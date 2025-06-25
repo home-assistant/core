@@ -3,7 +3,6 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import (
     CONF_CALC_METHOD,
     CONF_LAT_ADJ_METHOD,
@@ -24,7 +23,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        islamic_prayer_times.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -76,7 +75,7 @@ async def test_integration_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        islamic_prayer_times.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

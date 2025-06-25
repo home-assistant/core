@@ -17,9 +17,9 @@ from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event as evt
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
+from . import DeviceTuple, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -27,6 +27,7 @@ from .const import (
     CONF_OFF_DELAY,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 

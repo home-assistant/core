@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
@@ -21,11 +20,10 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import EcoforestCoordinator
+from .coordinator import EcoforestConfigEntry
 from .entity import EcoforestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +132,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
     ),
     EcoforestSensorEntityDescription(
         key="convecto_air_flow",
-        translation_key="convecto_air_flow",
+        translation_key="convector_air_flow",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.convecto_air_flow,
@@ -143,10 +141,12 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EcoforestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ecoforest sensor platform."""
-    coordinator: EcoforestCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         EcoforestSensor(coordinator, description) for description in SENSOR_TYPES

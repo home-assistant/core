@@ -44,7 +44,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -264,7 +264,7 @@ class SnmpSwitch(SwitchEntity):
             _LOGGER.error(
                 "SNMP error: %s at %s",
                 errstatus.prettyPrint(),
-                errindex and restable[-1][int(errindex) - 1] or "?",
+                (errindex and restable[-1][int(errindex) - 1]) or "?",
             )
         else:
             for resrow in restable:
@@ -277,6 +277,11 @@ class SnmpSwitch(SwitchEntity):
                 ):
                     self._state = False
                 else:
+                    _LOGGER.warning(
+                        "Invalid payload '%s' received for entity %s, state is unknown",
+                        resrow[-1],
+                        self.entity_id,
+                    )
                     self._state = None
 
     @property

@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.hub import Hub
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
 from aiopvapi.resources.shade import BaseShade
 
 from homeassistant.config_entries import ConfigEntry
 
-from .coordinator import PowerviewShadeUpdateCoordinator
+if TYPE_CHECKING:
+    from .coordinator import PowerviewShadeUpdateCoordinator
 
 type PowerviewConfigEntry = ConfigEntry[PowerviewEntryData]
 
 
-@dataclass
+@dataclass(slots=True)
 class PowerviewEntryData:
     """Define class for main domain information."""
 
@@ -28,7 +31,7 @@ class PowerviewEntryData:
     device_info: PowerviewDeviceInfo
 
 
-@dataclass
+@dataclass(slots=True)
 class PowerviewDeviceInfo:
     """Define class for device information."""
 
@@ -38,3 +41,12 @@ class PowerviewDeviceInfo:
     firmware: str | None
     model: str
     hub_address: str
+
+
+@dataclass(slots=True)
+class PowerviewAPI:
+    """Define class to hold the Powerview Hub API data."""
+
+    hub: Hub
+    pv_request: AioRequest
+    device_info: PowerviewDeviceInfo

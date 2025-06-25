@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "station_id": "Hydrological station"
+        },
+        "data_description": {
+          "station_id": "Select a hydrological station from the list."
         }
       }
     },
@@ -13,31 +16,25 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
-    "binary_sensor": {
-      "flood_alarm": {
-        "name": "Flood alarm"
-      },
-      "flood_warning": {
-        "name": "Flood warning"
-      }
-    },
     "sensor": {
-      "flood_alarm_level": {
-        "name": "Flood alarm level"
-      },
-      "flood_warning_level": {
-        "name": "Flood warning level"
-      },
       "water_level": {
         "name": "Water level"
       },
       "water_temperature": {
         "name": "Water temperature"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the IMGW-PIB API for {entry}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the IMGW-PIB API for {entry}: {error}"
     }
   }
 }

@@ -1,0 +1,14 @@
+fetch_connections:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: swiss_public_transport
+    limit:
+      example: 3
+      selector:
+        number:
+          min: 1
+          max: 15
+          step: 1

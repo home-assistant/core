@@ -28,7 +28,7 @@ class MockPlexMedia:
     viewOffset = 333
     _server = Mock(_baseurl=PLEX_DIRECT_URL)
 
-    def __init__(self, title, mediatype):
+    def __init__(self, title, mediatype) -> None:
         """Initialize the instance."""
         self.listType = mediatype
         self.title = title

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
+        "description": "Unable to discover Tempest WeatherFlow devices. Select **Submit** to try again.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -13,11 +13,11 @@
     },
     "error": {
       "address_in_use": "Unable to open local UDP port 50222.",
-      "cannot_connect": "UDP discovery error."
+      "cannot_connect": "UDP discovery error.",
+      "no_device_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {

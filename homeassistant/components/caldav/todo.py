@@ -18,14 +18,13 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import CalDavConfigEntry
 from .api import async_get_calendars, get_attr_value
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,12 +45,11 @@ TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CalDavConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
+    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(
@@ -140,6 +138,8 @@ class WebDavTodoListEntity(TodoListEntity):
             await self.hass.async_add_executor_job(
                 partial(self._calendar.save_todo, **item_data),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -174,6 +174,8 @@ class WebDavTodoListEntity(TodoListEntity):
                     obj_type="todo",
                 ),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -197,3 +199,5 @@ class WebDavTodoListEntity(TodoListEntity):
                 await self.hass.async_add_executor_job(item.delete)
             except (requests.ConnectionError, DAVError) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+        # refreshing async otherwise it would take too much time
+        self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

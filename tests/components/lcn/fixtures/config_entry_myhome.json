@@ -6,6 +6,7 @@
   "password": "lcn",
   "sk_num_tries": 0,
   "dim_mode": "STEPS200",
+  "acknowledge": false,
   "devices": [],
   "entities": [
     {

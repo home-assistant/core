@@ -8,12 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
-
-from .const import DEFAULT_NAME, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 type EfergyConfigEntry = ConfigEntry[Efergy]
@@ -47,22 +42,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class EfergyEntity(Entity):
-    """Representation of a Efergy entity."""
-
-    _attr_attribution = "Data provided by Efergy"
-
-    def __init__(self, api: Efergy, server_unique_id: str) -> None:
-        """Initialize an Efergy entity."""
-        self.api = api
-        self._attr_device_info = DeviceInfo(
-            configuration_url="https://engage.efergy.com/user/login",
-            connections={(dr.CONNECTION_NETWORK_MAC, api.info["mac"])},
-            identifiers={(DOMAIN, server_unique_id)},
-            manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
-            model=api.info["type"],
-            sw_version=api.info["version"],
-        )

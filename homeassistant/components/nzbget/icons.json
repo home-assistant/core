@@ -1,7 +1,13 @@
 {
   "services": {
-    "pause": "mdi:pause",
-    "resume": "mdi:play",
-    "set_speed": "mdi:speedometer"
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "resume": {
+      "service": "mdi:play"
+    },
+    "set_speed": {
+      "service": "mdi:speedometer"
+    }
   }
 }

@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -19,7 +19,6 @@ from homeassistant.helpers.integration_platform import (
 from . import home_assistant_cast
 from .const import DOMAIN
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 

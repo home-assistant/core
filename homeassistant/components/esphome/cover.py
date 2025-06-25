@@ -24,6 +24,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     """A cover implementation for ESPHome."""
@@ -61,13 +63,13 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state.current_operation == CoverOperation.IS_OPENING
+        return self._state.current_operation is CoverOperation.IS_OPENING
 
     @property
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state.current_operation == CoverOperation.IS_CLOSING
+        return self._state.current_operation is CoverOperation.IS_CLOSING
 
     @property
     @esphome_state_property

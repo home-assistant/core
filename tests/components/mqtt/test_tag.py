@@ -1,19 +1,19 @@
 """The tests for MQTT tag scanner."""
 
-from collections.abc import Generator
 import copy
 import json
-from unittest.mock import ANY, AsyncMock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock
 
 import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_unload_config_entry
+from .common import help_test_unload_config_entry
 
 from tests.common import (
     MockConfigEntry,
@@ -44,13 +44,6 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
-
-
-@pytest.fixture
-def tag_mock() -> Generator[AsyncMock]:
-    """Fixture to mock tag."""
-    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
-        yield mock_tag
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -410,7 +403,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
         device_entry.id, mqtt_config_entry.entry_id
     )
@@ -504,7 +497,7 @@ async def test_entity_device_info_update(
     """Test device registry update."""
     await mqtt_mock_entry()
 
-    config = {
+    config: dict[str, Any] = {
         "topic": "test-topic",
         "device": {
             "identifiers": ["helloworld"],
@@ -597,7 +590,7 @@ async def test_cleanup_tag(
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
         device_entry1.id, mqtt_config_entry.entry_id
     )

@@ -16,6 +16,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
@@ -155,9 +156,10 @@ async def test_update_entity_states(
     attrs = state.attributes
     assert not attrs[ATTR_AUTO_UPDATE]
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
     await ws_client.send_json(
         {
@@ -322,12 +324,12 @@ async def test_update_entity_ha_not_running(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     # Update should be delayed by a day because HA is not running
     hass.set_state(CoreState.starting)
@@ -335,15 +337,15 @@ async def test_update_entity_ha_not_running(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     hass.set_state(CoreState.running)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[1][0][0]
+    assert len(client.async_send_command.call_args_list) == 5
+    args = client.async_send_command.call_args_list[4][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
 
@@ -417,6 +419,7 @@ async def test_update_entity_progress(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
     event = Event(
         type="firmware update progress",
@@ -439,7 +442,8 @@ async def test_update_entity_progress(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] == 5
+    assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] == 5
 
     event = Event(
         type="firmware update finished",
@@ -463,6 +467,7 @@ async def test_update_entity_progress(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
@@ -532,7 +537,8 @@ async def test_update_entity_install_failed(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] == 5
+    assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] == 5
 
     event = Event(
         type="firmware update finished",
@@ -556,6 +562,7 @@ async def test_update_entity_install_failed(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_ON
@@ -594,7 +601,8 @@ async def test_update_entity_reload(
     attrs = state.attributes
     assert not attrs[ATTR_AUTO_UPDATE]
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
 
@@ -643,28 +651,31 @@ async def test_update_entity_delay(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 6
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 6
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    update_interval = timedelta(minutes=5)
+    freezer.tick(update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     nodes: set[int] = set()
 
-    assert len(client.async_send_command.call_args_list) == 3
-    args = client.async_send_command.call_args_list[2][0][0]
+    assert len(client.async_send_command.call_args_list) == 7
+    args = client.async_send_command.call_args_list[6][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     nodes.add(args["nodeId"])
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 4
-    args = client.async_send_command.call_args_list[3][0][0]
+    assert len(client.async_send_command.call_args_list) == 8
+    args = client.async_send_command.call_args_list[7][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     nodes.add(args["nodeId"])
 
@@ -833,9 +844,10 @@ async def test_update_entity_full_restore_data_update_available(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
-    assert len(client.async_send_command.call_args_list) == 2
-    assert client.async_send_command.call_args_list[1][0][0] == {
+    assert len(client.async_send_command.call_args_list) == 5
+    assert client.async_send_command.call_args_list[4][0][0] == {
         "command": "controller.firmware_update_ota",
         "nodeId": climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
         "updateInfo": {

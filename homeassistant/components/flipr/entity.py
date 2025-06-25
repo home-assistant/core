@@ -2,32 +2,34 @@
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
+from .coordinator import BaseDataUpdateCoordinator
 
 
-class FliprEntity(CoordinatorEntity):
+class FliprEntity(CoordinatorEntity[BaseDataUpdateCoordinator]):
     """Implements a common class elements representing the Flipr component."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, description: EntityDescription
+        self,
+        coordinator: BaseDataUpdateCoordinator,
+        description: EntityDescription,
+        is_flipr_hub: bool = False,
     ) -> None:
         """Initialize Flipr sensor."""
         super().__init__(coordinator)
+        self.device_id = coordinator.device_id
         self.entity_description = description
-        if coordinator.config_entry:
-            flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
-            self._attr_unique_id = f"{flipr_id}-{description.key}"
+        self._attr_unique_id = f"{self.device_id}-{description.key}"
 
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, flipr_id)},
-                manufacturer=MANUFACTURER,
-                name=f"Flipr {flipr_id}",
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            manufacturer=MANUFACTURER,
+            name=f"Flipr hub {self.device_id}"
+            if is_flipr_hub
+            else f"Flipr {self.device_id}",
+        )

@@ -12,7 +12,7 @@ from axis.rtsp import Signal, State
 import pytest
 import respx
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -85,14 +85,13 @@ def fixture_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def fixture_config_entry(
-    hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_version: int,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         entry_id="676abe5b73621446e6550a2e86ffe3dd",
         unique_id=FORMATTED_MAC,
         data=config_entry_data,
@@ -127,6 +126,13 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 
 
 # Axis API fixtures
+
+
+@pytest.fixture(autouse=True)
+def reset_mock_requests() -> Generator[None]:
+    """Reset respx mock routes after the test."""
+    yield
+    respx.mock.clear()
 
 
 @pytest.fixture(name="mock_requests")

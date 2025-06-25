@@ -1,0 +1,162 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "VELUX Sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Netatmo",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "VELUX Sensor",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "16.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "+nvrOv1cCQU="
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "0000008A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 9,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Temperature sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 23.9,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0.0,
+            "maxValue": 50.0,
+            "minStep": 0.1
+          }
+        ]
+      },
+      {
+        "iid": 11,
+        "type": "00000082-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Humidity sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000010-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 69.0,
+            "description": "Current Relative Humidity",
+            "unit": "percentage",
+            "minValue": 0.0,
+            "maxValue": 100.0,
+            "minStep": 1.0
+          }
+        ]
+      },
+      {
+        "iid": 14,
+        "type": "00000097-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 15,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Carbon Dioxide sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000092-0000-1000-8000-0026BB765291",
+            "iid": 16,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Carbon Dioxide Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000093-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 1124.0,
+            "description": "Carbon Dioxide Level",
+            "minValue": 0.0,
+            "maxValue": 5000.0
+          }
+        ]
+      }
+    ]
+  }
+]

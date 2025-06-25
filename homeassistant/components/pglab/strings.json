@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "confirm_from_user": {
+        "description": "In order to be found PG LAB Electronics devices need to be connected to the same broker as the Home Assistant MQTT integration client. Do you want to continue?"
+      },
+      "confirm_from_mqtt": {
+        "description": "Do you want to set up PG LAB Electronics?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "mqtt_not_connected": "Home Assistant MQTT integration not connected to MQTT broker.",
+      "mqtt_not_configured": "Home Assistant MQTT integration not configured."
+    }
+  },
+  "entity": {
+    "cover": {
+      "shutter": {
+        "name": "Shutter {shutter_id}"
+      }
+    },
+    "switch": {
+      "relay": {
+        "name": "Relay {relay_id}"
+      }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "runtime": {
+        "name": "Run time"
+      },
+      "mpu_voltage": {
+        "name": "MPU voltage"
+      }
+    }
+  }
+}

@@ -77,7 +77,7 @@ class KrakenData:
                 return await self._hass.async_add_executor_job(self._get_kraken_data)
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Kraken.com reported an unknown asset pair. Refreshing list of"
                     " tradable asset pairs"
                 )
@@ -145,7 +145,10 @@ class KrakenData:
         await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
 
     def _get_websocket_name_asset_pairs(self) -> str:
-        return ",".join(wsname for wsname in self.tradable_asset_pairs.values())
+        return ",".join(
+            self.tradable_asset_pairs[tracked_pair]
+            for tracked_pair in self._config_entry.options[CONF_TRACKED_ASSET_PAIRS]
+        )
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""

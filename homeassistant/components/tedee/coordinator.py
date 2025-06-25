@@ -1,12 +1,14 @@
 """Coordinator for Tedee locks."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
 from typing import Any
 
-from pytedee_async import (
+from aiotedee import (
     TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
@@ -14,14 +16,14 @@ from pytedee_async import (
     TedeeLock,
     TedeeWebhookException,
 )
-from pytedee_async.bridge import TedeeBridge
+from aiotedee.bridge import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -31,22 +33,25 @@ GET_LOCKS_INTERVAL_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
+
 
 class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: TedeeConfigEntry
+    bridge: TedeeBridge
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
 
-        self._bridge: TedeeBridge | None = None
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
@@ -55,24 +60,20 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         self._next_get_locks = time.time()
         self._locks_last_update: set[int] = set()
-        self.new_lock_callbacks: list[Callable[[int], None]] = []
+        self.new_lock_callbacks: list[Callable[[list[TedeeLock]], None]] = []
         self.tedee_webhook_id: int | None = None
 
-    @property
-    def bridge(self) -> TedeeBridge:
-        """Return bridge."""
-        assert self._bridge
-        return self._bridge
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        async def _async_get_bridge() -> None:
+            self.bridge = await self.tedee_client.get_local_bridge()
+
+        _LOGGER.debug("Update coordinator: Getting bridge from API")
+        await self._async_update(_async_get_bridge)
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
-        if self._bridge is None:
-
-            async def _async_get_bridge() -> None:
-                self._bridge = await self.tedee_client.get_local_bridge()
-
-            _LOGGER.debug("Update coordinator: Getting bridge from API")
-            await self._async_update(_async_get_bridge)
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
@@ -98,14 +99,19 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             await update_fn()
         except TedeeLocalAuthException as ex:
             raise ConfigEntryAuthFailed(
-                "Authentication failed. Local access token is invalid"
+                translation_domain=DOMAIN,
+                translation_key="authentification_failed",
             ) from ex
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed(f"Error while updating data: {ex!s}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from ex
         except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed(f"Querying API failed. Error: {ex!s}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex
 
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
@@ -152,8 +158,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # add new locks
         if new_locks := current_locks - self._locks_last_update:
             _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
-            for lock_id in new_locks:
-                for callback in self.new_lock_callbacks:
-                    callback(lock_id)
+            for callback in self.new_lock_callbacks:
+                callback([self.data[lock_id] for lock_id in new_locks])
 
         self._locks_last_update = current_locks

@@ -1,12 +1,28 @@
 {
   "services": {
-    "send_raw_node_command": "mdi:console-line",
-    "send_node_command": "mdi:console",
-    "get_zwave_parameter": "mdi:download",
-    "set_zwave_parameter": "mdi:upload",
-    "set_zwave_lock_user_code": "mdi:upload-lock",
-    "delete_zwave_lock_user_code": "mdi:lock-remove",
-    "rename_node": "mdi:pencil",
-    "send_program_command": "mdi:console"
+    "send_raw_node_command": {
+      "service": "mdi:console-line"
+    },
+    "send_node_command": {
+      "service": "mdi:console"
+    },
+    "get_zwave_parameter": {
+      "service": "mdi:download"
+    },
+    "set_zwave_parameter": {
+      "service": "mdi:upload"
+    },
+    "set_zwave_lock_user_code": {
+      "service": "mdi:upload-lock"
+    },
+    "delete_zwave_lock_user_code": {
+      "service": "mdi:lock-remove"
+    },
+    "rename_node": {
+      "service": "mdi:pencil"
+    },
+    "send_program_command": {
+      "service": "mdi:console"
+    }
   }
 }

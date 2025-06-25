@@ -1,9 +1,19 @@
 {
   "services": {
-    "set_system_mode": "mdi:pencil",
-    "reset_system": "mdi:refresh",
-    "refresh_system": "mdi:refresh",
-    "set_zone_override": "mdi:motion-sensor",
-    "clear_zone_override": "mdi:motion-sensor-off"
+    "set_system_mode": {
+      "service": "mdi:pencil"
+    },
+    "reset_system": {
+      "service": "mdi:refresh"
+    },
+    "refresh_system": {
+      "service": "mdi:refresh"
+    },
+    "set_zone_override": {
+      "service": "mdi:motion-sensor"
+    },
+    "clear_zone_override": {
+      "service": "mdi:motion-sensor-off"
+    }
   }
 }

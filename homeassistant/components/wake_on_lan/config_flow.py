@@ -68,8 +68,8 @@ OPTIONS_FLOW = {
 }
 
 
-class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config flow for Statistics."""
+class WakeonLanConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+    """Handle a config flow for Wake on Lan."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

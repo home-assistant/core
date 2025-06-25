@@ -3,44 +3,62 @@
 from abc import abstractmethod
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
-class TeslemetryEntity(
-    CoordinatorEntity[
-        TeslemetryVehicleDataCoordinator
-        | TeslemetryEnergySiteLiveCoordinator
-        | TeslemetryEnergySiteInfoCoordinator
-    ]
-):
+class TeslemetryRootEntity(Entity):
     """Parent class for all Teslemetry entities."""
 
     _attr_has_entity_name = True
+    scoped: bool
+
+    def raise_for_scope(self, scope: Scope):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_scope",
+                translation_placeholders={"scope": scope},
+            )
+
+
+class TeslemetryPollingEntity(
+    TeslemetryRootEntity,
+    CoordinatorEntity[
+        TeslemetryVehicleDataCoordinator
+        | TeslemetryEnergyHistoryCoordinator
+        | TeslemetryEnergySiteLiveCoordinator
+        | TeslemetryEnergySiteInfoCoordinator
+    ],
+):
+    """Parent class for all Teslemetry Coordinator entities."""
 
     def __init__(
         self,
         coordinator: TeslemetryVehicleDataCoordinator
+        | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator,
-        api: VehicleSpecific | EnergySpecific,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
         super().__init__(coordinator)
-        self.api = api
         self.key = key
         self._attr_translation_key = self.key
         self._async_update_attrs()
@@ -70,11 +88,6 @@ class TeslemetryEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
-    @property
-    def has(self) -> bool:
-        """Return True if a specific value is in coordinator data."""
-        return self.key in self.coordinator.data
-
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -84,16 +97,13 @@ class TeslemetryEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
-    def raise_for_scope(self):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError("Missing required scope")
 
-
-class TeslemetryVehicleEntity(TeslemetryEntity):
+class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
+    api: Vehicle
+    vehicle: TeslemetryVehicleData
 
     def __init__(
         self,
@@ -102,24 +112,28 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
 
-        self._attr_unique_id = f"{data.vin}-{key}"
+        self.api = data.api
         self.vehicle = data
-
+        self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
-        super().__init__(data.coordinator, data.api, key)
+
+        if not data.poll:
+            # This entities data is not available for free
+            # so disable it by default
+            self._attr_entity_registry_enabled_default = False
+
+        super().__init__(data.coordinator, key)
 
     @property
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
 
-    async def wake_up_if_asleep(self) -> None:
-        """Wake up the vehicle if its asleep."""
-        await wake_up_vehicle(self.vehicle)
 
-
-class TeslemetryEnergyLiveEntity(TeslemetryEntity):
+class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
+
+    api: EnergySite
 
     def __init__(
         self,
@@ -127,14 +141,20 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Live entity."""
+
+        assert data.live_coordinator
+
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.live_coordinator, data.api, key)
+        super().__init__(data.live_coordinator, key)
 
 
-class TeslemetryEnergyInfoEntity(TeslemetryEntity):
+class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
+
+    api: EnergySite
 
     def __init__(
         self,
@@ -142,18 +162,38 @@ class TeslemetryEnergyInfoEntity(TeslemetryEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.info_coordinator, data.api, key)
+        super().__init__(data.info_coordinator, key)
 
 
-class TeslemetryWallConnectorEntity(
-    TeslemetryEntity, CoordinatorEntity[TeslemetryEnergySiteLiveCoordinator]
-):
+class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
+    """Parent class for Teslemetry Energy History Entities."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+
+        assert data.history_coordinator
+
+        self.api = data.api
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.history_coordinator, key)
+
+
+class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
+    api: EnergySite
 
     def __init__(
         self,
@@ -162,6 +202,10 @@ class TeslemetryWallConnectorEntity(
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
+
+        assert data.live_coordinator
+
+        self.api = data.api
         self.din = din
         self._attr_unique_id = f"{data.id}-{din}-{key}"
 
@@ -182,13 +226,39 @@ class TeslemetryWallConnectorEntity(
             model=model,
         )
 
-        super().__init__(data.live_coordinator, data.api, key)
+        super().__init__(data.live_coordinator, key)
 
     @property
-    def _value(self) -> int:
+    def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
         return (
             self.coordinator.data.get("wall_connectors", {})
             .get(self.din, {})
             .get(self.key)
         )
+
+    @property
+    def exists(self) -> bool:
+        """Return True if it exists in the wall connector coordinator data."""
+        return self.key in self.coordinator.data.get("wall_connectors", {}).get(
+            self.din, {}
+        )
+
+
+class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
+    """Parent class for Teslemetry Vehicle Stream entities."""
+
+    api: Vehicle
+
+    def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+        self.vehicle = data
+
+        self.api = data.api
+        self.stream = data.stream
+        self.vin = data.vin
+        self.add_field = data.stream.get_vehicle(self.vin).add_field
+
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{data.vin}-{key}"
+        self._attr_device_info = data.device

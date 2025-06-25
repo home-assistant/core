@@ -16,7 +16,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
-    DOMAIN,
+    DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
 )
 from homeassistant.const import (
@@ -91,8 +91,8 @@ async def test_activity_remote(
     assert acc.char_input_source.value == 1
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
+    call_turn_on = async_mock_service(hass, REMOTE_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, REMOTE_DOMAIN, "turn_off")
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()

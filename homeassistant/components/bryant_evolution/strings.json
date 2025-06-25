@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "reconfigure": {
+        "data": {
+          "filename": "[%key:component::bryant_evolution::config::step::user::data::filename%]"
+        }
+      },
+      "user": {
+        "data": {
+          "filename": "Serial port filename"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "exceptions": {
+    "failed_to_read_hvac_mode": {
+      "message": "Failed to read current HVAC mode"
+    },
+    "failed_to_parse_hvac_mode": {
+      "message": "Cannot parse response to HVACMode: {mode}"
+    },
+    "failed_to_read_hvac_action": {
+      "message": "Failed to read current HVAC action"
+    },
+    "failed_to_parse_hvac_action": {
+      "message": "Could not determine HVAC action: {mode_and_active}, {self.current_temperature}, {self.target_temperature_low}"
+    },
+    "failed_to_set_hvac_mode": {
+      "message": "Failed to set HVAC mode"
+    },
+    "failed_to_set_clsp": {
+      "message": "Failed to set cooling setpoint"
+    },
+    "failed_to_set_htsp": {
+      "message": "Failed to set heating setpoint"
+    },
+    "failed_to_set_temp": {
+      "message": "Failed to set temperature"
+    },
+    "failed_to_set_fan_mode": {
+      "message": "Failed to set fan mode"
+    }
+  }
+}

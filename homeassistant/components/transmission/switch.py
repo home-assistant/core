@@ -7,12 +7,11 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TransmissionConfigEntry
 from .const import DOMAIN
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +44,7 @@ SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TransmissionConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission switch."""
 

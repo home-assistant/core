@@ -1,0 +1,110 @@
+{
+  "operating_mode": {
+    "name": "DHW operating mode",
+    "error": 0,
+    "value": "On",
+    "desc": "On",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "nominal_setpoint": {
+    "name": "DHW nominal setpoint",
+    "error": 0,
+    "value": "50.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "nominal_setpoint_max": {
+    "name": "DHW nominal setpoint maximum",
+    "error": 0,
+    "value": "65.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "reduced_setpoint": {
+    "name": "DHW reduced setpoint",
+    "error": 0,
+    "value": "40.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "release": {
+    "name": "DHW release programme",
+    "error": 0,
+    "value": "1",
+    "desc": "Released",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "legionella_function": {
+    "name": "Legionella function fixed weekday",
+    "error": 0,
+    "value": "0",
+    "desc": "Off",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "legionella_setpoint": {
+    "name": "Legionella function setpoint",
+    "error": 0,
+    "value": "60.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "legionella_periodicity": {
+    "name": "Legionella function periodicity",
+    "error": 0,
+    "value": "7",
+    "desc": "Weekly",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "days"
+  },
+  "legionella_function_day": {
+    "name": "Legionella function day",
+    "error": 0,
+    "value": "6",
+    "desc": "Saturday",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "legionella_function_time": {
+    "name": "Legionella function time",
+    "error": 0,
+    "value": "12:00",
+    "desc": "",
+    "dataType": 2,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_actual_value_top_temperature": {
+    "name": "DHW temperature actual value",
+    "error": 0,
+    "value": "48.5",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 1,
+    "unit": "&deg;C"
+  },
+  "state_dhw_pump": {
+    "name": "State DHW circulation pump",
+    "error": 0,
+    "value": "0",
+    "desc": "Off",
+    "dataType": 1,
+    "readonly": 1,
+    "unit": ""
+  }
+}

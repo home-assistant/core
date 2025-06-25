@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 import sys
-from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -14,12 +14,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -31,18 +36,24 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_THINK,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
-    DEFAULT_PROMPT,
+    DEFAULT_NUM_CTX,
+    DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MAX_NUM_CTX,
+    MIN_NUM_CTX,
     MODEL_NAMES,
 )
 
@@ -61,7 +72,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -85,8 +96,12 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        self._async_abort_entries_match({CONF_URL: self.url})
+
         try:
-            self.client = ollama.AsyncClient(host=self.url)
+            self.client = ollama.AsyncClient(
+                host=self.url, verify=get_default_context()
+            )
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self.client.list()
 
@@ -135,8 +150,16 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_download()
 
         return self.async_create_entry(
-            title=_get_title(self.model),
+            title=self.url,
             data={CONF_URL: self.url, CONF_MODEL: self.model},
+            subentries=[
+                {
+                    "subentry_type": "conversation",
+                    "data": {},
+                    "title": _get_title(self.model),
+                    "unique_id": None,
+                }
+            ],
         )
 
     async def async_step_download(
@@ -178,6 +201,14 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=_get_title(self.model),
             data={CONF_URL: self.url, CONF_MODEL: self.model},
+            subentries=[
+                {
+                    "subentry_type": "conversation",
+                    "data": {},
+                    "title": _get_title(self.model),
+                    "unique_id": None,
+                }
+            ],
         )
 
     async def async_step_failed(
@@ -186,68 +217,138 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step after model downloading has failed."""
         return self.async_abort(reason="download_failed")
 
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return OllamaOptionsFlow(config_entry)
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"conversation": ConversationSubentryFlowHandler}
 
 
-class OllamaOptionsFlow(OptionsFlow):
-    """Ollama options flow."""
+class ConversationSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing conversation subentries."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.url: str = self.config_entry.data[CONF_URL]
-        self.model: str = self.config_entry.data[CONF_MODEL]
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
 
-    async def async_step_init(
+    async def async_step_set_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
+    ) -> SubentryFlowResult:
+        """Set conversation options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        errors: dict[str, str] = {}
+
+        if user_input is None:
+            if self._is_new:
+                options = {}
+            else:
+                options = self._get_reconfigure_subentry().data.copy()
+
+        elif self._is_new:
             return self.async_create_entry(
-                title=_get_title(self.model), data=user_input
+                title=user_input.pop(CONF_NAME),
+                data=user_input,
+            )
+        else:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
             )
 
-        options = self.config_entry.options or MappingProxyType({})
-        schema = ollama_config_option_schema(options)
+        schema = ollama_config_option_schema(self.hass, self._is_new, options)
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
+            step_id="set_options", data_schema=vol.Schema(schema), errors=errors
         )
 
+    async_step_user = async_step_set_options
+    async_step_reconfigure = async_step_set_options
 
-def ollama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+
+def ollama_config_option_schema(
+    hass: HomeAssistant, is_new: bool, options: Mapping[str, Any]
+) -> dict:
     """Ollama options schema."""
-    return {
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_MAX_HISTORY,
-            description={
-                "suggested_value": options.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY)
-            },
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
-        vol.Optional(
-            CONF_KEEP_ALIVE,
-            description={
-                "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
-            },
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
-    }
+    hass_apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    ]
+
+    if is_new:
+        schema: dict[vol.Required | vol.Optional, Any] = {
+            vol.Required(CONF_NAME, default="Ollama Conversation"): str,
+        }
+    else:
+        schema = {}
+
+    schema.update(
+        {
+            vol.Optional(
+                CONF_PROMPT,
+                description={
+                    "suggested_value": options.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    )
+                },
+            ): TemplateSelector(),
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+            vol.Optional(
+                CONF_NUM_CTX,
+                description={
+                    "suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_NUM_CTX,
+                    max=MAX_NUM_CTX,
+                    step=1,
+                    mode=NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Optional(
+                CONF_MAX_HISTORY,
+                description={
+                    "suggested_value": options.get(
+                        CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY
+                    )
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(
+                CONF_KEEP_ALIVE,
+                description={
+                    "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(
+                CONF_THINK,
+                description={
+                    "suggested_value": options.get("think", DEFAULT_THINK),
+                },
+            ): BooleanSelector(),
+        }
+    )
+
+    return schema
 
 
 def _get_title(model: str) -> str:

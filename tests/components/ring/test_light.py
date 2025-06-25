@@ -1,9 +1,10 @@
 """The tests for the Ring light platform."""
 
-from unittest.mock import PropertyMock
+from unittest.mock import Mock
 
 import pytest
 import ring_doorbell
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
@@ -11,22 +12,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform
+from .common import MockConfigEntry, setup_platform
+
+from tests.common import snapshot_platform
 
 
-async def test_entity_registry(
+async def test_states(
     hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_ring_client,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
+    """Test states."""
+    mock_config_entry.add_to_hass(hass)
     await setup_platform(hass, Platform.LIGHT)
-
-    entry = entity_registry.async_get("light.front_light")
-    assert entry.unique_id == "765432"
-
-    entry = entity_registry.async_get("light.internal_light")
-    assert entry.unique_id == "345678"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_light_off_reports_correctly(
@@ -67,25 +68,6 @@ async def test_light_can_be_turned_on(hass: HomeAssistant, mock_ring_client) -> 
     assert state.state == "on"
 
 
-async def test_updates_work(
-    hass: HomeAssistant, mock_ring_client, mock_ring_devices
-) -> None:
-    """Tests the update service works correctly."""
-    await setup_platform(hass, Platform.LIGHT)
-    state = hass.states.get("light.front_light")
-    assert state.state == "off"
-
-    front_light_mock = mock_ring_devices.get_device(765432)
-    front_light_mock.lights = "on"
-
-    await hass.services.async_call("ring", "update", {}, blocking=True)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.front_light")
-    assert state.state == "on"
-
-
 @pytest.mark.parametrize(
     ("exception_type", "reauth_expected"),
     [
@@ -109,15 +91,14 @@ async def test_light_errors_when_turned_on(
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     front_light_mock = mock_ring_devices.get_device(765432)
-    p = PropertyMock(side_effect=exception_type)
-    type(front_light_mock).lights = p
+    front_light_mock.async_set_lights.side_effect = exception_type
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light", "turn_on", {"entity_id": "light.front_light"}, blocking=True
         )
     await hass.async_block_till_done()
-    p.assert_called_once()
+    front_light_mock.async_set_lights.assert_called_once()
 
     assert (
         any(

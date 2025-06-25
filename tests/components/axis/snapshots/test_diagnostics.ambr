@@ -37,6 +37,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'axis',
       'entry_id': '676abe5b73621446e6550a2e86ffe3dd',
       'minor_version': 1,
@@ -45,6 +47,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
       'version': 3,

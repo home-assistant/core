@@ -23,6 +23,7 @@
     ],
     "sucNodeId": 1,
     "supportsTimers": false,
+    "supportsLongRange": true,
     "isHealNetworkActive": false,
     "inclusionState": 0,
     "status": 0

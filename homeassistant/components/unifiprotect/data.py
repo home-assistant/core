@@ -164,7 +164,7 @@ class ProtectData:
 
         self._auth_failures = 0
         if not was_success:
-            _LOGGER.info("%s: Connection restored", self._entry.title)
+            _LOGGER.warning("%s: Connection restored", self._entry.title)
             self._async_process_updates()
         elif force_update:
             self._async_process_updates()
@@ -349,6 +349,7 @@ def async_ufp_instance_for_config_entry_ids(
             entry.runtime_data.api
             for entry_id in config_entry_ids
             if (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
             and hasattr(entry, "runtime_data")
         ),
         None,

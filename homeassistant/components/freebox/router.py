@@ -38,6 +38,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FreeboxConfigEntry = ConfigEntry[FreeboxRouter]
+
 
 def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
@@ -72,7 +74,11 @@ async def get_hosts_list_if_supported(
     supports_hosts: bool = True
     fbx_devices: list[dict[str, Any]] = []
     try:
-        fbx_devices = await fbx_api.lan.get_hosts_list() or []
+        fbx_interfaces = await fbx_api.lan.get_interfaces() or []
+        for interface in fbx_interfaces:
+            fbx_devices.extend(
+                await fbx_api.lan.get_hosts_list(interface["name"]) or []
+            )
     except HttpRequestError as err:
         if (
             (matcher := re.search(r"Request failed \(APIResponse: (.+)\)", str(err)))
@@ -98,7 +104,7 @@ class FreeboxRouter:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: FreeboxConfigEntry,
         api: Freepybox,
         freebox_config: Mapping[str, Any],
     ) -> None:
@@ -225,7 +231,7 @@ class FreeboxRouter:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
         except HttpRequestError:
             self.supports_raid = False
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Router %s API does not support RAID",
                 self.name,
             )

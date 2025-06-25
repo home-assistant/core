@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -253,17 +253,6 @@ async def test_always_available(hass: HomeAssistant) -> None:
     }
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test reconfiguring."""
     input_sensor1_entity_id = "sensor.input1"
@@ -293,8 +282,8 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "source") == input_sensor1_entity_id
-    assert get_suggested(schema, "periodically_resetting") is True
+    assert get_schema_suggested_value(schema, "source") == input_sensor1_entity_id
+    assert get_schema_suggested_value(schema, "periodically_resetting") is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -374,6 +363,7 @@ async def test_change_device_source(
 
     # Configure source entity 3 (without a device)
     source_config_entry_3 = MockConfigEntry()
+    source_config_entry_3.add_to_hass(hass)
     source_entity_3 = entity_registry.async_get_or_create(
         "sensor",
         "test",

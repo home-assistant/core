@@ -10,7 +10,7 @@ from homeassistant.components.twitch.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -109,14 +109,7 @@ async def test_reauth(
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -182,16 +175,9 @@ async def test_reauth_wrong_account(
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
     twitch_mock.return_value.get_users = lambda *args, **kwargs: get_generator(
-        "get_users_2.json", TwitchUser
+        hass, "get_users_2.json", TwitchUser
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

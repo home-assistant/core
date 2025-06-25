@@ -18,7 +18,7 @@ DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
 
 
 @pytest.fixture
-def storage_collection(hass):
+def storage_collection(hass: HomeAssistant) -> person.PersonStorageCollection:
     """Return an empty storage collection."""
     id_manager = collection.IDManager()
     return person.PersonStorageCollection(
@@ -31,7 +31,7 @@ def storage_collection(hass):
 
 
 @pytest.fixture
-def storage_setup(
+async def storage_setup(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
 ) -> None:
     """Storage setup."""
@@ -49,4 +49,4 @@ def storage_setup(
             ]
         },
     }
-    assert hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, {}))
+    assert await async_setup_component(hass, DOMAIN, {})

@@ -1,16 +1,26 @@
 """Config flow for Airgradient."""
 
+from collections.abc import Mapping
 from typing import Any
 
-from airgradient import AirGradientClient, AirGradientError, ConfigurationControl
+from airgradient import (
+    AirGradientClient,
+    AirGradientError,
+    AirGradientParseError,
+    ConfigurationControl,
+)
 from awesomeversion import AwesomeVersion
-from mashumaro import MissingField
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -33,7 +43,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.data[CONF_HOST] = host = discovery_info.host
@@ -83,16 +93,26 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             self.client = AirGradientClient(user_input[CONF_HOST], session=session)
             try:
                 current_measures = await self.client.get_current_measures()
+            except AirGradientParseError:
+                return self.async_abort(reason="invalid_version")
             except AirGradientError:
                 errors["base"] = "cannot_connect"
-            except MissingField:
-                return self.async_abort(reason="invalid_version")
             else:
-                await self.async_set_unique_id(current_measures.serial_number)
-                self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(
+                    current_measures.serial_number, raise_on_progress=False
+                )
+                if self.source == SOURCE_USER:
+                    self._abort_if_unique_id_configured()
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
                 await self.set_configuration_source()
-                return self.async_create_entry(
-                    title=current_measures.model,
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title=current_measures.model,
+                        data={CONF_HOST: user_input[CONF_HOST]},
+                    )
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
         return self.async_show_form(
@@ -100,3 +120,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()

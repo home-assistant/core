@@ -1,5 +1,7 @@
 {
   "services": {
-    "log": "mdi:file-document"
+    "log": {
+      "service": "mdi:file-document"
+    }
   }
 }

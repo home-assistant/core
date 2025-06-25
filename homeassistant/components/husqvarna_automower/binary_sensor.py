@@ -12,13 +12,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,7 +30,7 @@ class AutomowerBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[MowerAttributes], bool]
 
 
-BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
+MOWER_BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
     AutomowerBinarySensorEntityDescription(
         key="battery_charging",
         value_fn=lambda data: data.mower.activity == MowerActivities.CHARGING,
@@ -39,26 +41,26 @@ BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         translation_key="leaving_dock",
         value_fn=lambda data: data.mower.activity == MowerActivities.LEAVING,
     ),
-    AutomowerBinarySensorEntityDescription(
-        key="returning_to_dock",
-        translation_key="returning_to_dock",
-        value_fn=lambda data: data.mower.activity == MowerActivities.GOING_HOME,
-    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerBinarySensorEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in BINARY_SENSOR_TYPES
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerBinarySensorEntity(mower_id, coordinator, description)
+            for mower_id in mower_ids
+            for description in MOWER_BINARY_SENSOR_TYPES
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerBinarySensorEntity(AutomowerBaseEntity, BinarySensorEntity):

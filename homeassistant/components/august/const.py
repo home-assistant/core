@@ -16,8 +16,6 @@ NOTIFICATION_TITLE = "August"
 
 MANUFACTURER = "August Home Inc."
 
-DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
-
 DEFAULT_NAME = "August"
 DOMAIN = "august"
 

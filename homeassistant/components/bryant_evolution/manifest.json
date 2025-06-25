@@ -1,0 +1,10 @@
+{
+  "domain": "bryant_evolution",
+  "name": "Bryant Evolution",
+  "codeowners": ["@danielsmyers"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bryant_evolution",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["evolutionhttp==0.0.18"]
+}

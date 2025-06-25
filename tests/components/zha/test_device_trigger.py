@@ -199,6 +199,7 @@ async def test_if_fires_on_event(
     )
     ep = zigpy_device.add_endpoint(1)
     ep.add_output_cluster(0x0006)
+    ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
@@ -306,6 +307,7 @@ async def test_device_offline_fires(
     assert zha_device.available is True
     zha_device.available = False
     zha_device.emit_zha_event({"device_event_type": "device_offline"})
+    await hass.async_block_till_done()
 
     assert len(service_calls) == 1
     assert service_calls[0].data["message"] == "service called"

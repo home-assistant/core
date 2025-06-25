@@ -164,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await hass.data[DOMAIN][entry.entry_id][AUTH].async_addwebhook(webhook_url)
-            _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
+            _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
         else:
@@ -224,7 +224,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await data[entry.entry_id][AUTH].async_dropwebhook()
         except pyatmo.ApiError:
             _LOGGER.debug("No webhook to be dropped")
-        _LOGGER.info("Unregister Netatmo webhook")
+        _LOGGER.debug("Unregister Netatmo webhook")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -257,7 +257,6 @@ async def async_remove_config_entry_device(
     return not any(
         identifier
         for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN
-        and identifier[1] in modules
+        if (identifier[0] == DOMAIN and identifier[1] in modules)
         or identifier[1] in rooms
     )

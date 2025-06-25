@@ -7,7 +7,8 @@ from iaqualink.exception import (
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.components.iaqualink import config_flow
+from homeassistant.components.iaqualink import DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,13 +19,12 @@ async def test_already_configured(
     """Test config flow when iaqualink component is already setup."""
     config_entry.add_to_hass(hass)
 
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_user(config_data)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_without_config(hass: HomeAssistant) -> None:

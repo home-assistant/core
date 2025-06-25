@@ -1,0 +1,32 @@
+{
+  "name": "Cambridge Audio CXNv2",
+  "timezone": "America/Chicago",
+  "locale": "en_GB",
+  "usage_reports": true,
+  "setup": true,
+  "sources_setup": true,
+  "versions": [
+    {
+      "component": "cast",
+      "version": "1.52.272222"
+    },
+    {
+      "component": "MCU",
+      "version": "3.1+0.5+36"
+    },
+    {
+      "component": "service-pack",
+      "version": "v022-a-151+a"
+    },
+    {
+      "component": "application",
+      "version": "1.0+gitAUTOINC+a94a3e2ad8"
+    }
+  ],
+  "udn": "02680b5c-1320-4d54-9f7c-3cfe915ad4c3",
+  "hcv": 3764,
+  "model": "CXNv2",
+  "unit_id": "0020c2d8",
+  "max_http_body_size": 65536,
+  "api": "1.8"
+}

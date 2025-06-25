@@ -1,0 +1,136 @@
+{
+  "items": [
+    {
+      "deviceId": "c9276e43-fe3c-88c3-1dcc-2eb79e292b8c",
+      "name": "Galaxy Home Mini (MQVL)",
+      "label": "Galaxy Home Mini",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "IM-SPEAKER-AI-0001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "33db9e71-abe9-43a0-acd3-3f0927bbe5b7",
+      "ownerId": "9a1ee192-04ba-46ca-9c3d-196d8dbcf807",
+      "roomId": "445c006d-1796-4dd6-8308-1c3cd045e8ff",
+      "deviceTypeName": "Samsung OCF Network Audio Player",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "mediaInputSource",
+              "version": 1
+            },
+            {
+              "id": "mediaPlaybackRepeat",
+              "version": 1
+            },
+            {
+              "id": "mediaPlaybackShuffle",
+              "version": 1
+            },
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "mediaTrackControl",
+              "version": 1
+            },
+            {
+              "id": "audioTrackAddressing",
+              "version": 1
+            },
+            {
+              "id": "audioTrackData",
+              "version": 1
+            },
+            {
+              "id": "musicPlayer",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "speechSynthesis",
+              "version": 1
+            },
+            {
+              "id": "samsungim.bixbyContent",
+              "version": 1
+            },
+            {
+              "id": "samsungim.announcement",
+              "version": 1
+            },
+            {
+              "id": "samsungim.networkAudioMode",
+              "version": 1
+            },
+            {
+              "id": "samsungim.networkAudioGroupInfo",
+              "version": 1
+            },
+            {
+              "id": "samsungim.networkAudioTrackData",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "NetworkAudio",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-03-08T12:06:18.865Z",
+      "profile": {
+        "id": "09df8e36-e94f-339c-9086-9639505e1fb2"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.networkaudio",
+        "name": "Galaxy Home Mini (MQVL)",
+        "specVersion": "core0.0.1",
+        "verticalDomainSpecVersion": "IoTivity1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "SM-V310",
+        "platformVersion": "4.0.0.1",
+        "platformOS": "Tizen",
+        "hwVersion": "1.0",
+        "firmwareVersion": "V310XXU1AWK1",
+        "vendorId": "IM-SPEAKER-AI-0001",
+        "lastSignupTime": "2025-03-08T12:06:16.386696652Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

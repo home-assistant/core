@@ -101,7 +101,7 @@
         },
         "speed_pct": {
           "name": "Speed",
-          "description": "Effect speed for the custom effect (0-100)."
+          "description": "The speed of the effect in % (0-100, default 50)."
         },
         "transition": {
           "name": "Transition",

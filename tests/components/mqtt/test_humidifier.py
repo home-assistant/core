@@ -12,7 +12,6 @@ from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MODE,
-    DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
@@ -37,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -87,7 +86,9 @@ async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) 
     """Turn all or specified humidifier on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(
+        humidifier.DOMAIN, SERVICE_TURN_ON, data, blocking=True
+    )
 
 
 async def async_turn_off(
@@ -96,7 +97,9 @@ async def async_turn_off(
     """Turn all or specified humidier off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(
+        humidifier.DOMAIN, SERVICE_TURN_OFF, data, blocking=True
+    )
 
 
 async def async_set_mode(
@@ -109,7 +112,9 @@ async def async_set_mode(
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_MODE, data, blocking=True)
+    await hass.services.async_call(
+        humidifier.DOMAIN, SERVICE_SET_MODE, data, blocking=True
+    )
 
 
 async def async_set_humidity(
@@ -122,7 +127,9 @@ async def async_set_humidity(
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
+    await hass.services.async_call(
+        humidifier.DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True
+    )
 
 
 @pytest.mark.parametrize(
@@ -855,7 +862,9 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][humidifier.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(
+        DEFAULT_CONFIG[mqtt.DOMAIN][humidifier.DOMAIN]
+    )
     config["modes"] = ["eco", "auto"]
     config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
     await help_test_encoding_subscribable_topics(
@@ -1466,7 +1475,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = humidifier.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "mode_command_topic":
         config[mqtt.DOMAIN][domain]["modes"] = ["auto", "eco"]
 

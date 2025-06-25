@@ -4,20 +4,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import HomeAssistantBSBLANData
-from .const import DOMAIN
+from . import BSBLanConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: BSBLanConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
+
     return {
-        "info": data.info.dict(),
-        "device": data.device.dict(),
-        "state": data.coordinator.data.dict(),
+        "info": data.info.to_dict(),
+        "device": data.device.to_dict(),
+        "coordinator_data": {
+            "state": data.coordinator.data.state.to_dict(),
+            "sensor": data.coordinator.data.sensor.to_dict(),
+        },
+        "static": data.static.to_dict(),
     }

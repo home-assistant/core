@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,7 +64,7 @@ def setup_platform(
             if mediabox.test_connection():
                 connection_successful = True
             elif manual_config:
-                _LOGGER.info("Can't connect to %s", host)
+                _LOGGER.error("Can't connect to %s", host)
             else:
                 _LOGGER.error("Can't connect to %s", host)
             # When the device is in eco mode it's not connected to the network
@@ -77,7 +77,7 @@ def setup_platform(
         except OSError as error:
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
-        _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
+        _LOGGER.warning("Ignoring duplicate Ziggo Mediabox XL %s", host)
     add_entities(hosts, True)
 
 

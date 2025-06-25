@@ -232,16 +232,19 @@
           }),
           'capabilities': dict({
             'a4aType': 'BLUETOOTH',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': True,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_2_UWB',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': True,
             }),
             'horn': True,
             'inCarCamera': True,
+            'inCarCameraDwa': True,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -252,27 +255,38 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
             'isCustomerEsimSupported': True,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
@@ -287,11 +301,45 @@
                 'NOT_SUPPORTED',
               ]),
             }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+                'state': 'ACTIVATED',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+                'state': 'ACTIVATED',
+              }),
+            }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
             'surroundViewRecorder': True,
             'unlock': True,
@@ -570,6 +618,7 @@
               'roofState': 'CLOSED',
               'roofStateType': 'SUN_ROOF',
             }),
+            'securityOverviewMode': 'ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -658,6 +707,18 @@
                   'targetPressure': 269,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -1086,15 +1147,19 @@
           }),
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -1105,37 +1170,80 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
-            'isCustomerEsimSupported': True,
+            'isCustomerEsimSupported': False,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -1408,6 +1516,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': 'NOT_ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -1496,6 +1605,18 @@
                   'targetPressure': 303,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -1840,16 +1961,20 @@
           }),
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'VENTILATION',
             'climateNow': True,
             'climateTimerTrigger': 'DEPARTURE_TIMER',
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': False,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': False,
@@ -1867,31 +1992,73 @@
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': False,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': False,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': True,
+            'isThirdPartyAppStoreSupported': False,
+            'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -2027,6 +2194,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': None,
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -2111,6 +2279,18 @@
                   'pressureStatus': 0,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -2944,226 +3124,6 @@
     'fingerprint': list([
       dict({
         'content': dict({
-          'capabilities': dict({
-            'climateFunction': 'AIR_CONDITIONING',
-            'climateNow': True,
-            'climateTimerTrigger': 'DEPARTURE_TIMER',
-            'horn': True,
-            'isBmwChargingSupported': True,
-            'isCarSharingSupported': False,
-            'isChargeNowForBusinessSupported': False,
-            'isChargingHistorySupported': True,
-            'isChargingHospitalityEnabled': False,
-            'isChargingLoudnessEnabled': False,
-            'isChargingPlanSupported': True,
-            'isChargingPowerLimitEnabled': False,
-            'isChargingSettingsEnabled': False,
-            'isChargingTargetSocEnabled': False,
-            'isClimateTimerSupported': True,
-            'isCustomerEsimSupported': False,
-            'isDCSContractManagementSupported': True,
-            'isDataPrivacyEnabled': False,
-            'isEasyChargeEnabled': False,
-            'isEvGoChargingSupported': False,
-            'isMiniChargingSupported': False,
-            'isNonLscFeatureEnabled': False,
-            'isRemoteEngineStartSupported': False,
-            'isRemoteHistoryDeletionSupported': False,
-            'isRemoteHistorySupported': True,
-            'isRemoteParkingSupported': False,
-            'isRemoteServicesActivationRequired': False,
-            'isRemoteServicesBookingRequired': False,
-            'isScanAndChargeSupported': False,
-            'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': False,
-            'lastStateCallState': 'ACTIVATED',
-            'lights': True,
-            'lock': True,
-            'remoteChargingCommands': dict({
-            }),
-            'sendPoi': True,
-            'specialThemeSupport': list([
-            ]),
-            'unlock': True,
-            'vehicleFinder': False,
-            'vehicleStateSource': 'LAST_STATE_CALL',
-          }),
-          'state': dict({
-            'chargingProfile': dict({
-              'chargingControlType': 'WEEKLY_PLANNER',
-              'chargingMode': 'DELAYED_CHARGING',
-              'chargingPreference': 'CHARGING_WINDOW',
-              'chargingSettings': dict({
-                'hospitality': 'NO_ACTION',
-                'idcc': 'NO_ACTION',
-                'targetSoc': 100,
-              }),
-              'climatisationOn': False,
-              'departureTimes': list([
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 1,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 35,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 2,
-                  'timeStamp': dict({
-                    'hour': 18,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                    'SATURDAY',
-                    'SUNDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 3,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 4,
-                  'timerWeekDays': list([
-                  ]),
-                }),
-              ]),
-              'reductionOfChargeCurrent': dict({
-                'end': dict({
-                  'hour': 1,
-                  'minute': 30,
-                }),
-                'start': dict({
-                  'hour': 18,
-                  'minute': 1,
-                }),
-              }),
-            }),
-            'checkControlMessages': list([
-            ]),
-            'climateTimers': list([
-              dict({
-                'departureTime': dict({
-                  'hour': 6,
-                  'minute': 40,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'THURSDAY',
-                  'SUNDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 12,
-                  'minute': 50,
-                }),
-                'isWeeklyTimer': False,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'MONDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 18,
-                  'minute': 59,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'DEACTIVATE',
-                'timerWeekDays': list([
-                  'WEDNESDAY',
-                ]),
-              }),
-            ]),
-            'combustionFuelLevel': dict({
-              'range': 105,
-              'remainingFuelLiters': 6,
-            }),
-            'currentMileage': 137009,
-            'doorsState': dict({
-              'combinedSecurityState': 'UNLOCKED',
-              'combinedState': 'CLOSED',
-              'hood': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'leftRear': 'CLOSED',
-              'rightFront': 'CLOSED',
-              'rightRear': 'CLOSED',
-              'trunk': 'CLOSED',
-            }),
-            'driverPreferences': dict({
-              'lscPrivacyMode': 'OFF',
-            }),
-            'electricChargingState': dict({
-              'chargingConnectionType': 'CONDUCTIVE',
-              'chargingLevelPercent': 82,
-              'chargingStatus': 'WAITING_FOR_CHARGING',
-              'chargingTarget': 100,
-              'isChargerConnected': True,
-              'range': 174,
-            }),
-            'isLeftSteering': True,
-            'isLscSupported': True,
-            'lastFetched': '2022-06-22T14:24:23.982Z',
-            'lastUpdatedAt': '2022-06-22T13:58:52Z',
-            'range': 174,
-            'requiredServices': list([
-              dict({
-                'dateTime': '2022-10-01T00:00:00.000Z',
-                'description': 'Next service due by the specified date.',
-                'status': 'OK',
-                'type': 'BRAKE_FLUID',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next vehicle check due after the specified distance or date.',
-                'status': 'OK',
-                'type': 'VEHICLE_CHECK',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next state inspection due by the specified date.',
-                'status': 'OK',
-                'type': 'VEHICLE_TUV',
-              }),
-            ]),
-            'roofState': dict({
-              'roofState': 'CLOSED',
-              'roofStateType': 'SUN_ROOF',
-            }),
-            'windowsState': dict({
-              'combinedState': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'rightFront': 'CLOSED',
-            }),
-          }),
-        }),
-        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT04.json',
-      }),
-      dict({
-        'content': dict({
           'chargeAndClimateSettings': dict({
             'chargeAndClimateTimer': dict({
               'showDepartureTimers': False,
@@ -3237,18 +3197,29 @@
       }),
       dict({
         'content': dict({
+          'gcid': 'ceb64158-d2ca-47e9-9ee6-cbffb881434e',
+          'mappingInfos': list([
+          ]),
+        }),
+        'filename': 'toyota-eadrax-vcs_v5_vehicle-list.json',
+      }),
+      dict({
+        'content': dict({
           'capabilities': dict({
             'a4aType': 'BLUETOOTH',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': True,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_2_UWB',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': True,
             }),
             'horn': True,
             'inCarCamera': True,
+            'inCarCameraDwa': True,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -3259,27 +3230,38 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
             'isCustomerEsimSupported': True,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
@@ -3294,11 +3276,45 @@
                 'NOT_SUPPORTED',
               ]),
             }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+                'state': 'ACTIVATED',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+                'state': 'ACTIVATED',
+              }),
+            }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
             'surroundViewRecorder': True,
             'unlock': True,
@@ -3476,6 +3492,7 @@
               'roofState': 'CLOSED',
               'roofStateType': 'SUN_ROOF',
             }),
+            'securityOverviewMode': 'ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -3564,6 +3581,18 @@
                   'targetPressure': 269,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -3685,15 +3714,19 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -3704,37 +3737,80 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
-            'isCustomerEsimSupported': True,
+            'isCustomerEsimSupported': False,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -3906,6 +3982,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': 'NOT_ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -3994,6 +4071,18 @@
                   'targetPressure': 303,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -4115,16 +4204,20 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'VENTILATION',
             'climateNow': True,
             'climateTimerTrigger': 'DEPARTURE_TIMER',
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': False,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': False,
@@ -4142,31 +4235,73 @@
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': False,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': False,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': True,
+            'isThirdPartyAppStoreSupported': False,
+            'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -4300,6 +4435,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': None,
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -4384,6 +4520,18 @@
                   'pressureStatus': 0,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -4685,7 +4833,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -5345,226 +5493,6 @@
     'fingerprint': list([
       dict({
         'content': dict({
-          'capabilities': dict({
-            'climateFunction': 'AIR_CONDITIONING',
-            'climateNow': True,
-            'climateTimerTrigger': 'DEPARTURE_TIMER',
-            'horn': True,
-            'isBmwChargingSupported': True,
-            'isCarSharingSupported': False,
-            'isChargeNowForBusinessSupported': False,
-            'isChargingHistorySupported': True,
-            'isChargingHospitalityEnabled': False,
-            'isChargingLoudnessEnabled': False,
-            'isChargingPlanSupported': True,
-            'isChargingPowerLimitEnabled': False,
-            'isChargingSettingsEnabled': False,
-            'isChargingTargetSocEnabled': False,
-            'isClimateTimerSupported': True,
-            'isCustomerEsimSupported': False,
-            'isDCSContractManagementSupported': True,
-            'isDataPrivacyEnabled': False,
-            'isEasyChargeEnabled': False,
-            'isEvGoChargingSupported': False,
-            'isMiniChargingSupported': False,
-            'isNonLscFeatureEnabled': False,
-            'isRemoteEngineStartSupported': False,
-            'isRemoteHistoryDeletionSupported': False,
-            'isRemoteHistorySupported': True,
-            'isRemoteParkingSupported': False,
-            'isRemoteServicesActivationRequired': False,
-            'isRemoteServicesBookingRequired': False,
-            'isScanAndChargeSupported': False,
-            'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': False,
-            'lastStateCallState': 'ACTIVATED',
-            'lights': True,
-            'lock': True,
-            'remoteChargingCommands': dict({
-            }),
-            'sendPoi': True,
-            'specialThemeSupport': list([
-            ]),
-            'unlock': True,
-            'vehicleFinder': False,
-            'vehicleStateSource': 'LAST_STATE_CALL',
-          }),
-          'state': dict({
-            'chargingProfile': dict({
-              'chargingControlType': 'WEEKLY_PLANNER',
-              'chargingMode': 'DELAYED_CHARGING',
-              'chargingPreference': 'CHARGING_WINDOW',
-              'chargingSettings': dict({
-                'hospitality': 'NO_ACTION',
-                'idcc': 'NO_ACTION',
-                'targetSoc': 100,
-              }),
-              'climatisationOn': False,
-              'departureTimes': list([
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 1,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 35,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 2,
-                  'timeStamp': dict({
-                    'hour': 18,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                    'SATURDAY',
-                    'SUNDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 3,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 4,
-                  'timerWeekDays': list([
-                  ]),
-                }),
-              ]),
-              'reductionOfChargeCurrent': dict({
-                'end': dict({
-                  'hour': 1,
-                  'minute': 30,
-                }),
-                'start': dict({
-                  'hour': 18,
-                  'minute': 1,
-                }),
-              }),
-            }),
-            'checkControlMessages': list([
-            ]),
-            'climateTimers': list([
-              dict({
-                'departureTime': dict({
-                  'hour': 6,
-                  'minute': 40,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'THURSDAY',
-                  'SUNDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 12,
-                  'minute': 50,
-                }),
-                'isWeeklyTimer': False,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'MONDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 18,
-                  'minute': 59,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'DEACTIVATE',
-                'timerWeekDays': list([
-                  'WEDNESDAY',
-                ]),
-              }),
-            ]),
-            'combustionFuelLevel': dict({
-              'range': 105,
-              'remainingFuelLiters': 6,
-            }),
-            'currentMileage': 137009,
-            'doorsState': dict({
-              'combinedSecurityState': 'UNLOCKED',
-              'combinedState': 'CLOSED',
-              'hood': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'leftRear': 'CLOSED',
-              'rightFront': 'CLOSED',
-              'rightRear': 'CLOSED',
-              'trunk': 'CLOSED',
-            }),
-            'driverPreferences': dict({
-              'lscPrivacyMode': 'OFF',
-            }),
-            'electricChargingState': dict({
-              'chargingConnectionType': 'CONDUCTIVE',
-              'chargingLevelPercent': 82,
-              'chargingStatus': 'WAITING_FOR_CHARGING',
-              'chargingTarget': 100,
-              'isChargerConnected': True,
-              'range': 174,
-            }),
-            'isLeftSteering': True,
-            'isLscSupported': True,
-            'lastFetched': '2022-06-22T14:24:23.982Z',
-            'lastUpdatedAt': '2022-06-22T13:58:52Z',
-            'range': 174,
-            'requiredServices': list([
-              dict({
-                'dateTime': '2022-10-01T00:00:00.000Z',
-                'description': 'Next service due by the specified date.',
-                'status': 'OK',
-                'type': 'BRAKE_FLUID',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next vehicle check due after the specified distance or date.',
-                'status': 'OK',
-                'type': 'VEHICLE_CHECK',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next state inspection due by the specified date.',
-                'status': 'OK',
-                'type': 'VEHICLE_TUV',
-              }),
-            ]),
-            'roofState': dict({
-              'roofState': 'CLOSED',
-              'roofStateType': 'SUN_ROOF',
-            }),
-            'windowsState': dict({
-              'combinedState': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'rightFront': 'CLOSED',
-            }),
-          }),
-        }),
-        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT04.json',
-      }),
-      dict({
-        'content': dict({
           'chargeAndClimateSettings': dict({
             'chargeAndClimateTimer': dict({
               'showDepartureTimers': False,
@@ -5638,18 +5566,29 @@
       }),
       dict({
         'content': dict({
+          'gcid': 'ceb64158-d2ca-47e9-9ee6-cbffb881434e',
+          'mappingInfos': list([
+          ]),
+        }),
+        'filename': 'toyota-eadrax-vcs_v5_vehicle-list.json',
+      }),
+      dict({
+        'content': dict({
           'capabilities': dict({
             'a4aType': 'BLUETOOTH',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': True,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_2_UWB',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': True,
             }),
             'horn': True,
             'inCarCamera': True,
+            'inCarCameraDwa': True,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -5660,27 +5599,38 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
             'isCustomerEsimSupported': True,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
@@ -5695,11 +5645,45 @@
                 'NOT_SUPPORTED',
               ]),
             }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+                'state': 'ACTIVATED',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+                'state': 'ACTIVATED',
+              }),
+            }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
             'surroundViewRecorder': True,
             'unlock': True,
@@ -5877,6 +5861,7 @@
               'roofState': 'CLOSED',
               'roofStateType': 'SUN_ROOF',
             }),
+            'securityOverviewMode': 'ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -5965,6 +5950,18 @@
                   'targetPressure': 269,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -6086,15 +6083,19 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -6105,37 +6106,80 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
-            'isCustomerEsimSupported': True,
+            'isCustomerEsimSupported': False,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -6307,6 +6351,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': 'NOT_ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -6395,6 +6440,18 @@
                   'targetPressure': 303,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -6516,16 +6573,20 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'VENTILATION',
             'climateNow': True,
             'climateTimerTrigger': 'DEPARTURE_TIMER',
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': False,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': False,
@@ -6543,31 +6604,73 @@
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': False,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': False,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': True,
+            'isThirdPartyAppStoreSupported': False,
+            'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -6701,6 +6804,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': None,
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -6785,6 +6889,18 @@
                   'pressureStatus': 0,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -7086,7 +7202,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -7100,226 +7216,6 @@
     'fingerprint': list([
       dict({
         'content': dict({
-          'capabilities': dict({
-            'climateFunction': 'AIR_CONDITIONING',
-            'climateNow': True,
-            'climateTimerTrigger': 'DEPARTURE_TIMER',
-            'horn': True,
-            'isBmwChargingSupported': True,
-            'isCarSharingSupported': False,
-            'isChargeNowForBusinessSupported': False,
-            'isChargingHistorySupported': True,
-            'isChargingHospitalityEnabled': False,
-            'isChargingLoudnessEnabled': False,
-            'isChargingPlanSupported': True,
-            'isChargingPowerLimitEnabled': False,
-            'isChargingSettingsEnabled': False,
-            'isChargingTargetSocEnabled': False,
-            'isClimateTimerSupported': True,
-            'isCustomerEsimSupported': False,
-            'isDCSContractManagementSupported': True,
-            'isDataPrivacyEnabled': False,
-            'isEasyChargeEnabled': False,
-            'isEvGoChargingSupported': False,
-            'isMiniChargingSupported': False,
-            'isNonLscFeatureEnabled': False,
-            'isRemoteEngineStartSupported': False,
-            'isRemoteHistoryDeletionSupported': False,
-            'isRemoteHistorySupported': True,
-            'isRemoteParkingSupported': False,
-            'isRemoteServicesActivationRequired': False,
-            'isRemoteServicesBookingRequired': False,
-            'isScanAndChargeSupported': False,
-            'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': False,
-            'lastStateCallState': 'ACTIVATED',
-            'lights': True,
-            'lock': True,
-            'remoteChargingCommands': dict({
-            }),
-            'sendPoi': True,
-            'specialThemeSupport': list([
-            ]),
-            'unlock': True,
-            'vehicleFinder': False,
-            'vehicleStateSource': 'LAST_STATE_CALL',
-          }),
-          'state': dict({
-            'chargingProfile': dict({
-              'chargingControlType': 'WEEKLY_PLANNER',
-              'chargingMode': 'DELAYED_CHARGING',
-              'chargingPreference': 'CHARGING_WINDOW',
-              'chargingSettings': dict({
-                'hospitality': 'NO_ACTION',
-                'idcc': 'NO_ACTION',
-                'targetSoc': 100,
-              }),
-              'climatisationOn': False,
-              'departureTimes': list([
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 1,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 35,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 2,
-                  'timeStamp': dict({
-                    'hour': 18,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                    'MONDAY',
-                    'TUESDAY',
-                    'WEDNESDAY',
-                    'THURSDAY',
-                    'FRIDAY',
-                    'SATURDAY',
-                    'SUNDAY',
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 3,
-                  'timeStamp': dict({
-                    'hour': 7,
-                    'minute': 0,
-                  }),
-                  'timerWeekDays': list([
-                  ]),
-                }),
-                dict({
-                  'action': 'DEACTIVATE',
-                  'id': 4,
-                  'timerWeekDays': list([
-                  ]),
-                }),
-              ]),
-              'reductionOfChargeCurrent': dict({
-                'end': dict({
-                  'hour': 1,
-                  'minute': 30,
-                }),
-                'start': dict({
-                  'hour': 18,
-                  'minute': 1,
-                }),
-              }),
-            }),
-            'checkControlMessages': list([
-            ]),
-            'climateTimers': list([
-              dict({
-                'departureTime': dict({
-                  'hour': 6,
-                  'minute': 40,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'THURSDAY',
-                  'SUNDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 12,
-                  'minute': 50,
-                }),
-                'isWeeklyTimer': False,
-                'timerAction': 'ACTIVATE',
-                'timerWeekDays': list([
-                  'MONDAY',
-                ]),
-              }),
-              dict({
-                'departureTime': dict({
-                  'hour': 18,
-                  'minute': 59,
-                }),
-                'isWeeklyTimer': True,
-                'timerAction': 'DEACTIVATE',
-                'timerWeekDays': list([
-                  'WEDNESDAY',
-                ]),
-              }),
-            ]),
-            'combustionFuelLevel': dict({
-              'range': 105,
-              'remainingFuelLiters': 6,
-            }),
-            'currentMileage': 137009,
-            'doorsState': dict({
-              'combinedSecurityState': 'UNLOCKED',
-              'combinedState': 'CLOSED',
-              'hood': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'leftRear': 'CLOSED',
-              'rightFront': 'CLOSED',
-              'rightRear': 'CLOSED',
-              'trunk': 'CLOSED',
-            }),
-            'driverPreferences': dict({
-              'lscPrivacyMode': 'OFF',
-            }),
-            'electricChargingState': dict({
-              'chargingConnectionType': 'CONDUCTIVE',
-              'chargingLevelPercent': 82,
-              'chargingStatus': 'WAITING_FOR_CHARGING',
-              'chargingTarget': 100,
-              'isChargerConnected': True,
-              'range': 174,
-            }),
-            'isLeftSteering': True,
-            'isLscSupported': True,
-            'lastFetched': '2022-06-22T14:24:23.982Z',
-            'lastUpdatedAt': '2022-06-22T13:58:52Z',
-            'range': 174,
-            'requiredServices': list([
-              dict({
-                'dateTime': '2022-10-01T00:00:00.000Z',
-                'description': 'Next service due by the specified date.',
-                'status': 'OK',
-                'type': 'BRAKE_FLUID',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next vehicle check due after the specified distance or date.',
-                'status': 'OK',
-                'type': 'VEHICLE_CHECK',
-              }),
-              dict({
-                'dateTime': '2023-05-01T00:00:00.000Z',
-                'description': 'Next state inspection due by the specified date.',
-                'status': 'OK',
-                'type': 'VEHICLE_TUV',
-              }),
-            ]),
-            'roofState': dict({
-              'roofState': 'CLOSED',
-              'roofStateType': 'SUN_ROOF',
-            }),
-            'windowsState': dict({
-              'combinedState': 'CLOSED',
-              'leftFront': 'CLOSED',
-              'rightFront': 'CLOSED',
-            }),
-          }),
-        }),
-        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT04.json',
-      }),
-      dict({
-        'content': dict({
           'chargeAndClimateSettings': dict({
             'chargeAndClimateTimer': dict({
               'showDepartureTimers': False,
@@ -7393,18 +7289,29 @@
       }),
       dict({
         'content': dict({
+          'gcid': 'ceb64158-d2ca-47e9-9ee6-cbffb881434e',
+          'mappingInfos': list([
+          ]),
+        }),
+        'filename': 'toyota-eadrax-vcs_v5_vehicle-list.json',
+      }),
+      dict({
+        'content': dict({
           'capabilities': dict({
             'a4aType': 'BLUETOOTH',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': True,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_2_UWB',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': True,
             }),
             'horn': True,
             'inCarCamera': True,
+            'inCarCameraDwa': True,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -7415,27 +7322,38 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
             'isCustomerEsimSupported': True,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
@@ -7450,11 +7368,45 @@
                 'NOT_SUPPORTED',
               ]),
             }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+                'state': 'ACTIVATED',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+                'state': 'ACTIVATED',
+              }),
+            }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
             'surroundViewRecorder': True,
             'unlock': True,
@@ -7632,6 +7584,7 @@
               'roofState': 'CLOSED',
               'roofStateType': 'SUN_ROOF',
             }),
+            'securityOverviewMode': 'ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -7720,6 +7673,18 @@
                   'targetPressure': 269,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -7841,15 +7806,19 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'AIR_CONDITIONING',
             'climateNow': True,
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': True,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': True,
@@ -7860,37 +7829,80 @@
             'isChargingPowerLimitEnabled': True,
             'isChargingSettingsEnabled': True,
             'isChargingTargetSocEnabled': True,
+            'isClimateTimerSupported': False,
             'isClimateTimerWeeklyActive': False,
-            'isCustomerEsimSupported': True,
+            'isCustomerEsimSupported': False,
             'isDCSContractManagementSupported': True,
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': True,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': True,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
+            'isThirdPartyAppStoreSupported': False,
             'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -8062,6 +8074,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': 'NOT_ARMED',
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -8150,6 +8163,18 @@
                   'targetPressure': 303,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -8271,16 +8296,20 @@
         'content': dict({
           'capabilities': dict({
             'a4aType': 'NOT_SUPPORTED',
-            'checkSustainabilityDPP': False,
+            'alarmSystem': False,
             'climateFunction': 'VENTILATION',
             'climateNow': True,
             'climateTimerTrigger': 'DEPARTURE_TIMER',
             'digitalKey': dict({
               'bookedServicePackage': 'SMACC_1_5',
+              'isDigitalKeyFirstSupported': False,
               'readerGraphics': 'readerGraphics',
               'state': 'ACTIVATED',
+              'vehicleSoftwareUpgradeRequired': False,
             }),
             'horn': True,
+            'inCarCamera': False,
+            'inCarCameraDwa': False,
             'isBmwChargingSupported': False,
             'isCarSharingSupported': False,
             'isChargeNowForBusinessSupported': False,
@@ -8298,31 +8327,73 @@
             'isDataPrivacyEnabled': False,
             'isEasyChargeEnabled': False,
             'isEvGoChargingSupported': False,
+            'isLocationBasedChargingSettingsSupported': False,
             'isMiniChargingSupported': False,
             'isNonLscFeatureEnabled': False,
             'isPersonalPictureUploadSupported': False,
-            'isRemoteEngineStartSupported': False,
+            'isPlugAndChargeSupported': False,
+            'isRemoteEngineStartEnabled': False,
+            'isRemoteEngineStartSupported': True,
             'isRemoteHistoryDeletionSupported': False,
             'isRemoteHistorySupported': True,
+            'isRemoteParkingEes25Active': False,
             'isRemoteParkingSupported': False,
             'isRemoteServicesActivationRequired': False,
             'isRemoteServicesBookingRequired': False,
             'isScanAndChargeSupported': False,
             'isSustainabilityAccumulatedViewEnabled': False,
             'isSustainabilitySupported': False,
-            'isWifiHotspotServiceSupported': True,
+            'isThirdPartyAppStoreSupported': False,
+            'isWifiHotspotServiceSupported': False,
             'lastStateCallState': 'ACTIVATED',
             'lights': True,
+            'locationBasedCommerceFeatures': dict({
+              'fueling': False,
+              'parking': False,
+              'reservations': False,
+            }),
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+            }),
+            'remoteServices': dict({
+              'doorLock': dict({
+                'id': 'doorLock',
+                'state': 'ACTIVATED',
+              }),
+              'doorUnlock': dict({
+                'id': 'doorUnlock',
+                'state': 'ACTIVATED',
+              }),
+              'hornBlow': dict({
+                'id': 'hornBlow',
+                'state': 'ACTIVATED',
+              }),
+              'inCarCamera': dict({
+                'id': 'inCarCamera',
+              }),
+              'inCarCameraDwa': dict({
+                'id': 'inCarCameraDwa',
+              }),
+              'lightFlash': dict({
+                'id': 'lightFlash',
+                'state': 'ACTIVATED',
+              }),
+              'remote360': dict({
+                'id': 'remote360',
+                'state': 'ACTIVATED',
+              }),
+              'surroundViewRecorder': dict({
+                'id': 'surroundViewRecorder',
+              }),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
             'specialThemeSupport': list([
             ]),
-            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexa': True,
             'speechThirdPartyAlexaSDK': False,
+            'surroundViewRecorder': False,
             'unlock': True,
             'vehicleFinder': True,
             'vehicleStateSource': 'LAST_STATE_CALL',
@@ -8456,6 +8527,7 @@
                 'type': 'TIRE_WEAR_FRONT',
               }),
             ]),
+            'securityOverviewMode': None,
             'tireState': dict({
               'frontLeft': dict({
                 'details': dict({
@@ -8540,6 +8612,18 @@
                   'pressureStatus': 0,
                   'wearStatus': 0,
                 }),
+              }),
+            }),
+            'vehicleSoftwareVersion': dict({
+              'iStep': dict({
+                'iStep': 0,
+                'month': 0,
+                'seriesCluster': '',
+                'year': 0,
+              }),
+              'puStep': dict({
+                'month': 0,
+                'year': 0,
               }),
             }),
             'windowsState': dict({
@@ -8841,7 +8925,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',

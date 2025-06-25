@@ -109,6 +109,19 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
+def construct_event_message(iden: int, event: bytes) -> bytes:
+    """Construct an event message JSON."""
+    return b"".join(
+        (
+            b'{"id":',
+            str(iden).encode(),
+            b',"type":"event","event":',
+            event,
+            b"}",
+        )
+    )
+
+
 def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
@@ -207,7 +220,7 @@ def _state_diff_event(
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
         additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
-    elif old_state.last_updated != new_state.last_updated:
+    elif old_state.last_updated_timestamp != new_state.last_updated_timestamp:
         additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
@@ -224,9 +237,12 @@ def _state_diff_event(
     if (old_attributes := old_state.attributes) != (
         new_attributes := new_state.attributes
     ):
-        for key, value in new_attributes.items():
-            if old_attributes.get(key) != value:
-                additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
+        if added := {
+            key: value
+            for key, value in new_attributes.items()
+            if key not in old_attributes or old_attributes[key] != value
+        }:
+            additions[COMPRESSED_STATE_ATTRIBUTES] = added
         if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
             # here if there are any values to avoid jumping into the json_encoder_default

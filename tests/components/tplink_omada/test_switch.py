@@ -19,7 +19,7 @@ from tplink_omada_client.exceptions import InvalidDevice
 from homeassistant.components import switch
 from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -336,7 +336,7 @@ def _get_updated_gateway_port_status(
     return OmadaGatewayPortStatus(gateway_data["portStats"][port])
 
 
-def call_service(hass: HomeAssistant, service: str, entity_id: str):
+def call_service(hass: HomeAssistant, service: str, entity_id: str) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
         switch.DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True

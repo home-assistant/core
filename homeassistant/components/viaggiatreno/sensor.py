@@ -16,8 +16,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -174,7 +174,7 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._state = NO_INFORMATION_STRING
                 self._unit = ""
             else:
-                self._state = "Error: {}".format(res["error"])
+                self._state = f"Error: {res['error']}"
                 self._unit = ""
         else:
             for i in MONITORED_INFO:

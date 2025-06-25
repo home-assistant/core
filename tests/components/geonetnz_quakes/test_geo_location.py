@@ -5,9 +5,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
+from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_DEPTH,
     ATTR_EXTERNAL_ID,
@@ -31,14 +30,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
 
 from tests.common import async_fire_time_changed
 
-CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
+CONFIG = {DOMAIN: {CONF_RADIUS: 200}}
 
 
 async def test_setup(
@@ -74,7 +73,7 @@ async def test_setup(
     freezer.move_to(utcnow)
     with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -188,7 +187,7 @@ async def test_setup_imperial(
         patch("aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -201,10 +200,7 @@ async def test_setup_imperial(
         )
 
         # Test conversion of 200 miles to kilometers.
-        feeds = hass.data[DOMAIN][FEED]
-        assert feeds is not None
-        assert len(feeds) == 1
-        manager = list(feeds.values())[0]
+        manager = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
         # Ensure that the filter value in km is correctly set.
         assert manager._feed_manager._feed._filter_radius == 321.8688
 

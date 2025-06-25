@@ -13,32 +13,32 @@ from homeassistant.components.group import (
     SERVICE_SET,
 )
 from homeassistant.const import ATTR_ICON, ATTR_NAME, SERVICE_RELOAD
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 
 
 @bind_hass
-def reload(hass):
+def reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
     hass.add_job(async_reload, hass)
 
 
 @callback
 @bind_hass
-def async_reload(hass):
+def async_reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_RELOAD))
 
 
 @bind_hass
 def set_group(
-    hass,
-    object_id,
-    name=None,
-    entity_ids=None,
-    icon=None,
-    add=None,
-):
+    hass: HomeAssistant,
+    object_id: str,
+    name: str | None = None,
+    entity_ids: list[str] | None = None,
+    icon: str | None = None,
+    add: list[str] | None = None,
+) -> None:
     """Create/Update a group."""
     hass.add_job(
         async_set_group,
@@ -54,13 +54,13 @@ def set_group(
 @callback
 @bind_hass
 def async_set_group(
-    hass,
-    object_id,
-    name=None,
-    entity_ids=None,
-    icon=None,
-    add=None,
-):
+    hass: HomeAssistant,
+    object_id: str,
+    name: str | None = None,
+    entity_ids: list[str] | None = None,
+    icon: str | None = None,
+    add: list[str] | None = None,
+) -> None:
     """Create/Update a group."""
     data = {
         key: value
@@ -79,7 +79,7 @@ def async_set_group(
 
 @callback
 @bind_hass
-def async_remove(hass, object_id):
+def async_remove(hass: HomeAssistant, object_id: str) -> None:
     """Remove a user group."""
     data = {ATTR_OBJECT_ID: object_id}
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_REMOVE, data))

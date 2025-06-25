@@ -27,13 +27,15 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AirGradientConfigEntry
 from .const import PM_STANDARD, PM_STANDARD_REVERSE
-from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
+from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -137,6 +139,15 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
         entity_registry_enabled_default=False,
         value_fn=lambda status: status.raw_total_volatile_organic_component,
     ),
+    AirGradientMeasurementSensorEntityDescription(
+        key="pm02_raw",
+        translation_key="raw_pm02",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda status: status.raw_pm02,
+    ),
 )
 
 CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
@@ -214,11 +225,11 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient sensor entities based on a config entry."""
 
-    coordinator = entry.runtime_data.measurement
+    coordinator = entry.runtime_data
     listener: Callable[[], None] | None = None
     not_setup: set[AirGradientMeasurementSensorEntityDescription] = set(
         MEASUREMENT_SENSOR_TYPES
@@ -232,7 +243,7 @@ async def async_setup_entry(
         not_setup = set()
         sensors = []
         for description in sensor_descriptions:
-            if description.value_fn(coordinator.data) is None:
+            if description.value_fn(coordinator.data.measures) is None:
                 not_setup.add(description)
             else:
                 sensors.append(AirGradientMeasurementSensor(coordinator, description))
@@ -248,64 +259,65 @@ async def async_setup_entry(
     add_entities()
 
     entities = [
-        AirGradientConfigSensor(entry.runtime_data.config, description)
+        AirGradientConfigSensor(coordinator, description)
         for description in CONFIG_SENSOR_TYPES
     ]
-    if "L" in coordinator.data.model:
+    if "L" in coordinator.data.measures.model:
         entities.extend(
-            AirGradientConfigSensor(entry.runtime_data.config, description)
+            AirGradientConfigSensor(coordinator, description)
             for description in CONFIG_LED_BAR_SENSOR_TYPES
         )
-    if "I" in coordinator.data.model:
+    if "I" in coordinator.data.measures.model:
         entities.extend(
-            AirGradientConfigSensor(entry.runtime_data.config, description)
+            AirGradientConfigSensor(coordinator, description)
             for description in CONFIG_DISPLAY_SENSOR_TYPES
         )
     async_add_entities(entities)
 
 
-class AirGradientMeasurementSensor(AirGradientEntity, SensorEntity):
+class AirGradientSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
-
-    entity_description: AirGradientMeasurementSensorEntityDescription
-    coordinator: AirGradientMeasurementCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientMeasurementCoordinator,
-        description: AirGradientMeasurementSensorEntityDescription,
+        coordinator: AirGradientCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize airgradient sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
+
+
+class AirGradientMeasurementSensor(AirGradientSensor):
+    """Defines an AirGradient sensor."""
+
+    entity_description: AirGradientMeasurementSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.measures)
 
 
-class AirGradientConfigSensor(AirGradientEntity, SensorEntity):
+class AirGradientConfigSensor(AirGradientSensor):
     """Defines an AirGradient sensor."""
 
     entity_description: AirGradientConfigSensorEntityDescription
-    coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientConfigCoordinator,
+        coordinator: AirGradientCoordinator,
         description: AirGradientConfigSensorEntityDescription,
     ) -> None:
         """Initialize airgradient sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
+        super().__init__(coordinator, description)
         self._attr_entity_registry_enabled_default = (
-            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control
+            is not ConfigurationControl.LOCAL
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.config)

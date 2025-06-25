@@ -18,7 +18,7 @@ def pymochad_mock():
 
 
 @pytest.fixture
-def light_mock(hass, brightness):
+def light_mock(hass: HomeAssistant, brightness: int) -> mochad.MochadLight:
     """Mock light."""
     controller_mock = mock.MagicMock()
     dev_dict = {"address": "a1", "name": "fake_light", "brightness_levels": brightness}

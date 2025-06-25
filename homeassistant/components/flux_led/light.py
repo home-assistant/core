@@ -11,10 +11,9 @@ from flux_led.protocol import MusicMode
 from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -25,15 +24,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from .const import (
     CONF_COLORS,
@@ -43,7 +37,6 @@ from .const import (
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
-    DOMAIN,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
@@ -51,7 +44,7 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
 from .util import (
     _effect_brightness,
@@ -67,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MODE_ATTRS = {
     ATTR_EFFECT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -139,11 +132,11 @@ SET_ZONES_DICT: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -205,8 +198,8 @@ class FluxLight(
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, base_unique_id, None)
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
+        self._attr_min_color_temp_kelvin = self._device.min_temp
+        self._attr_max_color_temp_kelvin = self._device.max_temp
         self._attr_supported_color_modes = _hass_color_modes(self._device)
         custom_effects: list[str] = []
         if custom_effect_colors:
@@ -222,9 +215,9 @@ class FluxLight(
         return self._device.brightness
 
     @property
-    def color_temp(self) -> int:
-        """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self._device.color_temp)
+    def color_temp_kelvin(self) -> int:
+        """Return the kelvin value of this light."""
+        return self._device.color_temp
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
@@ -304,8 +297,7 @@ class FluxLight(
             await self._async_set_effect(effect, brightness)
             return
         # Handle switch to CCT Color Mode
-        if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
-            color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+        if color_temp_kelvin := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
             if (
                 ATTR_BRIGHTNESS not in kwargs
                 and self.color_mode in MULTI_BRIGHTNESS_COLOR_MODES

@@ -9,7 +9,7 @@ import pytest
 import requests_mock
 
 from homeassistant.components import notify
-import homeassistant.components.clicksend_tts.notify as cs_tts
+from homeassistant.components.clicksend_tts import notify as cs_tts
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -46,7 +46,7 @@ def mock_clicksend_tts_notify():
         yield ns
 
 
-async def setup_notify(hass):
+async def setup_notify(hass: HomeAssistant) -> None:
     """Test setup."""
     with assert_setup_component(1, notify.DOMAIN) as config:
         assert await async_setup_component(hass, notify.DOMAIN, CONFIG)

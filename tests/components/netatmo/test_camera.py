@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
-from homeassistant.components.camera import STATE_STREAMING
+from homeassistant.components.camera import CameraState
 from homeassistant.components.netatmo.const import (
     NETATMO_EVENT,
     SERVICE_SET_CAMERA_LIGHT,
@@ -19,7 +19,7 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -176,7 +176,7 @@ async def test_camera_image_local(
     cam = hass.states.get(camera_entity_indoor)
 
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     assert cam.name == "Hall"
 
     stream_source = await camera.async_get_stream_source(hass, camera_entity_indoor)
@@ -204,7 +204,7 @@ async def test_camera_image_vpn(
     cam = hass.states.get(camera_entity_indoor)
 
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     stream_source = await camera.async_get_stream_source(hass, camera_entity_indoor)
     assert stream_source == stream_uri
@@ -408,7 +408,7 @@ async def test_camera_reconnect_webhook(
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(*args, **kwargs)
+        return await fake_post_request(hass, *args, **kwargs)
 
     with (
         patch(
@@ -507,7 +507,7 @@ async def test_setup_component_no_devices(
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(*args, **kwargs)
+        return await fake_post_request(hass, *args, **kwargs)
 
     with (
         patch(
@@ -550,7 +550,7 @@ async def test_camera_image_raises_exception(
         if "snapshot_720.jpg" in endpoint:
             raise pyatmo.ApiError
 
-        return await fake_post_request(*args, **kwargs)
+        return await fake_post_request(hass, *args, **kwargs)
 
     with (
         patch(

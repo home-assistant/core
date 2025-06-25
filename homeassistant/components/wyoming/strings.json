@@ -40,11 +40,19 @@
       "noise_suppression_level": {
         "name": "Noise suppression level",
         "state": {
-          "off": "Off",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
           "max": "Max"
+        }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
         }
       }
     },

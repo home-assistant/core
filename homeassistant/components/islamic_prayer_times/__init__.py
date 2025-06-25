@@ -4,21 +4,19 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
-from .coordinator import IslamicPrayerDataUpdateCoordinator
+from .coordinator import (
+    IslamicPrayerDataUpdateCoordinator,
+    IslamicPrayerTimesConfigEntry,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
-
-type IslamicPrayerTimesConfigEntry = ConfigEntry[IslamicPrayerDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -38,7 +36,7 @@ async def async_setup_entry(
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
-    coordinator = IslamicPrayerDataUpdateCoordinator(hass)
+    coordinator = IslamicPrayerDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator
@@ -50,7 +48,9 @@ async def async_setup_entry(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 

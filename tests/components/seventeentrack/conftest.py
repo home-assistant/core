@@ -40,6 +40,11 @@ NEW_SUMMARY_DATA = {
     "Returned": 1,
 }
 
+ARCHIVE_PACKAGE_NUMBER = "123"
+CONFIG_ENTRY_ID_KEY = "config_entry_id"
+PACKAGE_TRACKING_NUMBER_KEY = "package_tracking_number"
+PACKAGE_STATE_KEY = "package_state"
+
 VALID_CONFIG = {
     CONF_USERNAME: "test",
     CONF_PASSWORD: "test",

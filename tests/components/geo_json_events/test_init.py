@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.geo_json_events.const import DOMAIN
 from homeassistant.components.geo_location import DOMAIN as GEO_LOCATION_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,11 +24,11 @@ async def test_component_unload_config_entry(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_feed_manager_update.call_count == 1
-        assert hass.data[DOMAIN][config_entry.entry_id] is not None
+        assert config_entry.state is ConfigEntryState.LOADED
         # Unload config entry.
         assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN].get(config_entry.entry_id) is None
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_remove_orphaned_entities(

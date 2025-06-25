@@ -1,6 +1,6 @@
 """Define common test values."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.drop_connect.const import (
     CONF_COMMAND_TOPIC,
@@ -33,6 +33,10 @@ TEST_DATA_HUB_RESET = (
 TEST_DATA_SALT_TOPIC = "drop_connect/DROP-1_C0FFEE/8"
 TEST_DATA_SALT = '{"salt":1}'
 TEST_DATA_SALT_RESET = '{"salt":0}'
+
+TEST_DATA_ALERT_TOPIC = "drop_connect/DROP-1_C0FFEE/81"
+TEST_DATA_ALERT = '{"battery":100,"sens":1,"pwrOff":0,"temp":68.2}'
+TEST_DATA_ALERT_RESET = '{"battery":0,"sens":0,"pwrOff":1,"temp":0}'
 
 TEST_DATA_LEAK_TOPIC = "drop_connect/DROP-1_C0FFEE/20"
 TEST_DATA_LEAK = '{"battery":100,"leak":1,"temp":68.2}'
@@ -102,6 +106,25 @@ def config_entry_salt() -> ConfigEntry:
             CONF_DEVICE_ID: 8,
             CONF_DEVICE_NAME: "Salt Sensor",
             CONF_DEVICE_TYPE: "salt",
+            CONF_HUB_ID: "DROP-1_C0FFEE",
+            CONF_DEVICE_OWNER_ID: "DROP-1_C0FFEE_255",
+        },
+        version=1,
+    )
+
+
+def config_entry_alert() -> ConfigEntry:
+    """Config entry version 1 fixture."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_81",
+        data={
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/81/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/81/#",
+            CONF_DEVICE_DESC: "Alert",
+            CONF_DEVICE_ID: 81,
+            CONF_DEVICE_NAME: "Alert",
+            CONF_DEVICE_TYPE: "alrt",
             CONF_HUB_ID: "DROP-1_C0FFEE",
             CONF_DEVICE_OWNER_ID: "DROP-1_C0FFEE_255",
         },

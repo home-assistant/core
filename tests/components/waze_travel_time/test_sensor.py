@@ -3,6 +3,7 @@
 import pytest
 from pywaze.route_calculator import WRCError
 
+from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
@@ -74,6 +75,8 @@ async def test_sensor(hass: HomeAssistant) -> None:
                 CONF_AVOID_TOLL_ROADS: True,
                 CONF_AVOID_SUBSCRIPTION_ROADS: True,
                 CONF_AVOID_FERRIES: True,
+                CONF_INCL_FILTER: [""],
+                CONF_EXCL_FILTER: [""],
             },
         )
     ],
@@ -98,7 +101,8 @@ async def test_imperial(hass: HomeAssistant) -> None:
                 CONF_AVOID_TOLL_ROADS: True,
                 CONF_AVOID_SUBSCRIPTION_ROADS: True,
                 CONF_AVOID_FERRIES: True,
-                CONF_INCL_FILTER: "IncludeThis",
+                CONF_INCL_FILTER: ["IncludeThis"],
+                CONF_EXCL_FILTER: [""],
             },
         )
     ],
@@ -121,7 +125,8 @@ async def test_incl_filter(hass: HomeAssistant) -> None:
                 CONF_AVOID_TOLL_ROADS: True,
                 CONF_AVOID_SUBSCRIPTION_ROADS: True,
                 CONF_AVOID_FERRIES: True,
-                CONF_EXCL_FILTER: "ExcludeThis",
+                CONF_INCL_FILTER: [""],
+                CONF_EXCL_FILTER: ["ExcludeThis"],
             },
         )
     ],
@@ -138,7 +143,11 @@ async def test_sensor_failed_wrcerror(
 ) -> None:
     """Test that sensor update fails with log message."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
+        entry_id="test",
+        version=WazeConfigFlow.VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

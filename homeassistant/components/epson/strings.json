@@ -3,11 +3,12 @@
     "step": {
       "user": {
         "data": {
+          "connection_type": "Connection type",
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Epson projector."
+          "host": "The hostname, IP address or serial port of your Epson projector."
         }
       }
     },
@@ -28,6 +29,14 @@
           "name": "Color mode",
           "description": "Name of Cmode."
         }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "http": "HTTP",
+        "serial": "Serial"
       }
     }
   }

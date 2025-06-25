@@ -16,9 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .config_flow import ConfigFlow
 from .const import DOMAIN
@@ -50,11 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
     )
 
-    coordinators = {
-        "legacy_status": LegacyStatusCoordinator(hass, api),
-        "status": StatusCoordinator(hass, api),
-        "job": JobUpdateCoordinator(hass, api),
-        "info": InfoUpdateCoordinator(hass, api),
+    coordinators: dict[str, PrusaLinkUpdateCoordinator] = {
+        "legacy_status": LegacyStatusCoordinator(hass, entry, api),
+        "status": StatusCoordinator(hass, entry, api),
+        "job": JobUpdateCoordinator(hass, entry, api),
+        "info": InfoUpdateCoordinator(hass, entry, api),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
@@ -128,19 +126,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
-    """Defines a base PrusaLink entity."""
-
-    _attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this PrusaLink device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
-            name=self.coordinator.config_entry.title,
-            manufacturer="Prusa",
-            configuration_url=self.coordinator.api.client.host,
-        )

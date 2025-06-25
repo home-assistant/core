@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/azure_devops",
   "iot_class": "cloud_polling",
   "loggers": ["aioazuredevops"],
-  "requirements": ["aioazuredevops==2.1.1"]
+  "requirements": ["aioazuredevops==2.2.1"]
 }

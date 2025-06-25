@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, M
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -32,6 +32,7 @@ from ..const import (
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     DOMAIN,
+    EVENT_VALUE_UPDATED,
 )
 from ..helpers import async_get_nodes_from_targets, get_device_id
 from .trigger_helpers import async_bypass_dynamic_config_validation
@@ -184,7 +185,7 @@ async def async_attach_trigger(
             # We need to store the current value and device for the callback
             unsubs.append(
                 node.on(
-                    "value updated",
+                    EVENT_VALUE_UPDATED,
                     functools.partial(async_on_value_updated, value, device),
                 )
             )
@@ -201,3 +202,29 @@ async def async_attach_trigger(
     _create_zwave_listeners()
 
     return async_remove
+
+
+class ValueUpdatedTrigger(Trigger):
+    """Z-Wave JS value updated trigger."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+        self._config = config
+        self._hass = hass
+
+    @classmethod
+    async def async_validate_trigger_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return await async_validate_trigger_config(hass, config)
+
+    async def async_attach_trigger(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        return await async_attach_trigger(
+            self._hass, self._config, action, trigger_info
+        )

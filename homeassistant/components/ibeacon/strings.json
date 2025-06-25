@@ -6,8 +6,7 @@
       }
     },
     "abort": {
-      "bluetooth_not_available": "At least one Bluetooth adapter or remote must be configured to use iBeacon Tracker.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote must be configured to use iBeacon Tracker."
     }
   },
   "options": {

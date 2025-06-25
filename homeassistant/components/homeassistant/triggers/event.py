@@ -60,7 +60,6 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     variables = trigger_info["variables"]
 
-    template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
@@ -72,19 +71,22 @@ async def async_attach_trigger(
     event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_DATA])
         event_data = {}
         event_data.update(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
-        # Build the schema or a an items view if the schema is simple
-        # and does not contain sub-dicts. We explicitly do not check for
-        # list like the context data below since lists are a special case
-        # only for context data. (see test test_event_data_with_list)
+
+        # For performance reasons, we want to avoid using a voluptuous schema here
+        # unless required. Thus, if possible, we try to use a simple items comparison
+        # For that, we explicitly do not check for list like the context data below
+        # since lists are a special case only used for context data, see test
+        # test_event_data_with_list. Otherwise, we build a volutupus schema, see test
+        # test_event_data_with_list_nested
         if any(isinstance(value, dict) for value in event_data.values()):
             event_data_schema = vol.Schema(
-                {vol.Required(key): value for key, value in event_data.items()},
+                event_data,
                 extra=vol.ALLOW_EXTRA,
+                required=True,
             )
         else:
             # Use a simple items comparison if possible
@@ -94,7 +96,6 @@ async def async_attach_trigger(
     event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_CONTEXT])
         event_context = {}
         event_context.update(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
@@ -154,7 +155,8 @@ async def async_attach_trigger(
                 # If event doesn't match, skip event
                 return
 
-        hass.async_run_hass_job(
+        hass.loop.call_soon(
+            hass.async_run_hass_job,
             job,
             {
                 "trigger": {

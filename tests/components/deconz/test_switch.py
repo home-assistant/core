@@ -4,15 +4,14 @@ from collections.abc import Callable
 
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,9 +51,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_power_plugs(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
@@ -92,17 +91,6 @@ async def test_power_plugs(
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 4
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "light_payload",
@@ -122,7 +110,7 @@ async def test_remove_legacy_on_off_output_as_light(
 ) -> None:
     """Test that switch platform cleans up legacy light entities."""
     assert entity_registry.async_get_or_create(
-        LIGHT_DOMAIN, DECONZ_DOMAIN, "00:00:00:00:00:00:00:00-00"
+        LIGHT_DOMAIN, DOMAIN, "00:00:00:00:00:00:00:00-00"
     )
 
     await config_entry_factory()

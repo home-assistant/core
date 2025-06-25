@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_VALIDATOR = "validator"
@@ -88,6 +88,7 @@ class MerakiView(HomeAssistantView):
             _LOGGER.debug("No observations found")
             return None
         self._handle(request.app[KEY_HASS], data)
+        return None
 
     @callback
     def _handle(self, hass, data):

@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_device_registry[None-0]
+  list([
+  ])
+# ---
+# name: test_device_registry[device_info0-1]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': '2.7.3',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'rainforest_raven',
+          'abcdef0123456789',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Rainforest Automation, Inc.',
+      'model': 'Z105-2-EMU2-LEDD_JM',
+      'model_id': 'Z105-2-EMU2-LEDD_JM',
+      'name': 'RAVEn Device',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': '2.0.0 (7400)',
+      'via_device_id': None,
+    }),
+  ])
+# ---

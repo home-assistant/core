@@ -1,15 +1,37 @@
 {
   "services": {
-    "enable_recording": "mdi:record-rec",
-    "disable_recording": "mdi:stop",
-    "enable_audio": "mdi:volume-high",
-    "disable_audio": "mdi:volume-off",
-    "enable_motion_recording": "mdi:motion-sensor",
-    "disable_motion_recording": "mdi:motion-sensor-off",
-    "goto_preset": "mdi:pan",
-    "set_color_bw": "mdi:palette",
-    "start_tour": "mdi:panorama",
-    "stop_tour": "mdi:panorama-outline",
-    "ptz_control": "mdi:pan"
+    "enable_recording": {
+      "service": "mdi:record-rec"
+    },
+    "disable_recording": {
+      "service": "mdi:stop"
+    },
+    "enable_audio": {
+      "service": "mdi:volume-high"
+    },
+    "disable_audio": {
+      "service": "mdi:volume-off"
+    },
+    "enable_motion_recording": {
+      "service": "mdi:motion-sensor"
+    },
+    "disable_motion_recording": {
+      "service": "mdi:motion-sensor-off"
+    },
+    "goto_preset": {
+      "service": "mdi:pan"
+    },
+    "set_color_bw": {
+      "service": "mdi:palette"
+    },
+    "start_tour": {
+      "service": "mdi:panorama"
+    },
+    "stop_tour": {
+      "service": "mdi:panorama-outline"
+    },
+    "ptz_control": {
+      "service": "mdi:pan"
+    }
   }
 }

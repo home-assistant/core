@@ -66,15 +66,7 @@ async def test_reauth_success(hass: HomeAssistant, smarttub_api, account) -> Non
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -107,15 +99,7 @@ async def test_reauth_wrong_account(hass: HomeAssistant, smarttub_api, account) 
 
     # we try to reauth account #2, and the user successfully authenticates to account #1
     account.id = mock_entry1.unique_id
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry2.unique_id,
-            "entry_id": mock_entry2.entry_id,
-        },
-        data=mock_entry2.data,
-    )
+    result = await mock_entry2.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

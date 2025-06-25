@@ -70,6 +70,7 @@ def idfn(val):
     """Provide IDs for pytest parametrize."""
     if isinstance(val, (datetime)):
         return val.strftime("%Y%m%d")
+    return None
 
 
 @pytest.mark.parametrize(("type", "day", "expected"), NORTHERN_PARAMETERS, ids=idfn)

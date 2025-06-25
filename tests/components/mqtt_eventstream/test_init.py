@@ -5,12 +5,12 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-import homeassistant.components.mqtt_eventstream as eventstream
+from homeassistant.components import mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     async_fire_mqtt_message,
@@ -20,7 +20,12 @@ from tests.common import (
 from tests.typing import MqttMockHAClient
 
 
-async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=None):
+async def add_eventstream(
+    hass: HomeAssistant,
+    sub_topic: str | None = None,
+    pub_topic: str | None = None,
+    ignore_event: list[str] | None = None,
+) -> bool:
     """Add a mqtt_eventstream component."""
     config = {}
     if sub_topic:

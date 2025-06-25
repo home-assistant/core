@@ -8,9 +8,7 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError

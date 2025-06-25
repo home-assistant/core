@@ -8,7 +8,7 @@ from unittest.mock import patch
 from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakePairing
 from attr import asdict
 import pytest
@@ -40,7 +40,7 @@ ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
 
 
-def create_motion_sensor_service(accessory):
+def create_motion_sensor_service(accessory: Accessory) -> None:
     """Define motion characteristics as per page 225 of HAP spec."""
     service = accessory.add_service(ServicesTypes.MOTION_SENSOR)
     cur_state = service.add_char(CharacteristicsTypes.MOTION_DETECTED)
@@ -83,7 +83,7 @@ async def test_async_remove_entry(
     assert hkid not in hass.data[ENTITY_MAP].storage_data
 
 
-def create_alive_service(accessory):
+def create_alive_service(accessory: Accessory) -> Service:
     """Create a service to validate we can only remove dead devices."""
     service = accessory.add_service(ServicesTypes.LIGHTBULB, name=ALIVE_DEVICE_NAME)
     service.add_char(CharacteristicsTypes.ON)
@@ -174,6 +174,7 @@ async def test_offline_device_raises(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery")
 async def test_ble_device_only_checks_is_available(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
@@ -242,6 +243,34 @@ async def test_ble_device_only_checks_is_available(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_populates_connections(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+) -> None:
+    """Test a BLE device populates connections in the device registry."""
+    aid = get_next_aid()
+
+    accessory = Accessory.create_with_info(
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, _ = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    dev_reg = dr.async_get(hass)
+    assert (
+        dev_reg.async_get_device(
+            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        )
+        is not None
+    )
+
+
 @pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
 async def test_snapshots(
     hass: HomeAssistant,
@@ -289,6 +318,7 @@ async def test_snapshots(
             entry.pop("device_id", None)
             entry.pop("created_at", None)
             entry.pop("modified_at", None)
+            entry.pop("_cache", None)
 
             entities.append({"entry": entry, "state": state_dict})
 
@@ -297,6 +327,8 @@ async def test_snapshots(
         device_dict.pop("via_device_id", None)
         device_dict.pop("created_at", None)
         device_dict.pop("modified_at", None)
+        device_dict.pop("_cache", None)
+
         devices.append({"device": device_dict, "entities": entities})
 
     assert snapshot == devices

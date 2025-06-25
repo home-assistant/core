@@ -39,7 +39,7 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    def read_gpio(device_id, port, level):
+    def read_gpio(device_id: int, port: int, level: bool) -> None:
         """Send signal to entity to have it update state."""
         dispatcher_send(hass, NUMATO_SIGNAL.format(device_id, port), level)
 
@@ -71,7 +71,7 @@ def setup_platform(
                 api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
-                _LOGGER.info(
+                _LOGGER.error(
                     "Notification setup failed on device %s, "
                     "updates on binary sensor %s only in polling mode: %s",
                     device_id,
@@ -97,7 +97,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
 
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor object."""
-        self._name = name or DEVICE_DEFAULT_NAME
+        self._attr_name = name or DEVICE_DEFAULT_NAME
         self._device_id = device_id
         self._port = port
         self._invert_logic = invert_logic
@@ -119,11 +119,6 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         """Update entity state."""
         self._state = level
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def is_on(self):

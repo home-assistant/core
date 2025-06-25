@@ -4,13 +4,15 @@ import pytest
 from ttn_client import TTNAuthError
 
 from homeassistant.components.thethingsnetwork.const import CONF_APP_ID, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 from .conftest import API_KEY, APP_ID, HOST
+
+from tests.common import MockConfigEntry
 
 USER_DATA = {CONF_HOST: HOST, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 
@@ -92,21 +94,13 @@ async def test_duplicate_entry(
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, mock_ttnclient, mock_config_entry
+    hass: HomeAssistant, mock_ttnclient, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth step works."""
 
     await init_integration(hass, mock_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": APP_ID,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_DATA,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]

@@ -19,6 +19,7 @@ CONF_KEEP_MAIN_LIGHT = "keep_master_light"
 DEFAULT_KEEP_MAIN_LIGHT = False
 
 # Attributes
+ATTR_CCT = "cct"
 ATTR_COLOR_PRIMARY = "color_primary"
 ATTR_DURATION = "duration"
 ATTR_FADE = "fade"
@@ -29,6 +30,10 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
 ATTR_UDP_PORT = "udp_port"
+
+# Static values
+COLOR_TEMP_K_MIN = 2000
+COLOR_TEMP_K_MAX = 6535
 
 
 LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = {
@@ -48,7 +53,9 @@ LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = 
         ColorMode.COLOR_TEMP,
     ],
     LightCapability.RGB_COLOR | LightCapability.COLOR_TEMPERATURE: [
-        ColorMode.RGBWW,
+        # Technically this is RGBWW but wled does not support RGBWW colors (with warm and cold white separately)
+        # but rather RGB + CCT which does not have a direct mapping in HA
+        ColorMode.RGB,
     ],
     LightCapability.WHITE_CHANNEL | LightCapability.COLOR_TEMPERATURE: [
         ColorMode.COLOR_TEMP,
@@ -56,8 +63,8 @@ LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = 
     LightCapability.RGB_COLOR
     | LightCapability.WHITE_CHANNEL
     | LightCapability.COLOR_TEMPERATURE: [
-        ColorMode.RGB,
         ColorMode.COLOR_TEMP,
+        ColorMode.RGBW,
     ],
     LightCapability.MANUAL_WHITE: [
         ColorMode.BRIGHTNESS,

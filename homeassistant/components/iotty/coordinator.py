@@ -7,7 +7,8 @@ from datetime import timedelta
 import logging
 
 from iottycloud.device import Device
-from iottycloud.verbs import RESULT, STATUS
+from iottycloud.shutter import Shutter
+from iottycloud.verbs import OPEN_PERCENTAGE, RESULT, STATUS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,16 +32,27 @@ class IottyData:
     devices: list[Device]
 
 
+@dataclass
+class IottyConfigEntryData:
+    """Contains config entry data for iotty."""
+
+    known_devices: set[Device]
+    coordinator: IottyDataUpdateCoordinator
+
+
+type IottyConfigEntry = ConfigEntry[IottyConfigEntryData]
+
+
 class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     """Class to manage fetching Iotty data."""
 
-    config_entry: ConfigEntry
+    config_entry: IottyConfigEntry
     _entities: dict[str, Entity]
     _devices: list[Device]
     _device_registry: dr.DeviceRegistry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, session: OAuth2Session
+        self, hass: HomeAssistant, entry: IottyConfigEntry, session: OAuth2Session
     ) -> None:
         """Initialize the coordinator."""
         _LOGGER.debug("Initializing iotty data update coordinator")
@@ -48,11 +60,11 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_coordinator",
             update_interval=UPDATE_INTERVAL,
         )
 
-        self.config_entry = entry
         self._entities = {}
         self._devices = []
         self.iotty = api.IottyProxy(
@@ -60,13 +72,11 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         )
         self._device_registry = dr.async_get(hass)
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Override the first refresh to also fetch iotty devices list."""
+    async def _async_setup(self) -> None:
+        """Get devices."""
         _LOGGER.debug("Fetching devices list from iottyCloud")
         self._devices = await self.iotty.get_devices()
         _LOGGER.debug("There are %d devices", len(self._devices))
-
-        await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""
@@ -104,5 +114,9 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
                     "Retrieved status: '%s' for device %s", status, device.device_id
                 )
                 device.update_status(status)
+                if isinstance(device, Shutter) and isinstance(
+                    percentage := json.get(OPEN_PERCENTAGE), int
+                ):
+                    device.update_percentage(percentage)
 
         return IottyData(self._devices)

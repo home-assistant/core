@@ -1,8 +1,16 @@
 {
   "services": {
-    "play_everywhere": "mdi:play",
-    "create_zone": "mdi:plus",
-    "add_zone_slave": "mdi:plus",
-    "remove_zone_slave": "mdi:minus"
+    "play_everywhere": {
+      "service": "mdi:play"
+    },
+    "create_zone": {
+      "service": "mdi:plus"
+    },
+    "add_zone_slave": {
+      "service": "mdi:plus"
+    },
+    "remove_zone_slave": {
+      "service": "mdi:minus"
+    }
   }
 }

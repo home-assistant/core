@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_repair_docker_host_network_without_host_networking[mock_socket0]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': None,
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'network',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'docker_host_network',
+    'learn_more_url': 'https://www.home-assistant.io/installation/linux#install-home-assistant-container',
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'docker_host_network',
+    'translation_placeholders': dict({
+      'docs_url': 'https://docs.docker.com/network/network-tutorial-host/',
+      'install_url': 'https://www.home-assistant.io/installation/linux#install-home-assistant-container',
+    }),
+  })
+# ---

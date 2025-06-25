@@ -9,6 +9,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shelly.const import (
     CONF_GEN,
@@ -18,7 +19,7 @@ from homeassistant.components.shelly.const import (
     RPC_SENSORS_POLLING_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -40,18 +41,20 @@ async def init_integration(
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
+    data: dict[str, Any] | None = None,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
-    data = {
-        CONF_HOST: "192.168.1.37",
-        CONF_SLEEP_PERIOD: sleep_period,
-        "model": model,
-    }
+    if data is None:
+        data = {
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: sleep_period,
+            CONF_MODEL: model,
+        }
     if gen is not None:
         data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
+        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options, title="Test name"
     )
     entry.add_to_hass(hass)
 
@@ -141,13 +144,6 @@ def get_entity(
     )
 
 
-def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
-    """Return entity state."""
-    entity = hass.states.get(entity_id)
-    assert entity
-    return entity.state
-
-
 def register_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry
 ) -> DeviceEntry:
@@ -156,3 +152,30 @@ def register_device(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
+
+
+async def snapshot_device_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry_id: str,
+) -> None:
+    """Snapshot all device entities."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+async def force_uptime_value(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Force time to a specific point."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2025-05-26 16:04:00+00:00")

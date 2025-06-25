@@ -50,7 +50,7 @@ async def test_already_configured(
     )
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("reason") == "single_instance_allowed"
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_cpuinfo_config_flow.mock_calls) == 0

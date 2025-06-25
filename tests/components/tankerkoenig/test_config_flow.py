@@ -4,12 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError
 
-from homeassistant.components.tankerkoenig.const import (
-    CONF_FUEL_TYPES,
-    CONF_STATIONS,
-    DOMAIN,
-)
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.components.tankerkoenig.const import CONF_STATIONS, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -30,7 +26,6 @@ from tests.common import MockConfigEntry
 MOCK_USER_DATA = {
     CONF_NAME: "Home",
     CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
-    CONF_FUEL_TYPES: ["e5"],
     CONF_LOCATION: {CONF_LATITUDE: 51.0, CONF_LONGITUDE: 13.0},
     CONF_RADIUS: 2.0,
 }
@@ -81,7 +76,6 @@ async def test_user(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_NAME] == "Home"
         assert result["data"][CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
-        assert result["data"][CONF_FUEL_TYPES] == ["e5"]
         assert result["data"][CONF_LOCATION] == {"latitude": 51.0, "longitude": 13.0}
         assert result["data"][CONF_RADIUS] == 2.0
         assert result["data"][CONF_STATIONS] == [
@@ -162,6 +156,10 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test starting a flow by user to re-auth."""
     config_entry.add_to_hass(hass)
+    # re-auth initialized
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -171,15 +169,6 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
         ) as mock_nearby_stations,
     ):
-        # re-auth initialized
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-            data=config_entry.data,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         # re-auth unsuccessful
         mock_nearby_stations.side_effect = TankerkoenigInvalidKeyError("Booom!")
         result = await hass.config_entries.flow.async_configure(

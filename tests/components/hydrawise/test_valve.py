@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pydrawise.schema import Zone
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.valve import DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
@@ -42,7 +42,7 @@ async def test_services(
 ) -> None:
     """Test valve services."""
     await hass.services.async_call(
-        DOMAIN,
+        VALVE_DOMAIN,
         SERVICE_OPEN_VALVE,
         service_data={ATTR_ENTITY_ID: "valve.zone_one"},
         blocking=True,
@@ -51,7 +51,7 @@ async def test_services(
     mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        VALVE_DOMAIN,
         SERVICE_CLOSE_VALVE,
         service_data={ATTR_ENTITY_ID: "valve.zone_one"},
         blocking=True,

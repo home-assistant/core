@@ -1,12 +1,18 @@
 """Test Hydrawise sensor."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller, ControllerWaterUseSummary, User, Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.hydrawise.const import (
+    MAIN_SCAN_INTERVAL,
+    WATER_USE_SCAN_INTERVAL,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,7 +22,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
@@ -48,6 +54,34 @@ async def test_suspended_state(
     next_cycle = hass.states.get("sensor.zone_one_next_cycle")
     assert next_cycle is not None
     assert next_cycle.state == "unknown"
+
+
+@pytest.mark.freeze_time("2024-11-01 00:00:00+00:00")
+async def test_usage_refresh(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    controller_water_use_summary: ControllerWaterUseSummary,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that water usage summaries refresh less frequently than other data."""
+    assert hass.states.get("sensor.zone_one_daily_active_water_use") is not None
+    mock_pydrawise.get_water_use_summary.assert_called_once()
+
+    # Make the coordinator refresh data.
+    mock_pydrawise.get_water_use_summary.reset_mock()
+    freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # Make sure we didn't fetch water use summary again.
+    mock_pydrawise.get_water_use_summary.assert_not_called()
+
+    # Wait for enough time to pass for a water use summary fetch.
+    mock_pydrawise.get_water_use_summary.return_value = controller_water_use_summary
+    freezer.tick(WATER_USE_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_pydrawise.get_water_use_summary.assert_called_once()
 
 
 async def test_no_sensor_and_water_state(

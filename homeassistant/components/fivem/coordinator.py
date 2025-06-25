@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
 from fivem import FiveM, FiveMServerOfflineError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,26 +26,32 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FiveMConfigEntry = ConfigEntry[FiveMDataUpdateCoordinator]
+
 
 class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching FiveM data."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_data: Mapping[str, Any], unique_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: FiveMConfigEntry) -> None:
         """Initialize server instance."""
-        self.unique_id = unique_id
+        self.unique_id = entry.entry_id
         self.server = None
         self.version = None
         self.game_name: str | None = None
 
-        self.host = config_data[CONF_HOST]
+        self.host = entry.data[CONF_HOST]
 
-        self._fivem = FiveM(self.host, config_data[CONF_PORT])
+        self._fivem = FiveM(self.host, entry.data[CONF_PORT])
 
         update_interval = timedelta(seconds=SCAN_INTERVAL)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def initialize(self) -> None:
         """Initialize the FiveM server."""

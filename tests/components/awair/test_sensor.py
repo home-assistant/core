@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_awair
@@ -48,16 +48,24 @@ SENSOR_TYPES_MAP = {
 
 def assert_expected_properties(
     hass: HomeAssistant,
-    registry: er.RegistryEntry,
-    name,
-    unique_id,
-    state_value,
+    entity_registry: er.RegistryEntry,
+    name: str,
+    unique_id: str,
+    state_value: str,
     attributes: dict,
+    model="Awair",
+    model_id="awair",
 ):
     """Assert expected properties from a dict."""
+    entity_entry = entity_registry.async_get(name)
+    assert entity_entry.unique_id == unique_id
 
-    entry = registry.async_get(name)
-    assert entry.unique_id == unique_id
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model == model
+    assert device_entry.model_id == model_id
+
     state = hass.states.get(name)
     assert state
     assert state.state == state_value
@@ -119,7 +127,7 @@ async def test_awair_gen1_sensors(
     assert_expected_properties(
         hass,
         entity_registry,
-        "sensor.living_room_vocs",
+        "sensor.living_room_volatile_organic_compounds_parts",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
         "366",
         {
@@ -201,7 +209,10 @@ async def test_awair_gen2_sensors(
 
 
 async def test_local_awair_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, local_devices, local_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    local_devices,
+    local_data,
 ) -> None:
     """Test expected sensors on a local Awair."""
 
@@ -215,6 +226,8 @@ async def test_local_awair_sensors(
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
         {},
+        model="Awair Element",
+        model_id="awair-element",
     )
 
 

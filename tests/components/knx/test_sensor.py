@@ -68,25 +68,21 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # receive initial telegram
     await knx.receive_write("1/1/1", (0x42,))
     await knx.receive_write("2/2/2", (0x42,))
-    await hass.async_block_till_done()
     assert len(events) == 2
 
     # receive second telegram with identical payload
     # always_callback shall force state_changed event
     await knx.receive_write("1/1/1", (0x42,))
     await knx.receive_write("2/2/2", (0x42,))
-    await hass.async_block_till_done()
     assert len(events) == 3
 
     # receive telegram with different payload
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
-    await hass.async_block_till_done()
     assert len(events) == 5
 
     # receive telegram with second payload again
     # always_callback shall force state_changed event
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
-    await hass.async_block_till_done()
     assert len(events) == 6

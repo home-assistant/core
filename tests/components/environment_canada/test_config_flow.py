@@ -1,7 +1,7 @@
 """Test the Environment Canada (EC) config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 
 import aiohttp
 import pytest
@@ -30,7 +30,7 @@ def mocked_ec():
     ec_mock.lat = FAKE_CONFIG[CONF_LATITUDE]
     ec_mock.lon = FAKE_CONFIG[CONF_LONGITUDE]
     ec_mock.language = FAKE_CONFIG[CONF_LANGUAGE]
-    ec_mock.metadata = {"location": FAKE_TITLE}
+    ec_mock.metadata.location = FAKE_TITLE
 
     ec_mock.update = AsyncMock()
 
@@ -94,7 +94,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         (aiohttp.ClientResponseError(Mock(), (), status=404), "bad_station_id"),
         (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (et.ParseError, "bad_station_id"),
+        (ET.ParseError, "bad_station_id"),
         (ValueError, "unknown"),
     ],
 )

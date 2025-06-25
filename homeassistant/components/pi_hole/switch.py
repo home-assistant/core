@@ -12,10 +12,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PiHoleConfigEntry, PiHoleEntity
+from . import PiHoleConfigEntry
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .entity import PiHoleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PiHoleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole switch."""
     name = entry.data[CONF_NAME]

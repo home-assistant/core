@@ -41,7 +41,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     DEFAULT_DISABLE_2FA,
-    DOMAIN as CLOUD_DOMAIN,
+    DOMAIN,
     PREF_DISABLE_2FA,
     PREF_SHOULD_EXPOSE,
 )
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CLOUD_GOOGLE = f"{CLOUD_DOMAIN}.{GOOGLE_DOMAIN}"
+CLOUD_GOOGLE = f"{DOMAIN}.{GOOGLE_DOMAIN}"
 
 
 SUPPORTED_DOMAINS = {
@@ -478,7 +478,7 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    async def _handle_device_registry_updated(
+    def _handle_device_registry_updated(
         self, event: Event[dr.EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle when device registry updated."""

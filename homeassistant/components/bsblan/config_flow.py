@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError
+from bsblan import BSBLAN, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -80,15 +80,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
         """Get device information from an BSBLAN device."""
-        session = async_get_clientsession(self.hass)
-        bsblan = BSBLAN(
+        config = BSBLANConfig(
             host=self.host,
-            username=self.username,
-            password=self.password,
             passkey=self.passkey,
             port=self.port,
-            session=session,
+            username=self.username,
+            password=self.password,
         )
+        session = async_get_clientsession(self.hass)
+        bsblan = BSBLAN(config, session)
         device = await bsblan.device()
         self.mac = device.MAC
 

@@ -6,13 +6,12 @@ from typing import Any
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 SERVICE_REMOVE_CLIENTS = "remove_clients"
@@ -43,7 +42,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     for service in SUPPORTED_SERVICES:
         hass.services.async_register(
-            UNIFI_DOMAIN,
+            DOMAIN,
             service,
             async_call_unifi_service,
             schema=SERVICE_TO_SCHEMA.get(service),
@@ -67,10 +66,9 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
     if mac == "":
         return
 
-    for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
-        if config_entry.state is not ConfigEntryState.LOADED or (
-            (hub := config_entry.runtime_data)
-            and not hub.available
+    for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if (
+            (not (hub := config_entry.runtime_data).available)
             or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
@@ -86,12 +84,8 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Total time between first seen and last seen is less than 15 minutes.
     - Neither IP, hostname nor name is configured.
     """
-    for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
-        if (
-            config_entry.state is not ConfigEntryState.LOADED
-            or (hub := config_entry.runtime_data)
-            and not hub.available
-        ):
+    for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if not (hub := config_entry.runtime_data).available:
             continue
 
         clients_to_remove = []

@@ -1,0 +1,14 @@
+{
+  "devices": [
+    {
+      "id": "21dac6b0e0a1f181870fdc9749b2656466557666",
+      "is_active": false,
+      "is_private_session": false,
+      "is_restricted": false,
+      "name": "DESKTOP-BKC5SIK",
+      "supports_volume": true,
+      "type": "Computer",
+      "volume_percent": 69
+    }
+  ]
+}

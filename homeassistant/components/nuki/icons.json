@@ -7,7 +7,11 @@
     }
   },
   "services": {
-    "lock_n_go": "mdi:lock-clock",
-    "set_continuous_mode": "mdi:bell-cog"
+    "lock_n_go": {
+      "service": "mdi:lock-clock"
+    },
+    "set_continuous_mode": {
+      "service": "mdi:bell-cog"
+    }
   }
 }

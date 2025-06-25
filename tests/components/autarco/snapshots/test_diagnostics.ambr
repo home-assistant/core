@@ -3,6 +3,17 @@
   dict({
     'sites_data': list([
       dict({
+        'battery': dict({
+          'charged_month': 26,
+          'charged_today': 1,
+          'charged_total': 748,
+          'discharged_month': 25,
+          'discharged_today': 2,
+          'discharged_total': 696,
+          'flow_now': 777,
+          'net_charged_now': 777,
+          'state_of_charge': 56,
+        }),
         'health': 'OK',
         'id': 1,
         'inverters': list([

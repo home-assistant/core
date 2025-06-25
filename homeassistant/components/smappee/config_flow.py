@@ -1,14 +1,15 @@
 """Config flow for Smappee."""
 
 import logging
+from typing import Any
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import api
 from .const import (
@@ -27,6 +28,9 @@ class SmappeeFlowHandler(
 
     DOMAIN = DOMAIN
 
+    ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
+    serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
+
     async def async_oauth_create_entry(self, data):
         """Create an entry for the flow."""
 
@@ -39,7 +43,7 @@ class SmappeeFlowHandler(
         return logging.getLogger(__name__)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
@@ -58,55 +62,54 @@ class SmappeeFlowHandler(
         if self.is_cloud_device_already_added():
             return self.async_abort(reason="already_configured_device")
 
-        self.context.update(
-            {
-                CONF_IP_ADDRESS: discovery_info.host,
-                CONF_SERIALNUMBER: serial_number,
-                "title_placeholders": {"name": serial_number},
-            }
-        )
+        self.context["title_placeholders"] = {"name": serial_number}
+        self.ip_address = discovery_info.host
+        self.serial_number = serial_number
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm zeroconf flow."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Check if already configured (cloud)
         if self.is_cloud_device_already_added():
             return self.async_abort(reason="already_configured_device")
 
         if user_input is None:
-            serialnumber = self.context.get(CONF_SERIALNUMBER)
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={"serialnumber": serialnumber},
+                description_placeholders={"serialnumber": self.serial_number},
                 errors=errors,
             )
 
-        ip_address = self.context.get(CONF_IP_ADDRESS)
-        serial_number = self.context.get(CONF_SERIALNUMBER)
-
         # Attempt to make a connection to the local device
-        if helper.is_smappee_genius(serial_number):
+        if helper.is_smappee_genius(self.serial_number):
             # next generation device, attempt connect to the local mqtt broker
-            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=self.serial_number)
             connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
         else:
             # legacy devices, without local mqtt broker, try api access
-            smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+            smappee_api = api.api.SmappeeLocalApi(ip=self.ip_address)
             logon = await self.hass.async_add_executor_job(smappee_api.logon)
             if logon is None:
                 return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=f"{DOMAIN}{serial_number}",
-            data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
+            title=f"{DOMAIN}{self.serial_number}",
+            data={
+                CONF_IP_ADDRESS: self.ip_address,
+                CONF_SERIALNUMBER: self.serial_number,
+            },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         # If there is a CLOUD entry already, abort a new LOCAL entry
@@ -115,7 +118,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_environment()
 
-    async def async_step_environment(self, user_input=None):
+    async def async_step_environment(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Decide environment, cloud or local."""
         if user_input is None:
             return self.async_show_form(
@@ -141,7 +146,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_pick_implementation()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle local flow."""
         if user_input is None:
             return self.async_show_form(

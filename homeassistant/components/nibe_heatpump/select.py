@@ -8,20 +8,21 @@ from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import CoilEntity, Coordinator
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         Select(coordinator, coil)
@@ -35,7 +36,7 @@ class Select(CoilEntity, SelectEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
+    def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         assert coil.mappings
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)

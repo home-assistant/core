@@ -7,6 +7,7 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import device_registry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -64,6 +65,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -86,6 +88,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [],
             "created_at": utcnow().timestamp(),
@@ -120,6 +123,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -274,7 +278,9 @@ async def test_remove_config_entry_from_device(
 
     can_remove = False
 
-    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
         return can_remove
 
     mock_integration(
@@ -356,7 +362,9 @@ async def test_remove_config_entry_from_device_fails(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
         return True
 
     mock_integration(
@@ -473,7 +481,9 @@ async def test_remove_config_entry_from_device_if_integration_remove(
 
     can_remove = False
 
-    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
         if can_remove:
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=config_entry.entry_id

@@ -2,27 +2,13 @@
 
 import asyncio
 
-from aiorussound import CommandException
-from aiorussound.const import FeatureFlag
-
-from homeassistant.components.media_player import MediaPlayerEntityFeature
+from aiorussound import CommandError
 
 DOMAIN = "russound_rio"
 
 RUSSOUND_RIO_EXCEPTIONS = (
-    CommandException,
+    CommandError,
     ConnectionRefusedError,
     TimeoutError,
     asyncio.CancelledError,
 )
-
-
-class NoPrimaryControllerException(Exception):
-    """Thrown when the Russound device is not the primary unit in the RNET stack."""
-
-
-CONNECT_TIMEOUT = 5
-
-MP_FEATURES_BY_FLAG = {
-    FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON: MediaPlayerEntityFeature.VOLUME_MUTE
-}

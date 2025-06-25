@@ -6,6 +6,7 @@ import logging
 
 from govee_local_api import GoveeController, GoveeDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -19,15 +20,22 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
+
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    config_entry: GoveeLocalConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="GoveeLightLocalApi",
             update_interval=SCAN_INTERVAL,
         )
@@ -80,6 +88,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     async def set_temperature(self, device: GoveeDevice, temperature: int) -> None:
         """Set light color in kelvin."""
         await device.set_temperature(temperature)
+
+    async def set_scene(self, device: GoveeController, scene: str) -> None:
+        """Set light scene."""
+        await device.set_scene(scene)
 
     @property
     def devices(self) -> list[GoveeDevice]:

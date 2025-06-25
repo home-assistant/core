@@ -1,22 +1,29 @@
 """Support for MotionMount numeric control."""
 
+import socket
+
 import motionmount
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import MotionMountConfigEntry
 from .const import DOMAIN
 from .entity import MotionMountEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MotionMountConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vogel's MotionMount from a config entry."""
-    mm: motionmount.MotionMount = hass.data[DOMAIN][entry.entry_id]
+    mm = entry.runtime_data
 
     async_add_entities(
         (
@@ -34,7 +41,9 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_translation_key = "motionmount_extension"
 
-    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
+    ) -> None:
         """Initialize Extension number."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-extension"
@@ -46,7 +55,13 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
-        await self.mm.set_extension(int(value))
+        try:
+            await self.mm.set_extension(int(value))
+        except (TimeoutError, socket.gaierror) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
 
 
 class MotionMountTurn(MotionMountEntity, NumberEntity):
@@ -57,7 +72,9 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_translation_key = "motionmount_turn"
 
-    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
+    ) -> None:
         """Initialize Turn number."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-turn"
@@ -69,4 +86,10 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
-        await self.mm.set_turn(int(value * -1))
+        try:
+            await self.mm.set_turn(int(value * -1))
+        except (TimeoutError, socket.gaierror) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex

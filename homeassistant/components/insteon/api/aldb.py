@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
-from .device import async_device_name, notify_device_not_found
+from ..utils import async_device_name
+from .device import notify_device_not_found
 
 ALDB_RECORD = "record"
 ALDB_RECORD_SCHEMA = vol.Schema(
@@ -57,6 +58,13 @@ async def async_reload_and_save_aldb(hass, device):
     else:
         await device.aldb.async_load(refresh=True)
     await devices.async_save(workdir=hass.config.config_dir)
+
+
+def any_aldb_loading() -> bool:
+    """Identify if any All-Link Databases are loading."""
+    return any(
+        device.aldb.status == ALDBStatus.LOADING for _, device in devices.items()
+    )
 
 
 @websocket_api.websocket_command(
@@ -293,3 +301,45 @@ async def websocket_notify_on_aldb_status(
     device.aldb.subscribe_status_changed(aldb_loaded)
 
     connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command({vol.Required(TYPE): "insteon/aldb/notify_all"})
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_notify_on_aldb_status_all(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Tell Insteon all ALDBs are loaded."""
+
+    @callback
+    def aldb_status_changed(status: ALDBStatus) -> None:
+        """Forward ALDB loaded event to websocket."""
+
+        forward_data = {
+            "type": "status",
+            "is_loading": any_aldb_loading(),
+        }
+        connection.send_message(websocket_api.event_message(msg["id"], forward_data))
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for device in devices.values():
+            device.aldb.unsubscribe_status_changed(aldb_status_changed)
+
+        forward_data = {"type": "unsubscribed"}
+        connection.send_message(websocket_api.event_message(msg["id"], forward_data))
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    for device in devices.values():
+        device.aldb.subscribe_status_changed(aldb_status_changed)
+
+    connection.send_result(msg[ID])
+
+    forward_data = {
+        "type": "status",
+        "is_loading": any_aldb_loading(),
+    }
+    connection.send_message(websocket_api.event_message(msg["id"], forward_data))

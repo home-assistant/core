@@ -37,7 +37,7 @@ async def test_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.yale_smart_alarm_panic_button",
+            ATTR_ENTITY_ID: "button.test_username_panic_button",
         },
         blocking=True,
     )
@@ -50,7 +50,7 @@ async def test_button(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.yale_smart_alarm_panic_button",
+                ATTR_ENTITY_ID: "button.test_username_panic_button",
             },
             blocking=True,
         )

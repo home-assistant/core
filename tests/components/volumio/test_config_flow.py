@@ -4,11 +4,11 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +21,7 @@ TEST_CONNECTION = {
 }
 
 
-TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
+TEST_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",

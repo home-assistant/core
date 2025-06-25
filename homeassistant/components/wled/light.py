@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -16,18 +17,21 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLEDConfigEntry
 from .const import (
+    ATTR_CCT,
     ATTR_COLOR_PRIMARY,
     ATTR_ON,
     ATTR_SEGMENT_ID,
+    COLOR_TEMP_K_MAX,
+    COLOR_TEMP_K_MIN,
     LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
 )
 from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
-from .helpers import wled_exception_handler
+from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -35,7 +39,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator = entry.runtime_data
@@ -109,6 +113,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_translation_key = "segment"
+    _attr_min_color_temp_kelvin = COLOR_TEMP_K_MIN
+    _attr_max_color_temp_kelvin = COLOR_TEMP_K_MAX
 
     def __init__(
         self,
@@ -165,6 +171,12 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if not (color := self.coordinator.data.state.segments[self._segment].color):
             return None
         return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the CT color value in K."""
+        cct = self.coordinator.data.state.segments[self._segment].cct
+        return kelvin_to_255_reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
 
     @property
     def effect(self) -> str | None:
@@ -235,6 +247,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if ATTR_RGBW_COLOR in kwargs:
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data[ATTR_CCT] = kelvin_to_255(
+                kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
+            )
+
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
             data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
@@ -267,7 +284,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {

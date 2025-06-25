@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_USERNAME,
     Platform,
@@ -30,7 +29,6 @@ from .const import (
     CONF_CONCURRENCY,
     DATA_COORDINATOR,
     DEFAULT_CONCURRENCY,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
     SYSTEM_UPDATE_SIGNAL,
@@ -144,12 +142,9 @@ async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     except UnauthorizedError as error:
         raise ConfigEntryAuthFailed from error
 
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    coordinator = RiscoDataUpdateCoordinator(hass, risco, scan_interval)
+    coordinator = RiscoDataUpdateCoordinator(hass, entry, risco)
     await coordinator.async_config_entry_first_refresh()
-    events_coordinator = RiscoEventsDataUpdateCoordinator(
-        hass, risco, entry.entry_id, 60
-    )
+    events_coordinator = RiscoEventsDataUpdateCoordinator(hass, entry, risco)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 

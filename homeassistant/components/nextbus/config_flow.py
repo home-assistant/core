@@ -37,52 +37,33 @@ def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
 
 
 def _get_agency_tags(client: NextBusClient) -> dict[str, str]:
-    return {a["tag"]: a["title"] for a in client.get_agency_list()["agency"]}
+    return {a["id"]: a["name"] for a in client.agencies()}
 
 
 def _get_route_tags(client: NextBusClient, agency_tag: str) -> dict[str, str]:
-    return {a["tag"]: a["title"] for a in client.get_route_list(agency_tag)["route"]}
+    return {a["id"]: a["title"] for a in client.routes(agency_tag)}
 
 
 def _get_stop_tags(
     client: NextBusClient, agency_tag: str, route_tag: str
 ) -> dict[str, str]:
-    route_config = client.get_route_config(route_tag, agency_tag)
-    tags = {a["tag"]: a["title"] for a in route_config["route"]["stop"]}
-    title_counts = Counter(tags.values())
+    route_config = client.route_details(route_tag, agency_tag)
+    stop_ids = {a["id"]: a["name"] for a in route_config["stops"]}
+    title_counts = Counter(stop_ids.values())
 
     stop_directions: dict[str, str] = {}
-    for direction in listify(route_config["route"]["direction"]):
-        for stop in direction["stop"]:
-            stop_directions[stop["tag"]] = direction["name"]
+    for direction in listify(route_config["directions"]):
+        if not direction["useForUi"]:
+            continue
+        for stop in direction["stops"]:
+            stop_directions[stop] = direction["name"]
 
     # Append directions for stops with shared titles
-    for tag, title in tags.items():
+    for stop_id, title in stop_ids.items():
         if title_counts[title] > 1:
-            tags[tag] = f"{title} ({stop_directions.get(tag, tag)})"
+            stop_ids[stop_id] = f"{title} ({stop_directions.get(stop_id, stop_id)})"
 
-    return tags
-
-
-def _validate_import(
-    client: NextBusClient, agency_tag: str, route_tag: str, stop_tag: str
-) -> str | tuple[str, str, str]:
-    agency_tags = _get_agency_tags(client)
-    agency = agency_tags.get(agency_tag)
-    if not agency:
-        return "invalid_agency"
-
-    route_tags = _get_route_tags(client, agency_tag)
-    route = route_tags.get(route_tag)
-    if not route:
-        return "invalid_route"
-
-    stop_tags = _get_stop_tags(client, agency_tag, route_tag)
-    stop = stop_tags.get(stop_tag)
-    if not stop:
-        return "invalid_stop"
-
-    return agency, route, stop
+    return stop_ids
 
 
 def _unique_id_from_data(data: dict[str, str]) -> str:
@@ -98,10 +79,10 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
     _route_tags: dict[str, str]
     _stop_tags: dict[str, str]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize NextBus config flow."""
         self.data: dict[str, str] = {}
-        self._client = NextBusClient(output_format="json")
+        self._client = NextBusClient()
 
     async def async_step_user(
         self,

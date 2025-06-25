@@ -19,10 +19,9 @@ async def test_remote_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote receives push updates and state is updated."""
-    mock_config_entry.options = {
-        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
-    }
+    new_options = {"apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}}
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -53,10 +52,9 @@ async def test_remote_toggles(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote toggles."""
-    mock_config_entry.options = {
-        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
-    }
+    new_options = {"apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}}
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -185,7 +183,9 @@ async def test_remote_connection_closed(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_api.send_key_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "remote",
             "send_command",
@@ -199,7 +199,9 @@ async def test_remote_connection_closed(
     assert mock_api.send_key_command.mock_calls == [call("DPAD_LEFT", "SHORT")]
 
     mock_api.send_launch_app_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "remote",
             "turn_on",

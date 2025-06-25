@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -261,7 +261,7 @@ class OwnTracksContext:
             return False
 
         if self.max_gps_accuracy is not None and acc > self.max_gps_accuracy:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Ignoring %s update because expected GPS accuracy %s is not met: %s",
                 message["_type"],
                 self.max_gps_accuracy,

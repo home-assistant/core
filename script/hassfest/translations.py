@@ -29,6 +29,7 @@ ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
     "emulated_roku",
+    "energenie_power_sockets",
     "faa_delays",
     "garages_amsterdam",
     "generic",
@@ -40,7 +41,9 @@ ALLOW_NAME_TRANSLATION = {
     "local_ip",
     "local_todo",
     "nmap_tracker",
+    "remote_calendar",
     "rpi_power",
+    "swiss_public_transport",
     "waze_travel_time",
     "zodiac",
 }
@@ -130,11 +133,13 @@ def translation_value_validator(value: Any) -> str:
     - prevents strings with single quoted placeholders
     - prevents combined translations
     """
-    value = cv.string_with_no_html(value)
-    value = string_no_single_quoted_placeholders(value)
-    if RE_COMBINED_REFERENCE.search(value):
+    string_value = cv.string_with_no_html(value)
+    string_value = string_no_single_quoted_placeholders(string_value)
+    if RE_COMBINED_REFERENCE.search(string_value):
         raise vol.Invalid("the string should not contain combined translations")
-    return str(value)
+    if string_value != string_value.strip():
+        raise vol.Invalid("the string should not contain leading or trailing spaces")
+    return string_value
 
 
 def string_no_single_quoted_placeholders(value: str) -> str:
@@ -166,9 +171,12 @@ def gen_data_entry_schema(
                 vol.Optional("data_description"): {str: translation_value_validator},
                 vol.Optional("menu_options"): {str: translation_value_validator},
                 vol.Optional("submit"): translation_value_validator,
-                vol.Optional("section"): {
+                vol.Optional("sections"): {
                     str: {
                         vol.Optional("data"): {str: translation_value_validator},
+                        vol.Optional("data_description"): {
+                            str: translation_value_validator
+                        },
                         vol.Optional("description"): translation_value_validator,
                         vol.Optional("name"): translation_value_validator,
                     },
@@ -179,6 +187,8 @@ def gen_data_entry_schema(
         vol.Optional("abort"): {str: translation_value_validator},
         vol.Optional("progress"): {str: translation_value_validator},
         vol.Optional("create_entry"): {str: translation_value_validator},
+        vol.Optional("initiate_flow"): {str: translation_value_validator},
+        vol.Optional("entry_type"): translation_value_validator,
     }
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
@@ -279,6 +289,15 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     "user" if integration.integration_type == "helper" else None
                 ),
             ),
+            vol.Optional("config_subentries"): cv.schema_with_slug_keys(
+                gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=REMOVED,
+                    require_step_title=False,
+                ),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
                 integration=integration,
@@ -287,10 +306,11 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             ),
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
-                    "options": cv.schema_with_slug_keys(
+                    vol.Optional("options"): cv.schema_with_slug_keys(
                         translation_value_validator,
                         slug_validator=translation_key_validator,
-                    )
+                    ),
+                    vol.Optional("fields"): cv.schema_with_slug_keys(str),
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),
@@ -365,6 +385,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                             },
                             slug_validator=translation_key_validator,
                         ),
+                        vol.Optional(
+                            "unit_of_measurement"
+                        ): translation_value_validator,
                     },
                     slug_validator=translation_key_validator,
                 ),
@@ -387,6 +410,22 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         {
                             vol.Required("name"): str,
                             vol.Optional("description"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+            vol.Optional("triggers"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description_configured"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
                     ),
@@ -445,7 +484,7 @@ ONBOARDING_SCHEMA = vol.Schema(
 )
 
 
-def validate_translation_file(  # noqa: C901
+def validate_translation_file(
     config: Config,
     integration: Integration,
     all_strings: dict[str, Any] | None,
@@ -501,8 +540,8 @@ def validate_translation_file(  # noqa: C901
                     ):
                         integration.add_error(
                             "translations",
-                            "Don't specify title in translation strings if it's a brand "
-                            "name or add exception to ALLOW_NAME_TRANSLATION",
+                            "Don't specify title in translation strings if it's "
+                            "a brand name or add exception to ALLOW_NAME_TRANSLATION",
                         )
 
     if config.specific_integrations:
@@ -523,12 +562,15 @@ def validate_translation_file(  # noqa: C901
         if parts or key not in search:
             integration.add_error(
                 "translations",
-                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+                f"{reference['source']} contains invalid reference"
+                f"{reference['ref']}: Could not find {key}",
             )
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                "Lokalise supports only one level of references: "
+                f'"{reference["source"]}" should point to directly '
+                f'to "{match.groups()[0]}"',
             )
 
 

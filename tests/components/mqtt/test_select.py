@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOW
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -610,7 +610,7 @@ def _test_options_attributes_options_config(
 
 @pytest.mark.parametrize(
     ("hass_config", "options"),
-    _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),
+    _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),  # type:ignore[arg-type]
 )
 async def test_options_attributes(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, options: list[str]

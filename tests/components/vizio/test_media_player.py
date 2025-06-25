@@ -19,7 +19,6 @@ from pyvizio.const import (
     MAX_VOLUME,
     UNKNOWN_APP,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -42,7 +41,6 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
 )
-from homeassistant.components.vizio import validate_apps
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -50,7 +48,6 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
     SERVICE_UPDATE_SETTING,
-    VIZIO_SCHEMA,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -69,9 +66,7 @@ from .const import (
     EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
-    MOCK_SPEAKER_APPS_FAILURE,
     MOCK_SPEAKER_CONFIG,
-    MOCK_TV_APPS_FAILURE,
     MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
     MOCK_TV_WITH_EXCLUDE_CONFIG,
     MOCK_TV_WITH_INCLUDE_CONFIG,
@@ -155,7 +150,7 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        data=MOCK_USER_VALID_TV_CONFIG,
         unique_id=UNIQUE_ID,
     )
 
@@ -181,7 +176,7 @@ async def _test_setup_speaker(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+        data=MOCK_SPEAKER_CONFIG,
         unique_id=UNIQUE_ID,
     )
 
@@ -215,7 +210,7 @@ async def _cm_for_test_setup_tv_with_apps(
 ) -> AsyncIterator[None]:
     """Context manager to setup test for Vizio TV with support for apps."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=vol.Schema(VIZIO_SCHEMA)(device_config), unique_id=UNIQUE_ID
+        domain=DOMAIN, data=device_config, unique_id=UNIQUE_ID
     )
 
     async with _cm_for_test_setup_without_apps(
@@ -641,15 +636,6 @@ async def test_setup_with_apps_additional_apps_config(
         assert not service_call2.called
 
 
-def test_invalid_apps_config(hass: HomeAssistant) -> None:
-    """Test that schema validation fails on certain conditions."""
-    with pytest.raises(vol.Invalid):
-        vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_TV_APPS_FAILURE)
-
-    with pytest.raises(vol.Invalid):
-        vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_SPEAKER_APPS_FAILURE)
-
-
 @pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_unknown_app_config(
     hass: HomeAssistant,
@@ -687,7 +673,7 @@ async def test_setup_tv_without_mute(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when mute property isn't returned by Vizio API."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        data=MOCK_USER_VALID_TV_CONFIG,
         unique_id=UNIQUE_ID,
     )
 
@@ -742,7 +728,7 @@ async def test_vizio_update_with_apps_on_input(hass: HomeAssistant) -> None:
     """Test a vizio TV with apps that is on a TV input."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        data=MOCK_USER_VALID_TV_CONFIG,
         unique_id=UNIQUE_ID,
     )
     await _add_config_entry_to_hass(hass, config_entry)

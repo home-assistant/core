@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import socket
-from telnetlib import Telnet  # pylint: disable=deprecated-module
+from typing import Any
 
+from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -21,10 +22,13 @@ from homeassistant.const import (
     CONF_PORT,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +59,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HDDTemp sensor."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "hddtemp",
+        },
+    )
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -82,10 +101,11 @@ class HddTempSensor(SensorEntity):
         self._details = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:
             return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
+        return None
 
     def update(self) -> None:
         """Get the latest data from HDDTemp daemon and updates the state."""
