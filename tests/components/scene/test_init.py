@@ -238,10 +238,9 @@ async def test_restore_state_does_not_restore_unavailable(
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
-@pytest.mark.parametrize("auto_set", [True, False])
-async def test_set_last_activated(hass: HomeAssistant, auto_set: bool) -> None:
-    """Test the scene with and without auto setting __last_activated."""
-    scene = LastActivatedTestScene(hass, auto_set)
+async def test_auto_set_last_activated(hass: HomeAssistant) -> None:
+    """Test the scene with auto setting __last_activated."""
+    scene = LastActivatedTestScene(hass, auto_set=True)
 
     state = hass.states.get(scene.entity_id)
     assert state is None
@@ -249,11 +248,22 @@ async def test_set_last_activated(hass: HomeAssistant, auto_set: bool) -> None:
     await scene._async_activate()
     state = hass.states.get(scene.entity_id)
 
-    if auto_set:
-        assert state is not None
-        assert state.state is not None
-    else:
-        assert state is None
+    assert state is not None
+    assert state.state is not None
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_no_auto_set_last_activated(hass: HomeAssistant) -> None:
+    """Test the scene without auto setting __last_activated."""
+    scene = LastActivatedTestScene(hass, auto_set=False)
+
+    state = hass.states.get(scene.entity_id)
+    assert state is None
+
+    await scene._async_activate()
+    state = hass.states.get(scene.entity_id)
+
+    assert state is None
 
 
 async def activate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
