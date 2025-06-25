@@ -20,21 +20,25 @@ from .coordinator import ActronNeoConfigEntry, ActronNeoSystemCoordinator
 
 PARALLEL_UPDATES = 0
 
-FAN_MODE_MAPPING = {
+FAN_MODE_MAPPING_ACTRONAIR_TO_HA = {
     "AUTO": "auto",
     "LOW": "low",
     "MED": "medium",
     "HIGH": "high",
 }
-FAN_MODE_MAPPING_REVERSE = {v: k for k, v in FAN_MODE_MAPPING.items()}
-HVAC_MODE_MAPPING = {
+FAN_MODE_MAPPING_HA_TO_ACTRONAIR = {
+    v: k for k, v in FAN_MODE_MAPPING_ACTRONAIR_TO_HA.items()
+}
+HVAC_MODE_MAPPING_ACTRONAIR_TO_HA = {
     "COOL": HVACMode.COOL,
     "HEAT": HVACMode.HEAT,
     "FAN": HVACMode.FAN_ONLY,
     "AUTO": HVACMode.AUTO,
     "OFF": HVACMode.OFF,
 }
-HVAC_MODE_MAPPING_REVERSE = {v: k for k, v in HVAC_MODE_MAPPING.items()}
+HVAC_MODE_MAPPING_HA_TO_ACTRONAIR = {
+    v: k for k, v in HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.items()
+}
 
 
 async def async_setup_entry(
@@ -72,8 +76,8 @@ class BaseClimateEntity(CoordinatorEntity[ActronNeoSystemCoordinator], ClimateEn
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_name = None
-    _attr_fan_modes = list(FAN_MODE_MAPPING.values())
-    _attr_hvac_modes = list(HVAC_MODE_MAPPING.values())
+    _attr_fan_modes = list(FAN_MODE_MAPPING_ACTRONAIR_TO_HA.values())
+    _attr_hvac_modes = list(HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.values())
 
     def __init__(
         self,
@@ -104,8 +108,8 @@ class ActronSystemClimate(BaseClimateEntity):
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator, name)
         serial_number = coordinator.serial_number
-        self._attr_unique_id: str = serial_number
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._attr_unique_id = serial_number
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=self._status.ac_system.system_name,
             manufacturer="Actron Air",
@@ -136,13 +140,13 @@ class ActronSystemClimate(BaseClimateEntity):
             return HVACMode.OFF
 
         mode = self._status.user_aircon_settings.mode
-        return HVAC_MODE_MAPPING.get(mode, HVACMode.OFF)
+        return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode, HVACMode.OFF)
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_mode = self._status.user_aircon_settings.fan_mode
-        return FAN_MODE_MAPPING.get(fan_mode)
+        return FAN_MODE_MAPPING_ACTRONAIR_TO_HA.get(fan_mode)
 
     @property
     def current_humidity(self) -> float:
@@ -161,12 +165,12 @@ class ActronSystemClimate(BaseClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
-        api_fan_mode = FAN_MODE_MAPPING_REVERSE.get(fan_mode.lower())
+        api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR.get(fan_mode.lower())
         await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        ac_mode = HVAC_MODE_MAPPING_REVERSE.get(hvac_mode)
+        ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR.get(hvac_mode)
         await self._status.ac_system.set_system_mode(ac_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -228,7 +232,7 @@ class ActronZoneClimate(BaseClimateEntity):
         """Return the current HVAC mode."""
         if self._zone.is_active:
             mode = self._zone.hvac_mode
-            return HVAC_MODE_MAPPING.get(mode, HVACMode.OFF)
+            return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode, HVACMode.OFF)
         return HVACMode.OFF
 
     @property
