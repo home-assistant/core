@@ -35,5 +35,129 @@
     "create_entry": {
       "default": "Successfully authenticated"
     }
+  },
+  "services": {
+    "zone_bypass": {
+      "name": "Zone Bypass",
+      "description": "Bypass a zone on the alarm system",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "zone_index": {
+          "name": "Zone Index",
+          "description": "The index of the zone to bypass (0-based)"
+        }
+      }
+    },
+    "zone_unbypass": {
+      "name": "Zone Unbypass",
+      "description": "Unbypass a zone on the alarm system",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "zone_index": {
+          "name": "Zone Index",
+          "description": "The index of the zone to unbypass (0-based)"
+        }
+      }
+    },
+    "pgm_command": {
+      "name": "PGM Command",
+      "description": "Send a PGM (Programmable Gate Module) command",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "pgm_index": {
+          "name": "PGM Index",
+          "description": "The index of the PGM to control (0-based)"
+        },
+        "pgm_action": {
+          "name": "PGM Action",
+          "description": "The action to perform on the PGM"
+        }
+      }
+    },
+    "utility_key": {
+      "name": "Utility Key",
+      "description": "Activate a utility key",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "ukey_index": {
+          "name": "Utility Key Index",
+          "description": "The index of the utility key to activate (0-based)"
+        }
+      }
+    },
+    "link_output_command": {
+      "name": "LINK Output Command",
+      "description": "Send a command to a LINK output",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "link_id": {
+          "name": "LINK ID",
+          "description": "The ID of the LINK device"
+        },
+        "output_index": {
+          "name": "Output Index",
+          "description": "The index of the output to control (0-based)"
+        },
+        "output_action": {
+          "name": "Output Action",
+          "description": "The action to perform on the output"
+        }
+      }
+    },
+    "link_relay_command": {
+      "name": "LINK Relay Command",
+      "description": "Send a command to a LINK relay",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "link_id": {
+          "name": "LINK ID",
+          "description": "The ID of the LINK device"
+        },
+        "relay_index": {
+          "name": "Relay Index",
+          "description": "The index of the relay to control (0-based)"
+        },
+        "relay_action": {
+          "name": "Relay Action",
+          "description": "The action to perform on the relay"
+        }
+      }
+    },
+    "max_output_command": {
+      "name": "MAX Output Command",
+      "description": "Send a command to a MAX output",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "output_index": {
+          "name": "Output Index",
+          "description": "The index of the output to control (0-based)"
+        },
+        "output_action": {
+          "name": "Output Action",
+          "description": "The action to perform on the output"
+        }
+      }
+    }
   }
 }

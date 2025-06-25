@@ -1,0 +1,132 @@
+# Describes the format for available Olarm services
+
+zone_bypass:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    zone_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 128
+
+zone_unbypass:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    zone_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 128
+
+pgm_command:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    pgm_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 16
+    pgm_action:
+      required: true
+      selector:
+        select:
+          options:
+            - "open"
+            - "close"
+            - "pulse"
+
+utility_key:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    ukey_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 16
+
+link_output_command:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    link_id:
+      required: true
+      selector:
+        text:
+    output_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 4
+    output_action:
+      required: true
+      selector:
+        select:
+          options:
+            - "open"
+            - "close"
+            - "pulse"
+
+link_relay_command:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    link_id:
+      required: true
+      selector:
+        text:
+    relay_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 2
+    relay_action:
+      required: true
+      selector:
+        select:
+          options:
+            - "latch"
+            - "unlatch"
+            - "pulse"
+
+max_output_command:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        text:
+    output_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 2
+    output_action:
+      required: true
+      selector:
+        select:
+          options:
+            - "open"
+            - "close"
+            - "pulse"
