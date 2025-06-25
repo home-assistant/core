@@ -115,12 +115,8 @@ class SwitchbotVacuumEntity(SwitchbotEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        self._last_run_success = bool(
-            await self._device.clean_up(self.protocol_version)
-        )
+        await self._device.clean_up(self.protocol_version)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return to dock."""
-        self._last_run_success = bool(
-            await self._device.return_to_dock(self.protocol_version)
-        )
+        await self._device.return_to_dock(self.protocol_version)

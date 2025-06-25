@@ -73,16 +73,16 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     @exception_handler
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        self._last_run_success = bool(await self._device.set_level(humidity))
+        await self._device.set_level(humidity)
         self.async_write_ha_state()
 
     @exception_handler
     async def async_set_mode(self, mode: str) -> None:
         """Set new target humidity."""
         if mode == MODE_AUTO:
-            self._last_run_success = await self._device.async_set_auto()
+            await self._device.async_set_auto()
         else:
-            self._last_run_success = await self._device.async_set_manual()
+            await self._device.async_set_manual()
         self.async_write_ha_state()
 
 

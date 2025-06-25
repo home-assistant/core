@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, Concatenate
 
@@ -37,7 +37,6 @@ class SwitchbotEntity(
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device = coordinator.device
-        self._last_run_success: bool | None = None
         self._address = coordinator.ble_device.address
         self._attr_unique_id = coordinator.base_unique_id
         self._attr_device_info = DeviceInfo(
@@ -61,11 +60,6 @@ class SwitchbotEntity(
     def parsed_data(self) -> dict[str, Any]:
         """Return parsed device data for this entity."""
         return self.coordinator.device.parsed_data
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -121,9 +115,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
         """Turn device on."""
         _LOGGER.debug("Turn Switchbot device on %s", self._address)
 
-        self._last_run_success = bool(await self._device.turn_on())
-        if self._last_run_success:
-            self._attr_is_on = True
+        await self._device.turn_on()
         self.async_write_ha_state()
 
     @exception_handler
@@ -131,7 +123,6 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
         """Turn device off."""
         _LOGGER.debug("Turn Switchbot device off %s", self._address)
 
-        self._last_run_success = bool(await self._device.turn_off())
-        if self._last_run_success:
-            self._attr_is_on = False
+        await self._device.turn_off()
+        self._attr_is_on = False
         self.async_write_ha_state()
