@@ -73,7 +73,7 @@ class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             session = async_get_clientsession(self.hass)
             referrer = user_input.get(CONF_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
-            auth = Auth(session, user_input[CONF_API_KEY], referrer)
+            auth = Auth(session, user_input[CONF_API_KEY], referrer = referrer)
             client = GoogleAirQualityApi(auth)
             try:
                 await client.async_air_quality(37.419734, -122.0827784)
