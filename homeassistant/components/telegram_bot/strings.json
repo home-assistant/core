@@ -924,10 +924,6 @@
     "proxy_params_auth_deprecation": {
       "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
       "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
-    },
-    "proxy_params_deprecation": {
-      "title": "{telegram_bot}: Proxy params option will be removed",
-      "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue."
     }
   }
 }
