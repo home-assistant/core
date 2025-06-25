@@ -692,6 +692,16 @@ async def test_usb_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -781,6 +791,21 @@ async def test_usb_discovery_addon_not_running(
     assert result["step_id"] == "configure_addon_user"
 
     # Make sure the discovered usb device is preferred.
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema.get(CONF_USB_PATH) is None
+    assert data_schema.schema.get("network_type") is not None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
     data_schema = result["data_schema"]
     assert data_schema is not None
     assert data_schema({}) == {
@@ -1150,6 +1175,16 @@ async def test_discovery_addon_not_running(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1250,6 +1285,16 @@ async def test_discovery_addon_not_installed(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1752,6 +1797,16 @@ async def test_addon_installed(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1846,6 +1901,16 @@ async def test_addon_installed_start_failure(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1935,6 +2000,16 @@ async def test_addon_installed_failures(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -2005,6 +2080,16 @@ async def test_addon_installed_set_options_failure(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -2115,6 +2200,16 @@ async def test_addon_installed_already_configured(
         result["flow_id"],
         {
             "usb_path": "/new",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -2202,6 +2297,16 @@ async def test_addon_not_installed(
         result["flow_id"],
         {
             "usb_path": "/test",
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -4496,7 +4601,8 @@ async def test_intent_recommended_user(
     assert result["step_id"] == "configure_addon_user"
     data_schema = result["data_schema"]
     assert data_schema is not None
-    assert data_schema.schema[CONF_USB_PATH] is not None
+    assert data_schema.schema.get(CONF_USB_PATH) is not None
+    assert data_schema.schema.get("network_type") is not None
     assert data_schema.schema.get(CONF_S0_LEGACY_KEY) is None
     assert data_schema.schema.get(CONF_S2_ACCESS_CONTROL_KEY) is None
     assert data_schema.schema.get(CONF_S2_AUTHENTICATED_KEY) is None
@@ -4508,6 +4614,7 @@ async def test_intent_recommended_user(
         result["flow_id"],
         user_input={
             CONF_USB_PATH: "/test",
+            "network_type": "new",
         },
     )
 

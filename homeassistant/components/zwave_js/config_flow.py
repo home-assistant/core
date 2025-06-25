@@ -90,6 +90,9 @@ ADDON_USER_INPUT_MAP = {
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
+NETWORK_TYPE_NEW = "new"
+NETWORK_TYPE_EXISTING = "existing"
+
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the manual step."""
@@ -630,6 +633,70 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
+
+        # For recommended installation, automatically set network type to "new"
+        if self._recommended_install and self._usb_discovery:
+            user_input = {"network_type": NETWORK_TYPE_NEW}
+
+        if user_input is not None:
+            if not self._usb_discovery:
+                self.usb_path = user_input[CONF_USB_PATH]
+
+            if user_input["network_type"] == NETWORK_TYPE_NEW:
+                # Set all keys to empty strings for new network
+                self.s0_legacy_key = ""
+                self.s2_access_control_key = ""
+                self.s2_authenticated_key = ""
+                self.s2_unauthenticated_key = ""
+                self.lr_s2_access_control_key = ""
+                self.lr_s2_authenticated_key = ""
+
+                addon_config_updates = {
+                    CONF_ADDON_DEVICE: self.usb_path,
+                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                }
+
+                await self._async_set_addon_config(addon_config_updates)
+                return await self.async_step_start_addon()
+
+            # Network already exists, go to security keys step
+            return await self.async_step_configure_security_keys()
+
+        usb_path = self.usb_path or ""
+
+        schema: VolDictType = {
+            vol.Required("network_type", default=""): vol.In(
+                [NETWORK_TYPE_NEW, NETWORK_TYPE_EXISTING]
+            )
+        }
+
+        if not self._usb_discovery:
+            try:
+                ports = await async_get_usb_ports(self.hass)
+            except OSError as err:
+                _LOGGER.error("Failed to get USB ports: %s", err)
+                return self.async_abort(reason="usb_ports_failed")
+
+            schema = {
+                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
+                **schema,
+            }
+
+        data_schema = vol.Schema(schema)
+
+        return self.async_show_form(
+            step_id="configure_addon_user", data_schema=data_schema
+        )
+
+    async def async_step_configure_security_keys(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for security keys for existing Z-Wave network."""
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
 
@@ -652,10 +719,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
 
-        if self._recommended_install and self._usb_discovery:
-            # Recommended installation with USB discovery, skip asking for keys
-            user_input = {}
-
         if user_input is not None:
             self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, s0_legacy_key)
             self.s2_access_control_key = user_input.get(
@@ -673,8 +736,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = user_input.get(
                 CONF_LR_S2_AUTHENTICATED_KEY, lr_s2_authenticated_key
             )
-            if not self._usb_discovery:
-                self.usb_path = user_input[CONF_USB_PATH]
 
             addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
@@ -687,14 +748,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             await self._async_set_addon_config(addon_config_updates)
-
             return await self.async_step_start_addon()
 
-        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
-        schema: VolDictType = (
-            {}
-            if self._recommended_install
-            else {
+        data_schema = vol.Schema(
+            {
                 vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
                 vol.Optional(
                     CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
@@ -714,22 +771,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if not self._usb_discovery:
-            try:
-                ports = await async_get_usb_ports(self.hass)
-            except OSError as err:
-                _LOGGER.error("Failed to get USB ports: %s", err)
-                return self.async_abort(reason="usb_ports_failed")
-
-            schema = {
-                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
-                **schema,
-            }
-
-        data_schema = vol.Schema(schema)
-
         return self.async_show_form(
-            step_id="configure_addon_user", data_schema=data_schema
+            step_id="configure_security_keys", data_schema=data_schema
         )
 
     async def async_step_finish_addon_setup_user(
