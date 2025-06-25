@@ -151,8 +151,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
 
         if not self.firmware_install_task:
-            # We can be sure that firmware needs to be installed if the wrong firmware
-            # is currently installed
+            # We 100% need to install new firmware only if the wrong firmware is
+            # currently installed
             firmware_install_required = self._probed_firmware_info is None or (
                 self._probed_firmware_info.firmware_type
                 != expected_installed_firmware_type
@@ -168,6 +168,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     "Failed to fetch firmware update manifest", exc_info=True
                 )
 
+                # Not having internet access should not prevent setup
                 if firmware_install_required:
                     raise AbortFlow(
                         "fw_download_failed",
@@ -183,7 +184,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             if not firmware_install_required:
                 assert self._probed_firmware_info is not None
 
-                # See if we need to upgrade
+                # Make sure we do not downgrade the firmware
                 fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
                 fw_version = fw_metadata.get_public_version()
                 probed_fw_version = Version(self._probed_firmware_info.firmware_version)
