@@ -693,7 +693,7 @@ async def test_send_message_with_config_entry(
         )
     await hass.async_block_till_done()
 
-    assert err.value.translation_key == "not_allowed_chat_ids"
+    assert err.value.translation_key == "failed_chat_ids"
     assert err.value.translation_placeholders["chat_ids"] == "1"
     assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
