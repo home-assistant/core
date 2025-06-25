@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -12,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
 
@@ -66,7 +67,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         # save reference to coordinator
         self._coordinator = coordinator
 
-        # set attibutes
+        # set attributes
         self._attr_alarm_state = AlarmControlPanelState.DISARMED
         # _attr_changed_by: str | None = None
         self._attr_code_arm_required = False
@@ -103,13 +104,19 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
             self._attr_alarm_state,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the signal listener when the entity is added."""
         async_dispatcher_connect(
             self.hass, "olarm_mqtt_update", self._handle_mqtt_update
         )
 
-    def _handle_mqtt_update(self, device_id, device_state, device_links, device_io):
+    def _handle_mqtt_update(
+        self,
+        device_id: str,
+        device_state: dict[str, Any],
+        device_links: dict[str, Any],
+        device_io: dict[str, Any],
+    ) -> None:
         """Handle state updates from MQTT messages."""
 
         # check if the device_id is the same as the device_id
@@ -117,7 +124,11 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
             return
 
         # update area state
-        self.area_state = device_state.get("areas")[self.area_index]
+        areas = device_state.get("areas")
+        if areas is not None and self.area_index < len(areas):
+            self.area_state = areas[self.area_index]
+        else:
+            return
 
         # handle areas_state if disarm, stay, sleep, alarm etc..
         if self.area_state in ("disarm", "notready"):
@@ -133,7 +144,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
 
         self.schedule_update_ha_state()
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Handle the 'Disarm' button click."""
 
         # send command via API
@@ -145,7 +156,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState.PENDING
         self.async_write_ha_state()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Handle the 'Arm Away' button click."""
 
         # send command via API
@@ -157,7 +168,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState.PENDING
         self.async_write_ha_state()
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Handle the 'Arm Home' button click."""
 
         # send command via API
@@ -170,7 +181,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState.PENDING
         self.async_write_ha_state()
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Handle the 'Arm Home' button click."""
 
         # send command via API
@@ -190,11 +201,13 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         return self._attr_name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
     @property
-    def alarm_state(self):
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the alarm control panel."""
+        if self._attr_alarm_state is None:
+            return AlarmControlPanelState.DISARMED
         return self._attr_alarm_state

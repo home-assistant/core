@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
 
@@ -271,7 +271,7 @@ class OlarmBinarySensor(BinarySensorEntity):
         if self.sensor_type == "zone":
             self._attr_extra_state_attributes = {"bypassed": self.sensor_state == "b"}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the signal listener when the entity is added."""
         async_dispatcher_connect(
             self.hass, "olarm_mqtt_update", self._handle_mqtt_update
