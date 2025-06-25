@@ -468,6 +468,8 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         **kwargs: Any,
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
+        data = dict(data)
+        observations = data.pop(CONF_OBSERVATIONS)
         subentries: list[ConfigSubentryData] = [
             ConfigSubentryData(
                 data=observation,
@@ -475,10 +477,8 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
                 subentry_type="observation",
                 unique_id=None,
             )
-            for observation in data[CONF_OBSERVATIONS]
+            for observation in observations
         ]
-        data = dict(data)
-        data.pop(CONF_OBSERVATIONS)
 
         self.async_config_flow_finished(data)
         return super().async_create_entry(data=data, subentries=subentries, **kwargs)
