@@ -234,6 +234,6 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
             and self.device_id in self.coordinator.data
             and (
                 not self.entity_description.unavailable_when_not_cooking
-                or self.coordinator.data[self.device_id].cook is not None
+                or self.probe.cook is not None
             )
         )
