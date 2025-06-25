@@ -391,9 +391,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
         elif msgtype == SERVICE_LEAVE_CHAT:
-            messages = await notify_service.leave_chat(
-                context=service.context, **kwargs
-            )
+            await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
         else:

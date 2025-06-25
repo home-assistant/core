@@ -295,7 +295,7 @@ class TelegramNotificationService:
         """
         allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
 
-        if not target:
+        if target is None:
             return [allowed_chat_ids[0]]
 
         chat_ids = [target] if isinstance(target, int) else target
