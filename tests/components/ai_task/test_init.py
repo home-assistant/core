@@ -49,7 +49,7 @@ async def test_preferences_storage_load(
     ("set_preferences", "msg_extra"),
     [
         (
-            {"gen_text_entity_id": TEST_ENTITY_ID},
+            {"gen_data_entity_id": TEST_ENTITY_ID},
             {},
         ),
         (
@@ -58,20 +58,20 @@ async def test_preferences_storage_load(
         ),
     ],
 )
-async def test_generate_text_service(
+async def test_generate_data_service(
     hass: HomeAssistant,
     init_components: None,
     freezer: FrozenDateTimeFactory,
     set_preferences: dict[str, str | None],
     msg_extra: dict[str, str],
 ) -> None:
-    """Test the generate text service."""
+    """Test the generate data service."""
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
     result = await hass.services.async_call(
         "ai_task",
-        "generate_text",
+        "generate_data",
         {
             "task_name": "Test Name",
             "instructions": "Test prompt",
@@ -81,4 +81,4 @@ async def test_generate_text_service(
         return_response=True,
     )
 
-    assert result["text"] == "Mock result"
+    assert result["data"] == "Mock result"
