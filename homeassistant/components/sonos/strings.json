@@ -205,7 +205,7 @@
       "message": "Entity {entity_id} not found."
     },
     "speaker_not_found": {
-      "message": "Speaker not found for {entity_id}"
+      "message": "Sonos apeaker not found for {entity_id}"
     },
     "timeout_join": {
       "message": "Timeout while waiting for Sonos player to join the group {group_description}"
