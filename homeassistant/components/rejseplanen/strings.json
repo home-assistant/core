@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up **ntfy** push notification service"
+        "description": "Set up Rejseplanen data service."
       }
     },
     "abort": {
