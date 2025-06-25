@@ -64,7 +64,7 @@ class LibreHardwareMonitorSensor(
 
         # Hardware device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sensor_data.device_name)},
+            identifiers={(DOMAIN, sensor_data.device_id)},
             name=sensor_data.device_name,
             model=sensor_data.device_type,
         )
