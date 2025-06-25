@@ -1480,7 +1480,7 @@ py-cpuinfo==9.0.0
 py-dactyl==2.0.4
 
 # homeassistant.components.dormakaba_dkey
-py-dormakaba-dkey==1.0.5
+py-dormakaba-dkey==1.0.6
 
 # homeassistant.components.improv_ble
 py-improv-ble-client==1.0.3
