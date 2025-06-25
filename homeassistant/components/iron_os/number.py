@@ -462,13 +462,3 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
             is UnitOfTemperature.CELSIUS
             and self.settings.data.get("temp_unit") is TempUnit.FAHRENHEIT
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if (
-            self.entity_description.key is PinecilNumber.BOOST_TEMP
-            and not self.native_value
-        ):
-            return super().available or False
-        return super().available

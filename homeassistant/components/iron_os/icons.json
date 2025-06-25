@@ -209,12 +209,6 @@
         "state": {
           "off": "mdi:card-bulleted-off-outline"
         }
-      },
-      "boost": {
-        "default": "mdi:thermometer-high",
-        "state": {
-          "off": "mdi:thermometer-off"
-        }
       }
     }
   }
