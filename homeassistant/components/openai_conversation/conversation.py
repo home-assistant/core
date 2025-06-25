@@ -34,7 +34,7 @@ from openai.types.responses.web_search_tool_param import UserLocation
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -76,8 +76,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = OpenAIConversationEntity(config_entry)
-    async_add_entities([agent])
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
+        async_add_entities(
+            [OpenAIConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 def _format_tool(
@@ -141,6 +147,11 @@ async def _transform_stream(
             if isinstance(event.item, ResponseOutputMessage):
                 yield {"role": event.item.role}
             elif isinstance(event.item, ResponseFunctionToolCall):
+                # OpenAI has tool calls as individual events
+                # while HA puts tool calls inside the assistant message.
+                # We turn them into individual assistant content for HA
+                # to ensure that tools are called as soon as possible.
+                yield {"role": "assistant"}
                 current_tool_call = event.item
         elif isinstance(event, ResponseOutputItemDoneEvent):
             item = event.item.model_dump()
@@ -224,21 +235,22 @@ class OpenAIConversationEntity(
 ):
     """OpenAI conversation agent."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
+    _attr_supports_streaming = True
 
-    def __init__(self, entry: OpenAIConfigEntry) -> None:
+    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self._attr_unique_id = entry.entry_id
+        self.subentry = subentry
+        self._attr_name = subentry.title
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="OpenAI",
-            model="ChatGPT",
+            model=entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
@@ -269,18 +281,36 @@ class OpenAIConversationEntity(
         user_input: conversation.ConversationInput,
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
-        """Call the API."""
-        options = self.entry.options
+        """Process the user input and call the API."""
+        options = self.subentry.data
 
         try:
-            await chat_log.async_update_llm_data(
-                DOMAIN,
-                user_input,
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
                 options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        assert type(chat_log.content[-1]) is conversation.AssistantContent
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.subentry.data
 
         tools: list[ToolParam] | None = None
         if chat_log.llm_api:
@@ -352,22 +382,13 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(chat_log, result, messages)
+                self.entity_id, _transform_stream(chat_log, result, messages)
             ):
                 if not isinstance(content, conversation.AssistantContent):
                     messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        assert type(chat_log.content[-1]) is conversation.AssistantContent
-        intent_response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry

@@ -1,4 +1,7 @@
 {
+  "application_credentials": {
+    "description": "Login to Home Connect requires a client ID and secret. To acquire them, please follow the following steps.\n\n1. Visit the [Home Connect Developer Program website]({developer_dashboard_url}) and sign up for a development account.\n1. Enter the email of your login for the original Home Connect app under **Default Home Connect User Account for Testing** in the signup process.\n1. Go to the [Applications]({applications_url}) page and select [Register Application]({register_application_url}) and set the fields to the following values:\n   * **Application ID**: Home Assistant (or any other name that makes sense)\n   * **OAuth Flow**: Authorization Code Grant Flow\n   * **Redirect URI**: `{redirect_url}`\n\nIn the newly created application's details, you will find the **Client ID** and the **Client Secret**."
+  },
   "common": {
     "confirmed": "Confirmed",
     "present": "Present"
@@ -6,11 +9,20 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Home Connect integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Home Connect device on your network. Be aware that the setup of Home Connect is more complicated than many other integrations. Press **Submit** to continue setting up Home Connect."
       }
     },
     "abort": {
@@ -156,28 +168,6 @@
         }
       }
     },
-    "deprecated_program_switch_in_automations_scripts": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
-            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_program_switch": {
-      "title": "Deprecated program switch entities",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
-            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
-          }
-        }
-      }
-    },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
       "fix_flow": {
@@ -234,7 +224,7 @@
         "consumer_products_coffee_maker_program_coffee_world_black_eye": "Black eye",
         "consumer_products_coffee_maker_program_coffee_world_dead_eye": "Dead eye",
         "consumer_products_coffee_maker_program_beverage_hot_water": "Hot water",
-        "dishcare_dishwasher_program_pre_rinse": "Pre_rinse",
+        "dishcare_dishwasher_program_pre_rinse": "Pre-rinse",
         "dishcare_dishwasher_program_auto_1": "Auto 1",
         "dishcare_dishwasher_program_auto_2": "Auto 2",
         "dishcare_dishwasher_program_auto_3": "Auto 3",
@@ -252,7 +242,7 @@
         "dishcare_dishwasher_program_intensiv_power": "Intensive power",
         "dishcare_dishwasher_program_magic_daily": "Magic daily",
         "dishcare_dishwasher_program_super_60": "Super 60ºC",
-        "dishcare_dishwasher_program_kurz_60": "Kurz 60ºC",
+        "dishcare_dishwasher_program_kurz_60": "Speed 60ºC",
         "dishcare_dishwasher_program_express_sparkle_65": "Express sparkle 65ºC",
         "dishcare_dishwasher_program_machine_care": "Machine care",
         "dishcare_dishwasher_program_steam_fresh": "Steam fresh",

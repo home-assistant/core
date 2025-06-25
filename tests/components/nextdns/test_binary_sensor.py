@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from nextdns import ApiError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

@@ -1,5 +1,16 @@
 {
   "entity": {
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent",
+        "state": {
+          "empty": "mdi:water-off",
+          "low": "mdi:water-outline",
+          "medium": "mdi:water",
+          "high": "mdi:water-check"
+        }
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
@@ -9,6 +20,42 @@
               "natural": "mdi:leaf",
               "sleep": "mdi:power-sleep",
               "baby": "mdi:baby-face-outline"
+            }
+          }
+        }
+      },
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "level_1": "mdi:fan-speed-1",
+              "level_2": "mdi:fan-speed-2",
+              "level_3": "mdi:fan-speed-3",
+              "auto": "mdi:auto-mode",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "mdi:water-plus",
+              "medium": "mdi:water",
+              "low": "mdi:water-outline",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target",
+              "sleep": "mdi:weather-night",
+              "auto": "mdi:autorenew",
+              "drying_filter": "mdi:water-remove"
             }
           }
         }
