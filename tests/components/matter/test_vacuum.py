@@ -93,7 +93,7 @@ async def test_vacuum_actions(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.OperationalState.Commands.Pause(),
+        command=clusters.RvcOperationalState.Commands.Pause(),
     )
     matter_client.send_device_command.reset_mock()
 
@@ -168,19 +168,26 @@ async def test_vacuum_updates(
     assert state
     assert state.state == "returning"
 
-    # confirm state is 'error' by setting the operational state to 0x01
+    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is idle
     set_node_attribute(matter_node, 1, 97, 4, 0x01)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "error"
+    assert state.state == "idle"
 
-    # confirm state is 'error' by setting the operational state to 0x02
+    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is cleaning
+    set_node_attribute(matter_node, 1, 97, 4, 0x01)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "idle"
+
+    # confirm state is 'paused' by setting the operational state to 0x02
     set_node_attribute(matter_node, 1, 97, 4, 0x02)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "error"
+    assert state.state == "paused"
 
     # confirm state is 'cleaning' by setting;
     # - the operational state to 0x00
@@ -211,3 +218,11 @@ async def test_vacuum_updates(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
+
+    # confirm state is 'error' by setting;
+    # - the operational state to 0x03
+    set_node_attribute(matter_node, 1, 97, 4, 3)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "error"
