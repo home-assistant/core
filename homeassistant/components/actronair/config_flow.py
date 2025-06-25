@@ -110,7 +110,7 @@ class ActronAirOAuth2FlowHandler(
             step_id="user",
             description_placeholders={
                 "code": user_code,
-                "here": f"[here]({verification_uri_complete})",
+                "verification_uri_complete": f"[ActronAir login page]({verification_uri_complete})",
                 "qr_code_data_url": f"![Scan this QR Code]({qr_code_data_url})",
                 "time": expires_in / 60,
             },

@@ -59,14 +59,25 @@ mock_system_status = SystemStatus(
 async def test_actronair_climate_entity() -> None:
     """Test initialization of ActronAir Wall Controller climate entity."""
     mock_coordinator = AsyncMock(spec=ActronAirSystemStatusDataCoordinator)
-    mock_coordinator.acSystemStatus = AsyncMock()
-    mock_coordinator.acSystemStatus.SystemName = "Main AC"
-    mock_coordinator.acSystemStatus.MasterSerial = "12345"
-    mock_coordinator.acSystemStatus.IsOn = True
-    mock_coordinator.acSystemStatus.Mode = "COOL"
-    mock_coordinator.acSystemStatus.TemprSetPoint_Cool = 24
-    mock_coordinator.acSystemStatus.LiveTemp_oC = 22
-    mock_coordinator.acSystemStatus.LiveHumidity_pc = 60
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = AsyncMock()
+    mock_coordinator.ac_system_status_list["23456"] = AsyncMock()
+
+    mock_coordinator.ac_system_status_list["12345"].SystemName = "Main AC"
+    mock_coordinator.ac_system_status_list["12345"].MasterSerial = "12345"
+    mock_coordinator.ac_system_status_list["12345"].IsOn = True
+    mock_coordinator.ac_system_status_list["12345"].Mode = "COOL"
+    mock_coordinator.ac_system_status_list["12345"].TemprSetPoint_Cool = 24
+    mock_coordinator.ac_system_status_list["12345"].LiveTemp_oC = 22
+    mock_coordinator.ac_system_status_list["12345"].LiveHumidity_pc = 60
+
+    mock_coordinator.ac_system_status_list["23456"].SystemName = "Upstairs AC"
+    mock_coordinator.ac_system_status_list["23456"].MasterSerial = "23456"
+    mock_coordinator.ac_system_status_list["23456"].IsOn = False
+    mock_coordinator.ac_system_status_list["23456"].Mode = "HEAT"
+    mock_coordinator.ac_system_status_list["23456"].TemprSetPoint_Cool = 25
+    mock_coordinator.ac_system_status_list["23456"].LiveTemp_oC = 23
+    mock_coordinator.ac_system_status_list["23456"].LiveHumidity_pc = 62
 
     entity = ActronAirClimate(mock_coordinator, mock_coordinator, "12345")
 
@@ -76,6 +87,15 @@ async def test_actronair_climate_entity() -> None:
     assert entity.target_temperature == 24
     assert entity.current_temperature == 22
     assert entity.current_humidity == 60
+
+    entity = ActronAirClimate(mock_coordinator, mock_coordinator, "23456")
+
+    assert entity.name == "AC Upstairs AC (23456)"
+    assert entity.unique_id == f"{DOMAIN}_23456_climate"
+    assert entity.hvac_mode == HVACMode.OFF
+    assert entity.target_temperature == 25
+    assert entity.current_temperature == 23
+    assert entity.current_humidity == 62
 
 
 ### 2. Test ActronAirClimate HVAC Mode Handling**
@@ -102,17 +122,18 @@ async def test_actronair_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     mock_api.async_sendCommand.return_value = {"status": "ok"}
 
     mock_coordinator = ActronAirSystemStatusDataCoordinator(hass, mock_api)
-    mock_coordinator.ac_system_status = mock_system_status
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = mock_system_status
     mock_coordinator.async_request_refresh = AsyncMock()
     entity = ActronAirClimate(mock_coordinator, mock_coordinator, "12345")
 
     await entity.async_set_hvac_mode(HVACMode.COOL)
-    mock_coordinator.ac_system_status.IsOn = True
-    mock_coordinator.ac_system_status.Mode = "COOL"
+    mock_coordinator.ac_system_status_list["12345"].IsOn = True
+    mock_coordinator.ac_system_status_list["12345"].Mode = "COOL"
     assert entity.hvac_mode == HVACMode.COOL
 
     await entity.async_set_hvac_mode(HVACMode.OFF)
-    mock_coordinator.ac_system_status.IsOn = False
+    mock_coordinator.ac_system_status_list["12345"].IsOn = False
     assert entity.hvac_mode == HVACMode.OFF
 
 
@@ -121,7 +142,8 @@ async def test_actronair_climate_set_hvac_mode(hass: HomeAssistant) -> None:
 async def test_actronair_climate_set_fan_mode() -> None:
     """Test setting fan mode in ActronAir Wall Controller."""
     mock_coordinator = AsyncMock(spec=ActronAirSystemStatusDataCoordinator)
-    mock_coordinator.acSystemStatus = mock_system_status
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = mock_system_status
     mock_coordinator.async_request_refresh = AsyncMock()
     mock_api = AsyncMock()
     mock_api.async_sendCommand.return_value = {"status": "ok"}
@@ -129,11 +151,11 @@ async def test_actronair_climate_set_fan_mode() -> None:
     entity = ActronAirClimate(mock_coordinator, mock_coordinator, "12345")
 
     await entity.async_set_fan_mode(FAN_HIGH)
-    mock_coordinator.acSystemStatus.FanMode = "HIGH"
+    mock_coordinator.ac_system_status_list["12345"].FanMode = "HIGH"
     assert entity.fan_mode == FAN_HIGH
 
     await entity.async_set_fan_mode(FAN_AUTO)
-    mock_coordinator.acSystemStatus.FanMode = "AUTO"
+    mock_coordinator.ac_system_status_list["12345"].FanMode = "AUTO"
     assert entity.fan_mode == FAN_AUTO
 
 
@@ -142,7 +164,8 @@ async def test_actronair_climate_set_fan_mode() -> None:
 async def test_actronair_climate_set_temperature() -> None:
     """Test setting target temperature in ActronAir Wall Controller."""
     mock_coordinator = AsyncMock(spec=ActronAirSystemStatusDataCoordinator)
-    mock_coordinator.acSystemStatus = mock_system_status
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = mock_system_status
     mock_coordinator.async_request_refresh = AsyncMock()
     mock_api = AsyncMock()
     mock_api.async_sendCommand.return_value = {"status": "ok"}
@@ -150,7 +173,7 @@ async def test_actronair_climate_set_temperature() -> None:
     entity = ActronAirClimate(mock_coordinator, mock_coordinator, "12345")
 
     await entity.async_set_temperature(temperature=26)
-    mock_coordinator.acSystemStatus.TemprSetPoint_Cool = 26
+    mock_coordinator.ac_system_status_list["12345"].TemprSetPoint_Cool = 26
     assert entity.target_temperature == 26
 
 
@@ -159,7 +182,9 @@ async def test_actronair_climate_set_temperature() -> None:
 async def test_actronair_zone_climate_entity() -> None:
     """Test initialization of ActronAir Zone climate entity."""
     mock_coordinator = AsyncMock(spec=ActronAirSystemStatusDataCoordinator)
-    mock_coordinator.acSystemStatus = mock_system_status
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = mock_system_status
+    mock_coordinator.ac_system_status_list["12345"].IsOn = False
     mock_coordinator.async_request_refresh = AsyncMock()
     mock_api = AsyncMock()
     mock_api.async_sendCommand.return_value = {"status": "ok"}
@@ -167,8 +192,8 @@ async def test_actronair_zone_climate_entity() -> None:
     entity = ActronAirZoneClimate(mock_coordinator, "12345", 1)
 
     assert entity.name == "Zone 1 - (System is OFF)"
-    assert entity.unique_id == f"{DOMAIN}_zone_1_climate"
-    mock_coordinator.acSystemStatus.EnabledZones = [True]
+    assert entity.unique_id == f"{DOMAIN}_12345_zone_1_climate"
+    mock_coordinator.ac_system_status_list["12345"].EnabledZones = [True]
     assert entity.hvac_mode == HVACMode.HEAT_COOL
 
 
@@ -177,7 +202,8 @@ async def test_actronair_zone_climate_entity() -> None:
 async def test_actronair_zone_climate_toggle() -> None:
     """Test turning zone on and off."""
     mock_coordinator = AsyncMock(spec=ActronAirSystemStatusDataCoordinator)
-    mock_coordinator.acSystemStatus = mock_system_status
+    mock_coordinator.ac_system_status_list = {}
+    mock_coordinator.ac_system_status_list["12345"] = mock_system_status
     mock_coordinator.async_request_refresh = AsyncMock()
     mock_api = AsyncMock()
     mock_api.async_sendCommand.return_value = {"status": "ok"}
@@ -185,9 +211,9 @@ async def test_actronair_zone_climate_toggle() -> None:
     entity = ActronAirZoneClimate(mock_coordinator, "12345", 1)
 
     await entity.async_set_hvac_mode(HVACMode.OFF)
-    mock_coordinator.acSystemStatus.EnabledZones = [False]
+    mock_coordinator.ac_system_status_list["12345"].EnabledZones = [False]
     assert entity.hvac_mode == HVACMode.OFF
 
     await entity.async_set_hvac_mode(HVACMode.HEAT_COOL)
-    mock_coordinator.acSystemStatus.EnabledZones = [True]
+    mock_coordinator.ac_system_status_list["12345"].EnabledZones = [True]
     assert entity.hvac_mode == HVACMode.HEAT_COOL

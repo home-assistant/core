@@ -21,7 +21,7 @@ from .coordinator import (
     ActronAirSystemStatusDataCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.CLIMATE]
 _LOGGER = logging.getLogger(__name__)
 ACTRON_AIR_SYNC_INTERVAL = 10
 REQUEST_REFRESH_DELAY = 0.5

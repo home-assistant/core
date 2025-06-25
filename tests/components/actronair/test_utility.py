@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.actronair.const import DOMAIN, SELECTED_AC_SERIAL
+from homeassistant.components.actronair.const import AC_SYSTEMS, DOMAIN
 from homeassistant.components.actronair.coordinator import (
     ActronAirACSystemsDataCoordinator,
     ActronAirSystemStatusDataCoordinator,
@@ -32,7 +32,9 @@ async def test_ac_systems_data_coordinator(hass: HomeAssistant) -> None:
 
     mock_api = AsyncMock()
     mock_api.async_getACSystems.return_value = ["AC1", "AC2"]
-
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][AC_SYSTEMS] = {}
     coordinator = ActronAirACSystemsDataCoordinator(hass, mock_api)
     await coordinator._async_update_data()
     assert coordinator.acSystems == ["AC1", "AC2"]
@@ -56,7 +58,7 @@ async def test_system_status_api_failure(hass: HomeAssistant) -> None:
     """Test handling of API error in system status fetch."""
     mock_api = AsyncMock()
     mock_api.async_getACSystemStatus.side_effect = Exception("API error")
-    hass.data[DOMAIN] = {SELECTED_AC_SERIAL: "12345"}
+    hass.data[DOMAIN] = {"selected_ac_serial": "12345"}
 
     coordinator = ActronAirSystemStatusDataCoordinator(hass, mock_api)
 

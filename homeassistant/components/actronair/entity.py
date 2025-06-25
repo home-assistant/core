@@ -42,5 +42,5 @@ class ActronAirZoneDevice(ActronAirDevice):
         """Initialize a zone device."""
         serial_number = f"{wall_serial}_zone_{zone_id}"
         super().__init__(
-            coordinator, serial_number, f"Zone {zone_id}", "Zone Controller"
+            coordinator, serial_number, "Zone Controller", "Neo Zone Controller"
         )

@@ -28,6 +28,6 @@ async def test_zone_entity() -> None:
 
     entity = ActronAirZoneDevice(mock_coordinator, wall_serial, zone_id)
 
-    assert entity.name == "Zone 1"
+    assert entity.name == "Zone Controller"
     assert entity.unique_id == f"actronair_{wall_serial}_zone_{zone_id}"
-    assert entity.device_info["model"] == "Zone Controller"
+    assert entity.device_info["model"] == "Neo Zone Controller"

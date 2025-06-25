@@ -16,12 +16,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    AC_SYSTEMS_COORDINATOR,
-    DOMAIN,
-    SELECTED_AC_SERIAL,
-    SYSTEM_STATUS_COORDINATOR,
-)
+from .const import AC_SYSTEMS, AC_SYSTEMS_COORDINATOR, DOMAIN, SYSTEM_STATUS_COORDINATOR
 from .coordinator import (
     ActronAirACSystemsDataCoordinator,
     ActronAirSystemStatusDataCoordinator,
@@ -58,28 +53,29 @@ async def async_setup_entry(
 
     await ac_systems_coordinator.async_config_entry_first_refresh()
     await status_coordinator.async_config_entry_first_refresh()
-
-    selected_ac_serial = hass.data[DOMAIN].get(SELECTED_AC_SERIAL, None)
-
-    if selected_ac_serial:
-        entities: list[ClimateEntity] = [
-            ActronAirClimate(
-                ac_systems_coordinator, status_coordinator, selected_ac_serial
-            )
-        ]  # wall Controller
-
-        zoneId: int = 1
-        if status_coordinator.ac_system_status is not None:
-            for zoneInfo in status_coordinator.ac_system_status.RemoteZoneInfo:
-                if zoneInfo.CanOperate:
-                    entities.append(
-                        ActronAirZoneClimate(
-                            status_coordinator, selected_ac_serial, zoneId
-                        )
-                    )  # Zone entity
-                    zoneId += 1
-                else:
-                    break
+    acSystems = hass.data[DOMAIN].get(AC_SYSTEMS, None)
+    if acSystems is not None and len(acSystems) > 0:
+        entities: list[ClimateEntity] = []
+        for acSystem in acSystems:
+            entities.append(
+                ActronAirClimate(
+                    ac_systems_coordinator, status_coordinator, acSystem.serial
+                )
+            )  # wall Controller
+            zoneId: int = 1
+            if status_coordinator.ac_system_status_list[acSystem.serial] is not None:
+                for zoneInfo in status_coordinator.ac_system_status_list[
+                    acSystem.serial
+                ].RemoteZoneInfo:
+                    if zoneInfo.CanOperate:
+                        entities.append(
+                            ActronAirZoneClimate(
+                                status_coordinator, acSystem.serial, zoneId
+                            )
+                        )  # Zone entity
+                        zoneId += 1
+                    else:
+                        break
 
         async_add_entities(entities, update_before_add=True)
 
@@ -91,54 +87,57 @@ class ActronAirClimate(ActronAirWallController, ClimateEntity):
         self,
         ac_systems_coordinator: ActronAirACSystemsDataCoordinator,
         status_coordinator: ActronAirSystemStatusDataCoordinator,
-        selected_ac_serial: str,
+        ac_serial: str,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(status_coordinator, selected_ac_serial)
+        super().__init__(status_coordinator, ac_serial)
+        self.ac_serial = ac_serial
         self.ac_systems_coordinator = ac_systems_coordinator
         self.status_coordinator = status_coordinator
 
         # Fetch AC system details
-        self.ac_data = status_coordinator.ac_system_status
-        self._attr_name = (
-            f"AC {self.ac_data.SystemName + ' (' + self.ac_data.MasterSerial + ')'}"
-        )
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_unique_id = f"{DOMAIN}_{self.ac_data.MasterSerial}_climate"
-        self._attr_hvac_modes = SUPPORTED_HVAC_MODES
-        self._attr_fan_modes = SUPPORTED_FAN_MODES
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-        if self.ac_data.IsOn is False:
-            self._attr_hvac_mode = HVACMode.OFF
-        else:
-            self._attr_hvac_mode = get_HASS_ac_mode_from_ActronAir_ac_mode(
-                self.status_coordinator.ac_system_status.Mode
+        ac_system_status = status_coordinator.ac_system_status_list[ac_serial]
+        if ac_system_status:
+            self.ac_data = ac_system_status
+            self._attr_name = (
+                f"AC {self.ac_data.SystemName + ' (' + self.ac_data.MasterSerial + ')'}"
             )
-        self._attr_target_temperature = self.ac_data.TemprSetPoint_Cool
-        self._attr_current_temperature = self.ac_data.LiveTemp_oC
-        self._attr_current_humidity = self.ac_data.LiveHumidity_pc
-        self._is_on = self.ac_data.IsOn
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_unique_id = f"{DOMAIN}_{self.ac_data.MasterSerial}_climate"
+            self._attr_hvac_modes = SUPPORTED_HVAC_MODES
+            self._attr_fan_modes = SUPPORTED_FAN_MODES
+            self._attr_supported_features = (
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TURN_OFF
+                | ClimateEntityFeature.TURN_ON
+            )
+            if self.ac_data.IsOn is False:
+                self._attr_hvac_mode = HVACMode.OFF
+            else:
+                self._attr_hvac_mode = get_HASS_ac_mode_from_ActronAir_ac_mode(
+                    self.ac_data.Mode
+                )
+            self._attr_target_temperature = self.ac_data.TemprSetPoint_Cool
+            self._attr_current_temperature = self.ac_data.LiveTemp_oC
+            self._attr_current_humidity = self.ac_data.LiveHumidity_pc
+            self._is_on = self.ac_data.IsOn
 
     @property
     def name(self) -> str | None:
         """Return the name."""
-        self._attr_name = f"AC {self.status_coordinator.ac_system_status.SystemName + ' (' + self.status_coordinator.ac_system_status.MasterSerial + ')'}"
+        self._attr_name = f"AC {self.status_coordinator.ac_system_status_list[self.ac_serial].SystemName + ' (' + self.ac_serial + ')'}"
         return self._attr_name
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
-        if self.status_coordinator.ac_system_status.IsOn is False:
+        if self.status_coordinator.ac_system_status_list[self.ac_serial].IsOn is False:
             self._attr_hvac_mode = HVACMode.OFF
             self._is_on = False
         else:
             self._attr_hvac_mode = get_HASS_ac_mode_from_ActronAir_ac_mode(
-                self.status_coordinator.ac_system_status.Mode
+                self.status_coordinator.ac_system_status_list[self.ac_serial].Mode
             )
             self._is_on = True
         return self._attr_hvac_mode
@@ -146,30 +145,32 @@ class ActronAirClimate(ActronAirWallController, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        self._attr_target_temperature = (
-            self.status_coordinator.ac_system_status.TemprSetPoint_Cool
-        )
+        self._attr_target_temperature = self.status_coordinator.ac_system_status_list[
+            self.ac_serial
+        ].TemprSetPoint_Cool
         return self._attr_target_temperature
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        self._attr_current_temperature = (
-            self.status_coordinator.ac_system_status.LiveTemp_oC
-        )
+        self._attr_current_temperature = self.status_coordinator.ac_system_status_list[
+            self.ac_serial
+        ].LiveTemp_oC
         return self._attr_current_temperature
 
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        self._attr_current_humidity = self.ac_data.LiveHumidity_pc
+        self._attr_current_humidity = self.status_coordinator.ac_system_status_list[
+            self.ac_serial
+        ].LiveHumidity_pc
         return self._attr_current_humidity
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         self._attr_fan_mode = get_HASS_fan_mode_from_ActronAir_fan_mode(
-            self.status_coordinator.ac_system_status.FanMode
+            self.status_coordinator.ac_system_status_list[self.ac_serial].FanMode
         )
         return self._attr_fan_mode
 
@@ -262,8 +263,9 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(status_coordinator, serial_number, zone_id)
+        self.serial_number = serial_number
         self.status_coordinator = status_coordinator
-        self.ac_data = status_coordinator.ac_system_status
+        self.ac_data = status_coordinator.ac_system_status_list[self.serial_number]
         zoneInfo = self.ac_data.RemoteZoneInfo[zone_id - 1]
 
         self.zone_id = zone_id
@@ -282,11 +284,10 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
             self._attr_target_temperature = zoneInfo.TemprSetPoint_Cool
 
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_unique_id = f"{DOMAIN}_zone_{zone_id}_climate"
-        self.serial_number = serial_number
-        self._is_on = self.status_coordinator.ac_system_status.EnabledZones[
-            self.zone_id - 1
-        ]
+        self._attr_unique_id = f"{DOMAIN}_{serial_number}_zone_{zone_id}_climate"
+        self._is_on = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].EnabledZones[self.zone_id - 1]
         if (
             self.ac_data.RemoteZoneInfo[self.zone_id - 1].NV_ITD
             and zoneInfo.LiveTemp_oC < 100.0
@@ -299,11 +300,14 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
     @property
     def name(self) -> str:
         """Return device name."""
-        zoneInfo = self.status_coordinator.ac_system_status.RemoteZoneInfo[
-            self.zone_id - 1
-        ]
+        zoneInfo = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].RemoteZoneInfo[self.zone_id - 1]
         name_extension = ""
-        if self.status_coordinator.ac_system_status.IsOn is False:
+        if (
+            self.status_coordinator.ac_system_status_list[self.serial_number].IsOn
+            is False
+        ):
             name_extension = " - (System is OFF)"
 
         self._attr_name = zoneInfo.NV_Title + name_extension
@@ -312,32 +316,32 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return whether the zone is ON or OFF."""
-        self._is_on = self.status_coordinator.ac_system_status.EnabledZones[
-            self.zone_id - 1
-        ]
+        self._is_on = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].EnabledZones[self.zone_id - 1]
         return HVACMode.HEAT_COOL if self._is_on else HVACMode.OFF
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         self._attr_target_temperature = (
-            self.status_coordinator.ac_system_status.RemoteZoneInfo[
-                self.zone_id - 1
-            ].TemprSetPoint_Cool
+            self.status_coordinator.ac_system_status_list[self.serial_number]
+            .RemoteZoneInfo[self.zone_id - 1]
+            .TemprSetPoint_Cool
         )
         return self._attr_target_temperature
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        zoneInfo = self.status_coordinator.ac_system_status.RemoteZoneInfo[
-            self.zone_id - 1
-        ]
+        zoneInfo = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].RemoteZoneInfo[self.zone_id - 1]
         if zoneInfo.LiveTemp_oC < 100.0 and zoneInfo.NV_ITD:
             self._attr_current_temperature = (
-                self.status_coordinator.ac_system_status.RemoteZoneInfo[
-                    self.zone_id - 1
-                ].LiveTemp_oC
+                self.status_coordinator.ac_system_status_list[self.serial_number]
+                .RemoteZoneInfo[self.zone_id - 1]
+                .LiveTemp_oC
             )
             return self._attr_current_temperature
         return None
@@ -345,9 +349,9 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        zoneInfo = self.status_coordinator.ac_system_status.RemoteZoneInfo[
-            self.zone_id - 1
-        ]
+        zoneInfo = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].RemoteZoneInfo[self.zone_id - 1]
         if zoneInfo.LiveHumidity_pc is not None and zoneInfo.NV_IHD:
             self._attr_current_humidity = zoneInfo.LiveHumidity_pc
             return self._attr_current_humidity
@@ -356,12 +360,16 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return True if the AC system has been Online."""
-        self._attr_available = self.status_coordinator.ac_system_status.IsOnline
+        self._attr_available = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].IsOnline
         return self._attr_available
 
     def getZoneOnOffCommand(self, isON: bool, zoneId: int) -> Any:
         """Generate a command to turn a specific zone on or off."""
-        enabled_zones = self.status_coordinator.ac_system_status.EnabledZones
+        enabled_zones = self.status_coordinator.ac_system_status_list[
+            self.serial_number
+        ].EnabledZones
 
         if not (0 <= zoneId < len(enabled_zones)):
             raise ValueError(

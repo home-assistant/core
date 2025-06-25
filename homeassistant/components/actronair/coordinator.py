@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SELECTED_AC_SERIAL
+from .const import AC_SYSTEMS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,11 @@ class ActronAirACSystemsDataCoordinator(DataUpdateCoordinator[list[ACSystem]]):
         """Fetch data from Account balance API endpoint."""
         try:
             async with asyncio.timeout(60):
-                self.acSystems = await self.aa_api.async_getACSystems()
+                if DOMAIN not in self.hass.data:
+                    self.hass.data[DOMAIN] = {}
+                self.hass.data[DOMAIN][AC_SYSTEMS] = (
+                    self.acSystems
+                ) = await self.aa_api.async_getACSystems()
                 return self.acSystems
         except AuthException as auth_err:
             raise ConfigEntryAuthFailed from auth_err
@@ -78,7 +82,7 @@ class ActronAirACSystemsDataCoordinator(DataUpdateCoordinator[list[ACSystem]]):
 class ActronAirSystemStatusDataCoordinator(DataUpdateCoordinator[SystemStatus]):
     """ActronAir AC System Status Data object."""
 
-    ac_system_status: SystemStatus = {}
+    ac_system_status_list: dict[str, SystemStatus] = {}
     aa_api: ActronAirApi = None
 
     def __init__(self, hass: HomeAssistant, aa_api: ActronAirApi) -> None:
@@ -91,7 +95,7 @@ class ActronAirSystemStatusDataCoordinator(DataUpdateCoordinator[SystemStatus]):
         )
         self.hass = hass
         self.aa_api = aa_api
-        self.ac_system_status: SystemStatus = {}
+        self.ac_system_status_list: dict[str, SystemStatus] = {}
 
     async def async_added_to_hass(self):
         """Handle when the entity is added to Home Assistant."""
@@ -105,17 +109,19 @@ class ActronAirSystemStatusDataCoordinator(DataUpdateCoordinator[SystemStatus]):
             if DOMAIN not in self.hass.data:
                 self.hass.data[DOMAIN] = {}  # Initialize DOMAIN if missing
 
-            selectedSerial = self.hass.data[DOMAIN].get(SELECTED_AC_SERIAL, None)
-            if selectedSerial is not None and selectedSerial != {}:
-                async with asyncio.timeout(60):
-                    self.ac_system_status = await self.aa_api.async_getACSystemStatus(
-                        selectedSerial
-                    )
-                if self.ac_system_status is None or self.ac_system_status == {}:
-                    raise UpdateFailed(
-                        f"No status received for AC system {selectedSerial}"
-                    )
-                return self.ac_system_status
+            acSystems = self.hass.data[DOMAIN].get(AC_SYSTEMS, None)
+            if acSystems is not None and len(acSystems) > 0:
+                # self.ac_system_status_list: dict[str, SystemStatus] = {}
+                for acSystem in acSystems:
+                    async with asyncio.timeout(60):
+                        ac_system_status = await self.aa_api.async_getACSystemStatus(
+                            acSystem.serial
+                        )
+                    if ac_system_status is None or ac_system_status == {}:
+                        raise UpdateFailed(
+                            f"No status received for AC system {acSystem.serial}"
+                        )
+                    self.ac_system_status_list[acSystem.serial] = ac_system_status
 
         except AuthException as auth_err:
             raise ConfigEntryAuthFailed from auth_err
