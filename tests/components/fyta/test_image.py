@@ -10,7 +10,7 @@ from fyta_cli.fyta_models import Plant
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fyta.const import DOMAIN as FYTA_DOMAIN
+from homeassistant.components.fyta.const import DOMAIN
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ from . import setup_platform
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from tests.typing import ClientSessionGenerator
@@ -83,8 +83,12 @@ async def test_add_remove_entities(
     assert hass.states.get("image.gummibaum_user_image") is not None
 
     plants: dict[int, Plant] = {
-        0: Plant.from_dict(load_json_object_fixture("plant_status1.json", FYTA_DOMAIN)),
-        2: Plant.from_dict(load_json_object_fixture("plant_status3.json", FYTA_DOMAIN)),
+        0: Plant.from_dict(
+            await async_load_json_object_fixture(hass, "plant_status1.json", DOMAIN)
+        ),
+        2: Plant.from_dict(
+            await async_load_json_object_fixture(hass, "plant_status3.json", DOMAIN)
+        ),
     }
     mock_fyta_connector.update_all_plants.return_value = plants
     mock_fyta_connector.plant_list = {
@@ -121,9 +125,13 @@ async def test_update_image(
 
     plants: dict[int, Plant] = {
         0: Plant.from_dict(
-            load_json_object_fixture("plant_status1_update.json", FYTA_DOMAIN)
+            await async_load_json_object_fixture(
+                hass, "plant_status1_update.json", DOMAIN
+            )
         ),
-        2: Plant.from_dict(load_json_object_fixture("plant_status3.json", FYTA_DOMAIN)),
+        2: Plant.from_dict(
+            await async_load_json_object_fixture(hass, "plant_status3.json", DOMAIN)
+        ),
     }
     mock_fyta_connector.update_all_plants.return_value = plants
     mock_fyta_connector.plant_list = {

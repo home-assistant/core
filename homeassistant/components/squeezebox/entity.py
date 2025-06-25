@@ -29,6 +29,13 @@ class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
             connections={(CONNECTION_NETWORK_MAC, format_mac(self._player.player_id))},
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # super().available refers to CoordinatorEntity.available (self.coordinator.last_update_success)
+        # self.coordinator.available is the custom availability flag from SqueezeBoxPlayerUpdateCoordinator
+        return self.coordinator.available and super().available
+
 
 class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
     """Defines a base status sensor entity."""

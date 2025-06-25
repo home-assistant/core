@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "npsso": "NPSSO token"
+        },
+        "data_description": {
+          "npsso": "The NPSSO token is generated upon successful login of your PlayStation Network account and is used to authenticate your requests within Home Assistant."
+        },
+        "description": "To obtain your NPSSO token, log in to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token."
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate {name} with PlayStation Network",
+        "description": "The NPSSO token for **{name}** has expired. To obtain a new one, log in to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token.",
+        "data": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data::npsso%]"
+        },
+        "data_description": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data_description::npsso%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**"
+    }
+  },
+  "exceptions": {
+    "not_ready": {
+      "message": "Authentication to the PlayStation Network failed."
+    },
+    "update_failed": {
+      "message": "Data retrieval failed when trying to access the PlayStation Network."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "trophy_level": {
+        "name": "Trophy level"
+      },
+      "trophy_level_progress": {
+        "name": "Next level"
+      },
+      "earned_trophies_platinum": {
+        "name": "Platinum trophies",
+        "unit_of_measurement": "trophies"
+      },
+      "earned_trophies_gold": {
+        "name": "Gold trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "earned_trophies_silver": {
+        "name": "Silver trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "earned_trophies_bronze": {
+        "name": "Bronze trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "online_id": {
+        "name": "Online-ID"
+      }
+    }
+  }
+}

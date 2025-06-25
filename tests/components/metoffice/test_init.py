@@ -13,7 +13,7 @@ from homeassistant.util import utcnow
 
 from .const import METOFFICE_CONFIG_WAVERTREE
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
@@ -23,7 +23,7 @@ async def test_reauth_on_auth_error(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     requests_mock.get(

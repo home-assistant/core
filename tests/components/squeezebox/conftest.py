@@ -329,7 +329,6 @@ def mock_pysqueezebox_server(
         mock_lms.async_status = AsyncMock(
             return_value={"uuid": uuid, "version": FAKE_VERSION}
         )
-        mock_lms.async_prepared_status = mock_lms.async_status
         return mock_lms
 
 
