@@ -1,5 +1,16 @@
 {
   "entity": {
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent",
+        "state": {
+          "empty": "mdi:water-off",
+          "low": "mdi:water-outline",
+          "medium": "mdi:water",
+          "high": "mdi:water-check"
+        }
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
@@ -27,6 +38,24 @@
               "auto": "mdi:auto-mode",
               "pet": "mdi:paw",
               "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "mdi:water-plus",
+              "medium": "mdi:water",
+              "low": "mdi:water-outline",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target",
+              "sleep": "mdi:weather-night",
+              "auto": "mdi:autorenew",
+              "drying_filter": "mdi:water-remove"
             }
           }
         }

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
 from typing import Any, Literal
@@ -11,13 +11,14 @@ import ollama
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
@@ -40,12 +41,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OllamaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = OllamaConversationEntity(config_entry)
-    async_add_entities([agent])
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
+        async_add_entities(
+            [OllamaConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 def _format_tool(
@@ -130,7 +137,7 @@ def _convert_content(
 
 
 async def _transform_stream(
-    result: AsyncGenerator[ollama.Message],
+    result: AsyncIterator[ollama.ChatResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform the response stream into HA format.
 
@@ -174,17 +181,22 @@ class OllamaConversationEntity(
 ):
     """Ollama conversation agent."""
 
-    _attr_has_entity_name = True
     _attr_supports_streaming = True
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: OllamaConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
-
-        # conversation id -> message history
-        self._attr_name = entry.title
-        self._attr_unique_id = entry.entry_id
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        self.subentry = subentry
+        self._attr_name = subentry.title
+        self._attr_unique_id = subentry.subentry_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            manufacturer="Ollama",
+            model=entry.data[CONF_MODEL],
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
+        if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
@@ -216,7 +228,7 @@ class OllamaConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-        settings = {**self.entry.data, **self.entry.options}
+        settings = {**self.entry.data, **self.subentry.data}
 
         try:
             await chat_log.async_provide_llm_data(
@@ -248,9 +260,9 @@ class OllamaConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> None:
         """Generate an answer for the chat log."""
-        settings = {**self.entry.data, **self.entry.options}
+        settings = {**self.entry.data, **self.subentry.data}
 
-        client = self.hass.data[DOMAIN][self.entry.entry_id]
+        client = self.entry.runtime_data
         model = settings[CONF_MODEL]
 
         tools: list[dict[str, Any]] | None = None
@@ -322,8 +334,9 @@ class OllamaConversationEntity(
             num_keep = 2 * max_messages + 1
             drop_index = len(message_history.messages) - num_keep
             message_history.messages = [
-                message_history.messages[0]
-            ] + message_history.messages[drop_index:]
+                message_history.messages[0],
+                *message_history.messages[drop_index:],
+            ]
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry

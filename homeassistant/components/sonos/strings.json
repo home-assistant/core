@@ -200,6 +200,9 @@
     },
     "unregistered_entity": {
       "message": "{entity_id} is not registered as a Sonos entity."
+    },
+    "timeout_join": {
+      "message": "Timeout while waiting for Sonos player to join the group {group_description}"
     }
   }
 }
