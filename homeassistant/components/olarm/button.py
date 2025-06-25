@@ -10,8 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -23,7 +21,7 @@ async def async_setup_entry(
     """Add button a config entry."""
 
     # get coordinator
-    coordinator = hass.data[DOMAIN][config_entry.data["device_id"]].get("coordinator")
+    coordinator = config_entry.runtime_data["coordinator"]
 
     # init buttons
     buttons: list[OlarmButton] = []
