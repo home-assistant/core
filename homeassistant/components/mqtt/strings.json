@@ -631,7 +631,7 @@
         },
         "export": {
           "title": "Export MQTT device config",
-          "description": "An export allows you set up the MQTT Device configuration via YAML or MQTT discovery. The configuration can also be helpful for troubleshooting.",
+          "description": "An export allows you set up the MQTT device configuration via YAML or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
           "menu_options": {
             "export_discovery": "Export MQTT discovery information",
             "export_yaml": "Export to YAML configuration"
@@ -639,7 +639,7 @@
         },
         "export_yaml": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "The export includes the unique ID's used in the configuration. You cannot activate this configuration unless you remove the MQTT-device or change the unique id's. Note that removing the MQTT device subentry will also remove the device from the device registry.",
+          "description": "The export includes the unique ID's used in the configuration. You cannot activate this configuration unless you remove the MQTT device or change the unique id's. Note that removing the MQTT device subentry will also remove the device from the device registry.",
           "data": {
             "yaml": "Copy the YAML configuration below:"
           },
@@ -649,7 +649,7 @@
         },
         "export_discovery": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "The export includes the unique ID's used in the configuration. You cannot activate this configuration unless you remove the MQTT-device or change the unique id's. Note that removing the MQTT device subentry will also remove the device from the device registry.\n\nTo allow [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the needed information from the fields below.",
+          "description": "The export includes the unique ID's used in the configuration. You cannot activate this configuration unless you remove the MQTT device or change the unique id's. Note that removing the MQTT device subentry will also remove the device from the device registry.\n\nTo allow [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the needed information from the fields below.",
           "data": {
             "discovery_topic": "Discovery topic",
             "discovery_payload": "Discovery payload:"
