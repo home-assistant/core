@@ -43,7 +43,7 @@ class MeaterSensorEntityDescription(SensorEntityDescription):
     """Describes meater sensor entity."""
 
     value: Callable[[MeaterProbe], datetime | float | str | None]
-    requires_cook: bool = False
+    unavailable_when_not_cooking: bool = False
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
@@ -87,13 +87,13 @@ SENSOR_TYPES = (
     MeaterSensorEntityDescription(
         key="cook_name",
         translation_key="cook_name",
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         value=lambda probe: probe.cook.name if probe.cook else None,
     ),
     MeaterSensorEntityDescription(
         key="cook_state",
         translation_key="cook_state",
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         device_class=SensorDeviceClass.ENUM,
         options=list(COOK_STATES.values()),
         value=lambda probe: COOK_STATES.get(probe.cook.state) if probe.cook else None,
@@ -105,7 +105,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         value=(
             lambda probe: probe.cook.target_temperature
             if probe.cook and hasattr(probe.cook, "target_temperature")
@@ -119,7 +119,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         value=(
             lambda probe: probe.cook.peak_temperature
             if probe.cook and hasattr(probe.cook, "peak_temperature")
@@ -132,7 +132,7 @@ SENSOR_TYPES = (
         key="cook_time_remaining",
         translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         value=_remaining_time_to_timestamp,
     ),
     # Time since the start of cook in seconds. Default: 0. Exposed as a TIMESTAMP sensor
@@ -141,7 +141,7 @@ SENSOR_TYPES = (
         key="cook_time_elapsed",
         translation_key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
-        requires_cook=True,
+        unavailable_when_not_cooking=True,
         value=_elapsed_time_to_timestamp,
     ),
 )
@@ -233,7 +233,7 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
             super().available
             and self.device_id in self.coordinator.data
             and (
-                not self.entity_description.requires_cook
+                not self.entity_description.unavailable_when_not_cooking
                 or self.coordinator.data[self.device_id].cook is not None
             )
         )
