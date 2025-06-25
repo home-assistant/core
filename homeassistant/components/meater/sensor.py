@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import MeaterCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, MEATER_DATA
 from .coordinator import MeaterConfigEntry
 
 COOK_STATES = {
@@ -163,7 +163,7 @@ async def async_setup_entry(
 
         devices = coordinator.data
         entities = []
-        known_probes: set = hass.data[DOMAIN]["known_probes"]
+        known_probes = hass.data[MEATER_DATA]
 
         # Add entities for temperature probes which we've not yet seen
         for device_id in devices:
