@@ -35,7 +35,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CHAT_MODEL,
     CONF_PROMPT,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
@@ -190,7 +189,7 @@ async def async_setup_entry(
 
         client = await hass.async_add_executor_job(_init_client)
         await client.aio.models.get(
-            model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
     except (APIError, Timeout) as err:
