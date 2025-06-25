@@ -416,16 +416,20 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
+        # We must set the suggested values to None, else 'name' will be carried through
+        suggested_values=None,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
         NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
+        suggested_values=None,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
+        suggested_values=None,
     ),
 }
 
