@@ -48,10 +48,7 @@ CONF_IMAGE_FILENAME = "image_filename"
 CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = (
-    Platform.CONVERSATION,
-    Platform.TTS,
-)
+PLATFORMS = (Platform.CONVERSATION,)
 
 type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
