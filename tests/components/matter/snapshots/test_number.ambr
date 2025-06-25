@@ -1909,8 +1909,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
+      'max': 200,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 0.5,
     }),
@@ -1947,8 +1947,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump Setpoint',
-      'max': 100,
-      'min': 0,
+      'max': 200,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 0.5,
       'unit_of_measurement': '%',

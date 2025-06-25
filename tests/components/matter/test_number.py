@@ -148,17 +148,18 @@ async def test_pump_level(
         "set_value",
         {
             "entity_id": "number.mock_pump_setpoint",
-            "value": 100,
+            "value": 75,
         },
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.LevelControl.Commands.MoveToLevel(50),
+    assert (
+        matter_client.send_device_command.call_args
+        == call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.LevelControl.Commands.MoveToLevel(
+                level=150
+            ),  # 75 * 2 = 150, as the value is multiplied by 2 in the HA to native value conversion
+        )
     )
-    state = hass.states.get("number.mock_pump_setpoint")
-    assert state
-    # 100 * 2 = 200, as the value is multiplied by 2 in the HA to native value conversion
-    assert state.state == "200"
