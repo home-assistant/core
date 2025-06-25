@@ -601,7 +601,7 @@ async def test_description_placeholders(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
-        async def _get_description_placeholders(
+    async def _get_description_placeholders(
         _: SchemaCommonFlowHandler,
     ) -> dict[str, Any]:
         return {"option1": "a dynamic string"}
