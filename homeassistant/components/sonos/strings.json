@@ -195,17 +195,11 @@
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     },
-    "invalid_grouping_entity": {
-      "message": "Invalid Sonos grouping entity: {entity_id}"
-    },
-    "unregistered_entity": {
-      "message": "{entity_id} is not registered as a Sonos entity."
-    },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
     },
     "speaker_not_found": {
-      "message": "Sonos apeaker not found for {entity_id}"
+      "message": "{entity_id} is not a known Sonos speaker."
     },
     "timeout_join": {
       "message": "Timeout while waiting for Sonos player to join the group {group_description}"
