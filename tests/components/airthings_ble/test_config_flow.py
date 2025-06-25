@@ -47,7 +47,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Airthings Wave Plus (123456)"
+        "name": "Airthings Wave Plus (2930123456)"
     }
 
     with patch_async_setup_entry():
@@ -56,7 +56,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave Plus (123456)"
+    assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
