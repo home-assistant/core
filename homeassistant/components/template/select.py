@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -11,13 +11,13 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -132,20 +132,21 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
-        AbstractTemplateSelect.__init__(self, config)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+
+        if TYPE_CHECKING:
+            AbstractTemplateSelect.__init__(self, config)
 
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
+            self.add_script(CONF_SELECT_OPTION, select_option, self._attr_name, DOMAIN)
+        self._options_template = config[ATTR_OPTIONS]
+        self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
+        self._attr_options = []
+        self._attr_current_option = None
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -179,7 +180,7 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateSelect.__init__(self, config)
 
         if CONF_STATE in config:

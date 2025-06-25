@@ -30,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -163,10 +161,8 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
     ) -> None:
         """Initialize the Template switch."""
         super().__init__(hass, config=config, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
+
+        self.initialize(config, ENTITY_ID_FORMAT)
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -180,10 +176,6 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
 
         self._state: bool | None = False
         self._attr_assumed_state = self._template is None
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _update_state(self, result):
@@ -256,6 +248,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+        self.initialize(config, ENTITY_ID_FORMAT)
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self._template = config.get(CONF_STATE)
         if on_action := config.get(CONF_TURN_ON):
@@ -267,11 +260,6 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         if not self._attr_assumed_state:
             self._to_render_simple.append(CONF_STATE)
             self._parse_result.add(CONF_STATE)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

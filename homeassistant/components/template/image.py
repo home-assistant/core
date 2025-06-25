@@ -7,7 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
+from homeassistant.components.image import (
+    DOMAIN as IMAGE_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ImageEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
@@ -106,6 +110,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
             hass,
             config.get(CONF_DEVICE_ID),
         )
+        self.initialize(config, ENTITY_ID_FORMAT)
 
     @property
     def entity_picture(self) -> str | None:
@@ -148,6 +153,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
+        self.initialize(config, ENTITY_ID_FORMAT)
 
     @property
     def entity_picture(self) -> str | None:

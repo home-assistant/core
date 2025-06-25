@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
@@ -116,6 +117,8 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._code_format_template_error: TemplateError | None = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
+
+        self.initialize(config, ENTITY_ID_FORMAT)
 
     def _iterate_scripts(
         self, config: dict[str, Any]

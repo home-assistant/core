@@ -43,7 +43,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
@@ -251,6 +250,8 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._supports_transition = False
         self._color_mode: ColorMode | None = None
         self._supported_color_modes: set[ColorMode] | None = None
+
+        self.initialize(config, ENTITY_ID_FORMAT)
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -895,10 +896,6 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
         """Initialize the light."""
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateLight.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None

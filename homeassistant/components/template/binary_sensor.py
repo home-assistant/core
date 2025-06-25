@@ -39,8 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -170,10 +168,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
     ) -> None:
         """Initialize the Template binary sensor."""
         super().__init__(hass, config=config, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
+        self.initialize(config, ENTITY_ID_FORMAT)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
@@ -182,10 +177,6 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore state."""
@@ -269,6 +260,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+        self.initialize(config, ENTITY_ID_FORMAT)
 
         for key in (CONF_STATE, CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):

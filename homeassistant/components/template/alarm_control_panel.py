@@ -32,8 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -226,6 +224,7 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_supported_features: AlarmControlPanelEntityFeature = (
             AlarmControlPanelEntityFeature(0)
         )
+        self.initialize(config, ENTITY_ID_FORMAT)
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -365,10 +364,6 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         """Initialize the panel."""
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -378,11 +373,6 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -433,11 +423,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
