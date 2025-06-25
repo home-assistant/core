@@ -58,7 +58,7 @@
         "name": "Power source",
         "state": {
           "battery": "Battery",
-          "charging_base": "Charging Base",
+          "charging_base": "Charging base",
           "usb": "USB"
         }
       }
