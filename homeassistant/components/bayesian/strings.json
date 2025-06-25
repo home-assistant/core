@@ -49,7 +49,7 @@
     "step": {
       "user": {
         "title": "Add a Bayesian sensor",
-        "description": "Create a binary sensor which observes the state of multiple sensors to estimate whether an event is occurring, or if something is true. See [the documentation](https://www.home-assistant.io/integrations/bayesian/) for more details.",
+        "description": "Create a binary sensor which observes the state of multiple sensors to estimate whether an event is occurring, or if something is true. See [the documentation]({url}) for more details.",
         "data": {
           "probability_threshold": "Probability threshold",
           "prior": "Prior",

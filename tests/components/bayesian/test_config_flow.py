@@ -54,6 +54,10 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         )
         assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
+        assert (
+            result0["description_placeholders"]["url"]
+            == "https://www.home-assistant.io/integrations/bayesian/"
+        )
 
         # Enter basic settings
         result1 = await hass.config_entries.flow.async_configure(
@@ -283,6 +287,10 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
 
         assert result["step_id"] == str(ObservationTypes.STATE)
         assert result["type"] is FlowResultType.FORM
+        assert result["description_placeholders"]["parent_sensor_name"] == "Anyone home"
+        assert result["description_placeholders"]["device_class_on"] == "Detected"
+        assert result["description_placeholders"]["device_class_off"] == "Clear"
+
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {
@@ -762,6 +770,9 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
     # confirm the first page is the form for editing the observation
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert result["description_placeholders"]["parent_sensor_name"] == "Office occupied"
+    assert result["description_placeholders"]["device_class_on"] == "Detected"
+    assert result["description_placeholders"]["device_class_off"] == "Clear"
 
     # Edit all settings
     await hass.config_entries.subentries.async_configure(

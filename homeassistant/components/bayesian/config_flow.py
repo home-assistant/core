@@ -394,6 +394,33 @@ async def _validate_subentry_from_config_entry(
     return {"add_another": True} if add_another else {}
 
 
+async def _get_description_placeholders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    # Current step is None when were are about to start the first step
+    if handler.parent_handler.cur_step is None:
+        return {"url": "https://www.home-assistant.io/integrations/bayesian/"}
+    return {
+        "parent_sensor_name": handler.options[CONF_NAME],
+        "device_class_on": translation.async_translate_state(
+            handler.parent_handler.hass,
+            "on",
+            BINARY_SENSOR_DOMAIN,
+            platform=None,
+            translation_key=None,
+            device_class=handler.options.get(CONF_DEVICE_CLASS, None),
+        ),
+        "device_class_off": translation.async_translate_state(
+            handler.parent_handler.hass,
+            "off",
+            BINARY_SENSOR_DOMAIN,
+            platform=None,
+            translation_key=None,
+            device_class=handler.options.get(CONF_DEVICE_CLASS, None),
+        ),
+    }
+
+
 async def _add_more_or_end(
     user_input: dict[str, Any],
 ) -> str | None:
@@ -408,6 +435,7 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
         next_step=str(OBSERVATION_SELECTOR),
+        description_placeholders=_get_description_placeholders,
     ),
     str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
         [typ.value for typ in ObservationTypes]
@@ -419,18 +447,21 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         # Prevent the name of the bayesian sensor from being used as the suggested
         # name of the observations
         suggested_values=None,
+        description_placeholders=_get_description_placeholders,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
         NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
         suggested_values=None,
+        description_placeholders=_get_description_placeholders,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
         suggested_values=None,
+        description_placeholders=_get_description_placeholders,
     ),
 }
 
@@ -440,6 +471,7 @@ OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         OPTIONS_SCHEMA,
         suggested_values=_get_base_suggested_values,
         validate_user_input=_validate_user,
+        description_placeholders=_get_description_placeholders,
     ),
 }
 
