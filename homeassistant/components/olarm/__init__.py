@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN
 from .coordinator import OlarmConnectCoordinator
 
 _PLATFORMS = [
@@ -58,10 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Connecting to Olarm MQTT service")
         await coordinator.init_mqtt()
 
-        # load coordinator into hass.data
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
-        hass.data[DOMAIN][entry.data["device_id"]] = {"coordinator": coordinator}
+        # store coordinator in entry.runtime_data
+        entry.runtime_data = {"coordinator": coordinator}
 
         _LOGGER.debug("Setting up platforms for Olarm integration")
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -69,14 +66,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as e:
         _LOGGER.error("Failed to set up Olarm integration: %s", e)
         # Clean up any partial setup
-        if DOMAIN in hass.data and entry.data["device_id"] in hass.data[DOMAIN]:
-            coordinator = hass.data[DOMAIN][entry.data["device_id"]].get("coordinator")
+        if hasattr(entry, "runtime_data") and entry.runtime_data:
+            coordinator = entry.runtime_data.get("coordinator")
             if coordinator:
                 try:
                     await coordinator.async_stop()
                 except (OSError, ConnectionError, TimeoutError) as cleanup_error:
                     _LOGGER.error("Error during cleanup: %s", cleanup_error)
-            hass.data[DOMAIN].pop(entry.data["device_id"], None)
         raise
     else:
         return True
@@ -84,10 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator = hass.data[DOMAIN][entry.data["device_id"]]["coordinator"]
-
-    # remove coordinator from hass.data
-    hass.data[DOMAIN].pop(entry.data["device_id"], None)
+    coordinator = entry.runtime_data["coordinator"]
 
     # stop coordinator
     await coordinator.async_stop()

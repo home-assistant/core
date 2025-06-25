@@ -13,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,7 +26,7 @@ async def async_setup_entry(
     _LOGGER.debug("config_entry -> %s", config_entry.data)
 
     # get coordinator
-    coordinator = hass.data[DOMAIN][config_entry.data["device_id"]].get("coordinator")
+    coordinator = config_entry.runtime_data["coordinator"]
 
     # cycle through zones and create binary sensors
     sensors = []
