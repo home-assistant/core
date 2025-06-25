@@ -83,11 +83,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             device = await data.update_device(ble_device)
         except BleakError as err:
-            _LOGGER.error(
-                "Error connecting to and getting data from %s: %s",
-                discovery_info.address,
-                err,
-            )
             raise AirthingsDeviceUpdateError("Failed getting device data") from err
         except UnsupportedDeviceError:
             _LOGGER.debug("Skipping unsupported device: %s", discovery_info.name)
@@ -113,7 +108,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         except AirthingsDeviceUpdateError:
             return self.async_abort(reason="cannot_connect")
         except UnsupportedDeviceError:
-            _LOGGER.debug("Skipping unsupported device: %s", discovery_info.name)
             return self.async_abort(reason="unsupported_device")
         except Exception:  # noqa: BLE001
             return self.async_abort(reason="unknown")
@@ -178,10 +172,10 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
 
             if not any(uuid in SERVICE_UUIDS for uuid in discovery_info.service_uuids):
-                _LOGGER.debug("Skipping unsupported device: %s", discovery_info.name)
+                _LOGGER.debug(
+                    "Skipping unsupported device: %s (%s)", discovery_info.name, address
+                )
                 continue
-
-            _LOGGER.debug("Found %s (%s)", discovery_info.name, discovery_info.address)
 
             data = AirthingsBluetoothDeviceData(logger=_LOGGER)
 
@@ -199,6 +193,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
 
             name = get_name(device)
+            _LOGGER.debug("Discovered Airthings device: %s (%s)", name, address)
             self._discovered_devices[address] = Discovery(
                 name, discovery_info, device, data
             )
