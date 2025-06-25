@@ -246,6 +246,35 @@
           }
         }
       }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "sunset": "Sunset",
+              "vitality": "Vitality",
+              "flashing": "Flashing",
+              "strobe": "Strobe",
+              "fade": "Fade",
+              "smooth": "Smooth",
+              "forest": "Forest",
+              "ocean": "Ocean",
+              "autumn": "Autumn",
+              "cool": "Cool",
+              "flow": "Flow",
+              "relax": "Relax",
+              "modern": "Modern",
+              "rose": "Rose",
+              "colorful": "Colorful",
+              "flickering": "Flickering",
+              "breathing": "Breathing"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {
