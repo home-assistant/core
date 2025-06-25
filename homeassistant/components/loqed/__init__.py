@@ -44,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-    entry.async_on_unload(coordinator.remove_webhooks)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -52,4 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await entry.runtime_data.remove_webhooks()
+
+    return unload_ok
