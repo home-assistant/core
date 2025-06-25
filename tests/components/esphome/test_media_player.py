@@ -71,7 +71,7 @@ async def test_media_player_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "paused"
 
@@ -79,7 +79,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
@@ -93,7 +93,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_LEVEL: 0.5,
         },
         blocking=True,
@@ -119,7 +119,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -132,7 +132,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -145,7 +145,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_STOP,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -216,7 +216,7 @@ async def test_media_player_entity_with_source(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "playing"
 
@@ -225,7 +225,7 @@ async def test_media_player_entity_with_source(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "media-source://local/xz",
             },
@@ -249,7 +249,7 @@ async def test_media_player_entity_with_source(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
                 ATTR_MEDIA_CONTENT_ID: "media-source://local/xy",
             },
@@ -265,7 +265,7 @@ async def test_media_player_entity_with_source(
         {
             "id": 1,
             "type": "media_player/browse_media",
-            "entity_id": "media_player.test_mymedia_player",
+            "entity_id": "media_player.test_my_media_player",
         }
     )
     response = await client.receive_json()
@@ -275,7 +275,7 @@ async def test_media_player_entity_with_source(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
             ATTR_MEDIA_CONTENT_ID: "media-source://tts?message=hello",
             ATTR_MEDIA_ANNOUNCE: True,
@@ -339,7 +339,7 @@ async def test_media_player_proxy(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
     assert dev is not None
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "paused"
 
@@ -356,7 +356,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
             },
@@ -387,7 +387,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
                 ATTR_MEDIA_ANNOUNCE: True,
@@ -417,7 +417,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
                 ATTR_MEDIA_EXTRA: {
@@ -475,7 +475,7 @@ async def test_media_player_formats_reload_preserves_data(
     await hass.async_block_till_done()
 
     # Verify entity was created
-    state = hass.states.get("media_player.test_test_media_player")
+    state = hass.states.get("media_player.test_Test_Media_Player")
     assert state is not None
     assert state.state == "idle"
 
@@ -486,7 +486,7 @@ async def test_media_player_formats_reload_preserves_data(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_test_media_player",
+            ATTR_ENTITY_ID: "media_player.test_Test_Media_Player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: media_url,
         },
@@ -507,7 +507,7 @@ async def test_media_player_formats_reload_preserves_data(
     await hass.async_block_till_done()
 
     # Verify entity still exists after reload
-    state = hass.states.get("media_player.test_test_media_player")
+    state = hass.states.get("media_player.test_Test_Media_Player")
     assert state is not None
 
     # Test that play_media still works after reload with announcement
@@ -515,7 +515,7 @@ async def test_media_player_formats_reload_preserves_data(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_test_media_player",
+            ATTR_ENTITY_ID: "media_player.test_Test_Media_Player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: media_url,
             ATTR_MEDIA_ANNOUNCE: True,
