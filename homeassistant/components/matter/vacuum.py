@@ -200,7 +200,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterVacuum,
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
-            clusters.RvcOperationalState.Attributes.CurrentPhase,
+            clusters.RvcOperationalState.Attributes.OperationalState,
         ),
         optional_attributes=(
             clusters.RvcCleanMode.Attributes.CurrentMode,
