@@ -117,14 +117,12 @@ async def async_setup_entry(
     """Set up EZVIZ select entities based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities: list[EzvizSelect] = []
-
-    entities.extend(
+    entities = [
         EzvizSelect(coordinator, camera, ALARM_SOUND_MODE_SELECT_TYPE)
         for camera in coordinator.data
         for switch in coordinator.data[camera]["switches"]
         if switch == ALARM_SOUND_MODE_SELECT_TYPE.supported_switch
-    )
+    ]
 
     for camera in coordinator.data:
         device_category = coordinator.data[camera].get("device_category")
