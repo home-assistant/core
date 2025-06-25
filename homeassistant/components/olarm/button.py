@@ -6,11 +6,11 @@ import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OlarmConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,13 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    config_entry: OlarmConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add button a config entry."""
 
     # get coordinator
-    coordinator = config_entry.runtime_data["coordinator"]
+    coordinator = config_entry.runtime_data
 
     # init buttons
     buttons: list[OlarmButton] = []
@@ -325,7 +325,7 @@ class OlarmButton(ButtonEntity):
 
         # attributes
         self._attr_has_entity_name = True
-        self._attr_name = f"{link_name} {button_type_str_map[button_type]} {button_index + 1:02} {button_label}"
+        self._attr_name = f"{link_name} {button_type_str_map[button_type]} {button_index + 1:02} - {button_label}"
         self._attr_unique_id = f"{device_id}.{button_type}.{button_index}"
         # if link need to include address in unique id
         if link_id is not None:
@@ -353,10 +353,6 @@ class OlarmButton(ButtonEntity):
             self.button_index,
             self.button_label,
         )
-
-    # async def async_added_to_hass(self) -> None:
-    #     """Run when the entity is added to Home Assistant."""
-    #     await super().async_added_to_hass()
 
     async def async_press(self) -> None:
         """Handle the button press to send PGM command."""
@@ -409,6 +405,18 @@ class OlarmButton(ButtonEntity):
         elif self.button_type == "link_relay_pulse":
             await self._coordinator.send_device_link_relay_cmd(
                 self.device_id, self.link_id, "pulse", self.button_index
+            )
+        elif self.button_type == "max_output_open":
+            await self._coordinator.send_device_max_output_cmd(
+                self.device_id, "open", self.button_index
+            )
+        elif self.button_type == "max_output_close":
+            await self._coordinator.send_device_max_output_cmd(
+                self.device_id, "close", self.button_index
+            )
+        elif self.button_type == "max_output_pulse":
+            await self._coordinator.send_device_max_output_cmd(
+                self.device_id, "pulse", self.button_index
             )
 
         # self._attr_icon = "mdi:check-circle"

@@ -152,7 +152,7 @@ class OlarmFlowClientCoordinator:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_ukey_cmd(self, device_id, ukey_index):
-        """Send user key command to the Olarm device."""
+        """Send utility key command to the Olarm device."""
         try:
             await self._ensure_valid_token()
             await self._olarm_connect_client.send_device_ukey_activate(
@@ -165,7 +165,7 @@ class OlarmFlowClientCoordinator:
     async def send_device_link_output_cmd(
         self, device_id, link_id, output_action, output_index
     ):
-        """Send user key command to the Olarm device."""
+        """Send link output command to the Olarm device."""
         try:
             await self._ensure_valid_token()
             method_name = f"send_device_link_output_{output_action}"
@@ -178,7 +178,7 @@ class OlarmFlowClientCoordinator:
     async def send_device_link_relay_cmd(
         self, device_id, link_id, output_action, output_index
     ):
-        """Send user key command to the Olarm device."""
+        """Send link relay command to the Olarm device."""
         try:
             await self._ensure_valid_token()
             method_name = f"send_device_link_relay_{output_action}"
@@ -189,7 +189,7 @@ class OlarmFlowClientCoordinator:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_max_output_cmd(self, device_id, output_action, output_index):
-        """Send user key command to the Olarm device."""
+        """Send max output command to the Olarm device."""
         try:
             await self._ensure_valid_token()
             method_name = f"send_device_max_output_{output_action}"

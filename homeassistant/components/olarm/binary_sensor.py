@@ -1,4 +1,4 @@
-"""Support for zones through the Olarm cloud API."""
+"""Support for Olarm binary sensors."""
 
 from __future__ import annotations
 
@@ -8,12 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OlarmConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,15 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    config_entry: OlarmConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
 
     _LOGGER.debug("config_entry -> %s", config_entry.data)
 
     # get coordinator
-    coordinator = config_entry.runtime_data["coordinator"]
+    coordinator = config_entry.runtime_data
 
     # cycle through zones and create binary sensors
     sensors = []
@@ -194,31 +194,31 @@ class OlarmBinarySensor(BinarySensorEntity):
 
         # set attributes
         self._attr_has_entity_name = True
-        self._attr_name = f"Zone {sensor_index + 1:03} {sensor_label}"
+        self._attr_name = f"Zone {sensor_index + 1:03} - {sensor_label}"
         self._attr_unique_id = f"{device_id}.zone.{sensor_index}"
         if sensor_type == "zone_bypass":
-            self._attr_name = f"Zone {sensor_index + 1:03} Bypass {sensor_label}"
+            self._attr_name = f"Zone {sensor_index + 1:03} Bypass - {sensor_label}"
             self._attr_unique_id = f"{device_id}.zone.bypass.{sensor_index}"
         if sensor_type == "ac_power":
             self._attr_name = f"{sensor_label}"
             self._attr_unique_id = f"{device_id}.ac_power"
         if sensor_type == "link_input":
             self._attr_name = (
-                f"{link_name} LINK Input {sensor_index + 1:02} {sensor_label}"
+                f"{link_name} LINK Input {sensor_index + 1:02} - {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.input.{sensor_index}"
         if sensor_type == "link_output":
             self._attr_name = (
-                f"{link_name} LINK Output {sensor_index + 1:02} {sensor_label}"
+                f"{link_name} LINK Output {sensor_index + 1:02} - {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.output.{sensor_index}"
         if sensor_type == "link_relay":
             self._attr_name = (
-                f"{link_name} LINK Relay {sensor_index + 1:02} {sensor_label}"
+                f"{link_name} LINK Relay {sensor_index + 1:02} - {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.relay.{sensor_index}"
         if sensor_type == "max_input":
-            self._attr_name = f"MAX Input {sensor_index + 1:02} {sensor_label}"
+            self._attr_name = f"MAX Input {sensor_index + 1:02} - {sensor_label}"
             self._attr_unique_id = f"{device_id}.max.input.{sensor_index}"
         if sensor_type == "max_output":
             self._attr_name = f"MAX Output {sensor_index + 1:02} - {sensor_label}"

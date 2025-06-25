@@ -1,4 +1,4 @@
-"""Support for areas through the Olarm cloud API."""
+"""Support for Olarm Alarm Control Panels."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OlarmConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,13 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    config_entry: OlarmConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add binary sensors for a config entry."""
-
-    # get coordinator
-    coordinator = config_entry.runtime_data["coordinator"]
+    """Set up Olarm Alarm Control Panel platform."""
+    coordinator = config_entry.runtime_data
 
     # cycle through areas and create alarm control panels
     panels = []
@@ -69,7 +67,6 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
 
         # set attributes
         self._attr_alarm_state = AlarmControlPanelState.DISARMED
-        # _attr_changed_by: str | None = None
         self._attr_code_arm_required = False
         self._attr_supported_features = (
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -78,7 +75,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
             | AlarmControlPanelEntityFeature.TRIGGER
         )
         self._attr_has_entity_name = True
-        self._attr_name = f"{area_index + 1:02} {area_label}"
+        self._attr_name = f"Area {area_index + 1:02} - {area_label}"
         self._attr_unique_id = f"{device_id}.area.{area_index}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
