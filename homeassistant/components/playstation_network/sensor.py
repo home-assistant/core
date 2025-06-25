@@ -69,6 +69,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -78,6 +79,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -87,6 +89,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -96,6 +99,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/bronze.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
@@ -164,5 +168,14 @@ class PlaystationNetworkSensorEntity(
                 (pic.get("url") for pic in profile_pictures if pic.get("size") == "xl"),
                 None,
             )
+        if (
+            self.entity_description.key is PlaystationNetworkSensor.TROPHY_LEVEL
+            and self.coordinator.data.trophy_summary
+        ):
+            return f"https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/tier_{self.coordinator.data.trophy_summary.tier}.png"
 
-        return super().entity_picture
+        return (
+            entity_picture
+            if (entity_picture := self.entity_description.entity_picture)
+            else super().entity_picture
+        )
