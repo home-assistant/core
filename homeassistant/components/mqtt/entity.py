@@ -313,6 +313,11 @@ def async_setup_entity_entry_helper(
                 component_config.pop("platform")
                 component_config.update(availability_config)
                 component_config.update(device_mqtt_options)
+                if (
+                    CONF_ENTITY_CATEGORY in component_config
+                    and component_config[CONF_ENTITY_CATEGORY] is None
+                ):
+                    component_config.pop(CONF_ENTITY_CATEGORY)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -402,6 +407,7 @@ class MqttAttributesMixin(Entity):
     _message_callback: Callable[
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
+    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -438,7 +444,13 @@ class MqttAttributesMixin(Entity):
                     "msg_callback": partial(
                         self._message_callback,
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
+                        {
+                            "_attr_extra_state_attributes",
+                            "_attr_gps_accuracy",
+                            "_attr_latitude",
+                            "_attr_location_name",
+                            "_attr_longitude",
+                        },
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -477,7 +489,11 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                self._attr_extra_state_attributes = filtered_dict
+                if hasattr(self, "_process_update_extra_state_attributes"):
+                    self._process_update_extra_state_attributes(filtered_dict)
+                else:
+                    self._attr_extra_state_attributes = filtered_dict
+
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
@@ -629,8 +645,7 @@ async def cleanup_device_registry(
     entities, triggers or tags.
     """
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)

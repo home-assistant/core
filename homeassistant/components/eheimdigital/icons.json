@@ -1,5 +1,28 @@
 {
   "entity": {
+    "number": {
+      "manual_speed": {
+        "default": "mdi:pump"
+      },
+      "day_speed": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_speed": {
+        "default": "mdi:moon-waning-crescent"
+      },
+      "temperature_offset": {
+        "default": "mdi:thermometer"
+      },
+      "night_temperature_offset": {
+        "default": "mdi:thermometer"
+      },
+      "system_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "0": "mdi:led-off"
+        }
+      }
+    },
     "sensor": {
       "current_speed": {
         "default": "mdi:pump"
@@ -12,6 +35,22 @@
         "state": {
           "no_error": "mdi:check-circle"
         }
+      }
+    },
+    "switch": {
+      "filter_active": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "time": {
+      "day_start_time": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_start_time": {
+        "default": "mdi:moon-waning-crescent"
       }
     }
   }

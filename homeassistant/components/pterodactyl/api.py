@@ -63,15 +63,24 @@ class PterodactylAPI:
         self.pterodactyl = None
         self.identifiers = []
 
+    def get_game_servers(self) -> list[str]:
+        """Get all game servers."""
+        paginated_response = self.pterodactyl.client.servers.list_servers()  # type: ignore[union-attr]
+
+        return paginated_response.collect()
+
     async def async_init(self):
         """Initialize the Pterodactyl API."""
         self.pterodactyl = PterodactylClient(self.host, self.api_key)
 
         try:
-            paginated_response = await self.hass.async_add_executor_job(
-                self.pterodactyl.client.servers.list_servers
-            )
-        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            game_servers = await self.hass.async_add_executor_job(self.get_game_servers)
+        except (
+            BadRequestError,
+            PterodactylApiError,
+            ConnectionError,
+            StopIteration,
+        ) as error:
             raise PterodactylConnectionError(error) from error
         except HTTPError as error:
             if error.response.status_code == 401:
@@ -79,7 +88,6 @@ class PterodactylAPI:
 
             raise PterodactylConnectionError(error) from error
         else:
-            game_servers = paginated_response.collect()
             for game_server in game_servers:
                 self.identifiers.append(game_server["attributes"]["identifier"])
 

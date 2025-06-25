@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/uptimerobot",
   "iot_class": "cloud_polling",
   "loggers": ["pyuptimerobot"],
+  "quality_scale": "bronze",
   "requirements": ["pyuptimerobot==22.2.0"]
 }

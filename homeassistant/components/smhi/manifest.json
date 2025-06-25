@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/smhi",
   "iot_class": "cloud_polling",
   "loggers": ["pysmhi"],
-  "requirements": ["pysmhi==1.0.1"]
+  "requirements": ["pysmhi==1.0.2"]
 }

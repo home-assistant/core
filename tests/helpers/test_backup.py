@@ -17,6 +17,7 @@ async def test_async_get_manager(hass: HomeAssistant) -> None:
     backup_helper.async_initialize_backup(hass)
     task = asyncio.create_task(backup_helper.async_get_manager(hass))
     assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+    await hass.async_block_till_done()
     manager = await task
     assert manager is hass.data[backup_helper.DATA_MANAGER]
 
@@ -36,7 +37,5 @@ async def test_async_get_manager_backup_failed_setup(hass: HomeAssistant) -> Non
         side_effect=Exception("Boom!"),
     ):
         assert not await async_setup_component(hass, BACKUP_DOMAIN, {})
-    with (
-        pytest.raises(Exception, match="Boom!"),
-    ):
+    with pytest.raises(Exception, match="Boom!"):
         await backup_helper.async_get_manager(hass)

@@ -52,8 +52,8 @@
           "fan_mode": {
             "state": {
               "silent": "Silent",
-              "auto": "Auto",
-              "high": "High"
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]"
             }
           }
         }

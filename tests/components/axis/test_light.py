@@ -6,7 +6,7 @@ from unittest.mock import patch
 from axis.models.api import CONTEXT
 import pytest
 import respx
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (

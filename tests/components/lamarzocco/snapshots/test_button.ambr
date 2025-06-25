@@ -40,6 +40,7 @@
     'original_name': 'Start backflush',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start_backflush',
     'unique_id': 'GS012345_start_backflush',
