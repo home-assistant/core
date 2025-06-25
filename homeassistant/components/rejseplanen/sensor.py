@@ -14,13 +14,12 @@ import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
 
-from homeassistant.components.sensor import SensorEntity, cast
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_DUE_AT,
@@ -49,7 +48,6 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rejseplanen transport sensor."""
 
@@ -57,8 +55,15 @@ async def async_setup_entry(
         "Setting up Rejseplanen transport sensor for entry: %s", config_entry.entry_id
     )
 
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: RejseplanenDataUpdateCoordinator = entry_data["coordinator"]
+    if hass.data.get(DOMAIN) is None:
+        hass.data[DOMAIN] = {}
+
+    entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
+    coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
+        hass,
+        config_entry.data["authentication"],
+    )
+    entry_data["coordinator"] = coordinator
 
     # Only add the updater status sensor for the main entry
     if config_entry.data.get("is_main_entry"):
@@ -67,12 +72,7 @@ async def async_setup_entry(
         )
 
     for subentry_id, subentry in config_entry.subentries.items():
-        _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
-        if subentry_id != DOMAIN:
-            _LOGGER.warning(
-                "Unexpected subentry %s found in Rejseplanen config entry",
-                subentry_id,
-            )
+        _LOGGER.info("Subentry %s with data: %s", subentry_id, subentry.data)
 
         entry_data = hass.data[DOMAIN][config_entry.entry_id]
         coordinator = entry_data["coordinator"]
@@ -83,42 +83,52 @@ async def async_setup_entry(
         route = config.get(CONF_ROUTE, [])
         direction = config.get(CONF_DIRECTION, [])
         departure_type = config.get(CONF_DEPARTURE_TYPE, [])
+        unique_id = subentry.unique_id
 
         async_add_entities(
             [
                 RejseplanenTransportSensor(
                     coordinator=coordinator,
-                    entry_id=config_entry.entry_id,
                     stop_id=stop_id,
                     name=name,
                     route=route,
                     direction=direction,
                     departure_type=departure_type,
+                    unique_id=unique_id,
                 )
             ],
             config_subentry_id=subentry_id,
         )
 
+    await coordinator.async_config_entry_first_refresh()
 
-class RejseplanenTransportSensor(CoordinatorEntity, SensorEntity):
+
+class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
     _attr_icon = "mdi:bus"
 
     def __init__(
-        self, coordinator, entry_id, stop_id, route, direction, departure_type, name
+        self,
+        coordinator,
+        stop_id,
+        route,
+        direction,
+        departure_type,
+        name,
+        unique_id=None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._entry_id = entry_id
+        super().__init__()
+        self._coordinator: RejseplanenDataUpdateCoordinator = coordinator
         self._stop_id = stop_id
         self._route = route
         self._direction = direction
         self._departure_type = departure_type
         self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}"
-        cast(RejseplanenDataUpdateCoordinator, self.coordinator).add_stop_id(stop_id)
+        self._coordinator.add_stop_id(stop_id)
+        self._attr_unique_id = unique_id
 
     @property
     def native_value(self) -> StateType:
@@ -169,17 +179,15 @@ class RejseplanenTransportSensor(CoordinatorEntity, SensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal of the sensor from Home Assistant."""
         _LOGGER.debug("Removing sensor %s from coordinator", self._attr_unique_id)
-        coordinator = cast(RejseplanenDataUpdateCoordinator, self.coordinator)
-        coordinator.remove_stop_id(self._stop_id)
+        self._coordinator.remove_stop_id(self._stop_id)
 
     def _get_filtered_departures(self) -> list[dict[str, Any]]:
         """Get filtered departures based on the configured parameters."""
-        coordinator = cast(RejseplanenDataUpdateCoordinator, self.coordinator)
         route_filter = self._route if self._route else None
         direction_filter = self._direction if self._direction else None
         departure_type_filter = self._departure_type if self._departure_type else None
 
-        return coordinator.get_filtered_departures(
+        return self._coordinator.get_filtered_departures(
             stop_id=self._stop_id,
             route_filter=route_filter,
             direction_filter=direction_filter,

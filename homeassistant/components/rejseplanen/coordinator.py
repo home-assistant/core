@@ -46,9 +46,12 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
         except NoStopsRegisteredError as error:
             _LOGGER.debug("No stops registered, skipping data fetch: %s", error)
             raise UpdateFailed(error) from error
-        except (api_error, http_error) as error:  # runtime errors from the API
+        except (
+            api_error.RPAPIError,
+            http_error.RPHTTPError,
+        ) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
-        except connection_error as error:  # network errors
+        except connection_error.RPConnectionError as error:  # network errors
             _LOGGER.error("Connection error while fetching data: %s", error)
             raise UpdateFailed(error) from error
 

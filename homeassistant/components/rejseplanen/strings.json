@@ -8,5 +8,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "config_subentries": {
+    "stop": {
+      "step": {
+        "user": {
+          "description": "Set up stop subentry for Rejseplanen",
+          "title": "Add Stop"
+        }
+      }
+    }
   }
 }

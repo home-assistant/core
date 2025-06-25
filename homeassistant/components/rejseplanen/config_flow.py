@@ -1,5 +1,9 @@
 """Config flow for Rejseplanen integration."""
 
+import hashlib
+import json
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -117,6 +121,15 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
         stop_id = int(user_input[CONF_STOP_ID])
         name = user_input[CONF_NAME]
 
+        unique_parts: dict[str, str | list[Any]] = {
+            "route": user_input.get(CONF_ROUTE, []),
+            "direction": user_input.get(CONF_DIRECTION, []),
+            "departure_type": user_input.get(CONF_DEPARTURE_TYPE, []),
+        }
+        unique_str = json.dumps(unique_parts, sort_keys=True, separators=(",", ":"))
+        unique_hash = hashlib.sha256(unique_str.encode()).hexdigest()[:8]
+        unique_id = f"{stop_id}-{unique_hash}"
+
         return self.async_create_entry(
             title=name,
             data={
@@ -126,4 +139,5 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
                 CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
                 CONF_ROUTE: user_input.get(CONF_ROUTE, []),
             },
+            unique_id=unique_id,
         )
