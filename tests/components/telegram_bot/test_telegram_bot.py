@@ -686,7 +686,7 @@ async def test_send_message_with_config_entry(
             {
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 ATTR_MESSAGE: "mock message",
-                ATTR_TARGET: 1,
+                ATTR_TARGET: [123456, 1],
             },
             blocking=True,
             return_response=True,
@@ -788,6 +788,23 @@ async def test_delete_message(
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # test: delete message with invalid chat id
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_MESSAGE,
+            {ATTR_CHAT_ID: 1, ATTR_MESSAGEID: "last"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders["chat_ids"] == "1"
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+
+    # test: delete message with valid chat id
 
     response = await hass.services.async_call(
         DOMAIN,

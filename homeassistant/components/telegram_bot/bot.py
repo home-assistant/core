@@ -299,7 +299,20 @@ class TelegramNotificationService:
             return [allowed_chat_ids[0]]
 
         chat_ids = [target] if isinstance(target, int) else target
-        return [chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids]
+        valid_chat_ids = [
+            chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids
+        ]
+        if not valid_chat_ids:
+            raise ServiceValidationError(
+                "Invalid chat IDs",
+                translation_domain=DOMAIN,
+                translation_key="invalid_chat_ids",
+                translation_placeholders={
+                    "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
+                    "bot_name": self.config.title,
+                },
+            )
+        return valid_chat_ids
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
@@ -409,9 +422,9 @@ class TelegramNotificationService:
         """Send one message."""
         try:
             out = await func_send(*args_msg, **kwargs_msg)
-            if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
+            if isinstance(out, Message):
                 chat_id = out.chat_id
-                message_id = out[ATTR_MESSAGEID]
+                message_id = out.message_id
                 self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
@@ -419,7 +432,7 @@ class TelegramNotificationService:
                     chat_id,
                 )
 
-                event_data = {
+                event_data: dict[str, Any] = {
                     ATTR_CHAT_ID: chat_id,
                     ATTR_MESSAGEID: message_id,
                 }
@@ -431,10 +444,6 @@ class TelegramNotificationService:
                     ]
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
-                )
-            elif not isinstance(out, bool):
-                _LOGGER.warning(
-                    "Update last message: out_type:%s, out=%s", type(out), out
                 )
         except TelegramError as exc:
             _LOGGER.error(
