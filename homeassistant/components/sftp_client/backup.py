@@ -177,13 +177,9 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
 
         source_stream = await open_stream()
         tar_path = f"{self._backup_path}/{filename_tar}"
-        try:
-            async with await self.sftp.client.open(tar_path, "wb") as sftp_file:
-                async for chunk in source_stream:
-                    await sftp_file.write(chunk)
-        except SFTPError as err:
-            _LOGGER.debug("Full error: %s", err, exc_info=True)
-            raise BackupAgentError(f"Failed to write backup file: {err}") from err
+        async with await self.sftp.client.open(tar_path, "wb") as sftp_file:
+            async for chunk in source_stream:
+                await sftp_file.write(chunk)
 
         metadata_content = json_dumps(backup.as_dict())
         source_stream = json_to_stream(metadata_content)
