@@ -258,7 +258,7 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
 def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
-    import sqlite3  # pylint: disable=import-outside-toplevel
+    import sqlite3  # noqa: PLC0415
 
     try:
         conn = sqlite3.connect(dbpath)
@@ -402,9 +402,8 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    # pylint: disable=import-outside-toplevel
-    from MySQLdb.constants import FIELD_TYPE
-    from MySQLdb.converters import conversions
+    from MySQLdb.constants import FIELD_TYPE  # noqa: PLC0415
+    from MySQLdb.converters import conversions  # noqa: PLC0415
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
 
