@@ -158,6 +158,60 @@ async def test_form_cannot_connect(hass: HomeAssistant, sftp_client: AsyncMock) 
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_unknown(hass: HomeAssistant, sftp_client: AsyncMock) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.sftp_client.helpers.SFTPConnection.async_connect",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_BACKUP_PATH: "backup-folder",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    # Make sure the config flow tests finish with either an
+    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+    # we can show the config flow is able to recover from an error.
+
+    with patch(
+        "homeassistant.components.sftp_client.helpers.SFTPConnection.async_connect",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_BACKUP_PATH: "backup-folder",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username@1.1.1.1"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_BACKUP_PATH: "backup-folder",
+    }
+    assert len(sftp_client.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, sftp_client: AsyncMock
 ) -> None:
