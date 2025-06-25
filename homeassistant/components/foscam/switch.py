@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,226 +18,122 @@ from .entity import FoscamEntity
 class FoscamSwitchEntityDescription(SwitchEntityDescription):
     """A custom entity description that supports a turn_off function."""
 
-    turn_off_fn: Callable[[FoscamGenericSwitch], Awaitable[None]] | None = None
-    turn_on_fn: Callable[[FoscamGenericSwitch], Awaitable[None]] | None = None
+    turn_off_fn: Callable[[FoscamGenericSwitch], None] | None = None
+    turn_on_fn: Callable[[FoscamGenericSwitch], None] | None = None
 
 
-async def flip_off(switch: FoscamGenericSwitch) -> None:
-    """Disable vertical video flipping (flip mode) on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 0)
+def flip_off(switch: FoscamGenericSwitch) -> None:
+    """Disable vertical video flipping (flip mode) on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 0)
 
 
-async def mirror_off(switch: FoscamGenericSwitch) -> None:
-    """Disable horizontal video mirroring on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 0)
+def mirror_off(switch: FoscamGenericSwitch) -> None:
+    """Disable horizontal video mirroring on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 0)
 
 
-async def ir_off(switch: FoscamGenericSwitch) -> None:
-    """Turn off infrared LED lighting on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def ir_off(switch: FoscamGenericSwitch) -> None:
+    """Turn off infrared LED lighting on the camera asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.set_infra_led_config, 0
     )
-    await switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
+    switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
 
 
-async def wake_up_off(switch: FoscamGenericSwitch) -> None:
-    """Put the camera into sleep mode asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.wake_up)
+def wake_up_off(switch: FoscamGenericSwitch) -> None:
+    """Put the camera into sleep mode asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.wake_up)
 
 
-async def white_light_off(switch: FoscamGenericSwitch) -> None:
-    """Turn off the white light of the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.closeWhiteLight)
+def white_light_off(switch: FoscamGenericSwitch) -> None:
+    """Turn off the white light of the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.closeWhiteLight)
 
 
-async def siren_off(switch: FoscamGenericSwitch) -> None:
-    """Deactivate the camera's siren alarm asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def siren_off(switch: FoscamGenericSwitch) -> None:
+    """Deactivate the camera's siren alarm asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.setSirenConfig, 0, 100, 0
     )
 
 
-async def volume_off(switch: FoscamGenericSwitch) -> None:
-    """Disable audio output (speaker) on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def volume_off(switch: FoscamGenericSwitch) -> None:
+    """Disable audio output (speaker) on the camera asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.setVoiceEnableState, 1
     )
 
 
-async def light_off(switch: FoscamGenericSwitch) -> None:
-    """Disable status LED indicator on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
-        switch.coordinator.session.setLedEnableState, 1
-    )
+def light_off(switch: FoscamGenericSwitch) -> None:
+    """Disable status LED indicator on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setLedEnableState, 1)
 
 
-async def wdr_off(switch: FoscamGenericSwitch) -> None:
-    """Disable Wide Dynamic Range (WDR) mode on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 0)
+def wdr_off(switch: FoscamGenericSwitch) -> None:
+    """Disable Wide Dynamic Range (WDR) mode on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 0)
 
 
-async def hdr_off(switch: FoscamGenericSwitch) -> None:
-    """Disable High Dynamic Range (HDR) mode on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 0)
+def hdr_off(switch: FoscamGenericSwitch) -> None:
+    """Disable High Dynamic Range (HDR) mode on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 0)
 
 
-async def flip_on(switch: FoscamGenericSwitch) -> None:
-    """Enable vertical video flipping (flip mode) on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 1)
+def flip_on(switch: FoscamGenericSwitch) -> None:
+    """Enable vertical video flipping (flip mode) on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 1)
 
 
-async def mirror_on(switch: FoscamGenericSwitch) -> None:
-    """Enable horizontal video mirroring on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 1)
+def mirror_on(switch: FoscamGenericSwitch) -> None:
+    """Enable horizontal video mirroring on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 1)
 
 
-async def ir_on(switch: FoscamGenericSwitch) -> None:
-    """Turn on infrared LED lighting on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def ir_on(switch: FoscamGenericSwitch) -> None:
+    """Turn on infrared LED lighting on the camera asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.set_infra_led_config, 1
     )
-    await switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
+    switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
 
 
-async def wake_up_on(switch: FoscamGenericSwitch) -> None:
-    """Wake up the camera from sleep mode asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.sleep)
+def wake_up_on(switch: FoscamGenericSwitch) -> None:
+    """Wake up the camera from sleep mode asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.sleep)
 
 
-async def white_light_on(switch: FoscamGenericSwitch) -> None:
-    """Turn on the white light of the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.openWhiteLight)
+def white_light_on(switch: FoscamGenericSwitch) -> None:
+    """Turn on the white light of the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.openWhiteLight)
 
 
-async def siren_on(switch: FoscamGenericSwitch) -> None:
-    """Activate the camera's siren alarm asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def siren_on(switch: FoscamGenericSwitch) -> None:
+    """Activate the camera's siren alarm asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.setSirenConfig, 1, 100, 0
     )
 
 
-async def volume_on(switch: FoscamGenericSwitch) -> None:
-    """Enable audio output (speaker) on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
+def volume_on(switch: FoscamGenericSwitch) -> None:
+    """Enable audio output (speaker) on the camera asynchronously."""
+    switch.hass.async_add_executor_job(
         switch.coordinator.session.setVoiceEnableState, 0
     )
 
 
-async def light_on(switch: FoscamGenericSwitch) -> None:
-    """Enable status LED indicator on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(
-        switch.coordinator.session.setLedEnableState, 0
-    )
+def light_on(switch: FoscamGenericSwitch) -> None:
+    """Enable status LED indicator on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setLedEnableState, 0)
 
 
-async def wdr_on(switch: FoscamGenericSwitch) -> None:
-    """Enable Wide Dynamic Range (WDR) mode on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 1)
+def wdr_on(switch: FoscamGenericSwitch) -> None:
+    """Enable Wide Dynamic Range (WDR) mode on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 1)
 
 
-async def hdr_on(switch: FoscamGenericSwitch) -> None:
-    """Enable High Dynamic Range (HDR) mode on the camera asynchronously.
-
-    Args:
-        switch: The Foscam switch entity that provides access to the camera session.
-
-    """
-    await switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 1)
+def hdr_on(switch: FoscamGenericSwitch) -> None:
+    """Enable High Dynamic Range (HDR) mode on the camera asynchronously."""
+    switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 1)
 
 
 SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
@@ -381,13 +277,13 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         if self.entity_description.turn_off_fn:
-            await self.entity_description.turn_off_fn(self)
+            self.entity_description.turn_off_fn(self)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
         if self.entity_description.turn_on_fn:
-            await self.entity_description.turn_on_fn(self)
+            self.entity_description.turn_on_fn(self)
         await self.coordinator.async_request_refresh()
 
     @callback
