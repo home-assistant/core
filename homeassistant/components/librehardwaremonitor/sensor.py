@@ -81,19 +81,14 @@ class LibreHardwareMonitorSensor(
         else:
             self.value = None
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def native_value(self) -> str | None:
-        """Return the state of the device."""
+        """Return the formatted sensor value or None if no value is available."""
         if self.value is not None and self.value != "-":
             return self._format_number_value(self.value)
         return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes of the entity."""
-        return self._attr_extra_state_attributes
 
     @staticmethod
     def _format_number_value(number_str: str) -> str:
