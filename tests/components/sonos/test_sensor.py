@@ -13,7 +13,7 @@ from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
 from homeassistant.components.sonos.sensor import (
     HA_POWER_SOURCE_BATTERY,
-    HA_POWER_SOURCE_CHARGING_RING,
+    HA_POWER_SOURCE_CHARGING_BASE,
     HA_POWER_SOURCE_USB,
     SensorDeviceClass,
 )
@@ -78,11 +78,11 @@ async def test_battery_attributes(
 
     power_source = entity_registry.entities["sensor.zone_a_power_source"]
     power_source_state = hass.states.get(power_source.entity_id)
-    assert power_source_state.state == HA_POWER_SOURCE_CHARGING_RING
+    assert power_source_state.state == HA_POWER_SOURCE_CHARGING_BASE
     assert power_source_state.attributes.get("device_class") == SensorDeviceClass.ENUM
     assert power_source_state.attributes.get("options") == [
         HA_POWER_SOURCE_BATTERY,
-        HA_POWER_SOURCE_CHARGING_RING,
+        HA_POWER_SOURCE_CHARGING_BASE,
         HA_POWER_SOURCE_USB,
     ]
     result = translation.async_translate_state(
@@ -93,7 +93,7 @@ async def test_battery_attributes(
         power_source.translation_key,
         None,
     )
-    assert result == "Charging Ring"
+    assert result == "Charging Base"
 
 
 async def test_power_source_unknown_state(
