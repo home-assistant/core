@@ -125,29 +125,7 @@
         }
       }
     },
-    "cover": {
-      "cover": {
-        "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          }
-        }
-      }
-    },
     "humidifier": {
-      "humidifier": {
-        "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          }
-        }
-      },
       "evaporative_humidifier": {
         "state_attributes": {
           "mode": {
@@ -165,27 +143,9 @@
         }
       }
     },
-    "lock": {
-      "lock": {
-        "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          }
-        }
-      }
-    },
     "switch": {
       "bot": {
         "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          },
           "switch_mode": {
             "state": {
               "true": "Pull/Retract",
@@ -198,12 +158,6 @@
     "fan": {
       "fan": {
         "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          },
           "preset_mode": {
             "state": {
               "normal": "Normal",
@@ -216,12 +170,6 @@
       },
       "air_purifier": {
         "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
-            }
-          },
           "preset_mode": {
             "state": {
               "level_1": "Level 1",
@@ -230,18 +178,6 @@
               "auto": "[%key:common::state::auto%]",
               "pet": "Pet",
               "sleep": "Sleep"
-            }
-          }
-        }
-      }
-    },
-    "vacuum": {
-      "vacuum": {
-        "state_attributes": {
-          "last_run_success": {
-            "state": {
-              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
             }
           }
         }

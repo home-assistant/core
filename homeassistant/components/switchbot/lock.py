@@ -57,20 +57,20 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     @exception_handler
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        self._last_run_success = await self._device.lock()
+        await self._device.lock()
         self.async_write_ha_state()
 
     @exception_handler
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         if self._attr_supported_features & (LockEntityFeature.OPEN):
-            self._last_run_success = await self._device.unlock_without_unlatch()
+            await self._device.unlock_without_unlatch()
         else:
-            self._last_run_success = await self._device.unlock()
+            await self._device.unlock()
         self.async_write_ha_state()
 
     @exception_handler
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
-        self._last_run_success = await self._device.unlock()
+        await self._device.unlock()
         self.async_write_ha_state()

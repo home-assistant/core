@@ -38,7 +38,6 @@ async def test_switchbot_switch_with_restore_state(
             State(
                 entity_id,
                 STATE_ON,
-                {"last_run_success": True},
             )
         ],
     )
@@ -54,7 +53,6 @@ async def test_switchbot_switch_with_restore_state(
 
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
-        assert state.attributes["last_run_success"] is True
 
 
 @pytest.mark.parametrize(

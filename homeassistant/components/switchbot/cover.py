@@ -72,7 +72,6 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_position = last_state.attributes.get(
             ATTR_CURRENT_POSITION
         )
-        self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
@@ -81,7 +80,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        await self._device.open()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -91,7 +90,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        await self._device.close()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -101,7 +100,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
-        self._last_run_success = bool(await self._device.stop())
+        await self._device.stop()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -112,7 +111,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         position = kwargs.get(ATTR_POSITION)
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        await self._device.set_position(position)
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -159,7 +158,6 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_tilt_position = last_state.attributes.get(
             ATTR_CURRENT_TILT_POSITION
         )
-        self._last_run_success = last_state.attributes.get("last_run_success")
         if (_tilt := self._attr_current_cover_tilt_position) is not None:
             self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
                 _tilt > self.CLOSED_UP_THRESHOLD
@@ -170,7 +168,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the tilt."""
 
         _LOGGER.debug("Switchbot to open blind tilt %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        await self._device.open()
         self.async_write_ha_state()
 
     @exception_handler
@@ -178,7 +176,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the tilt."""
 
         _LOGGER.debug("Switchbot to close the blind tilt %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        await self._device.close()
         self.async_write_ha_state()
 
     @exception_handler
@@ -186,7 +184,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
-        self._last_run_success = bool(await self._device.stop())
+        await self._device.stop()
         self.async_write_ha_state()
 
     @exception_handler
@@ -195,7 +193,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         position = kwargs.get(ATTR_TILT_POSITION)
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        await self._device.set_position(position)
         self.async_write_ha_state()
 
     @callback
@@ -241,7 +239,6 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_position = last_state.attributes.get(
             ATTR_CURRENT_POSITION
         )
-        self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
@@ -250,7 +247,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the roller shade."""
 
         _LOGGER.debug("Switchbot to open roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        await self._device.open()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -260,7 +257,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the roller shade."""
 
         _LOGGER.debug("Switchbot to close roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        await self._device.close()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -270,7 +267,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Stop the moving of roller shade."""
 
         _LOGGER.debug("Switchbot to stop roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.stop())
+        await self._device.stop()
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -281,7 +278,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         position = kwargs.get(ATTR_POSITION)
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        await self._device.set_position(position)
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()

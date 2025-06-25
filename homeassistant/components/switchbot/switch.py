@@ -46,7 +46,6 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
         if not (last_state := await self.async_get_last_state()):
             return
         self._attr_is_on = last_state.state == STATE_ON
-        self._last_run_success = last_state.attributes.get("last_run_success")
 
     @property
     def assumed_state(self) -> bool:
@@ -64,6 +63,5 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            **super().extra_state_attributes,
             "switch_mode": self._device.switch_mode(),
         }

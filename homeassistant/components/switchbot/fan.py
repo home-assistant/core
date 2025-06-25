@@ -73,33 +73,37 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         """Return the current preset mode."""
         return self._device.get_current_mode()
 
+    @exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
 
         _LOGGER.debug(
             "Switchbot fan to set preset mode %s %s", preset_mode, self._address
         )
-        self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
+        await self._device.set_preset_mode(preset_mode)
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
 
         _LOGGER.debug(
             "Switchbot fan to set percentage %d %s", percentage, self._address
         )
-        self._last_run_success = bool(await self._device.set_percentage(percentage))
+        await self._device.set_percentage(percentage)
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
 
         _LOGGER.debug(
             "Switchbot fan to set oscillating %s %s", oscillating, self._address
         )
-        self._last_run_success = bool(await self._device.set_oscillation(oscillating))
+        await self._device.set_oscillation(oscillating)
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -114,14 +118,15 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
             preset_mode,
             self._address,
         )
-        self._last_run_success = bool(await self._device.turn_on())
+        await self._device.turn_on()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
 
         _LOGGER.debug("Switchbot fan to set turn off %s", self._address)
-        self._last_run_success = bool(await self._device.turn_off())
+        await self._device.turn_off()
         self.async_write_ha_state()
 
 
@@ -157,7 +162,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
             preset_mode,
             self._address,
         )
-        self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
+        await self._device.set_preset_mode(preset_mode)
         self.async_write_ha_state()
 
     @exception_handler
@@ -175,7 +180,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
             preset_mode,
             self._address,
         )
-        self._last_run_success = bool(await self._device.turn_on())
+        await self._device.turn_on()
         self.async_write_ha_state()
 
     @exception_handler
@@ -183,5 +188,5 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
         """Turn off the air purifier."""
 
         _LOGGER.debug("Switchbot air purifier to set turn off %s", self._address)
-        self._last_run_success = bool(await self._device.turn_off())
+        await self._device.turn_off()
         self.async_write_ha_state()
