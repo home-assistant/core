@@ -10,6 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_REFERRER
 from .coordinator import GoogleAirQualityConfigEntry, GoogleAirQualityUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -24,7 +25,8 @@ async def async_setup_entry(
     session = async_get_clientsession(hass)
     if TYPE_CHECKING:
         assert entry.unique_id is not None
-    auth = Auth(session, entry.unique_id)
+    referrer = entry.data.get(CONF_REFERRER)
+    auth = Auth(session, entry.unique_id, referrer)
     client = GoogleAirQualityApi(auth)
     coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
     for subentry_id in entry.subentries:

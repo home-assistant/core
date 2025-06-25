@@ -10,7 +10,7 @@ from google_air_quality_api.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.google_air_quality.const import DOMAIN
+from homeassistant.components.google_air_quality.const import CONF_REFERRER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -101,7 +101,7 @@ async def test_full_flow(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "API-Key: *********234"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_REFERRER: None}
 
 
 @pytest.mark.parametrize(

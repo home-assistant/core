@@ -11,6 +11,17 @@
         },
         "data_description": {
           "api_key": "The API key provided by Google."
+        },
+        "sections": {
+          "api_key_options": {
+            "name": "Optional API key options",
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)"
+            }
+          }
         }
       }
     },

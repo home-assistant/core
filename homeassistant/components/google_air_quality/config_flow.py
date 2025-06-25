@@ -26,18 +26,32 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
-from .const import DOMAIN
+from .const import CONF_API_KEY_OPTIONS, CONF_REFERRER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+USER_INPUT: dict = {}
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
-    }
+        vol.Optional(CONF_API_KEY_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_REFERRER,
+                        default=USER_INPUT.get(CONF_REFERRER, vol.UNDEFINED),
+                    ): str,
+                }
+            ),
+            {"collapsed": True},
+        ),
+    },
 )
 
 
@@ -58,7 +72,8 @@ class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         if user_input:
             session = async_get_clientsession(self.hass)
-            auth = Auth(session, user_input[CONF_API_KEY])
+            referrer = user_input.get(CONF_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
+            auth = Auth(session, user_input[CONF_API_KEY], referrer)
             client = GoogleAirQualityApi(auth)
             try:
                 await client.async_air_quality(37.419734, -122.0827784)
@@ -74,7 +89,7 @@ class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=f"API-Key: {'*' * (len(user_input[CONF_API_KEY]) - 3)}{user_input[CONF_API_KEY][-3:]}",
-                data={},
+                data={CONF_REFERRER: referrer},
             )
 
         return self.async_show_form(
