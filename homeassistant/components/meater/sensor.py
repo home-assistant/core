@@ -163,7 +163,7 @@ async def async_setup_entry(
 
         devices = coordinator.data
         entities = []
-        known_probes: set[str] = hass.data[MEATER_DATA]
+        known_probes = hass.data[MEATER_DATA]
 
         # Add entities for temperature probes which we've not yet seen
         for device_id in devices:
