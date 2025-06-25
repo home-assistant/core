@@ -263,16 +263,17 @@ class APIEntityStateView(HomeAssistantView):
 
         body = await request.text()
 
-        data: Any = json_loads(body) if body else None
+        try:
+            data: Any = json_loads(body) if body else None
+        except ValueError:
+            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
         if not isinstance(data, dict):
             return self.json_message(
-                "State data should be a JSON object", HTTPStatus.BAD_REQUEST
+                "State data should be a JSON object.", HTTPStatus.BAD_REQUEST
             )
         if (new_state := data.get("state")) is None:
-            return self.json_message(
-                "No state attribute specified.", HTTPStatus.BAD_REQUEST
-            )
+            return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
         attributes = data.get("attributes")
         force_update = data.get("force_update", False)
@@ -483,16 +484,19 @@ class APITemplateView(HomeAssistantView):
     @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Render a template."""
+        body = await request.text()
+
         try:
-            body = await request.text()
-
             data: Any = json_loads(body) if body else None
+        except ValueError:
+            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
-            if not isinstance(data, dict):
-                return self.json_message(
-                    "Template data should be a JSON object", HTTPStatus.BAD_REQUEST
-                )
-            tpl = _cached_template(data["template"], request.app[KEY_HASS])
+        if not isinstance(data, dict):
+            return self.json_message(
+                "Template data should be a JSON object.", HTTPStatus.BAD_REQUEST
+            )
+        tpl = _cached_template(data["template"], request.app[KEY_HASS])
+        try:
             return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
         except (ValueError, TemplateError) as ex:
             return self.json_message(
