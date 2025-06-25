@@ -226,7 +226,7 @@ async def test_creating_tts_subentry(
     assert result2["title"] == "Mock TTS"
     assert result2["data"] == RECOMMENDED_TTS_OPTIONS
 
-    assert len(mock_config_entry.subentries) == 2
+    assert len(mock_config_entry.subentries) == 3
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
