@@ -53,6 +53,9 @@
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
+      },
+      "next_alarm": {
+        "name": "Next alarm"
       }
     },
     "switch": {

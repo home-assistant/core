@@ -19,6 +19,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+ATTR_SCHEDULED_TODAY = "scheduled_today"
+
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
 
@@ -154,6 +156,7 @@ SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
+SONOS_CREATE_NEXT_ALARM_SENSOR = "sonos_create_next_alarm"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"

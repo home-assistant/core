@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -11,6 +12,7 @@ from soco.alarms import Alarm, Alarms
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util import dt as dt_util
 
 from .const import SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
 from .helpers import soco_error
@@ -38,6 +40,19 @@ class SonosAlarms(SonosHouseholdCoordinator):
     def get(self, alarm_id: str) -> Alarm | None:
         """Get an Alarm instance."""
         return self.alarms.get(alarm_id)
+
+    def get_next_alarm_datetime(
+        self, from_datetime=None, include_disabled=False, zone_uid=None
+    ) -> datetime.datetime | None:
+        """Get the next alarm datetime."""
+        if from_datetime is None:
+            from_datetime = dt_util.now()
+        else:
+            from_datetime = dt_util.as_local(from_datetime)
+
+        return self.alarms.get_next_alarm_datetime(
+            from_datetime, include_disabled, zone_uid
+        )
 
     async def async_update_entities(
         self, soco: SoCo, update_id: int | None = None

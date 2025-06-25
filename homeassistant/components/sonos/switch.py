@@ -16,9 +16,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_SCHEDULED_TODAY,
     DOMAIN,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
@@ -32,9 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
 ATTR_ID = "alarm_id"
+ATTR_NEXT_TRIGGER = "next_trigger"
 ATTR_PLAY_MODE = "play_mode"
 ATTR_RECURRENCE = "recurrence"
-ATTR_SCHEDULED_TODAY = "scheduled_today"
 ATTR_VOLUME = "volume"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
@@ -66,8 +68,6 @@ POLL_REQUIRED = (
     ATTR_TOUCH_CONTROLS,
     ATTR_STATUS_LIGHT,
 )
-
-WEEKEND_DAYS = (0, 6)
 
 
 async def async_setup_entry(
@@ -184,7 +184,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:alarm"
 
     def __init__(
         self, alarm_id: str, speaker: SonosSpeaker, config_entry: SonosConfigEntry
@@ -295,14 +294,14 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
-        recurrence = self.alarm.recurrence
-        daynum = int(datetime.datetime.today().strftime("%w"))
-        return (
-            recurrence in ("DAILY", "ONCE")
-            or (recurrence == "WEEKENDS" and daynum in WEEKEND_DAYS)
-            or (recurrence == "WEEKDAYS" and daynum not in WEEKEND_DAYS)
-            or (recurrence.startswith("ON_") and str(daynum) in recurrence)
-        )
+        if self._next_trigger is None:
+            return False
+        return self._next_trigger.date() == dt_util.now().date()
+
+    @property
+    def _next_trigger(self) -> datetime.datetime | None:
+        """Return the next datetime the alarm will trigger."""
+        return self.alarm.get_next_alarm_datetime(from_datetime=dt_util.now())
 
     @property
     def available(self) -> bool:
@@ -313,6 +312,13 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return state of Sonos alarm switch."""
         return self.alarm.enabled
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        if self.is_on:
+            return "mdi:alarm"
+        return "mdi:alarm-off"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -326,6 +332,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             ATTR_PLAY_MODE: str(self.alarm.play_mode),
             ATTR_SCHEDULED_TODAY: self._is_today,
             ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
+            ATTR_NEXT_TRIGGER: str(self._next_trigger),
         }
 
     def turn_on(self, **kwargs: Any) -> None:
