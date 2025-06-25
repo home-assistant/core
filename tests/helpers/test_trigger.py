@@ -36,8 +36,6 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
-from tests.common import MockModule, mock_integration, mock_platform
-
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     """Test bad trigger platform."""
