@@ -697,6 +697,15 @@
       "number": {
         "name": "[%key:component::number::title%]"
       },
+      "tilt_open_close_and_step_time": {
+        "name": "Tilt open close and step time"
+      },
+      "tilt_position_percentage_after_move_to_level": {
+        "name": "Tilt position percentage after move to level"
+      },
+      "lift_drive_down_time": { "name": "Lift drive down time" },
+      "lift_drive_up_time": { "name": "Lift drive up time" },
+      "sound_volume": { "name": "Sound volume" },
       "detection_interval": {
         "name": "Detection interval"
       },
@@ -1158,6 +1167,12 @@
       }
     },
     "select": {
+      "switch_actions": {
+        "name": "Switch actions"
+      },
+      "switch_indication": {
+        "name": "Switch indication"
+      },
       "default_siren_tone": {
         "name": "Default siren tone"
       },
@@ -1391,6 +1406,12 @@
       }
     },
     "sensor": {
+      "auto_relock": {
+        "name": "Auto relock"
+      },
+      "opening": {
+        "name": "[%key:component::binary_sensor::entity_component::opening::name%]"
+      },
       "active_power_ph_b": {
         "name": "Power phase B"
       },
@@ -1484,6 +1505,10 @@
       "filter_run_time": {
         "name": "Filter run time"
       },
+      "last_action": { "name": "Last action" },
+      "last_action_source": { "name": "Last action source" },
+      "last_action_user": { "name": "Last action user" },
+      "last_pin_code": { "name": "Last PIN code" },
       "last_feeding_source": {
         "name": "Last feeding source"
       },
