@@ -46,6 +46,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
 
     _device: switchbot.SwitchbotBaseLight
     _attr_name = None
+    _attr_translation_key = "light"
 
     @property
     def max_color_temp_kelvin(self) -> int:
