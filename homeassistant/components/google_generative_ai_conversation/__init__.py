@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import mimetypes
 from pathlib import Path
+from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -36,10 +37,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_PROMPT,
+    DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
 
@@ -242,6 +245,16 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         parent_entry = api_keys_entries[entry.data[CONF_API_KEY]]
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
+        if use_existing:
+            hass.config_entries.async_add_subentry(
+                parent_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
+            )
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,

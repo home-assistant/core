@@ -7,7 +7,11 @@ import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_generative_ai_conversation.const import DOMAIN
+from homeassistant.components.google_generative_ai_conversation.const import (
+    DEFAULT_TTS_NAME,
+    DOMAIN,
+    RECOMMENDED_TTS_OPTIONS,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -469,13 +473,27 @@ async def test_migration_from_v1_to_v2(
     entry = entries[0]
     assert entry.version == 2
     assert not entry.options
-    assert len(entry.subentries) == 2
-    for subentry in entry.subentries.values():
+    assert len(entry.subentries) == 3
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 2
+    for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
         assert "Google Generative AI" in subentry.title
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
+    assert len(tts_subentries) == 1
+    assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
+    assert tts_subentries[0].title == DEFAULT_TTS_NAME
 
-    subentry = list(entry.subentries.values())[0]
+    subentry = conversation_subentries[0]
 
     entity = entity_registry.async_get("conversation.google_generative_ai_conversation")
     assert entity.unique_id == subentry.subentry_id
@@ -493,7 +511,7 @@ async def test_migration_from_v1_to_v2(
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
 
-    subentry = list(entry.subentries.values())[1]
+    subentry = conversation_subentries[1]
 
     entity = entity_registry.async_get(
         "conversation.google_generative_ai_conversation_2"
@@ -591,11 +609,15 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
     for entry in entries:
         assert entry.version == 2
         assert not entry.options
-        assert len(entry.subentries) == 1
+        assert len(entry.subentries) == 2
         subentry = list(entry.subentries.values())[0]
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
         assert "Google Generative AI" in subentry.title
+        subentry = list(entry.subentries.values())[1]
+        assert subentry.subentry_type == "tts"
+        assert subentry.data == RECOMMENDED_TTS_OPTIONS
+        assert subentry.title == DEFAULT_TTS_NAME
 
         dev = device_registry.async_get_device(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
@@ -680,13 +702,27 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     entry = entries[0]
     assert entry.version == 2
     assert not entry.options
-    assert len(entry.subentries) == 2
-    for subentry in entry.subentries.values():
+    assert len(entry.subentries) == 3
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 2
+    for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
         assert "Google Generative AI" in subentry.title
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
+    assert len(tts_subentries) == 1
+    assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
+    assert tts_subentries[0].title == DEFAULT_TTS_NAME
 
-    subentry = list(entry.subentries.values())[0]
+    subentry = conversation_subentries[0]
 
     entity = entity_registry.async_get("conversation.google_generative_ai_conversation")
     assert entity.unique_id == subentry.subentry_id
@@ -704,7 +740,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
 
-    subentry = list(entry.subentries.values())[1]
+    subentry = conversation_subentries[1]
 
     entity = entity_registry.async_get(
         "conversation.google_generative_ai_conversation_2"
