@@ -2,14 +2,11 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import MEATER_DATA
 from .coordinator import MeaterConfigEntry, MeaterCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-MEATER_DATA: HassKey[set[str]] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bool:
