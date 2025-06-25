@@ -1650,15 +1650,7 @@ async def test_entity_with_unicode_name(
 
     # The entity_id should be based on the Unicode name, properly transliterated
     state = hass.states.get(expected_entity_id)
-    if state is None:
-        # Debug: show all available entity IDs
-        all_states = hass.states.async_all()
-        entity_ids = [
-            s.entity_id for s in all_states if s.entity_id.startswith("binary_sensor.")
-        ]
-        assert state is not None, (
-            f"Entity with ID {expected_entity_id} should exist. Available: {entity_ids}"
-        )
+    assert state is not None, f"Entity with ID {expected_entity_id} should exist"
     assert state.state == STATE_ON
 
     # The friendly name should preserve the original Unicode characters
