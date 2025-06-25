@@ -416,7 +416,8 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
-        # We must set the suggested values to None, else 'name' will be carried through
+        # Prevent the name of the bayesian sensor from being used as the suggested
+        # name of the observations
         suggested_values=None,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
