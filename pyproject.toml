@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.9.0.dev0"
+version = "2025.7.0b0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -58,7 +58,7 @@ dependencies = [
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==45.0.3",
-  "Pillow==11.3.0",
+  "Pillow==11.2.1",
   "propcache==0.3.2",
   "pyOpenSSL==25.1.0",
   "orjson==3.11.2",
@@ -118,7 +118,6 @@ init-hook = """\
 load-plugins = [
   "pylint.extensions.code_style",
   "pylint.extensions.typing",
-  "hass_async_load_fixtures",
   "hass_decorator",
   "hass_enforce_class_module",
   "hass_enforce_sorted_platforms",
@@ -451,7 +450,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   "error::sqlalchemy.exc.SAWarning",
-  "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning", # pytest
+  "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning",  # pytest
 
   # -- HomeAssistant - aiohttp
   # Overwrite web.Application to pass a custom default argument to _make_request
