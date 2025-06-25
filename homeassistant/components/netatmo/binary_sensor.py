@@ -26,18 +26,28 @@ def process_status(status: StateType) -> bool | None:
         "closed": False,
     }.get(status, None)
 
+@dataclass(frozen=True, kw_only=True)
+class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Netatmo binary sensor entity."""
 
-BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+    netatmo_name: str
+    value_fn: Callable[[StateType], StateType] = lambda x: x
+
+
+BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
+    NetatmoBinarySensorEntityDescription(
+
+#BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+#    BinarySensorEntityDescription(
         key="reachable",
-        #netatmo_name="reachable",
+        netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     BinarySensorEntityDescription(
         key="status",
-        #netatmo_name="status",
+        netatmo_name="status",
         device_class=BinarySensorDeviceClass.OPENING,
-        #value_fn=process_status,
+        value_fn=process_status,
     ),
 )
 
@@ -68,7 +78,8 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     """Implementation of a Netatmo binary sensor."""
 
     def __init__(
-        self, device: NetatmoDevice, description: BinarySensorEntityDescription
+#        self, device: NetatmoDevice, description: BinarySensorEntityDescription
+        self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
     ) -> None:
         """Initialize a Netatmo binary sensor."""
         super().__init__(device)
@@ -88,7 +99,6 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
             if value is not None:
                 value = process_status(value)
                 #value = self.entity_description.value_fn(value)
-            #self._attr_native_value = value
             self._attr_is_on = value
 
         self.async_write_ha_state()
