@@ -92,6 +92,7 @@ async def instant_timeout(*args, **kwargs) -> None:
     # This is never reached, but is needed to satisfy the asynccontextmanager
     yield  # pylint: disable=unreachable
 
+
 async def test_media_player_join_timeout(
     hass: HomeAssistant,
     sonos_setup_two_speakers: list[MockSoCo],
@@ -112,7 +113,6 @@ async def test_media_player_join_timeout(
         ),
         pytest.raises(HomeAssistantError, match=re.escape(expected)),
     ):
-        caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_JOIN,

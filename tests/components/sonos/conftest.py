@@ -125,7 +125,6 @@ class SonosMockEvent:
             zone_player_uui_ds_in_group: Optional comma-separated string of unique zone IDs in the group.
 
         """
-       
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
