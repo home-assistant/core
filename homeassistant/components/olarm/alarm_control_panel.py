@@ -15,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,7 +26,7 @@ async def async_setup_entry(
     """Add binary sensors for a config entry."""
 
     # get coordinator
-    coordinator = hass.data[DOMAIN][config_entry.data["device_id"]].get("coordinator")
+    coordinator = config_entry.runtime_data["coordinator"]
 
     # cycle through areas and create alarm control panels
     panels = []
