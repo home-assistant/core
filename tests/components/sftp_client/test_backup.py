@@ -17,6 +17,7 @@ from homeassistant.components.sftp_client.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from homeassistant.components.sftp_client.helpers import CannotConnect
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
@@ -224,6 +225,53 @@ async def test_error_on_agents_download(
         f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
     )
     assert resp.status == 404
+
+
+async def test_error_download_cannot_connect(
+    hass_client: ClientSessionGenerator,
+    sftp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we get not found on a not existing backup on download."""
+
+    with patch(
+        "homeassistant.components.sftp_client.backup.SFTPClientConfigEntryBackupAgent._find_backup_by_id",
+        new_callable=AsyncMock,
+    ) as mock_find_backup:
+        mock_find_backup.return_value = AgentBackup.from_dict(BACKUP_METADATA)
+
+        client = await hass_client()
+        backup_id = BACKUP_METADATA["backup_id"]
+        sftp_client.async_connect.side_effect = CannotConnect()
+
+        resp = await client.get(
+            f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+        )
+
+    assert resp.status == 500
+    assert sftp_client.async_connect.call_count == 2
+
+
+async def test_error_download_client_none(
+    hass_client: ClientSessionGenerator,
+    sftp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we get not found on a not existing backup on download."""
+    with patch(
+        "homeassistant.components.sftp_client.backup.SFTPClientConfigEntryBackupAgent._find_backup_by_id",
+        new_callable=AsyncMock,
+    ) as mock_find_backup:
+        mock_find_backup.return_value = AgentBackup.from_dict(BACKUP_METADATA)
+        sftp_client.client = None
+        client = await hass_client()
+        backup_id = BACKUP_METADATA["backup_id"]
+
+        resp = await client.get(
+            f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+        )
+    assert resp.status == 500
+    assert sftp_client.async_connect.call_count == 2
 
 
 @pytest.mark.parametrize(
