@@ -18,7 +18,13 @@ from homeassistant.components.sonos.sensor import (
     SensorDeviceClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
@@ -112,6 +118,26 @@ async def test_power_source_unknown_state(
     power_source = entity_registry.entities["sensor.zone_a_power_source"]
     power_source_state = hass.states.get(power_source.entity_id)
     assert power_source_state.state == STATE_UNKNOWN
+
+
+async def test_power_source_none(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test none value for power source."""
+    soco.get_battery_info.return_value = {
+        "Level": 100,
+        "PowerSource": None,
+    }
+
+    await async_setup_sonos()
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == STATE_UNAVAILABLE
 
 
 async def test_battery_on_s1(
