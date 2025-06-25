@@ -13,7 +13,6 @@ from ha_silabs_firmware_client import (
     FirmwareUpdateClient,
 )
 import pytest
-from universal_silabs_flasher.common import Version
 from yarl import URL
 
 from homeassistant.components.hassio import AddonInfo, AddonState
@@ -351,7 +350,7 @@ def mock_firmware_info(
             side_effect=mock_flash_firmware,
         ),
     ):
-        yield mock_otbr_manager
+        yield mock_otbr_manager, mock_update_client
 
 
 async def consume_progress_flow(
@@ -429,6 +428,33 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     assert zha_flow["step_id"] == "confirm"
 
 
+async def test_config_flow_firmware_index_download_fails_but_not_required(
+    hass: HomeAssistant,
+) -> None:
+    """Test flow continues if index download fails but install is not required."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with mock_firmware_info(
+        hass,
+        # The correct firmware is already installed
+        probe_app_type=ApplicationType.EZSP,
+        # An older version is probed, so an upgrade is attempted
+        probe_fw_version="7.4.3.0",
+    ) as (_, mock_update_client):
+        # Mock the firmware download to fail
+        mock_update_client.async_update_data.side_effect = ClientError()
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.FORM
+        assert pick_result["step_id"] == "confirm_zigbee"
+
+
 async def test_config_flow_firmware_download_fails_but_not_required(
     hass: HomeAssistant,
 ) -> None:
@@ -440,25 +466,13 @@ async def test_config_flow_firmware_download_fails_but_not_required(
     with (
         mock_firmware_info(
             hass,
-            # The correct firmware is already installed
+            # The correct firmware is already installed so installation isn't required
             probe_app_type=ApplicationType.EZSP,
             # An older version is probed, so an upgrade is attempted
             probe_fw_version="7.4.3.0",
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient"
-        ) as mock_update_client_cls,
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.NabuCasaMetadata"
-        ) as mock_metadata_cls,
+        ) as (_, mock_update_client),
     ):
-        # Mock the metadata parser to return a version for the downgrade check
-        mock_instance = mock_metadata_cls.from_json.return_value
-        mock_instance.get_public_version.return_value = Version("7.4.4.0")
-
-        # Mock the firmware download to fail
-        mock_client = mock_update_client_cls.return_value = AsyncMock()
-        mock_client.async_update_data.side_effect = ClientError()
+        mock_update_client.async_fetch_firmware.side_effect = ClientError()
 
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
@@ -469,13 +483,10 @@ async def test_config_flow_firmware_download_fails_but_not_required(
         assert pick_result["step_id"] == "confirm_zigbee"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains", ["test_firmware_domain"]
-)
-async def test_config_flow_firmware_download_fails_and_required(
+async def test_config_flow_doesnt_downgrade(
     hass: HomeAssistant,
 ) -> None:
-    """Test flow aborts if firmware download fails and install is required."""
+    """Test flow exits early, without downgrading firmware."""
     init_result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": "hardware"}
     )
@@ -483,74 +494,23 @@ async def test_config_flow_firmware_download_fails_and_required(
     with (
         mock_firmware_info(
             hass,
-            # The wrong firmware is installed, so a new install is required
-            probe_app_type=ApplicationType.SPINEL,
+            probe_app_type=ApplicationType.EZSP,
+            # An newer version is probed than what we offer
+            probe_fw_version="7.5.0.0",
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient"
-        ) as mock_update_client_cls,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware"
+        ) as mock_async_flash_silabs_firmware,
     ):
-        # Mock the firmware download to fail
-        mock_client = mock_update_client_cls.return_value = AsyncMock()
-        mock_client.async_fetch_firmware.side_effect = ClientError()
-
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-        assert pick_result["type"] is FlowResultType.ABORT
-        assert pick_result["reason"] == "fw_download_failed"
+        assert pick_result["type"] is FlowResultType.FORM
+        assert pick_result["step_id"] == "confirm_zigbee"
 
-
-async def test_options_flow_no_downgrade(
-    hass: HomeAssistant,
-) -> None:
-    """Test the options flow does not downgrade firmware."""
-    config_entry = MockConfigEntry(
-        domain=TEST_DOMAIN,
-        data={
-            "firmware": "ezsp",
-            "device": TEST_DEVICE,
-            "hardware": TEST_HARDWARE_NAME,
-        },
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    # Probed firmware is newer than what's available in the manifest (7.4.4.0)
-    with (
-        mock_firmware_info(
-            hass,
-            probe_app_type=ApplicationType.EZSP,
-            probe_fw_version="7.5.0.0",
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.NabuCasaMetadata"
-        ) as mock_metadata_cls,
-    ):
-        # Mock the metadata parser to return a version for the downgrade check
-        mock_instance = mock_metadata_cls.from_json.return_value
-        mock_instance.get_public_version.return_value = Version("7.4.4.0")
-
-        init_result = await hass.config_entries.options.async_init(
-            config_entry.entry_id
-        )
-
-        # The flow should see the newer version and skip flashing
-        with patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware"
-        ) as mock_flash:
-            confirm_result = await hass.config_entries.options.async_configure(
-                init_result["flow_id"],
-                user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
-            )
-
-            # Verify we did not flash the older firmware
-            mock_flash.assert_not_called()
-
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == "confirm_zigbee"
+        assert len(mock_async_flash_silabs_firmware.mock_calls) == 0
 
 
 async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) -> None:
@@ -622,7 +582,7 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
         hass,
         probe_app_type=ApplicationType.EZSP,
         flash_app_type=ApplicationType.SPINEL,
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         # Pick the menu option
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
@@ -706,7 +666,7 @@ async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -
             update_available=False,
             version=None,
         ),
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         # Pick the menu option
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
@@ -773,7 +733,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         hass,
         probe_app_type=ApplicationType.EZSP,
         flash_app_type=ApplicationType.SPINEL,
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         # First step is confirmation
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] is FlowResultType.MENU
