@@ -78,9 +78,9 @@ BULB_PARAMETERS = (
         SET_COLOR_TEMP_PARAMETERS,
         (
             SERVICE_TURN_ON,
-            {ATTR_EFFECT: "Breathing"},
+            {ATTR_EFFECT: "breathing"},
             "set_effect",
-            ("Breathing",),
+            ("breathing",),
         ),
     ],
 )
@@ -102,9 +102,9 @@ STRIP_LIGHT_PARAMETERS = (
         SET_RGB_PARAMETERS,
         (
             SERVICE_TURN_ON,
-            {ATTR_EFFECT: "Halloween"},
+            {ATTR_EFFECT: "halloween"},
             "set_effect",
-            ("Halloween",),
+            ("halloween",),
         ),
     ],
 )
@@ -118,9 +118,9 @@ FLOOR_LAMP_PARAMETERS = (
         SET_COLOR_TEMP_PARAMETERS,
         (
             SERVICE_TURN_ON,
-            {ATTR_EFFECT: "Halloween"},
+            {ATTR_EFFECT: "halloween"},
             "set_effect",
-            ("Halloween",),
+            ("halloween",),
         ),
     ],
 )
