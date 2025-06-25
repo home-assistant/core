@@ -3420,6 +3420,11 @@ class ConfigSubentryFlow(
         """Return config entry id."""
         return self.handler[0]
 
+    @property
+    def _subentry_type(self) -> str:
+        """Return type of subentry we are editing/creating."""
+        return self.handler[1]
+
     @callback
     def _get_entry(self) -> ConfigEntry:
         """Return the config entry linked to the current context."""
