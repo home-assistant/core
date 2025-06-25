@@ -10,8 +10,6 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     HVACMode,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .exception import ConversionException
@@ -84,18 +82,3 @@ def get_serial_from_option_text(optionText: str) -> str | Any | None:
     """Util function to extract serial number from display text."""
     match = re.search(r"\((.*?)\)", optionText)
     return match.group(1) if match else None
-
-
-async def getStoredData(hass: HomeAssistant, key: str) -> Any | None:
-    """Retrieve stored data for the given key."""
-    store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    stored_data = await store.async_load() or {}
-    return stored_data.get(key) if isinstance(stored_data, dict) else None
-
-
-async def storeData(hass: HomeAssistant, key: str, value: str) -> None:
-    """Store data (value) against the given key."""
-    store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    stored_data = await store.async_load() or {}
-    stored_data[key] = value
-    await store.async_save(stored_data)

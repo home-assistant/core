@@ -56,10 +56,6 @@ class ActronAirACSystemsDataCoordinator(DataUpdateCoordinator[list[ACSystem]]):
                 f"Error communicating with AA API: {api_err}"
             ) from api_err
 
-    def get_acSystem_options(self) -> list[ACSystem] | None:
-        """Get the acSystem options for selection."""
-        return self.acSystems
-
     def get_unique_id(self) -> str:
         """Return a unique_id for this entity."""
 
