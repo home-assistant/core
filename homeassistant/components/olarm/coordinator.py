@@ -39,7 +39,7 @@ class OlarmFlowClientCoordinator:
 
         # device props
         self.device_id = device_id
-        self.device_name = None
+        self.device_name = f"Olarm Device {device_id}"
         self.device_state = None
         self.device_links = None
         self.device_io = None
@@ -97,7 +97,9 @@ class OlarmFlowClientCoordinator:
 
             _LOGGER.debug("Device -> %s", device)
 
-            self.device_name = device.get("deviceName")
+            self.device_name = (
+                device.get("deviceName") or f"Olarm Device {self.device_id}"
+            )
             self.device_state = device.get("deviceState")
             self.device_links = device.get("deviceLinks")
             self.device_io = device.get("deviceIO")

@@ -8,7 +8,10 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,33 +34,24 @@ async def async_setup_entry(
         _create_zone_buttons(
             coordinator,
             config_entry.data["device_id"],
-            coordinator.device_name,
             buttons,
         )
 
     # cycle through PGMS (pulse, open and close)
-    _create_pgm_buttons(
-        coordinator, config_entry.data["device_id"], coordinator.device_name, buttons
-    )
+    _create_pgm_buttons(coordinator, config_entry.data["device_id"], buttons)
 
     # cycle through LINK outputs / relays
-    _create_link_output_buttons(
-        coordinator, config_entry.data["device_id"], coordinator.device_name, buttons
-    )
-    _create_link_relay_buttons(
-        coordinator, config_entry.data["device_id"], coordinator.device_name, buttons
-    )
+    _create_link_output_buttons(coordinator, config_entry.data["device_id"], buttons)
+    _create_link_relay_buttons(coordinator, config_entry.data["device_id"], buttons)
 
     # cycle through MAX outputs
-    _create_max_output_buttons(
-        coordinator, config_entry.data["device_id"], coordinator.device_name, buttons
-    )
+    _create_max_output_buttons(coordinator, config_entry.data["device_id"], buttons)
 
     async_add_entities(buttons)
 
 
 def _create_zone_buttons(
-    coordinator: Any, device_id: str, device_name: str, buttons: list[OlarmButton]
+    coordinator: Any, device_id: str, buttons: list[OlarmButton]
 ) -> None:
     """Create zone bypass/unbypass buttons."""
     if coordinator.device_profile is not None and coordinator.device_state is not None:
@@ -66,7 +60,6 @@ def _create_zone_buttons(
                 OlarmButton(
                     coordinator,
                     device_id,
-                    device_name,
                     "zone_bypass",
                     zone_index,
                     coordinator.device_profile.get("zonesLabels")[zone_index],
@@ -76,7 +69,6 @@ def _create_zone_buttons(
                 OlarmButton(
                     coordinator,
                     device_id,
-                    device_name,
                     "zone_unbypass",
                     zone_index,
                     coordinator.device_profile.get("zonesLabels")[zone_index],
@@ -85,7 +77,7 @@ def _create_zone_buttons(
 
 
 def _create_pgm_buttons(
-    coordinator: Any, device_id: str, device_name: str, buttons: list[OlarmButton]
+    coordinator: Any, device_id: str, buttons: list[OlarmButton]
 ) -> None:
     """Create PGM buttons."""
     if (
@@ -102,7 +94,6 @@ def _create_pgm_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "pgm_open",
                             pgm_index,
                             coordinator.device_profile.get("pgmLabels")[pgm_index],
@@ -112,7 +103,6 @@ def _create_pgm_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "pgm_close",
                             pgm_index,
                             coordinator.device_profile.get("pgmLabels")[pgm_index],
@@ -124,7 +114,6 @@ def _create_pgm_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "pgm_pulse",
                             pgm_index,
                             coordinator.device_profile.get("pgmLabels")[pgm_index],
@@ -140,7 +129,6 @@ def _create_pgm_buttons(
                     OlarmButton(
                         coordinator,
                         device_id,
-                        device_name,
                         "ukey",
                         ukey_index,
                         coordinator.device_profile.get("ukeysLabels")[ukey_index],
@@ -149,7 +137,7 @@ def _create_pgm_buttons(
 
 
 def _create_link_output_buttons(
-    coordinator: Any, device_id: str, device_name: str, buttons: list[OlarmButton]
+    coordinator: Any, device_id: str, buttons: list[OlarmButton]
 ) -> None:
     """Create LINK output buttons."""
     if (
@@ -169,22 +157,22 @@ def _create_link_output_buttons(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_output_open",
                                 io_index,
                                 io.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
                         buttons.append(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_output_close",
                                 io_index,
                                 io.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
                     elif io.get("outputMode") == "pulse":
@@ -192,17 +180,17 @@ def _create_link_output_buttons(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_output_pulse",
                                 io_index,
                                 io.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
 
 
 def _create_link_relay_buttons(
-    coordinator: Any, device_id: str, device_name: str, buttons: list[OlarmButton]
+    coordinator: Any, device_id: str, buttons: list[OlarmButton]
 ) -> None:
     """Create LINK relay buttons."""
     if (
@@ -222,22 +210,22 @@ def _create_link_relay_buttons(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_relay_unlatch",
                                 relay_index,
                                 relay.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
                         buttons.append(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_relay_latch",
                                 relay_index,
                                 relay.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
                     elif relay.get("relayMode") == "pulse":
@@ -245,17 +233,17 @@ def _create_link_relay_buttons(
                             OlarmButton(
                                 coordinator,
                                 device_id,
-                                device_name + " - " + link_name,
                                 "link_relay_pulse",
                                 relay_index,
                                 relay.get("label"),
                                 link_id,
+                                link_name,
                             )
                         )
 
 
 def _create_max_output_buttons(
-    coordinator: Any, device_id: str, device_name: str, buttons: list[OlarmButton]
+    coordinator: Any, device_id: str, buttons: list[OlarmButton]
 ) -> None:
     """Create MAX output buttons."""
     if (
@@ -271,7 +259,6 @@ def _create_max_output_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "max_output_open",
                             io_index,
                             io.get("label"),
@@ -281,7 +268,6 @@ def _create_max_output_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "max_output_close",
                             io_index,
                             io.get("label"),
@@ -292,7 +278,6 @@ def _create_max_output_buttons(
                         OlarmButton(
                             coordinator,
                             device_id,
-                            device_name,
                             "max_output_pulse",
                             io_index,
                             io.get("label"),
@@ -309,11 +294,11 @@ class OlarmButton(ButtonEntity):
         self,
         coordinator: Any,
         device_id: str,
-        base_name: str,
         button_type: str,
         button_index: int,
         button_label: str,
         link_id: str | None = None,
+        link_name: str | None = "",
     ) -> None:
         """Init the class."""
 
@@ -339,11 +324,20 @@ class OlarmButton(ButtonEntity):
         }
 
         # attributes
-        self._attr_name = f"{base_name} - {button_type_str_map[button_type]} - {button_index + 1:02} - {button_label}"
+        self._attr_has_entity_name = True
+        self._attr_name = f"{link_name} {button_type_str_map[button_type]} {button_index + 1:02} {button_label}"
         self._attr_unique_id = f"{device_id}.{button_type}.{button_index}"
         # if link need to include address in unique id
         if link_id is not None:
             self._attr_unique_id = f"{device_id}_{link_id}.{button_type}.{button_index}"
+
+        # Set device info - extract main device ID for LINK devices
+        main_device_id = device_id.split("_")[0]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, main_device_id)},
+            name=coordinator.device_name,
+            manufacturer="Olarm",
+        )
 
         # custom attributes
         self.device_id = device_id
