@@ -46,7 +46,7 @@ class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescrip
     """Describe Matter Number Input entities."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterLevelControNumberEntityDescription(
     NumberEntityDescription, MatterEntityDescription
 ):
