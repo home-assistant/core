@@ -63,10 +63,10 @@
     },
     "tts": {
       "initiate_flow": {
-        "user": "Add Text-to-Speech (TTS)",
-        "reconfigure": "Reconfigure Text-to-Speech (TTS)"
+        "user": "Add Text-to-Speech service",
+        "reconfigure": "Reconfigure Text-to-Speech service"
       },
-      "entry_type": "TTS",
+      "entry_type": "Text-to-Speech",
       "step": {
         "set_options": {
           "data": {
