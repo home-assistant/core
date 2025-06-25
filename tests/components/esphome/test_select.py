@@ -79,14 +79,14 @@ async def test_select_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("select.test_myselect")
+    state = hass.states.get("select.test_my_select")
     assert state is not None
     assert state.state == "a"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_myselect", ATTR_OPTION: "b"},
+        {ATTR_ENTITY_ID: "select.test_my_select", ATTR_OPTION: "b"},
         blocking=True,
     )
     mock_client.select_command.assert_has_calls([call(1, "b")])
@@ -107,9 +107,6 @@ async def test_wake_word_select_no_wake_words(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.ANNOUNCE
@@ -144,9 +141,6 @@ async def test_wake_word_select_zero_max_wake_words(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.ANNOUNCE
@@ -182,9 +176,6 @@ async def test_wake_word_select_no_active_wake_words(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.ANNOUNCE

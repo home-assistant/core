@@ -10,22 +10,6 @@
             "pick_firmware_thread": "Thread"
           }
         },
-        "install_zigbee_flasher_addon": {
-          "title": "Installing flasher",
-          "description": "Installing the Silicon Labs Flasher add-on."
-        },
-        "run_zigbee_flasher_addon": {
-          "title": "Installing Zigbee firmware",
-          "description": "Installing Zigbee firmware. This will take about a minute."
-        },
-        "uninstall_zigbee_flasher_addon": {
-          "title": "Removing flasher",
-          "description": "Removing the Silicon Labs Flasher add-on."
-        },
-        "zigbee_flasher_failed": {
-          "title": "Zigbee installation failed",
-          "description": "The Zigbee firmware installation process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
-        },
         "confirm_zigbee": {
           "title": "Zigbee setup complete",
           "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration."
@@ -55,9 +39,7 @@
         "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
       },
       "progress": {
-        "install_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is installed, this may take a few minutes.",
-        "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
-        "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is being removed."
+        "install_firmware": "Please wait while {firmware_name} firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
       }
     }
   },
@@ -110,16 +92,6 @@
           "data": {
             "disable_multi_pan": "Disable multiprotocol support"
           }
-        },
-        "install_flasher_addon": {
-          "title": "The Silicon Labs Flasher add-on installation has started"
-        },
-        "configure_flasher_addon": {
-          "title": "The Silicon Labs Flasher add-on installation has started"
-        },
-        "start_flasher_addon": {
-          "title": "Installing firmware",
-          "description": "Zigbee firmware is now being installed. This will take a few minutes."
         }
       },
       "error": {
