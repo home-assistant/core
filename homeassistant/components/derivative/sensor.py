@@ -223,6 +223,26 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             lambda *args: None
         )
 
+    def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
+        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = self._unit_template.format(
+            "" if source_unit is None else source_unit
+        )
+
+    async def _restore_data(self) -> None:
+        restored_data = await self.async_get_last_sensor_data()
+        if restored_data:
+            self._attr_native_unit_of_measurement = (
+                restored_data.native_unit_of_measurement
+            )
+            try:
+                self._attr_native_value = round(
+                    Decimal(restored_data.native_value),  # type: ignore[arg-type]
+                    self._round_digits,
+                )
+            except SyntaxError as err:
+                _LOGGER.warning("Could not restore last state: %s", err)
+
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
             window_start = now - timedelta(seconds=self._time_window)
@@ -333,10 +353,18 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             """Handle changed sensor state."""
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
+
             if not self._handle_invalid_source_state(new_state):
                 return
 
             assert new_state
+
+            original_unit = self._attr_native_unit_of_measurement
+            self._derive_and_set_attributes_from_state(new_state)
+            if original_unit != self._attr_native_unit_of_measurement:
+                self.async_write_ha_state()
+                return
+
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
             if old_state is not None:
@@ -357,12 +385,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     # Sensor becomes valid for the first time, just keep the restored value
                     self.async_write_ha_state()
                     return
-
-            if self.native_unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._attr_native_unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
 
             self._prune_state_list(new_state.last_reported)
 
