@@ -564,6 +564,8 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     )
 )
 
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
+
 
 @callback
 def validate_cover_platform_config(
@@ -3189,6 +3191,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             component_config.update(
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
             mqtt_yaml_config.append({platform: component_config})
 
         yaml_config = yaml.dump(mqtt_yaml_config_base)
@@ -3237,6 +3242,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             component_config.update(
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
         data_schema = vol.Schema(
