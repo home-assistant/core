@@ -29,7 +29,9 @@ type LibreHardwareMonitorConfigEntry = ConfigEntry[LibreHardwareMonitorCoordinat
 class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitorData]):
     """Class to manage fetching LibreHardwareMonitor data."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
