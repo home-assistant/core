@@ -21,11 +21,13 @@
         "data": {
           "voice": "Voice",
           "model": "Model",
+          "stt_auto_language": "Auto-detect language",
           "configure_voice": "Configure advanced voice settings"
         },
         "data_description": {
           "voice": "Voice to use for the TTS.",
           "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
+          "stt_auto_language": "Automatically detect the spoken language for STT.",
           "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation."
         }
       },
