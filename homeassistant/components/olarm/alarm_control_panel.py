@@ -12,8 +12,11 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +47,6 @@ async def async_setup_entry(
                 OlarmAlarmControlPanel(
                     coordinator,
                     config_entry.data["device_id"],
-                    coordinator.device_name,
                     area_index,
                     area_state,
                     area_label,
@@ -58,7 +60,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
     """Define an Olarm Alarm Control Panel."""
 
     def __init__(
-        self, coordinator, device_id, device_name, area_index, area_state, area_label
+        self, coordinator, device_id, area_index, area_state, area_label
     ) -> None:
         """Init the class."""
 
@@ -75,8 +77,14 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
             | AlarmControlPanelEntityFeature.ARM_NIGHT
             | AlarmControlPanelEntityFeature.TRIGGER
         )
-        self._attr_name = f"{device_name} - {area_index + 1:02} - {area_label}"
+        self._attr_has_entity_name = True
+        self._attr_name = f"{area_index + 1:02} {area_label}"
         self._attr_unique_id = f"{device_id}.area.{area_index}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=coordinator.device_name,
+            manufacturer="Olarm",
+        )
 
         # custom attributes
         self.device_id = device_id

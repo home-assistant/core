@@ -10,8 +10,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +37,9 @@ async def async_setup_entry(
         for zone_index, zone_state in enumerate(coordinator.device_state.get("zones")):
             sensors.append(
                 OlarmBinarySensor(
+                    coordinator,
                     "zone",
                     config_entry.data["device_id"],
-                    coordinator.device_name,
                     zone_index,
                     zone_state,
                     coordinator.device_profile.get("zonesLabels")[zone_index],
@@ -47,9 +50,9 @@ async def async_setup_entry(
             if config_entry.data.get("load_zones_bypass_entities"):
                 sensors.append(
                     OlarmBinarySensor(
+                        coordinator,
                         "zone_bypass",
                         config_entry.data["device_id"],
-                        coordinator.device_name,
                         zone_index,
                         zone_state,
                         coordinator.device_profile.get("zonesLabels")[zone_index],
@@ -66,12 +69,13 @@ async def async_setup_entry(
             ac_power_state = "on"
         sensors.append(
             OlarmBinarySensor(
+                coordinator,
                 "ac_power",
                 config_entry.data["device_id"],
-                coordinator.device_name,
                 0,
                 ac_power_state,
                 "AC Power",
+                None,
             )
         )
 
@@ -91,27 +95,29 @@ async def async_setup_entry(
                     if io.get("type") == "input":
                         sensors.append(
                             OlarmBinarySensor(
+                                coordinator,
                                 "link_input",
                                 config_entry.data["device_id"] + "_" + link_id,
-                                coordinator.device_name + " - " + link_name,
                                 io_index,
                                 coordinator.device_links[link_id]["inputs"][io_index],
                                 io.get("label"),
                                 None,
                                 link_id,
+                                link_name,
                             )
                         )
                     elif io.get("type") == "output" and io.get("outputMode") == "latch":
                         sensors.append(
                             OlarmBinarySensor(
+                                coordinator,
                                 "link_output",
                                 config_entry.data["device_id"] + "_" + link_id,
-                                coordinator.device_name + " - " + link_name,
                                 io_index,
                                 coordinator.device_links[link_id]["outputs"][io_index],
                                 io.get("label"),
                                 None,
                                 link_id,
+                                link_name,
                             )
                         )
 
@@ -121,14 +127,15 @@ async def async_setup_entry(
                 if relay.get("enabled") and relay.get("relayMode") == "latch":
                     sensors.append(
                         OlarmBinarySensor(
+                            coordinator,
                             "link_relay",
                             config_entry.data["device_id"] + "_" + link_id,
-                            coordinator.device_name + " - " + link_name,
                             relay_index,
                             coordinator.device_links[link_id]["relays"][relay_index],
                             relay.get("label"),
                             None,
                             link_id,
+                            link_name,
                         )
                     )
 
@@ -143,23 +150,25 @@ async def async_setup_entry(
                 if io.get("type") == "input":
                     sensors.append(
                         OlarmBinarySensor(
+                            coordinator,
                             "max_input",
                             config_entry.data["device_id"],
-                            coordinator.device_name,
                             io_index,
                             coordinator.device_io["inputs"][io_index],
                             io.get("label"),
+                            None,
                         )
                     )
                 elif io.get("type") == "output" and io.get("outputMode") == "latch":
                     sensors.append(
                         OlarmBinarySensor(
+                            coordinator,
                             "max_output",
                             config_entry.data["device_id"],
-                            coordinator.device_name,
                             io_index,
                             coordinator.device_io["outputs"][io_index],
                             io.get("label"),
+                            None,
                         )
                     )
 
@@ -171,53 +180,57 @@ class OlarmBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
+        coordinator,
         sensor_type,
         device_id,
-        base_name,
         sensor_index,
         sensor_state,
         sensor_label,
         sensor_class=None,
         link_id=None,
+        link_name: str | None = "",
     ) -> None:
         """Init the class."""
 
         # set attributes
-        self._attr_name = f"{base_name} - Zone {sensor_index + 1:03} - {sensor_label}"
+        self._attr_has_entity_name = True
+        self._attr_name = f"Zone {sensor_index + 1:03} {sensor_label}"
         self._attr_unique_id = f"{device_id}.zone.{sensor_index}"
         if sensor_type == "zone_bypass":
-            self._attr_name = (
-                f"{base_name} - Zone {sensor_index + 1:03} Bypass - {sensor_label}"
-            )
+            self._attr_name = f"Zone {sensor_index + 1:03} Bypass {sensor_label}"
             self._attr_unique_id = f"{device_id}.zone.bypass.{sensor_index}"
         if sensor_type == "ac_power":
-            self._attr_name = f"{base_name} - {sensor_label}"
+            self._attr_name = f"{sensor_label}"
             self._attr_unique_id = f"{device_id}.ac_power"
         if sensor_type == "link_input":
             self._attr_name = (
-                f"{base_name} - LINK Input {sensor_index + 1:02} - {sensor_label}"
+                f"{link_name} LINK Input {sensor_index + 1:02} {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.input.{sensor_index}"
         if sensor_type == "link_output":
             self._attr_name = (
-                f"{base_name} - LINK Output {sensor_index + 1:02} - {sensor_label}"
+                f"{link_name} LINK Output {sensor_index + 1:02} {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.output.{sensor_index}"
         if sensor_type == "link_relay":
             self._attr_name = (
-                f"{base_name} - LINK Relay {sensor_index + 1:02} - {sensor_label}"
+                f"{link_name} LINK Relay {sensor_index + 1:02} {sensor_label}"
             )
             self._attr_unique_id = f"{device_id}.link.relay.{sensor_index}"
         if sensor_type == "max_input":
-            self._attr_name = (
-                f"{base_name} - MAX Input {sensor_index + 1:02} - {sensor_label}"
-            )
+            self._attr_name = f"MAX Input {sensor_index + 1:02} {sensor_label}"
             self._attr_unique_id = f"{device_id}.max.input.{sensor_index}"
         if sensor_type == "max_output":
-            self._attr_name = (
-                f"{base_name} - MAX Output {sensor_index + 1:02} - {sensor_label}"
-            )
+            self._attr_name = f"MAX Output {sensor_index + 1:02} - {sensor_label}"
             self._attr_unique_id = f"{device_id}.max.output.{sensor_index}"
+
+            # Set device info - extract main device ID for LINK devices
+        main_device_id = device_id.split("_")[0]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, main_device_id)},
+            name=coordinator.device_name,
+            manufacturer="Olarm",
+        )
 
         _LOGGER.debug(
             "BinarySensor: init %s -> %s -> %s",
@@ -237,7 +250,6 @@ class OlarmBinarySensor(BinarySensorEntity):
         # custom attributes
         self.sensor_type = sensor_type
         self.device_id = device_id
-        self.base_name = base_name
         self.sensor_index = sensor_index
         self.sensor_state = sensor_state
         self.sensor_label = sensor_label
