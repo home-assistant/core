@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from yarl import URL
 
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,6 +38,6 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            configuration_url=URL(coordinator.config_entry.data[CONF_HOST]),
+            configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
             identifiers={(DOMAIN, coordinator.config_entry.unique_id or "")},
         )
