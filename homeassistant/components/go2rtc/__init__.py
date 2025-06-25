@@ -285,8 +285,9 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        ws_client = self._sessions.pop(session_id)
-        self._hass.async_create_task(ws_client.close())
+        ws_client = self._sessions.pop(session_id, None)
+        if ws_client is not None:
+            self._hass.async_create_task(ws_client.close())
 
     async def async_get_image(
         self,
