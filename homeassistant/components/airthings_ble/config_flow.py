@@ -26,14 +26,12 @@ from .const import DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-ATOM_SERVICE_UUID = "b42e90a2-ade7-11e4-89d3-123b93f75cba"
-
 SERVICE_UUIDS = [
     "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
     "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
     "b42e1c08-ade7-11e4-89d3-123b93f75cba",
     "b42e3882-ade7-11e4-89d3-123b93f75cba",
-    ATOM_SERVICE_UUID,
+    "b42e90a2-ade7-11e4-89d3-123b93f75cba",
 ]
 
 
