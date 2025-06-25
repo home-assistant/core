@@ -288,7 +288,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "home_connect",
-        "hostname": "(siemens|neff)-*",
+        "hostname": "(bosch|neff|siemens)-*",
         "macaddress": "38B4D3*",
     },
     {
