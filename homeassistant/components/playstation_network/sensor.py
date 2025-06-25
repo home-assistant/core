@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_SHOW_ENTITY_PICTURES, TIER_URL, TROPHIES_URL
 from .coordinator import (
     PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
@@ -37,6 +38,7 @@ class PlaystationNetworkSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[PlaystationNetworkData], StateType | datetime]
     available_fn: Callable[[PlaystationNetworkData], bool] = lambda _: True
+    entity_picture: Callable[[PlaystationNetworkData], str | None] | str | None = None
 
 
 class PlaystationNetworkSensor(StrEnum):
@@ -61,6 +63,11 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
         value_fn=(
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
+        entity_picture=(
+            lambda psn: f"{TIER_URL}tier_{psn.trophy_summary.tier}.png"
+            if psn.trophy_summary
+            else None
+        ),
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.TROPHY_LEVEL_PROGRESS,
@@ -78,6 +85,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
+        entity_picture=f"{TROPHIES_URL}platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -87,6 +95,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
+        entity_picture=f"{TROPHIES_URL}gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -96,6 +105,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
+        entity_picture=f"{TROPHIES_URL}silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -105,6 +115,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
+        entity_picture=f"{TROPHIES_URL}bronze.png",
     ),
 )
 SENSOR_DESCRIPTIONS_USER: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
@@ -199,6 +210,16 @@ class PlaystationNetworkSensorBaseEntity(
                 (pic.get("url") for pic in profile_pictures if pic.get("size") == "xl"),
                 None,
             )
+        if (
+            self.coordinator.config_entry.options.get(CONF_SHOW_ENTITY_PICTURES)
+            and (entity_picture := self.entity_description.entity_picture) is not None
+        ):
+            return (
+                entity_picture(self.coordinator.data)
+                if callable(entity_picture)
+                else entity_picture
+            )
+
         return super().entity_picture
 
     @property
