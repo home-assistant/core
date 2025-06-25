@@ -363,7 +363,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.6.0
+aioshelly==13.7.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.103.0
+hass-nabucasa==0.104.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1017,10 +1017,10 @@ hole==0.8.0
 holidays==0.75
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250531.3
+home-assistant-frontend==20250531.4
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.6.10
+home-assistant-intents==2025.6.23
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.6
@@ -1534,7 +1534,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.2.1
+pyairnow==1.3.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
@@ -1763,7 +1763,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.0
+pylitterbot==2024.2.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.24.0
@@ -2020,7 +2020,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==9.1.1
+python-homewizard-energy==9.2.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2477,7 +2477,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.30
+universal-silabs-flasher==0.0.31
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -2573,7 +2573,7 @@ wolf-comm==0.0.23
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.5.4
+wyoming==1.7.1
 
 # homeassistant.components.xbox
 xbox-webapi==2.1.0
