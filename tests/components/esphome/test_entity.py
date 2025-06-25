@@ -31,7 +31,11 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
+from .conftest import (
+    MockESPHomeDevice,
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+)
 
 
 async def test_entities_removed(
@@ -1597,3 +1601,104 @@ async def test_entity_device_id_rename_in_yaml(
     )
     assert renamed_device is not None
     assert entity_entry.device_id == renamed_device.id
+
+
+@pytest.mark.parametrize(
+    ("unicode_name", "expected_entity_id"),
+    [
+        ("Árvíztűrő tükörfúrógép", "binary_sensor.test_arvizturo_tukorfurogep"),
+        ("Teplota venku °C", "binary_sensor.test_teplota_venku_degc"),
+        ("Влажность %", "binary_sensor.test_vlazhnost"),
+        ("中文传感器", "binary_sensor.test_zhong_wen_chuan_gan_qi"),
+        ("Sensor à côté", "binary_sensor.test_sensor_a_cote"),
+        ("τιμή αισθητήρα", "binary_sensor.test_time_aisthetera"),
+    ],
+)
+async def test_entity_with_unicode_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    unicode_name: str,
+    expected_entity_id: str,
+) -> None:
+    """Test that entities with Unicode names get proper entity IDs.
+
+    This verifies the fix for Unicode entity names where ESPHome's C++ code
+    sanitizes Unicode characters to underscores (not UTF-8 aware), but the
+    entity_id should use the original name from entity_info.name rather than
+    the sanitized object_id to preserve Unicode characters properly.
+    """
+    # Simulate what ESPHome would send - a heavily sanitized object_id
+    # but with the original Unicode name preserved
+    sanitized_object_id = "_".join("_" * len(word) for word in unicode_name.split())
+
+    entity_info = [
+        BinarySensorInfo(
+            object_id=sanitized_object_id,  # ESPHome sends the sanitized version
+            key=1,
+            name=unicode_name,  # But also sends the original Unicode name
+            unique_id="unicode_sensor",
+        )
+    ]
+    states = [BinarySensorState(key=1, state=True)]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # The entity_id should be based on the Unicode name, properly transliterated
+    state = hass.states.get(expected_entity_id)
+    if state is None:
+        # Debug: show all available entity IDs
+        all_states = hass.states.async_all()
+        entity_ids = [
+            s.entity_id for s in all_states if s.entity_id.startswith("binary_sensor.")
+        ]
+        assert state is not None, (
+            f"Entity with ID {expected_entity_id} should exist. Available: {entity_ids}"
+        )
+    assert state.state == STATE_ON
+
+    # The friendly name should preserve the original Unicode characters
+    assert state.attributes["friendly_name"] == f"Test {unicode_name}"
+
+    # Verify that using the sanitized object_id would NOT find the entity
+    # This confirms we're not using the object_id for entity_id generation
+    wrong_entity_id = f"binary_sensor.test_{sanitized_object_id}"
+    wrong_state = hass.states.get(wrong_entity_id)
+    assert wrong_state is None, f"Entity should NOT be found at {wrong_entity_id}"
+
+
+async def test_entity_without_name_uses_device_name_only(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that entities without a name fall back to using device name only.
+
+    When entity_info.name is empty, the entity_id should just be domain.device_name
+    without the object_id appended, as noted in the comment in entity.py.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="some_sanitized_id",
+            key=1,
+            name="",  # Empty name
+            unique_id="no_name_sensor",
+        )
+    ]
+    states = [BinarySensorState(key=1, state=True)]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # With empty name, entity_id should just be domain.device_name
+    expected_entity_id = "binary_sensor.test"
+    state = hass.states.get(expected_entity_id)
+    assert state is not None, f"Entity {expected_entity_id} should exist"
+    assert state.state == STATE_ON
