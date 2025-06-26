@@ -26,7 +26,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert entry.unique_id is not None
     referrer = entry.data.get(CONF_REFERRER)
-    auth = Auth(session, entry.unique_id, referrer = referrer)
+    auth = Auth(session, entry.unique_id, referrer=referrer)
     client = GoogleAirQualityApi(auth)
     coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
     for subentry_id in entry.subentries:
