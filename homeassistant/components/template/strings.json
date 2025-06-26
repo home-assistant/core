@@ -19,6 +19,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "Template alarm control panel"
       },
       "binary_sensor": {
@@ -30,6 +38,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "Template binary sensor"
       },
@@ -43,6 +59,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "Template button"
       },
       "image": {
@@ -54,6 +78,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "Template image"
       },
@@ -71,6 +103,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "Template number"
       },
       "select": {
@@ -83,6 +123,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "Template select"
       },
@@ -97,6 +145,14 @@
         },
         "data_description": {
           "device_id": "Select a device to link to this entity."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Advanced Options",
+            "data": {
+              "availability": "Availability"
+            }
+          }
         },
         "title": "Template sensor"
       },
@@ -126,6 +182,14 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
           "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "Template switch"
       }
     }
@@ -149,6 +213,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "[%key:component::template::config::step::alarm_control_panel::title%]"
       },
       "binary_sensor": {
@@ -158,6 +230,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
       },
@@ -169,6 +249,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "[%key:component::template::config::step::button::title%]"
       },
       "image": {
@@ -179,6 +267,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "[%key:component::template::config::step::image::title%]"
       },
@@ -195,6 +291,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "[%key:component::template::config::step::number::title%]"
       },
       "select": {
@@ -207,6 +311,14 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "[%key:component::template::config::step::select::title%]"
       },
@@ -221,6 +333,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
         "title": "[%key:component::template::config::step::sensor::title%]"
       },
       "switch": {
@@ -234,6 +354,14 @@
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
           "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
       }

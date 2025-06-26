@@ -43,20 +43,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
+from homeassistant.helpers.trigger_template_entity import SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_OBJECT_ID
+from .helpers import rewrite_configy_entry_to_options_config
 from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
@@ -83,26 +85,25 @@ def validate_last_reset(val):
     return val
 
 
+SENSOR_FEATURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+    }
+).extend(SENSOR_BASE_SCHEMA.schema)
+
 SENSOR_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
         }
     )
-    .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+    .extend(SENSOR_FEATURE_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema),
     validate_last_reset,
 )
 
-
-SENSOR_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_STATE): cv.template,
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        }
-    ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
+SENSOR_CONFIG_SCHEMA = SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 LEGACY_SENSOR_SCHEMA = vol.All(
@@ -241,9 +242,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = SENSOR_CONFIG_SCHEMA(_options)
+    validated_config = SENSOR_CONFIG_SCHEMA(
+        rewrite_configy_entry_to_options_config(config_entry)
+    )
     async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
 
 

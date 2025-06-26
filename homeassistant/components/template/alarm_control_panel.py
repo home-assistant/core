@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -45,8 +45,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import CONF_OBJECT_ID, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import rewrite_configy_entry_to_options_config
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
@@ -94,25 +96,26 @@ LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
 
 DEFAULT_NAME = "Template Alarm Control Panel"
 
-ALARM_CONTROL_PANEL_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-            vol.Optional(
-                CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
-            ): cv.enum(TemplateCodeFormat),
-            vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+ALARM_CONTROL_PANEL_FEATURE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
+        ),
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+    }
 )
 
+ALARM_CONTROL_PANEL_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+)
 
 LEGACY_ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
@@ -141,23 +144,8 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     }
 )
 
-ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
-            TemplateCodeFormat
-        ),
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-    }
+ALARM_CONTROL_PANEL_CONFIG_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -225,10 +213,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    _options = rewrite_options_to_modern_conf(_options)
-    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
+    options = rewrite_configy_entry_to_options_config(config_entry)
+    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(
+        rewrite_options_to_modern_conf(options)
+    )
     async_add_entities(
         [
             AlarmControlPanelTemplate(

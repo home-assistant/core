@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -60,7 +60,9 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_PICTURE,
 )
+from .helpers import rewrite_configy_entry_to_options_config
 from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
@@ -82,7 +84,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_FEATURE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
@@ -91,12 +93,14 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+)
 
-BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-    }
+BINARY_SENSOR_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_SCHEMA.schema
+)
+
+BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
@@ -215,9 +219,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(_options)
+    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(
+        rewrite_configy_entry_to_options_config(config_entry)
+    )
     async_add_entities(
         [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]
     )

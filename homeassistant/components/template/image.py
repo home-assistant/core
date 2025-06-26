@@ -11,14 +11,13 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -29,7 +28,9 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
+from .helpers import rewrite_configy_entry_to_options_config
 from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -51,12 +52,10 @@ IMAGE_SCHEMA = vol.Schema(
 
 IMAGE_CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.template,
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
-)
+).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
 async def _async_create_entities(
@@ -105,9 +104,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = IMAGE_CONFIG_SCHEMA(_options)
+    validated_config = IMAGE_CONFIG_SCHEMA(
+        rewrite_configy_entry_to_options_config(config_entry)
+    )
     async_add_entities(
         [StateImageEntity(hass, validated_config, config_entry.entry_id)]
     )

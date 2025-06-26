@@ -9,15 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -26,7 +21,12 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import rewrite_configy_entry_to_options_config
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +42,10 @@ BUTTON_SCHEMA = vol.Schema(
 
 CONFIG_BUTTON_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
-)
+).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
 async def _async_create_entities(
@@ -88,9 +86,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = CONFIG_BUTTON_SCHEMA(_options)
+    validated_config = CONFIG_BUTTON_SCHEMA(
+        rewrite_configy_entry_to_options_config(config_entry)
+    )
     async_add_entities(
         [TemplateButtonEntity(hass, validated_config, config_entry.entry_id)]
     )
