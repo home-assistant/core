@@ -37,12 +37,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_PROMPT,
+    DEFAULT_STT_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
@@ -54,6 +56,7 @@ CONF_FILENAMES = "filenames"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
     Platform.CONVERSATION,
+    Platform.STT,
     Platform.TTS,
 )
 
@@ -294,3 +297,25 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 options={},
                 version=2,
             )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if entry.version == 2 and entry.minor_version == 0:
+        # Migrate from version 2.0 to 2.1
+        # Add STT subentry with default options
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+                subentry_type="stt",
+                title=DEFAULT_STT_NAME,
+                unique_id=None,
+            ),
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=1)
+        return True
+
+    return False
