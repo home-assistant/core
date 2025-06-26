@@ -1,6 +1,7 @@
 """Test state helpers."""
 
 import asyncio
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
@@ -172,3 +174,42 @@ async def test_as_number_invalid_cases(hass: HomeAssistant) -> None:
     for _state in ("", "foo", "foo.bar", None, False, True, object, object()):
         with pytest.raises(ValueError):
             state.state_as_number(State("domain.test", _state, {}))
+
+
+@pytest.mark.parametrize(
+    ("current_uptime_str", "last_uptime_str", "result_str"),
+    [
+        (
+            "2025-04-01T12:00:00+00:00",
+            None,
+            "2025-04-01T12:00:00+00:00",
+        ),
+        (
+            "2025-04-01T12:01:01+00:00",
+            "2025-04-01T12:00:00+00:00",
+            "2025-04-01T12:01:01+00:00",
+        ),
+        (
+            "2025-04-01T12:00:45+00:00",
+            "2025-04-01T12:00:00+00:00",
+            "2025-04-01T12:00:00+00:00",
+        ),
+    ],
+)
+async def test_get_device_uptime(
+    hass: HomeAssistant,
+    current_uptime_str: str,
+    last_uptime_str: str | None,
+    result_str: datetime,
+) -> None:
+    """Test get_device_uptime handle deviation properly."""
+
+    current_uptime = dt_util.as_utc(dt_util.parse_datetime(current_uptime_str))
+    last_uptime = (
+        dt_util.as_utc(dt_util.parse_datetime(last_uptime_str))
+        if last_uptime_str
+        else None
+    )
+    result = dt_util.as_utc(dt_util.parse_datetime(result_str))
+
+    assert state.get_device_uptime(current_uptime, last_uptime, "TEST") == result
