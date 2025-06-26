@@ -4435,8 +4435,8 @@ async def test_configure_addon_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
-async def test_get_usb_ports_sorting() -> None:
-    """Test that get_usb_ports sorts ports with 'n/a' descriptions last."""
+async def test_get_usb_ports_filtering() -> None:
+    """Test that get_usb_ports filters out 'n/a' descriptions when other ports are available."""
     mock_ports = [
         ListPortInfo("/dev/ttyUSB0"),
         ListPortInfo("/dev/ttyUSB1"),
@@ -4453,13 +4453,105 @@ async def test_get_usb_ports_sorting() -> None:
 
         descriptions = list(result.values())
 
-        # Verify that descriptions containing "n/a" are at the end
-
+        # Verify that only non-"n/a" descriptions are returned
         assert descriptions == [
             "Device A - /dev/ttyUSB1, s/n: n/a",
             "Device B - /dev/ttyUSB3, s/n: n/a",
+        ]
+
+
+async def test_get_usb_ports_all_na() -> None:
+    """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+    ]
+    mock_ports[0].description = "n/a"
+    mock_ports[1].description = "N/A"
+    mock_ports[2].description = "n/a"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that all ports are returned since they all have "n/a" descriptions
+        assert len(descriptions) == 3
+        # Verify that all descriptions contain "n/a" (case-insensitive)
+        assert all("n/a" in desc.lower() for desc in descriptions)
+        # Verify that all expected device paths are present
+        device_paths = [desc.split(" - ")[1].split(",")[0] for desc in descriptions]
+        assert "/dev/ttyUSB0" in device_paths
+        assert "/dev/ttyUSB1" in device_paths
+        assert "/dev/ttyUSB2" in device_paths
+
+
+async def test_get_usb_ports_mixed_case_filtering() -> None:
+    """Test that get_usb_ports filters out 'n/a' descriptions with different case variations."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+        ListPortInfo("/dev/ttyUSB3"),
+        ListPortInfo("/dev/ttyUSB4"),
+    ]
+    mock_ports[0].description = "n/a"
+    mock_ports[1].description = "Device A"
+    mock_ports[2].description = "N/A"
+    mock_ports[3].description = "n/A"
+    mock_ports[4].description = "Device B"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that only non-"n/a" descriptions are returned (case-insensitive filtering)
+        assert descriptions == [
+            "Device A - /dev/ttyUSB1, s/n: n/a",
+            "Device B - /dev/ttyUSB4, s/n: n/a",
+        ]
+
+
+async def test_get_usb_ports_empty_list() -> None:
+    """Test that get_usb_ports handles empty port list."""
+    with patch("serial.tools.list_ports.comports", return_value=[]):
+        result = get_usb_ports()
+
+        # Verify that empty dict is returned
+        assert result == {}
+
+
+async def test_get_usb_ports_single_na_port() -> None:
+    """Test that get_usb_ports returns single 'n/a' port when it's the only one available."""
+    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
+    mock_ports[0].description = "n/a"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that the single "n/a" port is returned
+        assert descriptions == [
             "n/a - /dev/ttyUSB0, s/n: n/a",
-            "N/A - /dev/ttyUSB2, s/n: n/a",
+        ]
+
+
+async def test_get_usb_ports_single_valid_port() -> None:
+    """Test that get_usb_ports returns single valid port."""
+    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
+    mock_ports[0].description = "Device A"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that the single valid port is returned
+        assert descriptions == [
+            "Device A - /dev/ttyUSB0, s/n: n/a",
         ]
 
 
