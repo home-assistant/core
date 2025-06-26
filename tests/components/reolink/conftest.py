@@ -10,6 +10,7 @@ from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -76,6 +77,9 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.get_stream_source = AsyncMock()
     host_mock.get_snapshot = AsyncMock()
     host_mock.get_encoding = AsyncMock(return_value="h264")
+    host_mock.pull_point_request = AsyncMock()
+    host_mock.set_audio = AsyncMock()
+    host_mock.set_email = AsyncMock()
     host_mock.ONVIF_event_callback = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
@@ -219,6 +223,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -269,6 +274,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
         "people": {"switch": 0, "musicId": 1},
         "visitor": {"switch": 1, "musicId": 2},
     }
+    TEST_CHIME.remove = AsyncMock()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME

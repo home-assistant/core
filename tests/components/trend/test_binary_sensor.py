@@ -48,6 +48,7 @@ async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -
 )
 async def test_basic_trend_setup_from_yaml(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     states: list[str],
     inverted: bool,
     expected_state: str,
@@ -71,6 +72,43 @@ async def test_basic_trend_setup_from_yaml(
 
     assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert sensor_state.state == expected_state
+
+    # Verify that entity without unique_id in YAML is not in the registry
+    entity_entry = entity_registry.async_get("binary_sensor.test_trend_sensor")
+    assert entity_entry is None
+
+
+async def test_trend_setup_from_yaml_with_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test trend setup from YAML with unique_id."""
+    await _setup_legacy_component(
+        hass,
+        {
+            "friendly_name": "Test state with ID",
+            "entity_id": "sensor.cpu_temp",
+            "unique_id": "my_unique_trend_sensor",
+            "max_samples": 2.0,
+            "min_gradient": 0.0,
+            "sample_duration": 0.0,
+        },
+    )
+
+    # Set some states to ensure the sensor works
+    hass.states.async_set("sensor.cpu_temp", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.cpu_temp", "2")
+    await hass.async_block_till_done()
+
+    # Check that the sensor exists and has the correct state
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == STATE_ON
+
+    # Check that the entity is registered with the correct unique_id
+    entity_entry = entity_registry.async_get("binary_sensor.test_trend_sensor")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "my_unique_trend_sensor"
 
 
 @pytest.mark.parametrize(

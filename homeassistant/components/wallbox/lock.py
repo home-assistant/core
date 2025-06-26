@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -41,7 +41,7 @@ async def async_setup_entry(
         )
     except InvalidAuth:
         return
-    except ConnectionError as exc:
+    except HomeAssistantError as exc:
         raise PlatformNotReady from exc
 
     async_add_entities(

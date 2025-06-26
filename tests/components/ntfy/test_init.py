@@ -65,3 +65,37 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (
+            NtfyUnauthorizedAuthenticationError(
+                40101,
+                401,
+                "unauthorized",
+                "https://ntfy.sh/docs/publish/#authentication",
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (NtfyHTTPError(418001, 418, "I'm a teapot", ""), ConfigEntryState.SETUP_RETRY),
+        (NtfyConnectionError, ConfigEntryState.SETUP_RETRY),
+        (NtfyTimeoutError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_coordinator_update_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry not ready from update failed in _async_update_data."""
+    mock_aiontfy.account.side_effect = [None, exception]
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
