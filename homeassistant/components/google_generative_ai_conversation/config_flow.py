@@ -47,6 +47,7 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
@@ -116,7 +117,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=user_input,
                     )
                 return self.async_create_entry(
-                    title="Google Generative AI",
+                    title=DEFAULT_TITLE,
                     data=user_input,
                     subentries=[
                         {
