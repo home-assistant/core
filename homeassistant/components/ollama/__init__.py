@@ -27,6 +27,7 @@ from .const import (
     CONF_NUM_CTX,
     CONF_PROMPT,
     CONF_THINK,
+    DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -138,6 +139,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_NAME,
                 options={},
                 version=2,
             )
