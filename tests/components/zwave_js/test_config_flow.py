@@ -900,7 +900,7 @@ async def test_usb_discovery_migration(
 
     client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
-    async def mock_restore_nvm(data: bytes):
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
             "nvm convert progress",
             {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
@@ -1031,7 +1031,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 
     client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
-    async def mock_restore_nvm(data: bytes):
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
             "nvm convert progress",
             {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
@@ -3501,7 +3501,7 @@ async def test_reconfigure_migrate_with_addon(
 
     client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
-    async def mock_restore_nvm(data: bytes):
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
             "nvm convert progress",
             {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
@@ -3686,7 +3686,7 @@ async def test_reconfigure_migrate_reset_driver_ready_timeout(
 
     client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
-    async def mock_restore_nvm(data: bytes):
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
             "nvm convert progress",
             {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
@@ -3835,7 +3835,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
 
     client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
-    async def mock_restore_nvm(data: bytes):
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
             "nvm convert progress",
             {"event": "nvm convert progress", "bytesRead": 100, "total": 200},

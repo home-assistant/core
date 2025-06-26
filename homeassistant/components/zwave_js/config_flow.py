@@ -1400,7 +1400,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             driver.once("driver ready", set_driver_ready),
         ]
         try:
-            await controller.async_restore_nvm(self.backup_data)
+            await controller.async_restore_nvm(
+                self.backup_data, {"preserveRoutes": False}
+            )
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
         else:
