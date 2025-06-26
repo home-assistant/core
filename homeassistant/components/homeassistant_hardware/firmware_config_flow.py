@@ -7,7 +7,8 @@ import asyncio
 import logging
 from typing import Any
 
-from ha_silabs_firmware_client import FirmwareUpdateClient
+from aiohttp import ClientError
+from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
 from universal_silabs_flasher.common import Version
 from universal_silabs_flasher.firmware import NabuCasaMetadata
 
@@ -166,7 +167,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 fw_manifest = next(
                     fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
                 )
-            except Exception as err:
+            except (StopIteration, TimeoutError, ClientError, ManifestMissing) as err:
                 _LOGGER.warning(
                     "Failed to fetch firmware update manifest", exc_info=True
                 )
@@ -204,7 +205,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
             try:
                 fw_data = await client.async_fetch_firmware(fw_manifest)
-            except Exception as err:
+            except (TimeoutError, ClientError, ValueError) as err:
                 _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
 
                 # If we cannot download new firmware, we shouldn't block setup
