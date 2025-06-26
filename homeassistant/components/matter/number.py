@@ -84,7 +84,7 @@ class MatterLevelControNumber(MatterEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
-        if value_convert := self.entity_description.ha_to_device:
+        if value_convert := self.entity_description.ha_to_native_value:
             send_value = value_convert(value)
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevel(
@@ -229,7 +229,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: None
             if x is None
             else x / 2,  # Matter range (1-200)
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControNumber,
