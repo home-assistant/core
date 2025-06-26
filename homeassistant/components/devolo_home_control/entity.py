@@ -9,7 +9,6 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
@@ -89,8 +88,16 @@ class DevoloDeviceEntity(Entity):
         elif len(message) == 3 and message[2] == "status":
             # Maybe the API wants to tell us, that the device went on- or offline.
             self._attr_available = self._device_instance.is_online()
-        elif message[1] == "del":
-            self.hass.add_job(async_remove_device, self.hass, self._device_instance.uid)
+        elif message[1] == "del" and self.platform.config_entry:
+            device_registry = dr.async_get(self.hass)
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, self._device_instance.uid)}
+            )
+            if device:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=self.platform.config_entry.entry_id,
+                )
         else:
             _LOGGER.debug("No valid message received: %s", message)
 
@@ -114,12 +121,3 @@ class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
         ]
 
         self._value = self._multi_level_switch_property.value
-
-
-@callback
-def async_remove_device(hass: HomeAssistant, uid: str) -> None:
-    """Remove device from registry as long as it wasn't already removed."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, uid)})
-    if device:
-        device_registry.async_remove_device(device.id)
