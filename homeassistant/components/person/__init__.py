@@ -525,7 +525,7 @@ class Person(
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
-            elif state.state != STATE_HOME:
+            else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_non_gps_home:
