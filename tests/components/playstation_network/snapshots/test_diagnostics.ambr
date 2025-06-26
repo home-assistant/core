@@ -2,7 +2,7 @@
 # name: test_diagnostics
   dict({
     'data': dict({
-      'account_id': 'my-psn-id',
+      'account_id': '**REDACTED**',
       'active_sessions': dict({
         'PS5': dict({
           'format': 'PS5',
@@ -37,7 +37,7 @@
         'avatars': list([
           dict({
             'size': 'xl',
-            'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+            'url': '**REDACTED**',
           }),
         ]),
         'isMe': True,
@@ -46,14 +46,14 @@
         'languages': list([
           'de-DE',
         ]),
-        'onlineId': 'testuser',
+        'onlineId': '**REDACTED**',
         'personalDetail': dict({
           'firstName': 'Rick',
           'lastName': 'Astley',
           'profilePictures': list([
             dict({
               'size': 'xl',
-              'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+              'url': '**REDACTED**',
             }),
           ]),
         }),
@@ -62,7 +62,7 @@
         'PS5',
       ]),
       'trophy_summary': dict({
-        'account_id': 'my-psn-id',
+        'account_id': '**REDACTED**',
         'earned_trophies': dict({
           'bronze': 14450,
           'gold': 11754,
@@ -73,7 +73,7 @@
         'tier': 10,
         'trophy_level': 1079,
       }),
-      'username': 'testuser',
+      'username': '**REDACTED**',
     }),
   })
 # ---

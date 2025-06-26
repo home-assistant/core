@@ -7,14 +7,12 @@ from typing import Any
 
 from psnawp_api.models.trophies import PlatformType
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_NPSSO
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 
-TO_REDACT = {
-    CONF_NPSSO,
-}
+TO_REDACT = {"account_id", "onlineId", "url", "username"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,7 +22,9 @@ async def async_get_config_entry_diagnostics(
     coordinator: PlaystationNetworkCoordinator = entry.runtime_data
 
     return {
-        "data": _serialize_platform_types(asdict(coordinator.data)),
+        "data": async_redact_data(
+            _serialize_platform_types(asdict(coordinator.data)), TO_REDACT
+        ),
     }
 
 

@@ -1,4 +1,4 @@
-"""Tests for ntfy diagnostics."""
+"""Tests for PlayStation Network diagnostics."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
