@@ -51,6 +51,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
     PLATFORM_BROADCAST,
+    SECTION_ADVANCED_SETTINGS,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
@@ -722,6 +723,7 @@ async def test_send_message_no_chat_id_error(
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
+        SECTION_ADVANCED_SETTINGS: {},
     }
 
     with patch("homeassistant.components.telegram_bot.config_flow.Bot.get_me"):
