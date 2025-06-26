@@ -131,7 +131,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 "device": device,
                 "geofence": get_first_geofence(
                     geofences,
-                    position["geofenceIds"] or [],
+                    position.get("geofenceIds") or device.get("geofenceIds") or [],
                 ),
                 "position": position,
                 "attributes": attr,
