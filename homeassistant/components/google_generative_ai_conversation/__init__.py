@@ -284,6 +284,12 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                 )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
