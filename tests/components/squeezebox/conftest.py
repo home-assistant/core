@@ -266,6 +266,7 @@ def player_factory() -> MagicMock:
 
 def mock_pysqueezebox_player(uuid: str) -> MagicMock:
     """Mock a Lyrion Media Server player."""
+    assert uuid
     with patch(
         "homeassistant.components.squeezebox.Player", autospec=True
     ) as mock_player:
