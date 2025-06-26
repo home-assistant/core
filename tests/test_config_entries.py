@@ -8052,6 +8052,8 @@ async def test_subentry_get_entry(
                 else:
                     reason = f"{reason}: {entry_id}"
 
+                reason = f"{reason}/type:{self._subentry_type}"
+
                 try:
                     subentry = self._get_reconfigure_subentry()
                 except ValueError as err:
@@ -8080,7 +8082,7 @@ async def test_subentry_get_entry(
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert (
             result["reason"]
-            == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
+            == "Found entry entry_title: mock_entry_id/type:test/Found subentry Test: mock_subentry_id"
         )
 
     # The subentry_id does not exist
@@ -8094,7 +8096,7 @@ async def test_subentry_get_entry(
         )
         assert (
             result["reason"]
-            == "Found entry entry_title: mock_entry_id/Subentry not found: 01JRemoved"
+            == "Found entry entry_title: mock_entry_id/type:test/Subentry not found: 01JRemoved"
         )
 
     # A user flow finds the config entry but not the subentry
@@ -8104,7 +8106,7 @@ async def test_subentry_get_entry(
         )
         assert (
             result["reason"]
-            == "Found entry entry_title: mock_entry_id/Source is user, expected reconfigure: -"
+            == "Found entry entry_title: mock_entry_id/type:test/Source is user, expected reconfigure: -"
         )
 
 
