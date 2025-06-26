@@ -345,6 +345,35 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains", ["test_firmware_domain"]
 )
+async def test_config_flow_firmware_index_download_fails_and_required(
+    hass: HomeAssistant,
+) -> None:
+    """Test flow aborts if OTA index download fails and install is required."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with (
+        mock_firmware_info(
+            hass,
+            # The wrong firmware is installed, so a new install is required
+            probe_app_type=ApplicationType.SPINEL,
+        ) as (_, mock_update_client),
+    ):
+        mock_update_client.async_update_data.side_effect = ClientError()
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.ABORT
+        assert pick_result["reason"] == "fw_download_failed"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains", ["test_firmware_domain"]
+)
 async def test_config_flow_firmware_download_fails_and_required(
     hass: HomeAssistant,
 ) -> None:
@@ -358,14 +387,9 @@ async def test_config_flow_firmware_download_fails_and_required(
             hass,
             # The wrong firmware is installed, so a new install is required
             probe_app_type=ApplicationType.SPINEL,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient"
-        ) as mock_update_client_cls,
+        ) as (_, mock_update_client),
     ):
-        # Mock the firmware download to fail
-        mock_client = mock_update_client_cls.return_value = AsyncMock()
-        mock_client.async_fetch_firmware.side_effect = ClientError()
+        mock_update_client.async_fetch_firmware.side_effect = ClientError()
 
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],

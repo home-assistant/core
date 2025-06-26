@@ -163,35 +163,28 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
             try:
                 manifest = await client.async_update_data()
+                fw_manifest = next(
+                    fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+                )
             except Exception as err:
                 _LOGGER.warning(
                     "Failed to fetch firmware update manifest", exc_info=True
                 )
 
                 # Not having internet access should not prevent setup
-                if firmware_install_required:
-                    raise AbortFlow(
-                        "fw_download_failed",
-                        description_placeholders={
-                            **self._get_translation_placeholders(),
-                            "firmware_name": firmware_name,
-                        },
-                    ) from err
+                if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to index download failure"
+                    )
+                    return self.async_show_progress_done(next_step_id=next_step_id)
 
-                return self.async_show_progress_done(next_step_id=next_step_id)
-
-            try:
-                fw_manifest = next(
-                    fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
-                )
-            except StopIteration as exc:
                 raise AbortFlow(
                     "fw_download_failed",
                     description_placeholders={
                         **self._get_translation_placeholders(),
                         "firmware_name": firmware_name,
                     },
-                ) from exc
+                ) from err
 
             if not firmware_install_required:
                 assert self._probed_firmware_info is not None
@@ -216,10 +209,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
                 # If we cannot download new firmware, we shouldn't block setup
                 if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to image download failure"
+                    )
                     return self.async_show_progress_done(next_step_id=next_step_id)
 
-                # If we cannot download new firmware but we need this new firmware, we
-                # should fail
+                # Otherwise, fail
                 raise AbortFlow(
                     "fw_download_failed",
                     description_placeholders={
