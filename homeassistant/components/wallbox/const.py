@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 60
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
@@ -11,6 +11,8 @@ CODE_KEY = "code"
 CONF_STATION = "station"
 CHARGER_ADDED_DISCHARGED_ENERGY_KEY = "added_discharged_energy"
 CHARGER_ADDED_ENERGY_KEY = "added_energy"
+CHARGER_ADDED_GREEN_ENERGY_KEY = "added_green_energy"
+CHARGER_ADDED_GRID_ENERGY_KEY = "added_grid_energy"
 CHARGER_ADDED_RANGE_KEY = "added_range"
 CHARGER_CHARGING_POWER_KEY = "charging_power"
 CHARGER_CHARGING_SPEED_KEY = "charging_speed"
@@ -72,3 +74,4 @@ class EcoSmartMode(StrEnum):
     OFF = "off"
     ECO_MODE = "eco_mode"
     FULL_SOLAR = "full_solar"
+    DISABLED = "disabled"

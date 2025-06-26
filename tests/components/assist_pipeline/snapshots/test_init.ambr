@@ -8,6 +8,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -107,6 +108,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -206,6 +208,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -305,6 +308,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -428,6 +432,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'mocked-token.mp3',
           'url': '/api/tts_proxy/mocked-token.mp3',
         }),

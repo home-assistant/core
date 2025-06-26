@@ -38,6 +38,21 @@ DHCP_DISCOVERY = (
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
+        hostname="BOSCH-ABCDE1234-68A40E000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
         hostname="SIEMENS-ABCDE1234-68A40E000000",
         macaddress="68:A4:0E:00:00:00",
     ),
@@ -54,6 +69,26 @@ DHCP_DISCOVERY = (
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="siemens-dishwasher-000000000000000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-68A40E000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-38B4D3000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
         macaddress="38:B4:D3:00:00:00",
     ),
 )
@@ -279,6 +314,15 @@ async def test_zeroconf_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -350,6 +394,15 @@ async def test_dhcp_flow(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

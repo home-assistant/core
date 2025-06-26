@@ -30,10 +30,10 @@ class OperationalState(IntEnum):
     Combination of generic OperationalState and RvcOperationalState.
     """
 
-    NO_ERROR = 0x00
-    UNABLE_TO_START_OR_RESUME = 0x01
-    UNABLE_TO_COMPLETE_OPERATION = 0x02
-    COMMAND_INVALID_IN_STATE = 0x03
+    STOPPED = 0x00
+    RUNNING = 0x01
+    PAUSED = 0x02
+    ERROR = 0x03
     SEEKING_CHARGER = 0x40
     CHARGING = 0x41
     DOCKED = 0x42
@@ -95,7 +95,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        await self.send_device_command(clusters.OperationalState.Commands.Pause())
+        await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
     @callback
     def _update_from_device(self) -> None:
@@ -120,11 +120,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             state = VacuumActivity.DOCKED
         elif operational_state == OperationalState.SEEKING_CHARGER:
             state = VacuumActivity.RETURNING
-        elif operational_state in (
-            OperationalState.UNABLE_TO_COMPLETE_OPERATION,
-            OperationalState.UNABLE_TO_START_OR_RESUME,
-        ):
+        elif operational_state == OperationalState.ERROR:
             state = VacuumActivity.ERROR
+        elif operational_state == OperationalState.PAUSED:
+            state = VacuumActivity.PAUSED
         elif (run_mode := self._supported_run_modes.get(run_mode_raw)) is not None:
             tags = {x.value for x in run_mode.modeTags}
             if ModeTag.CLEANING in tags:
@@ -201,7 +200,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterVacuum,
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
-            clusters.RvcOperationalState.Attributes.CurrentPhase,
+            clusters.RvcOperationalState.Attributes.OperationalState,
         ),
         optional_attributes=(
             clusters.RvcCleanMode.Attributes.CurrentMode,
