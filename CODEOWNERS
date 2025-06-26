@@ -57,6 +57,8 @@ build.json @home-assistant/supervisor
 /tests/components/aemet/ @Noltari
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
+/homeassistant/components/ai_task/ @home-assistant/core
+/tests/components/ai_task/ @home-assistant/core
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
 /homeassistant/components/airgradient/ @airgradienthq @joostlek
@@ -91,6 +93,8 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/alexa_devices/ @chemelli74
 /tests/components/alexa_devices/ @chemelli74
+/homeassistant/components/altruist/ @airalab @LoSk-p
+/tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
@@ -327,8 +331,8 @@ build.json @home-assistant/supervisor
 /tests/components/demo/ @home-assistant/core
 /homeassistant/components/denonavr/ @ol-iver @starkillerOG
 /tests/components/denonavr/ @ol-iver @starkillerOG
-/homeassistant/components/derivative/ @afaucogney
-/tests/components/derivative/ @afaucogney
+/homeassistant/components/derivative/ @afaucogney @karwosts
+/tests/components/derivative/ @afaucogney @karwosts
 /homeassistant/components/devialet/ @fwestenberg
 /tests/components/devialet/ @fwestenberg
 /homeassistant/components/device_automation/ @home-assistant/core
@@ -784,8 +788,6 @@ build.json @home-assistant/supervisor
 /tests/components/jellyfin/ @RunC0deRun @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
-/homeassistant/components/juicenet/ @jesserockz
-/tests/components/juicenet/ @jesserockz
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
@@ -1167,6 +1169,8 @@ build.json @home-assistant/supervisor
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
 /tests/components/plaato/ @JohNan
+/homeassistant/components/playstation_network/ @jackjpowell @tr4nt0r
+/tests/components/playstation_network/ @jackjpowell @tr4nt0r
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew
@@ -1578,6 +1582,8 @@ build.json @home-assistant/supervisor
 /tests/components/tile/ @bachya
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
+/homeassistant/components/tilt_pi/ @michaelheyman
+/tests/components/tilt_pi/ @michaelheyman
 /homeassistant/components/time/ @home-assistant/core
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
@@ -1666,6 +1672,8 @@ build.json @home-assistant/supervisor
 /tests/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
 /homeassistant/components/valve/ @home-assistant/core
 /tests/components/valve/ @home-assistant/core
+/homeassistant/components/vegehub/ @ghowevege
+/tests/components/vegehub/ @ghowevege
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio

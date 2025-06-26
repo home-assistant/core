@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
 import io
-import logging
 from typing import Any
 import wave
 
 from google.genai import types
+from google.genai.errors import APIError, ClientError
+from propcache.api import cached_property
 
 from homeassistant.components.tts import (
     ATTR_VOICE,
@@ -19,12 +21,10 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_MODEL, DOMAIN, RECOMMENDED_TTS_MODEL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
+from .entity import GoogleGenerativeAILLMBaseEntity
 
 
 async def async_setup_entry(
@@ -32,15 +32,23 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up TTS entity."""
-    tts_entity = GoogleGenerativeAITextToSpeechEntity(config_entry)
-    async_add_entities([tts_entity])
+    """Set up TTS entities."""
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "tts":
+            continue
+
+        async_add_entities(
+            [GoogleGenerativeAITextToSpeechEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
-class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
+class GoogleGenerativeAITextToSpeechEntity(
+    TextToSpeechEntity, GoogleGenerativeAILLMBaseEntity
+):
     """Google Generative AI text-to-speech entity."""
 
-    _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
+    _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
     _attr_supported_languages = [
         "ar-EG",
@@ -68,6 +76,8 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
         "uk-UA",
         "vi-VN",
     ]
+    # Unused, but required by base class.
+    # The Gemini TTS models detect the input language automatically.
     _attr_default_language = "en-US"
     # See https://ai.google.dev/gemini-api/docs/speech-generation#voices
     _supported_voices = [
@@ -106,54 +116,41 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
         )
     ]
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Google Generative AI Conversation speech entity."""
-        self.entry = entry
-        self._attr_name = "Google Generative AI TTS"
-        self._attr_unique_id = f"{entry.entry_id}_tts"
-        self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-            manufacturer="Google",
-            model="Generative AI",
-            entry_type=dr.DeviceEntryType.SERVICE,
-        )
-        self._genai_client = entry.runtime_data
-        self._default_voice_id = self._supported_voices[0].voice_id
-
     @callback
-    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
+
+    @cached_property
+    def default_options(self) -> Mapping[str, Any]:
+        """Return a mapping with the default options."""
+        return {
+            ATTR_VOICE: self._supported_voices[0].voice_id,
+        }
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        try:
-            response = self._genai_client.models.generate_content(
-                model=options.get(ATTR_MODEL, RECOMMENDED_TTS_MODEL),
-                contents=message,
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=options.get(
-                                    ATTR_VOICE, self._default_voice_id
-                                )
-                            )
-                        )
-                    ),
-                ),
+        config = self.create_generate_content_config()
+        config.response_modalities = ["AUDIO"]
+        config.speech_config = types.SpeechConfig(
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                    voice_name=options[ATTR_VOICE]
+                )
             )
-
+        )
+        try:
+            response = await self._genai_client.aio.models.generate_content(
+                model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
+                contents=message,
+                config=config,
+            )
             data = response.candidates[0].content.parts[0].inline_data.data
             mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
-        except Exception as exc:
-            _LOGGER.warning(
-                "Error during processing of TTS request %s", exc, exc_info=True
-            )
+        except (APIError, ClientError, ValueError) as exc:
+            LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
         return "wav", self._convert_to_wav(data, mime_type)
 
@@ -193,7 +190,7 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
 
         """
         if not mime_type.startswith("audio/L"):
-            _LOGGER.warning("Received unexpected MIME type %s", mime_type)
+            LOGGER.warning("Received unexpected MIME type %s", mime_type)
             raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")
 
         bits_per_sample = 16
