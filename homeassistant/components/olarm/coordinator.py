@@ -6,10 +6,11 @@ import asyncio
 import logging
 import ssl
 
+from aiohttp import ClientResponseError
 from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -68,6 +69,20 @@ class OlarmFlowClientCoordinator:
             _LOGGER.debug("Access token expires at: %s ", expires_at)
 
             await self._olarm_connect_client.update_access_token(new_token, expires_at)
+        except ClientResponseError as e:
+            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
+
+            # Check if this is an invalid_grant error (status 400) that requires re-authentication
+            if e.status == 400:
+                _LOGGER.warning(
+                    "OAuth2 refresh token is invalid (status 400), triggering re-authentication"
+                )
+                raise ConfigEntryAuthFailed(
+                    "OAuth2 refresh token is invalid, re-authentication required"
+                ) from e
+
+            # For other HTTP errors, treat as temporary and retry
+            raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
         except Exception as e:
             _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
             raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
@@ -86,7 +101,7 @@ class OlarmFlowClientCoordinator:
             # Ensure we have a valid token before reconnecting
             await self._ensure_valid_token()
             _LOGGER.debug("Token refreshed successfully for MQTT reconnection")
-        except (ConfigEntryNotReady, OSError, TimeoutError) as e:
+        except (ConfigEntryNotReady, ConfigEntryAuthFailed, OSError, TimeoutError) as e:
             _LOGGER.error("Failed to refresh token for MQTT reconnection: %s", e)
 
     async def get_device(self):
@@ -115,6 +130,9 @@ class OlarmFlowClientCoordinator:
                 },
             )
 
+        except ConfigEntryAuthFailed:
+            # Let auth failures propagate to trigger reauth flow
+            raise
         except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
@@ -249,6 +267,9 @@ class OlarmFlowClientCoordinator:
             )
             _LOGGER.debug("Successfully connected to Olarm MQTT Service")
 
+        except ConfigEntryAuthFailed:
+            # Let auth failures propagate to trigger reauth flow
+            raise
         except TimeoutError:
             _LOGGER.error("Timeout connecting to Olarm MQTT Service")
             raise ConfigEntryNotReady(
@@ -263,7 +284,7 @@ class OlarmFlowClientCoordinator:
     # Define callback function for MQTT messages
     def mqtt_message_callback(self, topic, payload):
         """Handle incoming MQTT messages."""
-        _LOGGER.debug("MQTT message recevied: topic = %s, payload = %s", topic, payload)
+        _LOGGER.debug("MQTT message received: topic = %s, payload = %s", topic, payload)
 
         # only update if there is new state in the payload
         flagDispatch = False
@@ -296,6 +317,9 @@ class OlarmFlowClientCoordinator:
         try:
             await self._ensure_valid_token()
             _LOGGER.debug("Access token refreshed successfully")
+        except ConfigEntryAuthFailed:
+            # Let auth failures propagate to trigger reauth flow
+            raise
         except Exception as e:
             _LOGGER.error("Failed to refresh access token: %s", e)
             raise
