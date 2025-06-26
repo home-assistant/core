@@ -27,15 +27,18 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import SelectSelector
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
@@ -68,11 +71,18 @@ def get_models_pager():
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
+    model_25_flash_tts = Mock(
+        display_name="Gemini 2.5 Flash Preview TTS",
+        supported_actions=["generateContent"],
+    )
+    model_25_flash_tts.name = "models/gemini-2.5-flash-preview-tts"
+
     async def models_pager():
         yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
+        yield model_25_flash_tts
 
     return models_pager()
 
@@ -199,6 +209,51 @@ async def test_creating_conversation_subentry(
     assert result2["data"] == processed_options
 
 
+async def test_creating_stt_subentry(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an STT subentry."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "stt"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM, result
+    assert result["step_id"] == "set_options"
+    assert not result["errors"]
+
+    old_subentries = set(mock_config_entry.subentries)
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Mock STT", **RECOMMENDED_STT_OPTIONS},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Mock STT"
+    assert result2["data"] == RECOMMENDED_STT_OPTIONS
+
+    assert len(mock_config_entry.subentries) == 3
+
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry = mock_config_entry.subentries[new_subentry_id]
+
+    assert new_subentry.subentry_type == "stt"
+    assert new_subentry.data == RECOMMENDED_STT_OPTIONS
+    assert new_subentry.title == "Mock STT"
+
+
 async def test_creating_tts_subentry(
     hass: HomeAssistant,
     mock_init_component: None,
@@ -242,6 +297,141 @@ async def test_creating_tts_subentry(
     assert new_subentry.subentry_type == "tts"
     assert new_subentry.data == RECOMMENDED_TTS_OPTIONS
     assert new_subentry.title == "Mock TTS"
+
+
+async def test_creating_stt_subentry_custom_options(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an STT subentry with custom options."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "stt"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    # Uncheck recommended to show custom options
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: DEFAULT_STT_NAME,
+                **RECOMMENDED_STT_OPTIONS,
+                CONF_RECOMMENDED: False,
+            },
+        )
+    assert result2["type"] is FlowResultType.FORM
+
+    # Find the schema key for CONF_CHAT_MODEL and check its default
+    schema_dict = result2["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert chat_model_key.default() == RECOMMENDED_STT_MODEL
+    assert isinstance(schema_dict[chat_model_key], SelectSelector)
+    models_in_selector = [
+        opt["value"] for opt in schema_dict[chat_model_key].config["options"]
+    ]
+    assert RECOMMENDED_TTS_MODEL not in models_in_selector
+    assert RECOMMENDED_STT_MODEL in models_in_selector
+
+    # Submit the form
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result3 = await hass.config_entries.subentries.async_configure(
+            result2["flow_id"],
+            {
+                CONF_NAME: DEFAULT_STT_NAME,
+                CONF_PROMPT: "Transcribe this",
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: RECOMMENDED_STT_MODEL,
+                CONF_TEMPERATURE: 1.0,
+                CONF_TOP_P: 1.0,
+                CONF_TOP_K: 1,
+                CONF_MAX_TOKENS: 1024,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_DANGEROUS_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_creating_tts_subentry_custom_options(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a TTS subentry with custom options."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "tts"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    # Uncheck recommended to show custom options
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: DEFAULT_TTS_NAME,
+                **RECOMMENDED_TTS_OPTIONS,
+                CONF_RECOMMENDED: False,
+            },
+        )
+    assert result2["type"] is FlowResultType.FORM
+
+    # Find the schema key for CONF_CHAT_MODEL and check its default
+    schema_dict = result2["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert chat_model_key.default() == RECOMMENDED_TTS_MODEL
+    assert isinstance(schema_dict[chat_model_key], SelectSelector)
+    models_in_selector = [
+        opt["value"] for opt in schema_dict[chat_model_key].config["options"]
+    ]
+    assert RECOMMENDED_TTS_MODEL in models_in_selector
+    assert RECOMMENDED_CHAT_MODEL not in models_in_selector
+
+    # Submit the form
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result3 = await hass.config_entries.subentries.async_configure(
+            result2["flow_id"],
+            {
+                CONF_NAME: DEFAULT_TTS_NAME,
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
+                CONF_TEMPERATURE: 1.0,
+                CONF_TOP_P: 1.0,
+                CONF_TOP_K: 1,
+                CONF_MAX_TOKENS: 1024,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+                CONF_DANGEROUS_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_creating_conversation_subentry_not_loaded(
