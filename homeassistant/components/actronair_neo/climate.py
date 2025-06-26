@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
+from .const import DOMAIN
 from .coordinator import ActronNeoConfigEntry, ActronNeoSystemCoordinator
 
 PARALLEL_UPDATES = 0

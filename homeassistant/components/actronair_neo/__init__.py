@@ -1,10 +1,9 @@
 """The Actron Air Neo integration."""
 
-import logging
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import _LOGGER
 from .coordinator import (
     ActronNeoApiClient,
     ActronNeoConfigEntry,
@@ -12,9 +11,7 @@ from .coordinator import (
     ActronNeoSystemCoordinator,
 )
 
-_LOGGER = logging.getLogger(__package__)
 PLATFORM = [Platform.CLIMATE]
-DOMAIN = "actronair_neo"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
@@ -26,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) ->
     system_coordinators: dict[str, ActronNeoSystemCoordinator] = {}
     for system in api_client.systems:
         coordinator = ActronNeoSystemCoordinator(hass, entry, api_client, system)
+        _LOGGER.debug("Setting up coordinator for system: %s", system["serial"])
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system["serial"]] = coordinator
 

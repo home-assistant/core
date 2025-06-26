@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import _LOGGER
+from .const import _LOGGER
 
 STALE_DEVICE_TIMEOUT = timedelta(hours=24)
 ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
