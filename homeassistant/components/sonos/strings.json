@@ -56,6 +56,14 @@
       },
       "next_alarm": {
         "name": "Next alarm"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "battery": "Battery",
+          "charging_base": "Charging base",
+          "usb": "USB"
+        }
       }
     },
     "switch": {

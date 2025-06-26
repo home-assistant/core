@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_TTS_NAME,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
@@ -33,8 +34,16 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "data": {},
                 "subentry_type": "conversation",
                 "title": DEFAULT_CONVERSATION_NAME,
+                "subentry_id": "ulid-conversation",
                 "unique_id": None,
-            }
+            },
+            {
+                "data": {},
+                "subentry_type": "tts",
+                "title": DEFAULT_TTS_NAME,
+                "subentry_id": "ulid-tts",
+                "unique_id": None,
+            },
         ],
     )
     entry.runtime_data = Mock()
