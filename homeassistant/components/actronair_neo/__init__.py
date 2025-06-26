@@ -1,5 +1,7 @@
 """The Actron Air Neo integration."""
 
+import logging
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -10,6 +12,7 @@ from .coordinator import (
     ActronNeoSystemCoordinator,
 )
 
+_LOGGER = logging.getLogger(__package__)
 PLATFORM = [Platform.CLIMATE]
 DOMAIN = "actronair_neo"
 

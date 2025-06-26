@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER
+from . import _LOGGER
 
 STALE_DEVICE_TIMEOUT = timedelta(hours=24)
 ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
@@ -54,7 +54,6 @@ class ActronNeoApiClient:
         try:
             await self.api.refresh_token()
             systems = await self.api.get_ac_systems()
-            self.systems = systems
         except ActronNeoAuthError:
             _LOGGER.error(
                 "Authentication error while setting up Actron Neo integration"
@@ -63,6 +62,7 @@ class ActronNeoApiClient:
         except ActronNeoAPIError as err:
             _LOGGER.error("API error while setting up Actron Neo integration: %s", err)
             raise
+        self.systems = systems
         return True
 
 
@@ -94,8 +94,8 @@ class ActronNeoSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch updates and merge incremental changes into the full state."""
-        self.last_seen = dt_util.utcnow()
         self.status = self.api.state_manager.get_status(self.serial_number)
+        self.last_seen = dt_util.utcnow()
         return self.status
 
     def is_device_stale(self) -> bool:
