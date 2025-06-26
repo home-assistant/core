@@ -4888,3 +4888,9 @@ async def test_update_device_no_connections_or_identifiers(
         device_registry.async_update_device(
             device.id, new_connections=set(), new_identifiers=set()
         )
+
+
+async def test_connections_validator() -> None:
+    """Test checking connections validator."""
+    with pytest.raises(ValueError, match="Invalid mac address format"):
+        dr.DeviceEntry(connections={(dr.CONNECTION_NETWORK_MAC, "123456ABCDEF")})
