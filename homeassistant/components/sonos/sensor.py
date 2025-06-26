@@ -2,18 +2,26 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
+from .alarms import SonosAlarms
 from .const import (
+    ATTR_SCHEDULED_TODAY,
+    SONOS_ALARMS_UPDATED,
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_FAVORITES_SENSOR,
+    SONOS_CREATE_NEXT_ALARM_SENSOR,
     SONOS_FAVORITES_UPDATED,
     SOURCE_TV,
 )
@@ -23,6 +31,8 @@ from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_FOLLOWING_ALARM_TRIGGER = "following_alarm_trigger"
 
 SONOS_POWER_SOURCE_BATTERY = "BATTERY"
 SONOS_POWER_SOURCE_CHARGING_RING = "SONOS_CHARGING_RING"
@@ -76,6 +86,12 @@ async def async_setup_entry(
         entity = SonosFavoritesEntity(favorites)
         async_add_entities([entity])
 
+    @callback
+    def _async_create_next_alarm_sensor(speaker: SonosSpeaker) -> None:
+        _LOGGER.debug("Creating next alarm sensor on %s", speaker.zone_name)
+        entity = SonosNextAlarmEntity(speaker, config_entry)
+        async_add_entities([entity])
+
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, _async_create_audio_format_entity
@@ -90,6 +106,12 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, SONOS_CREATE_FAVORITES_SENSOR, _async_create_favorites_sensor
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_NEXT_ALARM_SENSOR, _async_create_next_alarm_sensor
         )
     )
 
@@ -224,3 +246,89 @@ class SonosFavoritesEntity(SensorEntity):
             "items": {fav.item_id: fav.title for fav in self.favorites}
         }
         self.async_write_ha_state()
+
+
+class SonosNextAlarmEntity(SonosEntity, SensorEntity):
+    """Representation of a Sonos next alarm entity."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+    _attr_translation_key = "next_alarm"
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the next alarm sensor."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{self.soco.uid}-next-alarm"
+        self.household_id = speaker.household_id
+
+    async def async_added_to_hass(self) -> None:
+        """Handle sensor setup when added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_ALARMS_UPDATED}-{self.household_id}",
+                self.async_write_ha_state,
+            )
+        )
+
+        async def async_write_state_daily(now: datetime.datetime) -> None:
+            """Update state attributes each calendar day."""
+            _LOGGER.debug("Daily update of next alarm for %s", self.name)
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, async_write_state_daily, hour=0, minute=0, second=0
+            )
+        )
+
+    async def _async_fallback_poll(self) -> None:
+        """Call the central alarm polling method."""
+        alarms: SonosAlarms = self.config_entry.runtime_data.alarms[self.household_id]
+        assert alarms.async_poll
+        await alarms.async_poll()
+
+    @property
+    def icon(self) -> str:
+        """Icon of the entity."""
+        if self.native_value is None:
+            return "mdi:alarm-off"
+        if self._following_alarm_trigger is None:
+            return "mdi:alarm"
+        return "mdi:alarm-multiple"
+
+    @property
+    def native_value(self) -> datetime.datetime | None:
+        """Return the next alarm time."""
+        return self.speaker.alarms.get_next_alarm_datetime(zone_uid=self.soco.uid)
+
+    @property
+    def _is_today(self) -> bool:
+        """Return whether the next alarm is scheduled for today."""
+        if self.native_value is None:
+            return False
+        return self.native_value.date() == dt_util.now().date()
+
+    @property
+    def _following_alarm_trigger(self) -> datetime.datetime | None:
+        """Return the following alarm after the current next one."""
+        if self.native_value is None:
+            return None
+        return self.speaker.alarms.get_next_alarm_datetime(
+            from_datetime=self.native_value + datetime.timedelta(minutes=1),
+            zone_uid=self.soco.uid,
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return attributes of Sonos next alarm sensor."""
+        return {
+            ATTR_SCHEDULED_TODAY: self._is_today,
+            ATTR_FOLLOWING_ALARM_TRIGGER: self._following_alarm_trigger,
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return whether this entity is available."""
+        return self.speaker.available and self.native_value is not None

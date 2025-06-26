@@ -41,12 +41,12 @@ from .const import (
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
-    SONOS_CREATE_ALARM_SCHEDULED,
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
+    SONOS_CREATE_NEXT_ALARM_SENSOR,
     SONOS_CREATE_SWITCHES,
     SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
@@ -252,7 +252,7 @@ class SonosSpeaker:
         ]:
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
 
-        dispatches.append((SONOS_CREATE_ALARM_SCHEDULED, self))
+        dispatches.append((SONOS_CREATE_NEXT_ALARM_SENSOR, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
