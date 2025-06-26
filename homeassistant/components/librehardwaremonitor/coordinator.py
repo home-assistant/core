@@ -10,12 +10,17 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
 )
-from librehardwaremonitor_api.model import LibreHardwareMonitorData
+from librehardwaremonitor_api.model import (
+    DeviceId,
+    DeviceName,
+    LibreHardwareMonitorData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -44,11 +49,13 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
         self._api = LibreHardwareMonitorClient(host, port)
-        device_entries = dr.async_entries_for_config_entry(
+        device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
             registry=dr.async_get(self.hass), config_entry_id=config_entry.entry_id
         )
-        self._previous_devices = {
-            device.name for device in device_entries if device.name is not None
+        self._previous_devices: dict[DeviceId, DeviceName] = {
+            DeviceId(next(iter(device.identifiers))[1]): DeviceName(device.name)
+            for device in device_entries
+            if device.identifiers and device.name
         }
 
     async def _async_update_data(self) -> LibreHardwareMonitorData:
@@ -61,7 +68,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 
-        await self._async_handle_changes_in_devices(lhm_data.main_device_names)
+        await self._async_handle_changes_in_devices(lhm_data.main_device_ids_and_names)
 
         return lhm_data
 
@@ -78,33 +85,39 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         )
 
     async def _async_handle_changes_in_devices(
-        self, detected_devices: list[str]
+        self, detected_devices: dict[DeviceId, DeviceName]
     ) -> None:
         """Handle device changes by deleting devices from / adding devices to Home Assistant."""
-        if self._previous_devices == set(detected_devices) or self.config_entry is None:
+        previous_device_ids = set(self._previous_devices.keys())
+        detected_device_ids = set(detected_devices.keys())
+
+        if previous_device_ids == detected_device_ids or self.config_entry is None:
             return
 
         if self.data is None:
-            self._previous_devices = set(detected_devices)  # type: ignore[unreachable]
+            self._previous_devices = detected_devices  # type: ignore[unreachable]
             return
 
-        if orphaned_devices := list(self._previous_devices - set(detected_devices)):
-            _LOGGER.info(
-                "Devices no longer available, will be removed: %s", orphaned_devices
+        if orphaned_devices := previous_device_ids - detected_device_ids:
+            _LOGGER.warning(
+                "Device(s) no longer available, will be removed: %s",
+                [self._previous_devices[device_id] for device_id in orphaned_devices],
             )
             device_registry = dr.async_get(self.hass)
-            for device_name in orphaned_devices:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_name)}
-                )
-                if device:
+            for device_id in orphaned_devices:
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                ):
                     device_registry.async_update_device(
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
 
-        if new_devices := list(set(detected_devices) - self._previous_devices):
-            _LOGGER.info("New Device(s) added, reloading integration: %s", new_devices)
+        if new_devices := detected_device_ids - previous_device_ids:
+            _LOGGER.warning(
+                "New Device(s) added, reloading integration: %s",
+                [detected_devices[DeviceId(device_id)] for device_id in new_devices],
+            )
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
-        self._previous_devices = set(detected_devices)
+        self._previous_devices = detected_devices

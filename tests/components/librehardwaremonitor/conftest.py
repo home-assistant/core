@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from librehardwaremonitor_api.model import (
+    DeviceId,
+    DeviceName,
     LibreHardwareMonitorData,
     LibreHardwareMonitorSensorData,
 )
@@ -58,11 +60,11 @@ def mock_lhm_client() -> Generator[AsyncMock]:
 
 
 LHM_SAMPLE_DATA = LibreHardwareMonitorData(
-    main_device_names=[
-        "MSI MAG B650M MORTAR WIFI (MS-7D76)",
-        "AMD Ryzen 7 7800X3D",
-        "NVIDIA GeForce RTX 4080 SUPER",
-    ],
+    main_device_ids_and_names={
+        DeviceId("lpc-nct6687d-0"): DeviceName("MSI MAG B650M MORTAR WIFI (MS-7D76)"),
+        DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
+        DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
+    },
     sensor_data={
         "lpc-nct6687d-0-voltage-0": LibreHardwareMonitorSensorData(
             name="+12V Voltage",
