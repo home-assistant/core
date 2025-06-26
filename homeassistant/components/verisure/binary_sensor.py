@@ -120,7 +120,22 @@ class VerisureEthernetStatus(
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.coordinator.data["broadband"]["isBroadbandConnected"]
+        broadband_data = self.coordinator.data.get("broadband")
+        if not broadband_data:
+            return False
+
+        # Handle case where broadband_data is a list
+        if isinstance(broadband_data, list):
+            # If it's a list, try to get the first item
+            if broadband_data and isinstance(broadband_data[0], dict):
+                return broadband_data[0].get("isBroadbandConnected", False)
+            return False
+
+        # Handle case where broadband_data is a dictionary
+        if isinstance(broadband_data, dict):
+            return broadband_data.get("isBroadbandConnected", False)
+
+        return False
 
     @property
     def available(self) -> bool:
