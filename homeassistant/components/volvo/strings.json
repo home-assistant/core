@@ -60,25 +60,25 @@
         }
       },
       "average_energy_consumption": {
-        "name": "TM avg. energy consumption"
+        "name": "Trip manual average energy consumption"
       },
       "average_energy_consumption_automatic": {
-        "name": "TA avg. energy consumption"
+        "name": "Trip automatic average energy consumption"
       },
       "average_energy_consumption_charge": {
-        "name": "Avg. energy consumption since charge"
+        "name": "Average energy consumption since charge"
       },
       "average_fuel_consumption": {
-        "name": "TM avg. fuel consumption"
+        "name": "Trip manual average fuel consumption"
       },
       "average_fuel_consumption_automatic": {
-        "name": "TA avg. fuel consumption"
+        "name": "Trip automatic average fuel consumption"
       },
       "average_speed": {
-        "name": "TM avg. speed"
+        "name": "Trip manual average speed"
       },
       "average_speed_automatic": {
-        "name": "TA avg. speed"
+        "name": "Trip automatic average speed"
       },
       "battery_capacity": {
         "name": "Battery capacity"
@@ -121,7 +121,7 @@
         "name": "Engine time to service"
       },
       "estimated_charging_time": {
-        "name": "Est. charging time"
+        "name": "Estimated charging time"
       },
       "fuel_amount": {
         "name": "Fuel amount"
@@ -136,10 +136,10 @@
         "name": "Time to service"
       },
       "trip_meter_automatic": {
-        "name": "TA distance"
+        "name": "Trip automatic distance"
       },
       "trip_meter_manual": {
-        "name": "TM distance"
+        "name": "Trip manual distance"
       }
     }
   },
