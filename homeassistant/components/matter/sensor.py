@@ -518,6 +518,36 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="EveWeatherWeatherTrend",
+            translation_key="eve_weather_trend",
+            device_class=SensorDeviceClass.ENUM,
+            native_unit_of_measurement=None,
+            measurement_to_ha={
+                0: "0",
+                1: "1",
+                2: "2",
+                3: "3",
+                4: "4",
+                5: "5",
+                6: "6",
+                None: "previous",
+            }.get,
+            ha_to_native_value={
+                "0": 0,
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "5": 5,
+                "6": 6,
+                "previous": None,
+            }.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveCluster.Attributes.WeatherTrend,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="CarbonDioxideSensor",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             device_class=SensorDeviceClass.CO2,

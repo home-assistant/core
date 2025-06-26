@@ -407,6 +407,9 @@
       "pump_speed": {
         "name": "Rotation speed"
       },
+      "eve_weather_trend": {
+        "name": "Weather trend"
+      },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
       },
