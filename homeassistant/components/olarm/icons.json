@@ -1,0 +1,25 @@
+{
+  "services": {
+    "zone_bypass": {
+      "service": "mdi:shield-off"
+    },
+    "zone_unbypass": {
+      "service": "mdi:shield"
+    },
+    "pgm_command": {
+      "service": "mdi:console"
+    },
+    "utility_key": {
+      "service": "mdi:key"
+    },
+    "link_output_command": {
+      "service": "mdi:connection"
+    },
+    "link_relay_command": {
+      "service": "mdi:electric-switch"
+    },
+    "max_output_command": {
+      "service": "mdi:export"
+    }
+  }
+}

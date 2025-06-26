@@ -43,6 +43,8 @@ from .coordinator import OlarmFlowClientCoordinator
 
 type OlarmConfigEntry = ConfigEntry[OlarmFlowClientCoordinator]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 _PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
