@@ -12,6 +12,10 @@
           "select_device": "Device",
           "load_zones_bypass": "Would you like to also load entities for zone bypassing?"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with Olarm",
+        "description": "We need to reauthenticate with Olarm. Please click submit to continue with the authentication process."
       }
     },
     "error": {
@@ -30,7 +34,9 @@
       "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
       "user_rejected_authorize": "Account linking rejected: {error}",
       "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
-      "no_devices_found": "No Olarm devices found in your account."
+      "no_devices_found": "No Olarm devices found in your account.",
+      "reauth_account_not_found": "Account to reauthenticate not found.",
+      "reauth_successful": "Reauthentication successful"
     },
     "create_entry": {
       "default": "Successfully authenticated"
