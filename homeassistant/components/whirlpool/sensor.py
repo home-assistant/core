@@ -199,30 +199,38 @@ async def async_setup_entry(
     """Config flow entry for Whirlpool sensors."""
     appliances_manager = config_entry.runtime_data
 
-    entities = (
+    washer_sensors = [
+        WhirlpoolSensor(washer, description)
+        for washer in appliances_manager.washers
+        for description in WASHER_SENSORS
+    ]
+
+    washer_time_sensors = [
+        WasherTimeSensor(washer, description)
+        for washer in appliances_manager.washers
+        for description in WASHER_DRYER_TIME_SENSORS
+    ]
+
+    dryer_sensors = [
+        WhirlpoolSensor(dryer, description)
+        for dryer in appliances_manager.dryers
+        for description in DRYER_SENSORS
+    ]
+
+    dryer_time_sensors = [
+        DryerTimeSensor(dryer, description)
+        for dryer in appliances_manager.dryers
+        for description in WASHER_DRYER_TIME_SENSORS
+    ]
+
+    async_add_entities(
         [
-            WhirlpoolSensor(washer, description)
-            for washer in appliances_manager.washers
-            for description in WASHER_SENSORS
-        ]
-        + [
-            WasherTimeSensor(washer, description)
-            for washer in appliances_manager.washers
-            for description in WASHER_DRYER_TIME_SENSORS
-        ]
-        + [
-            WhirlpoolSensor(dryer, description)
-            for dryer in appliances_manager.dryers
-            for description in DRYER_SENSORS
-        ]
-        + [
-            DryerTimeSensor(dryer, description)
-            for dryer in appliances_manager.dryers
-            for description in WASHER_DRYER_TIME_SENSORS
+            *washer_sensors,
+            *washer_time_sensors,
+            *dryer_sensors,
+            *dryer_time_sensors,
         ]
     )
-
-    async_add_entities(entities)
 
 
 class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
