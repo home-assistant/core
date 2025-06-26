@@ -29,13 +29,13 @@ PARALLEL_UPDATES = 0
 
 @dataclass(kw_only=True, frozen=True)
 class PlaystationNetworkBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """PlayStation Network sensor description."""
+    """PlayStation Network binary sensor description."""
 
     value_fn: Callable[[PlaystationNetworkData], StateType]
 
 
 class PlaystationNetworkBinarySensor(StrEnum):
-    """PlayStation Network sensors."""
+    """PlayStation Network binary sensors."""
 
     ONLINE_STATUS = "online_status"
     PS_PLUS_STATUS = "ps_plus_status"
@@ -75,7 +75,7 @@ async def async_setup_entry(
 class PlaystationNetworkBinarySensorEntity(
     CoordinatorEntity[PlaystationNetworkCoordinator], BinarySensorEntity
 ):
-    """Representation of a PlayStation Network sensor entity."""
+    """Representation of a PlayStation Network binary sensor entity."""
 
     entity_description: PlaystationNetworkBinarySensorEntityDescription
     coordinator: PlaystationNetworkCoordinator
