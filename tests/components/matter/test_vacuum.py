@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotSupported
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -61,7 +61,29 @@ async def test_vacuum_actions(
     )
     matter_client.send_device_command.reset_mock()
 
-    # test start/resume action
+    # test start action (from idle state)
+    await hass.services.async_call(
+        "vacuum",
+        "start",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test resume action (from paused state)
+    # first set the operational state to paused
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
+
     await hass.services.async_call(
         "vacuum",
         "start",
@@ -98,25 +120,6 @@ async def test_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
     # test stop action
-    # stop command is not supported by the vacuum fixture
-    with pytest.raises(
-        ServiceNotSupported,
-        match="Entity vacuum.mock_vacuum does not support action vacuum.stop",
-    ):
-        await hass.services.async_call(
-            "vacuum",
-            "stop",
-            {
-                "entity_id": entity_id,
-            },
-            blocking=True,
-        )
-
-    # update accepted command list to add support for stop command
-    set_node_attribute(
-        matter_node, 1, 97, 65529, [clusters.OperationalState.Commands.Stop.command_id]
-    )
-    await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         "vacuum",
         "stop",
@@ -129,7 +132,7 @@ async def test_vacuum_actions(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.OperationalState.Commands.Stop(),
+        command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=0),
     )
     matter_client.send_device_command.reset_mock()
 
@@ -209,11 +212,21 @@ async def test_vacuum_updates(
     assert state
     assert state.state == "idle"
 
+    # confirm state is 'cleaning' by setting;
+    # - the operational state to 0x00
+    # - the run mode is set to a mode which has mapping tag
+    set_node_attribute(matter_node, 1, 97, 4, 0)
+    set_node_attribute(matter_node, 1, 84, 1, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "cleaning"
+
     # confirm state is 'unknown' by setting;
     # - the operational state to 0x00
     # - the run mode is set to a mode which has neither cleaning or idle tag
     set_node_attribute(matter_node, 1, 97, 4, 0)
-    set_node_attribute(matter_node, 1, 84, 1, 2)
+    set_node_attribute(matter_node, 1, 84, 1, 5)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
@@ -226,3 +239,55 @@ async def test_vacuum_updates(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "error"
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_vacuum_actions_no_supported_run_modes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum entity actions when no supported run modes are available."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
+    entity_id = "vacuum.mock_vacuum"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Set empty supported modes to simulate no available run modes
+    # RvcRunMode cluster ID is 84, SupportedModes attribute ID is 0
+    set_node_attribute(matter_node, 1, 84, 0, [])
+    # RvcOperationalState cluster ID is 97, AcceptedCommandList attribute ID is 65529
+    set_node_attribute(matter_node, 1, 97, 65529, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    # test start action fails when no supported run modes
+    with pytest.raises(
+        HomeAssistantError,
+        match="No supported run mode found to start the vacuum cleaner",
+    ):
+        await hass.services.async_call(
+            "vacuum",
+            "start",
+            {
+                "entity_id": entity_id,
+            },
+            blocking=True,
+        )
+
+    # test stop action fails when no supported run modes
+    with pytest.raises(
+        HomeAssistantError,
+        match="No supported run mode found to stop the vacuum cleaner",
+    ):
+        await hass.services.async_call(
+            "vacuum",
+            "stop",
+            {
+                "entity_id": entity_id,
+            },
+            blocking=True,
+        )
+
+    # Ensure no commands were sent to the device
+    assert matter_client.send_device_command.call_count == 0
