@@ -9,10 +9,10 @@ import logging
 from typing import Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
@@ -26,17 +26,12 @@ from homeassistant.components.device_tracker import (
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .const import DOMAIN as UNIFI_DOMAIN
-from .entity import (
-    HandlerT,
-    UnifiEntity,
-    UnifiEntityDescription,
-    async_device_available_fn,
-)
+from .const import DOMAIN
+from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
@@ -142,7 +137,7 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription(
+class UnifiTrackerEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
 ):
     """Class describing UniFi device tracker entity."""
@@ -204,14 +199,12 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
     def update_unique_id(obj_id: str) -> None:
         """Rework unique ID."""
         new_unique_id = f"{hub.site}-{obj_id}"
-        if ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, new_unique_id
-        ):
+        if ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, new_unique_id):
             return
 
         unique_id = f"{obj_id}-{hub.site}"
         if entity_id := ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, unique_id
+            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
         ):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
@@ -222,7 +215,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
@@ -231,7 +224,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
+class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], ScannerEntity
+):
     """Representation of a UniFi scanner."""
 
     entity_description: UnifiTrackerEntityDescription

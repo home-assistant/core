@@ -80,6 +80,9 @@
       },
       "one_touch_filter": {
         "default": "mdi:air-filter"
+      },
+      "water_heater_operation_mode": {
+        "default": "mdi:power"
       }
     },
     "climate": {
@@ -163,7 +166,13 @@
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
       },
+      "current_job_mode_ventilator": {
+        "default": "mdi:format-list-bulleted"
+      },
       "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_dehumidifier": {
         "default": "mdi:format-list-bulleted"
       },
       "operation_mode": {
@@ -407,6 +416,12 @@
       },
       "power_level_for_location": {
         "default": "mdi:radiator"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
       }
     }
   }

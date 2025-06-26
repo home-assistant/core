@@ -7,7 +7,7 @@
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
         },
         "data_description": {
-          "llm_hass_api": "The method for controling Home Assistant to expose with the Model Context Protocol."
+          "llm_hass_api": "The method for controlling Home Assistant to expose with the Model Context Protocol."
         }
       }
     },

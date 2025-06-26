@@ -86,7 +86,7 @@ class PilightBaseDevice(RestoreEntity):
 
         self._brightness = 255
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
@@ -99,7 +99,7 @@ class PilightBaseDevice(RestoreEntity):
         return self._name
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
 

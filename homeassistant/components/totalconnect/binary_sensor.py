@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
@@ -120,7 +120,7 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TotalConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
     sensors: list = []

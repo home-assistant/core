@@ -26,6 +26,7 @@
     { "value_type": "temperature", "value": "6.26" },
     { "value_type": "HECA_temperature", "value": "7.95" },
     { "value_type": "HECA_humidity", "value": "49.97" },
+    { "value_type": "ambient_light", "value": "298.45" },
     { "value_type": "signal", "value": "-72" }
   ]
 }

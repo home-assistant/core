@@ -38,14 +38,32 @@
     "inverters": {
       "1": {
         "serial_number": "1",
-        "last_report_date": 1,
-        "last_report_watts": 1,
-        "max_report_watts": 1
+        "last_report_date": 1750460765,
+        "last_report_watts": 116,
+        "max_report_watts": 325,
+        "dc_voltage": 33.793,
+        "dc_current": 3.668,
+        "ac_voltage": 243.438,
+        "ac_current": 0.504,
+        "ac_frequency": 50.01,
+        "temperature": 23,
+        "energy_produced": 32.254,
+        "energy_today": 134,
+        "lifetime_energy": 130209,
+        "last_report_duration": 903
       }
     },
     "tariff": null,
     "raw": {
       "varies_by": "firmware_version"
     }
+  },
+  "interface_information": {
+    "primary_interface": "eth0",
+    "interface_type": "ethernet",
+    "mac": "00:11:22:33:44:55",
+    "dhcp": true,
+    "software_build_epoch": 1719503966,
+    "timezone": "Europe/Amsterdam"
   }
 }

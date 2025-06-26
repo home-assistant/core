@@ -7,5 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["bring_api"],
-  "requirements": ["bring-api==1.0.2"]
+  "quality_scale": "platinum",
+  "requirements": ["bring-api==1.1.0"]
 }

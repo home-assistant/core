@@ -46,6 +46,16 @@ def build_mock_node(file: str) -> AsyncMock:
     def attribute_by_type(type, instance=0) -> HomeeAttribute | None:
         return {attr.type: attr for attr in mock_node.attributes}.get(type)
 
+    mock_node.raw_data = json_node
     mock_node.get_attribute_by_type = attribute_by_type
 
     return mock_node
+
+
+async def async_update_attribute_value(
+    hass: HomeAssistant, attribute: AsyncMock, value: float
+) -> None:
+    """Set the current_value of an attribute and notify hass."""
+    attribute.current_value = value
+    attribute.add_on_changed_listener.call_args_list[0][0][0](attribute)
+    await hass.async_block_till_done()

@@ -24,7 +24,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import LOGGER
@@ -77,7 +77,7 @@ TRANSITION_BLOCKLIST = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
     matter = get_matter(hass)
@@ -162,7 +162,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(  # type: ignore[unreachable]
+        level = round(
             renormalize(
                 brightness,
                 (0, 255),
@@ -249,7 +249,7 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
-        LOGGER.debug(  # type: ignore[unreachable]
+        LOGGER.debug(
             "Got brightness %s for %s",
             level_control.currentLevel,
             self.entity_id,

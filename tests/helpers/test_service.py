@@ -16,6 +16,7 @@ from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
+from homeassistant.components.input_button import DOMAIN as DOMAIN_INPUT_BUTTON
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
@@ -32,6 +33,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     SupportsResponse,
 )
 from homeassistant.helpers import (
@@ -41,7 +43,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
-from homeassistant.loader import async_get_integration
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.loader import (
+    Integration,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
@@ -49,6 +56,7 @@ from tests.common import (
     MockEntity,
     MockModule,
     MockUser,
+    RegistryEntryWithDefaults,
     async_mock_service,
     mock_area_registry,
     mock_device_registry,
@@ -158,94 +166,94 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    entity_in_own_area = er.RegistryEntry(
+    entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.in_own_area",
         unique_id="in-own-area-id",
         platform="test",
         area_id="own-area",
     )
-    config_entity_in_own_area = er.RegistryEntry(
+    config_entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.config_in_own_area",
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_own_area = er.RegistryEntry(
+    hidden_entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_in_own_area",
         unique_id="hidden-in-own-area-id",
         platform="test",
         area_id="own-area",
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_area = er.RegistryEntry(
+    entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
     )
-    config_entity_in_area = er.RegistryEntry(
+    config_entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.config_in_area",
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_area = er.RegistryEntry(
+    hidden_entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_in_area",
         unique_id="hidden-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_other_area = er.RegistryEntry(
+    entity_in_other_area = RegistryEntryWithDefaults(
         entity_id="light.in_other_area",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="other-area",
     )
-    entity_assigned_to_area = er.RegistryEntry(
+    entity_assigned_to_area = RegistryEntryWithDefaults(
         entity_id="light.assigned_to_area",
         unique_id="assigned-area-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="test-area",
     )
-    entity_no_area = er.RegistryEntry(
+    entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.no_area",
         unique_id="no-area-id",
         platform="test",
         device_id=device_no_area.id,
     )
-    config_entity_no_area = er.RegistryEntry(
+    config_entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.config_no_area",
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_no_area = er.RegistryEntry(
+    hidden_entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_no_area",
         unique_id="hidden-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_diff_area = er.RegistryEntry(
+    entity_diff_area = RegistryEntryWithDefaults(
         entity_id="light.diff_area",
         unique_id="diff-area-id",
         platform="test",
         device_id=device_diff_area.id,
     )
-    entity_in_area_a = er.RegistryEntry(
+    entity_in_area_a = RegistryEntryWithDefaults(
         entity_id="light.in_area_a",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_area_a.id,
         area_id="area-a",
     )
-    entity_in_area_b = er.RegistryEntry(
+    entity_in_area_b = RegistryEntryWithDefaults(
         entity_id="light.in_area_b",
         unique_id="in-area-b-id",
         platform="test",
@@ -329,53 +337,53 @@ def label_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    entity_with_my_label = er.RegistryEntry(
+    entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.with_my_label",
         unique_id="with_my_label",
         platform="test",
         labels={"my-label"},
     )
-    hidden_entity_with_my_label = er.RegistryEntry(
+    hidden_entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.hidden_with_my_label",
         unique_id="hidden_with_my_label",
         platform="test",
         labels={"my-label"},
         hidden_by=er.RegistryEntryHider.USER,
     )
-    config_entity_with_my_label = er.RegistryEntry(
+    config_entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.config_with_my_label",
         unique_id="config_with_my_label",
         platform="test",
         labels={"my-label"},
         entity_category=EntityCategory.CONFIG,
     )
-    entity_with_label1_from_device = er.RegistryEntry(
+    entity_with_label1_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device",
         unique_id="with_label1_from_device",
         platform="test",
         device_id=device_has_label1.id,
     )
-    entity_with_label1_from_device_and_different_area = er.RegistryEntry(
+    entity_with_label1_from_device_and_different_area = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device_diff_area",
         unique_id="with_label1_from_device_diff_area",
         platform="test",
         device_id=device_has_label1.id,
         area_id=area_without_labels.id,
     )
-    entity_with_label1_and_label2_from_device = er.RegistryEntry(
+    entity_with_label1_and_label2_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_and_label2_from_device",
         unique_id="with_label1_and_label2_from_device",
         platform="test",
         labels={"label1"},
         device_id=device_has_label2.id,
     )
-    entity_with_labels_from_device = er.RegistryEntry(
+    entity_with_labels_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_labels_from_device",
         unique_id="with_labels_from_device",
         platform="test",
         device_id=device_has_labels.id,
     )
-    entity_with_no_labels = er.RegistryEntry(
+    entity_with_no_labels = RegistryEntryWithDefaults(
         entity_id="light.no_labels",
         unique_id="no_labels",
         platform="test",
@@ -961,7 +969,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):
@@ -1033,7 +1041,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):
@@ -1090,37 +1098,65 @@ async def test_async_get_all_descriptions_failing_integration(
     """Test async_get_all_descriptions when async_get_integrations returns an exception."""
     group_config = {DOMAIN_GROUP: {}}
     await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    descriptions = await service.async_get_all_descriptions(hass)
-
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
 
     logger_config = {DOMAIN_LOGGER: {}}
     await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
+
+    input_button_config = {DOMAIN_INPUT_BUTTON: {}}
+    await async_setup_component(hass, DOMAIN_INPUT_BUTTON, input_button_config)
+
+    async def wrap_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
+        integrations = await async_get_integrations(hass, domains)
+        integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
+        return integrations
+
+    async def wrap_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        translations = await async_get_translations(
+            hass, language, category, integrations, config_flow
+        )
+        return {
+            key: value
+            for key, value in translations.items()
+            if not key.startswith("component.logger.services.")
+        }
+
     with (
         patch(
             "homeassistant.helpers.service.async_get_integrations",
-            return_value={"logger": ImportError},
+            wraps=wrap_get_integrations,
         ),
         patch(
             "homeassistant.helpers.service.translation.async_get_translations",
-            return_value={},
+            wrap_get_translations,
         ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-    assert "Failed to load integration: logger" in caplog.text
+    assert len(descriptions) == 3
+    assert "Failed to load services.yaml for integration: logger" in caplog.text
 
     # Services are empty defaults if the load fails but should
     # not raise
+    assert descriptions[DOMAIN_GROUP]["remove"]["description"]
+    assert descriptions[DOMAIN_GROUP]["remove"]["fields"]
+
     assert descriptions[DOMAIN_LOGGER]["set_level"] == {
         "description": "",
         "fields": {},
         "name": "",
     }
+
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["description"]
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["fields"] == {}
+    assert "target" in descriptions[DOMAIN_INPUT_BUTTON]["press"]
 
     hass.services.async_register(DOMAIN_LOGGER, "new_service", lambda x: None, None)
     service.async_set_service_schema(
@@ -1647,6 +1683,33 @@ async def test_register_admin_service(
     assert calls[0].context.user_id == hass_admin_user.id
 
 
+@pytest.mark.parametrize(
+    "supports_response",
+    [SupportsResponse.ONLY, SupportsResponse.OPTIONAL],
+)
+async def test_register_admin_service_return_response(
+    hass: HomeAssistant, supports_response: SupportsResponse
+) -> None:
+    """Test the register admin service for a service that returns response data."""
+
+    async def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Service handler coroutine."""
+        assert call.return_response
+        return {"test-reply": "test-value1"}
+
+    service.async_register_admin_service(
+        hass, "test", "test", mock_service, supports_response=supports_response
+    )
+    result = await hass.services.async_call(
+        "test",
+        "test",
+        service_data={},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"test-reply": "test-value1"}
+
+
 async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
     """Test domain verification in a service call with an unknown user."""
     calls = []
@@ -1697,7 +1760,7 @@ async def test_domain_control_unauthorized(
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1738,7 +1801,7 @@ async def test_domain_control_admin(
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1776,7 +1839,7 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",

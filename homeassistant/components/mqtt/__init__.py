@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, SERVICE_RELOAD
+from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -81,6 +81,7 @@ from .const import (
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
+    Platform,
 )
 from .models import (
     DATA_MQTT,
@@ -293,6 +294,21 @@ async def async_check_config_schema(
                     ) from exc
 
 
+def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Platform]:
+    """Return a set of platforms in use."""
+    domains: set[str | Platform] = {
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+    # Update with domains from subentries
+    for subentry in entry.subentries.values():
+        components = subentry.data["components"].values()
+        domains.update(component[CONF_PLATFORM] for component in components)
+    return domains
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
@@ -338,8 +354,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         def write_dump() -> None:
             with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
-                for msg in messages:
-                    fp.write(",".join(msg) + "\n")
+                fp.writelines([",".join(msg) + "\n" for msg in messages])
 
         async def finish_dump(_: datetime) -> None:
             """Write dump to file."""
@@ -434,12 +449,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mqtt_data, conf = await _setup_client()
     platforms_used = platforms_from_config(mqtt_data.config)
-    platforms_used.update(
-        entry.domain
-        for entry in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
-    )
+    platforms_used.update(_platforms_in_use(hass, entry))
     integration = async_get_loaded_integration(hass, DOMAIN)
     # Preload platforms we know we are going to use so
     # discovery can setup each platform synchronously
@@ -597,8 +607,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_automation
+    from . import device_automation  # noqa: PLC0415
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
     return True

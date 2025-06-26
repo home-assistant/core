@@ -5,7 +5,7 @@ from functools import partial
 from typing import Any, cast
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonAPIError
+from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -104,7 +104,7 @@ def setup_services(hass: HomeAssistant) -> None:
     def _post(client: Mastodon, **kwargs: Any) -> None:
         """Post to Mastodon."""
 
-        media_data: dict[str, Any] | None = None
+        media_data: MediaAttachment | None = None
 
         media_path = kwargs.get("media_path")
         if media_path:
@@ -137,7 +137,7 @@ def setup_services(hass: HomeAssistant) -> None:
         try:
             media_ids: str | None = None
             if media_data:
-                media_ids = media_data["id"]
+                media_ids = media_data.id
             client.status_post(media_ids=media_ids, **kwargs)
         except MastodonAPIError as err:
             raise HomeAssistantError(

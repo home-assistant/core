@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -84,8 +83,7 @@ def async_nest_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of all nest devices for all config entries."""
     return {
         device.name: device
-        for config_entry in hass.config_entries.async_entries(DOMAIN)
-        if config_entry.state == ConfigEntryState.LOADED
+        for config_entry in hass.config_entries.async_loaded_entries(DOMAIN)
         for device in config_entry.runtime_data.device_manager.devices.values()
     }
 

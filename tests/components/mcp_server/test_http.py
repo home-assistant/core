@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.mcp_server.const import STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import MESSAGES_API, SSE_API
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
@@ -24,6 +25,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    llm,
 )
 from homeassistant.setup import async_setup_component
 
@@ -297,6 +299,7 @@ async def mcp_session(
         yield session
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tools_list(
     hass: HomeAssistant,
     setup_integration: None,
@@ -312,13 +315,14 @@ async def test_mcp_tools_list(
     # are converted correctly.
     tool = next(iter(tool for tool in result.tools if tool.name == "HassTurnOn"))
     assert tool.name == "HassTurnOn"
-    assert tool.description == "Turns on/opens a device or entity"
+    assert tool.description is not None
     assert tool.inputSchema
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tool_call(
     hass: HomeAssistant,
     setup_integration: None,
@@ -371,6 +375,7 @@ async def test_mcp_tool_call_failed(
     assert "Error calling tool" in result.content[0].text
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_list(
     hass: HomeAssistant,
     setup_integration: None,
@@ -384,13 +389,11 @@ async def test_prompt_list(
 
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
-    assert prompt.name == "Stateless Assist"
-    assert (
-        prompt.description
-        == "Default prompt for the Home Assistant LLM API Stateless Assist"
-    )
+    assert prompt.name == "Assist"
+    assert prompt.description == "Default prompt for Home Assistant Assist API"
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_get(
     hass: HomeAssistant,
     setup_integration: None,
@@ -400,12 +403,9 @@ async def test_prompt_get(
     """Test the get prompt endpoint."""
 
     async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
-        result = await session.get_prompt(name="Stateless Assist")
+        result = await session.get_prompt(name="Assist")
 
-    assert (
-        result.description
-        == "Default prompt for the Home Assistant LLM API Stateless Assist"
-    )
+    assert result.description == "Default prompt for Home Assistant Assist API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"

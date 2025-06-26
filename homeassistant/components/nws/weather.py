@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
-from types import MappingProxyType
 from typing import Any, Required, TypedDict, cast
 
 import voluptuous as vol
@@ -40,7 +40,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_platform, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
@@ -87,7 +87,9 @@ def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) ->
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NWSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NWS weather platform."""
     entity_registry = er.async_get(hass)
@@ -124,7 +126,7 @@ class ExtraForecast(TypedDict, total=False):
     short_description: str | None
 
 
-def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> str:
+def _calculate_unique_id(entry_data: Mapping[str, Any], mode: str) -> str:
     """Calculate unique ID."""
     latitude = entry_data[CONF_LATITUDE]
     longitude = entry_data[CONF_LONGITUDE]
@@ -146,7 +148,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
     def __init__(
         self,
-        entry_data: MappingProxyType[str, Any],
+        entry_data: Mapping[str, Any],
         nws_data: NWSData,
     ) -> None:
         """Initialise the platform with a data instance and station name."""

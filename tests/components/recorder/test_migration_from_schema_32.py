@@ -225,6 +225,7 @@ async def test_migrate_events_context_ids(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -282,6 +283,7 @@ async def test_migrate_events_context_ids(
             patch(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
+            patch.object(migration.EventIDPostMigration, "migrate_data"),
         ):
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
@@ -588,6 +590,7 @@ async def test_migrate_states_context_ids(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -640,6 +643,7 @@ async def test_migrate_states_context_ids(
             patch(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
+            patch.object(migration.EventIDPostMigration, "migrate_data"),
         ):
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
@@ -1127,6 +1131,7 @@ async def test_post_migrate_entity_ids(
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EntityIDMigration, "migrate_data"),
         patch.object(migration.EntityIDPostMigration, "migrate_data"),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -1158,9 +1163,12 @@ async def test_post_migrate_entity_ids(
             return {state.state: state.entity_id for state in states}
 
     # Run again with new schema, let migration run
-    with patch(
-        "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
-    ) as wrapped_idx_create:
+    with (
+        patch(
+            "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+        ) as wrapped_idx_create,
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
+    ):
         async with (
             async_test_home_assistant() as hass,
             async_test_recorder(hass) as instance,
@@ -1168,7 +1176,6 @@ async def test_post_migrate_entity_ids(
             instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
             await hass.async_block_till_done()
-            await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
 
             states_by_state = await instance.async_add_executor_job(
@@ -1531,6 +1538,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": process_timestamp(one_year_ago).replace(tzinfo=None),
@@ -1546,6 +1554,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1561,6 +1570,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": process_timestamp(one_month_ago).replace(tzinfo=None),
@@ -1698,6 +1708,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1713,6 +1724,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1728,6 +1740,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1751,6 +1764,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1766,6 +1780,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1781,6 +1796,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1925,6 +1941,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1940,6 +1957,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1955,6 +1973,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1978,6 +1997,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,

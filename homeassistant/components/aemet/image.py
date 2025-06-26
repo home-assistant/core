@@ -9,7 +9,7 @@ from aemet_opendata.helpers import dict_nested_value
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
@@ -25,7 +25,7 @@ AEMET_IMAGES: Final[tuple[ImageEntityDescription, ...]] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AemetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData image entities based on a config entry."""
     domain_data = config_entry.runtime_data

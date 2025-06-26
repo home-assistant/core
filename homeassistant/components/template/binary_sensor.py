@@ -43,7 +43,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -150,7 +153,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
     hass: HomeAssistant,
     definitions: list[dict],
     unique_id_prefix: str | None,
@@ -209,7 +212,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)
@@ -349,6 +352,8 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
+        self._last_delay_from: bool | None = None
+        self._last_delay_to: bool | None = None
         self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel: CALLBACK_TYPE | None = None
         self._auto_off_time: datetime | None = None
@@ -385,6 +390,20 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         """Handle update of the data."""
         self._process_data()
 
+        raw = self._rendered.get(CONF_STATE)
+        state = template.result_as_boolean(raw)
+
+        key = CONF_DELAY_ON if state else CONF_DELAY_OFF
+        delay = self._rendered.get(key) or self._config.get(key)
+
+        if (
+            self._delay_cancel
+            and delay
+            and self._attr_is_on == self._last_delay_from
+            and state == self._last_delay_to
+        ):
+            return
+
         if self._delay_cancel:
             self._delay_cancel()
             self._delay_cancel = None
@@ -397,12 +416,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         if not self.available:
             self.async_write_ha_state()
             return
-
-        raw = self._rendered.get(CONF_STATE)
-        state = template.result_as_boolean(raw)
-
-        key = CONF_DELAY_ON if state else CONF_DELAY_OFF
-        delay = self._rendered.get(key) or self._config.get(key)
 
         # state without delay. None means rendering failed.
         if self._attr_is_on == state or state is None or delay is None:
@@ -419,6 +432,8 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
                 return
 
         # state with delay. Cancelled if new trigger received
+        self._last_delay_from = self._attr_is_on
+        self._last_delay_to = state
         self._delay_cancel = async_call_later(
             self.hass, delay.total_seconds(), partial(self._set_state, state)
         )

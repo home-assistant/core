@@ -31,6 +31,7 @@ from homeassistant.components.device_automation.trigger import (
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -49,6 +50,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
@@ -83,6 +85,7 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
 from . import (  # noqa: F401
+    type_air_purifiers,
     type_cameras,
     type_covers,
     type_fans,
@@ -113,6 +116,8 @@ from .const import (
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
+    CONF_LINKED_TEMPERATURE_SENSOR,
     CONFIG_OPTIONS,
     DEFAULT_EXCLUDE_ACCESSORY_MODE,
     DEFAULT_HOMEKIT_MODE,
@@ -126,6 +131,7 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
@@ -169,6 +175,8 @@ MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
 HUMIDITY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY)
+TEMPERATURE_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.TEMPERATURE)
+PM25_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.PM25)
 
 
 def _has_all_unique_names_and_ports(
@@ -221,6 +229,34 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 )
 
 
+@callback
+def _async_update_entries_from_yaml(
+    hass: HomeAssistant, config: ConfigType, start_import_flow: bool
+) -> None:
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+        current_entries
+    )
+    hk_config: list[dict[str, Any]] = config[DOMAIN]
+
+    for index, conf in enumerate(hk_config):
+        if _async_update_config_entry_from_yaml(
+            hass, entries_by_name, entries_by_port, conf
+        ):
+            continue
+
+        if start_import_flow:
+            conf[CONF_ENTRY_INDEX] = index
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=conf,
+                ),
+                eager_start=True,
+            )
+
+
 def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
     hk_data: HomeKitEntryData | None
@@ -258,31 +294,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.async_add_executor_job(get_loader)
 
     _async_register_events_and_services(hass)
-
     if DOMAIN not in config:
         return True
 
-    current_entries = hass.config_entries.async_entries(DOMAIN)
-    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-        current_entries
-    )
-
-    for index, conf in enumerate(config[DOMAIN]):
-        if _async_update_config_entry_from_yaml(
-            hass, entries_by_name, entries_by_port, conf
-        ):
-            continue
-
-        conf[CONF_ENTRY_INDEX] = index
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            ),
-            eager_start=True,
-        )
-
+    _async_update_entries_from_yaml(hass, config, start_import_flow=True)
     return True
 
 
@@ -326,13 +341,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     conf = entry.data
     options = entry.options
 
-    name = conf[CONF_NAME]
-    port = conf[CONF_PORT]
-    _LOGGER.debug("Begin setup HomeKit for %s", name)
-
+    name: str = conf[CONF_NAME]
+    port: int = conf[CONF_PORT]
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
-    advertise_ips: list[str] = conf.get(
+    ip_address: str | list[str] | None = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
+    advertise_ips: list[str]
+    advertise_ips = conf.get(
         CONF_ADVERTISE_IP
     ) or await network.async_get_announce_addresses(hass)
 
@@ -344,13 +358,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     # with users who have not migrated yet we do not do exclude
     # these entities by default as we cannot migrate automatically
     # since it requires a re-pairing.
-    exclude_accessory_mode = conf.get(
+    exclude_accessory_mode: bool = conf.get(
         CONF_EXCLUDE_ACCESSORY_MODE, DEFAULT_EXCLUDE_ACCESSORY_MODE
     )
-    homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-    entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
-    devices = options.get(CONF_DEVICES, [])
+    homekit_mode: str = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+    entity_config: dict[str, Any] = options.get(CONF_ENTITY_CONFIG, {}).copy()
+    entity_filter: EntityFilter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    devices: list[str] = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
         hass,
@@ -500,26 +514,15 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
     async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
-
         if not config or DOMAIN not in config:
             return
-
-        current_entries = hass.config_entries.async_entries(DOMAIN)
-        entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-            current_entries
-        )
-
-        for conf in config[DOMAIN]:
-            _async_update_config_entry_from_yaml(
-                hass, entries_by_name, entries_by_port, conf
+        _async_update_entries_from_yaml(hass, config, start_import_flow=False)
+        await asyncio.gather(
+            *(
+                create_eager_task(hass.config_entries.async_reload(entry.entry_id))
+                for entry in hass.config_entries.async_entries(DOMAIN)
             )
-
-        reload_tasks = [
-            create_eager_task(hass.config_entries.async_reload(entry.entry_id))
-            for entry in current_entries
-        ]
-
-        await asyncio.gather(*reload_tasks)
+        )
 
     async_register_admin_service(
         hass,
@@ -537,7 +540,7 @@ class HomeKit:
         hass: HomeAssistant,
         name: str,
         port: int,
-        ip_address: str | None,
+        ip_address: list[str] | str | None,
         entity_filter: EntityFilter,
         exclude_accessory_mode: bool,
         entity_config: dict[str, Any],
@@ -1139,6 +1142,21 @@ class HomeKit:
             if doorbell_event_entity_id := lookup.get(DOORBELL_EVENT_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
+                )
+
+        if domain == FAN_DOMAIN:
+            if current_humidity_sensor_entity_id := lookup.get(HUMIDITY_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
+                )
+            if current_pm25_sensor_entity_id := lookup.get(PM25_SENSOR):
+                config[entity_id].setdefault(CONF_TYPE, TYPE_AIR_PURIFIER)
+                config[entity_id].setdefault(
+                    CONF_LINKED_PM25_SENSOR, current_pm25_sensor_entity_id
+                )
+            if current_temperature_sensor_entity_id := lookup.get(TEMPERATURE_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_TEMPERATURE_SENSOR, current_temperature_sensor_entity_id
                 )
 
         if domain == HUMIDIFIER_DOMAIN and (

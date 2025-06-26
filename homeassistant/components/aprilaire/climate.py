@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     FAN_CIRCULATE,
@@ -63,7 +63,7 @@ FAN_MODE_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AprilaireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add climates for passed config_entry in HA."""
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pyezviz.constants import DeviceSwitchType, SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi.constants import DeviceSwitchType, SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
@@ -107,7 +107,7 @@ SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ switch based on a config entry."""
     coordinator = entry.runtime_data

@@ -90,7 +90,7 @@
     },
     "alarm_arm_home": {
       "name": "Arm home",
-      "description": "Sets the alarm to: _armed, but someone is home_.",
+      "description": "Arms the alarm in the home mode.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -100,7 +100,7 @@
     },
     "alarm_arm_away": {
       "name": "Arm away",
-      "description": "Sets the alarm to: _armed, no one home_.",
+      "description": "Arms the alarm in the away mode.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -110,7 +110,7 @@
     },
     "alarm_arm_night": {
       "name": "Arm night",
-      "description": "Sets the alarm to: _armed for the night_.",
+      "description": "Arms the alarm in the night mode.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -120,7 +120,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Arm vacation",
-      "description": "Sets the alarm to: _armed for vacation_.",
+      "description": "Arms the alarm in the vacation mode.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -130,7 +130,7 @@
     },
     "alarm_trigger": {
       "name": "Trigger",
-      "description": "Trigger the alarm manually.",
+      "description": "Triggers the alarm manually.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",

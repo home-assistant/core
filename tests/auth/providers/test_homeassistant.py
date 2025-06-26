@@ -19,18 +19,18 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def data(hass: HomeAssistant) -> hass_auth.Data:
+async def data(hass: HomeAssistant) -> hass_auth.Data:
     """Create a loaded data class."""
     data = hass_auth.Data(hass)
-    hass.loop.run_until_complete(data.async_load())
+    await data.async_load()
     return data
 
 
 @pytest.fixture
-def legacy_data(hass: HomeAssistant) -> hass_auth.Data:
+async def legacy_data(hass: HomeAssistant) -> hass_auth.Data:
     """Create a loaded legacy data class."""
     data = hass_auth.Data(hass)
-    hass.loop.run_until_complete(data.async_load())
+    await data.async_load()
     data.is_legacy = True
     return data
 

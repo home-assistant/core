@@ -18,7 +18,7 @@ from pytrydan.models.trydan import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
@@ -79,7 +79,7 @@ TRYDAN_SWITCHES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: V2CConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up V2C switch platform."""
     coordinator = config_entry.runtime_data

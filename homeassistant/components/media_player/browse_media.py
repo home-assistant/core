@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -23,7 +24,11 @@ from homeassistant.helpers.network import (
 from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
-PATHS_WITHOUT_AUTH = ("/api/tts_proxy/", "/api/esphome/ffmpeg_proxy/")
+PATHS_WITHOUT_AUTH = (
+    "/api/tts_proxy/",
+    "/api/esphome/ffmpeg_proxy/",
+    "/api/assist_satellite/static/",
+)
 
 
 @callback
@@ -105,6 +110,7 @@ class BrowseMedia:
         children_media_class: MediaClass | str | None = None,
         thumbnail: str | None = None,
         not_shown: int = 0,
+        can_search: bool = False,
     ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
@@ -117,6 +123,7 @@ class BrowseMedia:
         self.children_media_class = children_media_class
         self.thumbnail = thumbnail
         self.not_shown = not_shown
+        self.can_search = can_search
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
@@ -131,6 +138,7 @@ class BrowseMedia:
             "children_media_class": self.children_media_class,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "can_search": self.can_search,
             "thumbnail": self.thumbnail,
         }
 
@@ -159,3 +167,27 @@ class BrowseMedia:
     def __repr__(self) -> str:
         """Return representation of browse media."""
         return f"<BrowseMedia {self.title} ({self.media_class})>"
+
+
+@dataclass(kw_only=True, frozen=True)
+class SearchMedia:
+    """Represent search results."""
+
+    version: int = field(default=1)
+    result: list[BrowseMedia]
+
+    def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
+        """Convert SearchMedia class to browse media dictionary."""
+        return {
+            "result": [item.as_dict(parent=parent) for item in self.result],
+        }
+
+
+@dataclass(kw_only=True, frozen=True)
+class SearchMediaQuery:
+    """Represent a search media file."""
+
+    search_query: str
+    media_content_type: MediaType | str | None = field(default=None)
+    media_content_id: str | None = None
+    media_filter_classes: list[MediaClass] | None = field(default=None)

@@ -153,7 +153,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             )
             try:
                 if datetime.now().timestamp() >= expiry_time:
-                    await self._update_refresh_token()
+                    await self.update_refresh_token()
                 else:
                     await self.api.authenticate_refresh(
                         self.refresh_token, async_get_clientsession(self.hass)
@@ -178,7 +178,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             else:
                 self.async_set_updated_data(devices)
 
-    async def _update_refresh_token(self) -> None:
+    async def update_refresh_token(self) -> None:
         """Update the refresh token with Nice G.O. API."""
         _LOGGER.debug("Updating the refresh token with Nice G.O. API")
         try:

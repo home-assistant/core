@@ -105,7 +105,14 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_error",
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                        "error": repr(error),
+                    },
+                ) from error
 
         _LOGGER.debug(
             "Requests remaining: %s/%s",
@@ -126,7 +133,11 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
         standards = measurements.current["standards"]
 
         if index["description"] == NO_AIRLY_SENSORS:
-            raise UpdateFailed("Can't retrieve data: no Airly sensors in this area")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_station",
+                translation_placeholders={"entry": self.config_entry.title},
+            )
         for value in values:
             data[value["name"]] = value["value"]
         for standard in standards:

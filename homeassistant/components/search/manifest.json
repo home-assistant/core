@@ -1,7 +1,6 @@
 {
   "domain": "search",
   "name": "Search",
-  "after_dependencies": ["scene", "group", "automation", "script"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/search",

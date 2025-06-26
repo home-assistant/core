@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -41,7 +41,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import DATA_CLIENT, DOMAIN
@@ -67,7 +67,7 @@ MAX_MIREDS = 370  # 2700K as a safe default
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
     client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
@@ -483,7 +483,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             red = multi_color.get(COLOR_SWITCH_COMBINED_RED, red_val.value)
             green = multi_color.get(COLOR_SWITCH_COMBINED_GREEN, green_val.value)
             blue = multi_color.get(COLOR_SWITCH_COMBINED_BLUE, blue_val.value)
-            if None not in (red, green, blue):
+            if red is not None and green is not None and blue is not None:
                 # convert to HS
                 self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
                 # Light supports color, set color mode to hs
@@ -496,7 +496,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Calculate color temps based on whites
             if cold_white or warm_white:
                 self._color_temp = color_util.color_temperature_mired_to_kelvin(
-                    MAX_MIREDS - ((cold_white / 255) * (MAX_MIREDS - MIN_MIREDS))
+                    MAX_MIREDS
+                    - ((cast(int, cold_white) / 255) * (MAX_MIREDS - MIN_MIREDS))
                 )
                 # White channels turned on, set color mode to color_temp
                 self._color_mode = ColorMode.COLOR_TEMP
@@ -505,6 +506,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # only one white channel (warm white) = rgbw support
         elif red_val and green_val and blue_val and ww_val:
             white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
@@ -512,6 +520,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         elif cw_val:
             self._supports_rgbw = True
             white = multi_color.get(COLOR_SWITCH_COMBINED_COLD_WHITE, cw_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW

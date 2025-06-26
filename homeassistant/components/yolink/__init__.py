@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -26,10 +26,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, YOLINK_EVENT
+from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
-from .services import async_register_services
+from .services import async_setup_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -72,10 +72,13 @@ class YoLinkHomeMessageListener(MessageListener):
         if device_coordinator is None:
             return
         device_coordinator.dev_online = True
+        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
+            device_coordinator.dev_net_type = loraInfo.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
-            device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTER
+            device_coordinator.device.device_type
+            in [ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH]
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)
@@ -108,7 +111,7 @@ class YoLinkHomeStore:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up YoLink."""
 
-    async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 

@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
+from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -102,7 +103,7 @@ class EvoChild(EvoEntity):
 
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: dict[str, Any] | None = None
+        self._schedule: list[DayOfWeekDhwT] | None = None
         self._setpoints: dict[str, Any] = {}
 
     @property
@@ -122,6 +123,9 @@ class EvoChild(EvoEntity):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
+
+        if not self._schedule:
+            return self._setpoints
 
         this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
         next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
@@ -152,10 +156,10 @@ class EvoChild(EvoEntity):
                     self._evo_device,
                     err,
                 )
-                self._schedule = {}
+                self._schedule = []
                 return
             else:
-                self._schedule = schedule or {}  # mypy hint
+                self._schedule = schedule  # type: ignore[assignment]
 
             _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
 

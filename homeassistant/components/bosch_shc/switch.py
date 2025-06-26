@@ -21,7 +21,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BoschConfigEntry
@@ -79,7 +79,7 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
     session = config_entry.runtime_data

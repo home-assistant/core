@@ -407,7 +407,7 @@ async def test_binary_sensor_update_mount_type_garage(
 ) -> None:
     """Test binary_sensor motion entity."""
 
-    await init_entry(hass, ufp, [sensor_all], debug=True)
+    await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     _, entity_id = ids_from_device_description(

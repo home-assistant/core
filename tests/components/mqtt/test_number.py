@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -835,32 +835,57 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "min_number", "max_number", "step"),
     [
-        {
-            mqtt.DOMAIN: {
-                number.DOMAIN: {
-                    "state_topic": "test/state_number",
-                    "command_topic": "test/cmd_number",
-                    "name": "Test Number",
-                    "min": 5,
-                    "max": 110,
-                    "step": 20,
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "min": 5,
+                        "max": 110,
+                        "step": 20,
+                    }
                 }
-            }
-        }
+            },
+            5,
+            110,
+            20,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "min": 100,
+                        "max": 100,
+                    }
+                }
+            },
+            100,
+            100,
+            1,
+        ),
     ],
 )
 async def test_min_max_step_attributes(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    min_number: float,
+    max_number: float,
+    step: float,
 ) -> None:
     """Test min/max/step attributes."""
     await mqtt_mock_entry()
 
     state = hass.states.get("number.test_number")
-    assert state.attributes.get(ATTR_MIN) == 5
-    assert state.attributes.get(ATTR_MAX) == 110
-    assert state.attributes.get(ATTR_STEP) == 20
+    assert state.attributes.get(ATTR_MIN) == min_number
+    assert state.attributes.get(ATTR_MAX) == max_number
+    assert state.attributes.get(ATTR_STEP) == step
 
 
 @pytest.mark.parametrize(
@@ -885,7 +910,7 @@ async def test_invalid_min_max_attributes(
 ) -> None:
     """Test invalid min/max attributes."""
     assert await mqtt_mock_entry()
-    assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
+    assert f"{CONF_MAX} must be >= {CONF_MIN}" in caplog.text
 
 
 @pytest.mark.parametrize(

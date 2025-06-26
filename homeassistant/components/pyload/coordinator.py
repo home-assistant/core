@@ -9,7 +9,7 @@ from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -31,6 +31,7 @@ class PyLoadData:
     download: bool
     reconnect: bool
     captcha: bool | None = None
+    proxy: bool | None = None
     free_space: int
 
 
@@ -59,14 +60,11 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
     async def _async_update_data(self) -> PyLoadData:
         """Fetch data from API endpoint."""
         try:
-            if not self.version:
-                self.version = await self.pyload.version()
             return PyLoadData(
                 **await self.pyload.get_status(),
                 free_space=await self.pyload.free_space(),
             )
-
-        except InvalidAuth as e:
+        except InvalidAuth:
             try:
                 await self.pyload.login()
             except InvalidAuth as exc:
@@ -75,13 +73,42 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
                     translation_key="setup_authentication_exception",
                     translation_placeholders={CONF_USERNAME: self.pyload.username},
                 ) from exc
-
-            raise UpdateFailed(
-                "Unable to retrieve data due to cookie expiration"
-            ) from e
+            _LOGGER.debug(
+                "Unable to retrieve data due to cookie expiration, retrying after 20 seconds"
+            )
+            return self.data
         except CannotConnect as e:
             raise UpdateFailed(
-                "Unable to connect and retrieve data from pyLoad API"
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
             ) from e
         except ParserError as e:
-            raise UpdateFailed("Unable to parse data from pyLoad API") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        try:
+            await self.pyload.login()
+            self.version = await self.pyload.version()
+        except CannotConnect as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
+        except ParserError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={
+                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+                },
+            ) from e

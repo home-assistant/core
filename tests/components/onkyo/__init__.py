@@ -34,8 +34,9 @@ def create_config_entry_from_info(info: ReceiverInfo) -> MockConfigEntry:
     data = {CONF_HOST: info.host}
     options = {
         "volume_resolution": 80,
-        "input_sources": {"12": "tv"},
         "max_volume": 100,
+        "input_sources": {"12": "tv"},
+        "listening_modes": {"00": "stereo"},
     }
 
     return MockConfigEntry(
@@ -52,8 +53,9 @@ def create_empty_config_entry() -> MockConfigEntry:
     data = {CONF_HOST: ""}
     options = {
         "volume_resolution": 80,
-        "input_sources": {"12": "tv"},
         "max_volume": 100,
+        "input_sources": {"12": "tv"},
+        "listening_modes": {"00": "stereo"},
     }
 
     return MockConfigEntry(

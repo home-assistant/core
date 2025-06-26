@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from aiocomelit.api import ComelitVedoAreaObject
-from aiocomelit.const import ALARM_AREAS, AlarmAreaState
+from aiocomelit.const import AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -15,10 +15,13 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitVedoSystem
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +41,7 @@ ALARM_ACTIONS: dict[str, str] = {
 
 
 ALARM_AREA_ARMED_STATUS: dict[str, int] = {
+    DISABLE: 0,
     HOME_P1: 1,
     HOME_P2: 2,
     NIGHT: 3,
@@ -48,7 +52,7 @@ ALARM_AREA_ARMED_STATUS: dict[str, int] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Comelit VEDO system alarm control panel devices."""
 
@@ -56,7 +60,7 @@ async def async_setup_entry(
 
     async_add_entities(
         ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[ALARM_AREAS].values()
+        for device in coordinator.data["alarm_areas"].values()
     )
 
 
@@ -79,7 +83,6 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         config_entry_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
-        self._api = coordinator.api
         self._area_index = area.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
@@ -92,7 +95,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
     @property
     def _area(self) -> ComelitVedoAreaObject:
         """Return area object."""
-        return self.coordinator.data[ALARM_AREAS][self._area_index]
+        return self.coordinator.data["alarm_areas"][self._area_index]
 
     @property
     def available(self) -> bool:
@@ -125,20 +128,46 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
             AlarmAreaState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
         }.get(self._area.human_status)
 
+    async def _async_update_state(self, area_state: AlarmAreaState, armed: int) -> None:
+        """Update state after action."""
+        self._area.human_status = area_state
+        self._area.armed = armed
+        await self.async_update_ha_state()
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if code != str(self._api.device_pin):
+        if code != str(self.coordinator.api.device_pin):
             return
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[DISABLE])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[DISABLE]
+        )
+        await self._async_update_state(
+            AlarmAreaState.DISARMED, ALARM_AREA_ARMED_STATUS[DISABLE]
+        )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[AWAY])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[AWAY]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[AWAY]
+        )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[HOME])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[HOME]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[HOME_P1]
+        )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[NIGHT])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[NIGHT]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[NIGHT]
+        )

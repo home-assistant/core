@@ -7,8 +7,6 @@ import zoneinfo
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import conversation
-from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -22,7 +20,6 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
     TodoServices,
-    intent as todo_intent,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
@@ -32,10 +29,9 @@ from homeassistant.exceptions import (
     ServiceNotSupported,
     ServiceValidationError,
 )
-from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
-from . import MockTodoListEntity, create_mock_platform
+from . import create_mock_platform
 
 from tests.typing import WebSocketGenerator
 
@@ -164,9 +160,18 @@ async def test_unsupported_websocket(
     assert resp.get("error", {}).get("code") == "not_found"
 
 
+@pytest.mark.parametrize(
+    ("new_item_name"),
+    [
+        ("New item"),
+        ("New item   "),
+        ("  New item"),
+    ],
+)
 async def test_add_item_service(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    new_item_name: str,
 ) -> None:
     """Test adding an item in a To-do list."""
 
@@ -175,7 +180,7 @@ async def test_add_item_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "New item"},
+        {ATTR_ITEM: new_item_name},
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
@@ -213,6 +218,7 @@ async def test_add_item_service_raises(
     [
         ({}, vol.Invalid, "required key not provided"),
         ({ATTR_ITEM: ""}, vol.Invalid, "length of value must be at least 1"),
+        ({ATTR_ITEM: "    "}, vol.Invalid, "length of value must be at least 1"),
         (
             {ATTR_ITEM: "Submit forms", ATTR_DESCRIPTION: "Submit tax forms"},
             ServiceValidationError,
@@ -335,9 +341,18 @@ async def test_add_item_service_extended_fields(
     assert item == expected_item
 
 
+@pytest.mark.parametrize(
+    ("new_item_name"),
+    [
+        ("Updated item"),
+        ("Updated item  "),
+        ("  Updated item "),
+    ],
+)
 async def test_update_todo_item_service_by_id(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    new_item_name: str,
 ) -> None:
     """Test updating an item in a To-do list."""
 
@@ -346,7 +361,7 @@ async def test_update_todo_item_service_by_id(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: "1", ATTR_RENAME: "Updated item", ATTR_STATUS: "completed"},
+        {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
@@ -987,116 +1002,6 @@ async def test_move_item_unsupported(
     resp = await client.receive_json()
     assert resp.get("id") == 1
     assert resp.get("error", {}).get("code") == "not_supported"
-
-
-async def test_add_item_intent(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test adding items to lists using an intent."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    await todo_intent.async_setup_intents(hass)
-
-    entity1 = MockTodoListEntity()
-    entity1._attr_name = "List 1"
-    entity1.entity_id = "todo.list_1"
-
-    entity2 = MockTodoListEntity()
-    entity2._attr_name = "List 2"
-    entity2.entity_id = "todo.list_2"
-
-    await create_mock_platform(hass, [entity1, entity2])
-
-    # Add to first list
-    response = await intent.async_handle(
-        hass,
-        "test",
-        todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
-        assistant=conversation.DOMAIN,
-    )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.success_results[0].name == "list 1"
-    assert response.success_results[0].type == intent.IntentResponseTargetType.ENTITY
-    assert response.success_results[0].id == entity1.entity_id
-
-    assert len(entity1.items) == 1
-    assert len(entity2.items) == 0
-    assert entity1.items[0].summary == "beer"  # summary is trimmed
-    assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
-    entity1.items.clear()
-
-    # Add to second list
-    response = await intent.async_handle(
-        hass,
-        "test",
-        todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "cheese"}, "name": {"value": "List 2"}},
-        assistant=conversation.DOMAIN,
-    )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-
-    assert len(entity1.items) == 0
-    assert len(entity2.items) == 1
-    assert entity2.items[0].summary == "cheese"
-    assert entity2.items[0].status == TodoItemStatus.NEEDS_ACTION
-
-    # List name is case insensitive
-    response = await intent.async_handle(
-        hass,
-        "test",
-        todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "wine"}, "name": {"value": "lIST 2"}},
-        assistant=conversation.DOMAIN,
-    )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-
-    assert len(entity1.items) == 0
-    assert len(entity2.items) == 2
-    assert entity2.items[1].summary == "wine"
-    assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
-
-    # Should fail if lists are not exposed
-    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
-    async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
-    with pytest.raises(intent.MatchFailedError) as err:
-        await intent.async_handle(
-            hass,
-            "test",
-            todo_intent.INTENT_LIST_ADD_ITEM,
-            {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
-            assistant=conversation.DOMAIN,
-        )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
-
-    # Missing list
-    with pytest.raises(intent.MatchFailedError):
-        await intent.async_handle(
-            hass,
-            "test",
-            todo_intent.INTENT_LIST_ADD_ITEM,
-            {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
-            assistant=conversation.DOMAIN,
-        )
-
-    # Fail with empty name/item
-    with pytest.raises(intent.InvalidSlotInfo):
-        await intent.async_handle(
-            hass,
-            "test",
-            todo_intent.INTENT_LIST_ADD_ITEM,
-            {"item": {"value": "wine"}, "name": {"value": ""}},
-            assistant=conversation.DOMAIN,
-        )
-
-    with pytest.raises(intent.InvalidSlotInfo):
-        await intent.async_handle(
-            hass,
-            "test",
-            todo_intent.INTENT_LIST_ADD_ITEM,
-            {"item": {"value": ""}, "name": {"value": "list 1"}},
-            assistant=conversation.DOMAIN,
-        )
 
 
 async def test_remove_completed_items_service(

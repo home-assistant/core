@@ -10,24 +10,18 @@ from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
 
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COMPANY, DOMAIN
+from .const import COMPANY, DEVICE_UNIT_TO_HA, DOMAIN
 from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 EMPTY_STATE = PropertyState()
-
-UNIT_CONVERSION_MAP: dict[str, str] = {
-    "F": UnitOfTemperature.FAHRENHEIT,
-    "C": UnitOfTemperature.CELSIUS,
-}
 
 
 class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
@@ -75,7 +69,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         if unit is None:
             return None
 
-        return UNIT_CONVERSION_MAP.get(unit)
+        return DEVICE_UNIT_TO_HA.get(unit)
 
     def _update_status(self) -> None:
         """Update status itself.

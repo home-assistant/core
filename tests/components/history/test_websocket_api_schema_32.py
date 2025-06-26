@@ -1,5 +1,7 @@
 """The tests the History component websocket_api."""
 
+from collections.abc import Generator
+
 import pytest
 
 from homeassistant.components import recorder
@@ -17,9 +19,9 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def db_schema_32():
+def db_schema_32(hass: HomeAssistant) -> Generator[None]:
     """Fixture to initialize the db with the old schema 32."""
-    with old_db_schema("32"):
+    with old_db_schema(hass, "32"):
         yield
 
 

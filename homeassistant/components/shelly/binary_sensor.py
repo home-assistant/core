@@ -15,8 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
@@ -36,11 +35,14 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,8 +87,8 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac
         )
 
 
@@ -130,6 +132,7 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
@@ -187,7 +190,6 @@ RPC_SENSORS: Final = {
     "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
-        name="Input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
@@ -261,7 +263,6 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        has_entity_name=True,
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",
@@ -290,7 +291,7 @@ RPC_SENSORS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

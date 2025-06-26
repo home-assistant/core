@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import ZHAEntity
@@ -80,7 +80,7 @@ _EXTRA_STATE_ATTRIBUTES: set[str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     zha_data = get_zha_data(hass)
@@ -137,6 +137,11 @@ class Sensor(ZHAEntity, SensorEntity):
                 self._attr_device_class = SensorDeviceClass(
                     entity_description.device_class.value
                 )
+
+        if entity.info_object.suggested_display_precision is not None:
+            self._attr_suggested_display_precision = (
+                entity.info_object.suggested_display_precision
+            )
 
     @property
     def native_value(self) -> StateType:

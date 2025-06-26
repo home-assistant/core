@@ -1,0 +1,46 @@
+{
+  "components": {
+    "main": {
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "start": "2025-03-10T14:43:42.500Z",
+            "end": "2025-03-10T14:59:42.500Z",
+            "energy": 15720,
+            "deltaEnergy": 0
+          },
+          "timestamp": "2025-03-10T14:59:50.010Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2024-03-07T21:14:59.839Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-03-10T14:14:37.232Z"
+        }
+      },
+      "refresh": {},
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-03-10T14:14:37.232Z"
+        }
+      }
+    }
+  }
+}

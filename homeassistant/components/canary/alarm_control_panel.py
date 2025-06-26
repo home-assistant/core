@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
@@ -22,7 +22,7 @@ from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CanaryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Canary alarm control panels based on a config entry."""
     coordinator = entry.runtime_data

@@ -80,7 +80,7 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 

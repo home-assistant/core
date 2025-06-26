@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
+from typing import Any
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -15,7 +16,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
 from .entity import ThinQEntity
@@ -73,7 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThinqConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for vacuum platform."""
     entities: list[ThinQStateVacuumEntity] = []
@@ -154,7 +155,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
-    async def async_return_to_base(self, **kwargs) -> None:
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(
             "[%s:%s] async_return_to_base",

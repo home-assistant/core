@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import logging
+from typing import Any
 
+from pyforked_daapd import ForkedDaapdAPI
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -17,6 +23,8 @@ from .const import (
     SIGNAL_UPDATE_QUEUE,
 )
 
+type ForkedDaapdConfigEntry = ConfigEntry[ForkedDaapdUpdater]
+
 _LOGGER = logging.getLogger(__name__)
 
 WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "database"]
@@ -26,15 +34,20 @@ WEBSOCKET_RECONNECT_TIME = 30  # seconds
 class ForkedDaapdUpdater:
     """Manage updates for the forked-daapd device."""
 
-    def __init__(self, hass, api, entry_id):
+    def __init__(self, hass: HomeAssistant, api: ForkedDaapdAPI, entry_id: str) -> None:
         """Initialize."""
         self.hass = hass
         self._api = api
-        self.websocket_handler = None
-        self._all_output_ids = set()
+        self.websocket_handler: asyncio.Task[None] | None = None
+        self._all_output_ids: set[str] = set()
         self._entry_id = entry_id
 
-    async def async_init(self):
+    @property
+    def api(self) -> ForkedDaapdAPI:
+        """Return the API object."""
+        return self._api
+
+    async def async_init(self) -> None:
         """Perform async portion of class initialization."""
         if not (server_config := await self._api.get_request("config")):
             raise PlatformNotReady
@@ -51,7 +64,7 @@ class ForkedDaapdUpdater:
         else:
             _LOGGER.error("Invalid websocket port")
 
-    async def _disconnected_callback(self):
+    async def _disconnected_callback(self) -> None:
         """Send update signals when the websocket gets disconnected."""
         async_dispatcher_send(
             self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
@@ -60,9 +73,9 @@ class ForkedDaapdUpdater:
             self.hass, SIGNAL_UPDATE_OUTPUTS.format(self._entry_id), []
         )
 
-    async def _update(self, update_types):
+    async def _update(self, update_types_sequence: Sequence[str]) -> None:
         """Private update method."""
-        update_types = set(update_types)
+        update_types = set(update_types_sequence)
         update_events = {}
         _LOGGER.debug("Updating %s", update_types)
         if (
@@ -127,8 +140,8 @@ class ForkedDaapdUpdater:
                 self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True
             )
 
-    def _add_zones(self, outputs):
-        outputs_to_add = []
+    def _add_zones(self, outputs: list[dict[str, Any]]) -> None:
+        outputs_to_add: list[dict[str, Any]] = []
         for output in outputs:
             if output["id"] not in self._all_output_ids:
                 self._all_output_ids.add(output["id"])

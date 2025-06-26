@@ -53,13 +53,13 @@ def decide_duration(
     return duration
 
 
-def generate_supported_fanmodes(tado_to_ha_mapping: dict[str, str], options: list[str]):
+def generate_supported_fanmodes(
+    tado_to_ha_mapping: dict[str, str], options: list[str]
+) -> list[str] | None:
     """Return correct list of fan modes or None."""
 
     supported_fanmodes = [
-        tado_to_ha_mapping.get(option)
-        for option in options
-        if tado_to_ha_mapping.get(option) is not None
+        val for option in options if (val := tado_to_ha_mapping.get(option)) is not None
     ]
     if not supported_fanmodes:
         return None

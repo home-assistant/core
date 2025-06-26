@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
-from aiohttp import web
+from aiohttp import ClientError, ClientResponseError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
@@ -201,11 +201,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     auth = await api.new_auth(hass, entry)
     try:
         await auth.async_get_access_token()
-    except AuthException as err:
-        raise ConfigEntryAuthFailed(f"Authentication error: {err!s}") from err
-    except ConfigurationException as err:
-        _LOGGER.error("Configuration error: %s", err)
-        return False
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:

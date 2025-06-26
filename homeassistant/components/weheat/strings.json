@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "find_devices": {
         "title": "Select your heat pump"
@@ -37,7 +43,7 @@
         "name": "Indoor unit water pump"
       },
       "indoor_unit_auxiliary_pump_state": {
-        "name": "Indoor unit auxilary water pump"
+        "name": "Indoor unit auxiliary water pump"
       },
       "indoor_unit_dhw_valve_or_pump_state": {
         "name": "Indoor unit DHW valve or water pump"
@@ -86,6 +92,12 @@
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
+      },
       "heat_pump_state": {
         "state": {
           "standby": "[%key:common::state::standby%]",
@@ -95,7 +107,7 @@
           "dhw": "Heating DHW",
           "legionella_prevention": "Legionella prevention",
           "defrosting": "Defrosting",
-          "self_test": "Self test",
+          "self_test": "Self-test",
           "manual_control": "Manual control"
         }
       },

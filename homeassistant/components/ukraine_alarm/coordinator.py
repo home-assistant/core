@@ -52,7 +52,7 @@ class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error fetching alerts from API: {error}") from error
 
-        current = {alert_type: False for alert_type in ALERT_TYPES}
+        current = dict.fromkeys(ALERT_TYPES, False)
         for alert in res[0]["activeAlerts"]:
             current[alert["type"]] = True
 

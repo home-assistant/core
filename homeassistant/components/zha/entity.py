@@ -59,6 +59,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         meta = self.entity_data.entity.info_object
+        if meta.primary:
+            self._attr_name = None
+            return super().name
+
         original_name = super().name
 
         if original_name not in (UNDEFINED, None) or meta.fallback_name is None:

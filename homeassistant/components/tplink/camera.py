@@ -19,7 +19,7 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigFlowContext
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import CONF_CAMERA_CREDENTIALS
@@ -59,7 +59,7 @@ CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up camera entities."""
     data = config_entry.runtime_data

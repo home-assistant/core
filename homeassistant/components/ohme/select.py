@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -11,7 +11,7 @@ from ohme import ApiException, ChargerMode, OhmeApiClient
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import OhmeConfigEntry
@@ -24,11 +24,13 @@ PARALLEL_UPDATES = 1
 class OhmeSelectDescription(OhmeEntityDescription, SelectEntityDescription):
     """Class to describe an Ohme select entity."""
 
-    select_fn: Callable[[OhmeApiClient, Any], Awaitable[None]]
+    select_fn: Callable[[OhmeApiClient, Any], Coroutine[Any, Any, bool | None]]
+    options: list[str] | None = None
+    options_fn: Callable[[OhmeApiClient], list[str]] | None = None
     current_option_fn: Callable[[OhmeApiClient], str | None]
 
 
-SELECT_DESCRIPTION: Final[OhmeSelectDescription] = OhmeSelectDescription(
+MODE_SELECT_DESCRIPTION: Final[OhmeSelectDescription] = OhmeSelectDescription(
     key="charge_mode",
     translation_key="charge_mode",
     select_fn=lambda client, mode: client.async_set_mode(mode),
@@ -37,16 +39,30 @@ SELECT_DESCRIPTION: Final[OhmeSelectDescription] = OhmeSelectDescription(
     available_fn=lambda client: client.mode is not None,
 )
 
+VEHICLE_SELECT_DESCRIPTION: Final[OhmeSelectDescription] = OhmeSelectDescription(
+    key="vehicle",
+    translation_key="vehicle",
+    select_fn=lambda client, selection: client.async_set_vehicle(selection),
+    options_fn=lambda client: client.vehicles,
+    current_option_fn=lambda client: client.current_vehicle or None,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ohme selects."""
-    coordinator = config_entry.runtime_data.charge_session_coordinator
+    charge_sessions_coordinator = config_entry.runtime_data.charge_session_coordinator
+    device_info_coordinator = config_entry.runtime_data.device_info_coordinator
 
-    async_add_entities([OhmeSelect(coordinator, SELECT_DESCRIPTION)])
+    async_add_entities(
+        [
+            OhmeSelect(charge_sessions_coordinator, MODE_SELECT_DESCRIPTION),
+            OhmeSelect(device_info_coordinator, VEHICLE_SELECT_DESCRIPTION),
+        ]
+    )
 
 
 class OhmeSelect(OhmeEntity, SelectEntity):
@@ -63,6 +79,14 @@ class OhmeSelect(OhmeEntity, SelectEntity):
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e
         await self.coordinator.async_request_refresh()
+
+    @property
+    def options(self) -> list[str]:
+        """Return a set of selectable options."""
+        if self.entity_description.options_fn:
+            return self.entity_description.options_fn(self.coordinator.client)
+        assert self.entity_description.options
+        return self.entity_description.options
 
     @property
     def current_option(self) -> str | None:

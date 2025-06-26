@@ -1,26 +1,45 @@
 """Platform for eq3 switch entities."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from datetime import timedelta
+from functools import partial
+from typing import Any
 
 from eq3btsmart import Thermostat
+from eq3btsmart.const import EQ3_DEFAULT_AWAY_TEMP, Eq3OperationMode
 from eq3btsmart.models import Status
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from . import Eq3ConfigEntry
-from .const import ENTITY_KEY_AWAY, ENTITY_KEY_BOOST, ENTITY_KEY_LOCK
+from .const import (
+    DEFAULT_AWAY_HOURS,
+    ENTITY_KEY_AWAY,
+    ENTITY_KEY_BOOST,
+    ENTITY_KEY_LOCK,
+)
 from .entity import Eq3Entity
+
+
+async def async_set_away(thermostat: Thermostat, enable: bool) -> Status:
+    """Backport old async_set_away behavior."""
+
+    if not enable:
+        return await thermostat.async_set_mode(Eq3OperationMode.AUTO)
+
+    away_until = dt_util.now() + timedelta(hours=DEFAULT_AWAY_HOURS)
+    return await thermostat.async_set_away(away_until, EQ3_DEFAULT_AWAY_TEMP)
 
 
 @dataclass(frozen=True, kw_only=True)
 class Eq3SwitchEntityDescription(SwitchEntityDescription):
     """Entity description for eq3 switch entities."""
 
-    toggle_func: Callable[[Thermostat], Callable[[bool], Awaitable[None]]]
+    toggle_func: Callable[[Thermostat], Callable[[bool], Coroutine[None, None, Status]]]
     value_func: Callable[[Status], bool]
 
 
@@ -40,7 +59,7 @@ SWITCH_ENTITY_DESCRIPTIONS = [
     Eq3SwitchEntityDescription(
         key=ENTITY_KEY_AWAY,
         translation_key=ENTITY_KEY_AWAY,
-        toggle_func=lambda thermostat: thermostat.async_set_away,
+        toggle_func=lambda thermostat: partial(async_set_away, thermostat),
         value_func=lambda status: status.is_away,
     ),
 ]
@@ -49,7 +68,7 @@ SWITCH_ENTITY_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Eq3ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
 
@@ -87,8 +106,5 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
 
         return self.entity_description.value_func(self._thermostat.status)

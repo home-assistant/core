@@ -1,0 +1,11 @@
+{
+  "domain": "snoo",
+  "name": "Happiest Baby Snoo",
+  "codeowners": ["@Lash-L"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/snoo",
+  "iot_class": "cloud_push",
+  "loggers": ["snoo"],
+  "quality_scale": "bronze",
+  "requirements": ["python-snoo==0.6.6"]
+}

@@ -7,7 +7,9 @@ from collections.abc import Callable
 from contextlib import suppress
 import logging
 
+from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
+from synology_dsm.api.core.external_usb import SynoCoreExternalUSB
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.system import SynoCoreSystem
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
@@ -35,13 +37,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_BACKUP_PATH,
     CONF_DEVICE_TOKEN,
     DEFAULT_TIMEOUT,
+    DOMAIN,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
+    ISSUE_MISSING_BACKUP_SETUP,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
@@ -73,6 +79,7 @@ class SynoApi:
         self.system: SynoCoreSystem | None = None
         self.upgrade: SynoCoreUpgrade | None = None
         self.utilisation: SynoCoreUtilization | None = None
+        self.external_usb: SynoCoreExternalUSB | None = None
 
         # Should we fetch them
         self._fetching_entities: dict[str, set[str]] = {}
@@ -85,6 +92,7 @@ class SynoApi:
         self._with_system = True
         self._with_upgrade = True
         self._with_utilisation = True
+        self._with_external_usb = True
 
         self._login_future: asyncio.Future[None] | None = None
 
@@ -131,6 +139,9 @@ class SynoApi:
         )
         await self.async_login()
 
+        self.information = self.dsm.information
+        await self.information.update()
+
         # check if surveillance station is used
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
@@ -161,7 +172,10 @@ class SynoApi:
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
 
         # check if file station is used and permitted
-        self._with_file_station = bool(self.dsm.apis.get(SynoFileStation.LIST_API_KEY))
+        self._with_file_station = bool(
+            self.information.awesome_version >= AwesomeVersion("6.0")
+            and self.dsm.apis.get(SynoFileStation.LIST_API_KEY)
+        )
         if self._with_file_station:
             shares: list | None = None
             with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
@@ -172,6 +186,19 @@ class SynoApi:
                 LOGGER.debug(
                     "File Station found, but disabled due to missing user"
                     " permissions or no writable shared folders available"
+                )
+
+            if shares and not self._entry.options.get(CONF_BACKUP_PATH):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"{ISSUE_MISSING_BACKUP_SETUP}_{self._entry.unique_id}",
+                    data={"entry_id": self._entry.entry_id},
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=ISSUE_MISSING_BACKUP_SETUP,
+                    translation_placeholders={"title": self._entry.title},
                 )
 
         LOGGER.debug(
@@ -237,6 +264,9 @@ class SynoApi:
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
+        self._with_external_usb = bool(
+            self._fetching_entities.get(SynoCoreExternalUSB.API_KEY)
+        )
 
         # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
@@ -298,9 +328,17 @@ class SynoApi:
                 self.dsm.reset(self.utilisation)
             self.utilisation = None
 
+        if not self._with_external_usb:
+            LOGGER.debug(
+                "Disable external usb api from being updated for '%s'",
+                self._entry.unique_id,
+            )
+            if self.external_usb:
+                self.dsm.reset(self.external_usb)
+            self.external_usb = None
+
     async def _fetch_device_configuration(self) -> None:
         """Fetch initial device config."""
-        self.information = self.dsm.information
         self.network = self.dsm.network
         await self.network.update()
 
@@ -342,6 +380,12 @@ class SynoApi:
                 self._entry.unique_id,
             )
             self.surveillance_station = self.dsm.surveillance_station
+
+        if self._with_external_usb:
+            LOGGER.debug(
+                "Enable external usb api updates for '%s'", self._entry.unique_id
+            )
+            self.external_usb = self.dsm.external_usb
 
     async def _syno_api_executer(self, api_call: Callable) -> None:
         """Synology api call wrapper."""

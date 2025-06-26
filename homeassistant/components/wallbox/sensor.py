@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -21,12 +20,14 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
     CHARGER_ADDED_ENERGY_KEY,
+    CHARGER_ADDED_GREEN_ENERGY_KEY,
+    CHARGER_ADDED_GRID_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
@@ -46,11 +47,6 @@ from .const import (
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
-
-CHARGER_STATION = "station"
-UPDATE_INTERVAL = 30
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -94,6 +90,22 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_ENERGY_KEY,
         translation_key=CHARGER_ADDED_ENERGY_KEY,
+        precision=2,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    CHARGER_ADDED_GREEN_ENERGY_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ADDED_GREEN_ENERGY_KEY,
+        translation_key=CHARGER_ADDED_GREEN_ENERGY_KEY,
+        precision=2,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    CHARGER_ADDED_GRID_ENERGY_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ADDED_GRID_ENERGY_KEY,
+        translation_key=CHARGER_ADDED_GRID_ENERGY_KEY,
         precision=2,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -157,7 +169,9 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]

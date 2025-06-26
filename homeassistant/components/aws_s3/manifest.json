@@ -1,0 +1,12 @@
+{
+  "domain": "aws_s3",
+  "name": "AWS S3",
+  "codeowners": ["@tomasbedrich"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aws_s3",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["aiobotocore"],
+  "quality_scale": "bronze",
+  "requirements": ["aiobotocore==2.21.1"]
+}

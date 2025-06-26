@@ -1,12 +1,9 @@
 """Test ESPHome media_players."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
-    EntityInfo,
-    EntityState,
     MediaPlayerCommand,
     MediaPlayerEntityState,
     MediaPlayerFormatPurpose,
@@ -41,14 +38,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
 
 async def test_media_player_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity."""
     entity_info = [
@@ -72,7 +71,7 @@ async def test_media_player_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "paused"
 
@@ -80,7 +79,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
@@ -94,7 +93,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
@@ -108,7 +107,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_VOLUME_LEVEL: 0.5,
         },
         blocking=True,
@@ -120,7 +119,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -133,7 +132,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -146,7 +145,7 @@ async def test_media_player_entity(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_STOP,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
         },
         blocking=True,
     )
@@ -160,7 +159,7 @@ async def test_media_player_entity_with_source(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_ws_client: WebSocketGenerator,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity media source."""
     await async_setup_component(hass, "media_source", {"media_source": {}})
@@ -217,7 +216,7 @@ async def test_media_player_entity_with_source(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "playing"
 
@@ -226,7 +225,7 @@ async def test_media_player_entity_with_source(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "media-source://local/xz",
             },
@@ -250,7 +249,7 @@ async def test_media_player_entity_with_source(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
                 ATTR_MEDIA_CONTENT_ID: "media-source://local/xy",
             },
@@ -266,7 +265,7 @@ async def test_media_player_entity_with_source(
         {
             "id": 1,
             "type": "media_player/browse_media",
-            "entity_id": "media_player.test_mymedia_player",
+            "entity_id": "media_player.test_my_media_player",
         }
     )
     response = await client.receive_json()
@@ -276,7 +275,7 @@ async def test_media_player_entity_with_source(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
             ATTR_MEDIA_CONTENT_ID: "media-source://tts?message=hello",
             ATTR_MEDIA_ANNOUNCE: True,
@@ -293,13 +292,10 @@ async def test_media_player_proxy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a media_player entity with a proxy URL."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -332,7 +328,6 @@ async def test_media_player_proxy(
                 ],
             )
         ],
-        user_service=[],
         states=[
             MediaPlayerEntityState(
                 key=1, volume=50, muted=False, state=MediaPlayerState.PAUSED
@@ -344,7 +339,7 @@ async def test_media_player_proxy(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
     assert dev is not None
-    state = hass.states.get("media_player.test_mymedia_player")
+    state = hass.states.get("media_player.test_my_media_player")
     assert state is not None
     assert state.state == "paused"
 
@@ -361,7 +356,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
             },
@@ -392,7 +387,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
                 ATTR_MEDIA_ANNOUNCE: True,
@@ -422,7 +417,7 @@ async def test_media_player_proxy(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: media_url,
                 ATTR_MEDIA_EXTRA: {
@@ -434,3 +429,105 @@ async def test_media_player_proxy(
         mock_async_create_proxy_url.assert_not_called()
         media_args = mock_client.media_player_command.call_args.kwargs
         assert media_args["media_url"] == media_url
+
+
+async def test_media_player_formats_reload_preserves_data(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that media player formats are properly managed on reload."""
+    # Create a media player with supported formats
+    supported_formats = [
+        MediaPlayerSupportedFormat(
+            format="mp3",
+            sample_rate=48000,
+            num_channels=2,
+            purpose=MediaPlayerFormatPurpose.DEFAULT,
+        ),
+        MediaPlayerSupportedFormat(
+            format="wav",
+            sample_rate=16000,
+            num_channels=1,
+            purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+            sample_bytes=2,
+        ),
+    ]
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="test_media_player",
+                key=1,
+                name="Test Media Player",
+                unique_id="test_unique_id",
+                supports_pause=True,
+                supported_formats=supported_formats,
+            )
+        ],
+        states=[
+            MediaPlayerEntityState(
+                key=1, volume=50, muted=False, state=MediaPlayerState.IDLE
+            )
+        ],
+    )
+    await hass.async_block_till_done()
+
+    # Verify entity was created
+    state = hass.states.get("media_player.test_Test_Media_Player")
+    assert state is not None
+    assert state.state == "idle"
+
+    # Test that play_media works with proxy URL (which requires formats to be stored)
+    media_url = "http://127.0.0.1/test.mp3"
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_Test_Media_Player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: media_url,
+        },
+        blocking=True,
+    )
+
+    # Verify the API was called with a proxy URL (contains /api/esphome/ffmpeg_proxy/)
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+    assert ".mp3" in call_args.kwargs["media_url"]  # Should use mp3 format for default
+    assert call_args.kwargs["announcement"] is None
+
+    mock_client.media_player_command.reset_mock()
+
+    # Reload the integration
+    await hass.config_entries.async_reload(mock_device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify entity still exists after reload
+    state = hass.states.get("media_player.test_Test_Media_Player")
+    assert state is not None
+
+    # Test that play_media still works after reload with announcement
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_Test_Media_Player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: media_url,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+
+    # Verify the API was called with a proxy URL using wav format for announcements
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+    assert (
+        ".wav" in call_args.kwargs["media_url"]
+    )  # Should use wav format for announcement
+    assert call_args.kwargs["announcement"] is True

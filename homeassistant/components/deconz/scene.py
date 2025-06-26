@@ -8,7 +8,7 @@ from pydeconz.models.event import EventType
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DeconzConfigEntry
 from .entity import DeconzSceneMixin
@@ -17,7 +17,7 @@ from .entity import DeconzSceneMixin
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up scenes for deCONZ integration."""
     hub = config_entry.runtime_data

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': 'Allow charging from grid',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_disallow_charge_from_grid_with_solar_installed',
     'unique_id': '123456-components_disallow_charge_from_grid_with_solar_installed',
@@ -53,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -73,6 +76,7 @@
     'original_name': 'Storm watch',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_settings_storm_mode_enabled',
     'unique_id': '123456-user_settings_storm_mode_enabled',
@@ -100,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -120,6 +125,7 @@
     'original_name': 'Auto seat climate left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_seat_climate_left',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_auto_seat_climate_left',
@@ -147,6 +153,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -167,6 +174,7 @@
     'original_name': 'Auto seat climate right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_seat_climate_right',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_auto_seat_climate_right',
@@ -194,6 +202,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -214,6 +223,7 @@
     'original_name': 'Auto steering wheel heater',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_steering_wheel_heat',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_auto_steering_wheel_heat',
@@ -241,6 +251,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -261,6 +272,7 @@
     'original_name': 'Charge',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_user_charge_enable_request',
@@ -288,6 +300,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -308,6 +321,7 @@
     'original_name': 'Defrost',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_defrost_mode',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_defrost_mode',
@@ -335,6 +349,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -355,6 +370,7 @@
     'original_name': 'Sentry mode',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_sentry_mode',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sentry_mode',
@@ -369,6 +385,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[switch.test_valet_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_valet_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Valet mode',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_valet_mode',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_valet_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.test_valet_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Valet mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_valet_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -486,4 +551,36 @@
     'last_updated': <ANY>,
     'state': 'off',
   })
+# ---
+# name: test_switch_alt[switch.test_valet_mode-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Valet mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_valet_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_left]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_right]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_auto_steering_wheel_heater]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_charge]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_defrost]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_sentry_mode]
+  'on'
 # ---

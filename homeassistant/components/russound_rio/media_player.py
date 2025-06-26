@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 from aiorussound import Controller
 from aiorussound.const import FeatureFlag
 from aiorussound.models import PlayStatus, Source
-from aiorussound.rio import ZoneControlSurface
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
@@ -20,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RussoundConfigEntry
 from .entity import RussoundBaseEntity, command
@@ -33,7 +32,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RussoundConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Russound RIO platform."""
     client = entry.runtime_data
@@ -60,21 +59,16 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SEEK
     )
+    _attr_name = None
 
     def __init__(
         self, controller: Controller, zone_id: int, sources: dict[int, Source]
     ) -> None:
         """Initialize the zone device."""
-        super().__init__(controller)
-        self._zone_id = zone_id
+        super().__init__(controller, zone_id)
         _zone = self._zone
         self._sources = sources
-        self._attr_name = _zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
-
-    @property
-    def _zone(self) -> ZoneControlSurface:
-        return self._controller.zones[self._zone_id]
 
     @property
     def _source(self) -> Source:

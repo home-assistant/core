@@ -1,33 +1,28 @@
 {
   "config": {
+    "progress": {
+      "wait_for_device": "To authenticate, open the following URL and login at Tado:\n{url}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{code}```\n\n\nThe login attempt will time out after five minutes."
+    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "could_not_authenticate": "Could not authenticate with Tado.",
+      "no_homes": "There are no homes linked to this Tado account.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "title": "Connect to your Tado account"
+      "reauth_confirm": {
+        "title": "Authenticate with Tado",
+        "description": "You need to reauthenticate with Tado. Press `Submit` to start the authentication process."
       },
-      "reconfigure": {
-        "title": "Reconfigure your Tado",
-        "description": "Reconfigure the entry for your account: `{username}`.",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "Enter the (new) password for Tado."
-        }
+      "homekit": {
+        "title": "Authenticate with Tado",
+        "description": "Your device has been discovered and needs to authenticate with Tado. Press `Submit` to start the authentication process."
+      },
+      "timeout": {
+        "description": "The authentication process timed out. Please try again."
       }
-    },
-    "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_homes": "There are no homes linked to this Tado account.",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "options": {
@@ -58,10 +53,15 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto"
+              "auto": "[%key:common::state::auto%]"
             }
           }
         }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
       }
     },
     "sensor": {
@@ -139,7 +139,7 @@
       "description": "Adds a meter reading to Tado Energy IQ.",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "Config entry to add meter reading to."
         },
         "reading": {

@@ -8,8 +8,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
-from tesla_fleet_api import EnergySpecific
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
+from tesla_fleet_api.tessie import EnergySite
 from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
@@ -102,7 +102,11 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: TessieConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySpecific
+        self,
+        hass: HomeAssistant,
+        config_entry: TessieConfigEntry,
+        api: EnergySite,
+        data: dict[str, Any],
     ) -> None:
         """Initialize Tessie Energy Site Live coordinator."""
         super().__init__(
@@ -113,6 +117,12 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )
         self.api = api
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+        self.data = data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
@@ -138,7 +148,7 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: TessieConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySpecific
+        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySite
     ) -> None:
         """Initialize Tessie Energy Info coordinator."""
         super().__init__(
