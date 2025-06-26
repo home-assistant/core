@@ -11,7 +11,6 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 NPSSO_TOKEN: str = "npsso-token"
-NPSSO_TOKEN_INVALID_JSON: str = "{'npsso': 'npsso-token'"
 PSN_ID: str = "my-psn-id"
 
 
