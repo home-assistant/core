@@ -49,6 +49,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -351,6 +352,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_NAME,
                 options={},
                 version=2,
             )
