@@ -1,0 +1,163 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'account_id': 'my-psn-id',
+      'active_sessions': dict({
+        'PS5': dict({
+          'format': 'PS5',
+          'media_image_url': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+          'platform': 'PS5',
+          'status': 'online',
+          'title_id': 'PPSA07784_00',
+          'title_name': 'STAR WARS Jedi: Survivor™',
+        }),
+      }),
+      'available': True,
+      'presence': dict({
+        'basicPresence': dict({
+          'availability': 'availableToPlay',
+          'gameTitleInfoList': list([
+            dict({
+              'conceptIconUrl': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+              'format': 'PS5',
+              'launchPlatform': 'PS5',
+              'npTitleId': 'PPSA07784_00',
+              'titleName': 'STAR WARS Jedi: Survivor™',
+            }),
+          ]),
+          'primaryPlatformInfo': dict({
+            'onlineStatus': 'online',
+            'platform': 'PS5',
+          }),
+        }),
+      }),
+      'profile': dict({
+        'aboutMe': 'Never Gonna Give You Up',
+        'avatars': list([
+          dict({
+            'size': 'xl',
+            'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+          }),
+        ]),
+        'isMe': True,
+        'isOfficiallyVerified': False,
+        'isPlus': True,
+        'languages': list([
+          'de-DE',
+        ]),
+        'onlineId': 'testuser',
+        'personalDetail': dict({
+          'firstName': 'Rick',
+          'lastName': 'Astley',
+          'profilePictures': list([
+            dict({
+              'size': 'xl',
+              'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+            }),
+          ]),
+        }),
+      }),
+      'registered_platforms': list([
+        'PS5',
+      ]),
+      'trophy_summary': dict({
+        'account_id': 'my-psn-id',
+        'earned_trophies': dict({
+          'bronze': 14450,
+          'gold': 11754,
+          'platinum': 1398,
+          'silver': 8722,
+        }),
+        'progress': 19,
+        'tier': 10,
+        'trophy_level': 1079,
+      }),
+      'username': 'testuser',
+    }),
+    'entry': dict({
+      'npsso': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics_redacted_url
+  dict({
+    'data': dict({
+      'account_id': 'my-psn-id',
+      'active_sessions': dict({
+        'PS5': dict({
+          'format': 'PS5',
+          'media_image_url': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+          'platform': 'PS5',
+          'status': 'online',
+          'title_id': 'PPSA07784_00',
+          'title_name': 'STAR WARS Jedi: Survivor™',
+        }),
+      }),
+      'available': True,
+      'presence': dict({
+        'basicPresence': dict({
+          'availability': 'availableToPlay',
+          'gameTitleInfoList': list([
+            dict({
+              'conceptIconUrl': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+              'format': 'PS5',
+              'launchPlatform': 'PS5',
+              'npTitleId': 'PPSA07784_00',
+              'titleName': 'STAR WARS Jedi: Survivor™',
+            }),
+          ]),
+          'primaryPlatformInfo': dict({
+            'onlineStatus': 'online',
+            'platform': 'PS5',
+          }),
+        }),
+      }),
+      'profile': dict({
+        'aboutMe': 'Never Gonna Give You Up',
+        'avatars': list([
+          dict({
+            'size': 'xl',
+            'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+          }),
+        ]),
+        'isMe': True,
+        'isOfficiallyVerified': False,
+        'isPlus': True,
+        'languages': list([
+          'de-DE',
+        ]),
+        'onlineId': 'testuser',
+        'personalDetail': dict({
+          'firstName': 'Rick',
+          'lastName': 'Astley',
+          'profilePictures': list([
+            dict({
+              'size': 'xl',
+              'url': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+            }),
+          ]),
+        }),
+      }),
+      'registered_platforms': list([
+        'PS5',
+      ]),
+      'trophy_summary': dict({
+        'account_id': 'my-psn-id',
+        'earned_trophies': dict({
+          'bronze': 14450,
+          'gold': 11754,
+          'platinum': 1398,
+          'silver': 8722,
+        }),
+        'progress': 19,
+        'tier': 10,
+        'trophy_level': 1079,
+      }),
+      'username': 'testuser',
+    }),
+    'entry': dict({
+      'npsso': '**REDACTED**',
+    }),
+  })
+# ---
