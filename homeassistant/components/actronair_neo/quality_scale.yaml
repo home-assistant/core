@@ -26,11 +26,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not have custom service actions.
+  action-exceptions: todo
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -53,16 +53,24 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: This integration does not use entity categories.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not use entity device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Not required for this integration at this stage.
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: done
+  repair-issues:
+    status: exempt
+    comment: This integration does not have any known issues that require repair.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
