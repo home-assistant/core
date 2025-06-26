@@ -5649,7 +5649,7 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
-            "migrateOptions": {"preserveRoutes": False},
+            "migrateOptions": {},
         },
         require_schema=42,
     )
@@ -5685,7 +5685,7 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
-            "migrateOptions": {"preserveRoutes": False},
+            "migrateOptions": {},
         },
         require_schema=42,
     )
@@ -5740,7 +5740,7 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
-            "migrateOptions": {"preserveRoutes": False},
+            "migrateOptions": {},
         },
         require_schema=42,
     )
