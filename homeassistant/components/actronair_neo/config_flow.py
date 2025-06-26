@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import instance_id
 
-from .const import _LOGGER, DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH
+from .const import _LOGGER, DOMAIN
 
 ACTRON_AIR_SCHEMA = vol.Schema(
     {
@@ -39,9 +39,9 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.refresh_token()
                 user_data = await api.get_user()
             except ActronNeoAuthError:
-                errors["base"] = ERROR_INVALID_AUTH
+                errors["base"] = "invalid_auth"
             except ActronNeoAPIError:
-                errors["base"] = ERROR_API_ERROR
+                errors["base"] = "api_error"
             else:
                 await self.async_set_unique_id(user_data["id"])
                 self._abort_if_unique_id_configured()
