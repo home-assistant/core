@@ -1,9 +1,7 @@
 """Ezlo HA Cloud integration options flow for Home Assistant."""
 
 import asyncio
-import base64
 from datetime import datetime, timedelta
-import json
 import logging
 
 import voluptuous as vol
@@ -11,8 +9,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .api import authenticate, create_stripe_session, get_subscription_status, signup
-from .frp_helpers import fetch_and_update_frp_config, stop_frpc
+from .api import (
+    authenticate,
+    create_stripe_session,
+    decode_jwt_payload,
+    get_subscription_status,
+    signup,
+)
+from .frp_helpers import fetch_and_update_frp_config, start_frpc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +58,6 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="init",
             menu_options={
-                "view_status": "📋 View Payment Status",
-                "configure": "⚙️ Configure Port Settings",
                 "login": "🔑 Login to Ezlo Cloud",
                 "signup": "📝 Sign Up for Ezlo Cloud",
             },
@@ -122,48 +124,20 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 system_uuid = ""
                 _LOGGER.warning("Home Assistant system_uuid missing!")
             auth_response = await authenticate(username, password, system_uuid)
+            _LOGGER.info(f"response: s {auth_response}")
 
             if auth_response["success"]:
                 token = auth_response["data"]["token"]
                 user_info = auth_response["data"]["user"]
 
-                expiry_time = datetime.now() + timedelta(seconds=3600)
-                new_data = self._config_entry.data.copy()
-                new_data.update(
+                await self._handle_successful_login(
+                    token,
                     {
-                        "auth_token": token,
-                        "user": {
-                            "uuid": user_info.get("uuid"),
-                            "name": user_info.get("username", username),
-                            "email": user_info.get("email", ""),
-                            "ezlo_id": user_info.get("id", ""),
-                        },
-                        "is_logged_in": True,
-                        "token_expiry": expiry_time.timestamp(),
-                    }
-                )
-                # new_data["auth_token"] = auth_response["token"]
-                # new_data["user"] = {"name": username, "email": ""}
-                # new_data["is_logged_in"] = True
-                # new_data["token_expiry"] = expiry_time.timestamp()
-
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry, data=new_data
-                )
-
-                # UPDATE THE CONFIG TOML AND START THE FRPC CLIENT.
-                try:
-                    await fetch_and_update_frp_config(
-                        hass=self.hass,
-                        uuid=user_info["uuid"],
-                        token=token,
-                    )
-                    # await start_frpc(hass=self.hass, config_entry=self._config_entry)
-                except Exception as err:
-                    _LOGGER.error("Failed to fetch the server details: %s", err)
-
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._config_entry.entry_id)
+                        "uuid": user_info["uuid"],
+                        "username": user_info["username"],
+                        "email": user_info["email"],
+                        "ezlo_id": user_info["ezlo_id"],
+                    },
                 )
                 return self.async_abort(reason="login_successful")
             errors["base"] = auth_response["error"]
@@ -191,7 +165,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
-        await stop_frpc(self.hass, self.hass.config_entries)
+        # await stop_frpc(self.hass, self.hass.config_entries)
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):
@@ -213,12 +187,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             if signup_response.get("success") and "data" in signup_response:
                 try:
                     token = signup_response["data"].get("token", "")
-                    parts = token.split(".")
-                    if len(parts) != 3:
-                        raise ValueError("Invalid JWT format")
-
-                    payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
-                    payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+                    payload = decode_jwt_payload(token)
                     user_uuid = payload.get("uuid")
 
                     if not user_uuid:
@@ -238,7 +207,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                             "auth_token": token,
                             "user": {
                                 "uuid": user_uuid,
-                                "name": username,
+                                "username": username,
                                 "email": email,
                                 "ezlo_id": payload.get("ezlo_user_id", ""),
                             },
@@ -312,7 +281,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                     "uuid": user_info.get("uuid"),
                     "name": user_info.get("username"),
                     "email": user_info.get("email", ""),
-                    "ezlo_id": user_info.get("ezlo_user_id", ""),
+                    "ezlo_id": user_info.get("ezlo_id", ""),
                 },
                 "is_logged_in": True,
                 "token_expiry": expiry_time.timestamp(),
@@ -328,7 +297,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 uuid=user_info["uuid"],
                 token=token,
             )
-            # await start_frpc(hass=self.hass, config_entry=self._config_entry)
+            await start_frpc(hass=self.hass, config_entry=self._config_entry)
         except Exception as err:
             _LOGGER.error("Failed to fetch the server details: %s", err)
         self.hass.async_create_task(
@@ -354,7 +323,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                         "uuid": user_uuid,
                         "username": username,
                         "email": email,
-                        "ezlo_user_id": payload.get("ezlo_user_id", ""),
+                        "ezlo_id": payload.get("ezlo_user_id", ""),
                     },
                 )
                 return

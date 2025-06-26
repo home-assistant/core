@@ -33,12 +33,7 @@ async def authenticate(username, password, uuid):
 
         token = data.get("token")
         if token:
-            parts = token.split(".")
-            if len(parts) != 3:
-                raise ValueError("Invalid JWT format")
-
-            payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
-            payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+            payload = decode_jwt_payload(token)
 
             user_uuid = payload.get("uuid")
             ezlo_id = payload.get("ezlo_user_id")
@@ -146,7 +141,7 @@ async def get_subscription_status(user_uuid):
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             response = await client.get(
-                f"{API_URL}/subscription/status?user_uuid={user_uuid}",
+                f"{API_URL}/subscription/status",
                 params={"user_uuid": user_uuid},
             )
             response.raise_for_status()
@@ -166,3 +161,12 @@ async def get_subscription_status(user_uuid):
     except httpx.RequestError as e:
         _LOGGER.error("Failed to fetch subscription status: %s", e)
         return {"success": False, "error": "Network error"}
+
+
+def decode_jwt_payload(token: str) -> dict:
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise ValueError("Invalid JWT format")
+
+    payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
+    return json.loads(base64.urlsafe_b64decode(payload_b64))
