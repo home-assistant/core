@@ -8,6 +8,7 @@ from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_generative_ai_conversation.const import (
+    DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_TTS_OPTIONS,
@@ -473,6 +474,7 @@ async def test_migration_from_v1_to_v2(
     entry = entries[0]
     assert entry.version == 2
     assert not entry.options
+    assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 3
     conversation_subentries = [
         subentry
@@ -609,6 +611,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
     for entry in entries:
         assert entry.version == 2
         assert not entry.options
+        assert entry.title == DEFAULT_TITLE
         assert len(entry.subentries) == 2
         subentry = list(entry.subentries.values())[0]
         assert subentry.subentry_type == "conversation"
@@ -702,6 +705,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     entry = entries[0]
     assert entry.version == 2
     assert not entry.options
+    assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 3
     conversation_subentries = [
         subentry
