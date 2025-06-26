@@ -223,7 +223,7 @@ class GoogleGenerativeAISttEntity(
         if metadata.format == stt.AudioFormats.WAV:
             audio_data = convert_to_wav(
                 audio_data,
-                f"audio/L{metadata.bit_rate};rate={metadata.sample_rate}",
+                f"audio/L{metadata.bit_rate.value};rate={metadata.sample_rate.value}",
             )
 
         try:
@@ -233,7 +233,7 @@ class GoogleGenerativeAISttEntity(
                     self.subentry.data.get(CONF_PROMPT, DEFAULT_STT_PROMPT),
                     Part.from_bytes(
                         data=audio_data,
-                        mime_type=f"audio/{metadata.format}",
+                        mime_type=f"audio/{metadata.format.value}",
                     ),
                 ],
                 config=self.create_generate_content_config(),
