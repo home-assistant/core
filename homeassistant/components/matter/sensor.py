@@ -68,6 +68,13 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
+EVE_CLUSTER_WEATHER_MAP = {
+    # enum with known Weather state values which we can translate
+    1: "sunny",
+    2: None,
+    3: "cloudy",
+}
+
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
@@ -522,25 +529,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="eve_weather_trend",
             device_class=SensorDeviceClass.ENUM,
             native_unit_of_measurement=None,
-            measurement_to_ha={
-                0: "0",
-                1: "sunny",
-                2: "2",
-                3: "3",
-                4: "4",
-                5: "5",
-                6: "6",
-                None: "previous",
-            }.get,
-            ha_to_native_value={
-                "0": 0,
-                "1": 1,
-                "2": 2,
-                "3": 3,
-                "5": 5,
-                "6": 6,
-                "previous": None,
-            }.get,
+            options=[x for x in EVE_CLUSTER_WEATHER_MAP.values() if x is not None],
+            measurement_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.WeatherTrend,),

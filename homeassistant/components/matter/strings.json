@@ -410,6 +410,7 @@
       "eve_weather_trend": {
         "name": "Weather trend",
         "state": {
+          "cloudy": "Cloudy",
           "sunny": "Sunny"
         }
       },
