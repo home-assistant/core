@@ -55,9 +55,6 @@ async def test_setup_with_tcp_push(
     # ONVIF push subscription not called
     assert not reolink_host.subscribe.called
 
-    reolink_host.baichuan.events_active = False
-    reolink_host.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
-
 
 async def test_unloading_with_tcp_push(
     hass: HomeAssistant,
@@ -77,9 +74,6 @@ async def test_unloading_with_tcp_push(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    reolink_host.baichuan.events_active = False
-    reolink_host.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
 
 
 async def test_webhook_callback(
@@ -249,7 +243,6 @@ async def test_ONVIF_not_supported(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    reolink_host.subscribed.return_value = True
 
 
 async def test_renew(
