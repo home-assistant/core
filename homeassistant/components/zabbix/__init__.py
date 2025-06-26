@@ -167,24 +167,26 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             metrics.append(metric)
 
-        if include_strings:
-            string_keys_count = len(string_keys)
-            string_keys.update(strings)
-            if len(string_keys) != string_keys_count:
-                strings_discovery = [
-                    {"{#KEY}": string_key} for string_key in string_keys
-                ]
-                metric = ItemValue(
-                    publish_states_host,
-                    "homeassistant.strings_discovery",
-                    json.dumps(strings_discovery),
-                )
-                metrics.append(metric)
-            for key, value in strings.items():
-                metric = ItemValue(
-                    publish_states_host, f"homeassistant.string[{key}]", value
-                )
-                metrics.append(metric)
+        if not include_strings:
+            return metrics
+
+        string_keys_count = len(string_keys)
+        string_keys.update(strings)
+        if len(string_keys) != string_keys_count:
+            strings_discovery = [
+                {"{#KEY}": string_key} for string_key in string_keys
+            ]
+            metric = ItemValue(
+                publish_states_host,
+                "homeassistant.strings_discovery",
+                json.dumps(strings_discovery),
+            )
+            metrics.append(metric)
+        for key, value in strings.items():
+            metric = ItemValue(
+                publish_states_host, f"homeassistant.string[{key}]", value
+            )
+            metrics.append(metric)
 
         return metrics
 
