@@ -114,7 +114,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         metrics: list[ItemValue],
         item_type: str,
         keys: set[str],
-        key_values: dict[str, float|str]
+        key_values: dict[str, float | str]
     ):
         keys_count = len(keys)
         keys.update(key_values)
@@ -144,8 +144,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not entities_filter(entity_id):
             return None
 
-        floats: dict[str, float] = {}
-        strings: dict[str, str] = {}
+        floats: dict[str, float | str] = {}
+        strings: dict[str, float | str] = {}
         try:
             _state_as_value = float(state.state)
             floats[entity_id] = _state_as_value
