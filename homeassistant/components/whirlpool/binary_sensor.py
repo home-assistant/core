@@ -44,11 +44,19 @@ async def async_setup_entry(
     """Config flow entry for Whirlpool binary sensors."""
     entities: list = []
     appliances_manager = config_entry.runtime_data
-    for washer_dryer in appliances_manager.washer_dryers:
+
+    for washer in appliances_manager.washers:
         entities.extend(
-            WhirlpoolBinarySensor(washer_dryer, description)
+            WhirlpoolBinarySensor(washer, description)
             for description in WASHER_DRYER_SENSORS
         )
+
+    for dryer in appliances_manager.dryers:
+        entities.extend(
+            WhirlpoolBinarySensor(dryer, description)
+            for description in WASHER_DRYER_SENSORS
+        )
+
     async_add_entities(entities)
 
 
