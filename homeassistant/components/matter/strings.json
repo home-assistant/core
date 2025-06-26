@@ -408,7 +408,10 @@
         "name": "Rotation speed"
       },
       "eve_weather_trend": {
-        "name": "Weather trend"
+        "name": "Weather trend",
+        "state": {
+          "sunny": "Sunny"
+        }
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"

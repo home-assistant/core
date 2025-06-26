@@ -524,7 +524,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=None,
             measurement_to_ha={
                 0: "0",
-                1: "1",
+                1: "sunny",
                 2: "2",
                 3: "3",
                 4: "4",
