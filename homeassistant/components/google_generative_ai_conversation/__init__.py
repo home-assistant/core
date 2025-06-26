@@ -37,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_PROMPT,
+    DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
@@ -289,6 +290,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_TITLE,
                 options={},
                 version=2,
             )
