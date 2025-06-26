@@ -4460,8 +4460,8 @@ async def test_get_usb_ports_filtering() -> None:
         ]
 
 
-async def test_get_usb_ports_all_na_sorting() -> None:
-    """Test that get_usb_ports returns all ports sorted when only 'n/a' descriptions exist."""
+async def test_get_usb_ports_all_na() -> None:
+    """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
     mock_ports = [
         ListPortInfo("/dev/ttyUSB0"),
         ListPortInfo("/dev/ttyUSB1"),

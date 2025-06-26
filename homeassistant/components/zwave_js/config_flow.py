@@ -145,17 +145,8 @@ def get_usb_ports() -> dict[str, str]:
         if not desc.lower().startswith("n/a")
     }
 
-    # If we have non-"n/a" ports, return only those; otherwise return all ports sorted with "n/a" last
-    return (
-        non_na_ports
-        if non_na_ports
-        else dict(
-            sorted(
-                port_descriptions.items(),
-                key=lambda x: x[1].lower().startswith("n/a"),
-            )
-        )
-    )
+    # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
+    return non_na_ports if non_na_ports else port_descriptions
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
