@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SERVICE_CODE, DOMAIN
+from .const import CONF_SERVICE_CODE
 from .coordinator import PlenticoreConfigEntry, SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
