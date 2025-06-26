@@ -1129,6 +1129,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="EnergyEvseStateOfCharge",
+            translation_key="evse_soc",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
