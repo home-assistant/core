@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -13,6 +14,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_SOURCE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -74,6 +76,10 @@ class OlarmOauth2FlowHandler(
             self._expires_at = data["token"].get("expires_at")
 
             _LOGGER.debug("OAuth2 tokens fetched successfully, fetching devices")
+            if self._access_token is None:
+                errors["base"] = "oauth_failed"
+                return self.async_show_form(step_id="user", errors=errors)
+
             olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
 
             try:
@@ -86,6 +92,9 @@ class OlarmOauth2FlowHandler(
                 errors["base"] = "invalid_auth"
                 return self.async_show_form(step_id="user", errors=errors)
             else:
+                # Check if this is a reauth flow
+                if self.context.get(CONF_SOURCE) == "reauth":
+                    return await self.async_step_reauth_complete()
                 return await self.async_step_device()
         else:
             # OAuth failed - no access token received
@@ -148,6 +157,62 @@ class OlarmOauth2FlowHandler(
         )
 
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
+
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        # Import the default client credential for public OAuth client
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Olarm"),
+        )
+
+        # Start the OAuth flow to get new tokens
+        return await super().async_step_user()
+
+    async def async_step_reauth_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Complete the reauthentication flow."""
+        if self._oauth_data is None:
+            return self.async_abort(reason="oauth_data_missing")
+
+        # Get the existing config entry being reauthenticated
+        reauth_entry_id = self.context.get("entry_id")
+        if reauth_entry_id is None:
+            return self.async_abort(reason="reauth_account_not_found")
+
+        existing_entry = self.hass.config_entries.async_get_entry(reauth_entry_id)
+        if existing_entry is None:
+            return self.async_abort(reason="reauth_account_not_found")
+
+        # Update the existing entry with new tokens, preserving existing device and user settings
+        self.hass.config_entries.async_update_entry(
+            existing_entry,
+            data={
+                **existing_entry.data,
+                "token": self._oauth_data["token"],
+                "auth_implementation": self._oauth_data["auth_implementation"],
+                # Update user_id from API response but keep existing device configuration
+                "user_id": self._user_id,
+            },
+        )
+
+        # Reload the entry to use the new tokens
+        await self.hass.config_entries.async_reload(existing_entry.entry_id)
+
+        return self.async_abort(reason="reauth_successful")
 
 
 class CannotConnect(HomeAssistantError):
