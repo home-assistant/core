@@ -1,8 +1,8 @@
 """Support for Netatmo binary sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+import logging
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
