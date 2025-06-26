@@ -223,11 +223,13 @@ DISCOVERY_SCHEMAS = [
             key="pump_setpoint",
             native_unit_of_measurement=PERCENTAGE,
             translation_key="pump_setpoint",
-            native_max_value=200,  #  Level / 2 (0.5–100.0%)
-            native_min_value=1,
+            native_max_value=100,
+            native_min_value=0.5,
             native_step=0.5,
-            measurement_to_ha=lambda x: None if x is None else x / 2,
-            ha_to_native_value=lambda x: round(x * 2),
+            measurement_to_ha=lambda x: None
+            if x is None
+            else x / 2,  # Matter range (1-200)
+            ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControNumber,
