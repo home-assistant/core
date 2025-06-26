@@ -293,10 +293,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
 
+        description_placeholders: dict[str, str] = {
+            "botfather_username": "@BotFather",
+            "botfather_url": "https://t.me/botfather",
+        }
         if not user_input:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders=description_placeholders,
             )
 
         # prevent duplicates
@@ -305,7 +310,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )

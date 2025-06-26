@@ -1171,7 +1171,7 @@ hole==0.8.0
 holidays==0.75
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250625.0
+home-assistant-frontend==20250626.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.6.23
@@ -1817,7 +1817,7 @@ pySDCP==1
 pyTibber==0.31.2
 
 # homeassistant.components.dlink
-pyW215==0.7.0
+pyW215==0.8.0
 
 # homeassistant.components.w800rf32
 pyW800rf32==0.4

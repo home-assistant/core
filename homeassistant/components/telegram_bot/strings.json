@@ -2,11 +2,10 @@
   "config": {
     "step": {
       "user": {
-        "title": "Telegram bot setup",
-        "description": "Create a new Telegram bot",
+        "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "data": {
           "platform": "Platform",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "[%key:common::config_flow::data::api_token%]",
           "proxy_url": "Proxy URL"
         },
         "data_description": {
@@ -894,6 +893,12 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "invalid_chat_ids": {
+      "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
+    },
+    "failed_chat_ids": {
+      "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
     },
     "missing_input": {
       "message": "{field} is required."
