@@ -12,10 +12,13 @@ from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos import DOMAIN
-from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.components.sonos.binary_sensor import (
+    ATTR_BATTERY_POWER_SOURCE,
+    ATTR_FOLLOWING_ALARM_TRIGGER,
+    ATTR_NEXT_ALARM_TRIGGER,
+)
 from homeassistant.components.sonos.const import ATTR_SCHEDULED_TODAY
 from homeassistant.components.sonos.sensor import (
-    ATTR_FOLLOWING_ALARM,
     HA_POWER_SOURCE_BATTERY,
     HA_POWER_SOURCE_CHARGING_BASE,
     HA_POWER_SOURCE_USB,
@@ -33,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent, SonosMockService
 
 from tests.common import async_fire_time_changed
 
@@ -276,106 +279,71 @@ async def test_audio_input_sensor(
     assert audio_input_state.state == "No input"
 
 
-async def test_next_alarm_sensor(
+async def test_alarm_scheduled_binary_sensor(
     hass: HomeAssistant,
     async_setup_sonos,
-    alarm_clock,
-    alarm_clock_disabled,
-    alarm_event,
+    soco: MockSoCo,
+    alarm_clock: SonosMockService,
+    alarm_clock_disabled: SonosMockService,
+    alarm_event: SonosMockEvent,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test next_alarm sensor."""
-    alarm_enabled = copy(alarm_clock.ListAlarms.return_value)
-    alarm_disabled = copy(alarm_clock_disabled.ListAlarms.return_value)
-
+    """Test alarm_scheduled binary sensor."""
     await async_setup_sonos()
-    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "sensor.zone_a_next_alarm" in entity_registry.entities
+    assert "binary_sensor.zone_a_alarm_scheduled" in entity_registry.entities
 
-    next_alarm_sensor = entity_registry.entities["sensor.zone_a_next_alarm"]
-    next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
+    alarm_scheduled_sensor = entity_registry.entities[
+        "binary_sensor.zone_a_alarm_scheduled"
+    ]
+    alarm_scheduled_sensor_state = hass.states.get(alarm_scheduled_sensor.entity_id)
+
+    assert alarm_scheduled_sensor_state.state == STATE_ON
 
     alarm_time = dt_util.parse_time("07:00:00")
     now = dt_util.now()
-    LOGGER.info("A07:00:00")
-    LOGGER.info("Alarm time:")
-    LOGGER.info(str(alarm_time))
-    LOGGER.info("Now:")
-    LOGGER.info(str(now))
-    LOGGER.info("Dt.datetime.today().date():")
-    LOGGER.info(dt.datetime.today().date())
-    LOGGER.info("Next alarm sensor scheduled today state:")
-    LOGGER.info(str(next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)))
-    LOGGER.info("Next alarm sensor state:")
-    LOGGER.info(str(next_alarm_sensor_state.state))
-    LOGGER.info("Parsed next alarm sensor state:")
-    LOGGER.info(str(dt_util.parse_datetime(next_alarm_sensor_state.state)))
-    LOGGER.info("Parsed next alarm sensor state date:")
-    LOGGER.info(str(dt_util.parse_datetime(next_alarm_sensor_state.state).date()))
-    LOGGER.info("Next alarm sensor following alarm state:")
-    LOGGER.info(str(next_alarm_sensor_state.attributes.get(ATTR_FOLLOWING_ALARM)))
     next_alarm_delta_days = 0
     if alarm_time <= now.time():
         next_alarm_delta_days = 1
-        assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
+        assert not alarm_scheduled_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
     else:
-        assert next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
+        assert alarm_scheduled_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
-    assert dt_util.parse_datetime(next_alarm_sensor_state.state) == dt.datetime.combine(
+    assert alarm_scheduled_sensor_state.attributes.get(
+        ATTR_NEXT_ALARM_TRIGGER
+    ) == dt.datetime.combine(
         now + dt.timedelta(days=next_alarm_delta_days),
         alarm_time,
         now.tzinfo,
     )
 
-    assert next_alarm_sensor_state.attributes.get(
-        ATTR_FOLLOWING_ALARM
+    assert alarm_scheduled_sensor_state.attributes.get(
+        ATTR_FOLLOWING_ALARM_TRIGGER
     ) == dt.datetime.combine(
         now + dt.timedelta(days=next_alarm_delta_days + 1),
         alarm_time,
         now.tzinfo,
     )
 
-    # Update the entity by disabling the alarm
-    subscription = alarm_clock.subscribe.return_value
-    sub_callback = subscription.callback
-    alarm_clock.ListAlarms.return_value = alarm_disabled
-    alarm_event.variables["alarm_list_version"] = alarm_disabled[
-        "CurrentAlarmListVersion"
-    ]
-    sub_callback(event=alarm_event)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    now = dt_util.now()
-    LOGGER.info("B07:00:00")
-    LOGGER.info("Alarm time:")
-    LOGGER.info(str(alarm_time))
-    LOGGER.info("Now:")
-    LOGGER.info(str(now))
-    LOGGER.info("Dt.datetime.today().date():")
-    LOGGER.info(dt.datetime.today().date())
-    LOGGER.info("Next alarm sensor scheduled today state:")
-    LOGGER.info(str(next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)))
-    LOGGER.info("Next alarm sensor state:")
-    LOGGER.info(str(next_alarm_sensor_state.state))
-    LOGGER.info("Parsed next alarm sensor state:")
-    LOGGER.info(str(dt_util.parse_datetime(next_alarm_sensor_state.state)))
-    LOGGER.info("Parsed next alarm sensor state date:")
-    LOGGER.info(str(dt_util.parse_datetime(next_alarm_sensor_state.state).date()))
-    LOGGER.info("Next alarm sensor following alarm state:")
-    LOGGER.info(str(next_alarm_sensor_state.attributes.get(ATTR_FOLLOWING_ALARM)))
-
-    assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
-    assert next_alarm_sensor_state.state is None
-    assert next_alarm_sensor_state.attributes.get(ATTR_FOLLOWING_ALARM) is None
-
-    # Restore alarm enabled
-    alarm_enabled["CurrentAlarmListVersion"] = alarm_event.increment_variable(
+    # Update the entity by disabling the alarm.
+    alarm_update = copy(alarm_clock_disabled.ListAlarms.return_value)
+    alarm_clock.ListAlarms.return_value = alarm_update
+    alarm_event.variables["alarm_list_version"] = f"{soco.uid}:1000"
+    alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
     )
-    alarm_clock.ListAlarms.return_value = alarm_enabled
-    sub_callback(event=alarm_event)
+    alarm_clock.subscribe.return_value.callback(event=alarm_event)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    alarm_scheduled_sensor_state = hass.states.get(alarm_scheduled_sensor.entity_id)
+
+    assert alarm_scheduled_sensor_state.state == STATE_OFF
+    assert not alarm_scheduled_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
+    assert alarm_scheduled_sensor_state.attributes.get(ATTR_NEXT_ALARM_TRIGGER) is None
+    assert (
+        alarm_scheduled_sensor_state.attributes.get(ATTR_FOLLOWING_ALARM_TRIGGER)
+        is None
+    )
 
 
 async def test_microphone_binary_sensor(

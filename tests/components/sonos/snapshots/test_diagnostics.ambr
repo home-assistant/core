@@ -18,6 +18,7 @@
           'Temperature': 'NORMAL',
         }),
         'enabled_entities': list([
+          'binary_sensor.zone_a_alarm_scheduled',
           'binary_sensor.zone_a_charging',
           'binary_sensor.zone_a_microphone',
           'media_player.zone_a',
@@ -30,7 +31,6 @@
           'number.zone_a_treble',
           'sensor.zone_a_audio_input_format',
           'sensor.zone_a_battery',
-          'sensor.zone_a_next_alarm',
           'switch.sonos_alarm_14',
           'switch.zone_a_crossfade',
           'switch.zone_a_loudness',
@@ -111,6 +111,7 @@
       'Temperature': 'NORMAL',
     }),
     'enabled_entities': list([
+      'binary_sensor.zone_a_alarm_scheduled',
       'binary_sensor.zone_a_charging',
       'binary_sensor.zone_a_microphone',
       'media_player.zone_a',
@@ -123,7 +124,6 @@
       'number.zone_a_treble',
       'sensor.zone_a_audio_input_format',
       'sensor.zone_a_battery',
-      'sensor.zone_a_next_alarm',
       'switch.sonos_alarm_14',
       'switch.zone_a_crossfade',
       'switch.zone_a_loudness',
