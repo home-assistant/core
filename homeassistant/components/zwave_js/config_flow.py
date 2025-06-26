@@ -138,11 +138,22 @@ def get_usb_ports() -> dict[str, str]:
         )
         port_descriptions[dev_path] = human_name
 
-    # Sort the dictionary by description, putting "n/a" last
-    return dict(
-        sorted(
-            port_descriptions.items(),
-            key=lambda x: x[1].lower().startswith("n/a"),
+    # Filter out "n/a" descriptions only if there are other ports available
+    non_na_ports = {
+        path: desc
+        for path, desc in port_descriptions.items()
+        if not desc.lower().startswith("n/a")
+    }
+
+    # If we have non-"n/a" ports, return only those; otherwise return all ports sorted with "n/a" last
+    return (
+        non_na_ports
+        if non_na_ports
+        else dict(
+            sorted(
+                port_descriptions.items(),
+                key=lambda x: x[1].lower().startswith("n/a"),
+            )
         )
     )
 
