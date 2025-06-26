@@ -1,14 +1,17 @@
 """The Actron Air Neo integration."""
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import PLATFORM
 from .coordinator import (
     ActronNeoApiClient,
     ActronNeoConfigEntry,
     ActronNeoRuntimeData,
     ActronNeoSystemCoordinator,
 )
+
+PLATFORM = [Platform.CLIMATE]
+DOMAIN = "actronair_neo"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:

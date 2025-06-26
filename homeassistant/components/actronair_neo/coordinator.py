@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 from .const import _LOGGER
 
 STALE_DEVICE_TIMEOUT = timedelta(hours=24)
+ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
+ERROR_UNKNOWN = "unknown_error"
 
 
 @dataclass
@@ -35,7 +37,6 @@ type ActronNeoConfigEntry = ConfigEntry[ActronNeoRuntimeData]
 
 AUTH_ERROR_THRESHOLD = 3
 SCAN_INTERVAL = timedelta(seconds=30)
-PARALLEL_UPDATES = 0
 
 
 class ActronNeoApiClient:
