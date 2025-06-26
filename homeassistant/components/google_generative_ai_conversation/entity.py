@@ -312,7 +312,9 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Google",
-            model="Generative AI",
+            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL).split("/")[
+                -1
+            ],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
