@@ -48,8 +48,8 @@
       "turn_off_volume_switch": {
         "name": "Mute Volume Switch"
       },
-      "light_status_switch": {
-        "name": "Light Status Switch"
+      "turn_of_light_switch": {
+        "name": "Turn Off Light Switch"
       },
       "hdr_switch": {
         "name": "HDR Switch"

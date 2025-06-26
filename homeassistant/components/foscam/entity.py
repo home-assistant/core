@@ -21,7 +21,7 @@ class FoscamEntity(CoordinatorEntity[FoscamCoordinator]):
             identifiers={(DOMAIN, config_entry_id)},
             manufacturer="Foscam",
         )
-        if dev_info := coordinator.data["dev_info"]:
+        if dev_info := coordinator.data.dev_info:
             self._attr_device_info[ATTR_MODEL] = dev_info["productName"]
             self._attr_device_info[ATTR_SW_VERSION] = dev_info["firmwareVer"]
             self._attr_device_info[ATTR_HW_VERSION] = dev_info["hardwareVer"]

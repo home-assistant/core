@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .config_flow import DEFAULT_RTSP_PORT
-from .const import CONF_RTSP_PORT, LOGGER, SUPPORTED_SWITCHES
+from .const import CONF_RTSP_PORT, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 
 PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
@@ -91,15 +91,18 @@ async def async_migrate_entities(hass: HomeAssistant, entry: FoscamConfigEntry) 
     """Migrate old entries to support config_entry_id-based unique IDs."""
 
     @callback
-    def _update_unique_id(entity_entry: RegistryEntry) -> dict[str, str] | None:
-        if entity_entry.domain != Platform.SWITCH:
-            return None
-
-        for switch_key in SUPPORTED_SWITCHES:
-            if entity_entry.unique_id == switch_key:
-                new_unique_id = f"{entry.entry_id}_{switch_key}"
-                return {"new_unique_id": new_unique_id}
+    def _update_unique_id(
+        entity_entry: RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if (
+            entity_entry.domain == Platform.SWITCH
+            and entity_entry.unique_id == "sleep_switch"
+        ):
+            entity_new_unique_id = f"{entity_entry.config_entry_id}_sleep_switch"
+            return {"new_unique_id": entity_new_unique_id}
 
         return None
 
+    # Migrate entities
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)

@@ -1,9 +1,8 @@
 """The foscam coordinator object."""
 
 import asyncio
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 from libpyfoscamcgi import FoscamCamera
 
@@ -23,25 +22,27 @@ class FoscamDeviceInfo:
     dev_info: dict
     product_info: dict
 
-    is_openir: int
-    is_flip: int
-    is_mirror: int
+    is_openir: bool
+    is_flip: bool
+    is_mirror: bool
 
     is_asleep: dict
-    is_openwhitelight: int
-    is_sirenalarm: int
+    is_openwhitelight: bool
+    is_sirenalarm: bool
 
     volume: int
     speakvolume: int
-    is_turnoffvolume: int
-    is_turnofflight: int
+    is_turnoffvolume: bool
+    is_turnofflight: bool
 
-    is_openwdr: int | None = None
-    is_openhdr: int | None = None
+    is_openwdr: bool | None = None
+    is_openhdr: bool | None = None
 
 
-class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
     """Foscam coordinator."""
+
+    config_entry: FoscamConfigEntry
 
     def __init__(
         self,
@@ -127,23 +128,21 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return FoscamDeviceInfo(
             dev_info=dev_info,
             product_info=product_info,
-            is_openir=is_openIr,
-            is_flip=is_Flip,
-            is_mirror=is_Mirror,
+            is_openir=bool(is_openIr),
+            is_flip=bool(is_Flip),
+            is_mirror=bool(is_Mirror),
             is_asleep=is_asleep,
-            is_openwhitelight=is_openWhiteLight_val,
-            is_sirenalarm=is_sirenalarm_val,
+            is_openwhitelight=bool(is_openWhiteLight_val),
+            is_sirenalarm=bool(is_sirenalarm_val),
             volume=Volume_val,
             speakvolume=SpeakVolume_val,
-            is_turnoffvolume=is_TurnOffVolume_val,
-            is_turnofflight=is_TurnOffLight_val,
-            is_openwdr=is_OpenWdr,
-            is_openhdr=is_OpenHdr,
+            is_turnoffvolume=bool(is_TurnOffVolume_val),
+            is_turnofflight=bool(is_TurnOffLight_val),
+            is_openwdr=bool(is_OpenWdr),
+            is_openhdr=bool(is_OpenHdr),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> FoscamDeviceInfo:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(30):
-            # 先执行 gather_all_configs 得到 FoscamDeviceInfo 实例
-            dev_info = await self.hass.async_add_executor_job(self.gather_all_configs)
-            return asdict(dev_info)
+            return await self.hass.async_add_executor_job(self.gather_all_configs)
