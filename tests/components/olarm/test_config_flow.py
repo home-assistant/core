@@ -20,11 +20,6 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [["config.step.device.data_description.select_device"]],
-    indirect=True,
-)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
