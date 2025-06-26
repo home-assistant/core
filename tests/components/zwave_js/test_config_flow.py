@@ -864,6 +864,7 @@ async def test_usb_discovery_migration(
     restart_addon: AsyncMock,
     client: MagicMock,
     integration: MockConfigEntry,
+    get_server_version: AsyncMock,
 ) -> None:
     """Test usb discovery migration."""
     addon_options["device"] = "/dev/ttyUSB0"
@@ -947,6 +948,9 @@ async def test_usb_discovery_migration(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
+    version_info = get_server_version.return_value
+    version_info.home_id = 5678
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -969,6 +973,7 @@ async def test_usb_discovery_migration(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "5678"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -3370,6 +3375,16 @@ async def test_reconfigure_migrate_low_sdk_version(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.parametrize(
+    (
+        "restore_server_version_side_effect",
+        "final_unique_id",
+    ),
+    [
+        (None, "3245146787"),
+        (aiohttp.ClientError("Boom"), "5678"),
+    ],
+)
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client: MagicMock,
@@ -3379,8 +3394,12 @@ async def test_reconfigure_migrate_with_addon(
     restart_addon: AsyncMock,
     addon_options: dict[str, Any],
     set_addon_options: AsyncMock,
+    get_server_version: AsyncMock,
+    restore_server_version_side_effect: Exception | None,
+    final_unique_id: str,
 ) -> None:
     """Test migration flow with add-on."""
+    version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
@@ -3496,6 +3515,8 @@ async def test_reconfigure_migrate_with_addon(
     with pytest.raises(InInvalid):
         data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
+    version_info.home_id = 5678
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -3526,6 +3547,10 @@ async def test_reconfigure_migrate_with_addon(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert entry.unique_id == "5678"
+    get_server_version.side_effect = restore_server_version_side_effect
+    version_info.home_id = 3245146787
+
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
     assert client.connect.call_count == 2
@@ -3546,6 +3571,7 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data["usb_path"] == "/test"
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == final_unique_id
 
     assert len(device_registry.devices) == 2
     controller_device_id_ext = (

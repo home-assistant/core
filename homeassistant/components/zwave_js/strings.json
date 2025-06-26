@@ -108,9 +108,6 @@
           "intent_reconfigure": "Re-configure the current controller"
         }
       },
-      "intent_migrate": {
-        "title": "[%key:component::zwave_js::config::step::reconfigure::menu_options::intent_migrate%]"
-      },
       "instruct_unplug": {
         "title": "Unplug your old controller",
         "description": "Backup saved to \"{file_path}\"\n\nYour old controller has not been reset. You should now unplug it to prevent it from interfering with the new controller.\n\nPlease make sure your new controller is plugged in before continuing."
