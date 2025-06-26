@@ -7,6 +7,10 @@
         "data": {
           "select_device": "Device",
           "load_zones_bypass": "Would you like to also load entities for zone bypassing?"
+        },
+        "data_description": {
+          "select_device": "",
+          "load_zones_bypass": ""
         }
       },
       "reauth_confirm": {

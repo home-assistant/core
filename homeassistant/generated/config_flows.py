@@ -441,6 +441,7 @@ FLOWS = {
         "obihai",
         "octoprint",
         "ohme",
+        "olarm",
         "ollama",
         "omnilogic",
         "ondilo_ico",
