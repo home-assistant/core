@@ -843,11 +843,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        if user_input is not None:
-            self._migrating = True
-            return await self.async_step_backup_nvm()
-
-        return self.async_show_form(step_id="intent_migrate")
+        self._migrating = True
+        return await self.async_step_backup_nvm()
 
     async def async_step_backup_nvm(
         self, user_input: dict[str, Any] | None = None
@@ -902,7 +899,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_instruct_unplug(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Reset the current controller, and instruct the user to unplug it."""
+        """Instruct the user to unplug the old controller."""
 
         if user_input is not None:
             if self.usb_path:
@@ -912,62 +909,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
 
-        try:
-            driver = self._get_driver()
-        except AbortFlow:
-            return self.async_abort(reason="config_entry_not_loaded")
-
-        @callback
-        def set_driver_ready(event: dict) -> None:
-            "Set the driver ready event."
-            wait_driver_ready.set()
-
-        wait_driver_ready = asyncio.Event()
-
-        unsubscribe = driver.once("driver ready", set_driver_ready)
-
-        # reset the old controller
-        try:
-            await driver.async_hard_reset()
-        except FailedCommand as err:
-            unsubscribe()
-            _LOGGER.error("Failed to reset controller: %s", err)
-            return self.async_abort(reason="reset_failed")
-
-        # Update the unique id of the config entry
-        # to the new home id, which requires waiting for the driver
-        # to be ready before getting the new home id.
-        # If the backup restore, done later in the flow, fails,
-        # the config entry unique id should be the new home id
-        # after the controller reset.
-        try:
-            async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-                await wait_driver_ready.wait()
-        except TimeoutError:
-            pass
-        finally:
-            unsubscribe()
-
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-
-        try:
-            version_info = await async_get_version_info(
-                self.hass, config_entry.data[CONF_URL]
-            )
-        except CannotConnect:
-            # Just log this error, as there's nothing to do about it here.
-            # The stale unique id needs to be handled by a repair flow,
-            # after the config entry has been reloaded, if the backup restore
-            # also fails.
-            _LOGGER.debug(
-                "Failed to get server version, cannot update config entry "
-                "unique id with new home id, after controller reset"
-            )
-        else:
-            self.hass.config_entries.async_update_entry(
-                config_entry, unique_id=str(version_info.home_id)
-            )
 
         # Unload the config entry before asking the user to unplug the controller.
         await self.hass.config_entries.async_unload(config_entry.entry_id)
