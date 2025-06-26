@@ -56,7 +56,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 10
+STORAGE_VERSION_MINOR = 11
 
 CLEANUP_DELAY = 10
 
@@ -266,6 +266,48 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
+@lru_cache(maxsize=512)
+def format_mac(mac: str) -> str:
+    """Format the mac address string for entry into dev reg."""
+    to_test = mac
+
+    if len(to_test) == 17 and to_test.count(":") == 5:
+        return to_test.lower()
+
+    if len(to_test) == 17 and to_test.count("-") == 5:
+        to_test = to_test.replace("-", "")
+    elif len(to_test) == 14 and to_test.count(".") == 2:
+        to_test = to_test.replace(".", "")
+
+    if len(to_test) == 12:
+        # no : included
+        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
+
+
+def _normalize_connections(
+    connections: Iterable[tuple[str, str]],
+) -> set[tuple[str, str]]:
+    """Normalize connections to ensure we can match mac addresses."""
+    return {
+        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
+        for key, value in connections
+    }
+
+
+def _normalize_connections_validator(
+    instance: Any,
+    attribute: Any,
+    connections: Iterable[tuple[str, str]],
+) -> None:
+    """Check connections normalization used as attrs validator."""
+    for key, value in connections:
+        if key == CONNECTION_NETWORK_MAC and format_mac(value) != value:
+            raise ValueError(f"Invalid mac address format: {value}")
+
+
 @attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
@@ -274,7 +316,9 @@ class DeviceEntry:
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     config_entries_subentries: dict[str, set[str | None]] = attr.ib(factory=dict)
     configuration_url: str | None = attr.ib(default=None)
-    connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    connections: set[tuple[str, str]] = attr.ib(
+        converter=set, factory=set, validator=_normalize_connections_validator
+    )
     created_at: datetime = attr.ib(factory=utcnow)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
@@ -397,7 +441,9 @@ class DeletedDeviceEntry:
     area_id: str | None = attr.ib()
     config_entries: set[str] = attr.ib()
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
-    connections: set[tuple[str, str]] = attr.ib()
+    connections: set[tuple[str, str]] = attr.ib(
+        validator=_normalize_connections_validator
+    )
     created_at: datetime = attr.ib()
     disabled_by: DeviceEntryDisabler | None = attr.ib()
     id: str = attr.ib()
@@ -459,31 +505,10 @@ class DeletedDeviceEntry:
         )
 
 
-@lru_cache(maxsize=512)
-def format_mac(mac: str) -> str:
-    """Format the mac address string for entry into dev reg."""
-    to_test = mac
-
-    if len(to_test) == 17 and to_test.count(":") == 5:
-        return to_test.lower()
-
-    if len(to_test) == 17 and to_test.count("-") == 5:
-        to_test = to_test.replace("-", "")
-    elif len(to_test) == 14 and to_test.count(".") == 2:
-        to_test = to_test.replace(".", "")
-
-    if len(to_test) == 12:
-        # no : included
-        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
-
-    # Not sure how formatted, return original
-    return mac
-
-
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -559,6 +584,16 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["disabled_by"] = None
                     device["labels"] = []
                     device["name_by_user"] = None
+            if old_minor_version < 11:
+                # Normalization of stored CONNECTION_NETWORK_MAC, introduced in 2025.8
+                for device in old_data["devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
+                for device in old_data["deleted_devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
 
         if old_major_version > 2:
             raise NotImplementedError
@@ -1696,11 +1731,3 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         debounced_cleanup.async_cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
-
-
-def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
-    """Normalize connections to ensure we can match mac addresses."""
-    return {
-        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
-        for key, value in connections
-    }

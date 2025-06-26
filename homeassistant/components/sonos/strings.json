@@ -53,6 +53,14 @@
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "battery": "Battery",
+          "charging_base": "Charging base",
+          "usb": "USB"
+        }
       }
     },
     "switch": {
