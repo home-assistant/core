@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import io
 import logging
+import time
 from typing import Any, Final
 import wave
 
@@ -36,6 +37,7 @@ from homeassistant.components.assist_satellite import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
 from .data import WyomingService
@@ -53,6 +55,7 @@ _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
 _TTS_SAMPLE_RATE: Final = 22050
 _ANNOUNCE_CHUNK_BYTES: Final = 2048  # 1024 samples
+_TTS_TIMEOUT_EXTRA: Final = 1.0
 
 # Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
@@ -125,6 +128,14 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._ffmpeg_manager: ffmpeg.FFmpegManager | None = None
         self._played_event_received: asyncio.Event | None = None
 
+        # Randomly set on each pipeline loop run.
+        # Used to ensure TTS timeout is acted on correctly.
+        self._run_loop_id: str | None = None
+
+        # TTS streaming
+        self._tts_stream_token: str | None = None
+        self._is_tts_streaming: bool = False
+
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
@@ -172,11 +183,20 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         """Set state based on pipeline stage."""
         assert self._client is not None
 
-        if event.type == assist_pipeline.PipelineEventType.RUN_END:
+        if event.type == assist_pipeline.PipelineEventType.RUN_START:
+            if event.data and (tts_output := event.data["tts_output"]):
+                # Get stream token early.
+                # If "tts_start_streaming" is True in INTENT_PROGRESS event, we
+                # can start streaming TTS before the TTS_END event.
+                self._tts_stream_token = tts_output["token"]
+                self._is_tts_streaming = False
+        elif event.type == assist_pipeline.PipelineEventType.RUN_END:
             # Pipeline run is complete
             self._is_pipeline_running = False
             self._pipeline_ended_event.set()
             self.device.set_is_active(False)
+            self._tts_stream_token = None
+            self._is_tts_streaming = False
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
             self.config_entry.async_create_background_task(
                 self.hass,
@@ -238,6 +258,20 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     self._client.write_event(Transcript(text=stt_text).event()),
                     f"{self.entity_id} {event.type}",
                 )
+        elif event.type == assist_pipeline.PipelineEventType.INTENT_PROGRESS:
+            if (
+                event.data
+                and event.data.get("tts_start_streaming")
+                and self._tts_stream_token
+                and (stream := tts.async_get_stream(self.hass, self._tts_stream_token))
+            ):
+                # Start streaming TTS early (before TTS_END).
+                self._is_tts_streaming = True
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._stream_tts(stream),
+                    f"{self.entity_id} {event.type}",
+                )
         elif event.type == assist_pipeline.PipelineEventType.TTS_START:
             # Text-to-speech text
             if event.data:
@@ -260,8 +294,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             if (
                 event.data
                 and (tts_output := event.data["tts_output"])
+                and not self._is_tts_streaming
                 and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
             ):
+                # Send TTS only if we haven't already started streaming it in INTENT_PROGRESS.
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._stream_tts(stream),
@@ -511,6 +547,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         wake_word_phrase: str | None = None
         run_pipeline: RunPipeline | None = None
         send_ping = True
+        self._run_loop_id = ulid_now()
 
         # Read events and check for pipeline end in parallel
         pipeline_ended_task = self.config_entry.async_create_background_task(
@@ -698,38 +735,75 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 f"Cannot stream audio format to satellite: {tts_result.extension}"
             )
 
-        data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
+        # Track the total duration of TTS audio for response timeout
+        total_seconds = 0.0
+        start_time = time.monotonic()
 
-        with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-            sample_rate = wav_file.getframerate()
-            sample_width = wav_file.getsampwidth()
-            sample_channels = wav_file.getnchannels()
-            _LOGGER.debug("Streaming %s TTS sample(s)", wav_file.getnframes())
-
+        try:
+            header_data = b""
+            header_complete = False
+            sample_rate: int | None = None
+            sample_width: int | None = None
+            sample_channels: int | None = None
             timestamp = 0
-            await self._client.write_event(
-                AudioStart(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    timestamp=timestamp,
-                ).event()
-            )
 
-            # Stream audio chunks
-            while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
-                chunk = AudioChunk(
+            async for data_chunk in tts_result.async_stream_result():
+                if not header_complete:
+                    # Accumulate data until we can parse the header and get
+                    # sample rate, etc.
+                    header_data += data_chunk
+                    # Most WAVE headers are 44 bytes in length
+                    if (len(header_data) >= 44) and (
+                        audio_info := _try_parse_wav_header(header_data)
+                    ):
+                        # Overwrite chunk with audio after header
+                        sample_rate, sample_width, sample_channels, data_chunk = (
+                            audio_info
+                        )
+                        await self._client.write_event(
+                            AudioStart(
+                                rate=sample_rate,
+                                width=sample_width,
+                                channels=sample_channels,
+                                timestamp=timestamp,
+                            ).event()
+                        )
+                        header_complete = True
+
+                        if not data_chunk:
+                            # No audio after header
+                            continue
+                    else:
+                        # Header is incomplete
+                        continue
+
+                # Streaming audio
+                assert sample_rate is not None
+                assert sample_width is not None
+                assert sample_channels is not None
+
+                audio_chunk = AudioChunk(
                     rate=sample_rate,
                     width=sample_width,
                     channels=sample_channels,
-                    audio=audio_bytes,
+                    audio=data_chunk,
                     timestamp=timestamp,
                 )
-                await self._client.write_event(chunk.event())
-                timestamp += chunk.seconds
+
+                await self._client.write_event(audio_chunk.event())
+                timestamp += audio_chunk.milliseconds
+                total_seconds += audio_chunk.seconds
 
             await self._client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
+        finally:
+            send_duration = time.monotonic() - start_time
+            timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._tts_timeout(timeout_seconds, self._run_loop_id),
+                name="wyoming TTS timeout",
+            )
 
     async def _stt_stream(self) -> AsyncGenerator[bytes]:
         """Yield audio chunks from a queue."""
@@ -743,6 +817,18 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 _LOGGER.debug("Receiving audio from satellite")
 
             yield chunk
+
+    async def _tts_timeout(
+        self, timeout_seconds: float, run_loop_id: str | None
+    ) -> None:
+        """Force state change to IDLE in case TTS played event isn't received."""
+        await asyncio.sleep(timeout_seconds + _TTS_TIMEOUT_EXTRA)
+
+        if run_loop_id != self._run_loop_id:
+            # On a different pipeline run now
+            return
+
+        self.tts_response_finished()
 
     @callback
     def _handle_timer(
@@ -778,3 +864,25 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             self.config_entry.async_create_background_task(
                 self.hass, self._client.write_event(event), "wyoming timer event"
             )
+
+
+def _try_parse_wav_header(header_data: bytes) -> tuple[int, int, int, bytes] | None:
+    """Try to parse a WAV header from a buffer.
+
+    If successful, return (rate, width, channels, audio).
+    """
+    try:
+        with io.BytesIO(header_data) as wav_io:
+            wav_file: wave.Wave_read = wave.open(wav_io, "rb")
+            with wav_file:
+                return (
+                    wav_file.getframerate(),
+                    wav_file.getsampwidth(),
+                    wav_file.getnchannels(),
+                    wav_file.readframes(wav_file.getnframes()),
+                )
+    except wave.Error:
+        # Ignore errors and return None
+        pass
+
+    return None
