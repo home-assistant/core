@@ -560,7 +560,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["labels"] = []
                     device["name_by_user"] = None
             if old_minor_version < 11:
-                # Introduced in 2025.7
+                # Normalization of stored CONNECTION_NETWORK_MAC, introduced in 2025.8
                 for device in old_data["devices"]:
                     device["connections"] = _normalize_connections(
                         device["connections"]
