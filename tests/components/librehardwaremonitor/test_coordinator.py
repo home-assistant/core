@@ -1,5 +1,6 @@
 """Test the LibreHardwareMonitor coordinator."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from librehardwaremonitor_api import (
@@ -110,34 +111,13 @@ async def test_orphaned_devices_are_removed(
         mock_remove.assert_called_once_with(orphaned_device.id)
 
 
-async def test_new_devices_are_added_and_integration_reloaded(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
+async def test_integration_does_not_log_new_devices_on_first_refresh(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that devices not yet in HA are added to the integration."""
-    mock_config_entry.add_to_hass(hass)
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
-
-    await coordinator._async_refresh()
-
-    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_ids_and_names={
-            **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-            DeviceId("generic-memory"): DeviceName("Generic Memory"),
-        },
-        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
-    )
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
-    ) as async_schedule_reload:
-        await coordinator._async_refresh()
-        async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
-
-
-async def test_integration_is_not_reloaded_on_first_refresh(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that initial coordinator update does not cause integration to reload."""
+    """Test that initial coordinator update does not cause warning about new devices."""
     mock_config_entry.add_to_hass(hass)
     coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
@@ -149,8 +129,6 @@ async def test_integration_is_not_reloaded_on_first_refresh(
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
-    ) as async_schedule_reload:
+    with caplog.at_level(logging.WARNING):
         await coordinator._async_refresh()
-        async_schedule_reload.assert_not_called()
+        assert len(caplog.records) == 0
