@@ -7,6 +7,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
+from aiohttp import ClientError
 import pytest
 from zwave_js_server.const import (
     ExclusionStrategy,
@@ -31,7 +32,7 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
+from zwave_js_server.model.driver.firmware import DriverFirmwareUpdateData
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 from zwave_js_server.model.value import ConfigurationValue, get_value_id_str
@@ -504,6 +505,22 @@ async def test_node_alerts(
     result = msg["result"]
     assert result["comments"] == [{"level": "info", "text": "test"}]
     assert result["is_embedded"]
+
+    # Test with node in interview
+    with patch("zwave_js_server.model.node.Node.in_interview", return_value=True):
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/node_alerts",
+                DEVICE_ID: device.id,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        assert len(msg["result"]["comments"]) == 2
+        assert msg["result"]["comments"][1] == {
+            "level": "warning",
+            "text": "This device is currently being interviewed and may not be fully operational.",
+        }
 
     # Test with provisioned device
     valid_qr_info = {
@@ -3484,7 +3501,7 @@ async def test_firmware_upload_view(
             "homeassistant.components.zwave_js.api.update_firmware",
         ) as mock_node_cmd,
         patch(
-            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+            "homeassistant.components.zwave_js.api.driver_firmware_update_otw",
         ) as mock_controller_cmd,
         patch.dict(
             "homeassistant.components.zwave_js.api.USER_AGENT",
@@ -3527,7 +3544,7 @@ async def test_firmware_upload_view_controller(
             "homeassistant.components.zwave_js.api.update_firmware",
         ) as mock_node_cmd,
         patch(
-            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+            "homeassistant.components.zwave_js.api.driver_firmware_update_otw",
         ) as mock_controller_cmd,
         patch.dict(
             "homeassistant.components.zwave_js.api.USER_AGENT",
@@ -3540,7 +3557,7 @@ async def test_firmware_upload_view_controller(
         )
         mock_node_cmd.assert_not_called()
         assert mock_controller_cmd.call_args[0][1:2] == (
-            ControllerFirmwareUpdateData(
+            DriverFirmwareUpdateData(
                 "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
             ),
         )
@@ -4398,7 +4415,7 @@ async def test_subscribe_controller_firmware_update_status(
     event = Event(
         type="firmware update progress",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update progress",
             "progress": {
                 "sentFragments": 1,
@@ -4407,7 +4424,7 @@ async def test_subscribe_controller_firmware_update_status(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
@@ -4422,7 +4439,7 @@ async def test_subscribe_controller_firmware_update_status(
     event = Event(
         type="firmware update finished",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update finished",
             "result": {
                 "status": 255,
@@ -4430,7 +4447,7 @@ async def test_subscribe_controller_firmware_update_status(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
@@ -4447,13 +4464,13 @@ async def test_subscribe_controller_firmware_update_status_initial_value(
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])
 
-    assert client.driver.controller.firmware_update_progress is None
+    assert client.driver.firmware_update_progress is None
 
     # Send a firmware update progress event before the WS command
     event = Event(
         type="firmware update progress",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update progress",
             "progress": {
                 "sentFragments": 1,
@@ -4462,7 +4479,7 @@ async def test_subscribe_controller_firmware_update_status_initial_value(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     client.async_send_command_no_wait.return_value = {}
 
@@ -5080,14 +5097,17 @@ async def test_subscribe_node_statistics(
 
 async def test_hard_reset_controller(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
+    get_server_version: AsyncMock,
     integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the hard_reset_controller WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    assert entry.unique_id == "3245146787"
 
     async def async_send_command_driver_ready(
         message: dict[str, Any],
@@ -5122,6 +5142,40 @@ async def test_hard_reset_controller(
     assert client.async_send_command.call_args_list[0] == call(
         {"command": "driver.hard_reset"}, 25
     )
+    assert entry.unique_id == "1234"
+
+    client.async_send_command.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/hard_reset_controller",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
+    assert device is not None
+    assert msg["result"] == device.id
+    assert msg["success"]
+
+    assert client.async_send_command.call_count == 3
+    # The first call is the relevant hard reset command.
+    # 25 is the require_schema parameter.
+    assert client.async_send_command.call_args_list[0] == call(
+        {"command": "driver.hard_reset"}, 25
+    )
+    assert (
+        "Failed to get server version, cannot update config entry"
+        "unique id with new home id, after controller reset"
+    ) in caplog.text
 
     client.async_send_command.reset_mock()
 
@@ -5137,7 +5191,7 @@ async def test_hard_reset_controller(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         await ws_client.send_json_auto_id(
@@ -5161,6 +5215,8 @@ async def test_hard_reset_controller(
     assert client.async_send_command.call_args_list[0] == call(
         {"command": "driver.hard_reset"}, 25
     )
+
+    client.async_send_command.reset_mock()
 
     # Test FailedZWaveCommand is caught
     with patch(
@@ -5511,8 +5567,12 @@ async def test_restore_nvm(
     integration,
     client,
     hass_ws_client: WebSocketGenerator,
+    get_server_version: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the restore NVM websocket command."""
+    entry = integration
+    assert entry.unique_id == "3245146787"
     ws_client = await hass_ws_client(hass)
 
     # Set up mocks for the controller events
@@ -5589,9 +5649,50 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
         },
-        require_schema=14,
+        require_schema=42,
     )
+    assert entry.unique_id == "1234"
+
+    client.async_send_command.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    # Send the subscription request
+    await ws_client.send_json_auto_id(
+        {
+            "type": "zwave_js/restore_nvm",
+            "entry_id": entry.entry_id,
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
+    )
+
+    # Verify the finished event first
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["event"] == "finished"
+
+    # Verify subscription success
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"] is True
+
+    assert client.async_send_command.call_count == 3
+    assert client.async_send_command.call_args_list[0] == call(
+        {
+            "command": "controller.restore_nvm",
+            "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
+        },
+        require_schema=42,
+    )
+    assert (
+        "Failed to get server version, cannot update config entry"
+        "unique id with new home id, after controller NVM restore"
+    ) in caplog.text
 
     client.async_send_command.reset_mock()
 
@@ -5607,7 +5708,7 @@ async def test_restore_nvm(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.RESTORE_NVM_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         # Send the subscription request
@@ -5639,8 +5740,9 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
         },
-        require_schema=14,
+        require_schema=42,
     )
 
     client.async_send_command.reset_mock()

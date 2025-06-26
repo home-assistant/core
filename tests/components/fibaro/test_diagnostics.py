@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fibaro import DOMAIN
 from homeassistant.core import HomeAssistant

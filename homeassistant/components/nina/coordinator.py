@@ -23,6 +23,8 @@ from .const import (
     SCAN_INTERVAL,
 )
 
+type NinaConfigEntry = ConfigEntry[NINADataUpdateCoordinator]
+
 
 @dataclass
 class NinaWarningData:

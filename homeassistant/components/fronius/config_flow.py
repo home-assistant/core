@@ -35,7 +35,7 @@ async def validate_host(
     hass: HomeAssistant, host: str
 ) -> tuple[str, FroniusConfigEntryData]:
     """Validate the user input allows us to connect."""
-    fronius = Fronius(async_get_clientsession(hass), host)
+    fronius = Fronius(async_get_clientsession(hass, verify_ssl=False), host)
 
     try:
         datalogger_info: dict[str, Any]
