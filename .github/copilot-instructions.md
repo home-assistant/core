@@ -69,7 +69,7 @@ rules:
 - **Linting**: PyLint and Ruff
 - **Type Checking**: MyPy
 - **Testing**: pytest with plain functions and fixtures
-- **Language**: American English for all code, comments, and documentation
+- **Language**: American English for all code, comments, and documentation (use sentence case, including titles)
 
 ### Writing Style Guidelines
 - **Tone**: Friendly and informative
@@ -78,7 +78,7 @@ rules:
 - **Clarity**: Write for non-native English speakers
 - **Formatting in Messages**:
   - Use backticks for: file paths, filenames, variable names, field entries
-  - Use sentence-style capitalization
+  - Use sentence case for titles and messages (capitalize only the first word and proper nouns)
   - Avoid abbreviations when possible
 
 ## Code Organization
@@ -165,6 +165,7 @@ rules:
   - Avoid sleeping in loops
   - Avoid awaiting in loops - use `gather` instead
   - No blocking calls
+  - Group executor jobs when possible - switching between event loop and executor is expensive
 
 ### Async Dependencies (Platinum)
 - **Requirement**: All dependencies must use asyncio
