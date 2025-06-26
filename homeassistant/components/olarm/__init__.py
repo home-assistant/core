@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
-import voluptuous as vol
 from olarmflowclient import OlarmFlowClientApiError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -340,23 +339,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         if "401" in str(ex) or "403" in str(ex) or "unauthorized" in str(ex).lower():
             _LOGGER.error("Olarm API authentication failed: %s", ex)
             raise ConfigEntryAuthFailed("Invalid Olarm credentials") from ex
-        else:
-            _LOGGER.warning("Olarm API error during setup: %s", ex)
-            raise ConfigEntryNotReady("Olarm API temporarily unavailable") from ex
+        _LOGGER.warning("Olarm API error during setup: %s", ex)
+        raise ConfigEntryNotReady("Olarm API temporarily unavailable") from ex
     except (OSError, ConnectionError, TimeoutError) as ex:
         # Network-related errors that are likely temporary
         _LOGGER.warning("Network error during Olarm setup: %s", ex)
         raise ConfigEntryNotReady("Network connection to Olarm failed") from ex
     except Exception as ex:
         # Unexpected errors - log and treat as temporary to avoid permanent failure
-        _LOGGER.exception("Unexpected error setting up Olarm integration: %s", ex)
+        _LOGGER.exception("Unexpected error setting up Olarm integration")
         # Clean up any partial setup
         if hasattr(entry, "runtime_data") and entry.runtime_data:
             coordinator = entry.runtime_data
             if coordinator:
                 try:
                     await coordinator.async_stop()
-                except Exception as cleanup_error:
+                except (OSError, ConnectionError, RuntimeError) as cleanup_error:
                     _LOGGER.error("Error during cleanup: %s", cleanup_error)
         raise ConfigEntryNotReady("Unexpected error during Olarm setup") from ex
 

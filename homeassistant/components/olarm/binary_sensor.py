@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -11,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OlarmConfigEntry
 from .const import DOMAIN
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OlarmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # cycle through zones and create binary sensors
-    sensors = []
+    sensors: list[OlarmBinarySensor] = []
     if coordinator.device_profile is not None and coordinator.device_state is not None:
         for zone_index, zone_state in enumerate(coordinator.device_state.get("zones")):
             sensors.append(
@@ -257,7 +258,7 @@ class OlarmBinarySensor(BinarySensorEntity):
         self.link_id = (
             link_id  # only used for olarm LINKs to track which LINK as can have upto 8
         )
-        self._unsubscribe_dispatcher = None
+        self._unsubscribe_dispatcher: Callable[[], None] | None = None
 
         # set state if zone is active[a] or closed[c] or bypassed[b]
         if (

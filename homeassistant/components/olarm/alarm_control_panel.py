@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OlarmConfigEntry
 from .const import DOMAIN
@@ -24,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OlarmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Olarm Alarm Control Panel platform."""
     coordinator = config_entry.runtime_data
 
     # cycle through areas and create alarm control panels
-    panels = []
+    panels: list[OlarmAlarmControlPanel] = []
     if coordinator.device_profile is not None and coordinator.device_state is not None:
         for area_index, area_state in enumerate(coordinator.device_state.get("areas")):
             # Get area label with fallback to area number if not available
@@ -88,7 +88,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         self.area_index = area_index
         self.area_state = area_state
         self.area_label = area_label
-        self._unsubscribe_dispatcher = None
+        self._unsubscribe_dispatcher: Callable[[], None] | None = None
 
         # handle areas_state if disarm, stay, sleep, alarm etc..
         if self.area_state in ("disarm", "notready"):
@@ -121,17 +121,11 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
             self._unsubscribe_dispatcher()
         await super().async_will_remove_from_hass()
 
-    def _handle_mqtt_update(
-        self,
-        device_id: str,
-        device_state: dict[str, Any],
-        device_links: dict[str, Any],
-        device_io: dict[str, Any],
-    ) -> None:
+    def _handle_mqtt_update(self, device_id, device_state, device_links, device_io):
         """Handle state updates from MQTT messages."""
 
         # check if the device_id is the same as the device_id
-        if device_id != self.device_id:
+        if device_id != self.device_id or device_state is None:
             return
 
         # update area state
