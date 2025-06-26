@@ -490,9 +490,22 @@ async def test_import_multiple(
         CONF_BOT_COUNT: 2,
     }
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+            return_value=User(123456, "Testbot", True),
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
+            return_value=ChatFullInfo(
+                id=987654321,
+                title="mock title",
+                first_name="mock first_name",
+                type="PRIVATE",
+                max_reaction_count=100,
+                accent_color_id=AccentColor.COLOR_000,
+            ),
+        ),
     ):
         # test: import first entry success
 
