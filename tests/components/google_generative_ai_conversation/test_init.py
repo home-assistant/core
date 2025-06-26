@@ -743,6 +743,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
+    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
 
     subentry = conversation_subentries[1]
 
@@ -762,6 +766,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
+    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
 
 
 async def test_devices(
