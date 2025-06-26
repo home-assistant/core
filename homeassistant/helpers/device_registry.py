@@ -266,6 +266,27 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
+@lru_cache(maxsize=512)
+def format_mac(mac: str) -> str:
+    """Format the mac address string for entry into dev reg."""
+    to_test = mac
+
+    if len(to_test) == 17 and to_test.count(":") == 5:
+        return to_test.lower()
+
+    if len(to_test) == 17 and to_test.count("-") == 5:
+        to_test = to_test.replace("-", "")
+    elif len(to_test) == 14 and to_test.count(".") == 2:
+        to_test = to_test.replace(".", "")
+
+    if len(to_test) == 12:
+        # no : included
+        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
+
+
 def _normalize_connections(
     connections: Iterable[tuple[str, str]],
 ) -> set[tuple[str, str]]:
@@ -482,27 +503,6 @@ class DeletedDeviceEntry:
                 }
             )
         )
-
-
-@lru_cache(maxsize=512)
-def format_mac(mac: str) -> str:
-    """Format the mac address string for entry into dev reg."""
-    to_test = mac
-
-    if len(to_test) == 17 and to_test.count(":") == 5:
-        return to_test.lower()
-
-    if len(to_test) == 17 and to_test.count("-") == 5:
-        to_test = to_test.replace("-", "")
-    elif len(to_test) == 14 and to_test.count(".") == 2:
-        to_test = to_test.replace(".", "")
-
-    if len(to_test) == 12:
-        # no : included
-        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
-
-    # Not sure how formatted, return original
-    return mac
 
 
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
