@@ -314,7 +314,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         return self.alarm.enabled
 
     @property
-    def icon(self) -> str | None:
+    def icon(self) -> str:
         """Icon of the entity."""
         if self.is_on:
             return "mdi:alarm"

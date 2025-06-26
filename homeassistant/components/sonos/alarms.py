@@ -45,10 +45,9 @@ class SonosAlarms(SonosHouseholdCoordinator):
         self, from_datetime=None, include_disabled=False, zone_uid=None
     ) -> datetime.datetime | None:
         """Get the next alarm datetime."""
-        if from_datetime is None:
-            from_datetime = dt_util.now()
-        else:
-            from_datetime = dt_util.as_local(from_datetime)
+        from_datetime = (
+            dt_util.now() if from_datetime is None else dt_util.as_local(from_datetime)
+        )
 
         return self.alarms.get_next_alarm_datetime(
             from_datetime, include_disabled, zone_uid

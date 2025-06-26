@@ -210,7 +210,7 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
 
         async def async_write_state_daily(now: datetime.datetime) -> None:
             """Update state attributes each calendar day."""
-            _LOGGER.debug("Updating state attributes for %s", self.name)
+            _LOGGER.debug("Daily update of next alarm for %s", self.name)
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -226,7 +226,7 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
         await alarms.async_poll()
 
     @property
-    def icon(self) -> str | None:
+    def icon(self) -> str:
         """Icon of the entity."""
         if self.native_value is None:
             return "mdi:alarm-off"
@@ -263,8 +263,3 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
             ATTR_SCHEDULED_TODAY: self._is_today,
             ATTR_FOLLOWING_ALARM: self._following_alarm,
         }
-
-    @property
-    def available(self) -> bool:
-        """Return whether this device is available."""
-        return self.speaker.available
