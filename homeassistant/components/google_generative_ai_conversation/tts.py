@@ -15,7 +15,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -113,6 +113,10 @@ class GoogleGenerativeAITextToSpeechEntity(
             "Sulafat (Warm)",
         )
     ]
+
+    def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the TTS entity."""
+        super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice]:
