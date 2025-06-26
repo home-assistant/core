@@ -87,7 +87,22 @@ class DevoloDeviceEntity(Entity):
             self._value = message[1]
         elif len(message) == 3 and message[2] == "status":
             # Maybe the API wants to tell us, that the device went on- or offline.
-            self._attr_available = self._device_instance.is_online()
+            state = self._device_instance.is_online()
+            if state != self.available and not state:
+                _LOGGER.info(
+                    "Device %s is unavailable",
+                    self._device_instance.settings_property[
+                        "general_device_settings"
+                    ].name,
+                )
+            if state != self.available and state:
+                _LOGGER.info(
+                    "Device %s is back online",
+                    self._device_instance.settings_property[
+                        "general_device_settings"
+                    ].name,
+                )
+            self._attr_available = state
         else:
             _LOGGER.debug("No valid message received: %s", message)
 
