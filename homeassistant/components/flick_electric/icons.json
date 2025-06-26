@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "power_price": {
+        "default": "mdi:currency-usd"
+      }
+    }
+  }
+}
