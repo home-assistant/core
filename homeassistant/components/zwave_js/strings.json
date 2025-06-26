@@ -55,7 +55,7 @@
           "s2_unauthenticated_key": "S2 Unauthenticated Key"
         },
         "description": "Enter the security keys for your existing Z-Wave network",
-        "title": "Security Keys"
+        "title": "Security keys"
       },
       "configure_addon_reconfigure": {
         "data": {
