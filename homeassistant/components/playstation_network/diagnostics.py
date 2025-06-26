@@ -7,7 +7,6 @@ from typing import Any
 
 from psnawp_api.models.trophies import PlatformType
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_NPSSO
@@ -24,15 +23,12 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: PlaystationNetworkCoordinator = entry.runtime_data
 
-    data_dict = _serialize_platform_types(asdict(coordinator.data))
-
     return {
-        "entry": async_redact_data(entry.data, TO_REDACT),
-        "data": data_dict,
+        "data": _serialize_platform_types(asdict(coordinator.data)),
     }
 
 
-def _serialize_platform_types(data: dict[str, Any]) -> dict[str, Any]:
+def _serialize_platform_types(data: Any) -> Any:
     """Recursively convert PlatformType enums to strings in dicts and sets."""
     if isinstance(data, dict):
         return {
