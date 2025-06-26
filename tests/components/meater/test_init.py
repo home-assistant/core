@@ -49,7 +49,7 @@ async def test_load_unload(
         == 8
     )
     assert (
-        hass.states.get("sensor.meater_probe_40a72384_ambient_temperature")
+        hass.states.get("sensor.meater_probe_40a72384_ambient_temperature").state
         != STATE_UNAVAILABLE
     )
 
@@ -65,6 +65,6 @@ async def test_load_unload(
         == 8
     )
     assert (
-        hass.states.get("sensor.meater_probe_40a72384_ambient_temperature")
+        hass.states.get("sensor.meater_probe_40a72384_ambient_temperature").state
         != STATE_UNAVAILABLE
     )
