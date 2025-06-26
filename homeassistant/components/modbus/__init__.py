@@ -65,11 +65,8 @@ from .const import (
     CONF_BRIGHTNESS_REGISTER,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-<<<<<<< separate_scales
-    CONF_CURRENT_TEMP_SCALE,
-=======
     CONF_COLOR_TEMP_REGISTER,
->>>>>>> dev
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
