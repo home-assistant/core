@@ -6,7 +6,11 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
 )
-from librehardwaremonitor_api.model import LibreHardwareMonitorData
+from librehardwaremonitor_api.model import (
+    DeviceId,
+    DeviceName,
+    LibreHardwareMonitorData,
+)
 import pytest
 
 from homeassistant.components.librehardwaremonitor import (
@@ -84,14 +88,17 @@ async def test_orphaned_devices_are_removed(
     await coordinator._async_refresh()
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_names=["AMD Ryzen 7 7800X3D", "NVIDIA GeForce RTX 4080 SUPER"],
+        main_device_ids_and_names={
+            DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
+            DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
+        },
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
     device_registry = dr.async_get(hass)
     orphaned_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "MSI MAG B650M MORTAR WIFI (MS-7D76)")},
+        identifiers={(DOMAIN, "lpc-nct6687d-0")},
     )
 
     with patch.object(
@@ -113,10 +120,10 @@ async def test_new_devices_are_added_and_integration_reloaded(
     await coordinator._async_refresh()
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_names=[
-            *mock_lhm_client.get_data.return_value.main_device_names,
-            "Generic Memory",
-        ],
+        main_device_ids_and_names={
+            **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
+            DeviceId("generic-memory"): DeviceName("Generic Memory"),
+        },
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
@@ -135,10 +142,10 @@ async def test_integration_is_not_reloaded_on_first_refresh(
     coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_names=[
-            *mock_lhm_client.get_data.return_value.main_device_names,
-            "Generic Memory",
-        ],
+        main_device_ids_and_names={
+            **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
+            DeviceId("generic-memory"): DeviceName("Generic Memory"),
+        },
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
