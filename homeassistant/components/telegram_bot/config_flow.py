@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -58,6 +58,7 @@ from .const import (
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    SECTION_ADVANCED_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 
@@ -81,8 +82,15 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 autocomplete="current-password",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -98,8 +106,15 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 translation_key="platforms",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -197,6 +212,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         import_data[CONF_TRUSTED_NETWORKS] = ",".join(
             import_data[CONF_TRUSTED_NETWORKS]
         )
+        import_data[SECTION_ADVANCED_SETTINGS] = {
+            CONF_PROXY_URL: import_data.get(CONF_PROXY_URL)
+        }
         try:
             config_flow_result: ConfigFlowResult = await self.async_step_user(
                 import_data
@@ -332,7 +350,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input["advanced_settings"].get(CONF_PROXY_URL),
                 },
                 options={
                     # this value may come from yaml import
@@ -444,7 +462,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
-                CONF_PROXY_URL: self._step_user_data.get(CONF_PROXY_URL),
+                CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
+                    CONF_PROXY_URL
+                ),
                 CONF_URL: user_input.get(CONF_URL),
                 CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
@@ -509,9 +529,19 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    self._get_reconfigure_entry().data,
+                    {
+                        **self._get_reconfigure_entry().data,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
+                                CONF_PROXY_URL
+                            ),
+                        },
+                    },
                 ),
             )
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -527,7 +557,12 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    user_input,
+                    {
+                        **user_input,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                        },
+                    },
                 ),
                 errors=errors,
                 description_placeholders=description_placeholders,
