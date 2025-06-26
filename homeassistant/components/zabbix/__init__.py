@@ -114,7 +114,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         metrics: list[ItemValue],
         item_type: str,
         keys: set[str],
-        key_values: dict[str, float | str]
+        key_values: dict[str, float | str],
     ):
         keys_count = len(keys)
         keys.update(key_values)
