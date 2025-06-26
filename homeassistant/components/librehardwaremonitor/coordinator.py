@@ -95,6 +95,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             return
 
         if self.data is None:
+            # initial update during integration startup
             self._previous_devices = detected_devices  # type: ignore[unreachable]
             return
 
@@ -115,9 +116,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         if new_devices := detected_device_ids - previous_device_ids:
             _LOGGER.warning(
-                "New Device(s) added, reloading integration: %s",
+                "New Device(s) detected, reload integration to add them to Home Assistant: %s",
                 [detected_devices[DeviceId(device_id)] for device_id in new_devices],
             )
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
         self._previous_devices = detected_devices
