@@ -40,7 +40,6 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.helpers.typing import VolDictType
 
 from .addon import get_addon_manager
 from .const import (
@@ -634,14 +633,40 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
 
+        if user_input is not None:
+            self.usb_path = user_input[CONF_USB_PATH]
+            return await self.async_step_network_type()
+
+        if self._usb_discovery:
+            return await self.async_step_network_type()
+
+        usb_path = self.usb_path or ""
+
+        try:
+            ports = await async_get_usb_ports(self.hass)
+        except OSError as err:
+            _LOGGER.error("Failed to get USB ports: %s", err)
+            return self.async_abort(reason="usb_ports_failed")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="configure_addon_user", data_schema=data_schema
+        )
+
+    async def async_step_network_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for network type (new or existing)."""
         # For recommended installation, automatically set network type to "new"
-        if self._recommended_install and self._usb_discovery:
+        if self._recommended_install:
             user_input = {"network_type": NETWORK_TYPE_NEW}
 
         if user_input is not None:
-            if not self._usb_discovery:
-                self.usb_path = user_input[CONF_USB_PATH]
-
             if user_input["network_type"] == NETWORK_TYPE_NEW:
                 # Set all keys to empty strings for new network
                 self.s0_legacy_key = ""
@@ -667,30 +692,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # Network already exists, go to security keys step
             return await self.async_step_configure_security_keys()
 
-        usb_path = self.usb_path or ""
-
-        schema: VolDictType = {
-            vol.Required("network_type", default=""): vol.In(
-                [NETWORK_TYPE_NEW, NETWORK_TYPE_EXISTING]
-            )
-        }
-
-        if not self._usb_discovery:
-            try:
-                ports = await async_get_usb_ports(self.hass)
-            except OSError as err:
-                _LOGGER.error("Failed to get USB ports: %s", err)
-                return self.async_abort(reason="usb_ports_failed")
-
-            schema = {
-                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
-                **schema,
-            }
-
-        data_schema = vol.Schema(schema)
-
         return self.async_show_form(
-            step_id="configure_addon_user", data_schema=data_schema
+            step_id="network_type",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("network_type", default=""): vol.In(
+                        [NETWORK_TYPE_NEW, NETWORK_TYPE_EXISTING]
+                    )
+                }
+            ),
         )
 
     async def async_step_configure_security_keys(

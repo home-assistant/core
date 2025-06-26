@@ -39,11 +39,16 @@
     "step": {
       "configure_addon_user": {
         "data": {
-          "network_type": "Is your network new or does it already exist?",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "Select your Z-Wave adapter",
         "title": "Enter the Z-Wave add-on configuration"
+      },
+      "network_type": {
+        "data": {
+          "network_type": "Is your network new or does it already exist?"
+        },
+        "title": "Z-Wave network"
       },
       "configure_security_keys": {
         "data": {
