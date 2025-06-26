@@ -13,7 +13,7 @@
           'title_name': 'STAR WARS Jedi: Survivor™',
         }),
       }),
-      'availability': 'availableToPlay',
+      'available': True,
       'presence': dict({
         'basicPresence': dict({
           'availability': 'availableToPlay',
@@ -26,7 +26,6 @@
               'titleName': 'STAR WARS Jedi: Survivor™',
             }),
           ]),
-          'lastAvailableDate': '2025-06-30T01:42:15.391Z',
           'primaryPlatformInfo': dict({
             'onlineStatus': 'online',
             'platform': 'PS5',
