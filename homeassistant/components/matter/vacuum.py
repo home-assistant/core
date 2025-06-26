@@ -62,14 +62,14 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     _last_accepted_commands: list[int] | None = None
     _supported_run_modes: (
-        dict[int, clusters.RvcCleanMode.Structs.ModeOptionStruct] | None
+        dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        # We simply set the RvcCleanMode to the first runmode
+        # We simply set the RvcRunMode to the first runmode
         # that has the idle tag to stop the vacuum cleaner.
         # this is compatible with both Matter 1.2 and 1.3+ devices.
         supported_run_modes = self._supported_run_modes or {}
@@ -107,7 +107,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             )
             return
 
-        # We simply set the RvcCleanMode to the first runmode
+        # We simply set the RvcRunMode to the first runmode
         # that has the cleaning tag to start the vacuum cleaner.
         # this is compatible with both Matter 1.2 and 1.3+ devices.
         supported_run_modes = self._supported_run_modes or {}
@@ -184,7 +184,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         if self.get_matter_attribute_value(clusters.Identify.Attributes.IdentifyType):
             supported_features |= VacuumEntityFeature.LOCATE
         # create a map of supported run modes
-        run_modes: list[clusters.RvcCleanMode.Structs.ModeOptionStruct] = (
+        run_modes: list[clusters.RvcRunMode.Structs.ModeOptionStruct] = (
             self.get_matter_attribute_value(
                 clusters.RvcRunMode.Attributes.SupportedModes
             )
@@ -217,10 +217,7 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
-        optional_attributes=(
-            clusters.RvcCleanMode.Attributes.CurrentMode,
-            clusters.PowerSource.Attributes.BatPercentRemaining,
-        ),
+        optional_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),
