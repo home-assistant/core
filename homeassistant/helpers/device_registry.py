@@ -282,8 +282,8 @@ def _normalize_connections_validator(
     connections: Iterable[tuple[str, str]],
 ) -> None:
     """Check connections normalization used as attrs validator."""
-    for _key, value in connections:
-        if format_mac(value) != value:
+    for key, value in connections:
+        if key == CONNECTION_NETWORK_MAC and format_mac(value) != value:
             raise ValueError(f"Invalid mac address format: {value}")
 
 
