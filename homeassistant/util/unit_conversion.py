@@ -461,6 +461,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: 1,
+        UnitOfSpeed.METERS_PER_MINUTE: _MIN_TO_SEC,
     }
     VALID_UNITS = {
         UnitOfVolumetricFlux.INCHES_PER_DAY,
@@ -475,6 +476,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfSpeed.BEAUFORT,
+        UnitOfSpeed.METERS_PER_MINUTE,
     }
 
     @classmethod
