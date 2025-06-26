@@ -132,7 +132,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _state_as_value = float(state_helper.state_as_number(state))
                 floats[entity_id] = _state_as_value
             except ValueError:
-                strings[entity_id] = str(state.state)
+                if include_strings:
+                    strings[entity_id] = str(state.state)
 
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
