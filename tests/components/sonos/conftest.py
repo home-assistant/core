@@ -672,7 +672,7 @@ def alarm_clock_fixture_disabled() -> SonosMockAlarmClock:
     """Create alarmClock fixture."""
     return SonosMockAlarmClock(
         {
-            "CurrentAlarmListVersion": "RINCON_test:14",
+            "CurrentAlarmListVersion": "RINCON_test:16",
             "CurrentAlarmList": "<Alarms>"
             '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
             'Enabled="0" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
