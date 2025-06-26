@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from uiprotect.data import Camera, CloudAccount, ModelType, Version
