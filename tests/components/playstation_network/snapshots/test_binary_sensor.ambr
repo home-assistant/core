@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_sensors[binary_sensor.testuser_playstation_plus-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.testuser_playstation_plus',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PlayStation Plus',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkBinarySensor.PS_PLUS_STATUS: 'ps_plus_status'>,
+    'unique_id': 'my-psn-id_ps_plus_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.testuser_playstation_plus-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testuser PlayStation Plus',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.testuser_playstation_plus',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[binary_sensor.testuser_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.testuser_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkBinarySensor.ONLINE_STATUS: 'online_status'>,
+    'unique_id': 'my-psn-id_online_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.testuser_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testuser Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.testuser_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

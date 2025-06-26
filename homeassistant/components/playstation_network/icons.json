@@ -5,6 +5,14 @@
         "default": "mdi:sony-playstation"
       }
     },
+    "binary_sensor": {
+      "online_status": {
+        "default": "mdi:sony-playstation"
+      },
+      "ps_plus_status": {
+        "default": "mdi:shape-plus-outline"
+      }
+    },
     "sensor": {
       "trophy_level": {
         "default": "mdi:trophy-award"
