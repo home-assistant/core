@@ -116,7 +116,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             session = async_get_clientsession(hass)
             if TYPE_CHECKING:
                 assert entry.unique_id is not None
-            auth = Auth(session, entry.unique_id)
+            auth = Auth(
+                session, entry.unique_id, referrer=entry.data.get(CONF_REFERRER)
+            )
             client = GoogleAirQualityApi(auth)
             location = user_input[CONF_LOCATION]
             lat = location[CONF_LATITUDE]

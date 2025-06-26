@@ -47,6 +47,10 @@
           }
         }
       },
+      "abort": {
+        "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      },
       "initiate_flow": {
         "user": "Add location"
       },
@@ -54,9 +58,6 @@
       "error": {
         "unknown": "[%key:common::config_flow::error::unknown%]",
         "no_data_for_location": "Information is unavailable for this location. Please try a different location."
-      },
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
       }
     }
   },
