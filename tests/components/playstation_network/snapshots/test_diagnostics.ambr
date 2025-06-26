@@ -48,8 +48,8 @@
         ]),
         'onlineId': '**REDACTED**',
         'personalDetail': dict({
-          'firstName': 'Rick',
-          'lastName': 'Astley',
+          'firstName': '**REDACTED**',
+          'lastName': '**REDACTED**',
           'profilePictures': list([
             dict({
               'size': 'xl',

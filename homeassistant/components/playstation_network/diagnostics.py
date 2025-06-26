@@ -12,7 +12,15 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 
-TO_REDACT = {"account_id", "onlineId", "url", "username"}
+TO_REDACT = {
+    "account_id",
+    "firstName",
+    "lastName",
+    "middleName",
+    "onlineId",
+    "url",
+    "username",
+}
 
 
 async def async_get_config_entry_diagnostics(
