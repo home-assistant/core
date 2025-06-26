@@ -3105,7 +3105,7 @@ async def websocket_restore_nvm(
         driver.once("driver ready", set_driver_ready),
     ]
 
-    await controller.async_restore_nvm_base64(msg["data"])
+    await controller.async_restore_nvm_base64(msg["data"], {"preserveRoutes": False})
 
     with suppress(TimeoutError):
         async with asyncio.timeout(DRIVER_READY_TIMEOUT):
