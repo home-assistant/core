@@ -462,7 +462,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
-                CONF_PROXY_URL: self._step_user_data["advanced_settings"].get(
+                CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
                     CONF_PROXY_URL
                 ),
                 CONF_URL: user_input.get(CONF_URL),
