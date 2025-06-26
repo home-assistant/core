@@ -876,15 +876,6 @@ jobs:
       - mypy
     name: Split tests for full run
     steps:
-      - name: Install additional OS dependencies
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
-          sudo apt-get -y install \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -893,6 +884,18 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
+      - name: Generate partial pytest execution time restore key
+        id: generate-pytest-execution-time-report-key
+        run: |
+          echo "key=pytest-execution-time-report-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+      - name: Restore pytest execution time cache
+        uses: actions/cache/restore@v4.2.3
+        with:
+          path: pytest-execution-time-report.json
+          key: >-
+            ${{ runner.os }}-${{ steps.generate-pytest-execution-time-report-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-pytest-execution-time-report-
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@v4.2.3
@@ -905,7 +908,8 @@ jobs:
       - name: Run split_tests.py
         run: |
           . venv/bin/activate
-          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
+          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} \
+          tests pytest-execution-time-report.json
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.6.2
         with:
@@ -1004,6 +1008,7 @@ jobs:
             ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
+            --execution-time-report-name pytest-execution-time-report-${{ matrix.python-version }}-${{ matrix.group }}.json \
             --exclude-warning-annotations \
             $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
@@ -1012,7 +1017,9 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
-          path: pytest-*.txt
+          path: |
+            pytest-*.txt
+            pytest-*.json
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
@@ -1033,11 +1040,59 @@ jobs:
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
-      - name: Remove pytest_buckets
-        run: rm pytest_buckets.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
+
+  pytest-combine-test-execution-time:
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - pytest-full
+    name: Combine test execution times
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.5.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.2.3
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Generate partial pytest execution time restore key
+        id: generate-pytest-execution-time-report-key
+        run: |
+          echo "key=pytest-execution-time-report-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+      - name: Download pytest execution time artifacts
+        uses: actions/download-artifact@v4.2.1
+        with:
+          pattern: pytest-${{ github.run_number }}-${{ env.DEFAULT_PYTHON }}-*
+          merge-multiple: true
+      - name: Combine files into one
+        run: |
+          . venv/bin/activate
+          python -m script.merge_pytest_execution_time_reports "pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}-*.json"
+      - name: Upload combined pytest execution time artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: pytest-execution-time-report-${{ github.run_number }}
+          path: pytest-execution-time-report.json
+      - name: Save pytest execution time cache
+        uses: actions/cache/save@v4.2.3
+        with:
+          path: pytest-execution-time-report.json
+          key: >-
+            ${{ runner.os }}-${{
+            steps.generate-pytest-execution-time-report-key.outputs.key }}
 
   pytest-mariadb:
     runs-on: ubuntu-24.04
