@@ -8,7 +8,6 @@ import math
 import queue
 import threading
 import time
-from typing import Dict
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
@@ -112,8 +111,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = zapi
 
     def update_metrics(
-        metrics: list[ItemValue], item_type: str, keys: set[str],
-        key_values: Dict[str, float|str]
+        metrics: list[ItemValue],
+        item_type: str,
+        keys: set[str],
+        key_values: dict[str, float|str]
     ):
         keys_count = len(keys)
         keys.update(key_values)
@@ -143,8 +144,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not entities_filter(entity_id):
             return None
 
-        floats = {}
-        strings = {}
+        floats: dict[str, float] = {}
+        strings: dict[str, str] = {}
         try:
             _state_as_value = float(state.state)
             floats[entity_id] = _state_as_value
@@ -171,7 +172,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             else:
                 floats[attribute_id] = float_value
 
-        metrics = []
+        metrics: list[ItemValue] = []
         update_metrics(metrics, "float", float_keys, floats)
 
         if not publish_string_states:
@@ -179,7 +180,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         update_metrics(metrics, "string", string_keys, strings)
         return metrics
-
 
     if publish_states_host:
         zabbix_sender = Sender(server=conf[CONF_HOST], port=DEFAULT_SENDER_PORT)
