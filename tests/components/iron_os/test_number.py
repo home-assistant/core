@@ -94,7 +94,6 @@ async def test_state_fahrenheit(
     freezer.tick(timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    # await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     state = hass.states.get(entity_id)
     assert state is not None
