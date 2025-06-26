@@ -365,8 +365,11 @@ def _validate_observation_subentry(
         _LOGGER.debug(
             "Comparing with other subentries: %s", [*other_subentries, user_input]
         )
-        above_greater_than_below(user_input)
-        no_overlapping([*other_subentries, user_input])
+        try:
+            above_greater_than_below(user_input)
+            no_overlapping([*other_subentries, user_input])
+        except vol.Invalid as err:
+            raise SchemaFlowError(err) from err
 
     _LOGGER.debug("Processed observation with settings: %s", user_input)
     return user_input
@@ -388,7 +391,9 @@ async def _validate_subentry_from_config_entry(
     if handler.parent_handler.cur_step is not None:
         user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
         user_input = _validate_observation_subentry(
-            user_input[CONF_PLATFORM], user_input
+            user_input[CONF_PLATFORM],
+            user_input,
+            other_subentries=handler.options[CONF_OBSERVATIONS],
         )
     observations.append(user_input)
     return {"add_another": True} if add_another else {}
@@ -563,7 +568,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME),
                     data=user_input,
                 )
-            except (SchemaFlowError, vol.Invalid) as err:
+            except SchemaFlowError as err:
                 errors["base"] = str(err)
 
         return self.async_show_form(

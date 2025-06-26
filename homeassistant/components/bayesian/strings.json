@@ -44,7 +44,10 @@
       "extreme_prior_error": "'Prior' set to 0% means that it is impossible for the sensor to show 'on' and 100% means it will never show 'off', use a close number like 0.1% or 99.9% instead",
       "extreme_threshold_error": "'Probability threshold' set to 0% means that the sensor will always be 'on' and 100% mean it will always be 'off', use a close number like 0.1% or 99.9% instead",
       "equal_probabilities": "If 'Probability given true' and 'Probability given false' are equal, this observation can have no effect, and is therefore redundant",
-      "extreme_prob_given_error": "If either 'Probability given false' or 'Probability given true' is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
+      "extreme_prob_given_error": "If either 'Probability given false' or 'Probability given true' is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead",
+      "above_below": "Invalid range: 'Above' must be less than 'Below' when both are set.",
+      "above_or_below": "Invalid range: At least one of 'Above' or 'Below' must be set.",
+      "overlapping_ranges": "Invalid range: The 'Above' and 'Below' values overlap with another observation for the same entity."
     },
     "step": {
       "user": {
@@ -230,9 +233,9 @@
       "error": {
         "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]",
         "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]",
-        "above_below": "Invalid range: 'Above' must be less than 'Below' when both are set.",
-        "above_or_below": "Invalid range: At least one of 'Above' or 'Below' must be set.",
-        "overlapping_ranges": "Invalid range: The 'Above' and 'Below' values overlap with another observation for the same entity."
+        "above_below": "[%key:component::bayesian::config::error::above_below%]",
+        "above_or_below": "[%key:component::bayesian::config::error::above_or_below%]",
+        "overlapping_ranges": "[%key:component::bayesian::config::error::overlapping_ranges%]"
       },
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"

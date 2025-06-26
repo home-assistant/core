@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.bayesian.config_flow import (
+    OBSERVATION_SELECTOR,
     USER,
     ObservationTypes,
     OptionsFlowSteps,
@@ -43,7 +44,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
+async def test_config_flow_step_user(hass: HomeAssistant) -> None:
     """Test the config flow with an example."""
     with patch(
         "homeassistant.components.bayesian.async_setup_entry", return_value=True
@@ -70,15 +71,11 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["version"] == 1
-        assert result1["handler"] == DOMAIN
-        assert result1["title"] == "Office occupied"
-        assert result1["options"] == {
-            CONF_NAME: "Office occupied",
-            CONF_PROBABILITY_THRESHOLD: 0.5,
-            CONF_PRIOR: 0.15,
-            CONF_DEVICE_CLASS: "occupancy",
-        }
+
+        # We move on to the next step - the observation selector
+        assert result1["step_id"] == OBSERVATION_SELECTOR
+        assert result1["type"] is FlowResultType.MENU
+        assert result1["flow_id"] is not None
 
 
 async def test_subentry_flow(hass: HomeAssistant) -> None:
@@ -234,7 +231,7 @@ False
 async def test_single_state_observation(hass: HomeAssistant) -> None:
     """Test a Bayesian sensor with just one state observation added.
 
-    This test combines the config flow and the options flow for a single state observation.
+    This test combines the config flow for a single state observation.
     """
 
     with patch(
@@ -257,41 +254,20 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # Confirm the config entry is created with the basic options
-        assert result["options"] == {
-            CONF_NAME: "Anyone home",
-            CONF_PROBABILITY_THRESHOLD: 0.5,
-            CONF_PRIOR: 0.66,
-            CONF_DEVICE_CLASS: "occupancy",
-        }
-
-        # Confirm the config entry is created and then retrieve it again
-        entry_id = result["result"].entry_id
-        config_entry = hass.config_entries.async_get_entry(entry_id)
-        assert config_entry is not None
-        assert type(config_entry) is ConfigEntry
-
-        # Open a subentry flow
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-        assert result["step_id"] == "user"
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
         assert result["type"] is FlowResultType.MENU
         assert result["flow_id"] is not None
 
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
         await hass.async_block_till_done()
 
         assert result["step_id"] == str(ObservationTypes.STATE)
         assert result["type"] is FlowResultType.FORM
-        assert result["description_placeholders"]["parent_sensor_name"] == "Anyone home"
-        assert result["description_placeholders"]["device_class_on"] == "Detected"
-        assert result["description_placeholders"]["device_class_off"] == "Clear"
 
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.kitchen_occupancy",
@@ -299,9 +275,14 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 40,
                 CONF_P_GIVEN_F: 0.5,
                 CONF_NAME: "Kitchen Motion",
+                "add_another": False,
             },
         )
 
+        entry_id = result["result"].entry_id
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        assert config_entry is not None
+        assert type(config_entry) is ConfigEntry
         assert config_entry.version == 1
         assert config_entry.options == {
             CONF_NAME: "Anyone home",
@@ -347,22 +328,20 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # Open a subentry flow, in this test we are less stringent about checking success as that is covered in other tests
-        config_entry = result["result"]
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
 
         # select numeric state observation
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
         await hass.async_block_till_done()
 
         assert result["step_id"] == str(ObservationTypes.NUMERIC_STATE)
         assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.outside_temperature",
@@ -371,9 +350,10 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "20 - 35 outside",
+                "add_another": False,
             },
         )
-
+        config_entry = result["result"]
         assert config_entry.options == {
             CONF_NAME: "Nice day",
             CONF_PROBABILITY_THRESHOLD: 0.51,
@@ -418,22 +398,21 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        config_entry = result["result"]
-        # Open a subentry flow, in this test we are less stringent about checking success as that is covered in other tests
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
 
         # select numeric state observation
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
         await hass.async_block_till_done()
 
         assert result["step_id"] == str(ObservationTypes.NUMERIC_STATE)
         assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.outside_temperature",
@@ -442,22 +421,21 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "20 - 35 outside",
+                "add_another": True,
             },
         )
 
-        # open a second subentry flow for numeric state observation
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.subentries.async_configure(
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
         await hass.async_block_till_done()
 
         # This should fail as overlapping ranges for the same entity are not allowed
         current_step = result["step_id"]
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.outside_temperature",
@@ -466,15 +444,16 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "30 - 40 outside",
+                "add_another": False,
             },
         )
         await hass.async_block_till_done()
-        assert result["step_id"] == current_step
         assert result["errors"] == {"base": "overlapping_ranges"}
+        assert result["step_id"] == current_step
 
         # This should fail as above should always be less than below
         current_step = result["step_id"]
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.outside_temperature",
@@ -483,6 +462,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "35 - 40 outside",
+                "add_another": False,
             },
         )
         await hass.async_block_till_done()
@@ -490,7 +470,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "above_below"}
 
         # This should work
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.outside_temperature",
@@ -499,10 +479,12 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 70,
                 CONF_P_GIVEN_F: 20,
                 CONF_NAME: "35 - 40 outside",
+                "add_another": False,
             },
         )
         await hass.async_block_till_done()
 
+        config_entry = result["result"]
         assert config_entry.version == 1
         assert config_entry.options == {
             CONF_NAME: "Nice day",
@@ -562,22 +544,21 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        config_entry = result["result"]
 
-        # Open a subentry flow, in this test we are less stringent about checking success as that is covered in other tests
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
+
         # Select template observation
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
         )
         await hass.async_block_till_done()
 
         assert result["step_id"] == str(ObservationTypes.TEMPLATE)
         assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_VALUE_TEMPLATE: "{{is_state('device_tracker.paulus','not_home') and ((as_timestamp(now()) - as_timestamp(states.device_tracker.paulus.last_changed)) > 300)}}",
@@ -586,7 +567,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
                 CONF_NAME: "Not seen in last 5 minutes",
             },
         )
-
+        config_entry = result["result"]
         assert config_entry.version == 1
         assert config_entry.options == {
             CONF_NAME: "Paulus Home",
@@ -993,7 +974,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # priors should never be Zero, because then the sensor can never return 'on'
         with pytest.raises(vol.Invalid) as excinfo:
-            result1 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
                     CONF_NAME: "Office occupied",
@@ -1006,7 +987,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # priors should never be 100% because then the sensor can never be 'off'
         with pytest.raises(vol.Invalid) as excinfo:
-            result1 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
                     CONF_NAME: "Office occupied",
@@ -1019,7 +1000,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # Threshold should never be 100% because then the sensor can never be 'on'
         with pytest.raises(vol.Invalid) as excinfo:
-            result1 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
                     CONF_NAME: "Office occupied",
@@ -1032,7 +1013,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # Threshold should never be 0 because then the sensor can never be 'off'
         with pytest.raises(vol.Invalid) as excinfo:
-            result1 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
                     CONF_NAME: "Office occupied",
@@ -1043,8 +1024,8 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert CONF_PROBABILITY_THRESHOLD in excinfo.value.path
         assert excinfo.value.error_message == "extreme_threshold_error"
 
-        # Now lets submit a valid config so we can test the subentry flows
-        result1 = await hass.config_entries.flow.async_configure(
+        # Now lets submit a valid config so we can test the observation flows
+        result = await hass.config_entries.flow.async_configure(
             result0["flow_id"],
             {
                 CONF_NAME: "Office occupied",
@@ -1053,16 +1034,14 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1.get("errors") is None
-        config_entry = result1["result"]
+        assert result.get("errors") is None
 
-        # Open a subentry flow
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+        # Confirm the next step is the menu
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
 
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
         await hass.async_block_till_done()
@@ -1072,7 +1051,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # Observations with a probability of 0 will create certainties
         with pytest.raises(vol.Invalid) as excinfo:
-            result = await hass.config_entries.subentries.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
                     CONF_ENTITY_ID: "sensor.work_laptop",
@@ -1080,6 +1059,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                     CONF_P_GIVEN_T: 0,
                     CONF_P_GIVEN_F: 60,
                     CONF_NAME: "Work laptop on network",
+                    "add_another": False,
                 },
             )
         assert CONF_P_GIVEN_T in excinfo.value.path
@@ -1087,7 +1067,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         # Observations with a probability of 1 will create certainties
         with pytest.raises(vol.Invalid) as excinfo:
-            result = await hass.config_entries.subentries.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
                     CONF_ENTITY_ID: "sensor.work_laptop",
@@ -1095,6 +1075,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                     CONF_P_GIVEN_T: 60,
                     CONF_P_GIVEN_F: 100,
                     CONF_NAME: "Work laptop on network",
+                    "add_another": False,
                 },
             )
         assert CONF_P_GIVEN_F in excinfo.value.path
@@ -1103,7 +1084,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         # Observations with equal probabilities have no effect
         # Try with a ObservationTypes.STATE observation
         current_step = result["step_id"]
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.work_laptop",
@@ -1111,24 +1092,33 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 60,
                 CONF_P_GIVEN_F: 60,
                 CONF_NAME: "Work laptop on network",
+                "add_another": False,
             },
         )
         await hass.async_block_till_done()
         assert result["step_id"] == current_step
         assert result["errors"] == {"base": "equal_probabilities"}
 
-        # Try with a ObservationTypes.NUMERIC_STATE observation
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        # now submit a valid result
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.work_laptop",
+                CONF_TO_STATE: "on",
+                CONF_P_GIVEN_T: 60,
+                CONF_P_GIVEN_F: 70,
+                CONF_NAME: "Work laptop on network",
+                "add_another": True,
+            },
         )
         await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+
+        await hass.async_block_till_done()
         current_step = result["step_id"]
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
@@ -1136,23 +1126,33 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 85,
                 CONF_P_GIVEN_F: 85,
                 CONF_NAME: "Office is bright",
+                "add_another": False,
             },
         )
         await hass.async_block_till_done()
         assert result["step_id"] == current_step
         assert result["errors"] == {"base": "equal_probabilities"}
 
-        # Try with a ObservationTypes.TEMPLATE observation
-        result = await hass.config_entries.subentries.async_init(
-            (config_entry.entry_id, "observation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+                CONF_ABOVE: 40,
+                CONF_P_GIVEN_T: 85,
+                CONF_P_GIVEN_F: 10,
+                CONF_NAME: "Office is bright",
+                "add_another": True,
+            },
         )
         await hass.async_block_till_done()
+        # Try with a ObservationTypes.TEMPLATE observation
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
+        )
+
+        await hass.async_block_till_done()
         current_step = result["step_id"]
-        result = await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_VALUE_TEMPLATE: "{{ is_state('device_tracker.paulus', 'not_home') }}",
