@@ -472,14 +472,15 @@ class IronOSSetpointNumberEntity(IronOSTemperatureNumberEntity):
     def native_max_value(self) -> float:
         """Return the maximum value."""
 
-        if (max_tip_c := self.coordinator.data.max_tip_temp_ability) is None:
-            return super().native_max_value
-
-        max_tip = (
-            TemperatureConverter.convert(
-                float(max_tip_c), UnitOfTemperature.CELSIUS, self.unit_of_measurement
+        return (
+            min(
+                TemperatureConverter.convert(
+                    float(max_tip_c),
+                    UnitOfTemperature.CELSIUS,
+                    self.native_unit_of_measurement,
+                ),
+                super().native_max_value,
             )
-            if self.native_unit_of_measurement is UnitOfTemperature.FAHRENHEIT
-            else float(max_tip_c)
+            if (max_tip_c := self.coordinator.data.max_tip_temp_ability) is not None
+            else super().native_max_value
         )
-        return min(max_tip, super().native_max_value)
