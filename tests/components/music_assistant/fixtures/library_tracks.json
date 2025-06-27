@@ -1,0 +1,556 @@
+{
+  "library_tracks": [
+    {
+      "item_id": "456",
+      "provider": "library",
+      "name": "Tennessee Whiskey",
+      "version": "",
+      "sort_name": "tennessee whiskey",
+      "uri": "library://track/456",
+      "external_ids": [["isrc", "USUM71418088"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "44832786",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/44832786",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/4894ff62/9de2/4ed8/a7b9/69e217bbbdda/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2015 Mercury Records, a Division of UMG Recordings, Inc.",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 33,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 293,
+      "artists": [
+        {
+          "item_id": 433,
+          "provider": "library",
+          "name": "Chris Stapleton",
+          "version": "",
+          "sort_name": "chris stapleton",
+          "uri": "library://artist/433",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 463,
+        "provider": "library",
+        "name": "Traveller",
+        "version": "",
+        "sort_name": "traveller",
+        "uri": "library://album/463",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/4894ff62/9de2/4ed8/a7b9/69e217bbbdda/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 3
+    },
+    {
+      "item_id": "467",
+      "provider": "library",
+      "name": "Thelma + Louise",
+      "version": "",
+      "sort_name": "thelma + louise",
+      "uri": "library://track/467",
+      "external_ids": [["isrc", "GBUM72104380"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "194027388",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 24,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/194027388",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/04fc7c3c/b814/4855/874c/a2e456205b65/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2021 Virgin Records Limited",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 20,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 137,
+      "artists": [
+        {
+          "item_id": 81,
+          "provider": "library",
+          "name": "Bastille",
+          "version": "",
+          "sort_name": "bastille",
+          "uri": "library://artist/81",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 471,
+        "provider": "library",
+        "name": "Thelma + Louise",
+        "version": "",
+        "sort_name": "thelma + louise",
+        "uri": "library://album/471",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/04fc7c3c/b814/4855/874c/a2e456205b65/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 1
+    },
+    {
+      "item_id": "485",
+      "provider": "library",
+      "name": "They Don't Care About Us",
+      "version": "",
+      "sort_name": "they don't care about us",
+      "uri": "library://track/485",
+      "external_ids": [["isrc", "USSM19500629"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "5279069",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 24,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/5279069",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/a2fa5815/851d/4d2d/b6a7/17a365c838f9/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "(P) 1995 MJJ Productions Inc.",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 27,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 284,
+      "artists": [
+        {
+          "item_id": 30,
+          "provider": "library",
+          "name": "Michael Jackson",
+          "version": "",
+          "sort_name": "michael jackson",
+          "uri": "library://artist/30",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 486,
+        "provider": "library",
+        "name": "HIStory - PAST, PRESENT AND FUTURE - BOOK I",
+        "version": "",
+        "sort_name": "history - past, present and future - book i",
+        "uri": "library://album/486",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/a2fa5815/851d/4d2d/b6a7/17a365c838f9/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 2,
+      "track_number": 2
+    },
+    {
+      "item_id": "486",
+      "provider": "library",
+      "name": "They Don't Give A F**** About Us",
+      "version": "",
+      "sort_name": "they don't give a f**** about us",
+      "uri": "library://track/486",
+      "external_ids": [["isrc", "USIR10211795"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "44066854",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/44066854",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": true,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/6b7b2b58/5dc2/4d0c/8979/7b30bb779d6f/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2002 Amaru Entertainment, Inc., Under exclusive license to Interscope Records",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 34,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 306,
+      "artists": [
+        {
+          "item_id": 159,
+          "provider": "library",
+          "name": "2Pac",
+          "version": "",
+          "sort_name": "2pac",
+          "uri": "library://artist/159",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        },
+        {
+          "item_id": 451,
+          "provider": "library",
+          "name": "The Outlawz",
+          "version": "",
+          "sort_name": "outlawz, the",
+          "uri": "library://artist/451",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 487,
+        "provider": "library",
+        "name": "Better Dayz",
+        "version": "",
+        "sort_name": "better dayz",
+        "uri": "library://album/487",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/6b7b2b58/5dc2/4d0c/8979/7b30bb779d6f/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 2,
+      "track_number": 13
+    },
+    {
+      "item_id": "487",
+      "provider": "library",
+      "name": "Things We Lost In The Fire",
+      "version": "TORN Remix",
+      "sort_name": "things we lost in the fire",
+      "uri": "library://track/487",
+      "external_ids": [["isrc", "GBUM71304903"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "22627902",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/22627902",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/de277fd3/cc29/4d63/a60f/13b501c5f3d0/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2013 Virgin Records Limited",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 10,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 323,
+      "artists": [
+        {
+          "item_id": 81,
+          "provider": "library",
+          "name": "Bastille",
+          "version": "",
+          "sort_name": "bastille",
+          "uri": "library://artist/81",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 488,
+        "provider": "library",
+        "name": "Things We Lost In The Fire",
+        "version": "",
+        "sort_name": "things we lost in the fire",
+        "uri": "library://album/488",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/de277fd3/cc29/4d63/a60f/13b501c5f3d0/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 3
+    },
+    {
+      "item_id": "488",
+      "provider": "library",
+      "name": "Those Nights",
+      "version": "",
+      "sort_name": "those nights",
+      "uri": "library://track/488",
+      "external_ids": [["isrc", "GBUM71803866"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "110750762",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 24,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/110750762",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/713805f3/c08c/4c0f/8199/d63e6badac0d/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2019 Virgin Records Limited",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 21,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 270,
+      "artists": [
+        {
+          "item_id": 81,
+          "provider": "library",
+          "name": "Bastille",
+          "version": "",
+          "sort_name": "bastille",
+          "uri": "library://artist/81",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 489,
+        "provider": "library",
+        "name": "Doom Days",
+        "version": "",
+        "sort_name": "doom days",
+        "uri": "library://album/489",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/713805f3/c08c/4c0f/8199/d63e6badac0d/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 10
+    }
+  ]
+}

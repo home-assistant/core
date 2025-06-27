@@ -4,109 +4,147 @@ from __future__ import annotations
 
 from collections.abc import Awaitable
 from datetime import timedelta
+from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-import evohomeasync as ev1
-from evohomeasync.schema import SZ_ID, SZ_TEMP
-import evohomeasync2 as evo
-from evohomeasync2.schema.const import (
+import evohomeasync as ec1
+import evohomeasync2 as ec2
+from evohomeasync2.const import (
+    SZ_DHW,
     SZ_GATEWAY_ID,
     SZ_GATEWAY_INFO,
+    SZ_GATEWAYS,
     SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
+    SZ_TEMPERATURE_CONTROL_SYSTEMS,
     SZ_TIME_ZONE,
+    SZ_USE_DAYLIGHT_SAVE_SWITCHING,
+    SZ_ZONES,
 )
+from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
-from .helpers import handle_evo_exception
-
-if TYPE_CHECKING:
-    from . import EvoSession
-
-_LOGGER = logging.getLogger(__name__.rpartition(".")[0])
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 
-class EvoBroker:
-    """Broker for evohome client broker."""
+class EvoDataUpdateCoordinator(DataUpdateCoordinator):
+    """Coordinator for evohome integration/client."""
 
-    loc_idx: int
-    loc: evo.Location
-    loc_utc_offset: timedelta
-    tcs: evo.ControlSystem
+    # These will not be None after _async_setup())
+    loc: ec2.Location
+    tcs: ec2.ControlSystem
 
-    def __init__(self, sess: EvoSession) -> None:
-        """Initialize the evohome broker and its data structure."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        client_v2: ec2.EvohomeClient,
+        *,
+        name: str,
+        update_interval: timedelta,
+        location_idx: int,
+        client_v1: ec1.EvohomeClient | None = None,
+    ) -> None:
+        """Class to manage fetching data."""
 
-        self._sess = sess
-        self.hass = sess.hass
+        super().__init__(
+            hass,
+            logger,
+            config_entry=None,
+            name=name,
+            update_interval=update_interval,
+        )
 
-        assert sess.client_v2 is not None  # mypy
+        self.client = client_v2
+        self.client_v1 = client_v1
 
-        self.client = sess.client_v2
-        self.client_v1 = sess.client_v1
+        self.loc_idx = location_idx
 
+        self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
 
-    def validate_location(self, loc_idx: int) -> bool:
-        """Get the default TCS of the specified location."""
+        self._first_refresh_done = False  # get schedules only after first refresh
 
-        self.loc_idx = loc_idx
+    # our version of async_config_entry_first_refresh()...
+    async def async_first_refresh(self) -> None:
+        """Refresh data for the first time when integration is setup.
 
-        assert self.client.installation_info is not None  # mypy
+        This integration does not have config flow, so it is inappropriate to
+        invoke `async_config_entry_first_refresh()`.
+        """
+
+        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
+        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
+            return
+
+        await self._async_refresh(
+            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+        )
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Fetch the user information, and the configuration of their locations.
+        """
 
         try:
-            loc_config = self.client.installation_info[loc_idx]
-        except IndexError:
-            _LOGGER.error(
-                (
-                    "Config error: '%s' = %s, but the valid range is 0-%s. "
-                    "Unable to continue. Fix any configuration errors and restart HA"
-                ),
-                CONF_LOCATION_IDX,
-                loc_idx,
-                len(self.client.installation_info) - 1,
-            )
-            return False
+            await self.client.update(dont_update_status=True)  # only config for now
+        except ec2.EvohomeError as err:
+            raise UpdateFailed(err) from err
 
-        self.loc = self.client.locations[loc_idx]
-        self.loc_utc_offset = timedelta(minutes=self.loc.timeZone[UTC_OFFSET])
-        self.tcs = self.loc._gateways[0]._control_systems[0]  # noqa: SLF001
+        try:
+            self.loc = self.client.locations[self.loc_idx]
+        except IndexError as err:
+            raise UpdateFailed(
+                f"""
+                    Config error: 'location_idx' = {self.loc_idx},
+                    but the valid range is 0-{len(self.client.locations) - 1}.
+                    Unable to continue. Fix any configuration errors and restart HA
+                """
+            ) from err
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
+        self.tcs = self.loc.gateways[0].systems[0]
+
+        if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
-                SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
-                SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
+                SZ_LOCATION_ID: self.loc.id,
+                SZ_TIME_ZONE: self.loc.config[SZ_TIME_ZONE],
+                SZ_USE_DAYLIGHT_SAVE_SWITCHING: self.loc.config[
+                    SZ_USE_DAYLIGHT_SAVE_SWITCHING
+                ],
             }
+            tcs_info: EvoTcsConfigResponseT = self.tcs.config  # type: ignore[assignment]
+            tcs_info[SZ_ZONES] = [zone.config for zone in self.tcs.zones]
+            if self.tcs.hotwater:
+                tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
-                SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
-                TCS: loc_config[GWS][0][TCS],
+                SZ_GATEWAY_ID: self.loc.gateways[0].id,
+                SZ_TEMPERATURE_CONTROL_SYSTEMS: [tcs_info],
             }
             config = {
                 SZ_LOCATION_INFO: loc_info,
-                GWS: [{SZ_GATEWAY_INFO: gwy_info}],
+                SZ_GATEWAYS: [{SZ_GATEWAY_INFO: gwy_info}],
             }
-            _LOGGER.debug("Config = %s", config)
-
-        return True
+            self.logger.debug("Config = %s", [config])
 
     async def call_client_api(
         self,
         client_api: Awaitable[dict[str, Any] | None],
-        update_state: bool = True,
+        request_refresh: bool = True,
     ) -> dict[str, Any] | None:
-        """Call a client API and update the broker state if required."""
+        """Call a client API and update the Coordinator state if required."""
 
         try:
             result = await client_api
-        except evo.RequestFailed as err:
-            handle_evo_exception(err)
+
+        except ec2.ApiRequestFailedError as err:
+            self.logger.error(err)
             return None
 
-        if update_state:  # wait a moment for system to quiesce before updating state
-            await self.hass.data[DOMAIN]["coordinator"].async_request_refresh()
+        if request_refresh:  # wait a moment for system to quiesce before updating state
+            await self.async_request_refresh()  # hass.async_create_task() won't help
 
         return result
 
@@ -115,80 +153,90 @@ class EvoBroker:
 
         assert self.client_v1 is not None  # mypy check
 
-        old_session_id = self._sess.session_id
-
         try:
-            temps = await self.client_v1.get_temperatures()
+            await self.client_v1.update()
 
-        except ev1.InvalidSchema as err:
-            _LOGGER.warning(
+        except ec1.BadUserCredentialsError as err:
+            self.logger.warning(
                 (
                     "Unable to obtain high-precision temperatures. "
-                    "It appears the JSON schema is not as expected, "
-                    "so the high-precision feature will be disabled until next restart."
-                    "Message is: %s"
+                    "The feature will be disabled until next restart: %r"
                 ),
                 err,
             )
             self.client_v1 = None
 
-        except ev1.RequestFailed as err:
-            _LOGGER.warning(
+        except ec1.EvohomeError as err:
+            self.logger.warning(
                 (
                     "Unable to obtain the latest high-precision temperatures. "
-                    "Check your network and the vendor's service status page. "
-                    "Proceeding without high-precision temperatures for now. "
-                    "Message is: %s"
+                    "They will be ignored this refresh cycle: %r"
                 ),
                 err,
             )
             self.temps = {}  # high-precision temps now considered stale
 
-        except Exception:
-            self.temps = {}  # high-precision temps now considered stale
-            raise
-
         else:
-            if str(self.client_v1.location_id) != self.loc.locationId:
-                _LOGGER.warning(
-                    "The v2 API's configured location doesn't match "
-                    "the v1 API's default location (there is more than one location), "
-                    "so the high-precision feature will be disabled until next restart"
-                )
-                self.client_v1 = None
-            else:
-                self.temps = {str(i[SZ_ID]): i[SZ_TEMP] for i in temps}
+            self.temps = await self.client_v1.location_by_id[
+                self.loc.id
+            ].get_temperatures(dont_update_status=True)
 
-        finally:
-            if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
-                await self._sess.save_auth_tokens()
-
-        _LOGGER.debug("Temperatures = %s", self.temps)
+        self.logger.debug("Status (high-res temps) = %s", self.temps)
 
     async def _update_v2_api_state(self, *args: Any) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
 
-        access_token = self.client.access_token  # maybe receive a new token?
-
         try:
-            status = await self.loc.refresh_status()
-        except evo.RequestFailed as err:
-            handle_evo_exception(err)
-        else:
-            async_dispatcher_send(self.hass, DOMAIN)
-            _LOGGER.debug("Status = %s", status)
-        finally:
-            if access_token != self.client.access_token:
-                await self._sess.save_auth_tokens()
+            status = await self.loc.update()
 
-    async def async_update(self, *args: Any) -> None:
-        """Get the latest state data of an entire Honeywell TCC Location.
+        except ec2.ApiRequestFailedError as err:
+            if err.status != HTTPStatus.TOO_MANY_REQUESTS:
+                raise UpdateFailed(err) from err
+
+            raise UpdateFailed(
+                f"""
+                    The vendor's API rate limit has been exceeded.
+                    Consider increasing the {CONF_SCAN_INTERVAL}
+                """
+            ) from err
+
+        except ec2.EvohomeError as err:
+            raise UpdateFailed(err) from err
+
+        self.logger.debug("Status = %s", status)
+
+    async def _update_v2_schedules(self) -> None:
+        for zone in self.tcs.zones:
+            try:
+                await zone.get_schedule()
+            except ec2.InvalidScheduleError as err:
+                self.logger.warning(
+                    "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
+                )
+
+        if dhw := self.tcs.hotwater:
+            try:
+                await dhw.get_schedule()
+            except ec2.InvalidScheduleError as err:
+                self.logger.warning("DHW has an invalid/missing schedule: %r", err)
+
+    async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
+        """Fetch the latest state of an entire TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
-        await self._update_v2_api_state()
 
+        await self._update_v2_api_state()  # may raise UpdateFailed
         if self.client_v1:
-            await self._update_v1_api_temps()
+            await self._update_v1_api_temps()  # will never raise UpdateFailed
+
+        # to speed up HA startup, don't update entity schedules during initial
+        # async_first_refresh(), only during subsequent async_refresh()...
+        if self._first_refresh_done:
+            await self._update_v2_schedules()
+        else:
+            self._first_refresh_done = True
+
+        return self.loc.status

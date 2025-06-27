@@ -19,13 +19,24 @@ def create_receiver_info(id: int) -> ReceiverInfo:
     )
 
 
+def create_connection(id: int) -> Mock:
+    """Create an mock connection object for testing."""
+    connection = Mock()
+    connection.host = f"host {id}"
+    connection.port = 0
+    connection.name = f"type {id}"
+    connection.identifier = f"id{id}"
+    return connection
+
+
 def create_config_entry_from_info(info: ReceiverInfo) -> MockConfigEntry:
     """Create a config entry from receiver info."""
     data = {CONF_HOST: info.host}
     options = {
         "volume_resolution": 80,
-        "input_sources": {"12": "tv"},
         "max_volume": 100,
+        "input_sources": {"12": "tv"},
+        "listening_modes": {"00": "stereo"},
     }
 
     return MockConfigEntry(
@@ -42,8 +53,9 @@ def create_empty_config_entry() -> MockConfigEntry:
     data = {CONF_HOST: ""}
     options = {
         "volume_resolution": 80,
-        "input_sources": {"12": "tv"},
         "max_volume": 100,
+        "input_sources": {"12": "tv"},
+        "listening_modes": {"00": "stereo"},
     }
 
     return MockConfigEntry(

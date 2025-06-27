@@ -26,6 +26,7 @@ class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
             name=coordinator.device.device_name,
             manufacturer="Flexit",
             model="Nordic",
+            model_id=coordinator.device.model,
             serial_number=coordinator.device.serial_number,
         )
 

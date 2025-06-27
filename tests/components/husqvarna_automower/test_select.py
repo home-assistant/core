@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import HeadlightModes, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -74,10 +74,10 @@ async def test_select_commands(
         blocking=True,
     )
     mocked_method = mock_automower_client.commands.set_headlight_mode
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, service.upper())
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, service)
     assert len(mocked_method.mock_calls) == 1
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Touchline SL Setup Flow",
+    "flow_title": "Touchline SL setup flow",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -8,7 +8,7 @@
     },
     "step": {
       "user": {
-        "title": "Login to Touchline SL",
+        "title": "Log in to Touchline SL",
         "description": "Your credentials for the Roth Touchline SL mobile app/web service",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

@@ -18,8 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .coordinator import AnovaCoordinator
-from .models import AnovaConfigEntry, AnovaData
+from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -59,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
         # websocket client
         assert api.websocket_handler is not None
     devices = list(api.websocket_handler.devices.values())
-    coordinators = [AnovaCoordinator(hass, device) for device in devices]
+    coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
     entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

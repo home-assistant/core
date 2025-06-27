@@ -12,13 +12,12 @@ from script.hassfest.requirements import validate_requirements_format
 def integration():
     """Fixture for hassfest integration model."""
     return Integration(
-        path=Path("homeassistant/components/test"),
+        path=Path("homeassistant/components/test").absolute(),
         _config=Config(
             root=Path(".").absolute(),
             specific_integrations=None,
             action="validate",
             requirements=True,
-            core_integrations_path=Path("homeassistant/components"),
         ),
         _manifest={
             "domain": "test",

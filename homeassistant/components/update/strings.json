@@ -56,7 +56,7 @@
   "services": {
     "install": {
       "name": "Install update",
-      "description": "Installs an update for this device or service.",
+      "description": "Installs an update for a device or service.",
       "fields": {
         "version": {
           "name": "Version",
@@ -64,7 +64,7 @@
         },
         "backup": {
           "name": "Backup",
-          "description": "If supported by the integration, this creates a backup before starting the update ."
+          "description": "If supported by the integration, this creates a backup before starting the update."
         }
       }
     },

@@ -21,9 +21,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 WEEK = timedelta(days=7)
 
@@ -48,12 +48,15 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     _name: str
     _update_interval: timedelta
 
-    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MealieConfigEntry, client: MealieClient
+    ) -> None:
         """Initialize the Mealie data coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=self._name,
+            config_entry=config_entry,
+            name=f"Mealie {self._name}",
             update_interval=self._update_interval,
         )
         self.client = client
@@ -63,9 +66,15 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await self._async_update_internal()
         except MealieAuthenticationError as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from error
         except MealieConnectionError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=f"update_failed_{self._name}",
+            ) from error
 
     @abstractmethod
     async def _async_update_internal(self) -> _DataT:
@@ -77,7 +86,7 @@ class MealieMealplanCoordinator(
 ):
     """Class to manage fetching Mealie data."""
 
-    _name = "MealieMealplan"
+    _name = "mealplan"
     _update_interval = timedelta(hours=1)
 
     async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
@@ -106,7 +115,7 @@ class MealieShoppingListCoordinator(
 ):
     """Class to manage fetching Mealie Shopping list data."""
 
-    _name = "MealieShoppingList"
+    _name = "shopping_list"
     _update_interval = timedelta(minutes=5)
 
     async def _async_update_internal(
@@ -130,7 +139,7 @@ class MealieShoppingListCoordinator(
 class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
     """Class to manage fetching Mealie Statistics data."""
 
-    _name = "MealieStatistics"
+    _name = "statistics"
     _update_interval = timedelta(minutes=15)
 
     async def _async_update_internal(

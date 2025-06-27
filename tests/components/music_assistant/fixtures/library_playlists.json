@@ -1,0 +1,63 @@
+{
+  "library_playlists": [
+    {
+      "item_id": "40",
+      "provider": "library",
+      "name": "1970s Rock Hits",
+      "version": "",
+      "sort_name": "1970s rock hits",
+      "uri": "library://playlist/40",
+      "external_ids": [],
+      "media_type": "playlist",
+      "provider_mappings": [
+        {
+          "item_id": "30da0578-0ca0-4716-b66e-5f02bcd96702",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/browse/playlist/30da0578-0ca0-4716-b66e-5f02bcd96702",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/95913801/41c1/4cc9/bf94/a0fba657bba5/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "owner": "TIDAL",
+      "is_editable": 0,
+      "cache_checksum": "2023-10-09 07: 09: 23.446000+00: 00"
+    }
+  ]
+}

@@ -21,7 +21,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "(8 characters, see QR Code under the dustbin)."
+          "password": "(8 characters, see QR code under the dustbin)."
         }
       },
       "zeroconf_confirm": {
@@ -36,12 +36,12 @@
           "fan_speed": {
             "state": {
               "default": "Default",
-              "normal": "Normal",
-              "silent": "Silent",
+              "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
+              "high": "[%key:common::state::high%]",
               "intensive": "Intensive",
-              "super_silent": "Super silent",
-              "high": "High",
-              "auto": "Auto"
+              "silent": "Silent",
+              "super_silent": "Super silent"
             }
           }
         }

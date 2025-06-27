@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     EntityCategory,
@@ -21,11 +20,10 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import JustNimbusCoordinator
-from .const import DOMAIN
+from .coordinator import JustNimbusConfigEntry, JustNimbusCoordinator
 from .entity import JustNimbusEntity
 
 
@@ -101,15 +99,16 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: JustNimbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JustNimbus sensor."""
-    coordinator: JustNimbusCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         JustNimbusSensor(
             device_id=entry.data[CONF_CLIENT_ID],
             description=description,
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
         )
         for description in SENSOR_TYPES
     )

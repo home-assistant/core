@@ -1,0 +1,142 @@
+{
+  "Cooktop": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Hood": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Oven": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.PauseProgram",
+        "name": "Stop program"
+      },
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.OpenDoor",
+        "name": "Open door"
+      },
+      {
+        "key": "BSH.Common.Command.PartlyOpenDoor",
+        "name": "Partly open door"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "CleaningRobot": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.PauseProgram",
+        "name": "Stop program"
+      },
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Dishwasher": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Dryer": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.PauseProgram",
+        "name": "Stop program"
+      },
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Washer": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.PauseProgram",
+        "name": "Stop program"
+      },
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "WasherDryer": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.PauseProgram",
+        "name": "Stop program"
+      },
+      {
+        "key": "BSH.Common.Command.ResumeProgram",
+        "name": "Continue program"
+      },
+      {
+        "key": "BSH.Common.Command.AcknowledgeEvent",
+        "name": "Acknowledge event"
+      }
+    ]
+  },
+  "Freezer": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.OpenDoor",
+        "name": "Open door"
+      }
+    ]
+  },
+  "FridgeFreezer": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.OpenDoor",
+        "name": "Open door"
+      }
+    ]
+  },
+  "Refrigerator": {
+    "commands": [
+      {
+        "key": "BSH.Common.Command.OpenDoor",
+        "name": "Open door"
+      }
+    ]
+  }
+}

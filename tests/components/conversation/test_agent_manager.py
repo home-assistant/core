@@ -22,6 +22,7 @@ async def test_async_converse(hass: HomeAssistant, init_components) -> None:
             language="test lang",
             agent_id="conversation.home_assistant",
             device_id="test device id",
+            extra_system_prompt="test extra prompt",
         )
 
     assert mock_process.called
@@ -32,3 +33,4 @@ async def test_async_converse(hass: HomeAssistant, init_components) -> None:
     assert conversation_input.language == "test lang"
     assert conversation_input.agent_id == "conversation.home_assistant"
     assert conversation_input.device_id == "test device id"
+    assert conversation_input.extra_system_prompt == "test extra prompt"

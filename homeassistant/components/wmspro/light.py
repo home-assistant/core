@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
@@ -9,21 +10,22 @@ from wmspro.const import WMS_WebControl_pro_API_actionDescription
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import WebControlProConfigEntry
 from .const import BRIGHTNESS_SCALE
 from .entity import WebControlProGenericEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+ACTION_DELAY = 0.5
+SCAN_INTERVAL = timedelta(seconds=15)
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WebControlProConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WMS based lights from a config entry."""
     hub = config_entry.runtime_data
@@ -42,6 +44,7 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
     """Representation of a WMS based light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
@@ -54,11 +57,13 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
         """Turn the light on."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
         await action(onOffState=True)
+        await asyncio.sleep(ACTION_DELAY)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
         await action(onOffState=False)
+        await asyncio.sleep(ACTION_DELAY)
 
 
 class WebControlProDimmer(WebControlProLight):
@@ -87,3 +92,4 @@ class WebControlProDimmer(WebControlProLight):
         await action(
             percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
         )
+        await asyncio.sleep(ACTION_DELAY)

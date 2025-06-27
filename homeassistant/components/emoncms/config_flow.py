@@ -14,10 +14,9 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import selector
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_MESSAGE,
@@ -27,7 +26,6 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
-    LOGGER,
 )
 
 
@@ -48,13 +46,10 @@ def sensor_name(url: str) -> str:
     return f"emoncms@{sensorip}"
 
 
-async def get_feed_list(hass: HomeAssistant, url: str, api_key: str) -> dict[str, Any]:
+async def get_feed_list(
+    emoncms_client: EmoncmsClient,
+) -> dict[str, Any]:
     """Check connection to emoncms and return feed list if successful."""
-    emoncms_client = EmoncmsClient(
-        url,
-        api_key,
-        session=async_get_clientsession(hass),
-    )
     return await emoncms_client.async_request("/feed/list.json")
 
 
@@ -82,22 +77,25 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
 
         if user_input is not None:
+            self.url = user_input[CONF_URL]
+            self.api_key = user_input[CONF_API_KEY]
             self._async_abort_entries_match(
                 {
-                    CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_URL: user_input[CONF_URL],
+                    CONF_API_KEY: self.api_key,
+                    CONF_URL: self.url,
                 }
             )
-            result = await get_feed_list(
-                self.hass, user_input[CONF_URL], user_input[CONF_API_KEY]
+            emoncms_client = EmoncmsClient(
+                self.url, self.api_key, session=async_get_clientsession(self.hass)
             )
+            result = await get_feed_list(emoncms_client)
             if not result[CONF_SUCCESS]:
                 errors["base"] = "api_error"
                 description_placeholders = {"details": result[CONF_MESSAGE]}
             else:
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
-                self.url = user_input[CONF_URL]
-                self.api_key = user_input[CONF_API_KEY]
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+                self._abort_if_unique_id_configured()
                 options = get_options(result[CONF_MESSAGE])
                 self.dropdown = {
                     "options": options,
@@ -153,24 +151,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: ConfigType) -> ConfigFlowResult:
-        """Import config from yaml."""
-        url = import_info[CONF_URL]
-        api_key = import_info[CONF_API_KEY]
-        include_only_feeds = None
-        if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
-            include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        config = {
-            CONF_API_KEY: api_key,
-            CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
-            CONF_URL: url,
-        }
-        LOGGER.debug(config)
-        result = await self.async_step_user(config)
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
-
 
 class EmoncmsOptionsFlow(OptionsFlow):
     """Emoncms Options flow handler."""
@@ -191,7 +171,12 @@ class EmoncmsOptionsFlow(OptionsFlow):
             self.config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, []),
         )
         options: list = include_only_feeds
-        result = await get_feed_list(self.hass, self._url, self._api_key)
+        emoncms_client = EmoncmsClient(
+            self._url,
+            self._api_key,
+            session=async_get_clientsession(self.hass),
+        )
+        result = await get_feed_list(emoncms_client)
         if not result[CONF_SUCCESS]:
             errors["base"] = "api_error"
             description_placeholders = {"details": result[CONF_MESSAGE]}

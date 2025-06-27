@@ -166,7 +166,7 @@ class Segment:
                 self.hls_playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
                     f'"./segment/{self.sequence}.{part_num}.m4s"'
-                    f'{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                    f"{',INDEPENDENT=YES' if part.has_keyframe else ''}"
                 )
         if self.complete:
             # Construct the final playlist_template. The placeholder will share a
@@ -439,8 +439,9 @@ class KeyFrameConverter:
 
         # Keep import here so that we can import stream integration
         # without installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.camera.img_util import TurboJPEGSingleton
+        from homeassistant.components.camera.img_util import (  # noqa: PLC0415
+            TurboJPEGSingleton,
+        )
 
         self._packet: Packet | None = None
         self._event: asyncio.Event = asyncio.Event()
@@ -471,8 +472,7 @@ class KeyFrameConverter:
 
         # Keep import here so that we can import stream integration without
         # installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from av import CodecContext
+        from av import CodecContext  # noqa: PLC0415
 
         self._codec_context = cast(
             "VideoCodecContext", CodecContext.create(codec_context.name, "r")

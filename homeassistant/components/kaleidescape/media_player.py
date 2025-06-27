@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
 
 from kaleidescape import const as kaleidescape_const
 
@@ -12,18 +12,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN
+from . import KaleidescapeConfigEntry
 from .entity import KaleidescapeEntity
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 
 KALEIDESCAPE_PLAYING_STATES = [
     kaleidescape_const.PLAY_STATUS_PLAYING,
@@ -38,10 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: KaleidescapeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    entities = [KaleidescapeMediaPlayer(hass.data[KALEIDESCAPE_DOMAIN][entry.entry_id])]
+    entities = [KaleidescapeMediaPlayer(entry.runtime_data)]
     async_add_entities(entities)
 
 

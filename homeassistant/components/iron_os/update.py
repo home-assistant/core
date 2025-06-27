@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
 from .coordinator import IronOSFirmwareUpdateCoordinator
 from .entity import IronOSBaseEntity
+
+PARALLEL_UPDATES = 0
 
 UPDATE_DESCRIPTION = UpdateEntityDescription(
     key="firmware",
@@ -24,18 +28,18 @@ UPDATE_DESCRIPTION = UpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IronOS update platform."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     async_add_entities(
         [IronOSUpdate(coordinator, hass.data[IRON_OS_KEY], UPDATE_DESCRIPTION)]
     )
 
 
-class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
+class IronOSUpdate(IronOSBaseEntity, UpdateEntity, RestoreEntity):
     """Representation of an IronOS update entity."""
 
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
@@ -54,7 +58,7 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """IronOS version on the device."""
 
-        return self.coordinator.device_info.build
+        return self.coordinator.device_info.build or self._attr_installed_version
 
     @property
     def title(self) -> str | None:
@@ -84,6 +88,9 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
 
         Register extra update listener for the firmware update coordinator.
         """
+        if state := await self.async_get_last_state():
+            self._attr_installed_version = state.attributes.get(ATTR_INSTALLED_VERSION)
+
         await super().async_added_to_hass()
         self.async_on_remove(
             self.firmware_update.async_add_listener(self._handle_coordinator_update)

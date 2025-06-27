@@ -3,13 +3,13 @@
 import pytest
 
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -36,8 +36,6 @@ async def test_significant_state_change(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_system", "old_attrs", "new_attrs", "expected_result"),
     [
-        (METRIC, {ATTR_AUX_HEAT: "old_value"}, {ATTR_AUX_HEAT: "old_value"}, False),
-        (METRIC, {ATTR_AUX_HEAT: "old_value"}, {ATTR_AUX_HEAT: "new_value"}, True),
         (METRIC, {ATTR_FAN_MODE: "old_value"}, {ATTR_FAN_MODE: "old_value"}, False),
         (METRIC, {ATTR_FAN_MODE: "old_value"}, {ATTR_FAN_MODE: "new_value"}, True),
         (
@@ -66,6 +64,18 @@ async def test_significant_state_change(hass: HomeAssistant) -> None:
         ),
         (METRIC, {ATTR_SWING_MODE: "old_value"}, {ATTR_SWING_MODE: "old_value"}, False),
         (METRIC, {ATTR_SWING_MODE: "old_value"}, {ATTR_SWING_MODE: "new_value"}, True),
+        (
+            METRIC,
+            {ATTR_SWING_HORIZONTAL_MODE: "old_value"},
+            {ATTR_SWING_HORIZONTAL_MODE: "old_value"},
+            False,
+        ),
+        (
+            METRIC,
+            {ATTR_SWING_HORIZONTAL_MODE: "old_value"},
+            {ATTR_SWING_HORIZONTAL_MODE: "new_value"},
+            True,
+        ),
         # multiple attributes
         (
             METRIC,

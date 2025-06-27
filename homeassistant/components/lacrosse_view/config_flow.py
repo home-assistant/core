@@ -40,7 +40,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[Loca
         raise InvalidAuth from error
 
     if not locations:
-        raise NoLocations(f'No locations found for account {data["username"]}')
+        raise NoLocations(f"No locations found for account {data['username']}")
 
     return locations
 

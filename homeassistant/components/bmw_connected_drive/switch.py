@@ -12,11 +12,13 @@ from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,10 +66,10 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW switch from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities: list[BMWSwitch] = []
 
@@ -109,8 +111,11 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         try:
             await self.entity_description.remote_service_on(self.vehicle)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
-
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         self.coordinator.async_update_listeners()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -118,6 +123,9 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         try:
             await self.entity_description.remote_service_off(self.vehicle)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
-
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         self.coordinator.async_update_listeners()

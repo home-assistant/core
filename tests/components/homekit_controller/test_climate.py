@@ -8,6 +8,8 @@ from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     CurrentFanStateValues,
     CurrentHeaterCoolerStateValues,
+    HeatingCoolingCurrentValues,
+    HeatingCoolingTargetValues,
     SwingModeValues,
     TargetHeaterCoolerStateValues,
 )
@@ -20,6 +22,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.core import HomeAssistant
@@ -662,7 +665,7 @@ async def test_hvac_mode_vs_hvac_action(
 
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
-    assert state.attributes["hvac_action"] == "fan"
+    assert state.attributes["hvac_action"] == HVACAction.FAN
 
     # Simulate that current temperature is below target temp
     # Heating might be on and hvac_action currently 'heat'
@@ -676,7 +679,23 @@ async def test_hvac_mode_vs_hvac_action(
 
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
-    assert state.attributes["hvac_action"] == "heating"
+    assert state.attributes["hvac_action"] == HVACAction.HEATING
+
+    # If the fan is active, and the heating is off, the hvac_action should be 'fan'
+    # and not 'idle' or 'heating'
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
+            CharacteristicsTypes.HEATING_COOLING_CURRENT: HeatingCoolingCurrentValues.IDLE,
+            CharacteristicsTypes.HEATING_COOLING_TARGET: HeatingCoolingTargetValues.OFF,
+            CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == HVACMode.OFF
+    assert state.attributes["hvac_action"] == HVACAction.FAN
 
 
 async def test_hvac_mode_vs_hvac_action_current_mode_wrong(

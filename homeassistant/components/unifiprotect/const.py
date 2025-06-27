@@ -1,5 +1,7 @@
 """Constant definitions for UniFi Protect Integration."""
 
+from typing import Final
+
 from uiprotect.data import ModelType, Version
 
 from homeassistant.const import Platform
@@ -39,6 +41,7 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 
 DEVICES_THAT_ADOPT = {
+    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.VIEWPORT,
@@ -75,3 +78,15 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+
+EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
+EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
+EVENT_TYPE_NFC_SCANNED: Final = "scanned"
+EVENT_TYPE_DOORBELL_RING: Final = "ring"
+
+KEYRINGS_ULP_ID: Final = "ulp_id"
+KEYRINGS_USER_STATUS: Final = "user_status"
+KEYRINGS_USER_FULL_NAME: Final = "full_name"
+KEYRINGS_KEY_TYPE: Final = "key_type"
+KEYRINGS_KEY_TYPE_ID_FINGERPRINT: Final = "fingerprint_id"
+KEYRINGS_KEY_TYPE_ID_NFC: Final = "nfc_id"

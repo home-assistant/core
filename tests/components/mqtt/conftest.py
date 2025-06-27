@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
+from pathlib import Path
 from random import getrandbits
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -18,7 +19,6 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockPahoClient
 
 ENTRY_DEFAULT_BIRTH_MESSAGE = {
-    mqtt.CONF_BROKER: "mock-broker",
     mqtt.CONF_BIRTH_MESSAGE: {
         mqtt.ATTR_TOPIC: "homeassistant/status",
         mqtt.ATTR_PAYLOAD: "online",
@@ -39,14 +39,23 @@ def temp_dir_prefix() -> str:
     return "test"
 
 
-@pytest.fixture
-def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
+@pytest.fixture(autouse=True)
+async def mock_temp_dir(
+    hass: HomeAssistant, tmp_path: Path, temp_dir_prefix: str
+) -> AsyncGenerator[str]:
     """Mock the certificate temp directory."""
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
-    ) as mocked_temp_dir:
+    mqtt_temp_dir = f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}"
+    with (
+        patch(
+            "homeassistant.components.mqtt.util.tempfile.gettempdir",
+            return_value=tmp_path,
+        ),
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
+            mqtt_temp_dir,
+        ) as mocked_temp_dir,
+    ):
         yield mocked_temp_dir
 
 
@@ -77,6 +86,7 @@ def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
 async def setup_with_birth_msg_client_mock(
     hass: HomeAssistant,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> AsyncGenerator[MqttMockPahoClient]:
     """Test sending birth message."""
@@ -89,6 +99,9 @@ async def setup_with_birth_msg_client_mock(
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
+            options=mqtt_config_entry_options or {},
+            version=mqtt.CONFIG_ENTRY_VERSION,
+            minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         hass.config.components.add(mqtt.DOMAIN)

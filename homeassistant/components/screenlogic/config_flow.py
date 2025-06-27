@@ -10,7 +10,6 @@ from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWA
 from screenlogicpy.requests import login
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,8 +18,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
@@ -91,7 +91,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_gateway_select()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         mac = format_mac(discovery_info.macaddress)
@@ -105,7 +105,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_select(self, user_input=None) -> ConfigFlowResult:
         """Handle the selection of a discovered ScreenLogic gateway."""
-        existing = self._async_current_ids()
+        existing = self._async_current_ids(include_ignore=False)
         unconfigured_gateways = {
             mac: gateway[SL_GATEWAY_NAME]
             for mac, gateway in self.discovered_gateways.items()

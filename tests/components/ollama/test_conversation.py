@@ -1,8 +1,10 @@
 """Tests for the Ollama integration."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from ollama import Message, ResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -18,7 +20,22 @@ from homeassistant.helpers import intent, llm
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
+@pytest.fixture(autouse=True)
+def mock_ulid_tools():
+    """Mock generated ULIDs for tool calls."""
+    with patch("homeassistant.helpers.llm.ulid_now", return_value="mock-tool-call"):
+        yield
+
+
+async def stream_generator(response: dict | list[dict]) -> AsyncGenerator[dict]:
+    """Generate a response from the assistant."""
+    if not isinstance(response, list):
+        response = [response]
+    for msg in response:
+        yield msg
+
+
+@pytest.mark.parametrize("agent_id", [None, "conversation.ollama_conversation"])
 async def test_chat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -35,7 +52,9 @@ async def test_chat(
 
     with patch(
         "ollama.AsyncClient.chat",
-        return_value={"message": {"role": "assistant", "content": "test response"}},
+        return_value=stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        ),
     ) as mock_chat:
         result = await conversation.async_converse(
             hass,
@@ -51,13 +70,13 @@ async def test_chat(
 
         assert args["model"] == "test model"
         assert args["messages"] == [
-            Message({"role": "system", "content": prompt}),
-            Message({"role": "user", "content": "test message"}),
+            Message(role="system", content=prompt),
+            Message(role="user", content="test message"),
         ]
 
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
         assert result.response.speech["plain"]["speech"] == "test response"
 
     # Test Conversation tracing
@@ -74,6 +93,53 @@ async def test_chat(
     assert "Current time is" in detail_event["data"]["messages"][0]["content"]
 
 
+async def test_chat_stream(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test chat messages are assembled across streamed responses."""
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            [
+                {"message": {"role": "assistant", "content": "test "}},
+                {
+                    "message": {"role": "assistant", "content": "response"},
+                    "done": True,
+                    "done_reason": "stop",
+                },
+            ],
+        ),
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        assert mock_chat.call_count == 1
+        args = mock_chat.call_args.kwargs
+        prompt = args["messages"][0]["content"]
+
+        assert args["model"] == "test model"
+        assert args["messages"] == [
+            Message(role="system", content=prompt),
+            Message(role="user", content="test message"),
+        ]
+
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
+        assert result.response.speech["plain"]["speech"] == "test response"
+
+
 async def test_template_variables(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -83,9 +149,11 @@ async def test_template_variables(
     mock_user.id = "12345"
     mock_user.name = "Test User"
 
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": (
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
@@ -96,7 +164,9 @@ async def test_template_variables(
         patch("ollama.AsyncClient.list"),
         patch(
             "ollama.AsyncClient.chat",
-            return_value={"message": {"role": "assistant", "content": "test response"}},
+            return_value=stream_generator(
+                {"message": {"role": "assistant", "content": "test response"}}
+            ),
         ) as mock_chat,
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
@@ -106,9 +176,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
 
     args = mock_chat.call_args.kwargs
     prompt = args["messages"][0]["content"]
@@ -163,26 +233,30 @@ async def test_function_call(
     def completion_result(*args, messages, **kwargs):
         for message in messages:
             if message["role"] == "tool":
-                return {
-                    "message": {
-                        "role": "assistant",
-                        "content": "I have successfully called the function",
-                    }
-                }
-
-        return {
-            "message": {
-                "role": "assistant",
-                "tool_calls": [
+                return stream_generator(
                     {
-                        "function": {
-                            "name": "test_tool",
-                            "arguments": tool_args,
+                        "message": {
+                            "role": "assistant",
+                            "content": "I have successfully called the function",
                         }
                     }
-                ],
+                )
+
+        return stream_generator(
+            {
+                "message": {
+                    "role": "assistant",
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "test_tool",
+                                "arguments": tool_args,
+                            }
+                        }
+                    ],
+                }
             }
-        }
+        )
 
     with patch(
         "ollama.AsyncClient.chat",
@@ -205,13 +279,13 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args=expected_tool_args,
         ),
         llm.LLMContext(
             platform="ollama",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,
@@ -243,26 +317,30 @@ async def test_function_exception(
     def completion_result(*args, messages, **kwargs):
         for message in messages:
             if message["role"] == "tool":
-                return {
-                    "message": {
-                        "role": "assistant",
-                        "content": "There was an error calling the function",
-                    }
-                }
-
-        return {
-            "message": {
-                "role": "assistant",
-                "tool_calls": [
+                return stream_generator(
                     {
-                        "function": {
-                            "name": "test_tool",
-                            "arguments": {"param1": "test_value"},
+                        "message": {
+                            "role": "assistant",
+                            "content": "There was an error calling the function",
                         }
                     }
-                ],
+                )
+
+        return stream_generator(
+            {
+                "message": {
+                    "role": "assistant",
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "test_tool",
+                                "arguments": {"param1": "test_value"},
+                            }
+                        }
+                    ],
+                }
             }
-        }
+        )
 
     with patch(
         "ollama.AsyncClient.chat",
@@ -285,13 +363,13 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
         llm.LLMContext(
             platform="ollama",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,
@@ -306,24 +384,33 @@ async def test_unknown_hass_api(
     mock_init_component,
 ) -> None:
     """Test when we reference an API that no longer exists."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_LLM_HASS_API: "non-existing",
         },
     )
     await hass.async_block_till_done()
 
     result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        hass,
+        "hello",
+        "1234",
+        Context(),
+        agent_id=mock_config_entry.entry_id,
     )
 
     assert result == snapshot
 
 
 async def test_message_history_trimming(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a single message history is trimmed according to the config."""
     response_idx = 0
@@ -331,7 +418,9 @@ async def test_message_history_trimming(
     def response(*args, **kwargs) -> dict:
         nonlocal response_idx
         response_idx += 1
-        return {"message": {"role": "assistant", "content": f"response {response_idx}"}}
+        return stream_generator(
+            {"message": {"role": "assistant", "content": f"response {response_idx}"}}
+        )
 
     with patch(
         "ollama.AsyncClient.chat",
@@ -341,7 +430,7 @@ async def test_message_history_trimming(
         for i in range(5):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id="1234",
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -419,78 +508,28 @@ async def test_message_history_trimming(
         assert args[4].kwargs["messages"][5]["content"] == "message 5"
 
 
-async def test_message_history_pruning(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
-) -> None:
-    """Test that old message histories are pruned."""
-    with patch(
-        "ollama.AsyncClient.chat",
-        return_value={"message": {"role": "assistant", "content": "test response"}},
-    ):
-        # Create 3 different message histories
-        conversation_ids: list[str] = []
-        for i in range(3):
-            result = await conversation.async_converse(
-                hass,
-                f"message {i+1}",
-                conversation_id=None,
-                context=Context(),
-                agent_id=mock_config_entry.entry_id,
-            )
-            assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
-            ), result
-            assert isinstance(result.conversation_id, str)
-            conversation_ids.append(result.conversation_id)
-
-        agent = conversation.get_agent_manager(hass).async_get_agent(
-            mock_config_entry.entry_id
-        )
-        assert len(agent._history) == 3
-        assert agent._history.keys() == set(conversation_ids)
-
-        # Modify the timestamps of the first 2 histories so they will be pruned
-        # on the next cycle.
-        for conversation_id in conversation_ids[:2]:
-            # Move back 2 hours
-            agent._history[conversation_id].timestamp -= 2 * 60 * 60
-
-        # Next cycle
-        result = await conversation.async_converse(
-            hass,
-            "test message",
-            conversation_id=None,
-            context=Context(),
-            agent_id=mock_config_entry.entry_id,
-        )
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
-
-        # Only the most recent histories should remain
-        assert len(agent._history) == 2
-        assert conversation_ids[-1] in agent._history
-        assert result.conversation_id in agent._history
-
-
 async def test_message_history_unlimited(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
     """Test that message history is not trimmed when max_history = 0."""
     conversation_id = "1234"
+
+    def stream(*args, **kwargs) -> AsyncGenerator[dict]:
+        return stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        )
+
     with (
-        patch(
-            "ollama.AsyncClient.chat",
-            return_value={"message": {"role": "assistant", "content": "test response"}},
-        ),
+        patch("ollama.AsyncClient.chat", side_effect=stream) as mock_chat,
     ):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
+        subentry = next(iter(mock_config_entry.subentries.values()))
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data={ollama.CONF_MAX_HISTORY: 0}
         )
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=conversation_id,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -499,13 +538,13 @@ async def test_message_history_unlimited(
                 result.response.response_type == intent.IntentResponseType.ACTION_DONE
             ), result
 
-        agent = conversation.get_agent_manager(hass).async_get_agent(
-            mock_config_entry.entry_id
+        args = mock_chat.call_args_list
+        assert len(args) == 100
+        recorded_messages = args[-1].kwargs["messages"]
+        message_count = sum(
+            (message["role"] == "user") for message in recorded_messages
         )
-
-        assert len(agent._history) == 1
-        assert conversation_id in agent._history
-        assert agent._history[conversation_id].num_user_messages == 100
+        assert message_count == 100
 
 
 async def test_error_handling(
@@ -529,9 +568,11 @@ async def test_template_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that template error handling works."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
@@ -559,7 +600,7 @@ async def test_conversation_agent(
     )
     assert agent.supported_languages == MATCH_ALL
 
-    state = hass.states.get("conversation.mock_title")
+    state = hass.states.get("conversation.ollama_conversation")
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -575,7 +616,7 @@ async def test_conversation_agent_with_assist(
     )
     assert agent.supported_languages == MATCH_ALL
 
-    state = hass.states.get("conversation.mock_title")
+    state = hass.states.get("conversation.ollama_conversation")
     assert state
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -599,16 +640,64 @@ async def test_options(
     """Test that options are passed correctly to ollama client."""
     with patch(
         "ollama.AsyncClient.chat",
-        return_value={"message": {"role": "assistant", "content": "test response"}},
+        return_value=stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        ),
     ) as mock_chat:
         await conversation.async_converse(
             hass,
             "test message",
             None,
             Context(),
-            agent_id="conversation.mock_title",
+            agent_id="conversation.ollama_conversation",
         )
 
         assert mock_chat.call_count == 1
         args = mock_chat.call_args.kwargs
         assert args.get("options") == expected_options
+
+
+@pytest.mark.parametrize(
+    "think",
+    [False, True],
+    ids=["no_think", "think"],
+)
+async def test_reasoning_filter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    think: bool,
+) -> None:
+    """Test that think option is passed correctly to client."""
+
+    agent_id = mock_config_entry.entry_id
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            ollama.CONF_THINK: think,
+        },
+    )
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        ),
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=agent_id,
+        )
+
+        # Assert called with the expected think value
+        for call in mock_chat.call_args_list:
+            kwargs = call.kwargs
+            assert kwargs.get("think") == think

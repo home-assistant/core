@@ -81,11 +81,11 @@ class PlayerMockData:
                 volume_db=0.5,
                 volume=50,
                 group=None,
-                master=None,
-                slaves=None,
+                leader=None,
+                followers=None,
                 zone=None,
-                zone_master=None,
-                zone_slave=None,
+                zone_leader=None,
+                zone_follower=None,
                 mute_volume_db=None,
                 mute_volume=None,
             )
@@ -102,8 +102,8 @@ class PlayerMockData:
         )
         player.presets = AsyncMock(
             return_value=[
-                Preset("preset1", "1", "url1", "image1", None),
-                Preset("preset2", "2", "url2", "image2", None),
+                Preset("preset1", 1, "url1", "image1", None),
+                Preset("preset2", 2, "url2", "image2", None),
             ]
         )
 

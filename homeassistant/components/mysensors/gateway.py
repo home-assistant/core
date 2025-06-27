@@ -22,7 +22,7 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -47,7 +47,6 @@ from .handler import HANDLERS
 from .helpers import (
     discover_mysensors_node,
     discover_mysensors_platform,
-    on_unload,
     validate_child,
     validate_node,
 )
@@ -293,9 +292,7 @@ async def _gw_start(
         """Stop the gateway."""
         await gw_stop(hass, entry, gateway)
 
-    on_unload(
-        hass,
-        entry.entry_id,
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
     )
 

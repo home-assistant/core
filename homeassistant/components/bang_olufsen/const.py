@@ -17,62 +17,9 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(
-        name="Audio Streamer",
-        id="uriStreamer",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    BLUETOOTH: Final[Source] = Source(
-        name="Bluetooth",
-        id="bluetooth",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    CHROMECAST: Final[Source] = Source(
-        name="Chromecast built-in",
-        id="chromeCast",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    LINE_IN: Final[Source] = Source(
-        name="Line-In",
-        id="lineIn",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    SPDIF: Final[Source] = Source(
-        name="Optical",
-        id="spdif",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    NET_RADIO: Final[Source] = Source(
-        name="B&O Radio",
-        id="netRadio",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    DEEZER: Final[Source] = Source(
-        name="Deezer",
-        id="deezer",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
-    TIDAL: Final[Source] = Source(
-        name="Tidal",
-        id="tidal",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -132,6 +79,7 @@ class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE = "active_listening_mode"
+    BUTTON = "button"
     PLAYBACK_ERROR = "playback_error"
     PLAYBACK_METADATA = "playback_metadata"
     PLAYBACK_PROGRESS = "playback_progress"
@@ -256,10 +204,73 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
     ]
 )
+# Map for storing compatibility of devices.
 
+MODEL_SUPPORT_DEVICE_BUTTONS: Final[str] = "device_buttons"
+
+MODEL_SUPPORT_MAP = {
+    MODEL_SUPPORT_DEVICE_BUTTONS: (
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_A5,
+        BangOlufsenModel.BEOSOUND_A9,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_EMERGE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
+    )
+}
 
 # Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
+# Dict used to translate native Bang & Olufsen event names to string.json compatible ones
+EVENT_TRANSLATION_MAP: dict[str, str] = {
+    "shortPress (Release)": "short_press_release",
+    "longPress (Timeout)": "long_press_timeout",
+    "longPress (Release)": "long_press_release",
+    "veryLongPress (Timeout)": "very_long_press_timeout",
+    "veryLongPress (Release)": "very_long_press_release",
+}
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+DEVICE_BUTTONS: Final[list[str]] = [
+    "Bluetooth",
+    "Microphone",
+    "Next",
+    "PlayPause",
+    "Preset1",
+    "Preset2",
+    "Preset3",
+    "Preset4",
+    "Previous",
+    "Volume",
+]
+
+
+DEVICE_BUTTON_EVENTS: Final[list[str]] = [
+    "short_press_release",
+    "long_press_timeout",
+    "long_press_release",
+    "very_long_press_timeout",
+    "very_long_press_release",
+]
+
+# Beolink Converter NL/ML sources need to be transformed to upper case
+BEOLINK_JOIN_SOURCES_TO_UPPER = (
+    "aux_a",
+    "cd",
+    "ph",
+    "radio",
+    "tp1",
+    "tp2",
+)
+BEOLINK_JOIN_SOURCES = (
+    *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    "beoradio",
+    "deezer",
+    "spotify",
+    "tidal",
+)

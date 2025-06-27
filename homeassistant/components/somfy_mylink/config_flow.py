@@ -9,7 +9,6 @@ from typing import Any
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -21,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_REVERSE,
@@ -69,7 +69,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})

@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
-from .services import setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Blink."""
 
-    setup_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
     auth_data = deepcopy(dict(entry.data))
     blink.auth = Auth(auth_data, no_prompt=True, session=session)
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    coordinator = BlinkUpdateCoordinator(hass, blink)
+    coordinator = BlinkUpdateCoordinator(hass, entry, blink)
 
     try:
         await blink.start()

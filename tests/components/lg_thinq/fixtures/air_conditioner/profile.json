@@ -57,6 +57,16 @@
         "type": "number"
       }
     },
+    "filterInfo": {
+      "filterLifetime": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "usedTime": {
+        "mode": ["r"],
+        "type": "number"
+      }
+    },
     "operation": {
       "airCleanOperationMode": {
         "mode": ["w"],
@@ -124,6 +134,52 @@
         }
       }
     },
+    "temperatureInUnits": [
+      {
+        "currentTemperature": {
+          "type": "number",
+          "mode": ["r"]
+        },
+        "targetTemperature": {
+          "type": "number",
+          "mode": ["r"]
+        },
+        "coolTargetTemperature": {
+          "type": "range",
+          "mode": ["w"],
+          "value": {
+            "w": {
+              "max": 30,
+              "min": 18,
+              "step": 1
+            }
+          }
+        },
+        "unit": "C"
+      },
+      {
+        "currentTemperature": {
+          "type": "number",
+          "mode": ["r"]
+        },
+        "targetTemperature": {
+          "type": "number",
+          "mode": ["r"]
+        },
+        "coolTargetTemperature": {
+          "type": "range",
+          "mode": ["w"],
+          "value": {
+            "w": {
+              "max": 86,
+              "min": 64,
+              "step": 2
+            }
+          }
+        },
+        "unit": "F"
+      }
+    ],
     "timer": {
       "relativeHourToStart": {
         "mode": ["r", "w"],
@@ -148,6 +204,24 @@
       "absoluteMinuteToStart": {
         "mode": ["r", "w"],
         "type": "number"
+      }
+    },
+    "windDirection": {
+      "rotateUpDown": {
+        "type": "boolean",
+        "mode": ["r", "w"],
+        "value": {
+          "r": [true, false],
+          "w": [true, false]
+        }
+      },
+      "rotateLeftRight": {
+        "type": "boolean",
+        "mode": ["r", "w"],
+        "value": {
+          "r": [true, false],
+          "w": [true, false]
+        }
       }
     }
   }

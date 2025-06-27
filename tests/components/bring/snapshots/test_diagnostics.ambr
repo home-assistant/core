@@ -1,101 +1,419 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'b4776778-7f6c-496e-951b-92a35d3db0dd': dict({
-      'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
-      'name': 'Baumarkt',
-      'purchase': list([
-        dict({
-          'attributes': list([
+    'activity': dict({
+      'b4776778-7f6c-496e-951b-92a35d3db0dd': dict({
+        'activity': dict({
+          'timeline': list([
             dict({
               'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
+                'items': list([
+                ]),
+                'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+                'purchase': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Gurke',
+                    'specification': '',
+                    'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+                  }),
+                ]),
+                'recently': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Milch',
+                    'specification': '',
+                    'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+                  }),
+                ]),
+                'sessionDate': '2025-01-01T03:09:33.036000+00:00',
+                'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
               }),
-              'type': 'PURCHASE_CONDITIONS',
+              'type': 'LIST_ITEMS_CHANGED',
             }),
-          ]),
-          'itemId': 'Paprika',
-          'specification': 'Rot',
-          'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
-        }),
-        dict({
-          'attributes': list([
             dict({
               'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
+                'items': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Joghurt',
+                    'specification': '',
+                    'uuid': '66a633a2-ae09-47bf-8845-3c0198480544',
+                  }),
+                ]),
+                'publicUserUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+                'purchase': list([
+                ]),
+                'recently': list([
+                ]),
+                'sessionDate': '2025-01-01T02:54:57.656000+00:00',
+                'uuid': '9a16635c-dea2-4e00-904a-c5034f9cfecf',
               }),
-              'type': 'PURCHASE_CONDITIONS',
+              'type': 'LIST_ITEMS_ADDED',
+            }),
+            dict({
+              'content': dict({
+                'items': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Tofu',
+                    'specification': '',
+                    'uuid': '2ba8ddb6-01c6-4b0b-a89d-f3da6b291528',
+                  }),
+                ]),
+                'publicUserUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+                'purchase': list([
+                ]),
+                'recently': list([
+                ]),
+                'sessionDate': '2025-01-01T03:09:12.380000+00:00',
+                'uuid': '303dedf6-d4b2-4d25-a8cd-1c7967b84fcb',
+              }),
+              'type': 'LIST_ITEMS_REMOVED',
             }),
           ]),
-          'itemId': 'Pouletbrüstli',
-          'specification': 'Bio',
-          'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
+          'timestamp': '2025-01-01T03:09:33.036000+00:00',
+          'totalEvents': 3,
         }),
-      ]),
-      'recently': list([
-        dict({
-          'attributes': list([
+        'users': dict({
+          'users': list([
+            dict({
+              'country': 'DE',
+              'email': '**REDACTED**',
+              'language': 'de',
+              'name': '**REDACTED**',
+              'photoPath': '',
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+              'pushEnabled': True,
+            }),
+            dict({
+              'country': 'US',
+              'email': '**REDACTED**',
+              'language': 'en',
+              'name': '**REDACTED**',
+              'photoPath': '',
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+              'pushEnabled': True,
+            }),
+            dict({
+              'country': 'US',
+              'email': None,
+              'language': 'en',
+              'name': None,
+              'photoPath': None,
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+              'pushEnabled': True,
+            }),
           ]),
-          'itemId': 'Ananas',
-          'specification': '',
-          'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
         }),
-      ]),
-      'status': 'REGISTERED',
-      'theme': 'ch.publisheria.bring.theme.home',
-      'uuid': '77a151f8-77c4-47a3-8295-c750a0e69d4f',
+      }),
+      'e542eef6-dba7-4c31-a52c-29e6ab9d83a5': dict({
+        'activity': dict({
+          'timeline': list([
+            dict({
+              'content': dict({
+                'items': list([
+                ]),
+                'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+                'purchase': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Gurke',
+                    'specification': '',
+                    'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+                  }),
+                ]),
+                'recently': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Milch',
+                    'specification': '',
+                    'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+                  }),
+                ]),
+                'sessionDate': '2025-01-01T03:09:33.036000+00:00',
+                'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
+              }),
+              'type': 'LIST_ITEMS_CHANGED',
+            }),
+            dict({
+              'content': dict({
+                'items': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Joghurt',
+                    'specification': '',
+                    'uuid': '66a633a2-ae09-47bf-8845-3c0198480544',
+                  }),
+                ]),
+                'publicUserUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+                'purchase': list([
+                ]),
+                'recently': list([
+                ]),
+                'sessionDate': '2025-01-01T02:54:57.656000+00:00',
+                'uuid': '9a16635c-dea2-4e00-904a-c5034f9cfecf',
+              }),
+              'type': 'LIST_ITEMS_ADDED',
+            }),
+            dict({
+              'content': dict({
+                'items': list([
+                  dict({
+                    'attributes': list([
+                    ]),
+                    'itemId': 'Tofu',
+                    'specification': '',
+                    'uuid': '2ba8ddb6-01c6-4b0b-a89d-f3da6b291528',
+                  }),
+                ]),
+                'publicUserUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+                'purchase': list([
+                ]),
+                'recently': list([
+                ]),
+                'sessionDate': '2025-01-01T03:09:12.380000+00:00',
+                'uuid': '303dedf6-d4b2-4d25-a8cd-1c7967b84fcb',
+              }),
+              'type': 'LIST_ITEMS_REMOVED',
+            }),
+          ]),
+          'timestamp': '2025-01-01T03:09:33.036000+00:00',
+          'totalEvents': 3,
+        }),
+        'users': dict({
+          'users': list([
+            dict({
+              'country': 'DE',
+              'email': '**REDACTED**',
+              'language': 'de',
+              'name': '**REDACTED**',
+              'photoPath': '',
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+              'pushEnabled': True,
+            }),
+            dict({
+              'country': 'US',
+              'email': '**REDACTED**',
+              'language': 'en',
+              'name': '**REDACTED**',
+              'photoPath': '',
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+              'pushEnabled': True,
+            }),
+            dict({
+              'country': 'US',
+              'email': None,
+              'language': 'en',
+              'name': None,
+              'photoPath': None,
+              'plusExpiry': None,
+              'plusTryOut': False,
+              'publicUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+              'pushEnabled': True,
+            }),
+          ]),
+        }),
+      }),
     }),
-    'e542eef6-dba7-4c31-a52c-29e6ab9d83a5': dict({
-      'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
-      'name': 'Einkauf',
-      'purchase': list([
-        dict({
-          'attributes': list([
-            dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
+    'data': dict({
+      'b4776778-7f6c-496e-951b-92a35d3db0dd': dict({
+        'content': dict({
+          'items': dict({
+            'purchase': list([
+              dict({
+                'attributes': list([
+                  dict({
+                    'content': dict({
+                      'convenient': True,
+                      'discounted': True,
+                      'urgent': True,
+                    }),
+                    'type': 'PURCHASE_CONDITIONS',
+                  }),
+                ]),
+                'itemId': 'Paprika',
+                'specification': 'Rot',
+                'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
               }),
-              'type': 'PURCHASE_CONDITIONS',
+              dict({
+                'attributes': list([
+                  dict({
+                    'content': dict({
+                      'convenient': True,
+                      'discounted': True,
+                      'urgent': True,
+                    }),
+                    'type': 'PURCHASE_CONDITIONS',
+                  }),
+                ]),
+                'itemId': 'Pouletbrüstli',
+                'specification': 'Bio',
+                'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
+              }),
+            ]),
+            'recently': list([
+              dict({
+                'attributes': list([
+                ]),
+                'itemId': 'Ananas',
+                'specification': '',
+                'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+              }),
+            ]),
+          }),
+          'status': 'REGISTERED',
+          'uuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+        }),
+        'lst': dict({
+          'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+          'name': 'Baumarkt',
+          'theme': 'ch.publisheria.bring.theme.home',
+        }),
+      }),
+      'e542eef6-dba7-4c31-a52c-29e6ab9d83a5': dict({
+        'content': dict({
+          'items': dict({
+            'purchase': list([
+              dict({
+                'attributes': list([
+                  dict({
+                    'content': dict({
+                      'convenient': True,
+                      'discounted': True,
+                      'urgent': True,
+                    }),
+                    'type': 'PURCHASE_CONDITIONS',
+                  }),
+                ]),
+                'itemId': 'Paprika',
+                'specification': 'Rot',
+                'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
+              }),
+              dict({
+                'attributes': list([
+                  dict({
+                    'content': dict({
+                      'convenient': True,
+                      'discounted': True,
+                      'urgent': True,
+                    }),
+                    'type': 'PURCHASE_CONDITIONS',
+                  }),
+                ]),
+                'itemId': 'Pouletbrüstli',
+                'specification': 'Bio',
+                'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
+              }),
+            ]),
+            'recently': list([
+              dict({
+                'attributes': list([
+                ]),
+                'itemId': 'Ananas',
+                'specification': '',
+                'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+              }),
+            ]),
+          }),
+          'status': 'REGISTERED',
+          'uuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+        }),
+        'lst': dict({
+          'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+          'name': 'Einkauf',
+          'theme': 'ch.publisheria.bring.theme.home',
+        }),
+      }),
+    }),
+    'lists': list([
+      dict({
+        'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+        'name': 'Einkauf',
+        'theme': 'ch.publisheria.bring.theme.home',
+      }),
+      dict({
+        'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+        'name': 'Baumarkt',
+        'theme': 'ch.publisheria.bring.theme.home',
+      }),
+    ]),
+    'user_settings': dict({
+      'userlistsettings': list([
+        dict({
+          'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+          'usersettings': list([
+            dict({
+              'key': 'listSectionOrder',
+              'value': '["Früchte & Gemüse","Brot & Gebäck","Milch & Käse","Fleisch & Fisch","Zutaten & Gewürze","Fertig- & Tiefkühlprodukte","Getreideprodukte","Snacks & Süsswaren","Getränke & Tabak","Haushalt & Gesundheit","Pflege & Gesundheit","Tierbedarf","Baumarkt & Garten","Eigene Artikel"]',
+            }),
+            dict({
+              'key': 'listArticleLanguage',
+              'value': 'de-DE',
             }),
           ]),
-          'itemId': 'Paprika',
-          'specification': 'Rot',
-          'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
         }),
         dict({
-          'attributes': list([
+          'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+          'usersettings': list([
             dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
-              }),
-              'type': 'PURCHASE_CONDITIONS',
+              'key': 'listSectionOrder',
+              'value': '["Früchte & Gemüse","Brot & Gebäck","Milch & Käse","Fleisch & Fisch","Zutaten & Gewürze","Fertig- & Tiefkühlprodukte","Getreideprodukte","Snacks & Süsswaren","Getränke & Tabak","Haushalt & Gesundheit","Pflege & Gesundheit","Tierbedarf","Baumarkt & Garten","Eigene Artikel"]',
+            }),
+            dict({
+              'key': 'listArticleLanguage',
+              'value': 'en-US',
             }),
           ]),
-          'itemId': 'Pouletbrüstli',
-          'specification': 'Bio',
-          'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
         }),
       ]),
-      'recently': list([
+      'usersettings': list([
         dict({
-          'attributes': list([
-          ]),
-          'itemId': 'Ananas',
-          'specification': '',
-          'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+          'key': 'autoPush',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideOffersBadge',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideSponsoredCategories',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideInspirationsBadge',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'onboardClient',
+          'value': 'android',
+        }),
+        dict({
+          'key': 'premiumHideOffersOnMain',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'defaultListUUID',
+          'value': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
         }),
       ]),
-      'status': 'REGISTERED',
-      'theme': 'ch.publisheria.bring.theme.home',
-      'uuid': '77a151f8-77c4-47a3-8295-c750a0e69d4f',
     }),
   })
 # ---

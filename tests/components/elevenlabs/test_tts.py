@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant.components import tts
 from homeassistant.components.elevenlabs.const import (
+    ATTR_MODEL,
     CONF_MODEL,
     CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
@@ -170,7 +171,37 @@ async def mock_config_entry_setup(
                 ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {},
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.mock_title",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.mock_title",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {ATTR_MODEL: "model2"},
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.mock_title",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2", ATTR_MODEL: "model2"},
             },
         ),
     ],
@@ -206,11 +237,13 @@ async def test_tts_service_speak(
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == HTTPStatus.OK
     )
+    voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "voice1")
+    model_id = service_data[tts.ATTR_OPTIONS].get(ATTR_MODEL, "model1")
 
     tts_entity._client.generate.assert_called_once_with(
         text="There is a person at the front door.",
-        voice="voice2",
-        model="model1",
+        voice=voice_id,
+        model=model_id,
         voice_settings=tts_entity._voice_settings,
         optimize_streaming_latency=tts_entity._latency,
     )
@@ -317,7 +350,7 @@ async def test_tts_service_speak_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     tts_entity._client.generate.assert_called_once_with(

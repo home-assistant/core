@@ -27,13 +27,12 @@ async def setup_component(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
 
-    with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
+    )
+    await hass.async_block_till_done()
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -249,10 +248,6 @@ async def test_agreement_already_set_up(
         assert result3["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.toon.config.abort.connection_error"],
-)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_toon_abort(
     hass: HomeAssistant,

@@ -60,7 +60,6 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
-from .helpers.frame import ReportBehavior, report_usage
 from .helpers.storage import Store
 from .helpers.typing import UNDEFINED, UndefinedType
 from .util import dt as dt_util, location
@@ -68,11 +67,11 @@ from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     UnitSystem,
     get_unit_system,
-    validate_unit_system,
 )
 
 # Typing imports that create a circular dependency
@@ -188,6 +187,26 @@ _CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _raise_issue_if_imperial_unit_system(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, Any]:
+    if config.get(CONF_UNIT_SYSTEM) == _CONF_UNIT_SYSTEM_IMPERIAL:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            "imperial_unit_system",
+            is_fixable=False,
+            learn_more_url="homeassistant://config/general",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="imperial_unit_system",
+        )
+        config[CONF_UNIT_SYSTEM] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    else:
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, "imperial_unit_system")
+
+    return config
+
+
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
     if currency not in HISTORIC_CURRENCIES:
         ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, "historic_currency")
@@ -249,7 +268,11 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_ELEVATION: vol.Coerce(int),
             CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            CONF_UNIT_SYSTEM: validate_unit_system,
+            CONF_UNIT_SYSTEM: vol.Any(
+                _CONF_UNIT_SYSTEM_METRIC,
+                _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+                _CONF_UNIT_SYSTEM_IMPERIAL,
+            ),
             CONF_TIME_ZONE: cv.time_zone,
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
@@ -332,6 +355,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
     # so we need to run it in an executor job.
     config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
+
+    # Check if we need to raise an issue for imperial unit system
+    config = _raise_issue_if_imperial_unit_system(hass, config)
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
@@ -482,25 +508,25 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
-    def add(self, component: str) -> None:
+    def add(self, value: str) -> None:
         """Add a component to the store."""
-        if "." not in component:
-            self._top_level_components.add(component)
-            self._all_components.add(component)
+        if "." not in value:
+            self._top_level_components.add(value)
+            self._all_components.add(value)
         else:
-            platform, _, domain = component.partition(".")
+            platform, _, domain = value.partition(".")
             if domain in BASE_PLATFORMS:
                 self._all_components.add(platform)
-        return super().add(component)
+        return super().add(value)
 
-    def remove(self, component: str) -> None:
+    def remove(self, value: str) -> None:
         """Remove a component from the store."""
-        if "." in component:
+        if "." in value:
             raise ValueError("_ComponentSet does not support removing sub-components")
-        self._top_level_components.remove(component)
-        return super().remove(component)
+        self._top_level_components.remove(value)
+        return super().remove(value)
 
-    def discard(self, component: str) -> None:
+    def discard(self, value: str) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 
@@ -512,8 +538,7 @@ class Config:
 
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
-        # pylint: disable-next=import-outside-toplevel
-        from .components.zone import DEFAULT_RADIUS
+        from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
 
         self.hass = hass
 
@@ -554,9 +579,7 @@ class Config:
         self.all_components: set[str] = set()
 
         # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(
-            self.top_level_components, self.all_components
-        )
+        self.components = _ComponentSet(self.top_level_components, self.all_components)
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
@@ -682,26 +705,6 @@ class Config:
     async def async_set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
         if time_zone := await dt_util.async_get_time_zone(time_zone_str):
-            self.time_zone = time_zone_str
-            dt_util.set_default_time_zone(time_zone)
-        else:
-            raise ValueError(f"Received invalid time zone {time_zone_str}")
-
-    def set_time_zone(self, time_zone_str: str) -> None:
-        """Set the time zone.
-
-        This is a legacy method that should not be used in new code.
-        Use async_set_time_zone instead.
-
-        It will be removed in Home Assistant 2025.6.
-        """
-        report_usage(
-            "set the time zone using set_time_zone instead of async_set_time_zone"
-            " which will stop working in Home Assistant 2025.6",
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.ERROR,
-        )
-        if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
@@ -841,8 +844,7 @@ class Config:
         ) -> dict[str, Any]:
             """Migrate to the new version."""
 
-            # pylint: disable-next=import-outside-toplevel
-            from .components.zone import DEFAULT_RADIUS
+            from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
 
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
@@ -859,20 +861,21 @@ class Config:
                 try:
                     owner = await self.hass.auth.async_get_owner()
                     if owner is not None:
-                        # pylint: disable-next=import-outside-toplevel
-                        from .components.frontend import storage as frontend_store
+                        from .components.frontend import (  # noqa: PLC0415
+                            storage as frontend_store,
+                        )
 
-                        _, owner_data = await frontend_store.async_user_store(
+                        owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id
                         )
 
                         if (
-                            "language" in owner_data
-                            and "language" in owner_data["language"]
+                            "language" in owner_store.data
+                            and "language" in owner_store.data["language"]
                         ):
                             with suppress(vol.InInvalid):
                                 data["language"] = cv.language(
-                                    owner_data["language"]["language"]
+                                    owner_store.data["language"]["language"]
                                 )
                 # pylint: disable-next=broad-except
                 except Exception:

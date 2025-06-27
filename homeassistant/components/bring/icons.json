@@ -1,5 +1,10 @@
 {
   "entity": {
+    "event": {
+      "activity": {
+        "default": "mdi:bell"
+      }
+    },
     "sensor": {
       "urgent": {
         "default": "mdi:run-fast"

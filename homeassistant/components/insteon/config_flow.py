@@ -7,7 +7,7 @@ from typing import Any
 
 from pyinsteon import async_connect
 
-from homeassistant.components import dhcp, usb
+from homeassistant.components import usb
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
     ConfigFlow,
@@ -15,6 +15,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import CONF_HUB_VERSION, DOMAIN
 from .schemas import build_hub_schema, build_plm_manual_schema, build_plm_schema
@@ -129,9 +131,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         self._device_path = discovery_info.device
         self._device_name = usb.human_readable_device_name(
@@ -162,7 +162,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}

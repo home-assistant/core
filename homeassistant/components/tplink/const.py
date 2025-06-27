@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.const import Platform, UnitOfTemperature
+from kasa.smart.modules.clean import AreaUnit
+
+from homeassistant.const import Platform, UnitOfArea, UnitOfTemperature
 
 DOMAIN = "tplink"
 
@@ -24,12 +26,15 @@ CONF_CREDENTIALS_HASH: Final = "credentials_hash"
 CONF_CONNECTION_PARAMETERS: Final = "connection_parameters"
 CONF_USES_HTTP: Final = "uses_http"
 CONF_AES_KEYS: Final = "aes_keys"
+CONF_CAMERA_CREDENTIALS = "camera_credentials"
+CONF_LIVE_VIEW = "live_view"
 
 CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.FAN,
     Platform.LIGHT,
@@ -38,9 +43,12 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 UNIT_MAPPING = {
     "celsius": UnitOfTemperature.CELSIUS,
     "fahrenheit": UnitOfTemperature.FAHRENHEIT,
+    AreaUnit.Sqm: UnitOfArea.SQUARE_METERS,
+    AreaUnit.Sqft: UnitOfArea.SQUARE_FEET,
 }

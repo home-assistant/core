@@ -4,13 +4,13 @@
       "user": {
         "description": "Make a choice",
         "menu_options": {
-          "sensor": "Set up a file based sensor",
+          "sensor": "Set up a file-based sensor",
           "notify": "Set up a notification service"
         }
       },
       "sensor": {
         "title": "File sensor",
-        "description": "Set up a file based sensor",
+        "description": "[%key:component::file::config::step::user::menu_options::sensor%]",
         "data": {
           "file_path": "File path",
           "value_template": "Value template",
@@ -18,7 +18,7 @@
         },
         "data_description": {
           "file_path": "The local file path to retrieve the sensor value from",
-          "value_template": "A template to render the the sensors value based on the file content",
+          "value_template": "A template to render the sensor's value based on the file content",
           "unit_of_measurement": "Unit of measurement for the sensor"
         }
       },

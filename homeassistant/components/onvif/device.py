@@ -9,7 +9,7 @@ import os
 import time
 from typing import Any
 
-from httpx import RequestError
+import aiohttp
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
@@ -25,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,
@@ -235,7 +235,7 @@ class ONVIFDevice:
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             device_time = await device_mgmt.GetSystemDateAndTime()
-        except RequestError as err:
+        except (TimeoutError, aiohttp.ClientError, Fault) as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
@@ -263,16 +263,22 @@ class ONVIFDevice:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
             return
 
-        cam_date = dt.datetime(
-            cdate.Date.Year,
-            cdate.Date.Month,
-            cdate.Date.Day,
-            cdate.Time.Hour,
-            cdate.Time.Minute,
-            cdate.Time.Second,
-            0,
-            tzone,
-        )
+        try:
+            cam_date = dt.datetime(
+                cdate.Date.Year,
+                cdate.Date.Month,
+                cdate.Date.Day,
+                cdate.Time.Hour,
+                cdate.Time.Minute,
+                cdate.Time.Second,
+                0,
+                tzone,
+            )
+        except ValueError as err:
+            LOGGER.warning(
+                "%s: Could not parse date/time from camera: %s", self.name, err
+            )
+            return
 
         cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
@@ -297,7 +303,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (RequestError, TransportError, IndexError, Fault):
+        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 

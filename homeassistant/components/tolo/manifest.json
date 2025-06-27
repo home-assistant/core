@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tolo",
   "iot_class": "local_polling",
   "loggers": ["tololib"],
-  "requirements": ["tololib==1.1.0"]
+  "requirements": ["tololib==1.2.2"]
 }

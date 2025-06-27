@@ -20,8 +20,8 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import GooglePhotosConfigEntry
 from .const import DOMAIN, READ_SCOPE
+from .coordinator import GooglePhotosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

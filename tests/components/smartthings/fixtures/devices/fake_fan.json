@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "deviceId": "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+      "name": "fake-fan",
+      "label": "Fake fan",
+      "manufacturerName": "Myself",
+      "presentationId": "3f0921d3-0a66-3d49-b458-752e596838e9",
+      "deviceManufacturerCode": "0086-0002-005F",
+      "locationId": "6f11ddf5-f0cb-4516-a06a-3a2a6ec22bca",
+      "ownerId": "9f257fc4-6471-2566-b06e-2fe72dd979fa",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "fanSpeed",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Fan",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-01-12T23:02:44.917Z",
+      "profile": {
+        "id": "6372cd27-93c7-32ef-9be5-aef2221adff1"
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

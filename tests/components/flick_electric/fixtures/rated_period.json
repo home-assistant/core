@@ -1,0 +1,112 @@
+{
+  "data": {
+    "id": "_2025-02-09 05:30:00 UTC..2025-02-09 05:59:59 UTC",
+    "type": "rating_rated_period",
+    "attributes": {
+      "start_at": "2025-02-09T05:30:00.000Z",
+      "end_at": "2025-02-09T05:59:59.000Z",
+      "status": "final",
+      "cost": "0.20011",
+      "import_cost": "0.20011",
+      "export_cost": null,
+      "cost_unit": "NZD",
+      "quantity": "1.0",
+      "import_quantity": "1.0",
+      "export_quantity": null,
+      "quantity_unit": "kwh",
+      "renewable_quantity": null,
+      "generation_price_contract": null
+    },
+    "relationships": {
+      "components": {
+        "data": [
+          {
+            "id": "213507464_1_kwh_generation_UN_24_default_2025-02-09 05:30:00 UTC..2025-02-09 05:59:59 UTC",
+            "type": "rating_component"
+          },
+          {
+            "id": "213507464_1_kwh_network_UN_24_offpeak_2025-02-09 05:30:00 UTC..2025-02-09 05:59:59 UTC",
+            "type": "rating_component"
+          }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "213507464_1_kwh_generation_UN_24_default_2025-02-09 05:30:00 UTC..2025-02-09 05:59:59 UTC",
+      "type": "rating_component",
+      "attributes": {
+        "charge_method": "kwh",
+        "charge_setter": "generation",
+        "value": "0.20011",
+        "quantity": "1.0",
+        "unit_code": "NZD",
+        "charge_per": "kwh",
+        "flow_direction": "import",
+        "content_code": "UN",
+        "hours_of_availability": 24,
+        "channel_number": 1,
+        "meter_serial_number": "213507464",
+        "price_name": "default",
+        "applicable_periods": [],
+        "single_unit_price": "0.20011",
+        "billable": true,
+        "renewable_quantity": null,
+        "generation_price_contract": "FLICK_FLAT_2024_04_01_midpoint"
+      }
+    },
+    {
+      "id": "213507464_1_kwh_network_UN_24_offpeak_2025-02-09 05:30:00 UTC..2025-02-09 05:59:59 UTC",
+      "type": "rating_component",
+      "attributes": {
+        "charge_method": "kwh",
+        "charge_setter": "network",
+        "value": "0.0406",
+        "quantity": "1.0",
+        "unit_code": "NZD",
+        "charge_per": "kwh",
+        "flow_direction": "import",
+        "content_code": "UN",
+        "hours_of_availability": 24,
+        "channel_number": 1,
+        "meter_serial_number": "213507464",
+        "price_name": "offpeak",
+        "applicable_periods": [],
+        "single_unit_price": "0.0406",
+        "billable": false,
+        "renewable_quantity": null,
+        "generation_price_contract": "FLICK_FLAT_2024_04_01_midpoint"
+      }
+    }
+  ],
+  "meta": {
+    "verb": "get",
+    "type": "rating_rated_period",
+    "params": [
+      {
+        "name": "supply_node_ref",
+        "type": "String",
+        "description": "The supply node to rate",
+        "example": "/network/nz/supply_nodes/bccd6f52-448b-4edf-a0c1-459ee67d215b",
+        "required": true
+      },
+      {
+        "name": "as_at",
+        "type": "DateTime",
+        "description": "The time to rate the supply node at; defaults to the current time",
+        "example": "2023-04-01T15:20:15-07:00",
+        "required": false
+      }
+    ],
+    "permission": {
+      "uri": "flick:rating:resource:rated_period:show",
+      "data_context": "supply_node"
+    },
+    "host": "https://api.flickuat.com",
+    "service": "rating",
+    "path": "/rated_period",
+    "description": "Fetch a rated period for a supply node in a specific point in time",
+    "respond_with_array": false
+  }
+}

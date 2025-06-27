@@ -14,7 +14,6 @@ from androidtvremote2 import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
@@ -142,7 +142,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Android TV device found via zeroconf: %s", discovery_info)
@@ -156,7 +156,12 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         # and one of them, which could end up being in discovery_info.host, is from a
         # different device. If any of the discovery_info.ip_addresses matches the
         # existing host, don't update the host.
-        if existing_config_entry and len(discovery_info.ip_addresses) > 1:
+        if (
+            existing_config_entry
+            # Ignored entries don't have host
+            and CONF_HOST in existing_config_entry.data
+            and len(discovery_info.ip_addresses) > 1
+        ):
             existing_host = existing_config_entry.data[CONF_HOST]
             if existing_host != self.host:
                 if existing_host in [

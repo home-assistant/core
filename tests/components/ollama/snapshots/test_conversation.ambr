@@ -1,7 +1,8 @@
 # serializer version: 1
 # name: test_unknown_hass_api
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': '1234',
     'response': IntentResponse(
       card=dict({
       }),
@@ -20,7 +21,7 @@
       speech=dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Error preparing LLM API: API non-existing not found',
+          'speech': 'Error preparing LLM API',
         }),
       }),
       speech_slots=dict({

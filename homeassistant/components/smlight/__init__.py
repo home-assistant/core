@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pysmlight import Api2
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import SmDataUpdateCoordinator, SmFirmwareUpdateCoordinator
+from .coordinator import (
+    SmConfigEntry,
+    SmDataUpdateCoordinator,
+    SmFirmwareUpdateCoordinator,
+    SmlightData,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,25 +24,12 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-@dataclass(kw_only=True)
-class SmlightData:
-    """Coordinator data class."""
-
-    data: SmDataUpdateCoordinator
-    firmware: SmFirmwareUpdateCoordinator
-
-
-type SmConfigEntry = ConfigEntry[SmlightData]
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     """Set up SMLIGHT Zigbee from a config entry."""
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
-    data_coordinator = SmDataUpdateCoordinator(hass, entry.data[CONF_HOST], client)
-    firmware_coordinator = SmFirmwareUpdateCoordinator(
-        hass, entry.data[CONF_HOST], client
-    )
+    data_coordinator = SmDataUpdateCoordinator(hass, entry, client)
+    firmware_coordinator = SmFirmwareUpdateCoordinator(hass, entry, client)
 
     await data_coordinator.async_config_entry_first_refresh()
     await firmware_coordinator.async_config_entry_first_refresh()

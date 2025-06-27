@@ -10,27 +10,26 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LaundrifyUpdateCoordinator
+from .coordinator import LaundrifyConfigEntry, LaundrifyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: LaundrifyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add power sensor for passed config_entry in HA."""
 
-    coordinator: LaundrifyUpdateCoordinator = hass.data[DOMAIN][config.entry_id][
-        "coordinator"
-    ]
+    coordinator = entry.runtime_data
 
     sensor_entities: list[LaundrifyPowerSensor | LaundrifyEnergySensor] = []
     for device in coordinator.data.values():

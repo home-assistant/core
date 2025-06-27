@@ -43,7 +43,7 @@ class SolarLogCoordinatorEntity(SolarLogBaseEntity):
             manufacturer="Solar-Log",
             model="Controller",
             identifiers={(DOMAIN, coordinator.unique_id)},
-            name=coordinator.name,
+            name="SolarLog",
             configuration_url=coordinator.host,
         )
 

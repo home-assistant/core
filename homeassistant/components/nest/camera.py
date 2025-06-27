@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import datetime
 import functools
 import logging
@@ -17,27 +17,25 @@ from google_nest_sdm.camera_traits import (
     WebRtcStream,
 )
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
-    StreamType,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +44,21 @@ PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 # Used to schedule an alarm to refresh the stream before expiration
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
+# Refresh streams with a bounded interval and backoff on failure
+MIN_REFRESH_BACKOFF_INTERVAL = datetime.timedelta(minutes=1)
+MAX_REFRESH_BACKOFF_INTERVAL = datetime.timedelta(minutes=10)
+BACKOFF_MULTIPLIER = 1.5
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the cameras."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
     entities: list[NestCameraBaseEntity] = []
-    for device in device_manager.devices.values():
+    for device in entry.runtime_data.device_manager.devices.values():
         if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
             continue
         if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:
@@ -65,6 +67,68 @@ async def async_setup_entry(
             entities.append(NestRTSPEntity(device))
 
     async_add_entities(entities)
+
+
+class StreamRefresh:
+    """Class that will refresh an expiring stream.
+
+    This class will schedule an alarm for the next expiration time of a stream.
+    When the alarm fires, it runs the provided `refresh_cb` to extend the
+    lifetime of the stream and return a new expiration time.
+
+    A simple backoff will be applied when the refresh callback fails.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        expires_at: datetime.datetime,
+        refresh_cb: Callable[[], Awaitable[datetime.datetime | None]],
+    ) -> None:
+        """Initialize StreamRefresh."""
+        self._hass = hass
+        self._unsub: Callable[[], None] | None = None
+        self._min_refresh_interval = MIN_REFRESH_BACKOFF_INTERVAL
+        self._refresh_cb = refresh_cb
+        self._schedule_stream_refresh(expires_at - STREAM_EXPIRATION_BUFFER)
+
+    def unsub(self) -> None:
+        """Invalidates the stream."""
+        if self._unsub:
+            self._unsub()
+
+    async def _handle_refresh(self, _: datetime.datetime) -> None:
+        """Alarm that fires to check if the stream should be refreshed."""
+        self._unsub = None
+        try:
+            expires_at = await self._refresh_cb()
+        except ApiException as err:
+            _LOGGER.debug("Failed to refresh stream: %s", err)
+            # Increase backoff until the max backoff interval is reached
+            self._min_refresh_interval = min(
+                self._min_refresh_interval * BACKOFF_MULTIPLIER,
+                MAX_REFRESH_BACKOFF_INTERVAL,
+            )
+            refresh_time = utcnow() + self._min_refresh_interval
+        else:
+            if expires_at is None:
+                return
+            self._min_refresh_interval = MIN_REFRESH_BACKOFF_INTERVAL  # Reset backoff
+            # Defend against invalid stream expiration time in the past
+            refresh_time = max(
+                expires_at - STREAM_EXPIRATION_BUFFER,
+                utcnow() + self._min_refresh_interval,
+            )
+        self._schedule_stream_refresh(refresh_time)
+
+    def _schedule_stream_refresh(self, refresh_time: datetime.datetime) -> None:
+        """Schedules an alarm to refresh any streams before expiration."""
+        _LOGGER.debug("Scheduling stream refresh for %s", refresh_time)
+        self._unsub = async_track_point_in_utc_time(
+            self._hass,
+            self._handle_refresh,
+            refresh_time,
+        )
 
 
 class NestCameraBaseEntity(Camera, ABC):
@@ -86,53 +150,12 @@ class NestCameraBaseEntity(Camera, ABC):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
         # The API "name" field is a unique device identifier.
         self._attr_unique_id = f"{self._device.name}-camera"
-        self._stream_refresh_unsub: Callable[[], None] | None = None
-
-    @abstractmethod
-    def _stream_expires_at(self) -> datetime.datetime | None:
-        """Next time when a stream expires."""
-
-    @abstractmethod
-    async def _async_refresh_stream(self) -> None:
-        """Refresh any stream to extend expiration time."""
-
-    def _schedule_stream_refresh(self) -> None:
-        """Schedules an alarm to refresh any streams before expiration."""
-        if self._stream_refresh_unsub is not None:
-            self._stream_refresh_unsub()
-
-        expiration_time = self._stream_expires_at()
-        if not expiration_time:
-            return
-        refresh_time = expiration_time - STREAM_EXPIRATION_BUFFER
-        _LOGGER.debug("Scheduled next stream refresh for %s", refresh_time)
-
-        self._stream_refresh_unsub = async_track_point_in_utc_time(
-            self.hass,
-            self._handle_stream_refresh,
-            refresh_time,
-        )
-
-    async def _handle_stream_refresh(self, _: datetime.datetime) -> None:
-        """Alarm that fires to check if the stream should be refreshed."""
-        _LOGGER.debug("Examining streams to refresh")
-        self._stream_refresh_unsub = None
-        try:
-            await self._async_refresh_stream()
-        finally:
-            self._schedule_stream_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Invalidates the RTSP token when unloaded."""
-        await super().async_will_remove_from_hass()
-        if self._stream_refresh_unsub:
-            self._stream_refresh_unsub()
 
 
 class NestRTSPEntity(NestCameraBaseEntity):
@@ -146,6 +169,7 @@ class NestRTSPEntity(NestCameraBaseEntity):
         super().__init__(device)
         self._create_stream_url_lock = asyncio.Lock()
         self._rtsp_live_stream_trait = device.traits[CameraLiveStreamTrait.NAME]
+        self._refresh_unsub: Callable[[], None] | None = None
 
     @property
     def use_stream_for_stills(self) -> bool:
@@ -173,20 +197,21 @@ class NestRTSPEntity(NestCameraBaseEntity):
                     )
                 except ApiException as err:
                     raise HomeAssistantError(f"Nest API error: {err}") from err
-                self._schedule_stream_refresh()
+                refresh = StreamRefresh(
+                    self.hass,
+                    self._rtsp_stream.expires_at,
+                    self._async_refresh_stream,
+                )
+                self._refresh_unsub = refresh.unsub
         assert self._rtsp_stream
         if self._rtsp_stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
         return self._rtsp_stream.rtsp_stream_url
 
-    def _stream_expires_at(self) -> datetime.datetime | None:
-        """Next time when a stream expires."""
-        return self._rtsp_stream.expires_at if self._rtsp_stream else None
-
-    async def _async_refresh_stream(self) -> None:
+    async def _async_refresh_stream(self) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
         if not self._rtsp_stream:
-            return
+            return None
         _LOGGER.debug("Extending RTSP stream")
         try:
             self._rtsp_stream = await self._rtsp_stream.extend_rtsp_stream()
@@ -197,14 +222,17 @@ class NestRTSPEntity(NestCameraBaseEntity):
             if self.stream:
                 await self.stream.stop()
                 self.stream = None
-            return
+            return None
         # Update the stream worker with the latest valid url
         if self.stream:
             self.stream.update_source(self._rtsp_stream.rtsp_stream_url)
+        return self._rtsp_stream.expires_at
 
     async def async_will_remove_from_hass(self) -> None:
         """Invalidates the RTSP token when unloaded."""
         await super().async_will_remove_from_hass()
+        if self._refresh_unsub is not None:
+            self._refresh_unsub()
         if self._rtsp_stream:
             try:
                 await self._rtsp_stream.stop_stream()
@@ -220,34 +248,18 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         """Initialize the camera."""
         super().__init__(device)
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
+        self._refresh_unsub: dict[str, Callable[[], None]] = {}
 
-    @property
-    def frontend_stream_type(self) -> StreamType | None:
-        """Return the type of stream supported by this camera."""
-        return StreamType.WEB_RTC
-
-    def _stream_expires_at(self) -> datetime.datetime | None:
-        """Next time when a stream expires."""
-        if not self._webrtc_sessions:
-            return None
-        return min(stream.expires_at for stream in self._webrtc_sessions.values())
-
-    async def _async_refresh_stream(self) -> None:
+    async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
-        now = utcnow()
-        for webrtc_stream in list(self._webrtc_sessions.values()):
-            if now < (webrtc_stream.expires_at - STREAM_EXPIRATION_BUFFER):
-                _LOGGER.debug(
-                    "Stream does not yet expire: %s", webrtc_stream.expires_at
-                )
-                continue
-            _LOGGER.debug("Extending WebRTC stream %s", webrtc_stream.media_session_id)
-            try:
-                webrtc_stream = await webrtc_stream.extend_stream()
-            except ApiException as err:
-                _LOGGER.debug("Failed to extend stream: %s", err)
-            else:
-                self._webrtc_sessions[webrtc_stream.media_session_id] = webrtc_stream
+        if not (webrtc_stream := self._webrtc_sessions.get(session_id)):
+            return None
+        _LOGGER.debug("Extending WebRTC stream %s", webrtc_stream.media_session_id)
+        webrtc_stream = await webrtc_stream.extend_stream()
+        if session_id in self._webrtc_sessions:
+            self._webrtc_sessions[session_id] = webrtc_stream
+            return webrtc_stream.expires_at
+        return None
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -275,7 +287,18 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         )
         self._webrtc_sessions[session_id] = stream
         send_message(WebRTCAnswer(stream.answer_sdp))
-        self._schedule_stream_refresh()
+        refresh = StreamRefresh(
+            self.hass,
+            stream.expires_at,
+            functools.partial(self._async_refresh_stream, session_id),
+        )
+        self._refresh_unsub[session_id] = refresh.unsub
+
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
+        """Ignore WebRTC candidates for Nest cloud based cameras."""
+        return
 
     @callback
     def close_webrtc_session(self, session_id: str) -> None:
@@ -284,6 +307,8 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             _LOGGER.debug(
                 "Closing WebRTC session %s, %s", session_id, stream.media_session_id
             )
+            unsub = self._refresh_unsub.pop(session_id)
+            unsub()
 
             async def stop_stream() -> None:
                 try:

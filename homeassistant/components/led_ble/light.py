@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from led_ble import LEDBLE
 
@@ -15,27 +15,26 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DEFAULT_EFFECT_SPEED, DOMAIN
-from .models import LEDBLEData
+from .const import DEFAULT_EFFECT_SPEED
+from .models import LEDBLEConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LEDBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform for LEDBLE."""
-    data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 
@@ -83,7 +82,7 @@ class LEDBLEEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness))
         if effect := kwargs.get(ATTR_EFFECT):
             await self._async_set_effect(effect, brightness)
             return
