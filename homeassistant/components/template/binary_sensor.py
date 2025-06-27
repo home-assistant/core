@@ -60,7 +60,7 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_PICTURE,
 )
-from .helpers import rewrite_configy_entry_to_options_config
+from .helpers import rewrite_config_entry_to_options_config
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA,
@@ -220,7 +220,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
     validated_config = BINARY_SENSOR_CONFIG_SCHEMA(
-        rewrite_configy_entry_to_options_config(config_entry)
+        rewrite_config_entry_to_options_config(config_entry)
     )
     async_add_entities(
         [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]

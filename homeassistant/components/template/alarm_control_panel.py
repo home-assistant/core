@@ -45,7 +45,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import CONF_OBJECT_ID, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import rewrite_configy_entry_to_options_config
+from .helpers import rewrite_config_entry_to_options_config
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -213,7 +213,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    options = rewrite_configy_entry_to_options_config(config_entry)
+    options = rewrite_config_entry_to_options_config(config_entry)
     validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(
         rewrite_options_to_modern_conf(options)
     )

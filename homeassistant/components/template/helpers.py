@@ -18,7 +18,7 @@ DATA_BLUEPRINTS = "template_blueprints"
 LOGGER = logging.getLogger(__name__)
 
 
-def rewrite_configy_entry_to_options_config(config_entry: ConfigEntry) -> ConfigType:
+def rewrite_config_entry_to_options_config(config_entry: ConfigEntry) -> ConfigType:
     """Rewrite config entry options to a configuration."""
     options = dict(config_entry.options)
     options.pop("template_type")

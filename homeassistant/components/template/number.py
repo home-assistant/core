@@ -35,7 +35,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
-from .helpers import rewrite_configy_entry_to_options_config
+from .helpers import rewrite_config_entry_to_options_config
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
@@ -123,7 +123,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
     validated_config = NUMBER_CONFIG_SCHEMA(
-        rewrite_configy_entry_to_options_config(config_entry)
+        rewrite_config_entry_to_options_config(config_entry)
     )
     async_add_entities([TemplateNumber(hass, validated_config, config_entry.entry_id)])
 

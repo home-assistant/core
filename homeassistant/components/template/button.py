@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
-from .helpers import rewrite_configy_entry_to_options_config
+from .helpers import rewrite_config_entry_to_options_config
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
@@ -87,7 +87,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
     validated_config = CONFIG_BUTTON_SCHEMA(
-        rewrite_configy_entry_to_options_config(config_entry)
+        rewrite_config_entry_to_options_config(config_entry)
     )
     async_add_entities(
         [TemplateButtonEntity(hass, validated_config, config_entry.entry_id)]
