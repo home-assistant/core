@@ -2,8 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
