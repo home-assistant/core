@@ -1,0 +1,33 @@
+# Services descriptions for Miele integration
+
+set_program:
+  target:
+    device:
+      integration: "miele"
+    entity:
+      integration: "miele"
+  fields:
+    program_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 99999
+          mode: box
+      example: 24
+    duration:
+      selector:
+        number:
+          min: 0
+          max: 240
+          mode: box
+          unit_of_measurement: min
+      example: 120
+    temperature:
+      selector:
+        number:
+          min: 100
+          max: 300
+          mode: box
+          unit_of_measurement: °C
+      example: 200
