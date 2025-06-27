@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -996,7 +997,7 @@ async def test_availability_icon_picture(hass: HomeAssistant, entity_id) -> None
             "template": {
                 "binary_sensor": {
                     "name": "test",
-                    "state": "{{ states.sensor.test_state.state == 'on' }}",
+                    "state": "{{ states.sensor.test_state.state }}",
                 },
             },
         },
@@ -1029,17 +1030,29 @@ async def test_availability_icon_picture(hass: HomeAssistant, entity_id) -> None
         ({"delay_on": 5}, STATE_ON, STATE_OFF, STATE_OFF),
         ({"delay_on": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN),
         ({"delay_on": 5}, STATE_ON, STATE_UNKNOWN, STATE_UNKNOWN),
+        ({}, None, STATE_ON, STATE_OFF),
+        ({}, None, STATE_OFF, STATE_OFF),
+        ({}, None, STATE_UNAVAILABLE, STATE_OFF),
+        ({}, None, STATE_UNKNOWN, STATE_OFF),
+        ({"delay_off": 5}, None, STATE_ON, STATE_ON),
+        ({"delay_off": 5}, None, STATE_OFF, STATE_OFF),
+        ({"delay_off": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
+        ({"delay_off": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
+        ({"delay_on": 5}, None, STATE_ON, STATE_OFF),
+        ({"delay_on": 5}, None, STATE_OFF, STATE_OFF),
+        ({"delay_on": 5}, None, STATE_UNAVAILABLE, STATE_OFF),
+        ({"delay_on": 5}, None, STATE_UNKNOWN, STATE_OFF),
     ],
 )
 async def test_restore_state(
     hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    extra_config,
-    source_state,
-    restored_state,
-    initial_state,
+    count: int,
+    domain: str,
+    config: ConfigType,
+    extra_config: ConfigType,
+    source_state: str | None,
+    restored_state: str,
+    initial_state: str,
 ) -> None:
     """Test restoring template binary sensor."""
 
