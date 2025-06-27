@@ -194,9 +194,12 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        if "time_series" not in data or not isinstance(data["time_series"], list):
+            return self.data
+
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data.get("time_series", []):
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+        for period in data["time_series"]:
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
                     if output[key] is None:
