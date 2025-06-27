@@ -699,6 +699,7 @@ FLOWS = {
         "voip",
         "volumio",
         "volvooncall",
+        "vrm_forecasts",
         "vulcan",
         "wake_on_lan",
         "wallbox",
