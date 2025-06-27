@@ -91,7 +91,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         previous_device_ids = set(self._previous_devices.keys())
         detected_device_ids = set(detected_devices.keys())
 
-        if previous_device_ids == detected_device_ids or self.config_entry is None:
+        if previous_device_ids == detected_device_ids:
             return
 
         if self.data is None:
@@ -111,7 +111,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
+                        remove_config_entry_id=self.config_entry.entry_id,  # type: ignore[union-attr]
                     )
 
         if new_devices := detected_device_ids - previous_device_ids:
