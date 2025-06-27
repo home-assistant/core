@@ -917,6 +917,9 @@ CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
+# Pool chlorine unit
+CHLORINE_UNIT: Final = "mg/L"
+
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
     """Blood glucose concentration units."""
