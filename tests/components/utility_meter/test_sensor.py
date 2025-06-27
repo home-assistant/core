@@ -2023,3 +2023,102 @@ async def test_device_id(
     utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_config"),
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            {
+                "cycle": "none",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 0,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+                "always_available": False,
+            },
+        ),
+    ],
+)
+async def test_state_force_update(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
+    """Test utility sensor state."""
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+        entity_id = yaml_config[DOMAIN]["energy_bill"]["source"]
+    else:
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options=config_entry_config,
+            title=config_entry_config["name"],
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = config_entry_config["source"]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, "0")
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow()
+    with (
+        freeze_time(now) as freezer,
+    ):
+        hass.states.async_set(entity_id, "1")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.energy_bill")
+        assert state is not None
+        assert state.state == "1"
+        assert state.attributes.get("status") == COLLECTING
+        assert state.last_reported == now
+        assert state.last_updated == now
+        assert state.last_changed == now
+
+        # Without force_update the timestamp should not change.
+        now2 = now + timedelta(seconds=10)
+        freezer.move_to(now2)
+        hass.states.async_set(
+            entity_id, "1", timestamp=(now + timedelta(seconds=10)).timestamp()
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.energy_bill")
+        assert state is not None
+        assert state.state == "1"
+        assert state.attributes.get("status") == COLLECTING
+        # Same timestamp as before.
+        assert state.last_reported == now
+        assert state.last_updated == now
+        assert state.last_changed == now
+
+        # With force_update the timestamp changes.
+        now3 = now2 + timedelta(seconds=10)
+        freezer.move_to(now3)
+        hass.states.async_set(entity_id, "1", force_update=True)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.energy_bill")
+        assert state is not None
+        assert state.state == "1"
+        assert state.attributes.get("status") == COLLECTING
+        assert state.last_reported == now3
+        assert state.last_updated == now3
+        assert state.last_changed == now3
