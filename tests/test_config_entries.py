@@ -8823,7 +8823,7 @@ async def test_create_entry_existing_unique_id(
 
     log_text = (
         f"Detected that integration '{domain}' creates a config entry "
-        "when another entry with the same unique ID exists. Please "
-        "create a bug report at https:"
+        "when another entry with the same unique ID exists. This will stop "
+        "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log
