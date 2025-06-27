@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from copy import copy
 import datetime as dt
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import PropertyMock, patch
@@ -15,7 +16,6 @@ from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
 from homeassistant.components.sonos.const import ATTR_SCHEDULED_TODAY
 from homeassistant.components.sonos.sensor import (
-    ATTR_FOLLOWING_ALARM_TRIGGER,
     HA_POWER_SOURCE_BATTERY,
     HA_POWER_SOURCE_CHARGING_BASE,
     HA_POWER_SOURCE_USB,
@@ -276,17 +276,16 @@ async def test_audio_input_sensor(
     assert audio_input_state.state == "No input"
 
 
-async def test_alarm_scheduled_sensor(
+async def test_next_alarm_sensor(
     hass: HomeAssistant,
-    async_setup_sonos,
+    async_autosetup_sonos,
     soco: MockSoCo,
     alarm_clock: SonosMockService,
     alarm_clock_disabled: SonosMockService,
     alarm_event: SonosMockEvent,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test alarm_scheduled binary sensor."""
-    await async_setup_sonos()
+    """Test next_alarm sensor."""
 
     assert "sensor.zone_a_next_alarm" in entity_registry.entities
 
@@ -308,14 +307,6 @@ async def test_alarm_scheduled_sensor(
         now.tzinfo,
     )
 
-    assert next_alarm_sensor_state.attributes.get(
-        ATTR_FOLLOWING_ALARM_TRIGGER
-    ) == dt.datetime.combine(
-        now + dt.timedelta(days=next_alarm_delta_days + 1),
-        alarm_time,
-        now.tzinfo,
-    )
-
     # Update the entity by disabling the alarm.
     alarm_update = copy(alarm_clock_disabled.ListAlarms.return_value)
     alarm_clock.ListAlarms.return_value = alarm_update
@@ -330,7 +321,6 @@ async def test_alarm_scheduled_sensor(
 
     assert next_alarm_sensor_state.state == STATE_UNAVAILABLE
     assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
-    assert next_alarm_sensor_state.attributes.get(ATTR_FOLLOWING_ALARM_TRIGGER) is None
 
 
 async def test_microphone_binary_sensor(
@@ -381,7 +371,7 @@ async def test_favorites_sensor(
     # Reload the integration to enable the sensor
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 

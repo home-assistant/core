@@ -2,6 +2,7 @@
 
 from copy import copy
 import datetime as dt
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -146,7 +147,7 @@ async def test_switch_attributes(
     with patch.object(hass.data[DATA_SONOS_DISCOVERY_MANAGER], "async_shutdown") as m:
         async_fire_time_changed(
             hass,
-            dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done(wait_background_tasks=True)
         assert m.called

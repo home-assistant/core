@@ -32,8 +32,6 @@ from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FOLLOWING_ALARM_TRIGGER = "following_alarm_trigger"
-
 SONOS_POWER_SOURCE_BATTERY = "BATTERY"
 SONOS_POWER_SOURCE_CHARGING_RING = "SONOS_CHARGING_RING"
 SONOS_POWER_SOURCE_USB = "USB_POWER"
@@ -294,9 +292,7 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
         """Icon of the entity."""
         if self.native_value is None:
             return "mdi:alarm-off"
-        if self._following_alarm_trigger is None:
-            return "mdi:alarm"
-        return "mdi:alarm-multiple"
+        return "mdi:alarm"
 
     @property
     def native_value(self) -> datetime.datetime | None:
@@ -311,24 +307,15 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
         return self.native_value.date() == dt_util.now().date()
 
     @property
-    def _following_alarm_trigger(self) -> datetime.datetime | None:
-        """Return the following alarm after the current next one."""
-        if self.native_value is None:
-            return None
-        return self.speaker.alarms.get_next_alarm_datetime(
-            from_datetime=self.native_value + datetime.timedelta(minutes=1),
-            zone_uid=self.soco.uid,
-        )
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Sonos next alarm sensor."""
         return {
             ATTR_SCHEDULED_TODAY: self._is_today,
-            ATTR_FOLLOWING_ALARM_TRIGGER: self._following_alarm_trigger,
         }
 
     @property
     def available(self) -> bool:
         """Return whether this entity is available."""
-        return self.speaker.available and self.native_value is not None
+        if self.native_value is None:
+            return False
+        return super().available
