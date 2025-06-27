@@ -33,7 +33,10 @@ rules:
 
   # Silver
   config-entry-unloading: done
-  log-when-unavailable: todo
+  log-when-unavailable:
+    status: todo
+    comment: |
+      https://github.com/balloob/home-assistant-quality-checker/blob/main/generated/zimi/log-when-unavailable.md
   entity-unavailable: done
   action-exceptions: todo
   reauthentication-flow:
