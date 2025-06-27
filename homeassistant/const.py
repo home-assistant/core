@@ -910,15 +910,13 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
+CONCENTRATION_MILLIGRAMS_PER_LITER: Final = "mg/L"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
-
-# Pool chlorine unit
-CHLORINE_UNIT: Final = "mg/L"
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):

@@ -7,7 +7,7 @@ from flipr_api.exceptions import FliprError
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CHLORINE_UNIT,
+    CONCENTRATION_MILLIGRAMS_PER_LITER,
     PERCENTAGE,
     UnitOfTemperature,
 )
@@ -59,7 +59,10 @@ async def test_sensors(
 
     state = hass.states.get("sensor.flipr_myfliprid_chlorine")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CHLORINE_UNIT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MILLIGRAMS_PER_LITER
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "0.23654886"
 

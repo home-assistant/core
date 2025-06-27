@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CHLORINE_UNIT,
+    CONCENTRATION_MILLIGRAMS_PER_LITER,
     PERCENTAGE,
     UnitOfElectricPotential,
     UnitOfTemperature,
@@ -24,7 +24,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
         translation_key="chlorine",
-        native_unit_of_measurement=CHLORINE_UNIT,
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_LITER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
