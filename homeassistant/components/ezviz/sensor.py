@@ -97,8 +97,6 @@ async def async_setup_entry(
     """Set up EZVIZ sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities = []
-
     entities = [
         EzvizSensor(coordinator, camera, sensor)
         for camera in coordinator.data
