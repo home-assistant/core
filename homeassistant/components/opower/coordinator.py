@@ -1,6 +1,8 @@
 """Coordinator to handle Opower connections."""
 
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta
+from itertools import chain, groupby
 import logging
 from typing import Any, cast
 
@@ -12,6 +14,7 @@ from opower import (
     MeterType,
     Opower,
     ReadResolution,
+    UsageRead,
     create_cookie_jar,
 )
 from opower.exceptions import ApiException, CannotConnect, InvalidAuth
@@ -107,6 +110,32 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         await self._insert_statistics()
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 
+    def _statistics_id(self, account, suffix) -> str:
+        return f"{DOMAIN}:{
+            '_'.join(
+                (
+                    self.api.utility.subdomain(),
+                    account.meter_type.name.lower(),
+                    # Some utilities like AEP have "-" in their account id.
+                    # Replace it with "_" to avoid "Invalid statistic_id"
+                    account.utility_account_id.replace('-', '_').lower(),
+                    suffix,
+                )
+            )
+        }"
+
+    def _cost_statistic_id(self, account) -> str:
+        return self._statistics_id(account, "energy_cost")
+
+    def _compensation_statistic_id(self, account) -> str:
+        return self._statistics_id(account, "energy_compensation")
+
+    def _consumption_statistic_id(self, account) -> str:
+        return self._statistics_id(account, "energy_consumption")
+
+    def _return_statistic_id(self, account) -> str:
+        return self._statistics_id(account, "energy_return")
+
     async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
         try:
@@ -115,21 +144,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
-            id_prefix = (
-                (
-                    f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
-                    f"{account.utility_account_id}"
-                )
-                # Some utilities like AEP have "-" in their account id.
-                # Other utilities like ngny-gas have "-" in their subdomain.
-                # Replace it with "_" to avoid "Invalid statistic_id"
-                .replace("-", "_")
-                .lower()
-            )
-            cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
-            compensation_statistic_id = f"{DOMAIN}:{id_prefix}_energy_compensation"
-            consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
-            return_statistic_id = f"{DOMAIN}:{id_prefix}_energy_return"
+            cost_statistic_id = self._cost_statistic_id(account)
+            compensation_statistic_id = self._compensation_statistic_id(account)
+            consumption_statistic_id = self._consumption_statistic_id(account)
+            return_statistic_id = self._return_statistic_id(account)
             _LOGGER.debug(
                 "Updating Statistics for %s, %s, %s, and %s",
                 cost_statistic_id,
@@ -183,10 +201,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             last_stat = await get_instance(self.hass).async_add_executor_job(
                 get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
             )
+            if self.api.utility.supports_realtime_usage():
+                async_get_reads = self._async_get_merged_cost_realtime_reads
+            else:
+                async_get_reads = self._async_get_cost_reads
+
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
-                cost_reads = await self._async_get_cost_reads(
-                    account, self.api.utility.timezone()
+                reads = await async_get_reads(
+                    account,
+                    self.api.utility.timezone(),
                 )
                 cost_sum = 0.0
                 compensation_sum = 0.0
@@ -214,15 +238,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                         "Statistics migration completed. Skipping update for now"
                     )
                     continue
-                cost_reads = await self._async_get_cost_reads(
+                reads = await async_get_reads(
                     account,
                     self.api.utility.timezone(),
                     last_stat[consumption_statistic_id][0]["start"],
                 )
-                if not cost_reads:
+                if not reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
-                start = cost_reads[0].start_time
+                start = reads[0].start_time
                 _LOGGER.debug("Getting statistics at: %s", start)
                 # In the common case there should be a previous statistic at start time
                 # so we only need to fetch one statistic. If there isn't any, fetch all.
@@ -271,29 +295,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             consumption_statistics = []
             return_statistics = []
 
-            for cost_read in cost_reads:
-                start = cost_read.start_time
+            for read in reads:
+                start = read.start_time
                 if last_stats_time is not None and start.timestamp() <= last_stats_time:
                     continue
 
-                cost_state = max(0, cost_read.provided_cost)
-                compensation_state = max(0, -cost_read.provided_cost)
-                consumption_state = max(0, cost_read.consumption)
-                return_state = max(0, -cost_read.consumption)
+                consumption_state = max(0, read.consumption)
+                return_state = max(0, -read.consumption)
 
-                cost_sum += cost_state
-                compensation_sum += compensation_state
                 consumption_sum += consumption_state
                 return_sum += return_state
 
-                cost_statistics.append(
-                    StatisticData(start=start, state=cost_state, sum=cost_sum)
-                )
-                compensation_statistics.append(
-                    StatisticData(
-                        start=start, state=compensation_state, sum=compensation_sum
-                    )
-                )
                 consumption_statistics.append(
                     StatisticData(
                         start=start, state=consumption_state, sum=consumption_sum
@@ -302,6 +314,23 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_statistics.append(
                     StatisticData(start=start, state=return_state, sum=return_sum)
                 )
+
+                # Realtime reads lack cost information.
+                if hasattr(read, "provided_cost"):
+                    cost_state = max(0, read.provided_cost)
+                    compensation_state = max(0, -read.provided_cost)
+
+                    cost_sum += cost_state
+                    compensation_sum += compensation_state
+
+                    cost_statistics.append(
+                        StatisticData(start=start, state=cost_state, sum=cost_sum)
+                    )
+                    compensation_statistics.append(
+                        StatisticData(
+                            start=start, state=compensation_state, sum=compensation_sum
+                        )
+                    )
 
             _LOGGER.debug(
                 "Adding %s statistics for %s",
@@ -455,9 +484,59 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
         return True
 
+    async def _async_get_merged_cost_realtime_reads(
+        self, account: Account, time_zone_str: str, start_time: float | None = None
+    ) -> Sequence[CostRead | UsageRead]:
+        cost_reads = await self._async_get_cost_reads(
+            account, time_zone_str, start_time
+        )
+
+        if self.api.utility.supports_realtime_usage():
+            _LOGGER.debug("Getting realtime usage data")
+            realtime_reads = await self.api.async_get_realtime_usage_reads(account)
+            if len(realtime_reads) > 0:
+                _LOGGER.debug(
+                    "Got %s realtime usage reads %s - %s",
+                    len(realtime_reads),
+                    realtime_reads[0].start_time,
+                    realtime_reads[-1].end_time,
+                )
+            else:
+                _LOGGER.debug("Got 0 realtime usage reads")
+        else:
+            realtime_reads = []
+
+        hourly_aggregated_realtime_reads = (
+            UsageRead(
+                start_time=hour,
+                end_time=hour + timedelta(hours=1),
+                consumption=sum(
+                    usage_read.consumption or 0.0 for usage_read in hourly_reads
+                ),
+            )
+            for hour, hourly_reads in groupby(
+                realtime_reads,
+                lambda usage_read: usage_read.start_time.replace(
+                    minute=0, second=0, microsecond=0
+                ),
+            )
+        )
+        joined_reads = {
+            read.start_time: read
+            for read in cast(
+                Iterable[CostRead | UsageRead],
+                chain(
+                    hourly_aggregated_realtime_reads,
+                    # Prioritize reads from cost data over realtime data.
+                    cost_reads,
+                ),
+            )
+        }
+        return sorted(joined_reads.values(), key=lambda read: read.start_time)
+
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
-    ) -> list[CostRead]:
+    ) -> Sequence[CostRead]:
         """Get cost reads.
 
         If start_time is None, get cost reads since account activation,
