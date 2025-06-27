@@ -334,7 +334,6 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
-        #await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -355,7 +354,9 @@ class NetatmoDataHandler:
         """Set up home door_tag modules."""
         for module in self.account.modules.values():
             if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug("Module %s dispatched as opening category (door_tag)", module.name)
+                _LOGGER.debug(
+                    "Module %s dispatched as opening category (door_tag)", module.name
+                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_DOOR_TAG,
@@ -366,6 +367,7 @@ class NetatmoDataHandler:
                         DOOR_TAG,
                     ),
                 )
+
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
         netatmo_type_signal_map = {
@@ -373,7 +375,6 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
-            #NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
@@ -389,11 +390,19 @@ class NetatmoDataHandler:
         }
         for module in home.modules.values():
             if not module.device_category:
-                _LOGGER.debug("Module %s skipped beacuse of missing category", module.name)
+                _LOGGER.debug(
+                    "Module %s skipped because of missing category", module.name
+                )
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
-                _LOGGER.debug("Module %s dispatched as %s category by %s to publisher %s", module.name, module.device_category, signal, signal_home)
+                _LOGGER.debug(
+                    "Module %s dispatched as %s category by %s to publisher %s",
+                    module.name,
+                    module.device_category,
+                    signal,
+                    signal_home,
+                )
                 async_dispatcher_send(
                     self.hass,
                     signal,
@@ -405,7 +414,11 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
-                _LOGGER.debug("Module %s dispatched as weather category to publisher %s", module.name, WEATHER)
+                _LOGGER.debug(
+                    "Module %s dispatched as weather category to publisher %s",
+                    module.name,
+                    WEATHER,
+                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
@@ -417,7 +430,11 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug("Module %s dispatched as opening category to publisher %s", module.name, DOOR_TAG)
+                _LOGGER.debug(
+                    "Module %s dispatched as opening category to publisher %s",
+                    module.name,
+                    DOOR_TAG,
+                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
@@ -447,7 +464,9 @@ class NetatmoDataHandler:
 
                 for module in room.modules.values():
                     if module.device_category is NetatmoDeviceCategory.climate:
-                        _LOGGER.debug("Battery for climate module %s dispatched", module.name)
+                        _LOGGER.debug(
+                            "Battery for climate module %s dispatched", module.name
+                        )
                         async_dispatcher_send(
                             self.hass,
                             NETATMO_CREATE_BATTERY,
