@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er  # 导入实体注册表
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -48,6 +49,12 @@ async def async_setup_entry(
             lists_added |= new_lists
         elif lists_added - new_lists:
             removed_device_ids = lists_added - new_lists
+            for device_id in removed_device_ids:
+                entity_registry = er.async_get(hass)
+                if entity := entity_registry.async_get_entity_id(
+                    "light", DOMAIN, device_id
+                ):
+                    entity_registry.async_remove(entity)
             lists_added = lists_added - removed_device_ids
 
     coordinator.async_add_listener(add_entities)
