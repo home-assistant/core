@@ -86,7 +86,10 @@ def async_setup_block_attribute_entities(
                 coordinator.device.settings, block
             ):
                 domain = sensor_class.__module__.split(".")[-1]
-                unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
+                unique_id = sensor_class(
+                    coordinator, block, sensor_id, description
+                ).unique_id
+                LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 entities.append(
