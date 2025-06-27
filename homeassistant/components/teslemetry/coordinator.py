@@ -194,7 +194,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        if "time_series" not in data or not isinstance(data["time_series"], list):
+        if not isinstance(data.get("time_series"), list):
             return self.data
 
         # Add all time periods together
