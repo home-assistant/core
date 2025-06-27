@@ -232,7 +232,7 @@ DISCOVERY_SCHEMAS = [
             ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
         ),
-        entity_class=MatterLevelControNumber,
+        entity_class=MatterLevelControlNumber,
         required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
         device_type=(device_types.Pump,),
         allow_multi=True,
