@@ -6,19 +6,20 @@ https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import date as Date, datetime, time as Time
+from collections.abc import Callable, Mapping
+from datetime import date as Date, datetime, time as Time, timedelta
 import logging
 from typing import Any
 import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
 
+from homeassistant import const
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -130,6 +131,7 @@ class RejseplanenTransportSensor(
         self._departure_type = departure_type
         self._attr_name = name
         self.coordinator.add_stop_id(stop_id)
+        self._unsub_interval: Callable[[], None] | None = None
         self._attr_unique_id = unique_id
         """Initialize the sensor's state."""
         self._attr_native_value = self.native_value
@@ -179,17 +181,45 @@ class RejseplanenTransportSensor(
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        return UnitOfTime.MINUTES
+        return const.UnitOfTime.MINUTES
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._unsub_interval = async_track_time_interval(
+            self.hass,
+            self._handle_minute_tick,
+            timedelta(minutes=1),
+            name=f"rejseplanen_{self._attr_unique_id}_minute_tick",
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal of the sensor from Home Assistant."""
         _LOGGER.debug("Removing sensor %s from coordinator", self._attr_unique_id)
         self.coordinator.remove_stop_id(self._stop_id)
+        if self._unsub_interval:
+            self._unsub_interval()
+            self._unsub_interval = None
+            _LOGGER.debug(
+                "Unsubscribed from minute tick for sensor %s", self._attr_unique_id
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.debug("Updating sensor %s with new data", self._attr_unique_id)
+        _LOGGER.debug(
+            "Coordinator update callback triggered for sensor %s", self._attr_unique_id
+        )
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_minute_tick(self, now):
+        """Call every minute to update the state."""
+        _LOGGER.debug(
+            "Minute tick callback triggered for sensor %s at %s",
+            self._attr_unique_id,
+            now.isoformat(),
+        )
         self.async_write_ha_state()
 
     def _get_filtered_departures(self) -> list[dict[str, Any]]:
