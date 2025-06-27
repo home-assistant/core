@@ -34,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -229,6 +228,8 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if self._battery_level_template:
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
+        self.initialize(config, ENTITY_ID_FORMAT)
+
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], VacuumEntityFeature | int]]:
@@ -364,10 +365,6 @@ class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
         """Initialize the vacuum."""
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateVacuum.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
