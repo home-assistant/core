@@ -92,7 +92,11 @@ def async_setup(hass: HomeAssistant) -> None:
 @bind_hass
 @singleton.singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
-    """Get the entity sources."""
+    """Get the entity sources.
+
+    Items are added to this dict by Entity.async_internal_added_to_hass and
+    removed by Entity.async_internal_will_remove_from_hass.
+    """
     return {}
 
 
