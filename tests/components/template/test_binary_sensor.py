@@ -1,9 +1,10 @@
 """The tests for the Template Binary sensor platform."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -71,7 +72,9 @@ from tests.common import (
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_setup_minimal(hass: HomeAssistant, entity_id, name, attributes) -> None:
+async def test_setup_minimal(
+    hass: HomeAssistant, entity_id: str, name: str, attributes: dict[str, str]
+) -> None:
     """Test the setup."""
     state = hass.states.get(entity_id)
     assert state is not None
@@ -116,7 +119,7 @@ async def test_setup_minimal(hass: HomeAssistant, entity_id, name, attributes) -
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_setup(hass: HomeAssistant, entity_id) -> None:
+async def test_setup(hass: HomeAssistant, entity_id: str) -> None:
     """Test the setup."""
     state = hass.states.get(entity_id)
     assert state is not None
@@ -233,9 +236,56 @@ async def test_setup_config_entry(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_setup_invalid_sensors(hass: HomeAssistant, count) -> None:
+async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
+
+
+@pytest.mark.parametrize(
+    ("state_template", "expected_result"),
+    [
+        ("{{ None }}", STATE_OFF),
+        ("{{ True }}", STATE_ON),
+        ("{{ False }}", STATE_OFF),
+        ("{{ 1 }}", STATE_ON),
+        (
+            "{% if states('binary_sensor.three') in ('unknown','unavailable') %}"
+            "{{ None }}"
+            "{% else %}"
+            "{{ states('binary_sensor.three') == 'off' }}"
+            "{% endif %}",
+            STATE_OFF,
+        ),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    state_template: str,
+    expected_result: str,
+) -> None:
+    """Test the config flow."""
+    hass.states.async_set("binary_sensor.one", "on")
+    hass.states.async_set("binary_sensor.two", "off")
+    hass.states.async_set("binary_sensor.three", "unknown")
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": state_template,
+            "template_type": binary_sensor.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.my_template")
+    assert state is not None
+    assert state.state == expected_result
 
 
 @pytest.mark.parametrize("count", [1])
@@ -280,7 +330,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
+async def test_icon_template(hass: HomeAssistant, entity_id: str) -> None:
     """Test icon template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("icon") == ""
@@ -333,7 +383,7 @@ async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_entity_picture_template(hass: HomeAssistant, entity_id) -> None:
+async def test_entity_picture_template(hass: HomeAssistant, entity_id: str) -> None:
     """Test entity_picture template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("entity_picture") == ""
@@ -382,7 +432,7 @@ async def test_entity_picture_template(hass: HomeAssistant, entity_id) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_attribute_templates(hass: HomeAssistant, entity_id) -> None:
+async def test_attribute_templates(hass: HomeAssistant, entity_id: str) -> None:
     """Test attribute_templates template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("test_attribute") == "It ."
@@ -395,7 +445,7 @@ async def test_attribute_templates(hass: HomeAssistant, entity_id) -> None:
 
 
 @pytest.fixture
-async def setup_mock():
+def setup_mock() -> Generator[Mock]:
     """Do setup of sensor mock."""
     with patch(
         "homeassistant.components.template.binary_sensor."
@@ -427,7 +477,7 @@ async def setup_mock():
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_match_all(hass: HomeAssistant, setup_mock) -> None:
+async def test_match_all(hass: HomeAssistant, setup_mock: Mock) -> None:
     """Test template that is rerendered on any state lifecycle."""
     init_calls = len(setup_mock.mock_calls)
 
@@ -646,7 +696,7 @@ async def test_template_delay_on_off(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_available_without_availability_template(
-    hass: HomeAssistant, entity_id
+    hass: HomeAssistant, entity_id: str
 ) -> None:
     """Ensure availability is true without an availability_template."""
     state = hass.states.get(entity_id)
@@ -695,7 +745,7 @@ async def test_available_without_availability_template(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_availability_template(hass: HomeAssistant, entity_id) -> None:
+async def test_availability_template(hass: HomeAssistant, entity_id: str) -> None:
     """Test availability template."""
     hass.states.async_set("sensor.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -732,7 +782,7 @@ async def test_availability_template(hass: HomeAssistant, entity_id) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text: str
 ) -> None:
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("binary_sensor.test_sensor", STATE_ON)
@@ -760,7 +810,7 @@ async def test_invalid_attribute_template(
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text: str
 ) -> None:
     """Test that an invalid availability keeps the device available."""
 
@@ -768,9 +818,7 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-async def test_no_update_template_match_all(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_no_update_template_match_all(hass: HomeAssistant) -> None:
     """Test that we do not update sensors that match on all."""
 
     hass.set_state(CoreState.not_running)
@@ -967,7 +1015,7 @@ async def test_template_validation_error(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_availability_icon_picture(hass: HomeAssistant, entity_id) -> None:
+async def test_availability_icon_picture(hass: HomeAssistant, entity_id: str) -> None:
     """Test name, icon and picture templates are rendered at setup."""
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
@@ -1347,12 +1395,12 @@ async def test_trigger_template_delay_with_multiple_triggers(
 )
 async def test_trigger_entity_restore_state(
     hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    restored_state,
-    initial_state,
-    initial_attributes,
+    count: int,
+    domain: str,
+    config: ConfigType,
+    restored_state: str,
+    initial_state: str,
+    initial_attributes: list[str],
 ) -> None:
     """Test restoring trigger template binary sensor."""
 
@@ -1422,10 +1470,10 @@ async def test_trigger_entity_restore_state(
 @pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])
 async def test_trigger_entity_restore_state_auto_off(
     hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    restored_state,
+    count: int,
+    domain: str,
+    config: ConfigType,
+    restored_state: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring trigger template binary sensor."""
@@ -1484,7 +1532,11 @@ async def test_trigger_entity_restore_state_auto_off(
     ],
 )
 async def test_trigger_entity_restore_state_auto_off_expired(
-    hass: HomeAssistant, count, domain, config, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    count: int,
+    domain: str,
+    config: ConfigType,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring trigger template binary sensor."""
 
@@ -1553,50 +1605,3 @@ async def test_device_id(
     template_entity = entity_registry.async_get("binary_sensor.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
-
-
-@pytest.mark.parametrize(
-    ("state_template", "expected_result"),
-    [
-        ("{{ None }}", STATE_OFF),
-        ("{{ True }}", STATE_ON),
-        ("{{ False }}", STATE_OFF),
-        ("{{ 1 }}", STATE_ON),
-        (
-            "{% if states('binary_sensor.three') in ('unknown','unavailable') %}"
-            "{{ None }}"
-            "{% else %}"
-            "{{ states('binary_sensor.three') == 'off' }}"
-            "{% endif %}",
-            STATE_OFF,
-        ),
-    ],
-)
-async def test_state(
-    hass: HomeAssistant,
-    state_template: str,
-    expected_result: str,
-) -> None:
-    """Test the config flow."""
-    hass.states.async_set("binary_sensor.one", "on")
-    hass.states.async_set("binary_sensor.two", "off")
-    hass.states.async_set("binary_sensor.three", "unknown")
-
-    template_config_entry = MockConfigEntry(
-        data={},
-        domain=template.DOMAIN,
-        options={
-            "name": "My template",
-            "state": state_template,
-            "template_type": binary_sensor.DOMAIN,
-        },
-        title="My template",
-    )
-    template_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.my_template")
-    assert state is not None
-    assert state.state == expected_result
