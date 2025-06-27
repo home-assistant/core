@@ -488,6 +488,7 @@ async def test_hub3_sensor(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_evaporative_humidifier_sensor(hass: HomeAssistant) -> None:
     """Test setting up creates the sensor for evaporative humidifier."""
@@ -544,6 +545,7 @@ async def test_evaporative_humidifier_sensor(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_relay_switch_2pm_sensor(hass: HomeAssistant) -> None:
