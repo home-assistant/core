@@ -10,5 +10,33 @@
       },
       "name": "Set TXT"
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Duck DNS subdomain and token below to configure dynamic DNS updates. You can find your token on the [Duck DNS]({url}) homepage after logging into your account.",
+        "data": {
+          "domain": "Subdomain",
+          "access_token": "Token"
+        },
+        "data_description": {
+          "domain": "The Duck DNS subdomain to update",
+          "access_token": "Your Duck DNS account token"
+        }
+      }
+    },
+    "error": {
+      "update_failed": "Updating DuckDNS failed",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "title": "The Duck DNS YAML configuration import failed",
+      "description": "Configuring Duck DNS using YAML is being removed but there was error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Duck DNS YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."
+    }
   }
 }

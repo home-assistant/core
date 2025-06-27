@@ -10,6 +10,7 @@ from typing import Any, cast
 from aiohttp import ClientSession
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -32,7 +33,13 @@ ATTR_TXT = "txt"
 DOMAIN = "duckdns"
 
 INTERVAL = timedelta(minutes=5)
-
+BACKOFF_INTERVALS = (
+    INTERVAL,
+    timedelta(minutes=1),
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+    timedelta(minutes=30),
+)
 SERVICE_SET_TXT = "set_txt"
 
 UPDATE_URL = "https://www.duckdns.org/update"
@@ -51,25 +58,20 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string)})
 
+type DuckDnsConfigEntry = ConfigEntry
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Initialize the DuckDNS component."""
-    domain: str = config[DOMAIN][CONF_DOMAIN]
-    token: str = config[DOMAIN][CONF_ACCESS_TOKEN]
+
+async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
+    """Set up Duck DNS from a config entry."""
+    domain = entry.data[CONF_DOMAIN]
+    token = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
     async def update_domain_interval(_now: datetime) -> bool:
         """Update the DuckDNS entry."""
         return await _update_duckdns(session, domain, token)
 
-    intervals = (
-        INTERVAL,
-        timedelta(minutes=1),
-        timedelta(minutes=5),
-        timedelta(minutes=15),
-        timedelta(minutes=30),
-    )
-    async_track_time_interval_backoff(hass, update_domain_interval, intervals)
+    async_track_time_interval_backoff(hass, update_domain_interval, BACKOFF_INTERVALS)
 
     async def update_domain_service(call: ServiceCall) -> None:
         """Update the DuckDNS entry."""
@@ -77,6 +79,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_TXT, update_domain_service, schema=SERVICE_TXT_SCHEMA
+    )
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Initialize the DuckDNS component."""
+
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+        )
     )
 
     return True
