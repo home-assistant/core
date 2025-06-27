@@ -22,16 +22,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
+from .const import (
+    CONF_FROM,
+    CONF_ROUTES,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    MIN_TIME_BETWEEN_UPDATES_SECONDS,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ROUTES = "routes"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_VIA = "via"
-CONF_TIME = "time"
-
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=MIN_TIME_BETWEEN_UPDATES_SECONDS)
 
 ROUTE_SCHEMA = vol.Schema(
     {
@@ -109,7 +111,7 @@ class NSDepartureSensor(SensorEntity):
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(self, nsapi, name, departure, heading, via, time) -> None:
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
@@ -123,23 +125,24 @@ class NSDepartureSensor(SensorEntity):
         self._next_trip = None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, object] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
 
+        # Always initialize route
+        route = [self._first_trip.departure]
         if self._first_trip.trip_parts:
-            route = [self._first_trip.departure]
             route.extend(k.destination for k in self._first_trip.trip_parts)
 
         # Static attributes
@@ -204,12 +207,17 @@ class NSDepartureSensor(SensorEntity):
             attributes["arrival_delay"] = True
 
         # Next attributes
-        if self._next_trip.departure_time_actual is not None:
-            attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
-        elif self._next_trip.departure_time_planned is not None:
-            attributes["next"] = self._next_trip.departure_time_planned.strftime(
-                "%H:%M"
-            )
+        if self._next_trip is not None:
+            if self._next_trip.departure_time_actual is not None:
+                attributes["next"] = self._next_trip.departure_time_actual.strftime(
+                    "%H:%M"
+                )
+            elif self._next_trip.departure_time_planned is not None:
+                attributes["next"] = self._next_trip.departure_time_planned.strftime(
+                    "%H:%M"
+                )
+            else:
+                attributes["next"] = None
         else:
             attributes["next"] = None
 
