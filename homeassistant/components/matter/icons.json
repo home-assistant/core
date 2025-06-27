@@ -57,7 +57,7 @@
           "sunny": "mdi:weather-sunny",
           "cloudy": "mdi:weather-cloudy",
           "rainy": "mdi:weather-rainy",
-          "windy": "mdi:weather-windy"
+          "stormy": "mdi:weather-windy"
         }
       },
       "air_quality": {

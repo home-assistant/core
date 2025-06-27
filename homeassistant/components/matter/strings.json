@@ -411,7 +411,9 @@
         "name": "Weather trend",
         "state": {
           "cloudy": "Cloudy",
-          "sunny": "Sunny"
+          "rainy": "Rainy",
+          "sunny": "Sunny",
+          "stormy": "Stormy"
         }
       },
       "evse_circuit_capacity": {

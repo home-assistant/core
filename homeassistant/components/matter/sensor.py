@@ -71,9 +71,9 @@ CONTAMINATION_STATE_MAP = {
 EVE_CLUSTER_WEATHER_MAP = {
     # enum with known Weather state values which we can translate
     1: "sunny",
-    2: None,
     3: "cloudy",
     6: "rainy",
+    14: "stormy",
 }
 
 OPERATIONAL_STATE_MAP = {
