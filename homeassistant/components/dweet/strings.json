@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "title": "The dweet.io integration has been removed",
+      "description": "The dweet.io integration has been removed from Home Assistant.\n\nThe dweet.io service has been discontinued and is no longer available.\n\nTo resolve this, please remove any related entries for the dweet.io integration from your `configuration.yaml` file and restart Home Assistant."
+    }
+  }
+}
