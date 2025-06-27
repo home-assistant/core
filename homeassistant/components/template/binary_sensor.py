@@ -54,7 +54,7 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .helpers import rewrite_configy_entry_to_options_config
+from .helpers import rewrite_config_entry_to_options_config
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA,
