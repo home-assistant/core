@@ -116,13 +116,13 @@ async def test_reconfigure_flow_broadcast(
 
 async def test_reconfigure_flow_webhooks(
     hass: HomeAssistant,
-    mock_webhooks_config_entry: MockConfigEntry,
+    mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
     """Test reconfigure flow for webhook."""
-    mock_webhooks_config_entry.add_to_hass(hass)
+    mock_broadcast_config_entry.add_to_hass(hass)
 
-    result = await mock_webhooks_config_entry.start_reconfigure_flow(hass)
+    result = await mock_broadcast_config_entry.start_reconfigure_flow(hass)
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -191,8 +191,8 @@ async def test_reconfigure_flow_webhooks(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_webhooks_config_entry.data[CONF_URL] == "https://reconfigure"
-    assert mock_webhooks_config_entry.data[CONF_TRUSTED_NETWORKS] == [
+    assert mock_broadcast_config_entry.data[CONF_URL] == "https://reconfigure"
+    assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
 

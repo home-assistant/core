@@ -353,6 +353,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Shutdown the bot if it exists."""
         if self._bot:
             await self._bot.shutdown()
+            self._bot = None
 
     async def _validate_bot(
         self,
@@ -389,12 +390,20 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config flow for webhook Telegram bot."""
 
         if not user_input:
+            default_trusted_networks = ",".join(
+                [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
+            )
+
             if self.source == SOURCE_RECONFIGURE:
+                suggested_values = dict(self._get_reconfigure_entry().data)
+                if CONF_TRUSTED_NETWORKS not in self._get_reconfigure_entry().data:
+                    suggested_values[CONF_TRUSTED_NETWORKS] = default_trusted_networks
+
                 return self.async_show_form(
                     step_id="webhooks",
                     data_schema=self.add_suggested_values_to_schema(
                         STEP_WEBHOOKS_DATA_SCHEMA,
-                        self._get_reconfigure_entry().data,
+                        suggested_values,
                     ),
                 )
 
@@ -403,9 +412,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_WEBHOOKS_DATA_SCHEMA,
                     {
-                        CONF_TRUSTED_NETWORKS: ",".join(
-                            [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
-                        ),
+                        CONF_TRUSTED_NETWORKS: default_trusted_networks,
                     },
                 ),
             )
