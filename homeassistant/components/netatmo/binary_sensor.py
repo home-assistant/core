@@ -2,8 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -20,6 +19,7 @@ from .const import NETATMO_CREATE_WEATHER_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoWeatherModuleEntity
 
+
 def process_status(status: StateType) -> bool | None:
     """Process status and return boolean for display."""
     if not isinstance(status, str):
@@ -27,7 +27,8 @@ def process_status(status: StateType) -> bool | None:
     return {
         "open": True,
         "closed": False,
-    }.get(status, None)
+    }.get(status)
+
 
 @dataclass(frozen=True, kw_only=True)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -78,8 +79,9 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     """Implementation of a Netatmo binary sensor."""
 
     def __init__(
-#        self, device: NetatmoDevice, description: BinarySensorEntityDescription
-        self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
+        self, 
+        device: NetatmoDevice, 
+        description: NetatmoBinarySensorEntityDescription
     ) -> None:
         """Initialize a Netatmo binary sensor."""
         super().__init__(device)
@@ -90,7 +92,7 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         value = cast(
-                StateType, getattr(self.device, self.entity_description.netatmo_name)
+            StateType, getattr(self.device, self.entity_description.netatmo_name)
         )
         if value is not None:
             value = self.entity_description.value_fn(value)
