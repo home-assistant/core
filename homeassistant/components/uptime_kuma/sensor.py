@@ -169,12 +169,12 @@ class UptimeKumaSensorEntity(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if (monitor := self.coordinator.data.get(self.monitor)) and (
-            value := self.entity_description.value_fn(monitor)
-        ) != "null":
-            return value
 
-        return None
+        return (
+            self.entity_description.value_fn(monitor)
+            if (monitor := self.coordinator.data.get(self.monitor))
+            else None
+        )
 
     @property
     def available(self) -> bool:
