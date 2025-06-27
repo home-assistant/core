@@ -5243,3 +5243,110 @@
 # name: test_sensors_streaming[sensor.test_time_to_full_charge-state]
   'unknown'
 # ---
+# name: test_tariff_sensors[sensor.energy_site_buy_tariff_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({}),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_buy_tariff_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({}),
+    'name': None,
+    'options': dict({}),
+    'original_device_class': None, # Was not set in TeslemetryTariffSensor
+    'original_icon': None,
+    'original_name': 'Buy tariff price', # Updated name
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energy_site_buy_tariff_price', # Auto-generated based on new name
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2', # Remains the same
+    'unique_id': '123456-tariff_content_v2', # Remains the same
+    'unit_of_measurement': 'USD/kWh', # Updated
+  })
+# ---
+# name: test_tariff_sensors[sensor.energy_site_buy_tariff_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Buy tariff price', # Updated name
+      'season': 'Summer',
+      'period_name': 'Off peak',
+      'start_time': <ANY>, #datetime.datetime(2023, 12, 31, 21, 0, tzinfo=datetime.timezone.utc), - Will be local
+      'end_time': <ANY>, #datetime.datetime(2024, 1, 1, 16, 0, tzinfo=datetime.timezone.utc), - Will be local
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'USD/kWh', # Updated
+      # device_class might be added by HA core based on unit if SensorDeviceClass.MONETARY is supported by test env.
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_buy_tariff_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.20', # Price as float string
+  })
+# ---
+# name: test_tariff_sensors[sensor.energy_site_sell_tariff_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({}),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_sell_tariff_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({}),
+    'name': None,
+    'options': dict({}),
+    'original_device_class': None, # Was not set in TeslemetryTariffSensor
+    'original_icon': None,
+    'original_name': 'Sell tariff price', # Updated name
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energy_site_sell_tariff_price', # Auto-generated
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2_sell_tariff', # Remains the same
+    'unique_id': '123456-tariff_content_v2_sell_tariff', # Remains the same
+    'unit_of_measurement': 'USD/kWh', # Updated
+  })
+# ---
+# name: test_tariff_sensors[sensor.energy_site_sell_tariff_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Sell tariff price', # Updated name
+      'season': 'Summer',
+      'period_name': 'Off peak',
+      'start_time': <ANY>, #datetime.datetime(2023, 12, 31, 21, 0, tzinfo=datetime.timezone.utc), - Will be local
+      'end_time': <ANY>, #datetime.datetime(2024, 1, 1, 16, 0, tzinfo=datetime.timezone.utc), - Will be local
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'USD/kWh', # Updated
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_sell_tariff_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.08', # Price as float string
+  })
+# ---

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any
 
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -28,6 +29,9 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    CURRENCY_DOLLAR,
+    CURRENCY_EURO,
+    CURRENCY_POUND,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -1623,7 +1627,186 @@ async def async_setup_entry(
         )
     )
 
+    # Add Tariff Sensors
+    for energy_site in entry.runtime_data.energysites:
+        # Buy Tariff Sensor
+        if energy_site.info_coordinator.data.get("tariff_content_v2_seasons"):
+            entities.append(TeslemetryTariffSensor(energy_site, "tariff_content_v2"))
+        # Sell Tariff Sensor
+        if energy_site.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons"):
+            entities.append(TeslemetryTariffSensor(energy_site, "tariff_content_v2_sell_tariff"))
+
     async_add_entities(entities)
+
+
+# --- Tariff Sensor ---
+# Duplicated from calendar.py and modified for sensor
+@dataclass(kw_only=True)
+class TariffPeriod:
+    """A single tariff period."""
+
+    name: str
+    price: float
+    from_hour: int = 0
+    from_minute: int = 0
+    to_hour: int = 0
+    to_minute: int = 0
+
+
+class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
+    """Energy Site Tariff Price Sensor."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    # _attr_device_class = SensorDeviceClass.MONETARY # Not available in all versions
+
+    seasons: dict[str, dict[str, Any]] = field(default_factory=dict)
+    charges: dict[str, dict[str, Any]] = field(default_factory=dict)
+    key_base: str
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key_base: str,
+    ) -> None:
+        """Initialize the tariff price sensor."""
+        self.key_base = key_base
+        # Use a modified key for uniqueness if needed, e.g., f"{key_base}_price"
+        # For now, assuming translation key in strings.json will differentiate display name
+        super().__init__(data, key_base)
+        # Attempt to get currency from coordinator data or HA config
+        # This is a placeholder, actual currency determination might be more complex
+        self.currency_symbol = self.coordinator.data.get(f"{self.key_base}_currency", hass.config.currency)
+
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current tariff price."""
+        price_info = self._get_current_tariff_info()
+        return price_info["price"] if price_info else None
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        # Fetch currency symbol dynamically if possible
+        # For now, using a placeholder or a common one like USD
+        # currency = self.coordinator.data.get(f"{self.key_base}_currency", "USD")
+        return f"{self.currency_symbol}/kWh" if self.currency_symbol else None
+
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return other tariff details as attributes."""
+        price_info = self._get_current_tariff_info()
+        if not price_info:
+            return None
+        attributes = {
+            "season": price_info["season_name"],
+            "period_name": price_info["period_name"],
+            "start_time": price_info["start_time"],
+            "end_time": price_info["end_time"],
+        }
+        # Add currency if available and not part of native_unit_of_measurement
+        # if "currency" in self.coordinator.data.get(self.key_base, {}):
+        #     attributes["currency"] = self.coordinator.data[self.key_base]["currency"]
+        return attributes
+
+    def _get_current_tariff_info(self) -> dict[str, Any] | None:
+        """Calculate the current tariff price and details."""
+        now = dt_util.now()
+        current_season_name = self._get_current_season(now)
+
+        if not current_season_name or not self.seasons.get(current_season_name):
+            return None
+
+        season_data = self.seasons[current_season_name]
+        tou_periods = season_data.get("tou_periods", {})
+
+        for period_name_key, period_group in tou_periods.items():
+            for period_def in period_group.get("periods", []):
+                day_of_week = now.weekday()
+                from_day = period_def.get("fromDayOfWeek", 0)
+                to_day = period_def.get("toDayOfWeek", 6)
+                if not (from_day <= day_of_week <= to_day):
+                    continue
+
+                from_hour, from_minute = period_def.get("fromHour", 0) % 24, period_def.get("fromMinute", 0) % 60
+                to_hour, to_minute = period_def.get("toHour", 0) % 24, period_def.get("toMinute", 0) % 60
+
+                start_time = now.replace(hour=from_hour, minute=from_minute, second=0, microsecond=0)
+                end_time = now.replace(hour=to_hour, minute=to_minute, second=0, microsecond=0)
+
+                if end_time <= start_time: # Period crosses midnight
+                    potential_end_time = end_time + timedelta(days=1)
+                    if start_time <= now < potential_end_time:
+                        end_time = potential_end_time
+                    elif (start_time - timedelta(days=1)) <= now < end_time:
+                        start_time -= timedelta(days=1)
+                    else:
+                        continue
+                elif not (start_time <= now < end_time):
+                    continue
+
+                price = self._get_price_for_period(current_season_name, period_name_key)
+                return {
+                    "price": price,
+                    "season_name": current_season_name.capitalize(),
+                    "period_name": period_name_key.capitalize().replace('_', ' '),
+                    "start_time": start_time,
+                    "end_time": end_time,
+                }
+        return None
+
+    def _get_current_season(self, date_to_check: datetime) -> str | None:
+        """Determine the active season for a given date."""
+        local_date = dt_util.as_local(date_to_check)
+        year = local_date.year
+        for season_name, season_data in self.seasons.items():
+            if not season_data:
+                continue
+            try:
+                from_month, from_day = season_data["fromMonth"], season_data["fromDay"]
+                to_month, to_day = season_data["toMonth"], season_data["toDay"]
+                start_year, end_year = year, year
+                if from_month > to_month or (from_month == to_month and from_day > to_day):
+                    if local_date.month > from_month or (local_date.month == from_month and local_date.day >= from_day):
+                        end_year = year + 1
+                    else:
+                        start_year = year - 1
+                season_start = local_date.replace(year=start_year, month=from_month, day=from_day, hour=0, minute=0, second=0, microsecond=0)
+                season_end = local_date.replace(year=end_year, month=to_month, day=to_day, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+                if season_start <= local_date < season_end:
+                    return season_name
+            except (KeyError, ValueError):
+                continue
+        return None
+
+    def _get_price_for_period(self, season_name: str, period_name: str) -> float | None:
+        """Get the price for a specific season and period name."""
+        try:
+            season_charges = self.charges.get(season_name, self.charges.get("ALL", {}))
+            rates = season_charges.get("rates", {})
+            price = rates.get(period_name, rates.get("ALL"))
+            return float(price) if price is not None else None
+        except (KeyError, ValueError, TypeError):
+            return None
+
+    def _async_update_attrs(self) -> None:
+        """Update the Sensor attributes from coordinator data."""
+        self.seasons = self.coordinator.data.get(f"{self.key_base}_seasons", {})
+        self.charges = self.coordinator.data.get(f"{self.key_base}_energy_charges", {})
+        self.currency_symbol = self.coordinator.data.get(f"{self.key_base}_currency", self.hass.config.currency)
+
+
+        # native_value is determined by property, but availability depends on data
+        current_tariff_info = self._get_current_tariff_info()
+        if current_tariff_info and current_tariff_info["price"] is not None:
+            self._attr_available = True
+            # native_value and native_unit_of_measurement are handled by properties
+        else:
+            self._attr_available = False
+        # extra_state_attributes is also handled by a property
+
+# --- End Tariff Sensor ---
 
 
 class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor):
