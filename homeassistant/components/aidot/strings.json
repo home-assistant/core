@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "The account in the current region has already configured"
+      "already_configured": "The account in the current region has already been configured"
     },
     "error": {
       "invalid_auth": "Authentication failed, please ensure that the network is functioning properly and the account password is correct."
