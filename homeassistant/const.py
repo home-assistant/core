@@ -910,7 +910,6 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_MILLIGRAMS_PER_LITER: Final = "mg/L"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
