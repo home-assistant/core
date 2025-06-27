@@ -11,11 +11,15 @@
   },
   "config_subentries": {
     "stop": {
+      "entry_type": "Stop",
       "step": {
         "user": {
           "description": "Set up stop subentry for Rejseplanen",
           "title": "Add Stop"
         }
+      },
+      "initiate_flow": {
+        "user": "Add stop"
       }
     }
   }
