@@ -221,12 +221,16 @@ def _get_item_thumbnail(
 ) -> str | None:
     """Construct path to thumbnail image."""
     item_thumbnail: str | None = None
-    if artwork_track_id := item.get("artwork_track_id"):
+    track_id = item.get("artwork_track_id") or (
+        item.get("id") if item_type == "track" else None
+    )
+
+    if track_id:
         if internal_request:
-            item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
+            item_thumbnail = player.generate_image_url_from_track_id(track_id)
         elif item_type is not None:
             item_thumbnail = entity.get_browse_image_url(
-                item_type, item["id"], artwork_track_id
+                item_type, item["id"], track_id
             )
 
     elif search_type in ["apps", "radios"]:
