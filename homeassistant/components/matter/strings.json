@@ -315,6 +315,9 @@
           "docked": "Docked"
         }
       },
+      "countdown_time": {
+        "name": "Countdown time"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
