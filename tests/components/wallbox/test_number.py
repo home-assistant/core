@@ -274,9 +274,7 @@ async def test_wallbox_number_class_icp_energy(
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
-            new=Mock(
-                return_value={"data": {"chargerData": {"maxAvailableCurrent": 20}}}
-            ),
+            new=Mock(return_value={"icp_max_current": 20}),
         ),
     ):
         await hass.services.async_call(

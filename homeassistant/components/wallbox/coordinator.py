@@ -30,7 +30,6 @@ from .const import (
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_CHARGING_CURRENT_POST_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
-    CHARGER_MAX_ICP_CURRENT_POST_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
@@ -197,10 +196,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 429:
                 raise UpdateFailed(
-                    "Failed to update Wallbox data; too too_many_requests"
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
                 ) from wallbox_connection_error
             raise UpdateFailed(
-                "Failed to update Wallbox data."
+                translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -208,7 +207,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return await self.hass.async_add_executor_job(self._get_data)
 
     @_require_authentication
-    def _set_charging_current(self, charging_current: float) -> dict:
+    def _set_charging_current(
+        self, charging_current: float
+    ) -> dict[str, dict[str, dict[str, Any]]]:
         """Set maximum charging current for Wallbox."""
         try:
             result = self._wallbox.setMaxChargingCurrent(
@@ -238,14 +239,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_icp_current(self, icp_current: float) -> dict:
+    def _set_icp_current(self, icp_current: float) -> dict[str, Any]:
         """Set maximum icp current for Wallbox."""
         try:
             result = self._wallbox.setIcpMaxCurrent(self._station, icp_current)
             data = self.data
-            data[CHARGER_MAX_ICP_CURRENT_KEY] = result[CHARGER_DATA_POST_L1_KEY][
-                CHARGER_DATA_POST_L2_KEY
-            ][CHARGER_MAX_ICP_CURRENT_POST_KEY]
+            data[CHARGER_MAX_ICP_CURRENT_KEY] = result[CHARGER_MAX_ICP_CURRENT_KEY]
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
@@ -266,7 +265,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_energy_cost(self, energy_cost: float) -> dict:
+    def _set_energy_cost(self, energy_cost: float) -> dict[str, Any]:
         """Set energy cost for Wallbox."""
         try:
             result = self._wallbox.setEnergyCost(self._station, energy_cost)
@@ -290,7 +289,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_lock_unlock(self, lock: bool) -> dict:
+    def _set_lock_unlock(self, lock: bool) -> dict[str, dict[str, dict[str, Any]]]:
         """Set wallbox to locked or unlocked."""
         try:
             if lock:
@@ -298,9 +297,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 result = self._wallbox.unlockCharger(self._station)
             data = self.data
-            data[CHARGER_LOCKED_UNLOCKED_KEY] = result["data"]["chargerData"][
-                CHARGER_LOCKED_UNLOCKED_KEY
-            ]
+            data[CHARGER_LOCKED_UNLOCKED_KEY] = result[CHARGER_DATA_POST_L1_KEY][
+                CHARGER_DATA_POST_L2_KEY
+            ][CHARGER_LOCKED_UNLOCKED_KEY]
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
