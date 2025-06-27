@@ -14,7 +14,7 @@ from aidot.const import (
 from aidot.device_client import DeviceClient, DeviceStatusData
 from aidot.exceptions import AidotAuthFailed, AidotNotLogin, AidotUserOrPassIncorrect
 
-from homeassistant.components.sensor import timedelta
+from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
