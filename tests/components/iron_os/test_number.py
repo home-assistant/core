@@ -5,10 +5,15 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pynecil import CharSetting, CommunicationError
+from pynecil import CharSetting, CommunicationError, TempUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.iron_os.const import (
+    MAX_TEMP_F,
+    MIN_BOOST_TEMP_F,
+    MIN_TEMP_F,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -54,6 +59,47 @@ async def test_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "min_value", "max_value"),
+    [
+        ("number.pinecil_setpoint_temperature", MIN_TEMP_F, MAX_TEMP_F),
+        ("number.pinecil_boost_temperature", MIN_BOOST_TEMP_F, MAX_TEMP_F),
+        ("number.pinecil_long_press_temperature_step", 5, 90),
+        ("number.pinecil_short_press_temperature_step", 1, 50),
+        ("number.pinecil_sleep_temperature", MIN_TEMP_F, MAX_TEMP_F),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "ble_device")
+async def test_state_fahrenheit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_pynecil: AsyncMock,
+    entity_id: str,
+    min_value: int,
+    max_value: int,
+) -> None:
+    """Test with temp unit set to fahrenheit."""
+
+    mock_pynecil.get_settings.return_value["temp_unit"] = TempUnit.FAHRENHEIT
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    assert state.attributes["min"] == min_value
+    assert state.attributes["max"] == max_value
 
 
 @pytest.mark.parametrize(
