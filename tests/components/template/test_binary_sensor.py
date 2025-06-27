@@ -1196,9 +1196,34 @@ async def test_restore_state(
         },
     ],
 )
+@pytest.mark.parametrize(
+    (
+        "beer_count",
+        "final_state",
+        "icon_attr",
+        "entity_picture_attr",
+        "plus_one_attr",
+        "another_attr",
+        "another_attr_update",
+    ),
+    [
+        (2, STATE_ON, "mdi:pirate", "/local/dogs.png", 3, 1, "si"),
+        (1, STATE_OFF, "mdi:pirate", "/local/dogs.png", 2, 1, "si"),
+        (0, STATE_OFF, "mdi:pirate", "/local/dogs.png", 1, 1, "si"),
+        (-1, STATE_UNAVAILABLE, None, None, None, None, None),
+    ],
+)
 @pytest.mark.usefixtures("start_ha")
 async def test_trigger_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    beer_count: int,
+    final_state: str,
+    icon_attr: str | None,
+    entity_picture_attr: str | None,
+    plus_one_attr: int | None,
+    another_attr: int | None,
+    another_attr_update: str | None,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test trigger entity works."""
     await hass.async_block_till_done()
@@ -1211,15 +1236,15 @@ async def test_trigger_entity(
     assert state.state == STATE_UNKNOWN
 
     context = Context()
-    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    hass.bus.async_fire("test_event", {"beer": beer_count}, context=context)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.hello_name")
-    assert state.state == STATE_ON
+    assert state.state == final_state
     assert state.attributes.get("device_class") == "battery"
-    assert state.attributes.get("icon") == "mdi:pirate"
-    assert state.attributes.get("entity_picture") == "/local/dogs.png"
-    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("icon") == icon_attr
+    assert state.attributes.get("entity_picture") == entity_picture_attr
+    assert state.attributes.get("plus_one") == plus_one_attr
     assert state.context is context
 
     assert len(entity_registry.entities) == 2
@@ -1233,36 +1258,20 @@ async def test_trigger_entity(
     )
 
     state = hass.states.get("binary_sensor.via_list")
-    assert state.state == STATE_ON
+    assert state.state == final_state
     assert state.attributes.get("device_class") == "battery"
-    assert state.attributes.get("icon") == "mdi:pirate"
-    assert state.attributes.get("entity_picture") == "/local/dogs.png"
-    assert state.attributes.get("plus_one") == 3
-    assert state.attributes.get("another") == 1
+    assert state.attributes.get("icon") == icon_attr
+    assert state.attributes.get("entity_picture") == entity_picture_attr
+    assert state.attributes.get("plus_one") == plus_one_attr
+    assert state.attributes.get("another") == another_attr
     assert state.context is context
 
     # Even if state itself didn't change, attributes might have changed
-    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    hass.bus.async_fire("test_event", {"beer": beer_count, "uno_mas": "si"})
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.via_list")
-    assert state.state == STATE_ON
-    assert state.attributes.get("another") == "si"
-
-    # Check None values
-    hass.bus.async_fire("test_event", {"beer": 0})
-    await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.hello_name")
-    assert state.state == STATE_OFF
-    state = hass.states.get("binary_sensor.via_list")
-    assert state.state == STATE_OFF
-
-    # Check template error
-    hass.bus.async_fire("test_event", {"beer": -1})
-    await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.hello_name")
-    assert state.state == STATE_UNAVAILABLE
-    state = hass.states.get("binary_sensor.via_list")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == final_state
+    assert state.attributes.get("another") == another_attr_update
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
