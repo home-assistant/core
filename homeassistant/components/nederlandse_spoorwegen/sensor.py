@@ -14,15 +14,21 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ICON,
     CONF_FROM,
     CONF_ROUTES,
     CONF_TIME,
@@ -94,6 +100,21 @@ def setup_platform(
     add_entities(sensors, True)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up NS sensors from a config entry."""
+    _LOGGER.debug("Setting up NS sensors for entry: %s", entry.entry_id)
+    api_key = entry.data[CONF_API_KEY]
+    nsapi = ns_api.NSAPI(api_key)
+    # For now, just add a single sensor as a proof of concept
+    # In a full implementation, routes would be handled via options
+    sensors = [NSDepartureSensor(nsapi, "NS Sensor", "AMS", "UTR", None, None)]
+    async_add_entities(sensors, True)
+
+
 def valid_stations(stations, given_stations):
     """Verify the existence of the given station codes."""
     for station in given_stations:
@@ -108,11 +129,19 @@ def valid_stations(stations, given_stations):
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
-    _attr_attribution = "Data provided by NS"
-    _attr_icon = "mdi:train"
+    _attr_attribution = ATTR_ATTRIBUTION
+    _attr_icon = ATTR_ICON
 
     def __init__(self, nsapi, name, departure, heading, via, time) -> None:
         """Initialize the sensor."""
+        _LOGGER.debug(
+            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            name,
+            departure,
+            heading,
+            via,
+            time,
+        )
         self._nsapi = nsapi
         self._name = name
         self._departure = departure
@@ -225,7 +254,15 @@ class NSDepartureSensor(SensorEntity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Get the trip information."""
+        """Fetch new state data for the sensor."""
+        _LOGGER.debug(
+            "Updating NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            self._name,
+            self._departure,
+            self._heading,
+            self._via,
+            self._time,
+        )
 
         # If looking for a specific trip time, update around that trip time only.
         if self._time and (
@@ -266,7 +303,7 @@ class NSDepartureSensor(SensorEntity):
                 filtered_times = [
                     (i, time)
                     for i, time in enumerate(all_times)
-                    if time > dt_util.now()
+                    if time is not None and time > dt_util.now()
                 ]
 
                 if len(filtered_times) > 0:

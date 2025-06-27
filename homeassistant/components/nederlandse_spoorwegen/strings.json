@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nederlandse Spoorwegen Setup",
+        "description": "Set up your Nederlandse Spoorwegen integration.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Your NS API key."
+        }
+      },
+      "routes": {
+        "title": "Add Route",
+        "description": "Add a train route to monitor.",
+        "data": {
+          "name": "Route name",
+          "from": "From station",
+          "to": "To station"
+        },
+        "data_description": {
+          "name": "A name for this route.",
+          "from": "Departure station code (e.g., AMS)",
+          "to": "Arrival station code (e.g., UTR)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to NS API. Check your API key.",
+      "invalid_auth": "Invalid API key.",
+      "unknown": "Unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure": {
+        "name": "Next Departure",
+        "state": {
+          "on_time": "On time",
+          "delayed": "Delayed",
+          "cancelled": "Cancelled"
+        }
+      }
+    }
+  }
+}
