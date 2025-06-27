@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.32
+AIOSomecomfort==0.0.33
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -204,7 +204,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.6.0
+aioautomower==1.0.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -820,9 +820,6 @@ dsmr-parser==1.4.3
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
 
-# homeassistant.components.dweet
-dweepy==0.3.0
-
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
 
@@ -1171,7 +1168,7 @@ hole==0.8.0
 holidays==0.75
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250626.0
+home-assistant-frontend==20250627.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.6.23
@@ -1279,7 +1276,7 @@ israel-rail-api==0.1.2
 jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.10.0
+jellyfin-apiclient-python==1.11.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
@@ -2166,7 +2163,7 @@ pymsteams==0.1.12
 pymysensors==0.25.0
 
 # homeassistant.components.iron_os
-pynecil==4.1.0
+pynecil==4.1.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -3102,7 +3099,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.20.0
+whirlpool-sixth-sense==0.21.1
 
 # homeassistant.components.whois
 whois==0.9.27

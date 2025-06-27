@@ -36,7 +36,8 @@
         "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
         "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
-        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
+        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device.",
+        "fw_download_failed": "{firmware_name} firmware for your {model} failed to download. Make sure Home Assistant has internet access and try again."
       },
       "progress": {
         "install_firmware": "Please wait while {firmware_name} firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
