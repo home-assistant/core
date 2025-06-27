@@ -15,6 +15,7 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 # diagnostics module will not be imported in the executor.
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -28,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AUTH_RETRIES,
+    CONF_ALLOW_EA,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -164,4 +166,24 @@ async def async_remove_config_entry_device(
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
         if device.is_adopted_by_us and device.mac in unifi_macs:
             return False
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating configuration from version %s", entry.version)
+
+    if entry.version > 1:
+        return False
+
+    if entry.version == 1:
+        options = dict(entry.options)
+        if CONF_ALLOW_EA in options:
+            options.pop(CONF_ALLOW_EA)
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(entry.unique_id), version=2, options=options
+        )
+
+    _LOGGER.debug("Migration to configuration version %s successful", entry.version)
+
     return True
