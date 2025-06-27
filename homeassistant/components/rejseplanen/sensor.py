@@ -73,7 +73,7 @@ async def async_setup_entry(
         )
 
     for subentry_id, subentry in config_entry.subentries.items():
-        _LOGGER.info("Subentry %s with data: %s", subentry_id, subentry.data)
+        _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
 
         entry_data = hass.data[DOMAIN][config_entry.entry_id]
         coordinator = entry_data["coordinator"]

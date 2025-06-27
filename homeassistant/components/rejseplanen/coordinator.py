@@ -80,7 +80,11 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
         if not self._stop_ids:
             _LOGGER.debug("No stop IDs registered, skipping data fetch")
             raise NoStopsRegisteredError
-
+        _LOGGER.debug(
+            "Fetching data for stop IDs: %s at time %s",
+            self._stop_ids,
+            dt_util.now().isoformat(),
+        )
         try:
             # Get all departures for this stop
             departure_board, _ = self.api.get_departures(list(self._stop_ids))
