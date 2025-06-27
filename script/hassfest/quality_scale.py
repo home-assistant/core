@@ -632,7 +632,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "meteo_france",
     "meteoalarm",
     "meteoclimatic",
-    "metoffice",
     "mfi",
     "microbees",
     "microsoft",
