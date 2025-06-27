@@ -199,6 +199,39 @@ class MatterSensor(MatterEntity, SensorEntity):
         self._attr_native_value = value
 
 
+class MatterMeterSensor(MatterEntity, SensorEntity):
+    """Representation of a Matter  Meter sensor."""
+
+    entity_description: MatterSensorEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        raw_value: Nullable | float | None
+        raw_value, value_convert = (
+            self.get_matter_attribute_value(self._entity_info.primary_attribute),
+            self.entity_description.measurement_to_ha,
+        )
+        if raw_value in (None, NullValue):
+            self._attr_native_value = None
+            return
+        if value_convert is not None:
+            self._attr_native_value = value_convert(raw_value)
+            return
+        multiplier, divisor = (
+            self.get_matter_attribute_value(self._entity_info.attributes_to_watch[1]),
+            self.get_matter_attribute_value(self._entity_info.attributes_to_watch[2]),
+        )
+        for value in (divisor, multiplier):
+            if value in (None, NullValue, 0):
+                self._attr_native_value = None
+                return
+        self._attr_native_value = round(
+            raw_value * multiplier / divisor,
+            self.entity_description.suggested_display_precision or 2,
+        )
+
+
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor for Matter 1.0 draft ElectricalMeasurement cluster."""
 
@@ -682,14 +715,16 @@ DISCOVERY_SCHEMAS = [
             key="ThirdRealityEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            measurement_to_ha=lambda x: x / 1000,
+            measurement_to_ha=None,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterMeterSensor,
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.CurrentSummationDelivered,
+            ThirdRealityMeteringCluster.Attributes.Multiplier,
+            ThirdRealityMeteringCluster.Attributes.Divisor,
         ),
         absent_clusters=(clusters.ElectricalEnergyMeasurement,),
     ),
