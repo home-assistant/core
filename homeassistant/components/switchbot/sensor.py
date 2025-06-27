@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from switchbot import HumidifierWaterLevel
 import switchbot
+from switchbot import HumidifierWaterLevel
 from switchbot.const.air_purifier import AirQualityLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -123,12 +123,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="water_level",
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
-    ),
-    "energy": SensorEntityDescription(
-        key="energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
     ),
 }
 
