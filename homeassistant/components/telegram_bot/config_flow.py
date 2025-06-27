@@ -328,6 +328,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
@@ -350,7 +353,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input["advanced_settings"].get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
+                        CONF_PROXY_URL
+                    ),
                 },
                 options={
                     # this value may come from yaml import
