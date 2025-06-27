@@ -56,7 +56,7 @@
           "json_query": "HTTP(s) - JSON query",
           "group": "Group",
           "docker": "Docker",
-          "grpc_keyword": "gPRC(s) - Keyword",
+          "grpc_keyword": "gRPC(s) - Keyword",
           "real_browser": "HTTP(s) - Browser engine",
           "gamedig": "GameDig",
           "kafka_producer": "Kafka Producer",
