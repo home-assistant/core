@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -81,11 +80,7 @@ class PlaystationNetworkBinarySensorEntity(
         description: PlaystationNetworkBinarySensorEntityDescription,
     ) -> None:
         """Initialize a binary sensor entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        if TYPE_CHECKING:
-            assert coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        super().__init__(coordinator, description)
 
     @property
     def is_on(self) -> bool:
