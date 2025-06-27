@@ -414,6 +414,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="inactive_reason",
         translation_key="inactive_reason",
+        exists_fn=lambda data: data.capabilities.work_areas,
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: INACTIVE_REASONS,
         value_fn=attrgetter("mower.inactive_reason"),
