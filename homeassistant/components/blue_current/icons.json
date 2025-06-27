@@ -29,7 +29,15 @@
       },
       "stop_charge_session": {
         "default": "mdi:stop"
+      },
+      "start_charge_session": {
+        "default": "mdi:play"
       }
+    }
+  },
+  "services": {
+    "start_charge_session": {
+      "service": "mdi:play"
     }
   }
 }

@@ -15,17 +15,33 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, CONF_DEVICE_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
+from .const import (
+    CARD,
+    CHARGING_CARD_ID,
+    DEFAULT_CARD,
+    DOMAIN,
+    EVSE_ID,
+    LOGGER,
+    MODEL_TYPE,
+    START_CHARGE_SESSION,
+    UID,
+)
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
+CHARGE_CARDS = "CHARGE_CARDS"
 DATA = "data"
 DELAY = 5
 
@@ -53,8 +69,32 @@ async def async_setup_entry(
     )
 
     await client.wait_for_charge_points()
+    await client.get_charge_cards()
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def start_charge_session(service_call: ServiceCall) -> None:
+        """Start a charge session with the provided device and charge card ID."""
+        # When no charge card is provided, use the default charge card set in the config flow.
+        charging_card_id = service_call.data.get(CHARGING_CARD_ID)
+        device_id = service_call.data.get(CONF_DEVICE_ID)
+        if device_id is None:
+            raise ServiceValidationError
+
+        # Get the device based on the given device ID.
+        device = dr.async_get(hass).devices.get(device_id)
+        if device is None:
+            raise ServiceValidationError
+
+        # Get the evse_id from the identifier of the device.
+        evse_id = list(device.identifiers)[0][1]
+
+        if charging_card_id is None:
+            charging_card_id = connector.selected_charge_card[UID]
+
+        await connector.client.start_session(evse_id, charging_card_id)
+
+    hass.services.async_register(DOMAIN, START_CHARGE_SESSION, start_charge_session)
 
     return True
 
@@ -79,6 +119,16 @@ class Connector:
         self.client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
+        self.charge_cards: dict[str, dict[str, Any]] = {}
+        self.selected_charge_card = config.options.get(CARD, DEFAULT_CARD)
+
+        async def update_listener(
+            hass: HomeAssistant, entry: BlueCurrentConfigEntry
+        ) -> None:
+            """Update listener to update the selected card when the options flow is finished."""
+            self.selected_charge_card = entry.options[CARD]
+
+        config.async_on_unload(config.add_update_listener(update_listener))
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -102,6 +152,9 @@ class Connector:
             self.grid = data
             self.dispatch_grid_update_signal()
 
+        elif object_name == CHARGE_CARDS:
+            self.add_charge_cards(message["default_card"], message["cards"])
+
     async def handle_charge_point_data(self, charge_points_data: list) -> None:
         """Handle incoming chargepoint data."""
         await asyncio.gather(
@@ -122,6 +175,20 @@ class Connector:
     def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
         """Add a charge point to charge_points."""
         self.charge_points[evse_id] = {MODEL_TYPE: model, ATTR_NAME: name}
+
+    def add_charge_cards(
+        self, default_card: dict[str, Any], cards: list[dict[str, Any]]
+    ) -> None:
+        """Add charge cards to charge_cards. Only adding valid charge cards."""
+
+        # Add the standard default card.
+        valid_cards = {default_card[UID]: default_card}
+
+        for card in cards:
+            if card["valid"]:
+                valid_cards[card[UID]] = card
+
+        self.charge_cards = valid_cards
 
     def update_charge_point(self, evse_id: str, data: dict) -> None:
         """Update the charge point data."""
