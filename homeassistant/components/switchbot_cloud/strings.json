@@ -16,5 +16,20 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "light_level": {
+        "name": "Light level"
+      },
+      "contact_open": {
+        "name": "Contact open",
+        "state": {
+          "open": "Open",
+          "closed": "Closed",
+          "timeout": "Timeout"
+        }
+      }
+    }
   }
 }

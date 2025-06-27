@@ -171,6 +171,26 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
+        "Motion Sensor",
+        "Contact Sensor",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in ["Hub 3"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in ["Water Detector"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.binary_sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -317,7 +337,7 @@ def _create_handle_webhook(
         ):
             _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
-
+        _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         deviceMac = data["context"]["deviceMac"]
 
         if deviceMac not in coordinators_by_id:

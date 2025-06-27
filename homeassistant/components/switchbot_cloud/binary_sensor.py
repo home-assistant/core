@@ -26,6 +26,7 @@ class SwitchBotCloudBinarySensorEntityDescription(BinarySensorEntityDescription)
 
     # Value or values to consider binary sensor to be "on"
     on_value: bool | str = True
+    keys: list[str] | None = None
 
 
 CALIBRATION_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -43,6 +44,24 @@ DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     on_value="opened",
 )
 
+MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="moveDetected",
+    device_class=BinarySensorDeviceClass.MOTION,
+)
+
+IS_LIGHT_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="brightness",
+    device_class=BinarySensorDeviceClass.LIGHT,
+    on_value="bright",
+)
+
+LEAK_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="status",
+    keys=["status", "detectionState"],
+    device_class=BinarySensorDeviceClass.MOISTURE,
+)
+
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
@@ -52,6 +71,13 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Motion Sensor": (MOVE_DETECTED_DESCRIPTION,),
+    "Contact Sensor": (
+        MOVE_DETECTED_DESCRIPTION,
+        IS_LIGHT_DESCRIPTION,
+    ),
+    "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
+    "Water Detector": (LEAK_DESCRIPTION,),
 }
 
 
@@ -95,6 +121,11 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return None
+
+        if self.entity_description.keys:
+            return any(
+                self.coordinator.data.get(key) for key in self.entity_description.keys
+            )
 
         return (
             self.coordinator.data.get(self.entity_description.key)
