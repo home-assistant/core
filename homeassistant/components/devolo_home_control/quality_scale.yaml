@@ -67,7 +67,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -82,7 +82,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  stale-devices: todo
+  stale-devices: done
   # Platinum
   async-dependency: todo
   inject-websession:
