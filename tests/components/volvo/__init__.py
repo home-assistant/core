@@ -39,7 +39,9 @@ async def async_load_fixture_as_value_field(
     return {key: VolvoCarsValueField.from_dict(value) for key, value in data.items()}
 
 
-def configure_mock(mock: AsyncMock, *, return_value: Any, side_effect: Any) -> None:
+def configure_mock(
+    mock: AsyncMock, *, return_value: Any = None, side_effect: Any = None
+) -> None:
     """Reconfigure mock."""
     mock.reset_mock()
     mock.side_effect = side_effect
