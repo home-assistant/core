@@ -40,5 +40,34 @@
     "update_failed": {
       "message": "Data retrieval failed when trying to access the PlayStation Network."
     }
+  },
+  "entity": {
+    "sensor": {
+      "trophy_level": {
+        "name": "Trophy level"
+      },
+      "trophy_level_progress": {
+        "name": "Next level"
+      },
+      "earned_trophies_platinum": {
+        "name": "Platinum trophies",
+        "unit_of_measurement": "trophies"
+      },
+      "earned_trophies_gold": {
+        "name": "Gold trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "earned_trophies_silver": {
+        "name": "Silver trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "earned_trophies_bronze": {
+        "name": "Bronze trophies",
+        "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
+      },
+      "online_id": {
+        "name": "Online-ID"
+      }
+    }
   }
 }

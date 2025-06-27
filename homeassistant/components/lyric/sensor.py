@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,14 +23,13 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN,
     PRESET_HOLD_UNTIL,
     PRESET_NO_HOLD,
     PRESET_PERMANENT_HOLD,
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
-from .coordinator import LyricDataUpdateCoordinator
+from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
 from .entity import LyricAccessoryEntity, LyricDeviceEntity
 
 LYRIC_SETPOINT_STATUS_NAMES = {
@@ -159,11 +157,11 @@ def get_datetime_from_future_time(time_str: str) -> datetime:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LyricConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
-    coordinator: LyricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LyricSensor(
