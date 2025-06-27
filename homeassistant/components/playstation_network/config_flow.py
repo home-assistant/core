@@ -14,7 +14,7 @@ from psnawp_api.models.user import User
 from psnawp_api.utils.misc import parse_npsso_token
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 
 from .const import CONF_NPSSO, DOMAIN, NPSSO_LINK, PSN_LINK
@@ -76,13 +76,23 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure flow for PlayStation Network integration."""
+        return await self.async_step_reauth_confirm(user_input)
+
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication dialog."""
         errors: dict[str, str] = {}
 
-        entry = self._get_reauth_entry()
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
 
         if user_input is not None:
             try:
@@ -113,7 +123,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
