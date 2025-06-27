@@ -2166,7 +2166,7 @@ pymsteams==0.1.12
 pymysensors==0.25.0
 
 # homeassistant.components.iron_os
-pynecil==4.1.0
+pynecil==4.1.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
