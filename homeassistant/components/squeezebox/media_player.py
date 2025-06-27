@@ -147,7 +147,8 @@ async def async_setup_entry(
         # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
         if (
             sdevice
-            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id)) in sdevice.connections
+            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
+            in sdevice.connections
         ):
             _LOGGER.debug("Shared server & player device %s", sdevice)
             name = sdevice.name
