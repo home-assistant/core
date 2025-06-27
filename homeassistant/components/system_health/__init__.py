@@ -231,7 +231,7 @@ async def handle_info(
                     "Error fetching system info for %s - %s",
                     domain,
                     key,
-                    exc_info=(type(exception), exception, exception.__traceback__),  # noqa: LOG014
+                    exc_info=(type(exception), exception, exception.__traceback__),
                 )
                 event_msg["success"] = False
                 event_msg["error"] = {"type": "failed", "error": "unknown"}
