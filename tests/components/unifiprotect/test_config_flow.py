@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import socket
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
@@ -793,6 +793,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         },
         unique_id="FFFFFFAAAAAA",
     )
+    mock_config.runtime_data = Mock(async_stop=AsyncMock())
     mock_config.add_to_hass(hass)
 
     other_ip_dict = UNIFI_DISCOVERY_DICT.copy()
@@ -854,7 +855,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         "port": 443,
         "verify_ssl": True,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
     assert len(mock_setup.mock_calls) == 1
 
 
