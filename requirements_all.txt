@@ -820,9 +820,6 @@ dsmr-parser==1.4.3
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
 
-# homeassistant.components.dweet
-dweepy==0.3.0
-
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
 
