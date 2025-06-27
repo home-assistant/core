@@ -12,6 +12,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.netatmo.const import (
+    ATTR_HOME_ID,
+    ATTR_SCHEDULE_ID,
+    DATA_HANDLER,
+    SERVICE_SYNC_SCHEDULE,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
@@ -557,3 +563,32 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_sync_schedule_service(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test the implementation of the sync_schedule method."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    home_id = "91763b24c43d3e344f424e8b"
+    schedule_id = "591b54a2764ff4d50d8b5795"
+
+    # Test syncing schedule using the service
+    with patch("pyatmo.home.Home.async_sync_schedule") as mock_sync_schedule:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SYNC_SCHEDULE,
+            {ATTR_HOME_ID: home_id, ATTR_SCHEDULE_ID: schedule_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        # Get the data handler
+        data_handler = hass.data[DOMAIN][config_entry.entry_id][DATA_HANDLER]
+        # Get schedule
+        schedule = data_handler.account.homes[home_id].schedules[schedule_id]
+
+        mock_sync_schedule.assert_called_once_with(schedule)
