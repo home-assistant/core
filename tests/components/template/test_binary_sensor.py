@@ -256,6 +256,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
             "{% endif %}",
             STATE_OFF,
         ),
+        ("{{ 1 / 0 == 10 }}", STATE_UNAVAILABLE),
     ],
 )
 async def test_state(
