@@ -39,12 +39,16 @@ def display_temp_interval(
 ) -> float:
     """Convert temperature interval into preferred units/precision for display."""
 
+    if not isinstance(interval, Number):
+        raise TypeError(f"Temperature interval is not a number: {interval}")
+
     ha_unit = hass.config.units.temperature_unit
 
     if unit != ha_unit:
         interval = TemperatureConverter.convert_interval(interval, unit, ha_unit)
 
-    # Ensure 0.5 -> 1 while (IEEE) rounding to int
+    # IEEE rounding would produce round(0.5) == 0 that seems unnatural.
+    # Ensure 0.5 -> 1 while rounding to int
     if precision == PRECISION_HALVES:
         return (round(interval * 2 + 1) - 1) / 2.0
     if precision == PRECISION_TENTHS:
