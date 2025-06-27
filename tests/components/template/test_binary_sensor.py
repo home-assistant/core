@@ -1293,20 +1293,34 @@ async def test_trigger_entity(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize(
+    ("beer_count", "first_state", "second_state", "final_state"),
+    [
+        (2, STATE_UNKNOWN, STATE_ON, STATE_OFF),
+        (1, STATE_OFF, STATE_OFF, STATE_OFF),
+        (0, STATE_OFF, STATE_OFF, STATE_OFF),
+        (-1, STATE_UNAVAILABLE, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+    ],
+)
 async def test_template_with_trigger_templated_delay_on(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    beer_count: int,
+    first_state: str,
+    second_state: str,
+    final_state: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNKNOWN
 
     context = Context()
-    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    hass.bus.async_fire("test_event", {"beer": beer_count}, context=context)
     await hass.async_block_till_done()
 
     # State should still be unknown
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == first_state
 
     # Now wait for the on delay
     freezer.tick(timedelta(seconds=3))
@@ -1314,7 +1328,7 @@ async def test_template_with_trigger_templated_delay_on(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
+    assert state.state == second_state
 
     # Now wait for the auto-off
     freezer.tick(timedelta(seconds=2))
@@ -1322,7 +1336,7 @@ async def test_template_with_trigger_templated_delay_on(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == final_state
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
