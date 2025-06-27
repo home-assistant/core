@@ -391,7 +391,7 @@ class NetatmoDataHandler:
         for module in home.modules.values():
             if not module.device_category:
                 _LOGGER.debug(
-                    "Module %s skipped beacuse of missing category", module.name
+                    "Module %s skipped because of missing category", module.name
                 )
                 continue
 
