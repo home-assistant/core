@@ -7,7 +7,10 @@
     },
     "binary_sensor": {
       "online_status": {
-        "default": "mdi:sony-playstation"
+        "default": "mdi:account-badge",
+        "state": {
+          "off": "mdi:account-off-outline"
+        }
       },
       "ps_plus_status": {
         "default": "mdi:shape-plus-outline"

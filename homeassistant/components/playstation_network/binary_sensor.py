@@ -12,17 +12,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import (
     PlaystationNetworkConfigEntry,
     PlaystationNetworkCoordinator,
     PlaystationNetworkData,
 )
+from .entity import PlaystationNetworkServiceEntity
 
 PARALLEL_UPDATES = 0
 
@@ -31,7 +28,7 @@ PARALLEL_UPDATES = 0
 class PlaystationNetworkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """PlayStation Network binary sensor description."""
 
-    value_fn: Callable[[PlaystationNetworkData], StateType]
+    is_on_fn: Callable[[PlaystationNetworkData], bool]
 
 
 class PlaystationNetworkBinarySensor(StrEnum):
@@ -47,14 +44,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[
     PlaystationNetworkBinarySensorEntityDescription(
         key=PlaystationNetworkBinarySensor.ONLINE_STATUS,
         translation_key=PlaystationNetworkBinarySensor.ONLINE_STATUS,
-        name="Online",
-        value_fn=(lambda psn: psn.available),
+        is_on_fn=lambda psn: psn.available,
     ),
     PlaystationNetworkBinarySensorEntityDescription(
         key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         translation_key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
-        name="PlayStation Plus",
-        value_fn=(lambda psn: psn.profile["isPlus"]),
+        is_on_fn=lambda psn: psn.profile["isPlus"],
     ),
 )
 
@@ -73,14 +68,12 @@ async def async_setup_entry(
 
 
 class PlaystationNetworkBinarySensorEntity(
-    CoordinatorEntity[PlaystationNetworkCoordinator], BinarySensorEntity
+    PlaystationNetworkServiceEntity,
+    BinarySensorEntity,
 ):
     """Representation of a PlayStation Network binary sensor entity."""
 
     entity_description: PlaystationNetworkBinarySensorEntityDescription
-    coordinator: PlaystationNetworkCoordinator
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -93,16 +86,9 @@ class PlaystationNetworkBinarySensorEntity(
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
-        self._attr_translation_key = description.translation_key
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
-            name=coordinator.data.username,
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Sony Interactive Entertainment",
-        )
 
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
 
-        return bool(self.entity_description.value_fn(self.coordinator.data))
+        return self.entity_description.is_on_fn(self.coordinator.data)

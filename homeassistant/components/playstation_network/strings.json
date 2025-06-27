@@ -55,18 +55,10 @@
   "entity": {
     "binary_sensor": {
       "online_status": {
-        "name": "Status",
-        "state": {
-          "on": "Online",
-          "off": "Offline"
-        }
+        "name": "Online"
       },
       "ps_plus_status": {
-        "name": "PlayStation Plus",
-        "state": {
-          "on": "[%key:common::state::active%]",
-          "off": "Inactive"
-        }
+        "name": "Subscribed to PlayStation Plus"
       }
     },
     "sensor": {
