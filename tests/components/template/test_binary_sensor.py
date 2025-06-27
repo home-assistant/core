@@ -1101,7 +1101,13 @@ async def test_restore_state(
                             "friendly_name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "device_class": "battery",
-                            "value_template": "{{ trigger.event.data.beer == 2 }}",
+                            "value_template": (
+                                "{% if trigger.event.data.beer < 0 %}"
+                                "{{ None }}"
+                                "{% else %}"
+                                "{{ trigger.event.data.beer == 2 }}"
+                                "{% endif %}"
+                            ),
                             "entity_picture_template": "{{ '/local/dogs.png' }}",
                             "icon_template": "{{ 'mdi:pirate' }}",
                             "attribute_templates": {
@@ -1114,7 +1120,13 @@ async def test_restore_state(
                             "name": "via list",
                             "unique_id": "via_list-id",
                             "device_class": "battery",
-                            "state": "{{ trigger.event.data.beer == 2 }}",
+                            "state": (
+                                "{% if trigger.event.data.beer < 0 %}"
+                                "{{ None }}"
+                                "{% else %}"
+                                "{{ trigger.event.data.beer == 2 }}"
+                                "{% endif %}"
+                            ),
                             "picture": "{{ '/local/dogs.png' }}",
                             "icon": "{{ 'mdi:pirate' }}",
                             "attributes": {
@@ -1187,6 +1199,14 @@ async def test_trigger_entity(
     state = hass.states.get("binary_sensor.via_list")
     assert state.state == STATE_ON
     assert state.attributes.get("another") == "si"
+
+    # Check None values
+    hass.bus.async_fire("test_event", {"beer": -1})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == STATE_OFF
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
