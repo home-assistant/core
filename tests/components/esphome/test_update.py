@@ -35,7 +35,7 @@ from tests.typing import WebSocketGenerator
 
 RELEASE_SUMMARY = "This is a release summary"
 RELEASE_URL = "https://esphome.io/changelog"
-ENTITY_ID = "update.test_myupdate"
+ENTITY_ID = "update.test_my_update"
 
 
 @pytest.fixture(autouse=True)

@@ -915,6 +915,11 @@ ZEROCONF = {
             "name": "uzg-01*",
         },
     ],
+    "_vege._tcp.local.": [
+        {
+            "domain": "vegehub",
+        },
+    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
