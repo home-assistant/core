@@ -7,7 +7,10 @@ import asyncio
 import logging
 from typing import Any
 
-from ha_silabs_firmware_client import FirmwareUpdateClient
+from aiohttp import ClientError
+from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
+from universal_silabs_flasher.common import Version
+from universal_silabs_flasher.firmware import NabuCasaMetadata
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -149,15 +152,78 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
 
         if not self.firmware_install_task:
-            session = async_get_clientsession(self.hass)
-            client = FirmwareUpdateClient(fw_update_url, session)
-            manifest = await client.async_update_data()
-
-            fw_meta = next(
-                fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+            # We 100% need to install new firmware only if the wrong firmware is
+            # currently installed
+            firmware_install_required = self._probed_firmware_info is None or (
+                self._probed_firmware_info.firmware_type
+                != expected_installed_firmware_type
             )
 
-            fw_data = await client.async_fetch_firmware(fw_meta)
+            session = async_get_clientsession(self.hass)
+            client = FirmwareUpdateClient(fw_update_url, session)
+
+            try:
+                manifest = await client.async_update_data()
+                fw_manifest = next(
+                    fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+                )
+            except (StopIteration, TimeoutError, ClientError, ManifestMissing) as err:
+                _LOGGER.warning(
+                    "Failed to fetch firmware update manifest", exc_info=True
+                )
+
+                # Not having internet access should not prevent setup
+                if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to index download failure"
+                    )
+                    return self.async_show_progress_done(next_step_id=next_step_id)
+
+                raise AbortFlow(
+                    "fw_download_failed",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                        "firmware_name": firmware_name,
+                    },
+                ) from err
+
+            if not firmware_install_required:
+                assert self._probed_firmware_info is not None
+
+                # Make sure we do not downgrade the firmware
+                fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
+                fw_version = fw_metadata.get_public_version()
+                probed_fw_version = Version(self._probed_firmware_info.firmware_version)
+
+                if probed_fw_version >= fw_version:
+                    _LOGGER.debug(
+                        "Not downgrading firmware, installed %s is newer than available %s",
+                        probed_fw_version,
+                        fw_version,
+                    )
+                    return self.async_show_progress_done(next_step_id=next_step_id)
+
+            try:
+                fw_data = await client.async_fetch_firmware(fw_manifest)
+            except (TimeoutError, ClientError, ValueError) as err:
+                _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
+
+                # If we cannot download new firmware, we shouldn't block setup
+                if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to image download failure"
+                    )
+                    return self.async_show_progress_done(next_step_id=next_step_id)
+
+                # Otherwise, fail
+                raise AbortFlow(
+                    "fw_download_failed",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                        "firmware_name": firmware_name,
+                    },
+                ) from err
+
             self.firmware_install_task = self.hass.async_create_task(
                 async_flash_silabs_firmware(
                     hass=self.hass,
@@ -214,6 +280,14 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "addon_name": self._failed_addon_name,
             },
         )
+
+    async def async_step_pre_confirm_zigbee(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pre-confirm Zigbee setup."""
+
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_confirm_zigbee()
 
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -409,7 +483,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         finally:
             self.addon_start_task = None
 
-        return self.async_show_progress_done(next_step_id="confirm_otbr")
+        return self.async_show_progress_done(next_step_id="pre_confirm_otbr")
+
+    async def async_step_pre_confirm_otbr(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pre-confirm OTBR setup."""
+
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_confirm_otbr()
 
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
