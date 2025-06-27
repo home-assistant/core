@@ -6,8 +6,13 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 
-from homeassistant.components.nederlandse_spoorwegen import sensor as ns_sensor
-from homeassistant.components.nederlandse_spoorwegen.sensor import NSDepartureSensor
+from homeassistant.components.nederlandse_spoorwegen.sensor import (
+    NSDepartureSensor,
+    PlatformNotReady,
+    RequestParametersError,
+    setup_platform,
+    valid_stations,
+)
 
 FIXED_NOW = datetime(2023, 1, 1, 12, 0, 0)
 
@@ -229,27 +234,27 @@ def test_sensor_platforms_differ(mock_nsapi, mock_trip) -> None:
 def test_valid_stations_all_valid() -> None:
     """Test valid_stations returns True when all stations are valid."""
     stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert ns_sensor.valid_stations(stations, ["AMS", "UTR"]) is True
+    assert valid_stations(stations, ["AMS", "UTR"]) is True
 
 
 def test_valid_stations_some_invalid(caplog: pytest.LogCaptureFixture) -> None:
     """Test valid_stations returns False and logs warning for invalid station."""
     stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
     with caplog.at_level("WARNING"):
-        assert ns_sensor.valid_stations(stations, ["AMS", "XXX"]) is False
+        assert valid_stations(stations, ["AMS", "XXX"]) is False
         assert "is not a valid station" in caplog.text
 
 
 def test_valid_stations_none_ignored() -> None:
     """Test valid_stations ignores None values in given_stations."""
     stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert ns_sensor.valid_stations(stations, [None, "AMS"]) is True
+    assert valid_stations(stations, [None, "AMS"]) is True
 
 
 def test_valid_stations_all_none() -> None:
     """Test valid_stations returns True if all given stations are None."""
     stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert ns_sensor.valid_stations(stations, [None, None]) is True
+    assert valid_stations(stations, [None, None]) is True
 
 
 def test_update_sets_first_and_next_trip(
@@ -315,3 +320,169 @@ def test_update_handles_connection_error(
     )
     mock_nsapi.get_trips.side_effect = requests.exceptions.ConnectionError("fail")
     sensor.update()  # Should not raise
+
+
+def test_setup_platform_connection_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test setup_platform raises PlatformNotReady on connection error."""
+
+    class DummyNSAPI:
+        def __init__(self, *a, **kw) -> None:
+            pass
+
+        def get_stations(self):
+            raise requests.exceptions.ConnectionError("fail")
+
+    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
+    config = {"api_key": "abc", "routes": []}
+    with pytest.raises(PlatformNotReady):
+        setup_platform(MagicMock(), config, lambda *a, **kw: None)
+
+
+def test_setup_platform_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test setup_platform raises PlatformNotReady on HTTP error."""
+
+    class DummyNSAPI:
+        def __init__(self, *a, **kw) -> None:
+            pass
+
+        def get_stations(self):
+            raise requests.exceptions.HTTPError("fail")
+
+    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
+    config = {"api_key": "abc", "routes": []}
+    with pytest.raises(PlatformNotReady):
+        setup_platform(MagicMock(), config, lambda *a, **kw: None)
+
+
+def test_setup_platform_request_parameters_error(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup_platform returns None and logs error on RequestParametersError."""
+
+    class DummyNSAPI:
+        def __init__(self, *a, **kw) -> None:
+            pass
+
+        def get_stations(self):
+            raise RequestParametersError("fail")
+
+    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
+    config = {"api_key": "abc", "routes": []}
+    with caplog.at_level("ERROR"):
+        assert setup_platform(MagicMock(), config, lambda *a, **kw: None) is None
+        assert "Could not fetch stations" in caplog.text
+
+
+def test_setup_platform_no_valid_stations(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test setup_platform does not add sensors if stations are invalid."""
+
+    class DummyNSAPI:
+        def __init__(self, *a, **kw) -> None:
+            pass
+
+        def get_stations(self):
+            return [type("Station", (), {"code": "AMS"})()]
+
+    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
+    config = {
+        "api_key": "abc",
+        "routes": [{"name": "Test", "from": "AMS", "to": "XXX"}],
+    }
+    called = {}
+
+    def add_entities(new_entities, update_before_add=False):
+        called["sensors"] = list(new_entities)
+        called["update"] = update_before_add
+
+    setup_platform(MagicMock(), config, add_entities)
+    assert called["sensors"] == []
+    assert called["update"] is True
+
+
+def test_setup_platform_adds_sensor(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test setup_platform adds a sensor for valid stations."""
+
+    class DummyNSAPI:
+        def __init__(self, *a, **kw) -> None:
+            pass
+
+        def get_stations(self):
+            return [
+                type("Station", (), {"code": "AMS"})(),
+                type("Station", (), {"code": "UTR"})(),
+            ]
+
+    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
+    config = {
+        "api_key": "abc",
+        "routes": [{"name": "Test", "from": "AMS", "to": "UTR"}],
+    }
+    called = {}
+
+    def add_entities(new_entities, update_before_add=False):
+        called["sensors"] = list(new_entities)
+        called["update"] = update_before_add
+
+    setup_platform(MagicMock(), config, add_entities)
+    assert len(called["sensors"]) == 1
+    assert isinstance(called["sensors"][0], NSDepartureSensor)
+    assert called["update"] is True
+
+
+def test_update_no_time_branch(
+    monkeypatch: pytest.MonkeyPatch, mock_nsapi, mock_trip
+) -> None:
+    """Test update covers the else branch for self._time (uses dt_util.now)."""
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
+    sensor._time = None
+    monkeypatch.setattr(
+        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
+        lambda: FIXED_NOW,
+    )
+    mock_trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
+    mock_nsapi.get_trips.return_value = [mock_trip]
+    sensor.update()
+    assert sensor._first_trip == mock_trip
+    assert sensor._state == (FIXED_NOW + timedelta(minutes=10)).strftime("%H:%M")
+
+
+def test_update_early_return(monkeypatch: pytest.MonkeyPatch, mock_nsapi) -> None:
+    """Test update returns early if self._time is set and now is not within ±30 min."""
+    future_time = (FIXED_NOW + timedelta(hours=2)).time()
+    sensor = NSDepartureSensor(
+        mock_nsapi, "Test Sensor", "AMS", "UTR", None, future_time
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
+        lambda: FIXED_NOW,
+    )
+    sensor.update()
+    assert sensor._state is None
+    assert sensor._trips is None
+    assert sensor._first_trip is None
+
+
+def test_update_logs_error(
+    monkeypatch: pytest.MonkeyPatch, mock_nsapi, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test update logs error on requests.ConnectionError or HTTPError."""
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
+    monkeypatch.setattr(
+        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
+        lambda: FIXED_NOW,
+    )
+    mock_nsapi.get_trips.side_effect = requests.exceptions.HTTPError("fail")
+    with caplog.at_level("ERROR"):
+        sensor.update()
+        assert "Couldn't fetch trip info" in caplog.text
+
+
+def test_extra_state_attributes_next_none(mock_nsapi, mock_trip) -> None:
+    """Test extra_state_attributes covers else branch for next_trip is None."""
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
+    sensor._trips = [mock_trip]
+    sensor._first_trip = mock_trip
+    sensor._next_trip = None
+    attrs = sensor.extra_state_attributes
+    assert attrs is not None
+    assert attrs["next"] is None
