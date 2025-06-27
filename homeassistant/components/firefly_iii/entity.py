@@ -31,13 +31,10 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
             assert coordinator.config_entry
 
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{entity_description.key}"
-        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
             configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id or "")},
+            identifiers={(DOMAIN, entity_description.key)},
         )

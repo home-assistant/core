@@ -13,9 +13,9 @@ from pyfirefly import (
 )
 import voluptuous as vol
 
-from homeassistant.components.water_heater import HomeAssistant
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -75,8 +75,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(
                     title=user_input[CONF_URL], data=user_input
                 )
