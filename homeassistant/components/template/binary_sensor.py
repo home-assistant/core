@@ -417,7 +417,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             self.async_write_ha_state()
             return
 
-        # state without delay. None means rendering failed.
+        # state without delay.
         if self._attr_is_on == state or state is None or delay is None:
             self._set_state(state)
             return
