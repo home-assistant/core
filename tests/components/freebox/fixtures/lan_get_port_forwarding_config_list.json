@@ -1,0 +1,15 @@
+[
+  {
+    "enabled": true,
+    "comment": "port comment",
+    "id": 1,
+    "host": {},
+    "hostname": "android-c5fe44a2c27be1e2",
+    "lan_port": 69,
+    "wan_port_end": 69,
+    "wan_port_start": 69,
+    "lan_ip": "192.168.1.22",
+    "ip_proto": "tcp",
+    "src_ip": "8.8.8.8"
+  }
+]
