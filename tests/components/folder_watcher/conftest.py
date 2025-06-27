@@ -36,7 +36,7 @@ async def load_int(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
-        title=f"Folder Watcher {path!s}",
+        title=f"Folder Watcher {tmp_path.parts[-1]!s}",
         data={},
         options={"folder": str(path), "patterns": ["*"]},
         entry_id="1",
