@@ -69,17 +69,17 @@ class LaMarzoccoBaseEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if (
-            self._unavailable_when_machine_off
-            and cast(
+        machine_state = (
+            cast(
                 MachineStatus,
                 self.coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
             ).status
-            is MachineState.OFF
-        ):
-            return False
-
-        return super().available
+            if WidgetType.CM_MACHINE_STATUS in self.coordinator.device.dashboard.config
+            else MachineState.OFF
+        )
+        return super().available and not (
+            self._unavailable_when_machine_off and machine_state is MachineState.OFF
+        )
 
 
 class LaMarzoccoEntity(LaMarzoccoBaseEntity):
