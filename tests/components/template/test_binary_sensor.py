@@ -35,6 +35,16 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
 )
 
+_BEER_TRIGGER_VALUE_TEMPLATE = (
+    "{% if trigger.event.data.beer < 0 %}"
+    "{{ 1 / 0 == 10 }}"
+    "{% elif trigger.event.data.beer == 0 %}"
+    "{{ None }}"
+    "{% else %}"
+    "{{ trigger.event.data.beer == 2 }}"
+    "{% endif %}"
+)
+
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
@@ -1150,13 +1160,7 @@ async def test_restore_state(
                             "friendly_name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "device_class": "battery",
-                            "value_template": (
-                                "{% if trigger.event.data.beer < 0 %}"
-                                "{{ None }}"
-                                "{% else %}"
-                                "{{ trigger.event.data.beer == 2 }}"
-                                "{% endif %}"
-                            ),
+                            "value_template": _BEER_TRIGGER_VALUE_TEMPLATE,
                             "entity_picture_template": "{{ '/local/dogs.png' }}",
                             "icon_template": "{{ 'mdi:pirate' }}",
                             "attribute_templates": {
@@ -1169,13 +1173,7 @@ async def test_restore_state(
                             "name": "via list",
                             "unique_id": "via_list-id",
                             "device_class": "battery",
-                            "state": (
-                                "{% if trigger.event.data.beer < 0 %}"
-                                "{{ None }}"
-                                "{% else %}"
-                                "{{ trigger.event.data.beer == 2 }}"
-                                "{% endif %}"
-                            ),
+                            "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                             "picture": "{{ '/local/dogs.png' }}",
                             "icon": "{{ 'mdi:pirate' }}",
                             "attributes": {
@@ -1250,12 +1248,20 @@ async def test_trigger_entity(
     assert state.attributes.get("another") == "si"
 
     # Check None values
-    hass.bus.async_fire("test_event", {"beer": -1})
+    hass.bus.async_fire("test_event", {"beer": 0})
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
     assert state.state == STATE_OFF
     state = hass.states.get("binary_sensor.via_list")
     assert state.state == STATE_OFF
+
+    # Check template error
+    hass.bus.async_fire("test_event", {"beer": -1})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1267,7 +1273,7 @@ async def test_trigger_entity(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "binary_sensor": {
                     "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
+                    "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                     "device_class": "motion",
                     "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
                     "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
@@ -1317,7 +1323,7 @@ async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> 
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "binary_sensor": {
                         "name": "test",
-                        "state": "{{ trigger.event.data.beer == 2 }}",
+                        "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                         "device_class": "motion",
                         "delay_on": '{{ ({ "seconds": 10 }) }}',
                     },
@@ -1372,7 +1378,7 @@ async def test_trigger_template_delay_with_multiple_triggers(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "binary_sensor": {
                     "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
+                    "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                     "device_class": "motion",
                     "picture": "{{ '/local/dogs.png' }}",
                     "icon": "{{ 'mdi:pirate' }}",
@@ -1460,7 +1466,7 @@ async def test_trigger_entity_restore_state(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "binary_sensor": {
                     "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
+                    "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                     "device_class": "motion",
                     "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
                 },
@@ -1524,7 +1530,7 @@ async def test_trigger_entity_restore_state_auto_off(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "binary_sensor": {
                     "name": "test",
-                    "state": "{{ trigger.event.data.beer == 2 }}",
+                    "state": _BEER_TRIGGER_VALUE_TEMPLATE,
                     "device_class": "motion",
                     "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
                 },
