@@ -2,27 +2,34 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from enum import StrEnum, unique
 from typing import Final
 
 DOMAIN: Final = "evohome"
 
+# storage is to be deprecated
 STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN
 
 CONF_LOCATION_IDX: Final = "location_idx"
+DEFAULT_LOCATION_IDX: Final = 0
+
+CONF_HIGH_PRECISION: Final = "high_precision"
+DEFAULT_HIGH_PRECISION: Final = False
+DEFAULT_HIGH_PRECISION_LEGACY: Final = True  # to be deprecated
+
+DEFAULT_SCAN_INTERVAL: Final = 60 * 5
+MAXIMUM_SCAN_INTERVAL: Final = 60 * 15
+MINIMUM_SCAN_INTERVAL: Final = 180
+MINIMUM_SCAN_INTERVAL_LEGACY: Final = 60  # to be deprecated
 
 USER_DATA: Final = "user_data"
 
-SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
-
-ATTR_PERIOD: Final = "period"  # number of days
-ATTR_DURATION: Final = "duration"  # number of minutes, <24h
-
+ATTR_DURATION: Final = "duration"
+ATTR_PERIOD: Final = "period"
 ATTR_SETPOINT: Final = "setpoint"
-ATTR_DURATION_UNTIL: Final = "duration"
+
+SZ_TOKEN_DATA: Final = "token_data"
 
 
 @unique
