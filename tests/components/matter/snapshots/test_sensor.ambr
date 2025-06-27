@@ -2914,8 +2914,8 @@
     'capabilities': dict({
       'options': list([
         'sunny',
-        None,
         'cloudy',
+        'rainy',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2954,8 +2954,8 @@
       'friendly_name': 'Eve Weather Weather trend',
       'options': list([
         'sunny',
-        None,
         'cloudy',
+        'rainy',
       ]),
     }),
     'context': <ANY>,
@@ -2963,7 +2963,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'rainy',
   })
 # ---
 # name: test_sensors[extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]

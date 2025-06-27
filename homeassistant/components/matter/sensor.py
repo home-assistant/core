@@ -73,6 +73,7 @@ EVE_CLUSTER_WEATHER_MAP = {
     1: "sunny",
     2: None,
     3: "cloudy",
+    6: "rainy",
 }
 
 OPERATIONAL_STATE_MAP = {
