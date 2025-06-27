@@ -35,6 +35,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 11>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterWaterHeater-513-18',

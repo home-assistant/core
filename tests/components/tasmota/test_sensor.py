@@ -13,7 +13,7 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 import requests_mock
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
