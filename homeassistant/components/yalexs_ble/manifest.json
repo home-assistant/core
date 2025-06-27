@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/yalexs_ble",
   "iot_class": "local_push",
-  "requirements": ["yalexs-ble==2.6.0"]
+  "requirements": ["yalexs-ble==3.0.0"]
 }
