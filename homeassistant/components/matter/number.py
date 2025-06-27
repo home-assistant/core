@@ -76,7 +76,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         self._attr_native_value = value
 
 
-class MatterLevelControNumber(MatterEntity, NumberEntity):
+class MatterLevelControlNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
     entity_description: MatterLevelControNumberEntityDescription
