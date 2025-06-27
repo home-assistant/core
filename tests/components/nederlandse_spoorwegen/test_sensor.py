@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.nederlandse_spoorwegen.sensor import NSDepartureSensor
 
+FIXED_NOW = datetime(2023, 1, 1, 12, 0, 0)
+
 
 @pytest.fixture
 def mock_nsapi():
@@ -25,11 +27,11 @@ def mock_trip():
     trip.status = "ON_TIME"
     trip.nr_transfers = 0
     trip.trip_parts = []
-    trip.departure_time_planned = datetime.now() + timedelta(minutes=10)
+    trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
     trip.departure_time_actual = None
     trip.departure_platform_planned = "5"
     trip.departure_platform_actual = "5"
-    trip.arrival_time_planned = datetime.now() + timedelta(minutes=40)
+    trip.arrival_time_planned = FIXED_NOW + timedelta(minutes=40)
     trip.arrival_time_actual = None
     trip.arrival_platform_planned = "8"
     trip.arrival_platform_actual = "8"
@@ -45,13 +47,12 @@ def mock_trip_delayed():
     trip.status = "DELAYED"
     trip.nr_transfers = 1
     trip.trip_parts = []
-    now = datetime.now()
-    trip.departure_time_planned = now + timedelta(minutes=10)
-    trip.departure_time_actual = now + timedelta(minutes=15)
+    trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
+    trip.departure_time_actual = FIXED_NOW + timedelta(minutes=15)
     trip.departure_platform_planned = "5"
     trip.departure_platform_actual = "6"
-    trip.arrival_time_planned = now + timedelta(minutes=40)
-    trip.arrival_time_actual = now + timedelta(minutes=45)
+    trip.arrival_time_planned = FIXED_NOW + timedelta(minutes=40)
+    trip.arrival_time_actual = FIXED_NOW + timedelta(minutes=45)
     trip.arrival_platform_planned = "8"
     trip.arrival_platform_actual = "9"
     return trip
