@@ -62,6 +62,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         entry_id: str | None = self.device_entry.id if self.device_entry else None
         if entry_id and (entry_id in self.entity_options):
             # send night latch command
+            # wait switchbot_api update to 2.7.0
             await self.send_api_command(LockCommands.LOCK)
         else:
             await self.send_api_command(LockCommands.LOCK)
@@ -73,6 +74,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         entry_id: str | None = self.device_entry.id if self.device_entry else None
         if entry_id and (entry_id in self.entity_options):
             # send night latch command
+            # wait switchbot_api update to 2.7.0
             await self.send_api_command(LockCommands.UNLOCK)
         else:
             await self.send_api_command(LockCommands.UNLOCK)
