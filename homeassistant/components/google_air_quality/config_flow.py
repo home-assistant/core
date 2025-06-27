@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
+class GoogleAirQualityApiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow to handle Google Air Quality authentication."""
 
     @classmethod
@@ -88,7 +88,7 @@ class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_API_KEY])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"API-Key: {'*' * (len(user_input[CONF_API_KEY]) - 3)}{user_input[CONF_API_KEY][-3:]}",
+                title="Google Air Quality",
                 data={CONF_REFERRER: referrer},
             )
 

@@ -100,7 +100,7 @@ async def test_full_flow(
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "API-Key: *********234"
+    assert result["title"] == "Google Air Quality"
     assert result["data"] == {CONF_REFERRER: None}
 
 
