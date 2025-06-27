@@ -418,7 +418,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             return
 
         # state without delay.
-        if self._attr_is_on == state or state is None or delay is None:
+        if self._attr_is_on == state or delay is None:
             self._set_state(state)
             return
 
