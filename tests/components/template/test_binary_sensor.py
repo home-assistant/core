@@ -25,7 +25,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -627,7 +626,9 @@ async def test_event(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_template_delay_on_off(hass: HomeAssistant) -> None:
+async def test_template_delay_on_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test binary sensor template delay on."""
     # Ensure the initial state is not on
     assert hass.states.get("binary_sensor.test_on").state != STATE_ON
@@ -639,8 +640,8 @@ async def test_template_delay_on_off(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.test_on").state == STATE_OFF
     assert hass.states.get("binary_sensor.test_off").state == STATE_ON
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_on").state == STATE_ON
     assert hass.states.get("binary_sensor.test_off").state == STATE_ON
@@ -661,8 +662,8 @@ async def test_template_delay_on_off(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.test_on").state == STATE_OFF
     assert hass.states.get("binary_sensor.test_off").state == STATE_ON
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_on").state == STATE_OFF
     assert hass.states.get("binary_sensor.test_off").state == STATE_OFF
@@ -1283,7 +1284,9 @@ async def test_trigger_entity(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> None:
+async def test_template_with_trigger_templated_delay_on(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNKNOWN
@@ -1297,16 +1300,16 @@ async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> 
     assert state.state == STATE_UNKNOWN
 
     # Now wait for the on delay
-    future = dt_util.utcnow() + timedelta(seconds=3)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_ON
 
     # Now wait for the auto-off
-    future = dt_util.utcnow() + timedelta(seconds=2)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -1323,7 +1326,7 @@ async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> 
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "binary_sensor": {
                         "name": "test",
-                        "state": _BEER_TRIGGER_VALUE_TEMPLATE,
+                        "state": "{{ trigger.event.data.beer == 2 }}",
                         "device_class": "motion",
                         "delay_on": '{{ ({ "seconds": 10 }) }}',
                     },
@@ -1349,10 +1352,9 @@ async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> 
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_trigger_template_delay_with_multiple_triggers(
-    hass: HomeAssistant, delay_state: str
+    hass: HomeAssistant, delay_state: str, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test trigger based binary sensor with multiple triggers occurring during the delay."""
-    future = dt_util.utcnow()
     for _ in range(10):
         # State should still be unknown
         state = hass.states.get("binary_sensor.test")
@@ -1361,8 +1363,8 @@ async def test_trigger_template_delay_with_multiple_triggers(
         hass.bus.async_fire("test_event", {"beer": 2}, context=Context())
         await hass.async_block_till_done()
 
-        future += timedelta(seconds=1)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
