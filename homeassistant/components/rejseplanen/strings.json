@@ -14,7 +14,7 @@
       "entry_type": "Stop",
       "step": {
         "user": {
-          "description": "Set up stop subentry for Rejseplanen",
+          "description": "Set up stop subentry for Rejseplanen, see the [documentation](https://www.home-assistant.io/integrations/rejseplanen/) for information on obtaining the stop id.",
           "title": "Add Stop"
         }
       },
