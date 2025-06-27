@@ -247,12 +247,12 @@
           "google_assistant": "Google Assistant",
           "amazon_alexa": "Amazon Alexa",
           "home_assistant": "Home Assistant",
-          "iftt": "IFTT",
-          "iftt_wildlife": "IFTT Wildlife",
-          "iftt_frost_and_rain": "IFTT Frost and Rain",
-          "iftt_calendar_connection": "IFTT Calendar Connection",
+          "ifttt": "IFTTT",
+          "ifttt_wildlife": "IFTTT wildlife prodection",
+          "ifttt_frost_and_rain_guard": "IFTTT frost and rain guard",
+          "ifttt_calendar_connection": "IFTTT calendar connection",
           "gardena_smart_system": "Gardena Smart System",
-          "iftt_applets": "IFTT Applets",
+          "ifttt_applets": "IFTTT applets",
           "developer_portal": "Developer Portal"
         }
       },

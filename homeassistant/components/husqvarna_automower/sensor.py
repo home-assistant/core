@@ -197,10 +197,10 @@ RESTRICTED_REASONS: list = [
     ExternalReasons.GARDENA_SMART_SYSTEM,
     ExternalReasons.GOOGLE_ASSISTANT,
     ExternalReasons.HOME_ASSISTANT,
-    ExternalReasons.IFTT,
-    ExternalReasons.IFTT_APPLETS,
-    ExternalReasons.IFTT_CALENDAR_CONNECTION,
-    ExternalReasons.IFTT_WILDLIFE,
+    ExternalReasons.IFTTT,
+    ExternalReasons.IFTTT_APPLETS,
+    ExternalReasons.IFTTT_CALENDAR_CONNECTION,
+    ExternalReasons.IFTTT_WILDLIFE,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
