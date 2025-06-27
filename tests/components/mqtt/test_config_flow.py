@@ -2941,8 +2941,8 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
-            None,
-            None,
+            {},
+            (),
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
@@ -2960,8 +2960,8 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {},
-            None,
-            None,
+            {},
+            (),
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
@@ -3220,37 +3220,32 @@ async def test_subentry_configflow(
         "url": learn_more_url(component["platform"]),
     }
 
-    # Process extra step if the platform supports it
-    if mock_entity_details_user_input is not None:
-        # Extra entity details flow step
-        assert result["step_id"] == "entity_platform_config"
+    # Process entity details setep
+    assert result["step_id"] == "entity_platform_config"
 
-        # First test validators if set of test
-        for failed_user_input, failed_errors in mock_entity_details_failed_user_input:
-            # Test an invalid entity details user input case
-            result = await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                user_input=failed_user_input,
-            )
-            assert result["type"] is FlowResultType.FORM
-            assert result["errors"] == failed_errors
-
-        # Now try again with valid data
+    # First test validators if set of test
+    for failed_user_input, failed_errors in mock_entity_details_failed_user_input:
+        # Test an invalid entity details user input case
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input=mock_entity_details_user_input,
+            user_input=failed_user_input,
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
-        assert result["description_placeholders"] == {
-            "mqtt_device": device_name,
-            "platform": component["platform"],
-            "entity": entity_name,
-            "url": learn_more_url(component["platform"]),
-        }
-    else:
-        # No details form step
-        assert result["step_id"] == "mqtt_platform_config"
+        assert result["errors"] == failed_errors
+
+    # Now try again with valid data
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=mock_entity_details_user_input,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["description_placeholders"] == {
+        "mqtt_device": device_name,
+        "platform": component["platform"],
+        "entity": entity_name,
+        "url": learn_more_url(component["platform"]),
+    }
 
     # Process mqtt platform config flow
     # Test an invalid mqtt user input case
@@ -3309,9 +3304,7 @@ async def test_subentry_reconfigure_remove_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3433,9 +3426,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
@@ -3505,6 +3496,16 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the platform specific entity data with changed entity_category
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "entity_category": "config",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data
@@ -3551,7 +3552,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 ),
             ),
             (),
-            None,
+            {},
             {
                 "command_topic": "test-topic1-updated",
                 "command_template": "{{ value }}",
@@ -3612,8 +3613,8 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                     title="Mock subentry",
                 ),
             ),
-            None,
-            None,
+            (),
+            {},
             {
                 "command_topic": "test-topic1-updated",
                 "state_topic": "test-topic1-updated",
@@ -3640,7 +3641,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         tuple[dict[str, Any], dict[str, str] | None], ...
     ]
     | None,
-    user_input_platform_config: dict[str, Any] | None,
+    user_input_platform_config: dict[str, Any],
     user_input_mqtt: dict[str, Any],
     component_data: dict[str, Any],
     removed_options: tuple[str, ...],
@@ -3651,9 +3652,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3700,28 +3699,25 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
 
-    if user_input_platform_config is None:
-        # Skip entity flow step
-        assert result["step_id"] == "mqtt_platform_config"
-    else:
-        # Additional entity flow step
-        assert result["step_id"] == "entity_platform_config"
-        for entity_validation_config, errors in user_input_platform_config_validation:
-            result = await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                user_input=entity_validation_config,
-            )
-            assert result["step_id"] == "entity_platform_config"
-            assert result.get("errors") == errors
-            assert result["type"] is FlowResultType.FORM
-
+    # entity platform config flow step
+    assert result["step_id"] == "entity_platform_config"
+    for entity_validation_config, errors in user_input_platform_config_validation:
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input=user_input_platform_config,
+            user_input=entity_validation_config,
         )
+        assert result["step_id"] == "entity_platform_config"
+        assert result.get("errors") == errors
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "mqtt_platform_config"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=user_input_platform_config,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data,
     result = await hass.config_entries.subentries.async_configure(
@@ -3795,9 +3791,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3888,7 +3882,12 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
 
 
 @pytest.mark.parametrize(
-    ("mqtt_config_subentries_data", "user_input_entity", "user_input_mqtt"),
+    (
+        "mqtt_config_subentries_data",
+        "user_input_entity",
+        "user_input_entity_platform_config",
+        "user_input_mqtt",
+    ),
     [
         (
             (
@@ -3903,6 +3902,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
                 "name": "The second notifier",
                 "entity_picture": "https://example.com",
             },
+            {"entity_category": "diagnostic"},
             {
                 "command_topic": "test-topic2",
             },
@@ -3916,6 +3916,7 @@ async def test_subentry_reconfigure_add_entity(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     user_input_entity: dict[str, Any],
+    user_input_entity_platform_config: dict[str, Any],
     user_input_mqtt: dict[str, Any],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure and add an entity."""
@@ -3924,9 +3925,7 @@ async def test_subentry_reconfigure_add_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3968,6 +3967,14 @@ async def test_subentry_reconfigure_add_entity(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input=user_input_entity,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the new entity platform config
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=user_input_entity_platform_config,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mqtt_platform_config"
@@ -4023,9 +4030,7 @@ async def test_subentry_reconfigure_update_device_properties(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -4124,9 +4129,7 @@ async def test_subentry_reconfigure_availablity(
     }
     assert subentry.data.get("availability") == expected_availability
 
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -4174,9 +4177,7 @@ async def test_subentry_reconfigure_availablity(
     assert subentry.data.get("availability") == expected_availability
 
     # Assert we can reset the availability config
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
     result = await hass.config_entries.subentries.async_configure(

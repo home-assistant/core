@@ -90,7 +90,9 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     return require_authentication
 
@@ -137,56 +139,65 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
-        data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
-        data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
-            CHARGER_MAX_CHARGING_CURRENT_KEY
-        ]
-        data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
-            CHARGER_LOCKED_UNLOCKED_KEY
-        ]
-        data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
-            CHARGER_ENERGY_PRICE_KEY
-        ]
-        # Only show max_icp_current if power_boost is available in the wallbox unit:
-        if (
-            data[CHARGER_DATA_KEY].get(CHARGER_MAX_ICP_CURRENT_KEY, 0) > 0
-            and CHARGER_POWER_BOOST_KEY
-            in data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][CHARGER_FEATURES_KEY]
-        ):
-            data[CHARGER_MAX_ICP_CURRENT_KEY] = data[CHARGER_DATA_KEY][
-                CHARGER_MAX_ICP_CURRENT_KEY
+        try:
+            data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
+            data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_MAX_CHARGING_CURRENT_KEY
             ]
+            data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_LOCKED_UNLOCKED_KEY
+            ]
+            data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_ENERGY_PRICE_KEY
+            ]
+            # Only show max_icp_current if power_boost is available in the wallbox unit:
+            if (
+                data[CHARGER_DATA_KEY].get(CHARGER_MAX_ICP_CURRENT_KEY, 0) > 0
+                and CHARGER_POWER_BOOST_KEY
+                in data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][CHARGER_FEATURES_KEY]
+            ):
+                data[CHARGER_MAX_ICP_CURRENT_KEY] = data[CHARGER_DATA_KEY][
+                    CHARGER_MAX_ICP_CURRENT_KEY
+                ]
 
-        data[CHARGER_CURRENCY_KEY] = (
-            f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
-        )
+            data[CHARGER_CURRENCY_KEY] = (
+                f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
+            )
 
-        data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
-            data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
-        )
+            data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
+                data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
+            )
 
-        # Set current solar charging mode
-        eco_smart_enabled = (
-            data[CHARGER_DATA_KEY]
-            .get(CHARGER_ECO_SMART_KEY, {})
-            .get(CHARGER_ECO_SMART_STATUS_KEY)
-        )
+            # Set current solar charging mode
+            eco_smart_enabled = (
+                data[CHARGER_DATA_KEY]
+                .get(CHARGER_ECO_SMART_KEY, {})
+                .get(CHARGER_ECO_SMART_STATUS_KEY)
+            )
 
-        eco_smart_mode = (
-            data[CHARGER_DATA_KEY]
-            .get(CHARGER_ECO_SMART_KEY, {})
-            .get(CHARGER_ECO_SMART_MODE_KEY)
-        )
-        if eco_smart_mode is None:
-            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.DISABLED
-        elif eco_smart_enabled is False:
-            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.OFF
-        elif eco_smart_mode == 0:
-            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
-        elif eco_smart_mode == 1:
-            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
+            eco_smart_mode = (
+                data[CHARGER_DATA_KEY]
+                .get(CHARGER_ECO_SMART_KEY, {})
+                .get(CHARGER_ECO_SMART_MODE_KEY)
+            )
+            if eco_smart_mode is None:
+                data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.DISABLED
+            elif eco_smart_enabled is False:
+                data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.OFF
+            elif eco_smart_mode == 0:
+                data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
+            elif eco_smart_mode == 1:
+                data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
 
-        return data
+            return data  # noqa: TRY300
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
@@ -200,7 +211,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
@@ -217,7 +234,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_set_icp_current(self, icp_current: float) -> None:
         """Set maximum icp current for Wallbox."""
@@ -227,8 +250,16 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
-
-        self._wallbox.setEnergyCost(self._station, energy_cost)
+        try:
+            self._wallbox.setEnergyCost(self._station, energy_cost)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
@@ -246,7 +277,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
@@ -256,11 +293,19 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
-
-        if pause:
-            self._wallbox.pauseChargingSession(self._station)
-        else:
-            self._wallbox.resumeChargingSession(self._station)
+        try:
+            if pause:
+                self._wallbox.pauseChargingSession(self._station)
+            else:
+                self._wallbox.resumeChargingSession(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
@@ -270,13 +315,21 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
-
-        if option == EcoSmartMode.ECO_MODE:
-            self._wallbox.enableEcoSmart(self._station, 0)
-        elif option == EcoSmartMode.FULL_SOLAR:
-            self._wallbox.enableEcoSmart(self._station, 1)
-        else:
-            self._wallbox.disableEcoSmart(self._station)
+        try:
+            if option == EcoSmartMode.ECO_MODE:
+                self._wallbox.enableEcoSmart(self._station, 0)
+            elif option == EcoSmartMode.FULL_SOLAR:
+                self._wallbox.enableEcoSmart(self._station, 1)
+            else:
+                self._wallbox.disableEcoSmart(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
 
     async def async_set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""

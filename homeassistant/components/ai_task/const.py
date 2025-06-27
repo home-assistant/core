@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import IntFlag
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -17,6 +17,11 @@ DOMAIN = "ai_task"
 DATA_COMPONENT: HassKey[EntityComponent[AITaskEntity]] = HassKey(DOMAIN)
 DATA_PREFERENCES: HassKey[AITaskPreferences] = HassKey(f"{DOMAIN}_preferences")
 
+SERVICE_GENERATE_DATA = "generate_data"
+
+ATTR_INSTRUCTIONS: Final = "instructions"
+ATTR_TASK_NAME: Final = "task_name"
+
 DEFAULT_SYSTEM_PROMPT = (
     "You are a Home Assistant expert and help users with their tasks."
 )
@@ -25,5 +30,5 @@ DEFAULT_SYSTEM_PROMPT = (
 class AITaskEntityFeature(IntFlag):
     """Supported features of the AI task entity."""
 
-    GENERATE_TEXT = 1
-    """Generate text based on instructions."""
+    GENERATE_DATA = 1
+    """Generate data based on instructions."""

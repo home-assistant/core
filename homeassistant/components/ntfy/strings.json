@@ -120,6 +120,88 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "messages": {
+        "name": "Messages published",
+        "unit_of_measurement": "messages"
+      },
+      "messages_remaining": {
+        "name": "Messages remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_limit": {
+        "name": "Messages usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_expiry_duration": {
+        "name": "Messages expiry duration"
+      },
+      "emails": {
+        "name": "Emails sent",
+        "unit_of_measurement": "emails"
+      },
+      "emails_remaining": {
+        "name": "Emails remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "emails_limit": {
+        "name": "Email usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "calls": {
+        "name": "Phone calls made",
+        "unit_of_measurement": "calls"
+      },
+      "calls_remaining": {
+        "name": "Phone calls remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "calls_limit": {
+        "name": "Phone calls usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "reservations": {
+        "name": "Reserved topics",
+        "unit_of_measurement": "topics"
+      },
+      "reservations_remaining": {
+        "name": "Reserved topics remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "reservations_limit": {
+        "name": "Reserved topics limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "attachment_total_size": {
+        "name": "Attachment storage"
+      },
+      "attachment_total_size_remaining": {
+        "name": "Attachment storage remaining"
+      },
+      "attachment_total_size_limit": {
+        "name": "Attachment storage limit"
+      },
+      "attachment_expiry_duration": {
+        "name": "Attachment expiry duration"
+      },
+      "attachment_file_size": {
+        "name": "Attachment file size limit"
+      },
+      "attachment_bandwidth": {
+        "name": "Attachment bandwidth limit"
+      },
+      "tier": {
+        "name": "Subscription tier",
+        "state": {
+          "free": "Free",
+          "supporter": "Supporter",
+          "pro": "Pro",
+          "business": "Business"
+        }
+      }
+    }
+  },
   "exceptions": {
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"
