@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -53,6 +53,8 @@ class MatterRangeNumberEntityDescription(
 ):
     """Describe Matter Number Input entities with min and max values."""
 
+    ha_to_native_value: Callable[[Any], Any]
+
     # attribute descriptors to get the min and max value
     min_attribute: type[ClusterAttributeDescriptor]
     max_attribute: type[ClusterAttributeDescriptor]
@@ -92,8 +94,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        if value_convert := self.entity_description.ha_to_native_value:
-            send_value = value_convert(value)
+        send_value = self.entity_description.ha_to_native_value(value)
         # custom command defined to set the new value
         await self.send_device_command(
             self.entity_description.command(send_value),
