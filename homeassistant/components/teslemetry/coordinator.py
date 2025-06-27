@@ -202,9 +202,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for period in data["time_series"]:
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
+                    output[key] += period[key]
 
         return output
