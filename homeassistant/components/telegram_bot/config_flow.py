@@ -637,7 +637,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
