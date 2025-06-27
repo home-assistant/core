@@ -348,7 +348,7 @@ async def test_firmware_options_flow(
     assert result["description_placeholders"]["model"] == "Home Assistant Yellow"
 
     async def mock_async_step_pick_firmware_zigbee(self, data):
-        return await self.async_step_confirm_zigbee(user_input={})
+        return await self.async_step_pre_confirm_zigbee()
 
     async def mock_install_firmware_step(
         self,
@@ -360,11 +360,16 @@ async def test_firmware_options_flow(
         next_step_id: str,
     ) -> ConfigFlowResult:
         if next_step_id == "start_otbr_addon":
-            next_step_id = "confirm_otbr"
+            next_step_id = "pre_confirm_otbr"
 
         return await getattr(self, f"async_step_{next_step_id}")(user_input={})
 
     with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
             return_value=None,
@@ -385,13 +390,22 @@ async def test_firmware_options_flow(
             ),
         ),
     ):
-        result = await hass.config_entries.options.async_configure(
+        confirm_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={"next_step_id": step},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"] is True
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == (
+            "confirm_zigbee" if step == STEP_PICK_FIRMWARE_ZIGBEE else "confirm_otbr"
+        )
+
+        create_result = await hass.config_entries.options.async_configure(
+            confirm_result["flow_id"], user_input={}
+        )
+
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    assert create_result["result"] is True
 
     assert config_entry.data == {
         "firmware": fw_type.value,
