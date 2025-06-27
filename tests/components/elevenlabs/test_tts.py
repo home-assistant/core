@@ -226,7 +226,6 @@ async def test_tts_service_speak(
         return_value=FakeAudioGenerator()
     )
 
-    # tts_entity._client.text_to_speech.convert.reset_mock()
     assert tts_entity._voice_settings == VoiceSettings(
         stability=DEFAULT_STABILITY,
         similarity_boost=DEFAULT_SIMILARITY,

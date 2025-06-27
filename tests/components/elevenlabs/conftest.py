@@ -88,8 +88,8 @@ def mock_async_client_voices_error() -> Generator[AsyncMock]:
     api_error = ApiError()
     api_error.body = {
         "detail": {
-            "status": "voices_unautorized",
-            "message": "API is unautorized for voices",
+            "status": "voices_unauthorized",
+            "message": "API is unauthorized for voices",
         }
     }
     client_mock.voices.get_all.side_effect = api_error
@@ -108,8 +108,8 @@ def mock_async_client_models_error() -> Generator[AsyncMock]:
     api_error = ApiError()
     api_error.body = {
         "detail": {
-            "status": "models_unautorized",
-            "message": "API is unautorized for models",
+            "status": "models_unauthorized",
+            "message": "API is unauthorized for models",
         }
     }
     client_mock.models.list.side_effect = api_error
