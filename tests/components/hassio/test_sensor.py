@@ -9,8 +9,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import DOMAIN, HASSIO_UPDATE_INTERVAL
-from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio.const import (
+    HASSIO_ADDON_UPDATE_INTERVAL,
+    REQUEST_REFRESH_DELAY,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -107,6 +110,38 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                         "repository": "core",
                         "url": "https://github.com",
                         "icon": False,
+                    },
+                ],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons",
+        json={
+            "result": "ok",
+            "data": {
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "state": "started",
+                        "update_available": True,
+                        "icon": False,
+                        "version": "2.0.0",
+                        "version_latest": "2.0.1",
+                        "repository": "core",
+                        "url": "https://github.com/home-assistant/addons/test",
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "state": "stopped",
+                        "update_available": False,
+                        "icon": False,
+                        "version": "3.1.0",
+                        "version_latest": "3.2.0",
+                        "repository": "core",
+                        "url": "https://github.com",
                     },
                 ],
             },
@@ -259,7 +294,7 @@ async def test_stats_addon_sensor(
     _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = SupervisorError
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_ADDON_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -269,7 +304,7 @@ async def test_stats_addon_sensor(
     _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = None
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_ADDON_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -285,13 +320,13 @@ async def test_stats_addon_sensor(
     assert entity_registry.async_get(entity_id).disabled_by is None
 
     # The config entry just reloaded, so we need to wait for the next update
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_ADDON_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is not None
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_ADDON_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Verify that the entity have the expected state.
@@ -302,7 +337,7 @@ async def test_stats_addon_sensor(
     _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = SupervisorError
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_ADDON_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
