@@ -17,9 +17,10 @@ from py_rejseplan.dataclasses.departure import Departure
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DUE_AT,
@@ -103,7 +104,9 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
 
-class RejseplanenTransportSensor(SensorEntity):
+class RejseplanenTransportSensor(
+    CoordinatorEntity[RejseplanenDataUpdateCoordinator], SensorEntity
+):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
@@ -120,15 +123,16 @@ class RejseplanenTransportSensor(SensorEntity):
         unique_id=None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__()
-        self._coordinator: RejseplanenDataUpdateCoordinator = coordinator
+        super().__init__(coordinator)
         self._stop_id = stop_id
         self._route = route
         self._direction = direction
         self._departure_type = departure_type
         self._attr_name = name
-        self._coordinator.add_stop_id(stop_id)
+        self.coordinator.add_stop_id(stop_id)
         self._attr_unique_id = unique_id
+        """Initialize the sensor's state."""
+        self._attr_native_value = self.native_value
 
     @property
     def native_value(self) -> StateType:
@@ -167,7 +171,8 @@ class RejseplanenTransportSensor(SensorEntity):
                 ATTR_TRACK: next_track,
             }
         )
-        # other_departures = departures[1:]
+        if len(departures) > 1:
+            attributes["next_departures"] = self.parse_next_departures(departures[1:])
 
         return attributes
 
@@ -179,7 +184,13 @@ class RejseplanenTransportSensor(SensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal of the sensor from Home Assistant."""
         _LOGGER.debug("Removing sensor %s from coordinator", self._attr_unique_id)
-        self._coordinator.remove_stop_id(self._stop_id)
+        self.coordinator.remove_stop_id(self._stop_id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug("Updating sensor %s with new data", self._attr_unique_id)
+        self.async_write_ha_state()
 
     def _get_filtered_departures(self) -> list[dict[str, Any]]:
         """Get filtered departures based on the configured parameters."""
@@ -187,12 +198,39 @@ class RejseplanenTransportSensor(SensorEntity):
         direction_filter = self._direction if self._direction else None
         departure_type_filter = self._departure_type if self._departure_type else None
 
-        return self._coordinator.get_filtered_departures(
+        return self.coordinator.get_filtered_departures(
             stop_id=self._stop_id,
             route_filter=route_filter,
             direction_filter=direction_filter,
             departure_type_filter=departure_type_filter,
         )
+
+    @staticmethod
+    def parse_next_departures(departures: list[Departure]) -> list[dict[str, Any]]:
+        """Parse the next departures into a list of dictionaries."""
+        parsed_departures = []
+        for departure in departures:
+            parsed_departure = {
+                ATTR_STOP_ID: departure.stopExtId,
+                ATTR_STOP_NAME: departure.name,
+                ATTR_FINAL_STOP: departure.direction,
+                ATTR_DUE_IN: RejseplanenTransportSensor.due_in(
+                    departure.time, departure.date
+                ),
+                ATTR_DUE_AT: datetime.combine(
+                    departure.date, departure.time
+                ).isoformat(),
+                ATTR_SCHEDULED_AT: datetime.combine(
+                    departure.date, departure.time
+                ).isoformat(),
+                ATTR_REAL_TIME_AT: datetime.combine(
+                    departure.rtDate or departure.date,
+                    departure.rtTime or departure.time,
+                ).isoformat(),
+                ATTR_TRACK: departure.rtTrack or departure.track,
+            }
+            parsed_departures.append(parsed_departure)
+        return parsed_departures
 
     @staticmethod
     def due_in(time: Time, date: Date) -> int:

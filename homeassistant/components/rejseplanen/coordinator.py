@@ -43,6 +43,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             return await self.hass.async_add_executor_job(self._fetch_data)
+
         except NoStopsRegisteredError as error:
             _LOGGER.debug("No stops registered, skipping data fetch: %s", error)
             raise UpdateFailed(error) from error
@@ -134,7 +135,24 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
                 x.rtTime if x.rtTime else x.time,
             ),
         )
-        return filtered_data
+        now = dt_util.now().replace(tzinfo=None)
+
+        # Find the index where the departure time is not in the past
+        def departure_datetime(d: Departure) -> datetime:
+            return datetime.strptime(
+                f"{d.rtDate if d.rtDate else d.date} {d.rtTime if d.rtTime else d.time}",
+                "%Y-%m-%d %H:%M:%S",
+            )
+
+        idx = next(
+            (
+                i
+                for i, d in enumerate(filtered_data)
+                if (departure_datetime(d) - now >= timedelta(minutes=0))
+            ),
+            len(filtered_data),
+        )
+        return filtered_data[idx:]
 
 
 class NoStopsRegisteredError(HomeAssistantError):
