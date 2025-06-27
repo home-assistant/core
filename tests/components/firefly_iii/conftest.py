@@ -36,42 +36,51 @@ def mock_firefly_client() -> Generator[AsyncMock]:
     """Mock Firefly client with dynamic exception injection support."""
     with (
         patch(
-            "homeassistant.components.firefly_iii.Firefly", autospec=True
+            "homeassistant.components.firefly_iii.config_flow.Firefly"
         ) as mock_client,
-        patch(
-            "homeassistant.components.firefly_iii.config_flow.Firefly", new=mock_client
-        ),
         patch(
             "homeassistant.components.firefly_iii.coordinator.Firefly", new=mock_client
         ),
     ):
         client = mock_client.return_value
 
-        client.get_about.return_value = About.from_dict(
-            load_json_value_fixture("about.json", DOMAIN)
+        client.get_about = AsyncMock(
+            return_value=About.from_dict(load_json_value_fixture("about.json", DOMAIN))
         )
-        client.get_accounts.return_value = [
-            Account.from_dict(account)
-            for account in load_json_array_fixture("accounts.json", DOMAIN)
-        ]
-        client.get_categories.return_value = [
-            Category.from_dict(category)
-            for category in load_json_array_fixture("categories.json", DOMAIN)
-        ]
-        client.get_category.return_value = Category.from_dict(
-            load_json_value_fixture("category.json", DOMAIN)
+        client.get_accounts = AsyncMock(
+            return_value=[
+                Account.from_dict(account)
+                for account in load_json_array_fixture("accounts.json", DOMAIN)
+            ]
         )
-        client.get_currency_native.return_value = Currency.from_dict(
-            load_json_value_fixture("native_currency.json", DOMAIN)
+        client.get_categories = AsyncMock(
+            return_value=[
+                Category.from_dict(category)
+                for category in load_json_array_fixture("categories.json", DOMAIN)
+            ]
         )
-        client.get_budgets.return_value = [
-            Budget.from_dict(budget)
-            for budget in load_json_array_fixture("budgets.json", DOMAIN)
-        ]
-        client.get_bills.return_value = [
-            Bill.from_dict(bill)
-            for bill in load_json_array_fixture("bills.json", DOMAIN)
-        ]
+        client.get_category = AsyncMock(
+            return_value=Category.from_dict(
+                load_json_value_fixture("category.json", DOMAIN)
+            )
+        )
+        client.get_currency_native = AsyncMock(
+            return_value=Currency.from_dict(
+                load_json_value_fixture("native_currency.json", DOMAIN)
+            )
+        )
+        client.get_budgets = AsyncMock(
+            return_value=[
+                Budget.from_dict(budget)
+                for budget in load_json_array_fixture("budgets.json", DOMAIN)
+            ]
+        )
+        client.get_bills = AsyncMock(
+            return_value=[
+                Bill.from_dict(bill)
+                for bill in load_json_array_fixture("bills.json", DOMAIN)
+            ]
+        )
         yield client
 
 

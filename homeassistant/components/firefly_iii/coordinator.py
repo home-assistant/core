@@ -57,21 +57,19 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self.firefly: Firefly
+        self.firefly = Firefly(
+            api_url=self.config_entry.data[CONF_URL],
+            api_key=self.config_entry.data[CONF_API_KEY],
+            session=async_create_clientsession(
+                self.hass,
+                self.config_entry.data[CONF_VERIFY_SSL],
+                cookie_jar=CookieJar(unsafe=True),
+            ),
+        )
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
-            session = async_create_clientsession(
-                self.hass,
-                self.config_entry.data[CONF_VERIFY_SSL],
-                cookie_jar=CookieJar(unsafe=True),
-            )
-            self.firefly = Firefly(
-                api_url=self.config_entry.data[CONF_URL],
-                api_key=self.config_entry.data[CONF_API_KEY],
-                session=session,
-            )
             await self.firefly.get_about()
         except FireflyAuthenticationError as err:
             raise ConfigEntryError(
