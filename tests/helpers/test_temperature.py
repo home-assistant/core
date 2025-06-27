@@ -43,9 +43,52 @@ def test_fahrenheit_wholes(hass: HomeAssistant) -> None:
     assert display_temp(hass, TEMP, UnitOfTemperature.FAHRENHEIT, PRECISION_WHOLE) == -4
 
 
-async def _async_test_interval(
+@pytest.mark.parametrize(
+    ("unit_system", "unit", "results"),
+    [
+        (
+            _CONF_UNIT_SYSTEM_METRIC,
+            UnitOfTemperature.CELSIUS,
+            {
+                PRECISION_HALVES: 0.5,
+                PRECISION_TENTHS: 0.5,
+                PRECISION_WHOLE: 1,
+            },
+        ),
+        (
+            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+            UnitOfTemperature.CELSIUS,
+            {
+                PRECISION_HALVES: 1,
+                PRECISION_TENTHS: 0.9,
+                PRECISION_WHOLE: 1,
+            },
+        ),
+        (
+            _CONF_UNIT_SYSTEM_METRIC,
+            UnitOfTemperature.FAHRENHEIT,
+            {
+                PRECISION_HALVES: 0.5,
+                PRECISION_TENTHS: 0.3,
+                PRECISION_WHOLE: 0,
+            },
+        ),
+        (
+            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+            UnitOfTemperature.FAHRENHEIT,
+            {
+                PRECISION_HALVES: 0.5,
+                PRECISION_TENTHS: 0.5,
+                PRECISION_WHOLE: 1,
+            },
+        ),
+    ],
+)
+async def test_temperature_interval(
     hass: HomeAssistant, unit_system: str, unit: UnitOfTemperature, results: dict
 ) -> None:
+    """Test temperature interval rendering with different system units and precisions."""
+
     _old_unit_system = hass.config.units
     if _old_unit_system._name != unit_system:
         await hass.config.async_update(unit_system=unit_system)
@@ -59,59 +102,3 @@ async def _async_test_interval(
     finally:
         if _old_unit_system._name != unit_system:
             await hass.config.async_update(unit_system=_old_unit_system._name)
-
-
-async def test_celsius_interval_metric(hass: HomeAssistant) -> None:
-    """Test celsius temperature interval in Metric System."""
-    await _async_test_interval(
-        hass,
-        _CONF_UNIT_SYSTEM_METRIC,
-        UnitOfTemperature.CELSIUS,
-        {
-            PRECISION_HALVES: 0.5,
-            PRECISION_TENTHS: 0.5,
-            PRECISION_WHOLE: 1,
-        },
-    )
-
-
-async def test_celsius_interval_us_customary(hass: HomeAssistant) -> None:
-    """Test celsius temperature interval in US Customary system."""
-    await _async_test_interval(
-        hass,
-        _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-        UnitOfTemperature.CELSIUS,
-        {
-            PRECISION_HALVES: 1,
-            PRECISION_TENTHS: 0.9,
-            PRECISION_WHOLE: 1,
-        },
-    )
-
-
-async def test_fahrenheit_interval_metric(hass: HomeAssistant) -> None:
-    """Test fahrenheit temperature interval in Metric System."""
-    await _async_test_interval(
-        hass,
-        _CONF_UNIT_SYSTEM_METRIC,
-        UnitOfTemperature.FAHRENHEIT,
-        {
-            PRECISION_HALVES: 0.5,
-            PRECISION_TENTHS: 0.3,
-            PRECISION_WHOLE: 0,
-        },
-    )
-
-
-async def test_fahrenheit_interval_us_customary(hass: HomeAssistant) -> None:
-    """Test fahrenheit temperature interval in US Customary system."""
-    await _async_test_interval(
-        hass,
-        _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-        UnitOfTemperature.FAHRENHEIT,
-        {
-            PRECISION_HALVES: 0.5,
-            PRECISION_TENTHS: 0.5,
-            PRECISION_WHOLE: 1,
-        },
-    )
