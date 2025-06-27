@@ -55,7 +55,7 @@
         "name": "Trophy level"
       },
       "trophy_level_progress": {
-        "name": "Next trophy level"
+        "name": "Next level"
       },
       "earned_trophies_platinum": {
         "name": "Platinum trophies",
@@ -74,7 +74,7 @@
         "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
       },
       "online_id": {
-        "name": "Online ID"
+        "name": "Online-ID"
       }
     }
   }
