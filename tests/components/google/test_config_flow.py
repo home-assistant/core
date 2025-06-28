@@ -570,7 +570,7 @@ async def test_reauth_flow(
     ("primary_calendar_error", "primary_calendar_status", "reason"),
     [
         (ClientError(), None, "cannot_connect"),
-        (None, HTTPStatus.FORBIDDEN, "api_disabled"),
+        (None, HTTPStatus.FORBIDDEN, "calendar_api_disabled"),
         (None, HTTPStatus.SERVICE_UNAVAILABLE, "cannot_connect"),
     ],
 )

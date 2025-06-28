@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, load_fixture
+from tests.common import assert_setup_component, async_load_fixture
 from tests.components.image_processing import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -97,15 +97,17 @@ async def test_ms_detect_process_image(
     """Set up and scan a picture and test plates from event."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("persongroups.json", "microsoft_face_detect"),
+        text=await async_load_fixture(
+            hass, "persongroups.json", "microsoft_face_detect"
+        ),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("persons.json", "microsoft_face_detect"),
+        text=await async_load_fixture(hass, "persons.json", "microsoft_face_detect"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("persons.json", "microsoft_face_detect"),
+        text=await async_load_fixture(hass, "persons.json", "microsoft_face_detect"),
     )
 
     await async_setup_component(hass, IP_DOMAIN, CONFIG)
@@ -127,7 +129,7 @@ async def test_ms_detect_process_image(
 
     aioclient_mock.post(
         ENDPOINT_URL.format("detect"),
-        text=load_fixture("detect.json", "microsoft_face_detect"),
+        text=await async_load_fixture(hass, "detect.json", "microsoft_face_detect"),
         params={"returnFaceAttributes": "age,gender"},
     )
 

@@ -19,8 +19,6 @@ DEFAULT_PORT = 3493
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
-DEFAULT_SCAN_INTERVAL = 60
-
 STATE_TYPES = {
     "OL": "Online",
     "OB": "On Battery",

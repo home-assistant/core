@@ -13,12 +13,19 @@ from homeassistant.components.roborock.const import (
     V1_LOCAL_IN_CLEANING_INTERVAL,
     V1_LOCAL_NOT_CLEANING_INTERVAL,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .mock_data import PROP
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SENSOR]
 
 
 @pytest.mark.parametrize(

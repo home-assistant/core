@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -37,6 +38,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -65,16 +68,78 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
-
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+}
+
+RVC_OPERATIONAL_STATE_MAP = {
+    # enum with known Operation state values which we can translate
+    **OPERATIONAL_STATE_MAP,
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
+}
+
+BOOST_STATE_MAP = {
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
+}
+
+CHARGE_STATE_MAP = {
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknown: None,
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsNotCharging: "not_charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsCharging: "charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsAtFullCharge: "full_charge",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknownEnumValue: None,
+}
+
+DEM_OPT_OUT_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut: "no_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut: "local_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut: "grid_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut: "opt_out",
+}
+
+ESA_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
+}
+
+EVSE_FAULT_STATE_MAP = {
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "over_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "under_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "over_current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "contact_wet_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "contact_dry_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "power_loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "power_quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "pilot_short_circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "emergency_stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "ev_disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "wrong_power_supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "live_neutral_swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "over_temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
+}
+
+PUMP_CONTROL_MODE_MAP = {
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_speed",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantPressure: "constant_pressure",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kProportionalPressure: "proportional_pressure",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantFlow: "constant_flow",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantTemperature: "constant_temperature",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kAutomatic: "automatic",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
 
@@ -111,6 +176,10 @@ class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescriptio
     state_list_attribute: type[ClusterAttributeDescriptor] = (
         clusters.OperationalState.Attributes.OperationalStateList
     )
+    state_attribute: type[ClusterAttributeDescriptor] = (
+        clusters.OperationalState.Attributes.OperationalState
+    )
+    state_map: dict[int, str] = field(default_factory=lambda: OPERATIONAL_STATE_MAP)
 
 
 class MatterSensor(MatterEntity, SensorEntity):
@@ -185,15 +254,15 @@ class MatterOperationalStateSensor(MatterSensor):
         for state in operational_state_list:
             # prefer translateable (known) state from mapping,
             # fallback to the raw state label as given by the device/manufacturer
-            states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
-                state.operationalStateID, slugify(state.operationalStateLabel)
+            states_map[state.operationalStateID] = (
+                self.entity_description.state_map.get(
+                    state.operationalStateID, slugify(state.operationalStateLabel)
+                )
             )
         self.states_map = states_map
         self._attr_options = list(states_map.values())
         self._attr_native_value = states_map.get(
-            self.get_matter_attribute_value(
-                clusters.OperationalState.Attributes.OperationalState
-            )
+            self.get_matter_attribute_value(self.entity_description.state_attribute)
         )
 
 
@@ -301,6 +370,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatVoltage",
+            translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
@@ -309,6 +379,47 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeRemaining",
+            translation_key="battery_time_remaining",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeRemaining,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatChargeState",
+            translation_key="battery_charge_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=[state for state in CHARGE_STATE_MAP.values() if state is not None],
+            measurement_to_ha=CHARGE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeToFullCharge",
+            translation_key="battery_time_to_full_charge",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeToFullCharge,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -722,6 +833,25 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalEnergyMeasurementCumulativeEnergyExported",
+            translation_key="energy_exported",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
+            measurement_to_ha=lambda x: x.energy,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="ElectricalMeasurementActivePower",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -878,6 +1008,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.RvcOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.RvcOperationalState.Attributes.OperationalState,
+            state_map=RVC_OPERATIONAL_STATE_MAP,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -895,6 +1027,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalState,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -903,5 +1036,186 @@ DISCOVERY_SCHEMAS = [
         ),
         # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TargetPositionLiftPercent100ths",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            translation_key="window_covering_target_position",
+            measurement_to_ha=lambda x: round((10000 - x) / 100),
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseFaultState",
+            translation_key="evse_fault_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(EVSE_FAULT_STATE_MAP.values()),
+            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.FaultState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseCircuitCapacity",
+            translation_key="evse_circuit_capacity",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMinimumChargeCurrent",
+            translation_key="evse_min_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MinimumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMaximumChargeCurrent",
+            translation_key="evse_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseUserMaximumChargeCurrent",
+            translation_key="evse_user_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementTankVolume",
+            translation_key="tank_volume",
+            device_class=SensorDeviceClass.VOLUME_STORAGE,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementTankPercentage",
+            translation_key="tank_percentage",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankPercentage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementEstimatedHeatRequired",
+            translation_key="estimated_heat_required",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAState",
+            translation_key="esa_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(ESA_STATE_MAP.values()),
+            measurement_to_ha=ESA_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAOptOutState",
+            translation_key="esa_opt_out_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(DEM_OPT_OUT_STATE_MAP.values()),
+            measurement_to_ha=DEM_OPT_OUT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.OptOutState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpControlMode",
+            translation_key="pump_control_mode",
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                mode for mode in PUMP_CONTROL_MODE_MAP.values() if mode is not None
+            ],
+            measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.ControlMode,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpSpeed",
+            translation_key="pump_speed",
+            native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PumpConfigurationAndControl.Attributes.Speed,),
     ),
 ]

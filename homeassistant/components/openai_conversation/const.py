@@ -5,10 +5,12 @@ import logging
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+DEFAULT_NAME = "OpenAI Conversation"
+
 CONF_CHAT_MODEL = "chat_model"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-CONF_PROMPT = "prompt"
 CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_RECOMMENDED = "recommended"
@@ -40,4 +42,13 @@ UNSUPPORTED_MODELS: list[str] = [
     "gpt-4o-realtime-preview-2024-10-01",
     "gpt-4o-mini-realtime-preview",
     "gpt-4o-mini-realtime-preview-2024-12-17",
+]
+
+WEB_SEARCH_MODELS: list[str] = [
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4o",
+    "gpt-4o-search-preview",
+    "gpt-4o-mini",
+    "gpt-4o-mini-search-preview",
 ]

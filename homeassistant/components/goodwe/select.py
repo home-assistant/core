@@ -5,13 +5,13 @@ import logging
 from goodwe import Inverter, InverterError, OperationMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
+from .const import DOMAIN
+from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +39,12 @@ OPERATION_MODE = SelectEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoodweConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the inverter select entities from a config entry."""
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    inverter = config_entry.runtime_data.inverter
+    device_info = config_entry.runtime_data.device_info
 
     supported_modes = await inverter.get_operation_modes(False)
     # read current operating mode from the inverter

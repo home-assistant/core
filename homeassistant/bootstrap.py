@@ -53,6 +53,7 @@ from .components import (
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
+    person as person_pre_import,  # noqa: F401
     recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
     repairs as repairs_pre_import,  # noqa: F401
     search as search_pre_import,  # noqa: F401
@@ -88,6 +89,7 @@ from .helpers import (
     restore_state,
     template,
     translation,
+    trigger,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
@@ -170,8 +172,6 @@ FRONTEND_INTEGRATIONS = {
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
 # Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# The substages preceding it should also have no timeout, until we ensure that the recorder
-# is not accidentally promoted as a dependency of any of the integrations in them.
 # If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
@@ -395,7 +395,7 @@ async def async_setup_hass(
 
 def open_hass_ui(hass: core.HomeAssistant) -> None:
     """Open the UI."""
-    import webbrowser  # pylint: disable=import-outside-toplevel
+    import webbrowser  # noqa: PLC0415
 
     if hass.config.api is None or "frontend" not in hass.config.components:
         _LOGGER.warning("Cannot launch the UI because frontend not loaded")
@@ -453,6 +453,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
         create_eager_task(async_get_system_info(hass)),
+        create_eager_task(trigger.async_setup(hass)),
     )
 
 
@@ -562,8 +563,7 @@ async def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable-next=import-outside-toplevel
-            from colorlog import ColoredFormatter
+            from colorlog import ColoredFormatter  # noqa: PLC0415
 
             # basicConfig must be called after importing colorlog in order to
             # ensure that the handlers it sets up wraps the correct streams.
@@ -859,14 +859,22 @@ async def _async_set_up_integrations(
     integrations, all_integrations = await _async_resolve_domains_and_preload(
         hass, config
     )
-    all_domains = set(all_integrations)
-    domains = set(integrations)
+    # Detect all cycles
+    integrations_after_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, all_integrations.values(), set(all_integrations)
+        )
+    )
+    all_domains = set(integrations_after_dependencies)
+    domains = set(integrations) & all_domains
 
     _LOGGER.info(
         "Domains to be set up: %s | %s",
         domains,
         all_domains - domains,
     )
+
+    async_set_domains_to_be_loaded(hass, all_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
@@ -900,24 +908,12 @@ async def _async_set_up_integrations(
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
-            for dep in all_integrations[domain].all_dependencies
+            for dep in integrations_after_dependencies[domain]
             if dep not in stage_domains
         }
         stage_dep_domains = stage_dep_domains_unfiltered - hass.config.components
 
         stage_all_domains = stage_domains | stage_dep_domains
-        stage_all_integrations = {
-            domain: all_integrations[domain] for domain in stage_all_domains
-        }
-        # Detect all cycles
-        stage_integrations_after_dependencies = (
-            await loader.resolve_integrations_after_dependencies(
-                hass, stage_all_integrations.values(), stage_all_domains
-            )
-        )
-        stage_all_domains = set(stage_integrations_after_dependencies)
-        stage_domains &= stage_all_domains
-        stage_dep_domains &= stage_all_domains
 
         _LOGGER.info(
             "Setting up stage %s: %s | %s\nDependencies: %s | %s",
@@ -928,13 +924,15 @@ async def _async_set_up_integrations(
             stage_dep_domains_unfiltered - stage_dep_domains,
         )
 
-        async_set_domains_to_be_loaded(hass, stage_all_domains)
-
         if timeout is None:
             await _async_setup_multi_components(hass, stage_all_domains, config)
             continue
         try:
-            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+            async with hass.timeout.async_timeout(
+                timeout,
+                cool_down=COOLDOWN_TIME,
+                cancel_message=f"Bootstrap stage {name} timeout",
+            ):
                 await _async_setup_multi_components(hass, stage_all_domains, config)
         except TimeoutError:
             _LOGGER.warning(
@@ -946,7 +944,11 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+        async with hass.timeout.async_timeout(
+            WRAP_UP_TIMEOUT,
+            cool_down=COOLDOWN_TIME,
+            cancel_message="Bootstrap startup wrap up timeout",
+        ):
             await hass.async_block_till_done()
     except TimeoutError:
         _LOGGER.warning(

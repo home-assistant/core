@@ -461,3 +461,49 @@ async def test_only_repairs_for_current_next_year(
 
     assert len(issue_registry.issues) == 2
     assert issue_registry.issues == snapshot
+
+
+async def test_missing_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when language exist but is empty."""
+    config = {
+        "add_holidays": [],
+        "country": "AU",
+        "days_offset": 0,
+        "excludes": ["sat", "sun", "holiday"],
+        "language": None,
+        "name": "Workday Sensor",
+        "platform": "workday",
+        "province": "QLD",
+        "remove_holidays": [
+            "Labour Day",
+        ],
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+    }
+    await init_integration(hass, config)
+    assert "Changing language from None to en_AU" in caplog.text
+
+
+async def test_incorrect_english_variant(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when language exist but is empty."""
+    config = {
+        "add_holidays": [],
+        "country": "AU",
+        "days_offset": 0,
+        "excludes": ["sat", "sun", "holiday"],
+        "language": "en_UK",  # Incorrect variant
+        "name": "Workday Sensor",
+        "platform": "workday",
+        "province": "QLD",
+        "remove_holidays": [
+            "Labour Day",
+        ],
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+    }
+    await init_integration(hass, config)
+    assert "Changing language from en_UK to en_AU" in caplog.text

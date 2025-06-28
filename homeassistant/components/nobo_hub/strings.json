@@ -46,7 +46,7 @@
       "global_override": {
         "name": "Global override",
         "state": {
-          "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+          "away": "[%key:common::state::not_home%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
           "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
           "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"

@@ -103,8 +103,8 @@
       "temperature_range": {
         "name": "Temperature range",
         "state": {
-          "low": "Low",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },

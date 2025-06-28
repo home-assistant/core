@@ -6,7 +6,8 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
+from hass_nabucasa.voice import VoiceError, VoiceTokenError
+from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
@@ -203,7 +204,7 @@ async def test_provider_properties(
     assert "nl-NL" in engine.supported_languages
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
-    assert Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    assert Voice("ColetteNeural", "Colette") in supported_voices
     supported_voices = engine.async_get_supported_voices("missing_language")
     assert supported_voices is None
 

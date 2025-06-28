@@ -18,7 +18,6 @@ from homeassistant.components.zha.repairs.network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
 )
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
-    DISABLE_MULTIPAN_URL,
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     HardwareType,
     _detect_radio_hardware,
@@ -49,7 +48,8 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
             "product": "SkyConnect v1.0",
             "firmware": "ezsp",
         },
-        version=2,
+        version=1,
+        minor_version=4,
         domain=SKYCONNECT_DOMAIN,
         options={},
         title="Home Assistant SkyConnect",
@@ -66,7 +66,8 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
             "product": "Home Assistant Connect ZBT-1",
             "firmware": "ezsp",
         },
-        version=2,
+        version=1,
+        minor_version=4,
         domain=SKYCONNECT_DOMAIN,
         options={},
         title="Home Assistant Connect ZBT-1",
@@ -108,17 +109,12 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("detected_hardware", "expected_learn_more_url"),
-    [
-        (HardwareType.SKYCONNECT, DISABLE_MULTIPAN_URL[HardwareType.SKYCONNECT]),
-        (HardwareType.YELLOW, DISABLE_MULTIPAN_URL[HardwareType.YELLOW]),
-        (HardwareType.OTHER, None),
-    ],
+    ("detected_hardware"),
+    [HardwareType.SKYCONNECT, HardwareType.YELLOW, HardwareType.OTHER],
 )
 async def test_multipan_firmware_repair(
     hass: HomeAssistant,
     detected_hardware: HardwareType,
-    expected_learn_more_url: str,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
     issue_registry: ir.IssueRegistry,
@@ -157,7 +153,6 @@ async def test_multipan_firmware_repair(
     # The issue is created when we fail to probe
     assert issue is not None
     assert issue.translation_placeholders["firmware_type"] == "CPC"
-    assert issue.learn_more_url == expected_learn_more_url
 
     # If ZHA manages to start up normally after this, the issue will be deleted
     await hass.config_entries.async_setup(config_entry.entry_id)
