@@ -67,7 +67,7 @@ async def _async_auth_and_create_api(
     try:
         await auth.async_get_access_token()
     except ClientResponseError as err:
-        if err.status == 401:
+        if err.status in (400, 401):
             raise ConfigEntryAuthFailed from err
 
         raise ConfigEntryNotReady from err

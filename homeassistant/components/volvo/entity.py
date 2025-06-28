@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from volvocarsapi.models import VolvoCarsApiBaseModel
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -45,6 +46,10 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
         super().__init__(coordinator)
 
         self.entity_description: VolvoEntityDescription = description
+
+        if description.device_class != SensorDeviceClass.BATTERY:
+            self._attr_translation_key = description.key
+
         self._attr_unique_id = get_unique_id(
             coordinator.config_entry.data[CONF_VIN], description.key
         )

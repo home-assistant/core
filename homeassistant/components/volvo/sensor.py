@@ -76,7 +76,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
     VolvoSensorDescription(
         key="availability",
-        translation_key="availability",
         api_field="availabilityStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -90,7 +89,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_energy_consumption",
-        translation_key="average_energy_consumption",
         api_field="averageEnergyConsumption",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
@@ -99,7 +97,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_energy_consumption_automatic",
-        translation_key="average_energy_consumption_automatic",
         api_field="averageEnergyConsumptionAutomatic",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,7 +105,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_energy_consumption_charge",
-        translation_key="average_energy_consumption_charge",
         api_field="averageEnergyConsumptionSinceCharge",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,7 +113,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_fuel_consumption",
-        translation_key="average_fuel_consumption",
         api_field="averageFuelConsumption",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +121,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_fuel_consumption_automatic",
-        translation_key="average_fuel_consumption_automatic",
         api_field="averageFuelConsumptionAutomatic",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
@@ -135,7 +129,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_speed",
-        translation_key="average_speed",
         api_field="averageSpeed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
@@ -144,7 +137,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="average_speed_automatic",
-        translation_key="average_speed_automatic",
         api_field="averageSpeedAutomatic",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
@@ -153,7 +145,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # vehicle endpoint
     VolvoSensorDescription(
         key="battery_capacity",
-        translation_key="battery_capacity",
         api_field=DATA_BATTERY_CAPACITY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
@@ -163,7 +154,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # fuel & recharge-status endpoint
     VolvoSensorDescription(
         key="battery_charge_level",
-        translation_key="battery_charge_level",
         api_field="batteryChargeLevel",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -173,7 +163,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # recharge-status endpoint
     VolvoSensorDescription(
         key="charging_connection_status",
-        translation_key="charging_connection_status",
         api_field="chargingConnectionStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -188,7 +177,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # recharge-status endpoint
     VolvoSensorDescription(
         key="charging_current_limit",
-        translation_key="charging_current_limit",
         api_field="chargingCurrentLimit",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -198,7 +186,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # recharge-status endpoint
     VolvoSensorDescription(
         key="charging_system_status",
-        translation_key="charging_system_status",
         api_field="chargingSystemStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -214,7 +201,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="distance_to_empty_battery",
-        translation_key="distance_to_empty_battery",
         api_field="distanceToEmptyBattery",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -224,7 +210,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="distance_to_empty_tank",
-        translation_key="distance_to_empty_tank",
         api_field="distanceToEmptyTank",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -234,7 +219,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # diagnostics endpoint
     VolvoSensorDescription(
         key="distance_to_service",
-        translation_key="distance_to_service",
         api_field="distanceToService",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -243,7 +227,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # diagnostics endpoint
     VolvoSensorDescription(
         key="engine_time_to_service",
-        translation_key="engine_time_to_service",
         api_field="engineHoursToService",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
@@ -252,7 +235,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # recharge-status endpoint
     VolvoSensorDescription(
         key="estimated_charging_time",
-        translation_key="estimated_charging_time",
         api_field="estimatedChargingTime",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
@@ -262,7 +244,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # fuel endpoint
     VolvoSensorDescription(
         key="fuel_amount",
-        translation_key="fuel_amount",
         api_field="fuelAmount",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
@@ -272,7 +253,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # odometer endpoint
     VolvoSensorDescription(
         key="odometer",
-        translation_key="odometer",
         api_field="odometer",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -281,7 +261,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # recharge-status endpoint
     VolvoSensorDescription(
         key="target_battery_charge_level",
-        translation_key="target_battery_charge_level",
         api_field="targetBatteryChargeLevel",
         native_unit_of_measurement=PERCENTAGE,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
@@ -289,7 +268,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # diagnostics endpoint
     VolvoSensorDescription(
         key="time_to_service",
-        translation_key="time_to_service",
         api_field="timeToService",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -298,7 +276,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="trip_meter_automatic",
-        translation_key="trip_meter_automatic",
         api_field="tripMeterAutomatic",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -307,7 +284,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     VolvoSensorDescription(
         key="trip_meter_manual",
-        translation_key="trip_meter_manual",
         api_field="tripMeterManual",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
