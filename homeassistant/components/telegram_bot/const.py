@@ -7,14 +7,12 @@ DOMAIN = "telegram_bot"
 PLATFORM_BROADCAST = "broadcast"
 PLATFORM_POLLING = "polling"
 PLATFORM_WEBHOOKS = "webhooks"
-
+SECTION_ADVANCED_SETTINGS = "advanced_settings"
 SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
 CONF_BOT_COUNT = "bot_count"
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
-CONF_PROXY_PARAMS = "proxy_params"
-
 
 CONF_PROXY_URL = "proxy_url"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
