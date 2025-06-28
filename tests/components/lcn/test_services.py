@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -328,7 +329,7 @@ async def test_service_send_keys_hit_deferred(
         patch.object(
             MockModuleConnection, "send_keys_hit_deferred"
         ) as send_keys_hit_deferred,
-        pytest.raises(ValueError),
+        pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -406,7 +407,7 @@ async def test_service_lock_keys_tab_a_temporary(
         patch.object(
             MockModuleConnection, "lock_keys_tab_a_temporary"
         ) as lock_keys_tab_a_temporary,
-        pytest.raises(ValueError),
+        pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
             DOMAIN,
