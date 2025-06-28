@@ -20,6 +20,10 @@ STATES = {
     "Stopped": MediaPlayerState.IDLE,
 }
 
+# Tesla uses 31 steps, in 0.333 increments up to 10.333
+VOLUME_STEP = 1 / 31
+VOLUME_FACTOR = 31 / 3  # 10.333
+
 PARALLEL_UPDATES = 0
 
 
@@ -38,6 +42,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     """Vehicle Location Media Class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_volume_step = VOLUME_STEP
 
     def __init__(
         self,
@@ -57,9 +62,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
-        return self.get("vehicle_state_media_info_audio_volume", 0) / self.get(
-            "vehicle_state_media_info_audio_volume_max", 10.333333
-        )
+        return self.get("vehicle_state_media_info_audio_volume", 0) / VOLUME_FACTOR
 
     @property
     def media_duration(self) -> int | None:

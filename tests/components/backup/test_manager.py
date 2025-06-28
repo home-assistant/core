@@ -36,6 +36,7 @@ from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     AddonErrorData,
+    AddonInfo,
     BackupManagerError,
     BackupManagerExceptionGroup,
     BackupManagerState,
@@ -653,7 +654,9 @@ async def test_initiate_backup(
         "database_included": include_database,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": expected_failed_agent_ids,
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
@@ -706,7 +709,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -726,7 +731,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -752,7 +759,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -857,7 +866,9 @@ async def test_initiate_backup_with_agent_error(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": ["test.remote"],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
@@ -890,7 +901,9 @@ async def test_initiate_backup_with_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
+            "failed_addons": [],
             "failed_agent_ids": ["test.remote"],
+            "failed_folders": [],
         }
     ]
 
@@ -1121,7 +1134,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {},
@@ -1135,7 +1149,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {},
@@ -1181,7 +1196,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {Folder.MEDIA: [("test_error", "Boom!")]},
@@ -1195,7 +1211,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {Folder.MEDIA: [("test_error", "Boom!")]},
@@ -1219,7 +1236,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {Folder.MEDIA: [("test_error", "Boom!")]},
@@ -1241,7 +1259,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
                 )
             },
             {Folder.MEDIA: [("test_error", "Boom!")]},
@@ -1847,7 +1866,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
         (
@@ -1855,7 +1874,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
     ],
@@ -2080,7 +2099,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -2100,7 +2121,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -2126,7 +2149,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -2256,7 +2281,9 @@ async def test_receive_backup_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
+            "failed_addons": [],
             "failed_agent_ids": ["test.remote"],
+            "failed_folders": [],
         }
     ]
 
@@ -3571,7 +3598,9 @@ async def test_initiate_backup_per_agent_encryption(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",

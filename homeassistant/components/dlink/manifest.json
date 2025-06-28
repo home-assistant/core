@@ -12,5 +12,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyW215"],
-  "requirements": ["pyW215==0.7.0"]
+  "requirements": ["pyW215==0.8.0"]
 }
