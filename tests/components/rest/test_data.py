@@ -5,7 +5,6 @@ import logging
 import pytest
 
 from homeassistant.components.rest import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,14 +27,17 @@ async def test_rest_data_log_warning_on_error_status(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.test }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.test }}",
+                    }
+                ],
             }
         },
     )
@@ -65,14 +67,17 @@ async def test_rest_data_no_warning_on_200_with_wrong_content_type(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value }}",
+                    }
+                ],
             }
         },
     )
@@ -100,14 +105,17 @@ async def test_rest_data_no_warning_on_success_json(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.value }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.value }}",
+                    }
+                ],
             }
         },
     )
@@ -133,14 +141,17 @@ async def test_rest_data_no_warning_on_success_xml(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.root.value }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.root.value }}",
+                    }
+                ],
             }
         },
     )
@@ -168,14 +179,17 @@ async def test_rest_data_warning_truncates_long_responses(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.test }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.test }}",
+                    }
+                ],
             }
         },
     )
@@ -209,14 +223,17 @@ async def test_rest_data_debug_logging_shows_response_details(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.test }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.test }}",
+                    }
+                ],
             }
         },
     )
@@ -247,13 +264,16 @@ async def test_rest_data_no_content_type_header(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                    }
+                ],
             }
         },
     )
@@ -283,14 +303,19 @@ async def test_rest_data_real_world_bom_blocking_scenario(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
-                "resource": "http://www.bom.gov.au/fwo/IDN60901/IDN60901.94767.json",
+            DOMAIN: {
+                "resource": ("http://www.bom.gov.au/fwo/IDN60901/IDN60901.94767.json"),
                 "method": "GET",
-                "name": "bom_temperature",
-                "value_template": ("{{ value_json.observations.data[0].air_temp }}"),
+                "sensor": [
+                    {
+                        "name": "bom_temperature",
+                        "value_template": (
+                            "{{ value_json.observations.data[0].air_temp }}"
+                        ),
+                    }
+                ],
             }
         },
     )
@@ -299,8 +324,8 @@ async def test_rest_data_real_world_bom_blocking_scenario(
     # Check that warning was logged with clear indication of the issue
     assert (
         "REST request to http://www.bom.gov.au/fwo/IDN60901/"
-        "IDN60901.94767.json returned status 403 with text/html response" in caplog.text
-    )
+        "IDN60901.94767.json returned status 403 with text/html response"
+    ) in caplog.text
     assert "Your access is blocked" in caplog.text
 
 
@@ -320,14 +345,17 @@ async def test_rest_data_warning_on_html_error(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
-                "value_template": "{{ value_json.test }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.test }}",
+                    }
+                ],
             }
         },
     )
@@ -356,15 +384,18 @@ async def test_rest_data_no_warning_on_json_error(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "POST",
                 "payload": '{"data": "test"}',
-                "name": "test_sensor",
-                "value_template": "{{ value_json.error }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.error }}",
+                    }
+                ],
             }
         },
     )
@@ -389,15 +420,18 @@ async def test_rest_data_timeout_error(
 
     assert await async_setup_component(
         hass,
-        SENSOR_DOMAIN,
+        DOMAIN,
         {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
+            DOMAIN: {
                 "resource": "http://example.com/api",
                 "method": "GET",
-                "name": "test_sensor",
                 "timeout": 10,
-                "value_template": "{{ value_json.test }}",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.test }}",
+                    }
+                ],
             }
         },
     )
