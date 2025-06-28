@@ -153,30 +153,32 @@ class RestData:
             self.headers = None
 
         # Log response details outside the try block so we always get logging
-        if response is not None:
-            # Log response details for debugging
-            content_type = response.headers.get(hdrs.CONTENT_TYPE)
-            _LOGGER.debug(
-                "REST response from %s: status=%s, content-type=%s, length=%s",
+        if response is None:
+            return
+
+        # Log response details for debugging
+        content_type = response.headers.get(hdrs.CONTENT_TYPE)
+        _LOGGER.debug(
+            "REST response from %s: status=%s, content-type=%s, length=%s",
+            self._resource,
+            response.status,
+            content_type or "not set",
+            len(self.data) if self.data else 0,
+        )
+
+        # If we got an error response with non-JSON/XML content, log a sample
+        # This helps debug issues like servers blocking with HTML error pages
+        if (
+            response.status >= 400
+            and content_type
+            and not self._is_expected_content_type(content_type)
+        ):
+            sample = self.data[:500] if self.data else "<empty>"
+            _LOGGER.warning(
+                "REST request to %s returned status %s with %s response: %s%s",
                 self._resource,
                 response.status,
-                content_type or "not set",
-                len(self.data) if self.data else 0,
+                content_type,
+                sample,
+                "..." if self.data and len(self.data) > 500 else "",
             )
-
-            # If we got an error response with non-JSON/XML content, log a sample
-            # This helps debug issues like servers blocking with HTML error pages
-            if (
-                response.status >= 400
-                and content_type
-                and not self._is_expected_content_type(content_type)
-            ):
-                sample = self.data[:500] if self.data else "empty"
-                _LOGGER.warning(
-                    "REST request to %s returned status %s with %s response: %s%s",
-                    self._resource,
-                    response.status,
-                    content_type,
-                    sample,
-                    "..." if self.data and len(self.data) > 500 else "",
-                )
