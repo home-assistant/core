@@ -21,7 +21,7 @@ av==13.1.0
 awesomeversion==25.5.0
 bcrypt==4.3.0
 bleak-retry-connector==3.9.0
-bleak==0.22.3
+bleak==1.0.1
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.5.2
 bluetooth-data-tools==1.28.1
