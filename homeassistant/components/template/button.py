@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
+from homeassistant.components.button import (
+    DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
@@ -26,6 +23,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
+from .helpers import async_setup_template_platform
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,19 +48,6 @@ CONFIG_BUTTON_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateButtonEntity]:
-    """Create the Template button."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateButtonEntity(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -70,15 +55,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template button."""
-    if not discovery_info or "coordinator" in discovery_info:
-        raise PlatformNotReady(
-            "The template button platform doesn't support trigger entities"
-        )
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        BUTTON_DOMAIN,
+        config,
+        StateButtonEntity,
+        None,
+        async_add_entities,
+        discovery_info,
     )
 
 
@@ -92,11 +76,11 @@ async def async_setup_entry(
     _options.pop("template_type")
     validated_config = CONFIG_BUTTON_SCHEMA(_options)
     async_add_entities(
-        [TemplateButtonEntity(hass, validated_config, config_entry.entry_id)]
+        [StateButtonEntity(hass, validated_config, config_entry.entry_id)]
     )
 
 
-class TemplateButtonEntity(TemplateEntity, ButtonEntity):
+class StateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
 
     _attr_should_poll = False
