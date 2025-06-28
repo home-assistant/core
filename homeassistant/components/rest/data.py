@@ -110,6 +110,12 @@ class RestData:
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
+        # Convert boolean values to lowercase strings for compatibility with aiohttp/yarl
+        if rendered_params:
+            for key, value in rendered_params.items():
+                if isinstance(value, bool):
+                    rendered_params[key] = str(value).lower()
+
         _LOGGER.debug("Updating from %s", self._resource)
         # Create request kwargs
         request_kwargs: dict[str, Any] = {
