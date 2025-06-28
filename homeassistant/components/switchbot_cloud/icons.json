@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "fan": {
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "normal": "mdi:fan",
+              "auto": "mdi:auto-mode",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    }
+  }
+}
