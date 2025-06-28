@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -134,6 +134,21 @@ async def test_service_relays(
     relay_states = [pypck.lcn_defs.RelayStateModifier[state] for state in states]
 
     control_relays.assert_awaited_with(relay_states)
+
+    # wrong states string
+    with (
+        patch.object(MockModuleConnection, "control_relays") as control_relays,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.RELAYS,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_STATE: "0011TT--00",
+            },
+            blocking=True,
+        )
 
 
 async def test_service_led(
@@ -369,6 +384,22 @@ async def test_service_lock_keys(
     lock_states = [pypck.lcn_defs.KeyLockStateModifier[state] for state in states]
 
     lock_keys.assert_awaited_with(0, lock_states)
+
+    # wrong states string
+    with (
+        patch.object(MockModuleConnection, "lock_keys") as lock_keys,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.LOCK_KEYS,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_TABLE: "a",
+                CONF_STATE: "0011TT--00",
+            },
+            blocking=True,
+        )
 
 
 async def test_service_lock_keys_tab_a_temporary(
