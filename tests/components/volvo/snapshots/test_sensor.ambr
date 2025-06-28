@@ -341,118 +341,6 @@
     'state': '30000',
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_ta_avg_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_ta_avg_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
-    'original_icon': None,
-    'original_name': 'TA avg. speed',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'average_speed_automatic',
-    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_ta_avg_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'Volvo S90 TA avg. speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_ta_avg_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26',
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_ta_distance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_ta_distance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'TA distance',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trip_meter_automatic',
-    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_ta_distance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Volvo S90 TA distance',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_ta_distance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18.2',
-  })
-# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -509,7 +397,7 @@
     'state': '17',
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_avg_fuel_consumption-entry]
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_automatic_average_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -524,59 +412,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_tm_avg_fuel_consumption',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'TM avg. fuel consumption',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'average_fuel_consumption',
-    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
-    'unit_of_measurement': 'L/100 km',
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_avg_fuel_consumption-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 TM avg. fuel consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'L/100 km',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_tm_avg_fuel_consumption',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7.23',
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_avg_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_tm_avg_speed',
+    'entity_id': 'sensor.volvo_s90_trip_automatic_average_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -591,33 +427,33 @@
     }),
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
-    'original_name': 'TM avg. speed',
+    'original_name': 'Trip automatic average speed',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'average_speed',
-    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'translation_key': 'average_speed_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_avg_speed-state]
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_automatic_average_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
-      'friendly_name': 'Volvo S90 TM avg. speed',
+      'friendly_name': 'Volvo S90 Trip automatic average speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_tm_avg_speed',
+    'entity_id': 'sensor.volvo_s90_trip_automatic_average_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '53',
+    'state': '26',
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_distance-entry]
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_automatic_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -632,7 +468,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_tm_distance',
+    'entity_id': 'sensor.volvo_s90_trip_automatic_distance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -647,7 +483,171 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'TM distance',
+    'original_name': 'Trip automatic distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_automatic_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo S90 Trip automatic distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_trip_automatic_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.2',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_average_fuel_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_trip_manual_average_fuel_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip manual average fuel consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_fuel_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
+    'unit_of_measurement': 'L/100 km',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_average_fuel_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo S90 Trip manual average fuel consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'L/100 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_trip_manual_average_fuel_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.23',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_average_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_trip_manual_average_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Trip manual average speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_average_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo S90 Trip manual average speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_trip_manual_average_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_trip_manual_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip manual distance',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -657,20 +657,73 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tm_distance-state]
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_manual_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Volvo S90 TM distance',
+      'friendly_name': 'Volvo S90 Trip manual distance',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_tm_distance',
+    'entity_id': 'sensor.volvo_s90_trip_manual_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3822.9',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'yv1abcdefg1234567_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Volvo XC40 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '58.0',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery_capacity-entry]
@@ -724,59 +777,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '81.608',
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery_charge_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_battery_charge_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery charge level',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_charge_level',
-    'unique_id': 'yv1abcdefg1234567_battery_charge_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery_charge_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Volvo XC40 Battery charge level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_battery_charge_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '58.0',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_car_connection-entry]
@@ -1135,7 +1135,7 @@
     'state': '1266',
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_est_charging_time-entry]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_estimated_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1150,7 +1150,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_est_charging_time',
+    'entity_id': 'sensor.volvo_xc40_estimated_charging_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1165,7 +1165,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Est. charging time',
+    'original_name': 'Estimated charging time',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1175,16 +1175,16 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_est_charging_time-state]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_estimated_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Volvo XC40 Est. charging time',
+      'friendly_name': 'Volvo XC40 Estimated charging time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_est_charging_time',
+    'entity_id': 'sensor.volvo_xc40_estimated_charging_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1247,118 +1247,6 @@
     'state': '30000',
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_ta_avg_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_ta_avg_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
-    'original_icon': None,
-    'original_name': 'TA avg. speed',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'average_speed_automatic',
-    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_ta_avg_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'Volvo XC40 TA avg. speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_ta_avg_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26',
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_ta_distance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_ta_distance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'TA distance',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trip_meter_automatic',
-    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_ta_distance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 TA distance',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_ta_distance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18.2',
-  })
-# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1412,7 +1300,7 @@
     'state': '23',
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_avg_energy_consumption-entry]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_average_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1427,59 +1315,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_tm_avg_energy_consumption',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'TM avg. energy consumption',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'average_energy_consumption',
-    'unique_id': 'yv1abcdefg1234567_average_energy_consumption',
-    'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_avg_energy_consumption-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 TM avg. energy consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_tm_avg_energy_consumption',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '22.6',
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_avg_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_tm_avg_speed',
+    'entity_id': 'sensor.volvo_xc40_trip_automatic_average_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1494,33 +1330,33 @@
     }),
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
-    'original_name': 'TM avg. speed',
+    'original_name': 'Trip automatic average speed',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'average_speed',
-    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'translation_key': 'average_speed_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_avg_speed-state]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_average_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
-      'friendly_name': 'Volvo XC40 TM avg. speed',
+      'friendly_name': 'Volvo XC40 Trip automatic average speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_tm_avg_speed',
+    'entity_id': 'sensor.volvo_xc40_trip_automatic_average_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '53',
+    'state': '26',
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_distance-entry]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1535,7 +1371,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_tm_distance',
+    'entity_id': 'sensor.volvo_xc40_trip_automatic_distance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1550,7 +1386,171 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'TM distance',
+    'original_name': 'Trip automatic distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC40 Trip automatic distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_trip_automatic_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.2',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_average_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_trip_manual_average_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip manual average energy consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_energy_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_energy_consumption',
+    'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_average_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Trip manual average energy consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_trip_manual_average_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.6',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_average_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_trip_manual_average_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Trip manual average speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_average_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC40 Trip manual average speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_trip_manual_average_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_trip_manual_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip manual distance',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1560,16 +1560,16 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tm_distance-state]
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_manual_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 TM distance',
+      'friendly_name': 'Volvo XC40 Trip manual distance',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_tm_distance',
+    'entity_id': 'sensor.volvo_xc40_trip_manual_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

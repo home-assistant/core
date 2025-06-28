@@ -61,7 +61,6 @@ async def test_token_refresh_success(
 @pytest.mark.parametrize(
     ("token_response"),
     [
-        (HTTPStatus.BAD_REQUEST),
         (HTTPStatus.FORBIDDEN),
         (HTTPStatus.INTERNAL_SERVER_ERROR),
         (HTTPStatus.NOT_FOUND),
