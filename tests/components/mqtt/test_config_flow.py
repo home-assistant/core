@@ -4073,7 +4073,7 @@ async def test_subentry_reconfigure_update_device_properties(
         result["flow_id"],
         user_input={
             "name": "Beer notifier",
-            "sw_version": "1.1",
+            "advanced_settings": {"sw_version": "1.1"},
             "model": "Beer bottle XL",
             "model_id": "bn003",
             "configuration_url": "https://example.com",
