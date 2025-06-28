@@ -43,8 +43,8 @@ async def test_rest_data_log_warning_on_error_status(
 
     # Check that warning was logged
     assert (
-        "REST request to http://example.com/api returned status 403 with text/html response"
-        in caplog.text
+        "REST request to http://example.com/api returned status 403 "
+        "with text/html response" in caplog.text
     )
     assert "<html><body>Access Denied</body></html>" in caplog.text
 
@@ -54,7 +54,7 @@ async def test_rest_data_no_warning_on_200_with_wrong_content_type(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that no warning is logged for 200 status even with unexpected content type."""
+    """Test that no warning is logged for 200 status with wrong content."""
     # Mock a 200 response with HTML - users might still want to parse this
     aioclient_mock.get(
         "http://example.com/api",
@@ -187,10 +187,8 @@ async def test_rest_data_warning_truncates_long_responses(
 
     # Verify the truncated warning appears
     assert (
-        "REST request to http://example.com/api returned status 500 with text/plain response: Error: "
-        + "x" * 493
-        + "..."
-        in caplog.text
+        "REST request to http://example.com/api returned status 500 "
+        "with text/plain response: Error: " + "x" * 493 + "..." in caplog.text
     )
 
 
@@ -226,8 +224,8 @@ async def test_rest_data_debug_logging_shows_response_details(
 
     # Check debug log
     assert (
-        "REST response from http://example.com/api: status=200, content-type=application/json, length="
-        in caplog.text
+        "REST response from http://example.com/api: status=200, "
+        "content-type=application/json, length=" in caplog.text
     )
 
 
@@ -295,7 +293,7 @@ async def test_rest_data_real_world_bom_blocking_scenario(
                 "resource": "http://www.bom.gov.au/fwo/IDN60901/IDN60901.94767.json",
                 "method": "GET",
                 "name": "bom_temperature",
-                "value_template": "{{ value_json.observations.data[0].air_temp }}",
+                "value_template": ("{{ value_json.observations.data[0].air_temp }}"),
             }
         },
     )
@@ -303,8 +301,8 @@ async def test_rest_data_real_world_bom_blocking_scenario(
 
     # Check that warning was logged with clear indication of the issue
     assert (
-        "REST request to http://www.bom.gov.au/fwo/IDN60901/IDN60901.94767.json returned status 403 with text/html response"
-        in caplog.text
+        "REST request to http://www.bom.gov.au/fwo/IDN60901/"
+        "IDN60901.94767.json returned status 403 with text/html response" in caplog.text
     )
     assert "Your access is blocked" in caplog.text
     assert "automated access request" in caplog.text
@@ -341,8 +339,8 @@ async def test_rest_data_warning_on_html_error(
 
     # Should warn for error status with HTML
     assert (
-        "REST request to http://example.com/api returned status 404 with text/html response"
-        in caplog.text
+        "REST request to http://example.com/api returned status 404 "
+        "with text/html response" in caplog.text
     )
     assert "<html><body><h1>404 Not Found</h1></body></html>" in caplog.text
 
