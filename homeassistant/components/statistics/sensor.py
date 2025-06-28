@@ -5,23 +5,26 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 import math
 import statistics
 import time
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -56,6 +59,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_report_event,
 )
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -588,6 +592,40 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
+@dataclasses.dataclass
+class StatisticsSensorExtraStoredData(SensorExtraStoredData):
+    """Object to hold extra stored data."""
+
+    states: list[float | bool]
+    ages: list[float]
+    source_value_valid: bool | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {
+            **super().as_dict(),
+            "states": self.states,
+            "ages": self.ages,
+            "source_value_valid": self.source_value_valid,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Create an instance from a dict representation."""
+        extra = SensorExtraStoredData.from_dict(restored)
+        if extra is None:
+            return None
+        try:
+            return cls(
+                **dataclasses.asdict(extra),
+                states=restored["states"],
+                ages=restored["ages"],
+                source_value_valid=restored["source_value_valid"],
+            )
+        except KeyError:
+            return None
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -650,7 +688,7 @@ async def async_setup_entry(
     )
 
 
-class StatisticsSensor(SensorEntity):
+class StatisticsSensor(RestoreSensor):
     """Representation of a Statistics sensor."""
 
     _attr_should_poll = False
@@ -767,8 +805,7 @@ class StatisticsSensor(SensorEntity):
         This is needed to ensure that the buffer is properly sorted by time.
         """
         _LOGGER.debug("Startup for %s", self.entity_id)
-        if "recorder" in self.hass.config.components:
-            await self._initialize_from_database()
+        await self._initialize_state()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -1027,7 +1064,11 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
-        """Fetch the states from the database."""
+        """Fetch the states from the database.
+
+        If MaxAge is provided then query will restrict to entries younger than
+        current datetime - MaxAge.
+        """
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         lower_entity_id = self._source_entity_id.lower()
         if (max_age := self._samples_max_age) is not None:
@@ -1044,7 +1085,10 @@ class StatisticsSensor(SensorEntity):
         else:
             start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
             _LOGGER.debug("%s: retrieving all records", self.entity_id)
-        return history.state_changes_during_period(
+        # The query will get the list of states in DESCENDING order so that we
+        # can limit the result to self._sample_size. Afterwards reverse the
+        # list so that we get it in the right order again.
+        states = history.state_changes_during_period(
             self.hass,
             start_date,
             entity_id=lower_entity_id,
@@ -1052,23 +1096,57 @@ class StatisticsSensor(SensorEntity):
             limit=self._samples_max_buffer_size,
             include_start_time_state=False,
         ).get(lower_entity_id, [])
+        states.reverse()
+        return states
 
-    async def _initialize_from_database(self) -> None:
-        """Initialize the list of states from the database.
-
-        The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
-
-        If MaxAge is provided then query will restrict to entries younger then
-        current datetime - MaxAge.
-        """
-        if states := await get_instance(self.hass).async_add_executor_job(
+    async def _initialize_from_database(self) -> bool:
+        """Initialize the list of states from the database."""
+        if DATA_RECORDER not in self.hass.config.components:
+            return False
+        states = await get_instance(self.hass).async_add_executor_job(
             self._fetch_states_from_database
+        )
+        if not states:
+            return False
+        for state in states:
+            self._add_state_to_queue(state, state.last_reported_timestamp)
+            self._calculate_state_attributes(state)
+        return True
+
+    async def _initialize_from_restore_state(self) -> bool:
+        """Initialize the list of states from the restore state."""
+        if (last_state := await self.async_get_last_state()) is None:
+            return False
+        if (extra_data := await self.async_get_last_extra_data()) is None:
+            return False
+        if (
+            typed_data := StatisticsSensorExtraStoredData.from_dict(
+                extra_data.as_dict()
+            )
+        ) is None:
+            return False
+        self.states = deque(typed_data.states, maxlen=self._samples_max_buffer_size)
+        self.ages = deque(typed_data.ages, maxlen=self._samples_max_buffer_size)
+        self._attr_available = last_state.state != STATE_UNAVAILABLE
+        self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = (
+            typed_data.source_value_valid
+        )
+        self._attr_native_unit_of_measurement = typed_data.native_unit_of_measurement
+        # No need to restore _attr_native_value because it will be recalculated
+        # by the upcoming _async_purge_update_and_schedule call
+        self._attr_device_class = last_state.attributes.get(ATTR_DEVICE_CLASS)
+        self._attr_state_class = last_state.attributes.get(ATTR_STATE_CLASS)
+        return True
+
+    async def _initialize_state(self) -> None:
+        """Initialize the sensor state from the database/restore info."""
+        if (
+            await self._initialize_from_restore_state()
+            or await self._initialize_from_database()
         ):
-            for state in reversed(states):
-                self._add_state_to_queue(state, state.last_reported_timestamp)
-                self._calculate_state_attributes(state)
+            _LOGGER.debug("%s: restored %d states", self.entity_id, len(self.states))
+
+        # Update the sensor based on the restored states.
         self._async_purge_update_and_schedule()
 
         # only write state to the state machine if we are not in preview mode
@@ -1077,7 +1155,7 @@ class StatisticsSensor(SensorEntity):
             self._preview_callback(calculated_state.state, calculated_state.attributes)
         else:
             self.async_write_ha_state()
-        _LOGGER.debug("%s: initializing from database completed", self.entity_id)
+        _LOGGER.debug("%s: initializing from the database completed", self.entity_id)
 
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
@@ -1111,3 +1189,15 @@ class StatisticsSensor(SensorEntity):
                 if self._precision == 0:
                     value = int(value)
         self._attr_native_value = value
+
+    @property
+    def extra_restore_state_data(self) -> StatisticsSensorExtraStoredData:
+        """Return specific state data to be restored."""
+        return StatisticsSensorExtraStoredData(
+            states=list(self.states),
+            ages=list(self.ages),
+            source_value_valid=self._attr_extra_state_attributes.get(
+                STAT_SOURCE_VALUE_VALID
+            ),
+            **dataclasses.asdict(super().extra_restore_state_data),
+        )
