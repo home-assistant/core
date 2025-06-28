@@ -3605,7 +3605,7 @@ async def test_track_time_interval_name(hass: HomeAssistant) -> None:
         timedelta(seconds=10),
         name=unique_string,
     )
-    scheduled = getattr(hass.loop, "_scheduled")
+    scheduled = hass.loop._scheduled
     assert any(handle for handle in scheduled if unique_string in str(handle))
     unsub()
 

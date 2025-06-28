@@ -5,18 +5,12 @@ from __future__ import annotations
 from aiolifx_themes.themes import ThemeLibrary
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_THEME,
-    DOMAIN,
-    INFRARED_BRIGHTNESS,
-    INFRARED_BRIGHTNESS_VALUES_MAP,
-)
-from .coordinator import LIFXUpdateCoordinator
+from .const import ATTR_THEME, INFRARED_BRIGHTNESS, INFRARED_BRIGHTNESS_VALUES_MAP
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
 
@@ -39,11 +33,11 @@ THEME_ENTITY = SelectEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LIFXConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[LIFXEntity] = []
 

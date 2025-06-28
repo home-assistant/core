@@ -138,6 +138,10 @@ async def setup_backup_integration(
         patch(
             "homeassistant.components.backup.backup.is_hassio", return_value=with_hassio
         ),
+        patch(
+            "homeassistant.components.backup.services.is_hassio",
+            return_value=with_hassio,
+        ),
     ):
         remote_agents = remote_agents or []
         remote_agents_dict = {}

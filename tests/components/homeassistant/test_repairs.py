@@ -2,6 +2,7 @@
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -10,13 +11,13 @@ from tests.components.repairs import (
     process_repair_fix_flow,
     start_repair_fix_flow,
 )
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import ClientSessionGenerator
 
 
 async def test_integration_not_found_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the integration_not_found issue confirm step."""
     assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
@@ -33,17 +34,11 @@ async def test_integration_not_found_confirm_step(
     issue_id = "integration_not_found.test1"
 
     await async_process_repairs_platforms(hass)
-    ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
-    # Assert the issue is present
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    issue = msg["result"]["issues"][0]
-    assert issue["issue_id"] == issue_id
-    assert issue["translation_placeholders"] == {"domain": "test1"}
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders == {"domain": "test1"}
 
     data = await start_repair_fix_flow(http_client, HOMEASSISTANT_DOMAIN, issue_id)
 
@@ -68,16 +63,13 @@ async def test_integration_not_found_confirm_step(
     assert hass.config_entries.async_get_entry(entry2.entry_id) is None
 
     # Assert the issue is resolved
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 0
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
 async def test_integration_not_found_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the integration_not_found issue ignore step."""
     assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
@@ -92,17 +84,11 @@ async def test_integration_not_found_ignore_step(
     issue_id = "integration_not_found.test1"
 
     await async_process_repairs_platforms(hass)
-    ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
-    # Assert the issue is present
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    issue = msg["result"]["issues"][0]
-    assert issue["issue_id"] == issue_id
-    assert issue["translation_placeholders"] == {"domain": "test1"}
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders == {"domain": "test1"}
 
     data = await start_repair_fix_flow(http_client, HOMEASSISTANT_DOMAIN, issue_id)
 
@@ -128,8 +114,6 @@ async def test_integration_not_found_ignore_step(
     assert hass.config_entries.async_get_entry(entry1.entry_id)
 
     # Assert the issue is resolved
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    assert msg["result"]["issues"][0].get("dismissed_version") is not None
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
