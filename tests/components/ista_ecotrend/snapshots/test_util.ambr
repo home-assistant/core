@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_get_statistics
+# name: test_get_statistics[heating-None]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -11,19 +11,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics.1
-  list([
-    dict({
-      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 113.0,
-    }),
-    dict({
-      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 38.0,
-    }),
-  ])
-# ---
-# name: test_get_statistics.2
+# name: test_get_statistics[heating-costs]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -35,7 +23,19 @@
     }),
   ])
 # ---
-# name: test_get_statistics.3
+# name: test_get_statistics[heating-energy]
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 113.0,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 38.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics[warmwater-None]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -47,7 +47,19 @@
     }),
   ])
 # ---
-# name: test_get_statistics.4
+# name: test_get_statistics[warmwater-costs]
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+  ])
+# ---
+# name: test_get_statistics[warmwater-energy]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -59,19 +71,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics.5
-  list([
-    dict({
-      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 7,
-    }),
-    dict({
-      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 7,
-    }),
-  ])
-# ---
-# name: test_get_statistics.6
+# name: test_get_statistics[water-None]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -83,11 +83,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics.7
-  list([
-  ])
-# ---
-# name: test_get_statistics.8
+# name: test_get_statistics[water-costs]
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -97,6 +93,10 @@
       'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
       'value': 3,
     }),
+  ])
+# ---
+# name: test_get_statistics[water-energy]
+  list([
   ])
 # ---
 # name: test_get_values_by_type

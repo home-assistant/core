@@ -1,5 +1,6 @@
 """Tests for the ista EcoTrend utility functions."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ista_ecotrend.util import (
@@ -121,26 +122,25 @@ def test_get_native_value() -> None:
     )
 
 
-def test_get_statistics(snapshot: SnapshotAssertion) -> None:
+@pytest.mark.parametrize(
+    "value_type",
+    [None, IstaValueType.ENERGY, IstaValueType.COSTS],
+)
+@pytest.mark.parametrize(
+    "consumption_type",
+    [
+        IstaConsumptionType.HEATING,
+        IstaConsumptionType.HOT_WATER,
+        IstaConsumptionType.WATER,
+    ],
+)
+def test_get_statistics(
+    snapshot: SnapshotAssertion,
+    value_type: IstaValueType | None,
+    consumption_type: IstaConsumptionType,
+) -> None:
     """Test get_statistics function."""
     test_data = get_consumption_data("26e93f1a-c828-11ea-87d0-0242ac130003")
-    for consumption_type in IstaConsumptionType:
-        assert get_statistics(test_data, consumption_type) == snapshot
-        assert get_statistics({"consumptions": None}, consumption_type) is None
-        assert (
-            get_statistics(test_data, consumption_type, IstaValueType.ENERGY)
-            == snapshot
-        )
-        assert (
-            get_statistics(
-                {"consumptions": None}, consumption_type, IstaValueType.ENERGY
-            )
-            is None
-        )
-        assert (
-            get_statistics(test_data, consumption_type, IstaValueType.COSTS) == snapshot
-        )
-        assert (
-            get_statistics({"costs": None}, consumption_type, IstaValueType.COSTS)
-            is None
-        )
+    assert get_statistics(test_data, consumption_type, value_type) == snapshot
+
+    assert get_statistics({"consumptions": None}, consumption_type, value_type) is None
