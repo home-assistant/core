@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
@@ -262,24 +261,39 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle sensor setup when added to hass."""
         await super().async_added_to_hass()
+        await self._async_update_state()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{SONOS_ALARMS_UPDATED}-{self.household_id}",
-                self.async_write_ha_state,
+                self._async_update_state,
             )
         )
 
         async def async_write_state_daily(now: datetime.datetime) -> None:
             """Update state attributes each calendar day."""
             _LOGGER.debug("Daily update of next alarm for %s", self.name)
-            self.async_write_ha_state()
+            await self._async_update_state()
 
         self.async_on_remove(
             async_track_time_change(
                 self.hass, async_write_state_daily, hour=0, minute=0, second=0
             )
         )
+
+    async def _async_update_state(self) -> None:
+        value = self.speaker.alarms.get_next_alarm_datetime(zone_uid=self.soco.uid)
+
+        self._attr_native_value = value
+
+        self._attr_icon = "mdi:alarm-off" if value is None else "mdi:alarm"
+
+        is_today = False if value is None else value.date() == dt_util.now().date()
+        self._attr_extra_state_attributes = {
+            ATTR_SCHEDULED_TODAY: is_today,
+        }
+
+        self.async_write_ha_state()
 
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
@@ -288,34 +302,9 @@ class SonosNextAlarmEntity(SonosEntity, SensorEntity):
         await alarms.async_poll()
 
     @property
-    def icon(self) -> str:
-        """Icon of the entity."""
-        if self.native_value is None:
-            return "mdi:alarm-off"
-        return "mdi:alarm"
-
-    @property
-    def native_value(self) -> datetime.datetime | None:
-        """Return the next alarm time."""
-        return self.speaker.alarms.get_next_alarm_datetime(zone_uid=self.soco.uid)
-
-    @property
-    def _is_today(self) -> bool:
-        """Return whether the next alarm is scheduled for today."""
-        if self.native_value is None:
-            return False
-        return self.native_value.date() == dt_util.now().date()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return attributes of Sonos next alarm sensor."""
-        return {
-            ATTR_SCHEDULED_TODAY: self._is_today,
-        }
-
-    @property
     def available(self) -> bool:
         """Return whether this entity is available."""
-        if self.native_value is None:
+        # This one must be a property to override parent (_attr_available won't work)
+        if self._attr_native_value is None:
             return False
         return super().available

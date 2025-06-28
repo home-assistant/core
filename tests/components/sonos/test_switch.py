@@ -1,10 +1,10 @@
 """Tests for the Sonos Alarm switch platform."""
 
 from copy import copy
-import datetime as dt
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sonos.const import (
@@ -73,22 +73,31 @@ async def test_switch_attributes(
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
 
-    alarm_time = dt_util.parse_time(alarm_state.attributes.get(ATTR_TIME))
-    now = dt_util.now()
-    next_alarm_delta_days = 0
-    if alarm_time <= now.time():
-        next_alarm_delta_days = 1
-        assert not alarm_state.attributes.get(ATTR_SCHEDULED_TODAY)
-    else:
+    test_time_before_alarm = dt_util.as_local(
+        dt_util.parse_datetime("2025-06-27 06:00:00")
+    )
+    with freeze_time(test_time_before_alarm):
+        async_fire_time_changed(hass, test_time_before_alarm)
+        await hass.async_block_till_done()
+
+        alarm_state = hass.states.get(alarm.entity_id)
+        assert dt_util.as_local(
+            dt_util.parse_datetime(alarm_state.attributes.get(ATTR_NEXT_TRIGGER))
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-27 07:00:00"))
         assert alarm_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
-    assert dt_util.parse_datetime(
-        alarm_state.attributes.get(ATTR_NEXT_TRIGGER)
-    ) == dt.datetime.combine(
-        now + dt.timedelta(days=next_alarm_delta_days),
-        alarm_time,
-        now.tzinfo,
+    test_time_after_alarm = dt_util.as_local(
+        dt_util.parse_datetime("2025-06-27 07:01:00")
     )
+    with freeze_time(test_time_after_alarm):
+        async_fire_time_changed(hass, test_time_after_alarm)
+        await hass.async_block_till_done()
+
+        alarm_state = hass.states.get(alarm.entity_id)
+        assert dt_util.as_local(
+            dt_util.parse_datetime(alarm_state.attributes.get(ATTR_NEXT_TRIGGER))
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-28 07:00:00"))
+        assert not alarm_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
     surround_music_full_volume = entity_registry.entities[
         "switch.zone_a_surround_music_full_volume"
