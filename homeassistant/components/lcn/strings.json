@@ -414,6 +414,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to {config_entry_title}."
+    },
     "invalid_device_id": {
       "message": "LCN device for given device ID {device_id} has not been configured."
     },
@@ -422,6 +425,12 @@
     },
     "invalid_lock_keys_table": {
       "message": "Invalid table for locking keys. Only table A allowed when locking for a specific time."
+    },
+    "invalid_domain": {
+      "message": "Invalid domain {domain}."
+    },
+    "invalid_length_of_states_string": {
+      "message": "Invalid length of states string. Expected 8 characters."
     }
   }
 }
