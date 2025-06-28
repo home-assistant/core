@@ -30,6 +30,8 @@ from .entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
+SLAT_ROTATION_MIN = -45
+SLAT_ROTATION_MAX = 90
 
 
 async def async_setup_entry(
@@ -139,28 +141,46 @@ class WebControlProSlatRotate(WebControlProSlat):
 
     _tilt_action_desc = ACTION_DESC.SlatRotate
 
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover and tilt like the hub."""
+        await super().async_open_cover(**kwargs)
+        await self.async_open_cover_tilt(**kwargs)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover and tilt like the hub."""
+        await super().async_close_cover(**kwargs)
+        await self.async_close_cover_tilt(**kwargs)
+
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
         return ranged_value_to_percentage(
-            (action.minValue, action.maxValue), action["rotation"]
+            (
+                max(action.minValue, SLAT_ROTATION_MIN),
+                min(action.maxValue, SLAT_ROTATION_MAX),
+            ),
+            action["rotation"],
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
         rotation = percentage_to_ranged_value(
-            (action.minValue, action.maxValue), kwargs[ATTR_TILT_POSITION]
+            (
+                max(action.minValue, SLAT_ROTATION_MIN),
+                min(action.maxValue, SLAT_ROTATION_MAX),
+            ),
+            kwargs[ATTR_TILT_POSITION],
         )
         await action(rotation=rotation)
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=action.maxValue)
+        await action(rotation=min(action.maxValue, SLAT_ROTATION_MAX))
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=action.minValue)
+        await action(rotation=max(action.minValue, SLAT_ROTATION_MIN))
