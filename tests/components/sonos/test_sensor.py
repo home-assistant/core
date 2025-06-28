@@ -1,8 +1,6 @@
 """Tests for the Sonos battery sensor platform."""
 
 from collections.abc import Callable, Coroutine
-from copy import copy
-import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any
@@ -301,7 +299,9 @@ async def test_next_alarm_sensor(
         await hass.async_block_till_done()
 
         next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
-        assert dt_util.as_local(dt_util.parse_datetime(next_alarm_sensor_state.state)) == dt_util.as_local(dt_util.parse_datetime("2025-06-27 07:00:00"))
+        assert dt_util.as_local(
+            dt_util.parse_datetime(next_alarm_sensor_state.state)
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-27 07:00:00"))
         assert next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
     test_time_after_alarm_14 = dt_util.as_local(
@@ -312,7 +312,9 @@ async def test_next_alarm_sensor(
         await hass.async_block_till_done()
 
         next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
-        assert dt_util.as_local(dt_util.parse_datetime(next_alarm_sensor_state.state)) == dt_util.as_local(dt_util.parse_datetime("2025-06-28 07:00:00"))
+        assert dt_util.as_local(
+            dt_util.parse_datetime(next_alarm_sensor_state.state)
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-28 07:00:00"))
         assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
     # # Update the entity by disabling the alarm.
