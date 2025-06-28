@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from rachiopy import Rachio
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -61,6 +61,14 @@ async def validate_input(hass: HomeAssistant, data):
     except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect from error
+    except HTTPError as error:
+        if hasattr(error, 'response') and error.response is not None and error.response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            headers = error.response.headers
+            cap = headers.get('x-ratelimit-limit', '?')
+            reset = headers.get('x-ratelimit-reset', '?')
+            _LOGGER.error("Rachio API rate limit exceeded: cap=%s, reset=%s", cap, reset)
+            raise RateLimitExceeded(cap, reset) from error
+        raise
 
     # Return info that you want to store in the config entry.
     return {"title": username}
@@ -86,6 +94,12 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except RateLimitExceeded as err:
+                errors["base"] = {
+                    "message": "rate_limit_exceeded",
+                    "cap": getattr(err, "cap", "?"),
+                    "reset": getattr(err, "reset", "?")
+                }
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -141,3 +155,11 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class RateLimitExceeded(HomeAssistantError):
+    """Error to indicate the Rachio API rate limit was exceeded."""
+    def __init__(self, cap: str, reset: str) -> None:
+        super().__init__(f"Rate limit exceeded: {cap} requests per day. Limit resets at {reset}.")
+        self.cap = cap
+        self.reset = reset
