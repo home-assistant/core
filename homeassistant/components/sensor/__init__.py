@@ -541,6 +541,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 native_unit_of_measurement
             ][self.hass.config.units.temperature_unit]
         except KeyError:
+            # any unsupported device_class and/or unit conversion
+            # will silently be discarded
             pass
 
         # Fourth priority: Unit translation
