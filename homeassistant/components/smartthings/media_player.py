@@ -25,6 +25,12 @@ MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_VOLUME,
 )
 
+EXTENDED_MEDIA_PLAYER_CAPABILITIES = (
+    Capability.AUDIO_MUTE,
+    Capability.AUDIO_VOLUME,
+    Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+)
+
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
 
 DEVICE_CLASS_MAP: dict[Category | str, MediaPlayerDeviceClass] = {
@@ -60,14 +66,24 @@ async def async_setup_entry(
     """Add media players for a config entry."""
     entry_data = entry.runtime_data
 
-    async_add_entities(
-        SmartThingsMediaPlayer(entry_data.client, device)
-        for device in entry_data.devices.values()
-        if all(
+    media_players = []
+
+    for device in entry_data.devices.values():
+        # Check if device has any media player capabilities
+        has_basic_capabilities = all(
             capability in device.status[MAIN]
             for capability in MEDIA_PLAYER_CAPABILITIES
         )
-    )
+
+        has_samsung_vd_media = (
+            Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE in device.status[MAIN]
+        )
+
+        # Add device if it has either basic or Samsung VD capabilities
+        if has_basic_capabilities or has_samsung_vd_media:
+            media_players.append(SmartThingsMediaPlayer(entry_data.client, device))
+
+    async_add_entities(media_players)
 
 
 class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
@@ -89,6 +105,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.MEDIA_PLAYBACK_REPEAT,
                 Capability.MEDIA_PLAYBACK_SHUFFLE,
                 Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
                 Capability.SWITCH,
             },
         )
@@ -123,6 +140,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
             )
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            flags |= MediaPlayerEntityFeature.SELECT_SOURCE
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
@@ -211,11 +230,35 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
-        await self.execute_device_command(
-            Capability.MEDIA_INPUT_SOURCE,
-            Command.SET_INPUT_SOURCE,
-            argument=source,
-        )
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            sources_map = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            source_id = source
+
+            if sources_map:
+                for source_info in sources_map:
+                    if source_info.get("name") == source:
+                        source_id = source_info.get("id")
+                        break
+                else:
+                    for source_info in sources_map:
+                        if source_info.get("id") == source:
+                            source_id = source
+                            break
+
+            await self.execute_device_command(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=source_id,
+            )
+        elif self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            await self.execute_device_command(
+                Capability.MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=source,
+            )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
@@ -311,6 +354,20 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Input source."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            current_source_id = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+            # Try to get the friendly name from supportedInputSourcesMap
+            sources_map = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            if sources_map and current_source_id:
+                for source in sources_map:
+                    if source.get("id") == current_source_id:
+                        return source.get("name", current_source_id)
+            return current_source_id
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
@@ -324,6 +381,19 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """List of input sources."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            # Try to get friendly names from supportedInputSourcesMap first
+            sources_map = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            if sources_map:
+                return [source.get("name", source.get("id")) for source in sources_map]
+            # Fallback to basic supported input sources
+            return self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES,
+            )
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
