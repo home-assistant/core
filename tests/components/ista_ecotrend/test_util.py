@@ -85,41 +85,31 @@ def test_get_values_by_type(snapshot: SnapshotAssertion) -> None:
     assert get_values_by_type({"readings": []}, IstaConsumptionType.HEATING) == {}
 
 
-def test_get_native_value() -> None:
+@pytest.mark.parametrize(
+    ("consumption_type", "value_type", "expected_value"),
+    [
+        (IstaConsumptionType.HEATING, None, 35),
+        (IstaConsumptionType.HOT_WATER, None, 1.0),
+        (IstaConsumptionType.WATER, None, 5.0),
+        (IstaConsumptionType.HEATING, IstaValueType.COSTS, 21),
+        (IstaConsumptionType.HOT_WATER, IstaValueType.COSTS, 7),
+        (IstaConsumptionType.WATER, IstaValueType.COSTS, 3),
+        (IstaConsumptionType.HEATING, IstaValueType.ENERGY, 38.0),
+        (IstaConsumptionType.HOT_WATER, IstaValueType.ENERGY, 57.0),
+    ],
+)
+def test_get_native_value(
+    consumption_type: IstaConsumptionType,
+    value_type: IstaValueType | None,
+    expected_value: float,
+) -> None:
     """Test getting native value for sensor states."""
     test_data = get_consumption_data("26e93f1a-c828-11ea-87d0-0242ac130003")
 
-    assert get_native_value(test_data, IstaConsumptionType.HEATING) == 35
-    assert get_native_value(test_data, IstaConsumptionType.HOT_WATER) == 1.0
-    assert get_native_value(test_data, IstaConsumptionType.WATER) == 5.0
-
-    assert (
-        get_native_value(test_data, IstaConsumptionType.HEATING, IstaValueType.COSTS)
-        == 21
-    )
-    assert (
-        get_native_value(test_data, IstaConsumptionType.HOT_WATER, IstaValueType.COSTS)
-        == 7
-    )
-    assert (
-        get_native_value(test_data, IstaConsumptionType.WATER, IstaValueType.COSTS) == 3
-    )
-
-    assert (
-        get_native_value(test_data, IstaConsumptionType.HEATING, IstaValueType.ENERGY)
-        == 38.0
-    )
-    assert (
-        get_native_value(test_data, IstaConsumptionType.HOT_WATER, IstaValueType.ENERGY)
-        == 57.0
-    )
+    assert get_native_value(test_data, consumption_type, value_type) == expected_value
 
     no_data = {"consumptions": None, "costs": None}
-    assert get_native_value(no_data, IstaConsumptionType.HEATING) is None
-    assert (
-        get_native_value(no_data, IstaConsumptionType.HEATING, IstaValueType.COSTS)
-        is None
-    )
+    assert get_native_value(no_data, consumption_type, value_type) is None
 
 
 @pytest.mark.parametrize(
