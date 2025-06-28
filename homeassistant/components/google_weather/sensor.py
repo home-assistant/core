@@ -144,8 +144,9 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     ),
     GoogleWeatherSensorDescription(
         key="wind_direction",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         native_unit_of_measurement=DEGREE,
         value_fn=lambda data: cast(int, data["wind"]["direction"]["degrees"]),
         translation_key="wind_direction",

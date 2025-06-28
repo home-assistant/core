@@ -21,9 +21,6 @@
       },
       "weather_condition": {
         "default": "mdi:card-text-outline"
-      },
-      "wind_direction": {
-        "default": "mdi:compass-outline"
       }
     }
   }
