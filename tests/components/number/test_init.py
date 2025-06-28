@@ -18,6 +18,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
+    async_update_number_units,
 )
 from homeassistant.components.number.const import (
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
@@ -811,6 +812,7 @@ async def test_custom_unit(
 
 @pytest.mark.parametrize(
     (
+        "device_class",
         "native_unit",
         "custom_unit",
         "used_custom_unit",
@@ -821,6 +823,7 @@ async def test_custom_unit(
     ),
     [
         (
+            NumberDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -830,6 +833,7 @@ async def test_custom_unit(
             37.5,
         ),
         (
+            NumberDeviceClass.TEMPERATURE,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -840,10 +844,42 @@ async def test_custom_unit(
         ),
         # Not a supported temperature unit
         (
+            NumberDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             "no_unit",
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
+            1000,
+            1000,
+            1000,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.CELSIUS,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.CELSIUS,
+            100,
+            180,
+            100,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.CELSIUS,
+            100,
+            100,
+            56,
+        ),
+        # Not a supported temperature unit
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.CELSIUS,
+            "no_unit",
+            UnitOfTemperatureInterval.CELSIUS,
+            UnitOfTemperatureInterval.CELSIUS,
             1000,
             1000,
             1000,
@@ -853,6 +889,7 @@ async def test_custom_unit(
 async def test_custom_unit_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_class,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -866,7 +903,7 @@ async def test_custom_unit_change(
         name="Test",
         native_value=native_value,
         native_unit_of_measurement=native_unit,
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=device_class,
         unique_id="very_unique",
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
@@ -985,6 +1022,222 @@ def test_device_classes_aligned() -> None:
         if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
         assert unit == NUMBER_DEVICE_CLASS_UNITS[device_class]
+
+
+@pytest.mark.parametrize(
+    (
+        "device_class",
+        "native_unit",
+        "native_value",
+        "initial_unit_system",
+        "initial_unit",
+        "initial_value",
+        "updated_unit_system",
+        "updated_unit",
+        "updated_value",
+    ),
+    [
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            1.0,
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            1.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            33.8,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.FAHRENHEIT,
+            32.0,
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            32.0,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            1.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            33.8,
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            1.0,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.FAHRENHEIT,
+            32.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            32.0,
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.0,
+        ),
+        # Kelvin are not converted
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.KELVIN,
+            100.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.KELVIN,
+            100.0,
+            METRIC_SYSTEM,
+            UnitOfTemperature.KELVIN,
+            100.0,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.CELSIUS,
+            1.0,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            1.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            1.8,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            1.0,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            0.6,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            1.0,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.CELSIUS,
+            -1.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            -1.8,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            -1.0,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            0.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            0.0,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            0.0,
+        ),
+        # Kelvin are not converted
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            UnitOfTemperatureInterval.KELVIN,
+            100.0,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.KELVIN,
+            100.0,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.KELVIN,
+            100.0,
+        ),
+    ],
+)
+async def test_core_unit_system_changed(
+    hass: HomeAssistant,
+    device_class,
+    native_unit,
+    native_value,
+    initial_unit_system,
+    initial_unit,
+    initial_value,
+    updated_unit_system,
+    updated_unit,
+    updated_value,
+) -> None:
+    """Make sure the NumberEntity updates units according to core config units."""
+
+    _async_write_ha_state = NumberEntity.async_write_ha_state
+
+    with (
+        patch(
+            "homeassistant.components.number.NumberEntity.async_write_ha_state",
+            autospec=True,
+        ) as mock_write_ha_state,
+    ):
+        entity_updating = common.MockNumberEntity(
+            name="Updating",
+            native_value=native_value,
+            native_unit_of_measurement=native_unit,
+            device_class=device_class,
+            unique_id="updating",
+        )
+        # Create an entity which should not be interested by unit updates
+        # triggered by async_update_number_units
+        entity_notupdating = common.MockNumberEntity(
+            name="Notupdating",
+            native_value=0,
+            native_unit_of_measurement="V",
+            device_class=NumberDeviceClass.VOLTAGE,
+            unique_id="notupdating",
+        )
+
+        mock_write_ha_state.side_effect = _async_write_ha_state
+        mock_call_entity_updating = ((entity_updating,), {})
+        mock_call_entity_notupdating = ((entity_notupdating,), {})
+
+        hass.config.units = initial_unit_system
+        setup_test_component_platform(
+            hass, DOMAIN, [entity_updating, entity_notupdating]
+        )
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        # Initial state flush when loading (2 entities)
+        mock_write_ha_state.assert_has_calls(
+            [mock_call_entity_updating, mock_call_entity_notupdating]
+        )
+        mock_write_ha_state.reset_mock()
+
+        # Default unit conversion according to initial unit system
+        state = hass.states.get(entity_updating.entity_id)
+        assert float(state.state) == float(initial_value)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == initial_unit
+
+        hass.config.units = updated_unit_system
+        async_update_number_units(hass)
+
+        if native_unit not in (
+            UnitOfTemperature.KELVIN,
+            UnitOfTemperatureInterval.KELVIN,
+        ):
+            # Check 'async_update_number_units' forwarded state updates for 'entity_updating'
+            # (2 calls for each entity since it'll also trigger registry updates).
+            mock_write_ha_state.assert_has_calls(
+                [mock_call_entity_updating, mock_call_entity_updating]
+            )
+        else:
+            # When trying to apply system units to a native KELVIN, 'async_update_number_units'
+            # will call write_ha_state but no state or registry update will be triggered.
+            mock_write_ha_state.assert_has_calls([mock_call_entity_updating])
+
+        mock_write_ha_state.reset_mock()
+
+        # unit conversion after updating unit system
+        state = hass.states.get(entity_updating.entity_id)
+        assert float(state.state) == float(updated_value)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == updated_unit
 
 
 class MockFlow(ConfigFlow):
