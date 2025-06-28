@@ -8,7 +8,7 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "name": "Location name. Used as the config entry and service name",
+          "name": "Location name",
           "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
           "location": "Location coordinates"
         },
@@ -35,6 +35,34 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "entry_type": "Location",
+      "step": {
+        "location": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "name": "[%key:component::google_weather::config::step::user::data_description::name%]",
+            "location": "[%key:component::google_weather::config::step::user::data_description::location%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:component::google_weather::config::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      }
     }
   },
   "entity": {

@@ -25,14 +25,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
-        title="Home",
+        title="Google Weather",
         domain=DOMAIN,
         data={
             CONF_API_KEY: "test-api-key",
-            CONF_LATITUDE: 10.1,
-            CONF_LONGITUDE: 20.1,
         },
-        unique_id="10.1-20.1",
+        subentries_data=[
+            {
+                "data": {
+                    CONF_LATITUDE: 10.1,
+                    CONF_LONGITUDE: 20.1,
+                },
+                "subentry_type": "location",
+                "title": "Home",
+                "subentry_id": "home-subentry-id",
+                "unique_id": None,
+            }
+        ],
     )
     config_entry.add_to_hass(hass)
     return config_entry

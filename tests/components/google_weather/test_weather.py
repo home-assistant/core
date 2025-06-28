@@ -65,6 +65,7 @@ async def test_availability(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
+    # Reset side effect, return a valid response again
     mock_google_weather_api.async_get_current_conditions.side_effect = None
 
     freezer.tick(timedelta(minutes=15))
@@ -75,6 +76,9 @@ async def test_availability(
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "sunny"
+    mock_google_weather_api.async_get_current_conditions.assert_called_with(
+        latitude=10.1, longitude=20.1
+    )
 
 
 async def test_manual_update_entity(
@@ -88,6 +92,9 @@ async def test_manual_update_entity(
     await async_setup_component(hass, "homeassistant", {})
 
     assert mock_google_weather_api.async_get_current_conditions.call_count == 1
+    mock_google_weather_api.async_get_current_conditions.assert_called_with(
+        latitude=10.1, longitude=20.1
+    )
 
     await hass.services.async_call(
         "homeassistant",
@@ -187,6 +194,7 @@ async def test_forecast_subscription(
     assert forecast1 == snapshot
 
     freezer.tick(timedelta(hours=1) + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     msg = await client.receive_json()
 

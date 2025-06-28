@@ -15,7 +15,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: No events subscribed.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -24,7 +26,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: No actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -49,7 +53,9 @@ rules:
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: done
+  docs-supported-devices:
+    status: exempt
+    comment: No physical devices.
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done

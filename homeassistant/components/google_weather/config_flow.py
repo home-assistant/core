@@ -8,7 +8,14 @@ from typing import Any
 from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -16,6 +23,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
@@ -23,6 +31,67 @@ from homeassistant.helpers.selector import LocationSelector, LocationSelectorCon
 from .const import CONF_API_KEY_OPTIONS, CONF_REFERRER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _validate_input(
+    user_input: dict[str, Any],
+    api: GoogleWeatherApi,
+    errors: dict[str, str],
+    description_placeholders: dict[str, str],
+) -> bool:
+    try:
+        await api.async_get_current_conditions(
+            latitude=user_input[CONF_LOCATION][CONF_LATITUDE],
+            longitude=user_input[CONF_LOCATION][CONF_LONGITUDE],
+        )
+    except GoogleWeatherApiError as err:
+        _LOGGER.error("Error connecting to Google Weather API: %s", str(err))
+        errors["base"] = "cannot_connect"
+        description_placeholders["error_message"] = str(err)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    else:
+        return True
+    return False
+
+
+def _get_location_schema(hass: HomeAssistant, user_input: dict[str, Any]) -> dict:
+    """Return the schema for a location prefilled from user_input or hass config."""
+    return {
+        vol.Required(
+            CONF_NAME,
+            default=user_input.get(CONF_NAME, hass.config.location_name),
+        ): str,
+        vol.Required(
+            CONF_LOCATION,
+            default=user_input.get(
+                CONF_LOCATION,
+                {
+                    CONF_LATITUDE: hass.config.latitude,
+                    CONF_LONGITUDE: hass.config.longitude,
+                },
+            ),
+        ): LocationSelector(LocationSelectorConfig(radius=False)),
+    }
+
+
+def _is_location_already_configured(
+    hass: HomeAssistant, new_data: dict[str, float], epsilon: float = 1e-4
+) -> bool:
+    """Check if the location is already configured."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        for subentry in entry.subentries.values():
+            # A more accurate way is to use the haversine formula, but for simplicity
+            # we use a simple distance check. The epsilon value is small anyway.
+            # This is mostly to capture cases where the user has slightly moved the location pin.
+            if (
+                abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
+                and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])
+                <= epsilon
+            ):
+                return True
+    return False
 
 
 class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,72 +110,95 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
             referrer = user_input.get(CONF_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
-            latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
-            longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            await self.async_set_unique_id(f"{latitude}-{longitude}")
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
+            if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
+                return self.async_abort(reason="already_configured")
             api = GoogleWeatherApi(
                 session=async_get_clientsession(self.hass),
                 api_key=api_key,
                 referrer=referrer,
-                latitude=latitude,
-                longitude=longitude,
                 language_code=self.hass.config.language,
             )
-            try:
-                await api.async_get_current_conditions()
-            except GoogleWeatherApiError as err:
-                _LOGGER.error("Error connecting to Google Weather: %s", str(err))
-                errors["base"] = "cannot_connect"
-                description_placeholders["error_message"] = str(err)
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                data = {
-                    CONF_API_KEY: api_key,
-                    CONF_LATITUDE: latitude,
-                    CONF_LONGITUDE: longitude,
-                    CONF_REFERRER: referrer,
-                }
-                return self.async_create_entry(title=user_input[CONF_NAME], data=data)
+            if await _validate_input(user_input, api, errors, description_placeholders):
+                return self.async_create_entry(
+                    title="Google Weather",
+                    data={
+                        CONF_API_KEY: api_key,
+                        CONF_REFERRER: referrer,
+                    },
+                    subentries=[
+                        {
+                            "subentry_type": "location",
+                            "data": user_input[CONF_LOCATION],
+                            "title": user_input[CONF_NAME],
+                            "unique_id": None,
+                        },
+                    ],
+                )
         else:
             user_input = {}
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_NAME,
-                    default=user_input.get(CONF_NAME, self.hass.config.location_name),
-                ): str,
-                vol.Required(
-                    CONF_API_KEY, default=user_input.get(CONF_API_KEY, vol.UNDEFINED)
-                ): str,
-                vol.Optional(CONF_API_KEY_OPTIONS): section(
-                    vol.Schema(
-                        {
-                            vol.Optional(
-                                CONF_REFERRER,
-                                default=user_input.get(CONF_REFERRER, vol.UNDEFINED),
-                            ): str,
-                        }
-                    ),
-                    {"collapsed": True},
+        schema = {
+            vol.Required(
+                CONF_API_KEY, default=user_input.get(CONF_API_KEY, vol.UNDEFINED)
+            ): str,
+            vol.Optional(CONF_API_KEY_OPTIONS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_REFERRER,
+                            default=user_input.get(CONF_REFERRER, vol.UNDEFINED),
+                        ): str,
+                    }
                 ),
-                vol.Required(
-                    CONF_LOCATION,
-                    default=user_input.get(
-                        CONF_LOCATION,
-                        {
-                            CONF_LATITUDE: self.hass.config.latitude,
-                            CONF_LONGITUDE: self.hass.config.longitude,
-                        },
-                    ),
-                ): LocationSelector(LocationSelectorConfig(radius=False)),
-            }
-        )
+                {"collapsed": True},
+            ),
+        }
+        schema.update(_get_location_schema(self.hass, user_input))
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=vol.Schema(schema),
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"location": LocationSubentryFlowHandler}
+
+
+class LocationSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for location."""
+
+    async def async_step_location(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> SubentryFlowResult:
+        """Handle the location step."""
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input is not None:
+            if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
+                return self.async_abort(reason="already_configured")
+            api: GoogleWeatherApi = self._get_entry().runtime_data.api
+            if await _validate_input(user_input, api, errors, description_placeholders):
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input[CONF_LOCATION],
+                )
+        else:
+            user_input = {}
+        return self.async_show_form(
+            step_id="location",
+            data_schema=vol.Schema(_get_location_schema(self.hass, user_input)),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async_step_user = async_step_location
