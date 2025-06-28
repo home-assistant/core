@@ -242,6 +242,9 @@ async def test_get_state_after_disconnect(
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
+    simple_mock_home = AsyncMock(spec=AsyncHome, autospec=True)
+    hap.home = simple_mock_home
+
     with patch.object(hap, "get_state") as mock_get_state:
         assert not hap._ws_connection_closed.is_set()
 
@@ -250,8 +253,14 @@ async def test_get_state_after_disconnect(
 
         await hap.ws_disconnected_handler()
         assert hap._ws_connection_closed.is_set()
-        await hap.ws_connected_handler()
-        mock_get_state.assert_called_once()
+        with patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
+            return_value=True,
+        ):
+            await hap.ws_connected_handler()
+            mock_get_state.assert_called_once()
+
+        assert not hap._ws_connection_closed.is_set()
 
 
 async def test_async_connect(
