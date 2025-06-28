@@ -8,7 +8,7 @@ from google.genai.errors import APIError, ClientError
 from google.genai.types import Part
 
 from homeassistant.components import stt
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,6 +43,10 @@ class GoogleGenerativeAISttEntity(
     stt.SpeechToTextEntity, GoogleGenerativeAILLMBaseEntity
 ):
     """Google Generative AI speech-to-text entity."""
+
+    def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the STT entity."""
+        super().__init__(config_entry, subentry, RECOMMENDED_STT_MODEL)
 
     @property
     def supported_languages(self) -> list[str]:
