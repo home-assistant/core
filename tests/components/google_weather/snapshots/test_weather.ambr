@@ -154,7 +154,7 @@
     'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '10.1-20.1',
+    'unique_id': 'home-subentry-id',
     'unit_of_measurement': None,
   })
 # ---

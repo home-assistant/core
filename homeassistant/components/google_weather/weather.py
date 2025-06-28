@@ -37,6 +37,7 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPrecipitationDepth,
@@ -127,7 +128,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    async_add_entities([GoogleWeatherEntity(entry)])
+    for subentry in entry.subentries.values():
+        async_add_entities(
+            [GoogleWeatherEntity(entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class GoogleWeatherEntity(
@@ -160,15 +165,19 @@ class GoogleWeatherEntity(
     def __init__(
         self,
         entry: GoogleWeatherConfigEntry,
+        subentry: ConfigSubentry,
     ) -> None:
         """Initialize the weather entity."""
+        subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
+            subentry.subentry_id
+        ]
         super().__init__(
-            observation_coordinator=entry.runtime_data.coordinator_observation,
-            daily_coordinator=entry.runtime_data.coordinator_daily_forecast,
-            hourly_coordinator=entry.runtime_data.coordinator_hourly_forecast,
-            twice_daily_coordinator=entry.runtime_data.coordinator_daily_forecast,
+            observation_coordinator=subentry_runtime_data.coordinator_observation,
+            daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
+            hourly_coordinator=subentry_runtime_data.coordinator_hourly_forecast,
+            twice_daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
         )
-        GoogleWeatherBaseEntity.__init__(self, entry)
+        GoogleWeatherBaseEntity.__init__(self, entry, subentry)
 
     @property
     def condition(self) -> str | None:

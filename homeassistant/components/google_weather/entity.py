@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -14,12 +15,14 @@ class GoogleWeatherBaseEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, config_entry: GoogleWeatherConfigEntry) -> None:
+    def __init__(
+        self, config_entry: GoogleWeatherConfigEntry, subentry: ConfigSubentry
+    ) -> None:
         """Initialize base entity."""
-        assert config_entry.unique_id
-        self._attr_unique_id = config_entry.unique_id
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, config_entry.unique_id)},
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Google",
+            entry_type=DeviceEntryType.SERVICE,
         )
