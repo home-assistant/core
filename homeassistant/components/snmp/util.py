@@ -15,7 +15,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UsmUserData,
 )
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
-from pysnmp.hlapi.varbinds import MibViewControllerManager
+from pysnmp.smi import view
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -90,7 +90,9 @@ def _get_snmp_engine() -> SnmpEngine:
     """Return a cached instance of SnmpEngine."""
     engine = SnmpEngine()
     # Actually load the MIBs from disk so we do not do it in the event loop
-    mib_view_controller = MibViewControllerManager.get_mib_view_controller(engine.cache)
-    if "PYSNMP-MIB" not in mib_view_controller.mibBuilder.mibSymbols:
-        mib_view_controller.mibBuilder.load_modules()
+     mib_view_controller = view.MibViewController(
+        engine.message_dispatcher.mib_instrum_controller.get_mib_builder()
+    )
+    engine.cache["mibViewController"] = mib_view_controller
+    mib_view_controller.mibBuilder.load_modules()
     return engine
