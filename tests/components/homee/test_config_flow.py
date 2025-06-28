@@ -25,16 +25,6 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-async def add_homee_to_hass(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homee: AsyncMock,
-) -> None:
-    """Add the mocked Homee config entry to hass."""
-    mock_config_entry.add_to_hass(hass)
-
-
 @pytest.mark.usefixtures("mock_homee", "mock_config_entry", "mock_setup_entry")
 async def test_config_flow(
     hass: HomeAssistant,
@@ -125,11 +115,13 @@ async def test_config_flow_errors(
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("add_homee_to_hass", "mock_homee")
+@pytest.mark.usefixtures("mock_homee")
 async def test_flow_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config flow aborts when already configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -148,12 +140,13 @@ async def test_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("add_homee_to_hass", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_homee", "mock_setup_entry")
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
+    mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
@@ -195,7 +188,6 @@ async def test_reauth_success(
         ),
     ],
 )
-@pytest.mark.usefixtures("add_homee_to_hass")
 async def test_reauth_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -204,6 +196,7 @@ async def test_reauth_errors(
     error: dict[str, str],
 ) -> None:
     """Test reconfigure flow errors."""
+    mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -243,12 +236,43 @@ async def test_reauth_errors(
     assert mock_config_entry.data[CONF_PASSWORD] == NEW_TESTPASS
 
 
-@pytest.mark.usefixtures("add_homee_to_hass", "mock_setup_entry")
+async def test_reauth_wrong_uid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: AsyncMock,
+) -> None:
+    """Test reauth flow with wrong UID."""
+    mock_homee.settings.uid = "wrong_uid"
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: NEW_TESTUSER,
+            CONF_PASSWORD: NEW_TESTPASS,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_hub"
+
+    # Confirm that the config entry is unchanged
+    assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_homee: AsyncMock,
 ) -> None:
     """Test the reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["step_id"] == "reconfigure"
@@ -289,7 +313,6 @@ async def test_reconfigure_success(
         ),
     ],
 )
-@pytest.mark.usefixtures("add_homee_to_hass")
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -298,6 +321,8 @@ async def test_reconfigure_errors(
     error: dict[str, str],
 ) -> None:
     """Test reconfigure flow errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
