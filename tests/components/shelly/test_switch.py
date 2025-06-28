@@ -40,6 +40,8 @@ from . import (
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
+DEVICE_BLOCK_ID = 4
+LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
@@ -326,14 +328,51 @@ async def test_block_device_mode_roller(
 
 
 async def test_block_device_app_type_light(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device in app type set to light mode."""
+    switch_entity_id = "switch.test_name_channel_1"
+    light_entity_id = "light.test_name_channel_1"
+
+    # Remove light blocks to prevent light entity creation
+    monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "sensor")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "blue")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "mode")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "gain")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "brightness")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "effect")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "colorTemp")
+
+    await init_integration(hass, 1)
+
+    # Entity is created as switch
+    assert hass.states.get(switch_entity_id)
+    assert hass.states.get(light_entity_id) is None
+
+    # Generate config change from switch to light
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
+    mock_block_device.mock_update()
+
     monkeypatch.setitem(
         mock_block_device.settings["relays"][RELAY_BLOCK_ID], "appliance_type", "light"
     )
-    await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1") is None
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 2)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Switch entity should be removed and light entity created
+    assert hass.states.get(switch_entity_id) is None
+    assert hass.states.get(light_entity_id)
 
 
 async def test_rpc_device_services(
