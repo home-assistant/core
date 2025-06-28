@@ -39,25 +39,37 @@
     "step": {
       "configure_addon_user": {
         "data": {
-          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
-          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
-          "s0_legacy_key": "S0 Key (Legacy)",
-          "s2_access_control_key": "S2 Access Control Key",
-          "s2_authenticated_key": "S2 Authenticated Key",
-          "s2_unauthenticated_key": "S2 Unauthenticated Key",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "Select your Z-Wave adapter",
         "title": "Enter the Z-Wave add-on configuration"
       },
+      "network_type": {
+        "data": {
+          "network_type": "Is your network new or does it already exist?"
+        },
+        "title": "Z-Wave network"
+      },
+      "configure_security_keys": {
+        "data": {
+          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
+          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
+          "s0_legacy_key": "S0 Key (Legacy)",
+          "s2_access_control_key": "S2 Access Control Key",
+          "s2_authenticated_key": "S2 Authenticated Key",
+          "s2_unauthenticated_key": "S2 Unauthenticated Key"
+        },
+        "description": "Enter the security keys for your existing Z-Wave network",
+        "title": "Security keys"
+      },
       "configure_addon_reconfigure": {
         "data": {
-          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
-          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_unauthenticated_key%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
@@ -108,13 +120,9 @@
           "intent_reconfigure": "Re-configure the current controller"
         }
       },
-      "intent_migrate": {
-        "title": "[%key:component::zwave_js::config::step::reconfigure::menu_options::intent_migrate%]",
-        "description": "Before setting up your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
-      },
       "instruct_unplug": {
         "title": "Unplug your old controller",
-        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has not been reset. You should now unplug it to prevent it from interfering with the new controller.\n\nPlease make sure your new controller is plugged in before continuing."
       },
       "restore_failed": {
         "title": "Restoring unsuccessful",
@@ -625,6 +633,14 @@
         }
       },
       "name": "Set a value (advanced)"
+    }
+  },
+  "selector": {
+    "network_type": {
+      "options": {
+        "new": "It's new",
+        "existing": "It already exists"
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
@@ -45,6 +45,7 @@ from .manager import (
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
+from .services import async_setup_services
 from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
@@ -113,29 +114,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_websocket_handlers(hass, with_hassio)
 
-    async def async_handle_create_service(call: ServiceCall) -> None:
-        """Service handler for creating backups."""
-        agent_id = list(backup_manager.local_backup_agents)[0]
-        await backup_manager.async_create_backup(
-            agent_ids=[agent_id],
-            include_addons=None,
-            include_all_addons=False,
-            include_database=True,
-            include_folders=None,
-            include_homeassistant=True,
-            name=None,
-            password=None,
-        )
-
-    async def async_handle_create_automatic_service(call: ServiceCall) -> None:
-        """Service handler for creating automatic backups."""
-        await backup_manager.async_create_automatic_backup()
-
-    if not with_hassio:
-        hass.services.async_register(DOMAIN, "create", async_handle_create_service)
-    hass.services.async_register(
-        DOMAIN, "create_automatic", async_handle_create_automatic_service
-    )
+    async_setup_services(hass)
 
     async_register_http_views(hass)
 
