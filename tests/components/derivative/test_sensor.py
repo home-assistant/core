@@ -116,6 +116,7 @@ async def _setup_sensor(
 
     config = {"sensor": dict(default_config, **config)}
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(entity_id, 0, {})
@@ -450,14 +451,14 @@ async def test_sub_intervals_instantaneous(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_UNAVAILABLE
 
         now += timedelta(seconds=60)
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_UNAVAILABLE
 
         now += timedelta(seconds=10)
         freezer.move_to(now)
@@ -703,7 +704,7 @@ async def test_device_id(
     assert derivative_entity.device_id == source_entity.device_id
 
 
-@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "xyzzy"])
+@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
 async def test_unavailable(
     bad_state: str,
     hass: HomeAssistant,
@@ -713,7 +714,12 @@ async def test_unavailable(
 
     times = [0, 1, 2, 3]
     values = [0, 1, bad_state, 2]
-    expected_state = [0, 1, STATE_UNKNOWN, 0.5]
+    expected_state = [
+        0,
+        1,
+        STATE_UNAVAILABLE if bad_state == STATE_UNAVAILABLE else STATE_UNKNOWN,
+        0.5,
+    ]
 
     # Testing a energy sensor with non-monotonic intervals and values
     base = dt_util.utcnow()
@@ -725,14 +731,15 @@ async def test_unavailable(
 
             state = hass.states.get("sensor.power")
             assert state is not None
+            rounded_state = (
+                state.state
+                if expect in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                else round(float(state.state), config["sensor"]["round"])
+            )
+            assert rounded_state == expect
 
-            if expect == STATE_UNKNOWN:
-                assert state.state == expect
-            else:
-                assert round(float(state.state), config["sensor"]["round"]) == expect
 
-
-@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "xyzzy"])
+@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
 async def test_unavailable_2(
     bad_state: str,
     hass: HomeAssistant,
@@ -761,7 +768,11 @@ async def test_unavailable_2(
             assert state is not None
 
             if value == bad_state:
-                assert state.state == STATE_UNKNOWN
+                assert (
+                    state.state == STATE_UNAVAILABLE
+                    if bad_state is STATE_UNAVAILABLE
+                    else STATE_UNKNOWN
+                )
             else:
                 expect = (time / 10) if time < 10 else 1
                 assert round(float(state.state), config["sensor"]["round"]) == round(
@@ -805,7 +816,7 @@ async def test_unavailable_boot(
 
     config = {"sensor": config}
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
     await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "sensor", config)
@@ -813,8 +824,8 @@ async def test_unavailable_boot(
 
     state = hass.states.get("sensor.power")
     assert state is not None
-    # As there was no recorded valid state for the sensor, we just hold the default or restored state.
-    assert state.state == restore_state
+    # Sensor is unavailable as source is unavailable
+    assert state.state == STATE_UNAVAILABLE
 
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:

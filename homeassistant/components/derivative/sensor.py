@@ -20,6 +20,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -241,6 +243,19 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if (current_time - time_end).total_seconds() < self._time_window
         ]
 
+    def _handle_invalid_source_state(self, state: State | None) -> bool:
+        # Check the source state for unknown/unavailable condition. If unusable, write unknown/unavailable state and return false.
+        if not state or state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return False
+        if not _is_decimal_state(state.state):
+            self._attr_available = True
+            self._write_native_value(None)
+            return False
+        self._attr_available = True
+        return True
+
     def _write_native_value(self, derivative: Decimal | None) -> None:
         self._attr_native_value = (
             None if derivative is None else round(derivative, self._round_digits)
@@ -302,35 +317,33 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             """Handle constant sensor state."""
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
-            if not new_state or not _is_decimal_state(new_state.state):
-                self._write_native_value(None)
+            if not self._handle_invalid_source_state(new_state):
                 return
 
+            assert new_state
             if self._attr_native_value == Decimal(0):
                 # If the derivative is zero, and the source sensor hasn't
                 # changed state, then we know it will still be zero.
                 return
             schedule_max_sub_interval_exceeded(new_state)
-            new_state = event.data["new_state"]
-            if new_state is not None:
-                calc_derivative(
-                    new_state, new_state.state, event.data["old_last_reported"]
-                )
+            calc_derivative(new_state, new_state.state, event.data["old_last_reported"])
 
         @callback
         def on_state_changed(event: Event[EventStateChangedData]) -> None:
             """Handle changed sensor state."""
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
-            if not new_state or not _is_decimal_state(new_state.state):
-                self._write_native_value(None)
+            if not self._handle_invalid_source_state(new_state):
                 return
 
-            # self._attr_available = True
+            assert new_state
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
-            if new_state is not None and old_state is not None:
+            if old_state is not None:
                 calc_derivative(new_state, old_state.state, old_state.last_reported)
+            else:
+                # On first state change from none, update availability
+                self.async_write_ha_state()
 
         def calc_derivative(
             new_state: State, old_value: str, old_last_reported: datetime
@@ -342,6 +355,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     old_last_reported = self._last_valid_state_time[1]
                 else:
                     # Sensor becomes valid for the first time, just keep the restored value
+                    self.async_write_ha_state()
                     return
 
             if self.native_unit_of_measurement is None:
@@ -402,8 +416,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 )
             self._write_native_value(derivative)
 
+        source_state = self.hass.states.get(self._sensor_source_id)
+        if source_state is None or source_state.state in [
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ]:
+            self._attr_available = False
+
         if self._max_sub_interval is not None:
-            source_state = self.hass.states.get(self._sensor_source_id)
             schedule_max_sub_interval_exceeded(source_state)
 
             @callback

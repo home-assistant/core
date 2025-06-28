@@ -99,6 +99,9 @@ async def test_setup_and_remove_config_entry(
     input_sensor_entity_id = "sensor.input"
     derivative_entity_id = "sensor.my_derivative"
 
+    hass.states.async_set(input_sensor_entity_id, "10.0", {})
+    await hass.async_block_till_done()
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
