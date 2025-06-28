@@ -35,7 +35,10 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: todo
   entity-unavailable: done
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: |
+      See https://github.com/balloob/home-assistant-quality-checker/blob/main/generated/zimi/action-exceptions.md
   reauthentication-flow:
     status: exempt
     comment: |
