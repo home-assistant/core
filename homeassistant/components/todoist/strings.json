@@ -28,6 +28,14 @@
       "message": "Project \"{project}\" has no section \"{section}\""
     }
   },
+  "selector": {
+    "reminder_location_direction": {
+      "options": {
+        "on_enter": "Entering",
+        "on_leave": "Leaving"
+      }
+    }
+  },
   "services": {
     "new_task": {
       "name": "New task",
@@ -48,6 +56,10 @@
         "section": {
           "name": "Section",
           "description": "The name of a section within the project to add the task to."
+        },
+        "create_section": {
+          "name": "Create section",
+          "description": "If the section does not exist, create it."
         },
         "labels": {
           "name": "Labels",
@@ -84,6 +96,34 @@
         "reminder_date": {
           "name": "Reminder date",
           "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+        },
+        "reminder_zone": {
+          "name": "Reminder zone",
+          "description": "The zone that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_location_name": {
+          "name": "Reminder location name",
+          "description": "An alias name for the location that should trigger the reminder."
+        },
+        "reminder_latitude": {
+          "name": "Reminder latitude",
+          "description": "The latitude of the location that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_longitude": {
+          "name": "Reminder longitude",
+          "description": "The longitude of the location that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_radius": {
+          "name": "Reminder radius",
+          "description": "The radius of the location that should trigger the reminder."
+        },
+        "reminder_location_direction": {
+          "name": "Reminder location direction",
+          "description": "Should the reminder be triggered when entering or leaving the zone?"
+        },
+        "reminder_users": {
+          "name": "Reminder users",
+          "description": "The username(s) of a shared project's member(s) to receive the reminder."
         }
       }
     }
