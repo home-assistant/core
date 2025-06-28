@@ -26,13 +26,15 @@ async def async_setup_entry(
     added_outputs: list[QbusMqttOutput] = []
 
     def _check_outputs() -> None:
+        entities: list[QbusEntity] = []
         add_new_outputs(
             coordinator,
             added_outputs,
             lambda output: output.type == "onoff",
             QbusSwitch,
-            async_add_entities,
+            entities,
         )
+        async_add_entities(entities)
 
     _check_outputs()
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))

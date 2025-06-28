@@ -14,7 +14,6 @@ from qbusmqttapi.state import QbusMqttState
 from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import QbusControllerCoordinator
@@ -29,9 +28,9 @@ def add_new_outputs(
     added_outputs: list[QbusMqttOutput],
     filter_fn: Callable[[QbusMqttOutput], bool],
     entity_type: type[QbusEntity],
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entities: list[QbusEntity],
 ) -> None:
-    """Call async_add_entities for new outputs."""
+    """Create entities for new outputs."""
 
     added_ref_ids = {k.ref_id for k in added_outputs}
 
@@ -43,7 +42,7 @@ def add_new_outputs(
 
     if new_outputs:
         added_outputs.extend(new_outputs)
-        async_add_entities([entity_type(output) for output in new_outputs])
+        entities.extend([entity_type(output) for output in new_outputs])
 
 
 def format_ref_id(ref_id: str) -> str | None:
@@ -70,7 +69,9 @@ class QbusEntity(Entity, Generic[StateT], ABC):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
+    def __init__(
+        self, mqtt_output: QbusMqttOutput, link_to_main_device: bool = False
+    ) -> None:
         """Initialize the Qbus entity."""
 
         self._mqtt_output = mqtt_output
@@ -82,17 +83,20 @@ class QbusEntity(Entity, Generic[StateT], ABC):
         )
 
         ref_id = format_ref_id(mqtt_output.ref_id)
-
         self._attr_unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
 
-        # Create linked device
-        self._attr_device_info = DeviceInfo(
-            name=mqtt_output.name.title(),
-            manufacturer=MANUFACTURER,
-            identifiers={(DOMAIN, f"{mqtt_output.device.serial_number}_{ref_id}")},
-            suggested_area=mqtt_output.location.title(),
-            via_device=create_main_device_identifier(mqtt_output),
-        )
+        if link_to_main_device:
+            self._attr_device_info = DeviceInfo(
+                identifiers={create_main_device_identifier(mqtt_output)}
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                name=mqtt_output.name.title(),
+                manufacturer=MANUFACTURER,
+                identifiers={(DOMAIN, f"{mqtt_output.device.serial_number}_{ref_id}")},
+                suggested_area=mqtt_output.location.title(),
+                via_device=create_main_device_identifier(mqtt_output),
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
