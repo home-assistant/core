@@ -90,7 +90,7 @@ def _get_snmp_engine() -> SnmpEngine:
     """Return a cached instance of SnmpEngine."""
     engine = SnmpEngine()
     # Actually load the MIBs from disk so we do not do it in the event loop
-     mib_view_controller = view.MibViewController(
+    mib_view_controller = view.MibViewController(
         engine.message_dispatcher.mib_instrum_controller.get_mib_builder()
     )
     engine.cache["mibViewController"] = mib_view_controller
