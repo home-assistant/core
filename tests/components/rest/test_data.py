@@ -272,10 +272,7 @@ async def test_rest_data_real_world_bom_blocking_scenario(
 ) -> None:
     """Test real-world scenario where BOM blocks with HTML response."""
     # Mock BOM blocking response
-    bom_block_html = """<p>Your access is blocked due to the detection of a potential automated access request. The Bureau of Meteorology website does not support web scraping: if you are trying to access Bureau data through automated means, you should stop. You may like to consider the following options:</p>
-<ul>
-<li>An anonymous FTP channel: <a href="http://www.bom.gov.au/catalogue/anon-ftp.shtml">http://www.bom.gov.au/catalogue/anon-ftp.shtml</a></li>
-</ul>"""
+    bom_block_html = "<p>Your access is blocked due to automated access</p>"
 
     aioclient_mock.get(
         "http://www.bom.gov.au/fwo/IDN60901/IDN60901.94767.json",
@@ -305,7 +302,6 @@ async def test_rest_data_real_world_bom_blocking_scenario(
         "IDN60901.94767.json returned status 403 with text/html response" in caplog.text
     )
     assert "Your access is blocked" in caplog.text
-    assert "automated access request" in caplog.text
 
 
 async def test_rest_data_warning_on_html_error(
