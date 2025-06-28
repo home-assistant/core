@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
+from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -70,6 +71,7 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
 
     entity_description: AmazonNotifyEntityDescription
 
+    @alexa_api_call
     async def async_send_message(
         self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:
