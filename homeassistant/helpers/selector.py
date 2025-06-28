@@ -1010,8 +1010,10 @@ class LocationSelector(Selector[LocationSelectorConfig]):
         return location
 
 
-class MediaSelectorConfig(BaseSelectorConfig):
+class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
+
+    accept: list[str]
 
 
 @SELECTORS.register("media")
@@ -1020,11 +1022,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("accept"): [str],
+        }
+    )
     DATA_SCHEMA = vol.Schema(
         {
-            # Although marked as optional in frontend, this field is required
-            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # If accept is set, the entity_id field will not be present
+            vol.Optional("entity_id"): cv.entity_id_or_uuid,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
@@ -1113,8 +1119,22 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class ObjectSelectorField(TypedDict):
+    """Class to represent an object selector fields dict."""
+
+    label: str
+    required: bool
+    selector: dict[str, Any]
+
+
 class ObjectSelectorConfig(BaseSelectorConfig):
     """Class to represent an object selector config."""
+
+    fields: dict[str, ObjectSelectorField]
+    multiple: bool
+    label_field: str
+    description_field: bool
+    translation_key: str
 
 
 @SELECTORS.register("object")
@@ -1123,7 +1143,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("fields"): {
+                str: {
+                    vol.Required("selector"): dict,
+                    vol.Optional("required"): bool,
+                    vol.Optional("label"): str,
+                }
+            },
+            vol.Optional("multiple", default=False): bool,
+            vol.Optional("label_field"): str,
+            vol.Optional("description_field"): str,
+            vol.Optional("translation_key"): str,
+        }
+    )
 
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1214,6 +1248,39 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [parent_schema(vol.Schema(str)(val)) for val in data]
+
+
+class StatisticSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a statistic selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("statistic")
+class StatisticSelector(Selector[StatisticSelectorConfig]):
+    """Selector of a single or list of statistics."""
+
+    selector_type = "statistic"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: StatisticSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+
+        if not self.config["multiple"]:
+            stat: str = vol.Schema(str)(data)
+            return stat
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class TargetSelectorConfig(BaseSelectorConfig, total=False):

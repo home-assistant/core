@@ -55,35 +55,35 @@ async def test_generic_numeric_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "50"
 
     # Test updating state
     mock_device.set_state(SensorState(key=1, state=60))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "60"
 
     # Test sending the same state again
     mock_device.set_state(SensorState(key=1, state=60))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "60"
 
     # Test we can still update after the same state
     mock_device.set_state(SensorState(key=1, state=70))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "70"
 
     # Test invalid data from the underlying api does not crash us
     mock_device.set_state(SensorState(key=1, state=object()))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "70"
 
@@ -113,11 +113,11 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_ICON] == "mdi:leaf"
-    entry = entity_registry.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_my_sensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
@@ -151,11 +151,11 @@ async def test_generic_numeric_sensor_state_class_measurement(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    entry = entity_registry.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_my_sensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
@@ -186,7 +186,7 @@ async def test_generic_numeric_sensor_device_class_timestamp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "2023-06-22T18:43:52+00:00"
 
@@ -215,7 +215,7 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
@@ -243,7 +243,7 @@ async def test_generic_numeric_sensor_no_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -270,7 +270,7 @@ async def test_generic_numeric_sensor_nan_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -297,7 +297,7 @@ async def test_generic_numeric_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -324,7 +324,7 @@ async def test_generic_text_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "i am a teapot"
 
@@ -351,7 +351,7 @@ async def test_generic_text_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -379,7 +379,7 @@ async def test_generic_text_sensor_device_class_timestamp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "2023-06-22T18:43:52+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
@@ -408,7 +408,7 @@ async def test_generic_text_sensor_device_class_date(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "2023-06-22"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DATE
@@ -437,7 +437,7 @@ async def test_generic_numeric_sensor_empty_string_uom(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "123"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

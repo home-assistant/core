@@ -38,6 +38,21 @@ DHCP_DISCOVERY = (
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
+        hostname="BOSCH-ABCDE1234-68A40E000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
         hostname="SIEMENS-ABCDE1234-68A40E000000",
         macaddress="68:A4:0E:00:00:00",
     ),
@@ -54,6 +69,26 @@ DHCP_DISCOVERY = (
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="siemens-dishwasher-000000000000000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-68A40E000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-38B4D3000000",
+        macaddress="38:B4:D3:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
+        macaddress="68:A4:0E:00:00:00",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
         macaddress="38:B4:D3:00:00:00",
     ),
 )

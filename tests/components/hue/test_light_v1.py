@@ -9,6 +9,7 @@ from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
 from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.components.light import ColorMode
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color as color_util
@@ -186,7 +187,7 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     config_entry.runtime_data = mock_bridge_v1
-    await hass.config_entries.async_forward_entry_setups(config_entry, ["light"])
+    await hass.config_entries.async_forward_entry_setups(config_entry, [Platform.LIGHT])
     # To flush out the service call to update the group
     await hass.async_block_till_done()
 

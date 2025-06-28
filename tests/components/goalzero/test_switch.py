@@ -1,6 +1,6 @@
 """Switch tests for the Goalzero integration."""
 
-from homeassistant.components.goalzero.const import DEFAULT_NAME
+from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -29,7 +29,7 @@ async def test_switches_states(
     assert hass.states.get(entity_id).state == STATE_OFF
     aioclient_mock.post(
         "http://1.2.3.4/state",
-        text=load_fixture("goalzero/state_change.json"),
+        text=await async_load_fixture(hass, "state_change.json", DOMAIN),
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -41,7 +41,7 @@ async def test_switches_states(
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         "http://1.2.3.4/state",
-        text=load_fixture("goalzero/state_data.json"),
+        text=await async_load_fixture(hass, "state_data.json", DOMAIN),
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,

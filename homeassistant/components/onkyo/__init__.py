@@ -18,7 +18,7 @@ from .const import (
     ListeningMode,
 )
 from .receiver import Receiver, async_interview
-from .services import DATA_MP_ENTITIES, async_register_services
+from .services import DATA_MP_ENTITIES, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ type OnkyoConfigEntry = ConfigEntry[OnkyoData]
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up Onkyo component."""
-    await async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 

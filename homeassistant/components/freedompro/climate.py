@@ -125,8 +125,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Async function to set mode to climate."""
-        if hvac_mode not in SUPPORTED_HVAC_MODES:
-            raise ValueError(f"Got unsupported hvac_mode {hvac_mode}")
 
         payload = {"heatingCoolingState": HVAC_INVERT_MAP[hvac_mode]}
         await put_state(

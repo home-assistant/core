@@ -24,7 +24,7 @@ from homeassistant.components.recorder import (
     get_instance as get_recorder_instance,
 )
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
+from homeassistant.const import ATTR_DOMAIN, BASE_PLATFORMS, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -225,7 +225,8 @@ class Analytics:
                 LOGGER.error(err)
                 return
 
-            configuration_set = set(yaml_configuration)
+            configuration_set = _domains_from_yaml_config(yaml_configuration)
+
             er_platforms = {
                 entity.platform
                 for entity in ent_reg.entities.values()
@@ -370,3 +371,13 @@ class Analytics:
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
         )
+
+
+def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
+    """Extract domains from the YAML configuration."""
+    domains = set(yaml_configuration)
+    for platforms in conf_util.extract_platform_integrations(
+        yaml_configuration, BASE_PLATFORMS
+    ).values():
+        domains.update(platforms)
+    return domains

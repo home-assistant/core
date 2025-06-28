@@ -23,6 +23,11 @@
       "smart_mode": {
         "name": "Smart Mode"
       }
+    },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      }
     }
   }
 }

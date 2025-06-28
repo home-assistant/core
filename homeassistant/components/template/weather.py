@@ -32,7 +32,6 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
-    CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
@@ -53,7 +52,11 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .coordinator import TriggerUpdateCoordinator
-from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
+from .template_entity import (
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+    rewrite_common_legacy_to_modern_conf,
+)
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
@@ -104,33 +107,33 @@ CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
 CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
+DEFAULT_NAME = "Template Weather"
+
 WEATHER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
-        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
-        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
-        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
         vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
-        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
     }
-)
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
 

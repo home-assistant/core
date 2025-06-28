@@ -1321,8 +1321,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from .helpers import check_config
+    from .helpers import check_config  # noqa: PLC0415
 
     res = await check_config.async_check_ha_config_file(hass)
 

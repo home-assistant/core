@@ -17,7 +17,7 @@ from .conftest import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
 )
 
 
@@ -104,7 +104,7 @@ async def test_zigbee2_router_button(
     """Test creation of second radio router button (if available)."""
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
-        load_json_object_fixture("info-MR1.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
 

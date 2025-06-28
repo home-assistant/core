@@ -16,10 +16,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
-    DOMAIN,
     Forecast,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -84,7 +84,9 @@ async def create_entity(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WEATHER]
+        )
         return True
 
     async def async_setup_entry_weather_platform(

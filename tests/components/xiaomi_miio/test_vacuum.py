@@ -25,7 +25,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    DOMAIN as XIAOMI_DOMAIN,
+    DOMAIN,
     MODELS_VACUUM,
 )
 from homeassistant.components.xiaomi_miio.vacuum import (
@@ -471,7 +471,7 @@ async def test_xiaomi_specific_services(
     device_method_attr.side_effect = error
 
     await hass.services.async_call(
-        XIAOMI_DOMAIN,
+        DOMAIN,
         service,
         service_data,
         blocking=True,
@@ -537,7 +537,7 @@ async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     entity_id = f"{VACUUM_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
-        domain=XIAOMI_DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
         title=entity_name,
         data={

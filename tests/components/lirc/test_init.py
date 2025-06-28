@@ -13,19 +13,17 @@ async def test_repair_issue_is_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created."""
-    from homeassistant.components.lirc import (  # pylint: disable=import-outside-toplevel
-        DOMAIN as LIRC_DOMAIN,
-    )
+    from homeassistant.components.lirc import DOMAIN  # noqa: PLC0415
 
     assert await async_setup_component(
         hass,
-        LIRC_DOMAIN,
+        DOMAIN,
         {
-            LIRC_DOMAIN: {},
+            DOMAIN: {},
         },
     )
     await hass.async_block_till_done()
     assert (
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_system_packages_yaml_integration_{LIRC_DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
     ) in issue_registry.issues

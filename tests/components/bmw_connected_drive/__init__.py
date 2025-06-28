@@ -13,7 +13,7 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
-    DOMAIN as BMW_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -34,7 +34,7 @@ FIXTURE_GCID = "DUMMY"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
-    "domain": BMW_DOMAIN,
+    "domain": DOMAIN,
     "title": FIXTURE_USER_INPUT[CONF_USERNAME],
     "data": {
         CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],

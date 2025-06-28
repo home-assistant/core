@@ -9,11 +9,10 @@ from typing import Any
 import lupupy.constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import LupusecConfigEntry
 from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
@@ -21,12 +20,12 @@ SCAN_INTERVAL = timedelta(seconds=2)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LupusecConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lupusec switch devices."""
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
 
     device_types = CONST.TYPE_SWITCH
 

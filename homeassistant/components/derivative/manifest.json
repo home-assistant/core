@@ -2,7 +2,7 @@
   "domain": "derivative",
   "name": "Derivative",
   "after_dependencies": ["counter"],
-  "codeowners": ["@afaucogney"],
+  "codeowners": ["@afaucogney", "@karwosts"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/derivative",
   "integration_type": "helper",

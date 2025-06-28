@@ -9,5 +9,10 @@
     "reload": {
       "service": "mdi:reload"
     }
+  },
+  "triggers": {
+    "mqtt": {
+      "trigger": "mdi:swap-horizontal"
+    }
   }
 }

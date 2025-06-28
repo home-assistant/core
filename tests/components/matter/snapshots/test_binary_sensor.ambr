@@ -489,6 +489,104 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dishwasher_door_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Door alarm',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dishwasher_alarm_door',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-DishwasherAlarmDoorError-93-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Dishwasher Door alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dishwasher_door_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dishwasher_inflow_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Inflow alarm',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dishwasher_alarm_inflow',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-DishwasherAlarmInflowError-93-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Dishwasher Inflow alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dishwasher_inflow_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charging_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -92,6 +92,9 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
     SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -117,6 +120,9 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
     SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
+    SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
 }
 
 

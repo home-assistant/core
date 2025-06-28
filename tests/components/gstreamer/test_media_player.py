@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.components.gstreamer import DOMAIN as GSTREAMER_DOMAIN
+from homeassistant.components.gstreamer import DOMAIN
 from homeassistant.components.media_player import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -22,7 +22,7 @@ async def test_repair_issue_is_created(
         {
             PLATFORM_DOMAIN: [
                 {
-                    CONF_PLATFORM: GSTREAMER_DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                 }
             ],
         },
@@ -30,5 +30,5 @@ async def test_repair_issue_is_created(
     await hass.async_block_till_done()
     assert (
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_system_packages_yaml_integration_{GSTREAMER_DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
     ) in issue_registry.issues

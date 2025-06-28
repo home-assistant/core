@@ -68,7 +68,7 @@ from .const import (
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
@@ -896,8 +896,8 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE43LS003.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
     )
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(

@@ -10,6 +10,8 @@
         'pushAlarm': 7,
       }),
     }),
+    'Baichuan only': False,
+    'Baichuan port': 5678,
     'Chimes': dict({
       '12345678': dict({
         'channel': 0,
@@ -62,7 +64,15 @@
       0,
     ]),
     'cmd list': dict({
+      '208': dict({
+        '0': 1,
+        'null': 1,
+      }),
       '296': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '299': dict({
         '0': 1,
         'null': 1,
       }),
@@ -135,6 +145,10 @@
         'null': 1,
       }),
       'GetManualRec': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetMask': dict({
         '0': 1,
         'null': 1,
       }),

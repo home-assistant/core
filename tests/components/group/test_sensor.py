@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
+from homeassistant.components.group import DOMAIN
 from homeassistant.components.group.sensor import (
     ATTR_LAST_ENTITY_ID,
     ATTR_MAX_ENTITY_ID,
@@ -77,7 +77,7 @@ async def test_sensors2(
     """Test the sensors."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": DEFAULT_NAME,
             "type": sensor_type,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -121,7 +121,7 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
     """Test the sensors."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": DEFAULT_NAME,
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -163,7 +163,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     """Test that there is nothing done if not enough values available."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_max",
             "type": "max",
             "ignore_non_numeric": True,
@@ -218,7 +218,7 @@ async def test_reload(hass: HomeAssistant) -> None:
         "sensor",
         {
             SENSOR_DOMAIN: {
-                "platform": GROUP_DOMAIN,
+                "platform": DOMAIN,
                 "name": "test_sensor",
                 "type": "mean",
                 "entities": ["sensor.test_1", "sensor.test_2"],
@@ -236,7 +236,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            GROUP_DOMAIN,
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -255,7 +255,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     """Test that non numeric values are ignored in a group."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_ignore_non_numeric",
             "type": "max",
             "ignore_non_numeric": True,
@@ -296,7 +296,7 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     """Test that non numeric values cause a group to be unknown."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_failure",
             "type": "max",
             "ignore_non_numeric": False,
@@ -333,7 +333,7 @@ async def test_sensor_require_all_states(hass: HomeAssistant) -> None:
     """Test the sum sensor with missing state require all."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "ignore_non_numeric": False,
@@ -361,7 +361,7 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     """Test the sensor calculating device_class, state_class and unit of measurement."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -434,7 +434,7 @@ async def test_sensor_with_uoms_but_no_device_class(
     """Test the sensor works with same uom when there is no device class."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -482,9 +482,7 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.state == str(float(sum(VALUES)))
 
     assert not [
-        issue
-        for issue in issue_registry.issues.values()
-        if issue.domain == GROUP_DOMAIN
+        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
     ]
 
     hass.states.async_set(
@@ -531,7 +529,7 @@ async def test_sensor_calculated_properties_not_same(
     """Test the sensor calculating device_class, state_class and unit of measurement not same."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -580,13 +578,13 @@ async def test_sensor_calculated_properties_not_same(
     assert state.attributes.get("unit_of_measurement") is None
 
     assert issue_registry.async_get_issue(
-        GROUP_DOMAIN, "sensor.test_sum_uoms_not_matching_no_device_class"
+        DOMAIN, "sensor.test_sum_uoms_not_matching_no_device_class"
     )
     assert issue_registry.async_get_issue(
-        GROUP_DOMAIN, "sensor.test_sum_device_classes_not_matching"
+        DOMAIN, "sensor.test_sum_device_classes_not_matching"
     )
     assert issue_registry.async_get_issue(
-        GROUP_DOMAIN, "sensor.test_sum_state_classes_not_matching"
+        DOMAIN, "sensor.test_sum_state_classes_not_matching"
     )
 
 
@@ -594,7 +592,7 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     """Test the sensor calculating fails as UoM not part of device class."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -667,7 +665,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     """Test the sensor calculating device_class, state_class and unit of measurement when device class not convertible."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -748,7 +746,7 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
     """Test the last sensor."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_last",
             "type": "last",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -775,7 +773,7 @@ async def test_sensors_attributes_added_when_entity_info_available(
     """Test the sensor calculate attributes once all entities attributes are available."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": DEFAULT_NAME,
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -830,7 +828,7 @@ async def test_sensor_state_class_no_uom_not_available(
 
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -893,7 +891,7 @@ async def test_sensor_different_attributes_ignore_non_numeric(
     """Test the sensor handles calculating attributes when using ignore_non_numeric."""
     config = {
         SENSOR_DOMAIN: {
-            "platform": GROUP_DOMAIN,
+            "platform": DOMAIN,
             "name": "test_sum",
             "type": "sum",
             "ignore_non_numeric": True,

@@ -32,6 +32,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -107,6 +108,7 @@ async def async_setup_entry(
         or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
         or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
+        or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -130,6 +132,7 @@ async def async_setup_entry(
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
             CONF_BC_PORT: host.api.baichuan.port,
+            CONF_BC_ONLY: host.api.baichuan_only,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -229,6 +232,14 @@ async def async_setup_entry(
     hass.http.register_view(PlaybackProxyView(hass))
 
     await register_callbacks(host, device_coordinator, hass)
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

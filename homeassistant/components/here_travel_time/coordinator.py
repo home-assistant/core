@@ -100,9 +100,11 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         try:
             response = await self._api.route(
                 transport_mode=TransportMode(params.travel_mode),
-                origin=here_routing.Place(params.origin[0], params.origin[1]),
+                origin=here_routing.Place(
+                    float(params.origin[0]), float(params.origin[1])
+                ),
                 destination=here_routing.Place(
-                    params.destination[0], params.destination[1]
+                    float(params.destination[0]), float(params.destination[1])
                 ),
                 routing_mode=params.route_mode,
                 arrival_time=params.arrival,
@@ -133,8 +135,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
         distance: float = 0.0
-        duration: float = 0.0
-        duration_in_traffic: float = 0.0
+        duration: int = 0
+        duration_in_traffic: int = 0
 
         for section in response["routes"][0]["sections"]:
             distance += DistanceConverter.convert(
@@ -167,8 +169,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             destination_name = names[0]["value"]
         return HERETravelTimeData(
             attribution=None,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration_in_traffic / 60),
+            duration=duration,
+            duration_in_traffic=duration_in_traffic,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
@@ -271,13 +273,13 @@ class HERETransitDataUpdateCoordinator(
             UnitOfLength.METERS,
             UnitOfLength.KILOMETERS,
         )
-        duration: float = sum(
+        duration: int = sum(
             section["travelSummary"]["duration"] for section in sections
         )
         return HERETravelTimeData(
             attribution=attribution,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration / 60),
+            duration=duration,
+            duration_in_traffic=duration,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
@@ -20,6 +21,7 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
+    AssistSatelliteAnswer,
     SatelliteBusyError,
 )
 from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
@@ -706,6 +708,127 @@ async def test_start_conversation_default_preannounce(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "response_text", "expected_answer"),
+    [
+        (
+            {"preannounce": False},
+            "jazz",
+            AssistSatelliteAnswer(id=None, sentence="jazz"),
+        ),
+        (
+            {
+                "answers": [
+                    {"id": "jazz", "sentences": ["[some] jazz [please]"]},
+                    {"id": "rock", "sentences": ["[some] rock [please]"]},
+                ],
+                "preannounce": False,
+            },
+            "Some Rock, please.",
+            AssistSatelliteAnswer(id="rock", sentence="Some Rock, please."),
+        ),
+        (
+            {
+                "answers": [
+                    {
+                        "id": "genre",
+                        "sentences": ["genre {genre} [please]"],
+                    },
+                    {
+                        "id": "artist",
+                        "sentences": ["artist {artist} [please]"],
+                    },
+                ],
+                "preannounce": False,
+            },
+            "artist Pink Floyd",
+            AssistSatelliteAnswer(
+                id="artist",
+                sentence="artist Pink Floyd",
+                slots={"artist": "Pink Floyd"},
+            ),
+        ),
+    ],
+)
+async def test_ask_question(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    service_data: dict,
+    response_text: str,
+    expected_answer: AssistSatelliteAnswer,
+) -> None:
+    """Test asking a question on a device and matching an answer."""
+    entity_id = "assist_satellite.test_entity"
+    question_text = "What kind of music would you like to listen to?"
+
+    await async_update_pipeline(
+        hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
+    )
+
+    async def speech_to_text(self, *args, **kwargs):
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
+            )
+        )
+
+        return response_text
+
+    original_start_conversation = entity.async_start_conversation
+
+    async def async_start_conversation(start_announcement):
+        # Verify state change
+        assert entity.state == AssistSatelliteState.RESPONDING
+        await original_start_conversation(start_announcement)
+
+        audio_stream = object()
+        with (
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+            ),
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                speech_to_text,
+            ),
+        ):
+            await entity.async_accept_pipeline_from_satellite(
+                audio_stream, start_stage=PipelineStage.STT
+            )
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
+    ):
+        response = await hass.services.async_call(
+            "assist_satellite",
+            "ask_question",
+            {"entity_id": entity_id, "question": question_text, **service_data},
+            blocking=True,
+            return_response=True,
+        )
+        assert entity.state == AssistSatelliteState.IDLE
+        assert response == asdict(expected_answer)
 
 
 async def test_wake_word_start_keeps_responding(

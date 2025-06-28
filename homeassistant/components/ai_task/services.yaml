@@ -1,0 +1,19 @@
+generate_data:
+  fields:
+    task_name:
+      example: "home summary"
+      required: true
+      selector:
+        text:
+    instructions:
+      example: "Generate a funny notification that the garage door was left open"
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          domain: ai_task
+          supported_features:
+            - ai_task.AITaskEntityFeature.GENERATE_DATA

@@ -1866,7 +1866,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
         (
@@ -1874,7 +1874,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
     ],

@@ -13,17 +13,15 @@ async def test_repair_issue_is_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created."""
-    from homeassistant.components.keyboard import (  # pylint:disable=import-outside-toplevel
-        DOMAIN as KEYBOARD_DOMAIN,
-    )
+    from homeassistant.components.keyboard import DOMAIN  # noqa: PLC0415
 
     assert await async_setup_component(
         hass,
-        KEYBOARD_DOMAIN,
-        {KEYBOARD_DOMAIN: {}},
+        DOMAIN,
+        {DOMAIN: {}},
     )
     await hass.async_block_till_done()
     assert (
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_system_packages_yaml_integration_{KEYBOARD_DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
     ) in issue_registry.issues

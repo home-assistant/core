@@ -20,10 +20,11 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import DOMAIN, WEBSOCKET_SSL_PORT
+from homeassistant.core import HomeAssistant
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
 
-from tests.common import load_json_object_fixture
+from tests.common import async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -174,7 +175,7 @@ def rest_api_fixture() -> Generator[Mock]:
 
 
 @pytest.fixture(name="rest_api_non_ssl_only")
-def rest_api_fixture_non_ssl_only() -> Generator[None]:
+def rest_api_fixture_non_ssl_only(hass: HomeAssistant) -> Generator[None]:
     """Patch the samsungtvws SamsungTVAsyncRest non-ssl only."""
 
     class MockSamsungTVAsyncRest:
@@ -189,7 +190,9 @@ def rest_api_fixture_non_ssl_only() -> Generator[None]:
             """Mock rest_device_info to fail for ssl and work for non-ssl."""
             if self.port == WEBSOCKET_SSL_PORT:
                 raise ResponseError
-            return load_json_object_fixture("device_info_UE48JU6400.json", DOMAIN)
+            return await async_load_json_object_fixture(
+                hass, "device_info_UE48JU6400.json", DOMAIN
+            )
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",

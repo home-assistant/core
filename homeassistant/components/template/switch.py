@@ -40,13 +40,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_PICTURE, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_OBJECT_ID, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
@@ -60,20 +59,13 @@ LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
 DEFAULT_NAME = "Template Switch"
 
 
-SWITCH_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_PICTURE): cv.template,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 LEGACY_SWITCH_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -228,7 +220,7 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass

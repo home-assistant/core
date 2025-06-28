@@ -3,15 +3,15 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
-from homeassistant.components.sonos import SonosDiscoveryManager
 from homeassistant.components.sonos.const import (
-    DATA_SONOS_DISCOVERY_MANAGER,
+    DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
@@ -87,76 +87,73 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_async_poll_manual_hosts_warnings(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    soco_factory: SoCoMockFactory,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that host warnings are not logged repeatedly."""
-    await async_setup_component(
-        hass,
-        sonos.DOMAIN,
-        {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
-    )
-    await hass.async_block_till_done()
-    manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    manager.hosts.add("10.10.10.10")
+
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
     with (
         caplog.at_level(logging.DEBUG),
-        patch.object(manager, "_async_handle_discovery_message"),
-        patch(
-            "homeassistant.components.sonos.async_call_later"
-        ) as mock_async_call_later,
-        patch("homeassistant.components.sonos.async_dispatcher_send"),
-        patch(
-            "homeassistant.components.sonos.sync_get_visible_zones",
-            side_effect=[
-                OSError(),
-                OSError(),
-                [],
-                [],
-                OSError(),
-            ],
-        ),
+        patch.object(
+            type(soco), "visible_zones", new_callable=PropertyMock
+        ) as mock_visible_zones,
     ):
         # First call fails, it should be logged as a WARNING message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 1
+        await _setup_hass(hass)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
         # Second call fails again, it should be logged as a DEBUG message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "DEBUG"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 2
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["DEBUG"]
 
-        # Third call succeeds, it should log an info message
+        # Third call succeeds, logs message indicating reconnect
+        mock_visible_zones.return_value = {soco}
+        mock_visible_zones.side_effect = None
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Connection reestablished to Sonos device" in record.message
-        assert mock_async_call_later.call_count == 3
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Connection reestablished to Sonos device" in rec.message
+        ] == ["WARNING"]
 
-        # Fourth call succeeds again, no need to log
+        # Fourth call succeeds, it should log nothing
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 0
-        assert mock_async_call_later.call_count == 4
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "Connection reestablished to Sonos device" not in caplog.text
 
-        # Fifth call fail again again, should be logged as a WARNING message
+        # Fifth call fails again again, should be logged as a WARNING message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 5
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
 
 class _MockSoCoOsError(MockSoCo):

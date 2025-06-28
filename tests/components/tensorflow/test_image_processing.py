@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAINN
-from homeassistant.components.tensorflow import CONF_GRAPH, DOMAIN as TENSORFLOW_DOMAIN
+from homeassistant.components.tensorflow import CONF_GRAPH, DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, CONF_MODEL, CONF_PLATFORM, CONF_SOURCE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -22,7 +22,7 @@ async def test_repair_issue_is_created(
         {
             IMAGE_PROCESSING_DOMAINN: [
                 {
-                    CONF_PLATFORM: TENSORFLOW_DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                     CONF_SOURCE: [
                         {CONF_ENTITY_ID: "camera.test_camera"},
                     ],
@@ -36,5 +36,5 @@ async def test_repair_issue_is_created(
     await hass.async_block_till_done()
     assert (
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_system_packages_yaml_integration_{TENSORFLOW_DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
     ) in issue_registry.issues

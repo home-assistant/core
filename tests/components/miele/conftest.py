@@ -18,7 +18,11 @@ from homeassistant.setup import async_setup_component
 from . import get_actions_callback, get_data_callback
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.fixture(name="expires_at")
@@ -75,9 +79,9 @@ def load_device_file() -> str:
 
 
 @pytest.fixture
-def device_fixture(load_device_file: str) -> MieleDevices:
+async def device_fixture(hass: HomeAssistant, load_device_file: str) -> MieleDevices:
     """Fixture for device."""
-    return load_json_object_fixture(load_device_file, DOMAIN)
+    return await async_load_json_object_fixture(hass, load_device_file, DOMAIN)
 
 
 @pytest.fixture(scope="package")
@@ -87,9 +91,9 @@ def load_action_file() -> str:
 
 
 @pytest.fixture
-def action_fixture(load_action_file: str) -> MieleAction:
+async def action_fixture(hass: HomeAssistant, load_action_file: str) -> MieleAction:
     """Fixture for action."""
-    return load_json_object_fixture(load_action_file, DOMAIN)
+    return await async_load_json_object_fixture(hass, load_action_file, DOMAIN)
 
 
 @pytest.fixture(scope="package")
@@ -99,9 +103,9 @@ def load_programs_file() -> str:
 
 
 @pytest.fixture
-def programs_fixture(load_programs_file: str) -> list[dict]:
+async def programs_fixture(hass: HomeAssistant, load_programs_file: str) -> list[dict]:
     """Fixture for available programs."""
-    return load_fixture(load_programs_file, DOMAIN)
+    return await async_load_fixture(hass, load_programs_file, DOMAIN)
 
 
 @pytest.fixture
@@ -172,7 +176,7 @@ async def push_data_and_actions(
     await data_callback(device_fixture)
     await hass.async_block_till_done()
 
-    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
+    act_file = await async_load_json_object_fixture(hass, "4_actions.json", DOMAIN)
     action_callback = get_actions_callback(mock_miele_client)
     await action_callback(act_file)
     await hass.async_block_till_done()
