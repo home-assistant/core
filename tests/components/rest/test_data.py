@@ -442,3 +442,52 @@ async def test_rest_data_timeout_error(
         "Timeout while fetching data: http://example.com/api" in caplog.text
         or "Platform rest not ready yet" in caplog.text
     )
+
+
+async def test_rest_data_boolean_params_converted_to_strings(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that boolean parameters are converted to lowercase strings."""
+    # Mock the request and capture the actual URL
+    aioclient_mock.get(
+        "http://example.com/api",
+        status=200,
+        json={"status": "ok"},
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "resource": "http://example.com/api",
+                "method": "GET",
+                "params": {
+                    "boolTrue": True,
+                    "boolFalse": False,
+                    "stringParam": "test",
+                    "intParam": 123,
+                },
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.status }}",
+                    }
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Check that the request was made with boolean values converted to strings
+    assert len(aioclient_mock.mock_calls) == 1
+    method, url, data, headers = aioclient_mock.mock_calls[0]
+
+    # Check that the URL query parameters have boolean values converted to strings
+    assert url.query["boolTrue"] == "true"
+    assert url.query["boolFalse"] == "false"
+    assert url.query["stringParam"] == "test"
+    assert url.query["intParam"] == "123"
