@@ -99,39 +99,39 @@
   list([
   ])
 # ---
-# name: test_get_values_by_type
+# name: test_get_values_by_type[heating]
   dict({
     'additionalValue': '38,0',
     'type': 'heating',
     'value': '35',
   })
 # ---
-# name: test_get_values_by_type.1
+# name: test_get_values_by_type[heating].1
+  dict({
+    'type': 'heating',
+    'value': 21,
+  })
+# ---
+# name: test_get_values_by_type[warmwater]
   dict({
     'additionalValue': '57,0',
     'type': 'warmwater',
     'value': '1,0',
   })
 # ---
-# name: test_get_values_by_type.2
-  dict({
-    'type': 'water',
-    'value': '5,0',
-  })
-# ---
-# name: test_get_values_by_type.3
-  dict({
-    'type': 'heating',
-    'value': 21,
-  })
-# ---
-# name: test_get_values_by_type.4
+# name: test_get_values_by_type[warmwater].1
   dict({
     'type': 'warmwater',
     'value': 7,
   })
 # ---
-# name: test_get_values_by_type.5
+# name: test_get_values_by_type[water]
+  dict({
+    'type': 'water',
+    'value': '5,0',
+  })
+# ---
+# name: test_get_values_by_type[water].1
   dict({
     'type': 'water',
     'value': 3,

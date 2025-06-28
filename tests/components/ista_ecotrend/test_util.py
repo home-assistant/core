@@ -35,7 +35,17 @@ def test_last_day_of_month(snapshot: SnapshotAssertion) -> None:
         assert last_day_of_month(month=month + 1, year=2024) == snapshot
 
 
-def test_get_values_by_type(snapshot: SnapshotAssertion) -> None:
+@pytest.mark.parametrize(
+    "consumption_type",
+    [
+        IstaConsumptionType.HEATING,
+        IstaConsumptionType.HOT_WATER,
+        IstaConsumptionType.WATER,
+    ],
+)
+def test_get_values_by_type(
+    snapshot: SnapshotAssertion, consumption_type: IstaConsumptionType
+) -> None:
     """Test get_values_by_type function."""
     consumptions = {
         "readings": [
@@ -56,9 +66,7 @@ def test_get_values_by_type(snapshot: SnapshotAssertion) -> None:
         ],
     }
 
-    assert get_values_by_type(consumptions, IstaConsumptionType.HEATING) == snapshot
-    assert get_values_by_type(consumptions, IstaConsumptionType.HOT_WATER) == snapshot
-    assert get_values_by_type(consumptions, IstaConsumptionType.WATER) == snapshot
+    assert get_values_by_type(consumptions, consumption_type) == snapshot
 
     costs = {
         "costsByEnergyType": [
@@ -77,12 +85,10 @@ def test_get_values_by_type(snapshot: SnapshotAssertion) -> None:
         ],
     }
 
-    assert get_values_by_type(costs, IstaConsumptionType.HEATING) == snapshot
-    assert get_values_by_type(costs, IstaConsumptionType.HOT_WATER) == snapshot
-    assert get_values_by_type(costs, IstaConsumptionType.WATER) == snapshot
+    assert get_values_by_type(costs, consumption_type) == snapshot
 
-    assert get_values_by_type({}, IstaConsumptionType.HEATING) == {}
-    assert get_values_by_type({"readings": []}, IstaConsumptionType.HEATING) == {}
+    assert get_values_by_type({}, consumption_type) == {}
+    assert get_values_by_type({"readings": []}, consumption_type) == {}
 
 
 @pytest.mark.parametrize(
