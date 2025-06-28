@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import mimetypes
 from pathlib import Path
+from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -35,12 +36,14 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CHAT_MODEL,
     CONF_PROMPT,
+    DEFAULT_TITLE,
+    DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
 
@@ -190,7 +193,7 @@ async def async_setup_entry(
 
         client = await hass.async_add_executor_job(_init_client)
         await client.aio.models.get(
-            model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
     except (APIError, Timeout) as err:
@@ -243,6 +246,16 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         parent_entry = api_keys_entries[entry.data[CONF_API_KEY]]
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
+        if use_existing:
+            hass.config_entries.async_add_subentry(
+                parent_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
+            )
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
@@ -271,12 +284,19 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                 )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_TITLE,
                 options={},
                 version=2,
             )

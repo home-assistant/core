@@ -89,6 +89,7 @@ from .helpers import (
     restore_state,
     template,
     translation,
+    trigger,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
@@ -452,6 +453,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
         create_eager_task(async_get_system_info(hass)),
+        create_eager_task(trigger.async_setup(hass)),
     )
 
 
@@ -605,7 +607,7 @@ async def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
-        exc_info=(  # type: ignore[arg-type]  # noqa: LOG014
+        exc_info=(  # type: ignore[arg-type]
             args.exc_type,
             args.exc_value,
             args.exc_traceback,
@@ -1059,5 +1061,5 @@ async def _async_setup_multi_components(
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
-                exc_info=(type(result), result, result.__traceback__),  # noqa: LOG014
+                exc_info=(type(result), result, result.__traceback__),
             )

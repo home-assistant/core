@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
@@ -74,6 +74,11 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+}
+
+RVC_OPERATIONAL_STATE_MAP = {
+    # enum with known Operation state values which we can translate
+    **OPERATIONAL_STATE_MAP,
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
@@ -171,6 +176,10 @@ class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescriptio
     state_list_attribute: type[ClusterAttributeDescriptor] = (
         clusters.OperationalState.Attributes.OperationalStateList
     )
+    state_attribute: type[ClusterAttributeDescriptor] = (
+        clusters.OperationalState.Attributes.OperationalState
+    )
+    state_map: dict[int, str] = field(default_factory=lambda: OPERATIONAL_STATE_MAP)
 
 
 class MatterSensor(MatterEntity, SensorEntity):
@@ -245,15 +254,15 @@ class MatterOperationalStateSensor(MatterSensor):
         for state in operational_state_list:
             # prefer translateable (known) state from mapping,
             # fallback to the raw state label as given by the device/manufacturer
-            states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
-                state.operationalStateID, slugify(state.operationalStateLabel)
+            states_map[state.operationalStateID] = (
+                self.entity_description.state_map.get(
+                    state.operationalStateID, slugify(state.operationalStateLabel)
+                )
             )
         self.states_map = states_map
         self._attr_options = list(states_map.values())
         self._attr_native_value = states_map.get(
-            self.get_matter_attribute_value(
-                clusters.OperationalState.Attributes.OperationalState
-            )
+            self.get_matter_attribute_value(self.entity_description.state_attribute)
         )
 
 
@@ -999,6 +1008,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.RvcOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.RvcOperationalState.Attributes.OperationalState,
+            state_map=RVC_OPERATIONAL_STATE_MAP,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -1016,6 +1027,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalState,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
