@@ -184,7 +184,7 @@ _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT: dict[
     UnitOfTemperature.CELSIUS: UnitOfTemperatureInterval.CELSIUS,
     UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureInterval.FAHRENHEIT,
 }
-_NATIVE_TEMPERATURE_UNIT_TO_CONFIG: dict[
+_DEVICECLASS_NATIVE_CONFIG_TO_UOM: dict[
     SensorDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
 ] = {
     SensorDeviceClass.TEMPERATURE: {
@@ -537,7 +537,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
         try:
-            return _NATIVE_TEMPERATURE_UNIT_TO_CONFIG[self.device_class][
+            return _DEVICECLASS_NATIVE_CONFIG_TO_UOM[self.device_class][
                 native_unit_of_measurement
             ][self.hass.config.units.temperature_unit]
         except KeyError:
