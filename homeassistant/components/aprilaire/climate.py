@@ -78,6 +78,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
     _attr_min_humidity = 10
     _attr_max_humidity = 50
+    _attr_target_temperature_step = 0.5
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
 
@@ -170,15 +171,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             return self.target_temperature_low
 
         return None
-
-    @property
-    def target_temperature_step(self) -> float | None:
-        """Get the step for the target temperature based on the unit."""
-        return (
-            0.5
-            if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
-            else 1
-        )
 
     @property
     def target_temperature_high(self) -> float | None:
