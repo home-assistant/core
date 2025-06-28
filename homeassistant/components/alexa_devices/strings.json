@@ -70,5 +70,13 @@
         "name": "Do not disturb"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
+    }
   }
 }

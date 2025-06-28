@@ -247,7 +247,7 @@ class OpenAIConversationEntity(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
         if self.subentry.data.get(CONF_LLM_HASS_API):

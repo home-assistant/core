@@ -17,7 +17,13 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, DOMAIN, LOGGER, RECOMMENDED_CHAT_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+)
 
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -117,12 +123,19 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                 )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_CONVERSATION_NAME,
                 options={},
                 version=2,
             )

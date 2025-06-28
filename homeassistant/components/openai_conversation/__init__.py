@@ -49,6 +49,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -345,12 +346,19 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                 )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
             hass.config_entries.async_update_entry(
                 entry,
+                title=DEFAULT_NAME,
                 options={},
                 version=2,
             )

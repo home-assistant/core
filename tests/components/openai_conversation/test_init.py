@@ -13,8 +13,10 @@ from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
-from homeassistant.components.openai_conversation import CONF_FILENAMES
+from homeassistant.components.openai_conversation import CONF_CHAT_MODEL, CONF_FILENAMES
 from homeassistant.components.openai_conversation.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -616,6 +618,10 @@ async def test_migration_from_v1_to_v2(
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
+    assert migrated_device.config_entries == {mock_config_entry.entry_id}
+    assert migrated_device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
 
 
 async def test_migration_from_v1_to_v2_with_multiple_keys(
@@ -707,6 +713,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
         )
         assert dev is not None
+        assert dev.config_entries == {entry.entry_id}
+        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
 
 
 async def test_migration_from_v1_to_v2_with_same_keys(
@@ -806,3 +814,26 @@ async def test_migration_from_v1_to_v2_with_same_keys(
             identifiers={(DOMAIN, subentry.subentry_id)}
         )
         assert dev is not None
+        assert dev.config_entries == {mock_config_entry.entry_id}
+        assert dev.config_entries_subentries == {
+            mock_config_entry.entry_id: {subentry.subentry_id}
+        }
+
+
+@pytest.mark.parametrize("mock_subentry_data", [{}, {CONF_CHAT_MODEL: "gpt-1o"}])
+async def test_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Assert exception when invalid config entry is provided."""
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+    device = devices[0]
+    assert device == snapshot(exclude=props("identifiers"))
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}

@@ -141,6 +141,10 @@ async def test_migration_from_v1_to_v2(
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
+    assert migrated_device.config_entries == {mock_config_entry.entry_id}
+    assert migrated_device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
 
 
 async def test_migration_from_v1_to_v2_with_multiple_keys(
@@ -231,6 +235,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
         )
         assert dev is not None
+        assert dev.config_entries == {entry.entry_id}
+        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
 
 
 async def test_migration_from_v1_to_v2_with_same_keys(
@@ -329,3 +335,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
             identifiers={(DOMAIN, subentry.subentry_id)}
         )
         assert dev is not None
+        assert dev.config_entries == {mock_config_entry.entry_id}
+        assert dev.config_entries_subentries == {
+            mock_config_entry.entry_id: {subentry.subentry_id}
+        }
