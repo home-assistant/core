@@ -11,7 +11,7 @@ import xmltodict
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.ssl import SSLCipherList
 
@@ -94,7 +94,7 @@ class RestData:
     async def async_update(self, log_errors: bool = True) -> None:
         """Get the latest data from REST service with provided method."""
         if not self._session:
-            self._session = async_get_clientsession(
+            self._session = async_create_clientsession(
                 self._hass,
                 verify_ssl=self._verify_ssl,
                 ssl_cipher=self._ssl_cipher_list,
