@@ -68,7 +68,6 @@ class ModemCalleridSensor(RestoreSensor):
             self._attr_extra_state_attributes[CID.CID_NAME] = last_state.attributes.get(
                 CID.CID_NAME, ""
             )
-
             self._attr_extra_state_attributes[CID.CID_NUMBER] = (
                 last_state.attributes.get(CID.CID_NUMBER, "")
             )
