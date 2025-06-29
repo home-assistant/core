@@ -16,7 +16,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
-    CoreState,
     MockConfigEntry,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
@@ -657,7 +656,6 @@ async def test_restore(
     hass: HomeAssistant,
 ) -> None:
     """Test state and unit are restored on boot."""
-    hass.set_state(CoreState.not_running)
     restore_state = "10.00"
     restore_unit = "kWh/h"
     mock_restore_cache_with_extra_data(
