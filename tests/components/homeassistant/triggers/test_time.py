@@ -877,3 +877,228 @@ async def test_if_at_template_limited_template(
     await hass.async_block_till_done()
 
     assert "is not supported in limited templates" in caplog.text
+
+
+async def test_if_fires_using_weekday_single(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing on a specific weekday."""
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
+
+    freezer.move_to(monday_before_trigger)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "5:00:00", "weekday": "mon"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire the trigger on Monday
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "time - Monday"
+
+    # Fire on Tuesday at the same time - should not trigger
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    # Should still be only 1 call
+    assert len(service_calls) == 1
+
+
+async def test_if_fires_using_weekday_multiple(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing on multiple weekdays."""
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
+
+    freezer.move_to(monday_before_trigger)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": "5:00:00",
+                    "weekday": ["mon", "wed", "fri"],
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire on Monday - should trigger
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert "Monday" in service_calls[0].data["some"]
+
+    # Fire on Tuesday - should not trigger
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Fire on Wednesday - should trigger
+    wednesday_trigger = now.replace(
+        year=2023, month=1, day=4, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, wednesday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+    assert "Wednesday" in service_calls[1].data["some"]
+
+    # Fire on Friday - should trigger
+    friday_trigger = now.replace(
+        year=2023, month=1, day=6, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, friday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 3
+    assert "Friday" in service_calls[2].data["some"]
+
+
+async def test_if_fires_using_weekday_with_entity(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing on weekday with input_datetime entity."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {"input_datetime": {"trigger": {"has_date": False, "has_time": True}}},
+    )
+
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.trigger",
+            "time": "05:00:00",
+        },
+        blocking=True,
+    )
+
+    freezer.move_to(monday_before_trigger)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": "input_datetime.trigger",
+                    "weekday": "mon",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                        "entity": "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire on Monday - should trigger
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 1
+    assert "Monday" in automation_calls[0].data["some"]
+    assert automation_calls[0].data["entity"] == "input_datetime.trigger"
+
+    # Fire on Tuesday - should not trigger
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 1
+
+
+def test_weekday_validation() -> None:
+    """Test weekday validation in trigger schema."""
+    # Valid single weekday
+    valid_config = {"platform": "time", "at": "5:00:00", "weekday": "mon"}
+    time.TRIGGER_SCHEMA(valid_config)
+
+    # Valid multiple weekdays
+    valid_config = {
+        "platform": "time",
+        "at": "5:00:00",
+        "weekday": ["mon", "wed", "fri"],
+    }
+    time.TRIGGER_SCHEMA(valid_config)
+
+    # Invalid weekday
+    invalid_config = {"platform": "time", "at": "5:00:00", "weekday": "invalid"}
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(invalid_config)
+
+    # Invalid weekday in list
+    invalid_config = {
+        "platform": "time",
+        "at": "5:00:00",
+        "weekday": ["mon", "invalid"],
+    }
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(invalid_config)
