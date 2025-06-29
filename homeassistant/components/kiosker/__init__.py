@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-try:
-    from kiosker import Blackout, KioskerAPI
-except ImportError:
-    # Handle missing dependency during development/translation scanning
-    Blackout = None
-    KioskerAPI = None
+from kiosker import Blackout, KioskerAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -75,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         token=entry.data[CONF_API_TOKEN],
-        ssl=entry.data[CONF_SSL],
+        ssl=entry.data.get(CONF_SSL, False),
         verify=entry.data.get(CONF_SSL_VERIFY, False),
     )
 
@@ -140,15 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
         # Convert RGB values to hex format
         background_color = convert_rgb_to_hex(call.data.get(ATTR_BACKGROUND, "#000000"))
         foreground_color = convert_rgb_to_hex(call.data.get(ATTR_FOREGROUND, "#FFFFFF"))
-        button_background_color = (
-            convert_rgb_to_hex(call.data[ATTR_BUTTON_BACKGROUND])
-            if call.data.get(ATTR_BUTTON_BACKGROUND)
-            else None
+        button_background_color = convert_rgb_to_hex(
+            call.data.get(ATTR_BUTTON_BACKGROUND, "#FFFFFF")
         )
-        button_foreground_color = (
-            convert_rgb_to_hex(call.data[ATTR_BUTTON_FOREGROUND])
-            if call.data.get(ATTR_BUTTON_FOREGROUND)
-            else None
+        button_foreground_color = convert_rgb_to_hex(
+            call.data.get(ATTR_BUTTON_FOREGROUND, "#000000")
         )
 
         blackout = Blackout(

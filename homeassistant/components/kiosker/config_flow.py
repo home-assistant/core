@@ -58,7 +58,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         status = await hass.async_add_executor_job(api.status)
     except Exception as exc:
         _LOGGER.error("Failed to connect to Kiosker: %s", exc)
-        raise
+        raise CannotConnect from exc
 
     # Return info that you want to store in the config entry
     device_id = status.device_id if hasattr(status, "device_id") else data[CONF_HOST]
@@ -69,6 +69,7 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kiosker."""
 
     VERSION = 1
+    MINOR_VERSION = 1
     CONNECTION_CLASS = "local_polling"
 
     def __init__(self) -> None:
@@ -85,16 +86,6 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Use host:port as unique identifier to prevent duplicate entries
-            unique_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-            )
-
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -103,6 +94,33 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Get device info to determine unique ID
+                api = KioskerAPI(
+                    host=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    token=user_input[CONF_API_TOKEN],
+                    ssl=user_input[CONF_SSL],
+                    verify=user_input[CONF_SSL_VERIFY],
+                )
+                try:
+                    status = await self.hass.async_add_executor_job(api.status)
+                    device_id = (
+                        status.device_id
+                        if hasattr(status, "device_id")
+                        else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                    )
+                except Exception:  # noqa: BLE001
+                    device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+
+                # Use device ID as unique identifier
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
+
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -122,7 +140,7 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         app_name = properties.get("app", "Kiosker")
         version = properties.get("version", "")
 
-        # Create device name from available information
+        # Use UUID from zeroconf if available, otherwise use host:port as fallback
         if uuid:
             device_name = f"{app_name} ({uuid[:8].upper()})"
             unique_id = uuid
