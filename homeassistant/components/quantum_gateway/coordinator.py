@@ -20,6 +20,8 @@ def get_scanner(host: str, password: str, use_https: bool) -> QuantumGatewayScan
 class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Class to manage fetching data from the Quantum Gateway router."""
 
+    scanner: QuantumGatewayScanner | None
+
     def __init__(self, hass: HomeAssistant, options: ConfigType) -> None:
         """Initialize the data coordinator."""
         update_interval = options.get(CONF_SCAN_INTERVAL)
@@ -31,7 +33,6 @@ class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
             always_update=False,
         )
         self.options = options
-        self.scanner: QuantumGatewayScanner | None = None
 
     @override
     async def _async_setup(self):
