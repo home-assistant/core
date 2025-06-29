@@ -1,0 +1,87 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: no actions/services are implemented
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: no actions/services are implemented
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: no actions/services are implemented
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: has no options flow
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: no authentication necessary
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: pure webservice, no discovery
+  discovery:
+    status: exempt
+    comment: pure webservice, no discovery
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: not applicable - see stale-devices
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      each config entry represents only one named measurement station,
+      so when the user wants to add another one, they can just add another config entry
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices:
+    status: exempt
+    comment: |
+      does not apply, since only one measurement station per config-entry
+      if a measurement station is removed from the data provider,
+      the user can just remove the related config entry
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
