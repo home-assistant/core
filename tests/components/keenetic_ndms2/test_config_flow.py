@@ -19,7 +19,14 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
 )
 
-from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
+from . import (
+    MOCK_DATA,
+    MOCK_IP,
+    MOCK_NAME,
+    MOCK_OPTIONS,
+    MOCK_RECONFIGURE,
+    MOCK_SSDP_DISCOVERY_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -72,6 +79,34 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure(hass: HomeAssistant, connect) -> None:
+    """Test reconfigure flow."""
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_RECONFIGURE,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: MOCK_IP,
+        **MOCK_RECONFIGURE,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
