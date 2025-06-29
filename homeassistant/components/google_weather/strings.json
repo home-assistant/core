@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "name": "Location name",
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
+          "location": "Location coordinates"
+        },
+        "sections": {
+          "api_key_options": {
+            "name": "Optional API key options",
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)"
+            }
+          }
+        },
+        "description": "Get your API key from [here]({api_key_url})."
+      }
+    },
+    "create_entry": {
+      "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Google Weather API:\n\n{error_message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "entry_type": "Location",
+      "step": {
+        "location": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "name": "[%key:component::google_weather::config::step::user::data_description::name%]",
+            "location": "[%key:component::google_weather::config::step::user::data_description::location%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:component::google_weather::config::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "apparent_temperature": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]"
+      },
+      "cloud_coverage": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]"
+      },
+      "dew_point": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]"
+      },
+      "heat_index": {
+        "name": "Heat index temperature"
+      },
+      "humidity": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::humidity::name%]"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "precipitation_qpf": {
+        "name": "Precipitation"
+      },
+      "pressure": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::pressure::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::temperature::name%]"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      },
+      "uv_index": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
+      },
+      "visibility": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      },
+      "wind_chill": {
+        "name": "Wind chill temperature"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_gust_speed": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
+      },
+      "wind_speed": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
+      }
+    }
+  }
+}
