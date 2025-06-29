@@ -1,4 +1,4 @@
-"""Conversation support for Anthropic."""
+"""Base entity for Anthropic."""
 
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
