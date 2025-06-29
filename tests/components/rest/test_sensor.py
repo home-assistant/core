@@ -178,7 +178,7 @@ async def test_setup_ssl_ciphers(
 ) -> None:
     """Test setup with minimum configuration."""
     with patch(
-        "homeassistant.components.rest.data.async_get_clientsession",
+        "homeassistant.components.rest.data.async_create_clientsession",
         return_value=aioclient_mock,
     ) as aiohttp_client:
         assert await async_setup_component(
