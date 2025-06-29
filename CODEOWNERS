@@ -1273,6 +1273,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/rehlko/ @bdraco @peterager
 /tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/rejseplanen/ @Jawar19
+/tests/components/rejseplanen/ @Jawar19
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555 @allenporter
