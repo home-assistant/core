@@ -47,6 +47,8 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
+    DEFAULT_STT_PROMPT,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
@@ -54,6 +56,8 @@ from .const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_STT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
@@ -92,6 +96,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
     VERSION = 2
+    MINOR_VERSION = 1
 
     async def async_step_api(
         self, user_input: dict[str, Any] | None = None
@@ -124,6 +129,12 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "subentry_type": "conversation",
                             "data": RECOMMENDED_CONVERSATION_OPTIONS,
                             "title": DEFAULT_CONVERSATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "stt",
+                            "data": RECOMMENDED_STT_OPTIONS,
+                            "title": DEFAULT_STT_NAME,
                             "unique_id": None,
                         },
                         {
@@ -179,6 +190,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "conversation": LLMSubentryFlowHandler,
+            "stt": LLMSubentryFlowHandler,
             "tts": LLMSubentryFlowHandler,
         }
 
@@ -213,6 +225,8 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
                 options: dict[str, Any]
                 if self._subentry_type == "tts":
                     options = RECOMMENDED_TTS_OPTIONS.copy()
+                elif self._subentry_type == "stt":
+                    options = RECOMMENDED_STT_OPTIONS.copy()
                 else:
                     options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
             else:
@@ -287,6 +301,8 @@ async def google_generative_ai_config_option_schema(
             default_name = options[CONF_NAME]
         elif subentry_type == "tts":
             default_name = DEFAULT_TTS_NAME
+        elif subentry_type == "stt":
+            default_name = DEFAULT_STT_NAME
         else:
             default_name = DEFAULT_CONVERSATION_NAME
         schema: dict[vol.Required | vol.Optional, Any] = {
@@ -312,6 +328,17 @@ async def google_generative_ai_config_option_schema(
                 ): SelectSelector(
                     SelectSelectorConfig(options=hass_apis, multiple=True)
                 ),
+            }
+        )
+    elif subentry_type == "stt":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
+                    },
+                ): TemplateSelector(),
             }
         )
     schema.update(
@@ -369,6 +396,8 @@ async def google_generative_ai_config_option_schema(
 
     if subentry_type == "tts":
         default_model = RECOMMENDED_TTS_MODEL
+    elif subentry_type == "stt":
+        default_model = RECOMMENDED_STT_MODEL
     else:
         default_model = RECOMMENDED_CHAT_MODEL
 
