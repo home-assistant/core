@@ -35,7 +35,7 @@ class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.options = options
 
     @override
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         """Set up the Quantum Gateway device scanner."""
         self.scanner = await self.hass.async_add_executor_job(
             get_scanner,
@@ -45,7 +45,7 @@ class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, str]:
         """Fetch the latest data from the Quantum Gateway."""
         if self.scanner is None:
             raise UpdateFailed("Scanner not initialized.")
