@@ -153,7 +153,12 @@ async def make_device_data(
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+    if isinstance(device, Device) and device.device_type in [
+        "Smart Lock",
+        "Smart Lock Lite",
+        "Smart Lock Pro",
+        "Smart Lock Ultra",
+    ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )

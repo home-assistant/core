@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
@@ -109,7 +110,7 @@ async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         mock_otbr_manager.async_get_addon_info.side_effect = AddonError()
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -147,7 +148,7 @@ async def test_config_flow_thread_addon_already_configured(hass: HomeAssistant) 
             update_available=False,
             version="1.0.0",
         ),
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         mock_otbr_manager.async_install_addon_waiting = AsyncMock(
             side_effect=AddonError()
         )
@@ -178,7 +179,7 @@ async def test_config_flow_thread_addon_install_fails(hass: HomeAssistant) -> No
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         mock_otbr_manager.async_install_addon_waiting = AsyncMock(
             side_effect=AddonError()
         )
@@ -209,7 +210,7 @@ async def test_config_flow_thread_addon_set_config_fails(hass: HomeAssistant) ->
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
 
         async def install_addon() -> None:
             mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
@@ -270,7 +271,7 @@ async def test_config_flow_thread_flasher_run_fails(hass: HomeAssistant) -> None
             update_available=False,
             version="1.0.0",
         ),
-    ) as mock_otbr_manager:
+    ) as (mock_otbr_manager, _):
         mock_otbr_manager.async_start_addon_waiting = AsyncMock(
             side_effect=AddonError()
         )
@@ -339,6 +340,64 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
 
         assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains", ["test_firmware_domain"]
+)
+async def test_config_flow_firmware_index_download_fails_and_required(
+    hass: HomeAssistant,
+) -> None:
+    """Test flow aborts if OTA index download fails and install is required."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with (
+        mock_firmware_info(
+            hass,
+            # The wrong firmware is installed, so a new install is required
+            probe_app_type=ApplicationType.SPINEL,
+        ) as (_, mock_update_client),
+    ):
+        mock_update_client.async_update_data.side_effect = ClientError()
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.ABORT
+        assert pick_result["reason"] == "fw_download_failed"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains", ["test_firmware_domain"]
+)
+async def test_config_flow_firmware_download_fails_and_required(
+    hass: HomeAssistant,
+) -> None:
+    """Test flow aborts if firmware download fails and install is required."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with (
+        mock_firmware_info(
+            hass,
+            # The wrong firmware is installed, so a new install is required
+            probe_app_type=ApplicationType.SPINEL,
+        ) as (_, mock_update_client),
+    ):
+        mock_update_client.async_fetch_firmware.side_effect = ClientError()
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.ABORT
+        assert pick_result["reason"] == "fw_download_failed"
 
 
 @pytest.mark.parametrize(

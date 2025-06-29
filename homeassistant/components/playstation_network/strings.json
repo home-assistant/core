@@ -19,6 +19,16 @@
         "data_description": {
           "npsso": "[%key:component::playstation_network::config::step::user::data_description::npsso%]"
         }
+      },
+      "reconfigure": {
+        "title": "Update PlayStation Network configuration",
+        "description": "[%key:component::playstation_network::config::step::user::description%]",
+        "data": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data::npsso%]"
+        },
+        "data_description": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data_description::npsso%]"
+        }
       }
     },
     "error": {
@@ -30,7 +40,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**"
+      "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "exceptions": {
