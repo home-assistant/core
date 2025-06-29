@@ -200,7 +200,7 @@ class HomematicipHAP:
         self.update_all()
 
     def get_state_finished(self, future) -> None:
-        """Execute when get_state coroutine has finished."""
+        """Execute when try_get_state coroutine has finished."""
         try:
             future.result()
         except Exception as err:  # noqa: BLE001
