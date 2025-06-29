@@ -3,12 +3,9 @@
   "name": "Kiosker",
   "codeowners": ["@Claeysson"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/kiosker",
-  "homekit": {},
   "iot_class": "local_polling",
   "quality_scale": "bronze",
   "requirements": ["kiosker-python-api==1.2.5"],
-  "ssdp": [],
   "zeroconf": ["_kiosker._tcp.local."]
 }

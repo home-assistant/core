@@ -68,7 +68,7 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "unkown": "Unknwown",
+          "unknown": "Unknown",
           "not_charging": "Not Charging",
           "fully_charged": "Fully Charged"
         }
@@ -119,11 +119,11 @@
     },
     "navigate_backward": {
       "name": "Navigate backward",
-      "description": "Navigate to the previous page"
+      "description": "Navigate to the previous page in history"
     },
     "navigate_forward": {
       "name": "Navigate forward",
-      "description": "Navigate to the next page"
+      "description": "Navigate to the next page in history"
     },
     "print": {
       "name": "Print",
@@ -167,7 +167,7 @@
         },
         "expire": {
           "name": "Expire time",
-          "description": "Time in seconds before blackout expires"
+          "description": "Time in seconds before the blackout expires"
         },
         "dismissible": {
           "name": "Dismissible",
@@ -187,7 +187,7 @@
         },
         "sound": {
           "name": "Sound",
-          "description": "Sound to play when blackout is displayed (SystemSoundID, eg: 1007)"
+          "description": "Sound to play when blackout is displayed (SystemSoundID, e.g., 1007)"
         }
       }
     }
