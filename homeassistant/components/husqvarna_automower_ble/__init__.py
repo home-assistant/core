@@ -19,6 +19,7 @@ type HusqvarnaConfigEntry = ConfigEntry[HusqvarnaCoordinator]
 
 PLATFORMS = [
     Platform.LAWN_MOWER,
+    Platform.SENSOR,
 ]
 
 
