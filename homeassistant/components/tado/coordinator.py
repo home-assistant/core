@@ -244,7 +244,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         return {"weather": weather, "geofence": geofence}
 
-    async def _async_update_heating_circuits(self) -> dict[int, dict]:
+    async def _async_update_heating_circuits(self) -> dict[str, dict]:
         """Update the heating circuits data from Tado."""
 
         try:
@@ -255,9 +255,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             _LOGGER.error("Error updating Tado heating circuits: %s", err)
             raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
 
-        mapped_heating_circuits: dict[int, dict] = {}
+        mapped_heating_circuits: dict[str, dict] = {}
         for circuit in heating_circuits:
-            mapped_heating_circuits[circuit["number"]] = circuit
+            mapped_heating_circuits[circuit["driverShortSerialNo"]] = circuit
 
         return mapped_heating_circuits
 
