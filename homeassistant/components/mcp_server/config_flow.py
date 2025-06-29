@@ -39,7 +39,9 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LLM_HASS_API] = "llm_api_required"
             else:
                 return self.async_create_entry(
-                    title=", ".join(llm_apis[api_id] for api_id in user_input[CONF_LLM_HASS_API]),
+                    title=", ".join(
+                        llm_apis[api_id] for api_id in user_input[CONF_LLM_HASS_API]
+                    ),
                     data=user_input,
                 )
 
