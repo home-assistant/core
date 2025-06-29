@@ -318,6 +318,22 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
         ),
         (
             {
+                "template_type": "notify",
+                "name": "My template",
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                },
+            },
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                },
+            },
+        ),
+        (
+            {
                 "template_type": "number",
                 "name": "My template",
                 "state": "{{ 10 }}",
