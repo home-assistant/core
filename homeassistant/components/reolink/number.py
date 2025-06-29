@@ -113,6 +113,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -271,6 +272,18 @@ NUMBER_ENTITIES = (
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="cry_sensitivity",
+        cmd_key="299",
+        translation_key="cry_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=5,
+        supported=lambda api, ch: api.supported(ch, "ai_cry"),
+        value=lambda api, ch: api.baichuan.cry_sensitivity(ch),
+        method=lambda api, ch, value: api.baichuan.set_cry_detection(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_delay",

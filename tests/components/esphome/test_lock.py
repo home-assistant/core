@@ -47,14 +47,14 @@ async def test_lock_entity_no_open(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("lock.test_mylock")
+    state = hass.states.get("lock.test_my_lock")
     assert state is not None
     assert state.state == LockState.UNLOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.test_mylock"},
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
@@ -83,7 +83,7 @@ async def test_lock_entity_start_locked(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("lock.test_mylock")
+    state = hass.states.get("lock.test_my_lock")
     assert state is not None
     assert state.state == LockState.LOCKED
 
@@ -112,14 +112,14 @@ async def test_lock_entity_supports_open(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("lock.test_mylock")
+    state = hass.states.get("lock.test_my_lock")
     assert state is not None
     assert state.state == LockState.LOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.test_mylock"},
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
@@ -128,7 +128,7 @@ async def test_lock_entity_supports_open(
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: "lock.test_mylock"},
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.UNLOCK, None)])
@@ -137,7 +137,7 @@ async def test_lock_entity_supports_open(
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_OPEN,
-        {ATTR_ENTITY_ID: "lock.test_mylock"},
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN)])
