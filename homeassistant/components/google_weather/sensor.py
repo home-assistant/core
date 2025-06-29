@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -22,7 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -203,17 +204,20 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Google Weather entities from a config_entry."""
-    coordinator: GoogleWeatherCurrentConditionsCoordinator = (
-        entry.runtime_data.coordinator_observation
-    )
+    entities = []
+    for subentry in entry.subentries.values():
+        subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
+            subentry.subentry_id
+        ]
+        coordinator = subentry_runtime_data.coordinator_observation
+        sensors = [
+            GoogleWeatherSensor(coordinator, subentry, description)
+            for description in SENSOR_TYPES
+            if description.value_fn(coordinator.data) is not None
+        ]
+        entities.extend(sensors)
 
-    sensors = [
-        GoogleWeatherSensor(coordinator, description)
-        for description in SENSOR_TYPES
-        if description.value_fn(coordinator.data) is not None
-    ]
-
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
 class GoogleWeatherSensor(
@@ -228,12 +232,13 @@ class GoogleWeatherSensor(
     def __init__(
         self,
         coordinator: GoogleWeatherCurrentConditionsCoordinator,
+        subentry: ConfigSubentry,
         description: GoogleWeatherSensorDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         GoogleWeatherBaseEntity.__init__(
-            self, coordinator.config_entry, description.key
+            self, coordinator.config_entry, subentry, description.key
         )
         self.entity_description = description
 
@@ -241,8 +246,3 @@ class GoogleWeatherSensor(
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self.async_write_ha_state()

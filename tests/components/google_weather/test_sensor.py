@@ -78,6 +78,9 @@ async def test_availability(
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "13.7"
+    mock_google_weather_api.async_get_current_conditions.assert_called_with(
+        latitude=10.1, longitude=20.1
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -91,7 +94,9 @@ async def test_manual_update_entity(
 
     await async_setup_component(hass, "homeassistant", {})
 
-    assert mock_google_weather_api.async_get_current_conditions.call_count == 1
+    mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
+        latitude=10.1, longitude=20.1
+    )
 
     await hass.services.async_call(
         "homeassistant",
