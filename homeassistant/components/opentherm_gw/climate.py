@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -30,6 +31,7 @@ from .const import (
     CONF_SET_PRECISION,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
+    DOMAIN,
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
@@ -186,7 +188,10 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        _LOGGER.warning("Changing HVAC mode is not supported")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="change_hvac_mode_not_supported",
+        )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""

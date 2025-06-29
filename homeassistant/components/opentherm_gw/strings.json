@@ -371,6 +371,11 @@
       }
     }
   },
+  "exceptions": {
+    "change_hvac_mode_not_supported": {
+      "message": "Changing HVAC mode is not supported."
+    }
+  },
   "services": {
     "reset_gateway": {
       "name": "Reset gateway",
