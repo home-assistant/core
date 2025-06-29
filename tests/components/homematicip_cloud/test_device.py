@@ -195,7 +195,6 @@ async def test_hap_reconnected(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False
     with patch(
         "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
         return_value=True,

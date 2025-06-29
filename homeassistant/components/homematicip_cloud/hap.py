@@ -174,7 +174,7 @@ class HomematicipHAP:
             await asyncio.sleep(30)
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
-    async def try_get_state(self) -> None:
+    async def _try_get_state(self) -> None:
         """Call get_state in a loop until no error occurs, using exponential backoff on error."""
 
         # Wait until WebSocket connection is established.
@@ -201,10 +201,16 @@ class HomematicipHAP:
 
     def get_state_finished(self, future) -> None:
         """Execute when get_state coroutine has finished."""
-        future.result()
-        _LOGGER.info(
-            "Updating state after HMIP access point reconnect finished successfully",
-        )
+        try:
+            future.result()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error updating state after HMIP access point reconnect: %s", err
+            )
+        else:
+            _LOGGER.info(
+                "Updating state after HMIP access point reconnect finished successfully",
+            )
 
     def set_all_to_unavailable(self) -> None:
         """Set all devices to unavailable and tell Home Assistant."""
@@ -253,7 +259,7 @@ class HomematicipHAP:
         """Handle websocket connected."""
         _LOGGER.info("Websocket connection to HomematicIP Cloud established")
         if self._ws_connection_closed.is_set():
-            self._get_state_task = self.hass.async_create_task(self.try_get_state())
+            self._get_state_task = self.hass.async_create_task(self._try_get_state())
             self._get_state_task.add_done_callback(self.get_state_finished)
 
             self._ws_connection_closed.clear()
