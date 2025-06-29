@@ -9,7 +9,6 @@ from unittest.mock import Mock, patch
 from amberelectric import ApiException
 from amberelectric.models.channel import Channel, ChannelType
 from amberelectric.models.interval import Interval
-from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus
 from amberelectric.models.spike_status import SpikeStatus
@@ -17,10 +16,7 @@ from dateutil import parser
 import pytest
 
 from homeassistant.components.amberelectric.const import CONF_SITE_ID, CONF_SITE_NAME
-from homeassistant.components.amberelectric.coordinator import (
-    AmberUpdateCoordinator,
-    normalize_descriptor,
-)
+from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -98,18 +94,6 @@ def mock_api_current_price() -> Generator:
         yield instance
 
 
-def test_normalize_descriptor() -> None:
-    """Test normalizing descriptors works correctly."""
-    assert normalize_descriptor(None) is None
-    assert normalize_descriptor(PriceDescriptor.NEGATIVE) == "negative"
-    assert normalize_descriptor(PriceDescriptor.EXTREMELYLOW) == "extremely_low"
-    assert normalize_descriptor(PriceDescriptor.VERYLOW) == "very_low"
-    assert normalize_descriptor(PriceDescriptor.LOW) == "low"
-    assert normalize_descriptor(PriceDescriptor.NEUTRAL) == "neutral"
-    assert normalize_descriptor(PriceDescriptor.HIGH) == "high"
-    assert normalize_descriptor(PriceDescriptor.SPIKE) == "spike"
-
-
 async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test fetching a site with only a general channel."""
 
@@ -120,7 +104,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -152,7 +136,7 @@ async def test_fetch_no_general_site(
         await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
 
@@ -166,7 +150,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -217,7 +201,7 @@ async def test_fetch_general_and_controlled_load_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_AND_CONTROLLED_SITE_ID, next=48
+        GENERAL_AND_CONTROLLED_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -257,7 +241,7 @@ async def test_fetch_general_and_feed_in_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_AND_FEED_IN_SITE_ID, next=48
+        GENERAL_AND_FEED_IN_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
