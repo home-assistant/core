@@ -120,6 +120,16 @@ CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
+CONDITION_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    vol.Schema(
+        {
+            vol.Optional("condition"): icon_value_validator,
+        }
+    ),
+    slug_validator=translation_key_validator,
+)
+
+
 TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
     vol.Schema(
         {
@@ -166,6 +176,7 @@ def icon_schema(
 
     schema = vol.Schema(
         {
+            vol.Optional("conditions"): CONDITION_ICONS_SCHEMA,
             vol.Optional("config"): DATA_ENTRY_ICONS_SCHEMA,
             vol.Optional("issues"): vol.Schema(
                 {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}

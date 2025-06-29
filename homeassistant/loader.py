@@ -858,6 +858,11 @@ class Integration:
         return self.manifest.get("import_executor", True)
 
     @cached_property
+    def has_conditions(self) -> bool:
+        """Return if the integration has conditions."""
+        return "conditions.yaml" in self._top_level_files
+
+    @cached_property
     def has_services(self) -> bool:
         """Return if the integration has services."""
         return "services.yaml" in self._top_level_files
