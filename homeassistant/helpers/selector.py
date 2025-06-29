@@ -1043,9 +1043,18 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, float]:
+    def __call__(self, data: Any) -> dict[str, str]:
         """Validate the passed selection."""
-        media: dict[str, float] = self.DATA_SCHEMA(data)
+        schema = self.DATA_SCHEMA.schema.copy()
+
+        if "accept" in self.config:
+            # If accept is set, the entity_id field will not be present
+            schema.pop("entity_id", None)
+        else:
+            # If accept is not set, the entity_id field is required
+            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+
+        media: dict[str, str] = self.DATA_SCHEMA(data)
         return media
 
 
