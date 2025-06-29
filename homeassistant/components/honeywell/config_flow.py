@@ -115,9 +115,9 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
     async def is_valid(self, **kwargs) -> bool:
         """Check if login credentials are valid."""
         # Always create a new session for Honeywell to prevent cookie injection
-        # issues. The Honeywell client updates cookies without passing a
-        # response_url, which can cause cookies to leak into other integrations
-        # when using the shared session. See issue #147395.
+        # issues. Even with response_url handling in aiosomecomfort 0.0.33+,
+        # cookies can still leak into other integrations when using the shared
+        # session. See issue #147395.
         client = aiosomecomfort.AIOSomeComfort(
             kwargs[CONF_USERNAME],
             kwargs[CONF_PASSWORD],

@@ -49,9 +49,9 @@ async def async_setup_entry(
     password = config_entry.data[CONF_PASSWORD]
 
     # Always create a new session for Honeywell to prevent cookie injection
-    # issues. The Honeywell client updates cookies without passing a
-    # response_url, which can cause cookies to leak into other integrations
-    # when using the shared session. See issue #147395.
+    # issues. Even with response_url handling in aiosomecomfort 0.0.33+,
+    # cookies can still leak into other integrations when using the shared
+    # session. See issue #147395.
     session = async_create_clientsession(hass)
     client = aiosomecomfort.AIOSomeComfort(username, password, session=session)
     try:
