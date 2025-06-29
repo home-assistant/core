@@ -120,6 +120,16 @@ CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
+TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    vol.Schema(
+        {
+            vol.Optional("trigger"): icon_value_validator,
+        }
+    ),
+    slug_validator=translation_key_validator,
+)
+
+
 def icon_schema(
     core_integration: bool, integration_type: str, no_entity_platform: bool
 ) -> vol.Schema:
@@ -164,6 +174,7 @@ def icon_schema(
             vol.Optional("services"): CORE_SERVICE_ICONS_SCHEMA
             if core_integration
             else CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA,
+            vol.Optional("triggers"): TRIGGER_ICONS_SCHEMA,
         }
     )
 

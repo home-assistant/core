@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import mimetypes
 from pathlib import Path
+from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -12,7 +13,7 @@ from google.genai.types import File, FileState
 from requests.exceptions import Timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -26,17 +27,23 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CHAT_MODEL,
     CONF_PROMPT,
+    DEFAULT_TITLE,
+    DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
 
@@ -55,6 +62,8 @@ type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Generative AI Conversation."""
+
+    await async_migrate_integration(hass)
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
@@ -184,7 +193,7 @@ async def async_setup_entry(
 
         client = await hass.async_add_executor_job(_init_client)
         await client.aio.models.get(
-            model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
     except (APIError, Timeout) as err:
@@ -209,3 +218,85 @@ async def async_unload_entry(
         return False
 
     return True
+
+
+async def async_migrate_integration(hass: HomeAssistant) -> None:
+    """Migrate integration entry structure."""
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not any(entry.version == 1 for entry in entries):
+        return
+
+    api_keys_entries: dict[str, ConfigEntry] = {}
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entry in entries:
+        use_existing = False
+        subentry = ConfigSubentry(
+            data=entry.options,
+            subentry_type="conversation",
+            title=entry.title,
+            unique_id=None,
+        )
+        if entry.data[CONF_API_KEY] not in api_keys_entries:
+            use_existing = True
+            api_keys_entries[entry.data[CONF_API_KEY]] = entry
+
+        parent_entry = api_keys_entries[entry.data[CONF_API_KEY]]
+
+        hass.config_entries.async_add_subentry(parent_entry, subentry)
+        if use_existing:
+            hass.config_entries.async_add_subentry(
+                parent_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
+            )
+        conversation_entity = entity_registry.async_get_entity_id(
+            "conversation",
+            DOMAIN,
+            entry.entry_id,
+        )
+        if conversation_entity is not None:
+            entity_registry.async_update_entity(
+                conversation_entity,
+                config_entry_id=parent_entry.entry_id,
+                config_subentry_id=subentry.subentry_id,
+                new_unique_id=subentry.subentry_id,
+            )
+
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.entry_id)}
+        )
+        if device is not None:
+            device_registry.async_update_device(
+                device.id,
+                new_identifiers={(DOMAIN, subentry.subentry_id)},
+                add_config_subentry_id=subentry.subentry_id,
+                add_config_entry_id=parent_entry.entry_id,
+            )
+            if parent_entry.entry_id != entry.entry_id:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
+
+        if not use_existing:
+            await hass.config_entries.async_remove(entry.entry_id)
+        else:
+            hass.config_entries.async_update_entry(
+                entry,
+                title=DEFAULT_TITLE,
+                options={},
+                version=2,
+            )
