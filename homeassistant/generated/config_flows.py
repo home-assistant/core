@@ -495,6 +495,7 @@ FLOWS = {
         "progettihwsw",
         "prosegur",
         "proximity",
+        "proxmoxve",
         "prusalink",
         "ps4",
         "pterodactyl",
