@@ -243,7 +243,17 @@
           "frost": "Frost",
           "all_work_areas_completed": "All work areas completed",
           "external": "External",
-          "not_applicable": "Not applicable"
+          "not_applicable": "Not applicable",
+          "google_assistant": "Google Assistant",
+          "amazon_alexa": "Amazon Alexa",
+          "home_assistant": "Home Assistant",
+          "ifttt": "IFTTT",
+          "ifttt_wildlife": "IFTTT wildlife protection",
+          "ifttt_frost_and_rain_guard": "IFTTT frost and rain guard",
+          "ifttt_calendar_connection": "IFTTT calendar connection",
+          "gardena_smart_system": "Gardena Smart System",
+          "ifttt_applets": "IFTTT applets",
+          "developer_portal": "Developer Portal"
         }
       },
       "total_charging_time": {
