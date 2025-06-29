@@ -1,5 +1,7 @@
 """Test the Elk-M1 Control config flow."""
 
+from __future__ import annotations
+
 from dataclasses import asdict
 from unittest.mock import patch
 
@@ -7,8 +9,16 @@ from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.elkm1.config_flow import InvalidAuth as ElkInvalidAuth
 from homeassistant.components.elkm1.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PREFIX,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -34,6 +44,21 @@ ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
 ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
 
 MODULE = "homeassistant.components.elkm1"
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Create a mock config entry for testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: f"elks://{MOCK_IP_ADDRESS}",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_PREFIX: "",
+        },
+        unique_id=MOCK_MAC,
+    )
 
 
 async def test_discovery_ignored_entry(hass: HomeAssistant) -> None:
@@ -1741,3 +1766,232 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         "username": "test-username",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_nonsecure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow switching to non-secure protocol."""
+    # Add mock_config_entry to hass before updating
+    mock_config_entry.add_to_hass(hass)
+
+    # Update mock_config_entry.data using async_update_entry
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            "auto_configure": True,
+            "host": "elk://localhost",
+            "username": "",
+            "password": "",
+            "prefix": "",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Mock the validation function and prevent reload
+    with (
+        patch(
+            "homeassistant.components.elkm1.config_flow.validate_input",
+            return_value={
+                "title": "Test Title",
+                CONF_HOST: "elk://1.2.3.4",
+                CONF_PREFIX: "",
+            },
+        ),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "non-secure",
+                "address": "1.2.3.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Verify the config entry was updated with the new data
+    assert dict(mock_config_entry.data) == {
+        "auto_configure": True,
+        "host": "elk://1.2.3.4",
+        "username": "",
+        "password": "",
+        "prefix": "",
+    }
+
+    # Verify the setup was called during reload
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_reconfigure_tls(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow switching to TLS 1.2 protocol."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Mock the validation function and prevent reload
+    with (
+        patch(
+            "homeassistant.components.elkm1.config_flow.validate_input",
+            return_value={
+                "title": "Test Title",
+                CONF_HOST: "elksv1_2://127.0.0.1",
+                CONF_PREFIX: "",
+            },
+        ),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Verify config entry was updated
+    assert mock_config_entry.data[CONF_HOST] == "elksv1_2://127.0.0.1"
+    assert mock_config_entry.data[CONF_USERNAME] == "test-username"
+    assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
+
+    # Verify the setup was called during reload
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_reconfigure_device_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow fails when device is offline."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mocked_elk = mock_elk(invalid_auth=None, sync_complete=None)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+            0,
+        ),
+        patch(
+            "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
+            0,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_reconfigure_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with invalid authentication."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    # Mock validation to simulate authentication failure
+    with patch(
+        "homeassistant.components.elkm1.config_flow.validate_input",
+        side_effect=ElkInvalidAuth,  # Use the correct exception
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "wronguser",
+                CONF_PASSWORD: "wrongpass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"password": "invalid_auth"}
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_reconfigure_unknown_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with an unexpected exception."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    # Mock validation to simulate an unexpected exception
+    with patch(
+        "homeassistant.components.elkm1.config_flow.validate_input",
+        side_effect=ValueError("Unexpected error"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "test",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
