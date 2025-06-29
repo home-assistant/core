@@ -59,12 +59,17 @@
         }
       }
     },
+    "select": {
+      "heating_circuit": {
+        "name": "Heating circuit",
+        "state": {
+          "no_heating_circuit": "No heating circuit"
+        }
+      }
+    },
     "switch": {
       "child_lock": {
         "name": "Child lock"
-      },
-      "heating_circuit": {
-        "name": "Heating circuit"
       }
     },
     "sensor": {
