@@ -9,17 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import (
-    async_create_clientsession,
-    async_get_clientsession,
-)
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import (
-    _LOGGER,
-    CONF_COOL_AWAY_TEMPERATURE,
-    CONF_HEAT_AWAY_TEMPERATURE,
-    DOMAIN,
-)
+from .const import _LOGGER, CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE
 
 UPDATE_LOOP_SLEEP_TIME = 5
 PLATFORMS = [Platform.CLIMATE, Platform.HUMIDIFIER, Platform.SENSOR, Platform.SWITCH]
@@ -56,11 +48,11 @@ async def async_setup_entry(
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
-        session = async_create_clientsession(hass)
-    else:
-        session = async_get_clientsession(hass)
-
+    # Always create a new session for Honeywell to prevent cookie injection
+    # issues. Even with response_url handling in aiosomecomfort 0.0.33+,
+    # cookies can still leak into other integrations when using the shared
+    # session. See issue #147395.
+    session = async_create_clientsession(hass)
     client = aiosomecomfort.AIOSomeComfort(username, password, session=session)
     try:
         await client.login()
