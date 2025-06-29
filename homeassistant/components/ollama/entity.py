@@ -1,4 +1,4 @@
-"""The conversation platform for the Ollama integration."""
+"""Base entity for the Ollama integration."""
 
 from __future__ import annotations
 
