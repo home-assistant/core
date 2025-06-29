@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COODINATOR, DOMAIN, LOGGER, PLATFORM_SCHEMA  # noqa: F401
 from .coordinator import QuantumGatewayCoordinator
@@ -27,13 +28,17 @@ async def async_get_scanner(
     return QuantumGatewayDeviceScanner(hass, coordinator)
 
 
-class QuantumGatewayDeviceScanner(DeviceScanner):
+class QuantumGatewayDeviceScanner(  # type: ignore[misc]
+    CoordinatorEntity[QuantumGatewayCoordinator],
+    DeviceScanner,
+):  # pylint: disable=hass-enforce-class-module
     """Class which queries a Quantum Gateway."""
 
     def __init__(
         self, hass: HomeAssistant, coordinator: QuantumGatewayCoordinator
     ) -> None:
         """Initialize the scanner."""
+        super().__init__(coordinator)
 
         LOGGER.debug("Initializing")
 
