@@ -2234,7 +2234,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.paperless_ngx
-pypaperless==4.1.0
+pypaperless==4.1.1
 
 # homeassistant.components.elv
 pypca==0.0.7
@@ -3062,7 +3062,7 @@ vsure==2.6.7
 vtjp==0.2.1
 
 # homeassistant.components.vulcan
-vulcan-api==2.3.2
+vulcan-api==2.4.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
