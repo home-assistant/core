@@ -29,9 +29,6 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
-    CURRENCY_DOLLAR,
-    CURRENCY_EURO,
-    CURRENCY_POUND,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -1633,50 +1630,33 @@ async def async_setup_entry(
         if energy_site.info_coordinator.data.get("tariff_content_v2_seasons"):
             entities.append(TeslemetryTariffSensor(energy_site, "tariff_content_v2"))
         # Sell Tariff Sensor
-        if energy_site.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons"):
-            entities.append(TeslemetryTariffSensor(energy_site, "tariff_content_v2_sell_tariff"))
+        if energy_site.info_coordinator.data.get(
+            "tariff_content_v2_sell_tariff_seasons"
+        ):
+            entities.append(
+                TeslemetryTariffSensor(energy_site, "tariff_content_v2_sell_tariff")
+            )
 
     async_add_entities(entities)
-
-
-# --- Tariff Sensor ---
-# Duplicated from calendar.py and modified for sensor
-@dataclass(kw_only=True)
-class TariffPeriod:
-    """A single tariff period."""
-
-    name: str
-    price: float
-    from_hour: int = 0
-    from_minute: int = 0
-    to_hour: int = 0
-    to_minute: int = 0
 
 
 class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
     """Energy Site Tariff Price Sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
-    # _attr_device_class = SensorDeviceClass.MONETARY # Not available in all versions
 
     seasons: dict[str, dict[str, Any]] = field(default_factory=dict)
     charges: dict[str, dict[str, Any]] = field(default_factory=dict)
-    key_base: str
+    key: str
 
     def __init__(
         self,
         data: TeslemetryEnergyData,
-        key_base: str,
+        key: str,
     ) -> None:
         """Initialize the tariff price sensor."""
-        self.key_base = key_base
-        # Use a modified key for uniqueness if needed, e.g., f"{key_base}_price"
-        # For now, assuming translation key in strings.json will differentiate display name
-        super().__init__(data, key_base)
-        # Attempt to get currency from coordinator data or HA config
-        # This is a placeholder, actual currency determination might be more complex
-        self.currency_symbol = self.coordinator.data.get(f"{self.key_base}_currency", hass.config.currency)
-
+        self.key = key
+        super().__init__(data, key)
 
     @property
     def native_value(self) -> float | None:
@@ -1687,11 +1667,7 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        # Fetch currency symbol dynamically if possible
-        # For now, using a placeholder or a common one like USD
-        # currency = self.coordinator.data.get(f"{self.key_base}_currency", "USD")
-        return f"{self.currency_symbol}/kWh" if self.currency_symbol else None
-
+        return f"{self.hass.config.currency}/kWh" if self.hass.config.currency else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -1699,16 +1675,12 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
         price_info = self._get_current_tariff_info()
         if not price_info:
             return None
-        attributes = {
+        return {
             "season": price_info["season_name"],
             "period_name": price_info["period_name"],
             "start_time": price_info["start_time"],
             "end_time": price_info["end_time"],
         }
-        # Add currency if available and not part of native_unit_of_measurement
-        # if "currency" in self.coordinator.data.get(self.key_base, {}):
-        #     attributes["currency"] = self.coordinator.data[self.key_base]["currency"]
-        return attributes
 
     def _get_current_tariff_info(self) -> dict[str, Any] | None:
         """Calculate the current tariff price and details."""
@@ -1729,13 +1701,23 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
                 if not (from_day <= day_of_week <= to_day):
                     continue
 
-                from_hour, from_minute = period_def.get("fromHour", 0) % 24, period_def.get("fromMinute", 0) % 60
-                to_hour, to_minute = period_def.get("toHour", 0) % 24, period_def.get("toMinute", 0) % 60
+                from_hour, from_minute = (
+                    period_def.get("fromHour", 0) % 24,
+                    period_def.get("fromMinute", 0) % 60,
+                )
+                to_hour, to_minute = (
+                    period_def.get("toHour", 0) % 24,
+                    period_def.get("toMinute", 0) % 60,
+                )
 
-                start_time = now.replace(hour=from_hour, minute=from_minute, second=0, microsecond=0)
-                end_time = now.replace(hour=to_hour, minute=to_minute, second=0, microsecond=0)
+                start_time = now.replace(
+                    hour=from_hour, minute=from_minute, second=0, microsecond=0
+                )
+                end_time = now.replace(
+                    hour=to_hour, minute=to_minute, second=0, microsecond=0
+                )
 
-                if end_time <= start_time: # Period crosses midnight
+                if end_time <= start_time:  # Period crosses midnight
                     potential_end_time = end_time + timedelta(days=1)
                     if start_time <= now < potential_end_time:
                         end_time = potential_end_time
@@ -1750,7 +1732,7 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
                 return {
                     "price": price,
                     "season_name": current_season_name.capitalize(),
-                    "period_name": period_name_key.capitalize().replace('_', ' '),
+                    "period_name": period_name_key.capitalize().replace("_", " "),
                     "start_time": start_time,
                     "end_time": end_time,
                 }
@@ -1767,13 +1749,33 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
                 from_month, from_day = season_data["fromMonth"], season_data["fromDay"]
                 to_month, to_day = season_data["toMonth"], season_data["toDay"]
                 start_year, end_year = year, year
-                if from_month > to_month or (from_month == to_month and from_day > to_day):
-                    if local_date.month > from_month or (local_date.month == from_month and local_date.day >= from_day):
+                if from_month > to_month or (
+                    from_month == to_month and from_day > to_day
+                ):
+                    if local_date.month > from_month or (
+                        local_date.month == from_month and local_date.day >= from_day
+                    ):
                         end_year = year + 1
                     else:
                         start_year = year - 1
-                season_start = local_date.replace(year=start_year, month=from_month, day=from_day, hour=0, minute=0, second=0, microsecond=0)
-                season_end = local_date.replace(year=end_year, month=to_month, day=to_day, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+                season_start = local_date.replace(
+                    year=start_year,
+                    month=from_month,
+                    day=from_day,
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                )
+                season_end = local_date.replace(
+                    year=end_year,
+                    month=to_month,
+                    day=to_day,
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                ) + timedelta(days=1)
                 if season_start <= local_date < season_end:
                     return season_name
             except (KeyError, ValueError):
@@ -1792,10 +1794,8 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the Sensor attributes from coordinator data."""
-        self.seasons = self.coordinator.data.get(f"{self.key_base}_seasons", {})
-        self.charges = self.coordinator.data.get(f"{self.key_base}_energy_charges", {})
-        self.currency_symbol = self.coordinator.data.get(f"{self.key_base}_currency", self.hass.config.currency)
-
+        self.seasons = self.coordinator.data.get(f"{self.key}_seasons", {})
+        self.charges = self.coordinator.data.get(f"{self.key}_energy_charges", {})
 
         # native_value is determined by property, but availability depends on data
         current_tariff_info = self._get_current_tariff_info()
@@ -1805,8 +1805,6 @@ class TeslemetryTariffSensor(TeslemetryEnergyInfoEntity, SensorEntity):
         else:
             self._attr_available = False
         # extra_state_attributes is also handled by a property
-
-# --- End Tariff Sensor ---
 
 
 class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor):

@@ -427,10 +427,10 @@
     },
     "sensor": {
       "tariff_content_v2": {
-        "name": "Buy tariff price"
+        "name": "Buy tariff"
       },
       "tariff_content_v2_sell_tariff": {
-        "name": "Sell tariff price"
+        "name": "Sell tariff"
       },
       "battery_power": {
         "name": "Battery power"
