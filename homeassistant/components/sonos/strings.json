@@ -54,6 +54,9 @@
       "audio_input_format": {
         "name": "Audio input format"
       },
+      "next_alarm": {
+        "name": "Next alarm"
+      },
       "power_source": {
         "name": "Power source",
         "state": {

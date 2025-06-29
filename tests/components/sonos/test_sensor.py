@@ -2,15 +2,18 @@
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import PropertyMock, patch
 
+from freezegun import freeze_time
 import pytest
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.components.sonos.const import ATTR_SCHEDULED_TODAY
 from homeassistant.components.sonos.sensor import (
     HA_POWER_SOURCE_BATTERY,
     HA_POWER_SOURCE_CHARGING_BASE,
@@ -29,9 +32,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent, SonosMockService
 
 from tests.common import async_fire_time_changed
+
+LOGGER = logging.getLogger(__name__)
 
 
 async def test_entity_registry_unsupported(
@@ -268,6 +273,64 @@ async def test_audio_input_sensor(
     unpolled_mock.assert_not_called()
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
     assert audio_input_state.state == "No input"
+
+
+async def test_next_alarm_sensor(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    alarm_clock: SonosMockService,
+    alarm_clock_disabled: SonosMockService,
+    alarm_event: SonosMockEvent,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test next_alarm sensor."""
+
+    assert "sensor.zone_a_next_alarm" in entity_registry.entities
+
+    next_alarm_sensor = entity_registry.entities["sensor.zone_a_next_alarm"]
+    next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
+
+    test_time_before_alarm_14 = dt_util.as_local(
+        dt_util.parse_datetime("2025-06-27 06:00:00")
+    )
+    with freeze_time(test_time_before_alarm_14):
+        async_fire_time_changed(hass, test_time_before_alarm_14)
+        await hass.async_block_till_done()
+
+        next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
+        assert dt_util.as_local(
+            dt_util.parse_datetime(next_alarm_sensor_state.state)
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-27 07:00:00"))
+        assert next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
+
+    test_time_after_alarm_14 = dt_util.as_local(
+        dt_util.parse_datetime("2025-06-27 07:01:00")
+    )
+    with freeze_time(test_time_after_alarm_14):
+        async_fire_time_changed(hass, test_time_after_alarm_14)
+        await hass.async_block_till_done()
+
+        next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
+        assert dt_util.as_local(
+            dt_util.parse_datetime(next_alarm_sensor_state.state)
+        ) == dt_util.as_local(dt_util.parse_datetime("2025-06-28 07:00:00"))
+        assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
+
+    # # Update the entity by disabling the alarm.
+    # alarm_update = copy(alarm_clock_disabled.ListAlarms.return_value)
+    # alarm_clock.ListAlarms.return_value = alarm_update
+    # alarm_event.variables["alarm_list_version"] = f"{soco.uid}:1000"
+    # alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
+    #     "alarm_list_version"
+    # )
+    # alarm_clock.subscribe.return_value.callback(event=alarm_event)
+    # await hass.async_block_till_done(wait_background_tasks=True)
+
+    # next_alarm_sensor_state = hass.states.get(next_alarm_sensor.entity_id)
+
+    # assert next_alarm_sensor_state.state == STATE_UNAVAILABLE
+    # assert not next_alarm_sensor_state.attributes.get(ATTR_SCHEDULED_TODAY)
 
 
 async def test_microphone_binary_sensor(
