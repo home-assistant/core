@@ -1931,6 +1931,7 @@ async def test_download_support_package(
                 "virtualenv": False,
                 "python_version": "3.13.1",
                 "docker": False,
+                "container_arch": None,
                 "arch": "x86_64",
                 "timezone": "US/Pacific",
                 "os_name": "Linux",
