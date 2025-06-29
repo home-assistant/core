@@ -1896,7 +1896,7 @@ pyrail==0.4.1
 pyrainbird==6.0.1
 
 # homeassistant.components.rejseplanen
-pyrejseplan==0.1.22
+pyrejseplan==0.1.23
 
 # homeassistant.components.risco
 pyrisco==0.6.7
