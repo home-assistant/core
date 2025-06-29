@@ -661,7 +661,6 @@ async def test_restore(
     hass: HomeAssistant,
 ) -> None:
     """Test state and unit are restored on boot."""
-    hass.set_state(CoreState.not_running)
     restore_state = "10.00"
     restore_unit = "kWh/h"
     mock_restore_cache_with_extra_data(
