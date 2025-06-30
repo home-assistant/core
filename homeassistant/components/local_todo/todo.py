@@ -99,6 +99,8 @@ def _convert_item(item: TodoItem) -> Todo:
         todo.summary = item.summary
     if item.status:
         todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
+    if item.completed:
+        todo.completed = item.completed
     todo.due = item.due
     if todo.due and not isinstance(todo.due, datetime.datetime):
         todo.due += datetime.timedelta(days=1)
@@ -154,6 +156,7 @@ class LocalTodoListEntity(TodoListEntity):
                     ),
                     due=due,
                     description=item.description,
+                    completed=item.completed,
                 )
             )
         self._attr_todo_items = todo_items
