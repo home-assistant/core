@@ -46,7 +46,7 @@ async def test_setup_api_v6(
     hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
 ) -> None:
     """Tests the API object is created with the expected parameters."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     config_entry_data = {**config_entry_data, CONF_STATISTICS_ONLY: True}
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config_entry_data)
     entry.add_to_hass(hass)
@@ -288,7 +288,7 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
 async def test_disable_service_call(hass: HomeAssistant) -> None:
     """Test disable service call with no Pi-hole named."""
 
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     with _patch_init_hole(mocked_hole):
         entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
         entry.add_to_hass(hass)
@@ -319,7 +319,7 @@ async def test_unload(hass: HomeAssistant) -> None:
         data={**CONFIG_DATA_DEFAULTS, CONF_HOST: "pi.hole"},
     )
     entry.add_to_hass(hass)
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     with _patch_init_hole(mocked_hole):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -332,7 +332,7 @@ async def test_unload(hass: HomeAssistant) -> None:
 
 async def test_remove_obsolete(hass: HomeAssistant) -> None:
     """Test removing obsolete config entry parameters."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
     )
