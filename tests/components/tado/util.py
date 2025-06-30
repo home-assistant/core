@@ -20,8 +20,10 @@ async def async_init_integration(
     me_fixture = "me.json"
     weather_fixture = "weather.json"
     home_fixture = "home.json"
+    home_heating_circuits_fixture = "heating_circuits.json"
     home_state_fixture = "home_state.json"
     zones_fixture = "zones.json"
+    zone_control_fixture = "zone_control.json"
     zone_states_fixture = "zone_states.json"
 
     # WR1 Device
@@ -69,6 +71,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/",
             text=await async_load_fixture(hass, home_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/heatingCircuits",
+            text=await async_load_fixture(hass, home_heating_circuits_fixture, DOMAIN),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/weather",
@@ -177,6 +183,30 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/1/state",
             text=await async_load_fixture(hass, zone_1_state_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/1/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/2/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/3/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/4/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/5/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/6/control",
+            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
         )
         m.post(
             "https://login.tado.com/oauth2/token",
