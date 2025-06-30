@@ -92,6 +92,7 @@ async def test_diagnostics_with_bluetooth(
                 "scanning": True,
                 "source": "AA:BB:CC:DD:EE:FC",
                 "start_time": ANY,
+                "raw_advertisement_data": {},
                 "time_since_last_device_detection": {},
                 "type": "ESPHomeScanner",
             },
@@ -123,9 +124,12 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "area": {"area_id": 0, "name": ""},
+                "areas": [],
                 "bluetooth_mac_address": "**REDACTED**",
                 "bluetooth_proxy_feature_flags": 63,
                 "compilation_time": "",
+                "devices": [],
                 "esphome_version": "1.0.0",
                 "friendly_name": "Test",
                 "has_deep_sleep": False,

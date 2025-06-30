@@ -52,7 +52,7 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
     _property: Property[bool]
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
         return self._property.get()
 
