@@ -153,8 +153,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
 
         if not self.firmware_install_task:
-            # We 100% need to install new firmware only if the wrong firmware is
-            # currently installed
+            # Installing new firmware is only truly required if the wrong type is
+            # installed: upgrading to the latest release of the current firmware type
+            # isn't strictly necessary for functionality.
             firmware_install_required = self._probed_firmware_info is None or (
                 self._probed_firmware_info.firmware_type
                 != expected_installed_firmware_type
