@@ -29,6 +29,7 @@ from homeassistant.const import (
     UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -56,6 +57,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureIntervalConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -87,6 +89,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ReactiveEnergyConverter,
         SpeedConverter,
         TemperatureConverter,
+        TemperatureIntervalConverter,
         UnitlessRatioConverter,
         EnergyDistanceConverter,
         VolumeConverter,
@@ -152,6 +155,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
         UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    TemperatureIntervalConverter: (
+        UnitOfTemperatureInterval.CELSIUS,
+        UnitOfTemperatureInterval.FAHRENHEIT,
         0.555556,
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
@@ -741,6 +749,34 @@ _CONVERTED_VALUE: dict[
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
+    TemperatureIntervalConverter: [
+        (
+            100,
+            UnitOfTemperatureInterval.CELSIUS,
+            180,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperatureInterval.CELSIUS, 100, UnitOfTemperatureInterval.KELVIN),
+        (
+            100,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureInterval.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureInterval.KELVIN,
+        ),
+        (100, UnitOfTemperatureInterval.KELVIN, 100, UnitOfTemperatureInterval.CELSIUS),
+        (
+            100,
+            UnitOfTemperatureInterval.KELVIN,
+            180,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+        ),
+    ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
         (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
@@ -1081,6 +1117,18 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        TemperatureIntervalConverter.converter_factory_allow_none(
+            UnitOfTemperatureInterval.CELSIUS, UnitOfTemperatureInterval.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureIntervalConverter.converter_factory_allow_none(
+            UnitOfTemperatureInterval.CELSIUS, UnitOfTemperatureInterval.CELSIUS
+        )(None)
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1130,3 +1178,42 @@ def test_temperature_convert_with_interval(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
+    [
+        (
+            100,
+            UnitOfTemperatureInterval.CELSIUS,
+            180,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperatureInterval.CELSIUS, 100, UnitOfTemperatureInterval.KELVIN),
+        (
+            100,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureInterval.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureInterval.KELVIN,
+        ),
+        (100, UnitOfTemperatureInterval.KELVIN, 100, UnitOfTemperatureInterval.CELSIUS),
+        (
+            100,
+            UnitOfTemperatureInterval.KELVIN,
+            180,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+        ),
+    ],
+)
+def test_temperature_interval_convert(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    expected = pytest.approx(expected)
+    assert TemperatureIntervalConverter.convert(value, from_unit, to_unit) == expected

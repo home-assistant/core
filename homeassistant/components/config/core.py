@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
+from homeassistant.components.number import async_update_number_units
 from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
@@ -83,6 +84,7 @@ async def websocket_update_config(
     try:
         await hass.config.async_update(**data)
         if update_units:
+            async_update_number_units(hass)
             async_update_suggested_units(hass)
         connection.send_result(msg["id"])
     except ValueError as err:
