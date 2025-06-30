@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
@@ -44,6 +47,23 @@ class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescrip
     """Describe Matter Number Input entities."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterRangeNumberEntityDescription(
+    NumberEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Number Input entities with min and max values."""
+
+    ha_to_native_value: Callable[[Any], Any]
+
+    # attribute descriptors to get the min and max value
+    min_attribute: type[ClusterAttributeDescriptor]
+    max_attribute: type[ClusterAttributeDescriptor]
+
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    command: Callable[[int], ClusterCommand]
+
+
 class MatterNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -65,6 +85,42 @@ class MatterNumber(MatterEntity, NumberEntity):
         if value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterRangeNumber(MatterEntity, NumberEntity):
+    """Representation of a Matter Attribute as a Number entity with min and max values."""
+
+    entity_description: MatterRangeNumberEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        send_value = self.entity_description.ha_to_native_value(value)
+        # custom command defined to set the new value
+        await self.send_device_command(
+            self.entity_description.command(send_value),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
+        self._attr_native_min_value = (
+            cast(
+                int,
+                self.get_matter_attribute_value(self.entity_description.min_attribute),
+            )
+            / 100
+        )
+        self._attr_native_max_value = (
+            cast(
+                int,
+                self.get_matter_attribute_value(self.entity_description.max_attribute),
+            )
+            / 100
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -212,5 +268,28 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.DoorLock.Attributes.AutoRelockTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="TemperatureControlTemperatureSetpoint",
+            name=None,
+            translation_key="temperature_setpoint",
+            command=lambda value: clusters.TemperatureControl.Commands.SetTemperature(
+                targetTemperature=value
+            ),
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            measurement_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_native_value=lambda x: round(x * 100),
+            min_attribute=clusters.TemperatureControl.Attributes.MinTemperature,
+            max_attribute=clusters.TemperatureControl.Attributes.MaxTemperature,
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
+            clusters.TemperatureControl.Attributes.MinTemperature,
+            clusters.TemperatureControl.Attributes.MaxTemperature,
+        ),
     ),
 ]

@@ -11,47 +11,63 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "prompt": "Instructions",
-          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-          "recommended": "Recommended model settings"
+  "config_subentries": {
+    "conversation": {
+      "initiate_flow": {
+        "user": "Add conversation agent",
+        "reconfigure": "Reconfigure conversation agent"
+      },
+      "entry_type": "Conversation agent",
+
+      "step": {
+        "init": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "Instructions",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "recommended": "Recommended model settings"
+          },
+          "data_description": {
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          }
         },
-        "data_description": {
-          "prompt": "Instruct how the LLM should respond. This can be a template."
+        "advanced": {
+          "title": "Advanced settings",
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "Maximum tokens to return in response",
+            "temperature": "Temperature",
+            "top_p": "Top P"
+          }
+        },
+        "model": {
+          "title": "Model-specific options",
+          "data": {
+            "reasoning_effort": "Reasoning effort",
+            "web_search": "Enable web search",
+            "search_context_size": "Search context size",
+            "user_location": "Include home location"
+          },
+          "data_description": {
+            "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "web_search": "Allow the model to search the web for the latest information before generating a response",
+            "search_context_size": "High level guidance for the amount of context window space to use for the search",
+            "user_location": "Refine search results based on geography"
+          }
         }
       },
-      "advanced": {
-        "title": "Advanced settings",
-        "data": {
-          "chat_model": "[%key:common::generic::model%]",
-          "max_tokens": "Maximum tokens to return in response",
-          "temperature": "Temperature",
-          "top_p": "Top P"
-        }
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
-      "model": {
-        "title": "Model-specific options",
-        "data": {
-          "reasoning_effort": "Reasoning effort",
-          "web_search": "Enable web search",
-          "search_context_size": "Search context size",
-          "user_location": "Include home location"
-        },
-        "data_description": {
-          "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
-          "web_search": "Allow the model to search the web for the latest information before generating a response",
-          "search_context_size": "High level guidance for the amount of context window space to use for the search",
-          "user_location": "Refine search results based on geography"
-        }
+      "error": {
+        "model_not_supported": "This model is not supported, please select a different model"
       }
-    },
-    "error": {
-      "model_not_supported": "This model is not supported, please select a different model"
     }
   },
   "selector": {

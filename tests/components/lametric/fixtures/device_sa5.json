@@ -57,6 +57,9 @@
   "name": "spyfly's LaMetric SKY",
   "os_version": "3.0.13",
   "serial_number": "SA52100000123TBNC",
+  "update_available": {
+    "version": "3.2.1"
+  },
   "wifi": {
     "active": true,
     "mac": "AA:BB:CC:DD:EE:FF",
