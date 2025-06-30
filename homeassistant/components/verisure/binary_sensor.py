@@ -120,8 +120,7 @@ class VerisureEthernetStatus(
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        broadband_data = self.coordinator.data.get("broadband")
-        if not broadband_data:
+        if not (broadband_data := self.coordinator.data.get("broadband")):
             return False
 
         # Handle case where broadband_data is a list
