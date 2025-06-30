@@ -16,6 +16,7 @@ from homeassistant.components.pi_hole.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -40,7 +41,7 @@ from tests.common import MockConfigEntry
     ("config_entry_data", "expected_api_token"),
     [(CONFIG_DATA_DEFAULTS, API_KEY), (CONFIG_ENTRY_WITHOUT_API_KEY, "")],
 )
-async def test_setup_api(
+async def test_setup_api_v6(
     hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
 ) -> None:
     """Tests the API object is created with the expected parameters."""
@@ -51,19 +52,47 @@ async def test_setup_api(
     with _patch_init_hole(mocked_hole) as patched_init_hole:
         assert await hass.config_entries.async_setup(entry.entry_id)
         patched_init_hole.assert_called_once_with(
-            config_entry_data[CONF_HOST],
-            ANY,
-            api_token=expected_api_token,
+            host=config_entry_data[CONF_HOST],
+            session=ANY,
+            password=expected_api_token,
             location=config_entry_data[CONF_LOCATION],
-            tls=config_entry_data[CONF_SSL],
+            protocol="http",
+            version=6,
         )
 
 
-async def test_setup_with_defaults(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("config_entry_data", "expected_api_token"),
+    [({**CONFIG_DATA_DEFAULTS}, API_KEY)],
+)
+async def test_setup_api_v5(
+    hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
+) -> None:
+    """Tests the API object is created with the expected parameters."""
+    mocked_hole = _create_mocked_hole(api_version=5)
+    config_entry_data = {**config_entry_data}
+    config_entry_data[CONF_API_VERSION] = 5
+    config_entry_data = {**config_entry_data, CONF_STATISTICS_ONLY: True}
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config_entry_data)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole) as patched_init_hole:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        patched_init_hole.assert_called_once_with(
+            host=config_entry_data[CONF_HOST],
+            session=ANY,
+            api_token=expected_api_token,
+            location=config_entry_data[CONF_LOCATION],
+            tls=config_entry_data[CONF_SSL],
+            version=5,
+        )
+
+
+async def test_setup_with_defaults_v5(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=5)
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+        domain=pi_hole.DOMAIN,
+        data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5, CONF_STATISTICS_ONLY: True},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -110,9 +139,87 @@ async def test_setup_with_defaults(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
+async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
+    """Tests component setup with default config."""
+    mocked_hole = _create_mocked_hole(
+        api_version=6, has_data=True, incorrect_app_password=False
+    )
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+    )
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    state = hass.states.get("sensor.pi_hole_ads_blocked")
+    assert state is not None
+    assert state.name == "Pi-Hole Ads blocked"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_ads_percentage_blocked")
+    assert state.name == "Pi-Hole Ads percentage blocked"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_queries_cached")
+    assert state.name == "Pi-Hole DNS queries cached"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_queries_forwarded")
+    assert state.name == "Pi-Hole DNS queries forwarded"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_queries")
+    assert state.name == "Pi-Hole DNS queries"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_unique_clients")
+    assert state.name == "Pi-Hole DNS unique clients"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_unique_domains")
+    assert state.name == "Pi-Hole DNS unique domains"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_domains_blocked")
+    assert state.name == "Pi-Hole Domains blocked"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_seen_clients")
+    assert state.name == "Pi-Hole Seen clients"
+    assert state.state == "0"
+
+    state = hass.states.get("binary_sensor.pi_hole_status")
+    assert state.name == "Pi-Hole Status"
+    assert state.state == "off"
+
+
+async def test_setup_without_api_version(hass: HomeAssistant) -> None:
+    """Tests component setup without API version."""
+
+    mocked_hole = _create_mocked_hole(api_version=6)
+    config = {**CONFIG_DATA_DEFAULTS}
+    config.pop(CONF_API_VERSION)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_API_VERSION] == 6
+
+    mocked_hole = _create_mocked_hole(api_version=5)
+    config = {**CONFIG_DATA_DEFAULTS}
+    config.pop(CONF_API_VERSION)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_API_VERSION] == 5
+
+
 async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
     )
@@ -122,16 +229,15 @@ async def test_setup_name_config(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.custom_ads_blocked_today").name
-        == "Custom Ads blocked today"
-    )
+    assert hass.states.get("sensor.custom_ads_blocked").name == "Custom Ads blocked"
 
 
 async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA, CONF_API_VERSION: 5}
+    )
     entry.add_to_hass(hass)
 
     with _patch_init_hole(mocked_hole):
@@ -145,7 +251,7 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-        mocked_hole.enable.assert_called_once()
+        mocked_hole.instances[-1].enable.assert_called_once()
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -153,17 +259,17 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-        mocked_hole.disable.assert_called_once_with(True)
+        mocked_hole.instances[-1].disable.assert_called_once_with(True)
 
         # Failed calls
-        type(mocked_hole).enable = AsyncMock(side_effect=HoleError("Error1"))
+        mocked_hole.instances[-1].enable = AsyncMock(side_effect=HoleError("Error1"))
         await hass.services.async_call(
             switch.DOMAIN,
             switch.SERVICE_TURN_ON,
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-        type(mocked_hole).disable = AsyncMock(side_effect=HoleError("Error2"))
+        mocked_hole.instances[-1].disable = AsyncMock(side_effect=HoleError("Error2"))
         await hass.services.async_call(
             switch.DOMAIN,
             switch.SERVICE_TURN_OFF,
@@ -171,6 +277,7 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
             blocking=True,
         )
         errors = [x for x in caplog.records if x.levelno == logging.ERROR]
+
         assert errors[-2].message == "Unable to enable Pi-hole: Error1"
         assert errors[-1].message == "Unable to disable Pi-hole: Error2"
 
@@ -199,7 +306,7 @@ async def test_disable_service_call(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        mocked_hole.disable.assert_called_with(1)
+        mocked_hole.instances[-1].disable.assert_called_with(1)
 
 
 async def test_unload(hass: HomeAssistant) -> None:
