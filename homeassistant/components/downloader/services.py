@@ -8,15 +8,21 @@ import re
 import threading
 
 import requests
+from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
     _LOGGER,
+    ATTR_AUTH_PASSWORD,
+    ATTR_AUTH_TYPE,
+    ATTR_AUTH_USERNAME,
     ATTR_FILENAME,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
@@ -35,24 +41,43 @@ def download_file(service: ServiceCall) -> None:
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
 
+    url: str = service.data[ATTR_URL]
+    auth_type: str | None = service.data.get(ATTR_AUTH_TYPE)
+    username: str | None = service.data.get(ATTR_AUTH_USERNAME)
+    password: str | None = service.data.get(ATTR_AUTH_PASSWORD)
+    subdir = service.data.get(ATTR_SUBDIR)
+    target_filename = service.data.get(ATTR_FILENAME)
+    overwrite = service.data.get(ATTR_OVERWRITE)
+
+    auth: AuthBase | None = None
+    if auth_type:
+        if not username or not password:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="missing_credentials"
+            )
+        if auth_type == HTTP_BASIC_AUTHENTICATION:
+            auth = HTTPBasicAuth(username, password)
+        elif auth_type == HTTP_DIGEST_AUTHENTICATION:
+            auth = HTTPDigestAuth(username, password)
+
+    if subdir:
+        # Check the subdir
+        try:
+            raise_if_invalid_path(subdir)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_subdir"
+            ) from err
+
     def do_download() -> None:
         """Download the file."""
+
+        filename = target_filename
+
         try:
-            url = service.data[ATTR_URL]
-
-            subdir = service.data.get(ATTR_SUBDIR)
-
-            filename = service.data.get(ATTR_FILENAME)
-
-            overwrite = service.data.get(ATTR_OVERWRITE)
-
-            if subdir:
-                # Check the path
-                raise_if_invalid_path(subdir)
-
             final_path = None
 
-            req = requests.get(url, stream=True, timeout=10)
+            req = requests.get(url=url, stream=True, timeout=10, auth=auth)
 
             if req.status_code != HTTPStatus.OK:
                 _LOGGER.warning(
@@ -150,9 +175,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         download_file,
         schema=vol.Schema(
             {
+                vol.Optional(ATTR_AUTH_TYPE): vol.In(
+                    [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+                ),
                 vol.Optional(ATTR_FILENAME): cv.string,
+                vol.Optional(ATTR_AUTH_PASSWORD): cv.string,
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
+                vol.Optional(ATTR_AUTH_USERNAME): cv.string,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
             }
         ),
