@@ -21,57 +21,97 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="ads_percentage_today",
         translation_key="ads_percentage_today",
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
-        key="dns_queries_today", translation_key="dns_queries_today"
+        key="dns_queries_today",
+        translation_key="dns_queries_today",
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
+        suggested_display_precision=0,
     ),
-    SensorEntityDescription(key="queries_cached", translation_key="queries_cached"),
     SensorEntityDescription(
-        key="queries_forwarded", translation_key="queries_forwarded"
+        key="queries_cached",
+        translation_key="queries_cached",
+        suggested_display_precision=0,
     ),
-    SensorEntityDescription(key="unique_clients", translation_key="unique_clients"),
-    SensorEntityDescription(key="unique_domains", translation_key="unique_domains"),
+    SensorEntityDescription(
+        key="queries_forwarded",
+        translation_key="queries_forwarded",
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="unique_clients",
+        translation_key="unique_clients",
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="unique_domains",
+        translation_key="unique_domains",
+        suggested_display_precision=0,
+    ),
 )
 
 SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="queries.blocked",
         translation_key="ads_blocked",
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="queries.percent_blocked",
         translation_key="percent_ads_blocked",
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="clients.total",
         translation_key="clients_ever_seen",
+        suggested_display_precision=0,
     ),
-    SensorEntityDescription(key="queries.total", translation_key="dns_queries"),
+    SensorEntityDescription(
+        key="queries.total",
+        translation_key="dns_queries",
+        suggested_display_precision=0,
+    ),
     SensorEntityDescription(
         key="gravity.domains_being_blocked",
         translation_key="domains_being_blocked",
+        suggested_display_precision=0,
     ),
-    SensorEntityDescription(key="queries.cached", translation_key="queries_cached"),
     SensorEntityDescription(
-        key="queries.forwarded", translation_key="queries_forwarded"
+        key="queries.cached",
+        translation_key="queries_cached",
+        suggested_display_precision=0,
     ),
-    SensorEntityDescription(key="clients.active", translation_key="unique_clients"),
     SensorEntityDescription(
-        key="queries.unique_domains", translation_key="unique_domains"
+        key="queries.forwarded",
+        translation_key="queries_forwarded",
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="clients.active",
+        translation_key="unique_clients",
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="queries.unique_domains",
+        translation_key="unique_domains",
+        suggested_display_precision=0,
     ),
 )
 
@@ -122,10 +162,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        try:
-            return round(get_nested(self.api.data, self.entity_description.key), 2)
-        except TypeError:
-            return get_nested(self.api.data, self.entity_description.key)
+        return get_nested(self.api.data, self.entity_description.key)
 
 
 def get_nested(data: Mapping[str, Any], key: str) -> float | int:
