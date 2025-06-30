@@ -90,7 +90,11 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="ElevenLabs",
                     data=user_input,
-                    options={CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: list(voices)[0]},
+                    options={
+                        CONF_MODEL: DEFAULT_MODEL,
+                        CONF_VOICE: list(voices)[0],
+                        CONF_STT_AUTO_LANGUAGE: False,
+                    },
                 )
         return self.async_show_form(
             step_id="user", data_schema=USER_STEP_SCHEMA, errors=errors
@@ -115,6 +119,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         self.models: dict[str, str] = {}
         self.model: str | None = None
         self.voice: str | None = None
+        self.auto_language: bool | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -128,6 +133,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         if user_input is not None:
             self.model = user_input[CONF_MODEL]
             self.voice = user_input[CONF_VOICE]
+            self.auto_language = user_input.get(CONF_STT_AUTO_LANGUAGE, False)
             configure_voice = user_input.pop(CONF_CONFIGURE_VOICE)
             if configure_voice:
                 return await self.async_step_voice_settings()
@@ -187,6 +193,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         if user_input is not None:
             user_input[CONF_MODEL] = self.model
             user_input[CONF_VOICE] = self.voice
+            user_input[CONF_STT_AUTO_LANGUAGE] = self.auto_language
             return self.async_create_entry(
                 title="ElevenLabs",
                 data=user_input,

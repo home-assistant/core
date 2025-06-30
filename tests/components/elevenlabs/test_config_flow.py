@@ -9,6 +9,7 @@ from homeassistant.components.elevenlabs.const import (
     CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
+    CONF_STT_AUTO_LANGUAGE,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
@@ -50,7 +51,11 @@ async def test_user_step(
     assert result["data"] == {
         "api_key": "api_key",
     }
-    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+    assert result["options"] == {
+        CONF_MODEL: DEFAULT_MODEL,
+        CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: False,
+    }
 
     mock_setup_entry.assert_called_once()
 
@@ -94,7 +99,11 @@ async def test_invalid_api_key(
     assert result["data"] == {
         "api_key": "api_key",
     }
-    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+    assert result["options"] == {
+        CONF_MODEL: DEFAULT_MODEL,
+        CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: False,
+    }
 
     mock_setup_entry.assert_called_once()
 
@@ -138,7 +147,11 @@ async def test_voices_error(
     assert result["data"] == {
         "api_key": "api_key",
     }
-    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+    assert result["options"] == {
+        CONF_MODEL: DEFAULT_MODEL,
+        CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: False,
+    }
 
     mock_setup_entry.assert_called_once()
 
@@ -182,7 +195,11 @@ async def test_models_error(
     assert result["data"] == {
         "api_key": "api_key",
     }
-    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+    assert result["options"] == {
+        CONF_MODEL: DEFAULT_MODEL,
+        CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: False,
+    }
 
     mock_setup_entry.assert_called_once()
 
@@ -205,13 +222,18 @@ async def test_options_flow_init(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_MODEL: "model1", CONF_VOICE: "voice1"},
+        user_input={
+            CONF_MODEL: "model1",
+            CONF_VOICE: "voice1",
+            CONF_STT_AUTO_LANGUAGE: True,
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_entry.options == {
         CONF_MODEL: "model1",
         CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: True,
     }
 
     mock_setup_entry.assert_called_once()
@@ -237,6 +259,7 @@ async def test_options_flow_voice_settings_default(
         user_input={
             CONF_MODEL: "model1",
             CONF_VOICE: "voice1",
+            CONF_STT_AUTO_LANGUAGE: False,
             CONF_CONFIGURE_VOICE: True,
         },
     )
@@ -252,6 +275,7 @@ async def test_options_flow_voice_settings_default(
     assert mock_entry.options == {
         CONF_MODEL: "model1",
         CONF_VOICE: "voice1",
+        CONF_STT_AUTO_LANGUAGE: False,
         CONF_SIMILARITY: DEFAULT_SIMILARITY,
         CONF_STABILITY: DEFAULT_STABILITY,
         CONF_STYLE: DEFAULT_STYLE,
