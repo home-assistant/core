@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
@@ -29,25 +29,9 @@ async def async_setup_entry(
     """Set up the devolo account from a config entry."""
     mydevolo = configure_mydevolo(entry.data)
 
-    credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
-
-    if not credentials_valid:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        )
-
-    if await hass.async_add_executor_job(mydevolo.maintenance):
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="maintenance",
-        )
-
-    gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
-
-    if entry.unique_id and GATEWAY_SERIAL_PATTERN.match(entry.unique_id):
-        uuid = await hass.async_add_executor_job(mydevolo.uuid)
-        hass.config_entries.async_update_entry(entry, unique_id=uuid)
+    gateway_ids = await hass.async_add_executor_job(
+        check_mydevolo_and_get_gateway_ids, mydevolo
+    )
 
     def shutdown(event: Event) -> None:
         for gateway in entry.runtime_data:
@@ -115,3 +99,19 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
     return mydevolo
+
+
+def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
+    """Check if the credentials are valid and return user's gateway IDs as long as mydevolo is not in maintenance mode."""
+    if not mydevolo.credentials_valid():
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        )
+    if mydevolo.maintenance():
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="maintenance",
+        )
+
+    return mydevolo.get_gateway_ids()
