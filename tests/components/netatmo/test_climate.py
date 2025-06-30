@@ -1,6 +1,9 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
+from functools import partial
+import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -44,9 +47,15 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
+from .common import (
+    AiohttpClientMockResponse,
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_entity(
@@ -77,10 +86,56 @@ async def test_schedule_update_webhook_event(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
 
-    # Save initial state
-    initial_state = hass.states.get(climate_entity_livingroom)
+    room_climate_entity = "climate.livingroom"
+
+    # Check initial state
+    assert hass.states.get(room_climate_entity).attributes["temperature"] == 12
+
+    # Modify the API request mock to return a modified schedule the 2nd time it is invoked
+    async def custom_post_request(
+        hass: HomeAssistant, *args: Any, **kwargs: Any
+    ) -> AiohttpClientMockResponse:
+        """Return fake data and simulate a schedule update."""
+        if "endpoint" not in kwargs:
+            return "{}"
+
+        endpoint = kwargs["endpoint"].split("/")[-1]
+
+        if endpoint == "homesdata":
+            json_data = json.loads(
+                await async_load_fixture(hass, "homesdata.json", DOMAIN)
+            )
+            # adapt the schedule
+            schedules = json_data.get("body").get("homes")[0].get("schedules")
+            for schedule in schedules:
+                if schedule.get("selected"):
+                    schedule["name"] = "Updated schedule"
+
+            return AiohttpClientMockResponse(
+                method="POST",
+                url=endpoint,
+                json=json_data,
+            )
+        if endpoint == "homestatus":
+            json_data = json.loads(
+                await async_load_fixture(
+                    hass, "homestatus_91763b24c43d3e344f424e8b.json", DOMAIN
+                )
+            )
+            # reflect the changes in the schedule
+            rooms = json_data.get("body").get("home").get("rooms")
+            for room in rooms:
+                if room.get("id") == "2746182631":
+                    room["therm_setpoint_temperature"] = 25
+
+            return AiohttpClientMockResponse(
+                method="POST", url=endpoint, json=json_data
+            )
+
+        return await fake_post_request(hass, *args, **kwargs)
+
+    netatmo_auth.async_post_api_request.side_effect = partial(custom_post_request, hass)
 
     # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
     response = {
@@ -90,8 +145,13 @@ async def test_schedule_update_webhook_event(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    # State should be unchanged
-    assert hass.states.get(climate_entity_livingroom) == initial_state
+    # Check that the schedule name has been updated
+    assert (
+        hass.states.get(room_climate_entity).attributes["selected_schedule"]
+        == "Updated schedule"
+    )
+    # Temperature should be updated according to home status response
+    assert hass.states.get(room_climate_entity).attributes["temperature"] == 25
 
 
 async def test_webhook_event_handling_thermostats(
