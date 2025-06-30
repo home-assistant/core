@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -58,6 +58,7 @@ from .const import (
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    SECTION_ADVANCED_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 
@@ -81,8 +82,15 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 autocomplete="current-password",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -98,8 +106,15 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 translation_key="platforms",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -197,6 +212,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         import_data[CONF_TRUSTED_NETWORKS] = ",".join(
             import_data[CONF_TRUSTED_NETWORKS]
         )
+        import_data[SECTION_ADVANCED_SETTINGS] = {
+            CONF_PROXY_URL: import_data.get(CONF_PROXY_URL)
+        }
         try:
             config_flow_result: ConfigFlowResult = await self.async_step_user(
                 import_data
@@ -293,10 +311,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
 
+        description_placeholders: dict[str, str] = {
+            "botfather_username": "@BotFather",
+            "botfather_url": "https://t.me/botfather",
+        }
         if not user_input:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders=description_placeholders,
             )
 
         # prevent duplicates
@@ -305,7 +328,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
@@ -328,7 +350,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input["advanced_settings"].get(CONF_PROXY_URL),
                 },
                 options={
                     # this value may come from yaml import
@@ -390,12 +412,20 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config flow for webhook Telegram bot."""
 
         if not user_input:
+            default_trusted_networks = ",".join(
+                [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
+            )
+
             if self.source == SOURCE_RECONFIGURE:
+                suggested_values = dict(self._get_reconfigure_entry().data)
+                if CONF_TRUSTED_NETWORKS not in self._get_reconfigure_entry().data:
+                    suggested_values[CONF_TRUSTED_NETWORKS] = default_trusted_networks
+
                 return self.async_show_form(
                     step_id="webhooks",
                     data_schema=self.add_suggested_values_to_schema(
                         STEP_WEBHOOKS_DATA_SCHEMA,
-                        self._get_reconfigure_entry().data,
+                        suggested_values,
                     ),
                 )
 
@@ -404,9 +434,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_WEBHOOKS_DATA_SCHEMA,
                     {
-                        CONF_TRUSTED_NETWORKS: ",".join(
-                            [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
-                        ),
+                        CONF_TRUSTED_NETWORKS: default_trusted_networks,
                     },
                 ),
             )
@@ -440,7 +468,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
-                CONF_PROXY_URL: self._step_user_data.get(CONF_PROXY_URL),
+                CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
+                    CONF_PROXY_URL
+                ),
                 CONF_URL: user_input.get(CONF_URL),
                 CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
@@ -455,12 +485,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str],
     ) -> None:
         # validate URL
-        if CONF_URL in user_input and not user_input[CONF_URL].startswith("https"):
-            errors["base"] = "invalid_url"
-            description_placeholders[ERROR_FIELD] = "URL"
-            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
-            return
-        if CONF_URL not in user_input:
+        url: str | None = user_input.get(CONF_URL)
+        if url is None:
             try:
                 get_url(self.hass, require_ssl=True, allow_internal=False)
             except NoURLAvailableError:
@@ -470,6 +496,11 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
+        elif not url.startswith("https"):
+            errors["base"] = "invalid_url"
+            description_placeholders[ERROR_FIELD] = "URL"
+            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
+            return
 
         # validate trusted networks
         csv_trusted_networks: list[str] = []
@@ -505,9 +536,19 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    self._get_reconfigure_entry().data,
+                    {
+                        **self._get_reconfigure_entry().data,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
+                                CONF_PROXY_URL
+                            ),
+                        },
+                    },
                 ),
             )
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -523,7 +564,12 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    user_input,
+                    {
+                        **user_input,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                        },
+                    },
                 ),
                 errors=errors,
                 description_placeholders=description_placeholders,
