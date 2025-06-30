@@ -10,7 +10,13 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import authorisation_response, http_404_error, http_429_error, setup_integration
+from . import (
+    authorisation_response,
+    http_404_error,
+    http_429_error,
+    setup_integration,
+    test_response,
+)
 from .const import MOCK_SWITCH_ENTITY_ID
 
 from tests.common import MockConfigEntry
@@ -39,6 +45,10 @@ async def test_wallbox_switch_class(
         patch(
             "homeassistant.components.wallbox.Wallbox.resumeChargingSession",
             new=Mock(return_value={CHARGER_STATUS_ID_KEY: 193}),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(return_value=test_response),
         ),
     ):
         await hass.services.async_call(
