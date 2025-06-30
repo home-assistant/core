@@ -14,24 +14,32 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
+from .const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ICON,
+    CONF_FROM,
+    CONF_ROUTES,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    MIN_TIME_BETWEEN_UPDATES_SECONDS,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ROUTES = "routes"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_VIA = "via"
-CONF_TIME = "time"
-
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=MIN_TIME_BETWEEN_UPDATES_SECONDS)
 
 ROUTE_SCHEMA = vol.Schema(
     {
@@ -92,6 +100,38 @@ def setup_platform(
     add_entities(sensors, True)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up NS sensors from a config entry."""
+    _LOGGER.debug("Setting up NS sensors for entry: %s", entry.entry_id)
+    api_key = entry.data[CONF_API_KEY]
+    nsapi = ns_api.NSAPI(api_key)
+    routes = entry.data.get("routes", [])
+    _LOGGER.debug("async_setup_entry: routes from entry.data: %s", routes)
+    _LOGGER.debug("async_setup_entry: entry.options: %s", entry.options)
+    # If options has routes, prefer those (options override data)
+    if entry.options.get("routes") is not None:
+        routes = entry.options["routes"]
+        _LOGGER.debug("async_setup_entry: using routes from entry.options: %s", routes)
+    else:
+        _LOGGER.debug("async_setup_entry: using routes from entry.data: %s", routes)
+    sensors = [
+        NSDepartureSensor(
+            nsapi,
+            route.get(CONF_NAME),
+            route.get(CONF_FROM),
+            route.get(CONF_TO),
+            route.get(CONF_VIA),
+            route.get(CONF_TIME),
+        )
+        for route in routes
+    ]
+    async_add_entities(sensors, True)
+
+
 def valid_stations(stations, given_stations):
     """Verify the existence of the given station codes."""
     for station in given_stations:
@@ -106,11 +146,19 @@ def valid_stations(stations, given_stations):
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
-    _attr_attribution = "Data provided by NS"
-    _attr_icon = "mdi:train"
+    _attr_attribution = ATTR_ATTRIBUTION
+    _attr_icon = ATTR_ICON
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(self, nsapi, name, departure, heading, via, time) -> None:
         """Initialize the sensor."""
+        _LOGGER.debug(
+            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            name,
+            departure,
+            heading,
+            via,
+            time,
+        )
         self._nsapi = nsapi
         self._name = name
         self._departure = departure
@@ -123,23 +171,24 @@ class NSDepartureSensor(SensorEntity):
         self._next_trip = None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, object] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
 
+        # Always initialize route
+        route = [self._first_trip.departure]
         if self._first_trip.trip_parts:
-            route = [self._first_trip.departure]
             route.extend(k.destination for k in self._first_trip.trip_parts)
 
         # Static attributes
@@ -204,12 +253,17 @@ class NSDepartureSensor(SensorEntity):
             attributes["arrival_delay"] = True
 
         # Next attributes
-        if self._next_trip.departure_time_actual is not None:
-            attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
-        elif self._next_trip.departure_time_planned is not None:
-            attributes["next"] = self._next_trip.departure_time_planned.strftime(
-                "%H:%M"
-            )
+        if self._next_trip is not None:
+            if self._next_trip.departure_time_actual is not None:
+                attributes["next"] = self._next_trip.departure_time_actual.strftime(
+                    "%H:%M"
+                )
+            elif self._next_trip.departure_time_planned is not None:
+                attributes["next"] = self._next_trip.departure_time_planned.strftime(
+                    "%H:%M"
+                )
+            else:
+                attributes["next"] = None
         else:
             attributes["next"] = None
 
@@ -217,7 +271,26 @@ class NSDepartureSensor(SensorEntity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Get the trip information."""
+        """Fetch new state data for the sensor."""
+        _LOGGER.debug(
+            "Updating NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            self._name,
+            self._departure,
+            self._heading,
+            self._via,
+            self._time,
+        )
+
+        # Ensure self._time is a datetime.time object if set as a string (e.g., from config flow)
+        if isinstance(self._time, str):
+            if self._time.strip() == "":
+                self._time = None
+            else:
+                try:
+                    self._time = datetime.strptime(self._time, "%H:%M").time()
+                except ValueError:
+                    _LOGGER.error("Invalid time format for self._time: %s", self._time)
+                    self._time = None
 
         # If looking for a specific trip time, update around that trip time only.
         if self._time and (
@@ -258,7 +331,7 @@ class NSDepartureSensor(SensorEntity):
                 filtered_times = [
                     (i, time)
                     for i, time in enumerate(all_times)
-                    if time > dt_util.now()
+                    if time is not None and time > dt_util.now()
                 ]
 
                 if len(filtered_times) > 0:
@@ -270,7 +343,7 @@ class NSDepartureSensor(SensorEntity):
                     filtered_times = [
                         (i, time)
                         for i, time in enumerate(all_times)
-                        if time > sorted_times[0][1]
+                        if time is not None and time > sorted_times[0][1]
                     ]
 
                     if len(filtered_times) > 0:
@@ -283,6 +356,15 @@ class NSDepartureSensor(SensorEntity):
                     self._first_trip = None
                     self._state = None
 
+        except KeyError as error:
+            _LOGGER.error(
+                "NS API response missing expected key: %s. This may indicate a malformed or error response. Check your API key and route configuration. Exception: %s",
+                error,
+                error,
+            )
+            self._trips = None
+            self._first_trip = None
+            self._state = None
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
