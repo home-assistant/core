@@ -167,7 +167,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Optional(
+                    vol.Required(
                         CONF_STT_AUTO_LANGUAGE,
                         default=self.config_entry.options.get(
                             CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
