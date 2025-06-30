@@ -76,7 +76,6 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
-        self._model = model
         self._auto_detect_language = auto_detect_language
 
         # Entity attributes
