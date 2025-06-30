@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+import yaml
 
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -175,3 +176,37 @@ async def test_full_user_flow_multiple_routes(hass: HomeAssistant) -> None:
         # from homeassistant.components.nederlandse_spoorwegen.sensor import NSDepartureSensor
         # sensors = [e for e in hass.data[DOMAIN][entry.entry_id]["entities"] if isinstance(e, NSDepartureSensor)] if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN] else []
         # assert sensors or True  # At least the flow and patching worked
+
+
+@pytest.mark.asyncio
+async def test_options_flow_edit_routes(hass: HomeAssistant) -> None:
+    """Test editing routes via the options flow."""
+    # Use the config flow to create the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=ROUTE
+    )
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    entry = entries[0]
+    # Start options flow
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    # Edit routes (add a new one)
+    routes = [ROUTE, {"name": "Test2", "from": "UTR", "to": "AMS"}]
+    routes_yaml = yaml.dump(routes, sort_keys=False, allow_unicode=True)
+    result = await hass.config_entries.options.async_configure(
+        result.get("flow_id"), user_input={"routes_yaml": routes_yaml}
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("data", {}).get("routes") == routes
+    # Ensure config entry options are updated
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.options.get("routes") == routes

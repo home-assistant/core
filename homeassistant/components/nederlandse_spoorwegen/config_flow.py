@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+import yaml
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
@@ -89,16 +90,37 @@ class NSOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry) -> None:
         """Initialize the options flow handler."""
-        self.config_entry = config_entry
+        super().__init__()
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Handle the options flow initialization step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        routes = (
+            self._config_entry.options.get("routes")
+            or self._config_entry.data.get("routes")
+            or []
+        )
+        # Present routes as YAML for editing simplicity
+        routes_yaml = yaml.dump(routes, sort_keys=False, allow_unicode=True)
 
-        # Example: let user edit routes (not implemented in detail here)
-        data_schema = vol.Schema({})
+        def _invalid_type():
+            raise TypeError("Routes must be a list")
+
+        if user_input is not None:
+            try:
+                new_routes = yaml.safe_load(user_input["routes_yaml"]) or []
+                if not isinstance(new_routes, list):
+                    _invalid_type()
+                return self.async_create_entry(title="", data={"routes": new_routes})
+            except (yaml.YAMLError, TypeError):
+                errors["routes_yaml"] = "invalid_yaml"
+        data_schema = vol.Schema(
+            {vol.Required("routes_yaml", default=routes_yaml): str}
+        )
         return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors
+            step_id="init",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={"routes": routes_yaml},
         )

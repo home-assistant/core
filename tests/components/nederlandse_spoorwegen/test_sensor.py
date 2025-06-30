@@ -458,8 +458,8 @@ def test_update_early_return(monkeypatch: pytest.MonkeyPatch, mock_nsapi) -> Non
     )
     sensor.update()
     assert sensor._state is None
-    assert sensor._trips is None
     assert sensor._first_trip is None
+    assert sensor._next_trip is None
 
 
 def test_update_logs_error(

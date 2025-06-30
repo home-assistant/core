@@ -109,9 +109,18 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up NS sensors for entry: %s", entry.entry_id)
     api_key = entry.data[CONF_API_KEY]
     nsapi = ns_api.NSAPI(api_key)
-    # For now, just add a single sensor as a proof of concept
-    # In a full implementation, routes would be handled via options
-    sensors = [NSDepartureSensor(nsapi, "NS Sensor", "AMS", "UTR", None, None)]
+    routes = entry.data.get("routes", [])
+    sensors = [
+        NSDepartureSensor(
+            nsapi,
+            route.get(CONF_NAME),
+            route.get(CONF_FROM),
+            route.get(CONF_TO),
+            route.get(CONF_VIA),
+            route.get(CONF_TIME),
+        )
+        for route in routes
+    ]
     async_add_entities(sensors, True)
 
 
@@ -315,7 +324,7 @@ class NSDepartureSensor(SensorEntity):
                     filtered_times = [
                         (i, time)
                         for i, time in enumerate(all_times)
-                        if time > sorted_times[0][1]
+                        if time is not None and time > sorted_times[0][1]
                     ]
 
                     if len(filtered_times) > 0:
