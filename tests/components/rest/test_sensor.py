@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import ssl
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -174,11 +174,12 @@ async def test_setup_ssl_ciphers(
     hass: HomeAssistant,
     ssl_cipher_list: str,
     ssl_cipher_list_expected: SSLCipherList,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup with minimum configuration."""
     with patch(
         "homeassistant.components.rest.data.async_get_clientsession",
-        return_value=MagicMock(request=AsyncMock(return_value=MagicMock())),
+        return_value=aioclient_mock,
     ) as aiohttp_client:
         assert await async_setup_component(
             hass,

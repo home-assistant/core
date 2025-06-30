@@ -38,7 +38,7 @@ from anthropic.types import (
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -72,8 +72,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = AnthropicConversationEntity(config_entry)
-    async_add_entities([agent])
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
+        async_add_entities(
+            [AnthropicConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 def _format_tool(
@@ -326,21 +332,22 @@ class AnthropicConversationEntity(
 ):
     """Anthropic conversation agent."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_supports_streaming = True
 
-    def __init__(self, entry: AnthropicConfigEntry) -> None:
+    def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self._attr_unique_id = entry.entry_id
+        self.subentry = subentry
+        self._attr_name = subentry.title
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Anthropic",
             model="Claude",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
@@ -363,17 +370,37 @@ class AnthropicConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-        options = self.entry.options
+        options = self.subentry.data
 
         try:
-            await chat_log.async_update_llm_data(
-                DOMAIN,
-                user_input,
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
                 options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        response_content = chat_log.content[-1]
+        if not isinstance(response_content, conversation.AssistantContent):
+            raise TypeError("Last message must be an assistant message")
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(response_content.content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.subentry.data
 
         tools: list[ToolParam] | None = None
         if chat_log.llm_api:
@@ -424,7 +451,7 @@ class AnthropicConversationEntity(
                     [
                         content
                         async for content in chat_log.async_add_delta_content_stream(
-                            user_input.agent_id,
+                            self.entity_id,
                             _transform_stream(chat_log, stream, messages),
                         )
                         if not isinstance(content, conversation.AssistantContent)
@@ -434,17 +461,6 @@ class AnthropicConversationEntity(
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        response_content = chat_log.content[-1]
-        if not isinstance(response_content, conversation.AssistantContent):
-            raise TypeError("Last message must be an assistant message")
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response_content.content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry

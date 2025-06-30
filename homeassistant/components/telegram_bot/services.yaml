@@ -27,6 +27,7 @@ send_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -774,3 +775,41 @@ delete_message:
       example: 12345
       selector:
         text:
+
+leave_chat:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+
+set_message_reaction:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message_id:
+      required: true
+      example: 54321
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    reaction:
+      required: true
+      example: 👍
+      selector:
+        text:
+    is_big:
+      required: false
+      selector:
+        boolean:
