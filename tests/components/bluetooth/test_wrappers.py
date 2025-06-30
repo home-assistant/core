@@ -92,6 +92,10 @@ class FakeBleakClient(BaseFakeBleakClient):
 
     async def connect(self, *args, **kwargs):
         """Connect."""
+
+    @property
+    def is_connected(self):
+        """Connected."""
         return True
 
 
@@ -100,6 +104,10 @@ class FakeBleakClientFailsToConnect(BaseFakeBleakClient):
 
     async def connect(self, *args, **kwargs):
         """Connect."""
+
+    @property
+    def is_connected(self):
+        """Not connected."""
         return False
 
 
@@ -109,6 +117,11 @@ class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
     async def connect(self, *args, **kwargs):
         """Connect."""
         raise ConnectionError("Test exception")
+
+    @property
+    def is_connected(self):
+        """Not connected."""
+        return False
 
 
 def _generate_ble_device_and_adv_data(
@@ -219,7 +232,8 @@ async def test_test_switch_adapters_when_out_of_slots(
     ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        assert await client.connect() is True
+        await client.connect()
+        assert client.is_connected is True
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 0
 
@@ -251,7 +265,8 @@ async def test_test_switch_adapters_when_out_of_slots(
     ):
         ble_device = hci0_device_advs["00:00:00:00:00:03"][0]
         client = bleak.BleakClient(ble_device)
-        assert await client.connect() is True
+        await client.connect()
+        assert client.is_connected is True
         assert release_slot_mock.call_count == 0
 
     cancel_hci0()
@@ -278,7 +293,8 @@ async def test_release_slot_on_connect_failure(
     ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        assert await client.connect() is False
+        await client.connect()
+        assert client.is_connected is False
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
 
@@ -335,13 +351,18 @@ async def test_passing_subclassed_str_as_address(
 
         async def connect(self, *args, **kwargs):
             """Connect."""
+
+        @property
+        def is_connected(self):
+            """Connected."""
             return True
 
     with patch(
         "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClient,
     ):
-        assert await client.connect() is True
+        await client.connect()
+        assert client.is_connected is True
 
     cancel_hci0()
     cancel_hci1()
