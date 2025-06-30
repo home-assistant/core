@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_get_statistics[heating-None]
+# name: test_get_statistics
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -11,19 +11,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics[heating-costs]
-  list([
-    dict({
-      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 62,
-    }),
-    dict({
-      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 21,
-    }),
-  ])
-# ---
-# name: test_get_statistics[heating-energy]
+# name: test_get_statistics.1
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -35,7 +23,19 @@
     }),
   ])
 # ---
-# name: test_get_statistics[warmwater-None]
+# name: test_get_statistics.2
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 62,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 21,
+    }),
+  ])
+# ---
+# name: test_get_statistics.3
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -47,19 +47,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics[warmwater-costs]
-  list([
-    dict({
-      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 7,
-    }),
-    dict({
-      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 7,
-    }),
-  ])
-# ---
-# name: test_get_statistics[warmwater-energy]
+# name: test_get_statistics.4
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -71,7 +59,19 @@
     }),
   ])
 # ---
-# name: test_get_statistics[water-None]
+# name: test_get_statistics.5
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+  ])
+# ---
+# name: test_get_statistics.6
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -83,7 +83,19 @@
     }),
   ])
 # ---
-# name: test_get_statistics[water-costs]
+# name: test_get_statistics.7
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 6.8,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 5.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics.8
   list([
     dict({
       'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
@@ -95,19 +107,7 @@
     }),
   ])
 # ---
-# name: test_get_statistics[water-energy]
-  list([
-    dict({
-      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 6.8,
-    }),
-    dict({
-      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
-      'value': 5.0,
-    }),
-  ])
-# ---
-# name: test_get_values_by_type[heating]
+# name: test_get_values_by_type
   dict({
     'additionalUnit': 'kWh',
     'additionalValue': '38,0',
@@ -116,13 +116,7 @@
     'value': '35',
   })
 # ---
-# name: test_get_values_by_type[heating].1
-  dict({
-    'type': 'heating',
-    'value': 21,
-  })
-# ---
-# name: test_get_values_by_type[warmwater]
+# name: test_get_values_by_type.1
   dict({
     'additionalUnit': 'kWh',
     'additionalValue': '57,0',
@@ -131,20 +125,26 @@
     'value': '1,0',
   })
 # ---
-# name: test_get_values_by_type[warmwater].1
-  dict({
-    'type': 'warmwater',
-    'value': 7,
-  })
-# ---
-# name: test_get_values_by_type[water]
+# name: test_get_values_by_type.2
   dict({
     'type': 'water',
     'unit': 'm³',
     'value': '5,0',
   })
 # ---
-# name: test_get_values_by_type[water].1
+# name: test_get_values_by_type.3
+  dict({
+    'type': 'heating',
+    'value': 21,
+  })
+# ---
+# name: test_get_values_by_type.4
+  dict({
+    'type': 'warmwater',
+    'value': 7,
+  })
+# ---
+# name: test_get_values_by_type.5
   dict({
     'type': 'water',
     'value': 3,
