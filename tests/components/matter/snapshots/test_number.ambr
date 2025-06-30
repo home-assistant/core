@@ -1846,6 +1846,64 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 288.0,
+      'min': 76.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature setpoint',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_setpoint',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Oven Temperature setpoint',
+      'max': 288.0,
+      'min': 76.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '76.0',
+  })
+# ---
 # name: test_numbers[pump][number.mock_pump_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1901,5 +1959,179 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 0.0,
+      'min': 0.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.laundrywasher_temperature_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature setpoint',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_setpoint',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Temperature setpoint',
+      'max': 0.0,
+      'min': 0.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.laundrywasher_temperature_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': -15.0,
+      'min': -18.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.refrigerator_temperature_setpoint_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature setpoint (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_setpoint',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Temperature setpoint (2)',
+      'max': -15.0,
+      'min': -18.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.refrigerator_temperature_setpoint_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-18.0',
+  })
+# ---
+# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 4.0,
+      'min': 1.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.refrigerator_temperature_setpoint_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature setpoint (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_setpoint',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-3-TemperatureControlTemperatureSetpoint-86-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Temperature setpoint (3)',
+      'max': 4.0,
+      'min': 1.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.refrigerator_temperature_setpoint_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
   })
 # ---

@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'account_id': '**REDACTED**',
+      'active_sessions': dict({
+        'PS5': dict({
+          'format': 'PS5',
+          'media_image_url': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+          'platform': 'PS5',
+          'status': 'online',
+          'title_id': 'PPSA07784_00',
+          'title_name': 'STAR WARS Jedi: Survivor™',
+        }),
+      }),
+      'available': True,
+      'presence': dict({
+        'basicPresence': dict({
+          'availability': 'availableToPlay',
+          'gameTitleInfoList': list([
+            dict({
+              'conceptIconUrl': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+              'format': 'PS5',
+              'launchPlatform': 'PS5',
+              'npTitleId': 'PPSA07784_00',
+              'titleName': 'STAR WARS Jedi: Survivor™',
+            }),
+          ]),
+          'primaryPlatformInfo': dict({
+            'onlineStatus': 'online',
+            'platform': 'PS5',
+          }),
+        }),
+      }),
+      'profile': dict({
+        'aboutMe': 'Never Gonna Give You Up',
+        'avatars': list([
+          dict({
+            'size': 'xl',
+            'url': '**REDACTED**',
+          }),
+        ]),
+        'isMe': True,
+        'isOfficiallyVerified': False,
+        'isPlus': True,
+        'languages': list([
+          'de-DE',
+        ]),
+        'onlineId': '**REDACTED**',
+        'personalDetail': dict({
+          'firstName': '**REDACTED**',
+          'lastName': '**REDACTED**',
+          'profilePictures': list([
+            dict({
+              'size': 'xl',
+              'url': '**REDACTED**',
+            }),
+          ]),
+        }),
+      }),
+      'registered_platforms': list([
+        'PS5',
+      ]),
+      'trophy_summary': dict({
+        'account_id': '**REDACTED**',
+        'earned_trophies': dict({
+          'bronze': 14450,
+          'gold': 11754,
+          'platinum': 1398,
+          'silver': 8722,
+        }),
+        'progress': 19,
+        'tier': 10,
+        'trophy_level': 1079,
+      }),
+      'username': '**REDACTED**',
+    }),
+  })
+# ---
