@@ -117,6 +117,7 @@ async def test_reconfigure_flow_broadcast(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_webhooks_config_entry.data[CONF_PLATFORM] == PLATFORM_BROADCAST
+    assert mock_webhooks_config_entry.data[CONF_PROXY_URL] == "https://test"
 
 
 async def test_reconfigure_flow_webhooks(
