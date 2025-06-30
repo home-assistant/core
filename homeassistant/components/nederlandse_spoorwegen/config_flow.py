@@ -165,7 +165,7 @@ class NSOptionsFlowHandler(OptionsFlow):
         ]
         if not routes:
             errors["base"] = "no_routes"
-            return await self.async_step_options_init()
+            return await self.async_step_init()
         data_schema = vol.Schema(
             {
                 vol.Required("route_idx"): vol.In(
@@ -195,6 +195,7 @@ class NSOptionsFlowHandler(OptionsFlow):
             step_id="select_route",
             data_schema=data_schema,
             errors=errors,
+            description_placeholders={"action": action or "manage"},
         )
 
     async def async_step_add_route(self, user_input=None) -> ConfigFlowResult:

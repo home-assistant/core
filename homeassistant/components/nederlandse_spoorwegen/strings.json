@@ -11,6 +11,36 @@
           "api_key": "Your NS API key."
         }
       },
+      "routes": {
+        "title": "Add Route",
+        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and should be in HH:MM format (e.g., 08:00). If omitted, the next available train will be shown.",
+        "data": {
+          "name": "Route name",
+          "from": "From station",
+          "to": "To station",
+          "via": "Via station (optional)",
+          "time": "Departure time (optional)"
+        },
+        "data_description": {
+          "name": "A name for this route.",
+          "from": "Departure station code (e.g., AMS)",
+          "to": "Arrival station code (e.g., UTR)",
+          "via": "Optional via station code (e.g., RTD)",
+          "time": "Optional departure time in HH:MM (24h)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to NS API. Check your API key.",
+      "invalid_auth": "Invalid API key.",
+      "unknown": "Unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured."
+    }
+  },
+  "options": {
+    "step": {
       "init": {
         "title": "Configure Routes",
         "description": "Configure the routes.",
@@ -20,7 +50,7 @@
       },
       "select_route": {
         "title": "Select Route",
-        "description": "Choose a route to edit or delete.",
+        "description": "Choose a route to {action}.",
         "data": {
           "route_idx": "Route"
         }
@@ -65,10 +95,10 @@
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
       "invalid_auth": "Invalid API key.",
-      "unknown": "Unknown error occurred."
-    },
-    "abort": {
-      "already_configured": "This API key is already configured."
+      "unknown": "Unknown error occurred.",
+      "no_routes": "No routes configured yet.",
+      "missing_fields": "Please fill in all required fields.",
+      "invalid_route_index": "Invalid route selected."
     }
   },
   "entity": {

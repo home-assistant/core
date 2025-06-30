@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 
+import homeassistant.components.nederlandse_spoorwegen.sensor as sensor_module
 from homeassistant.components.nederlandse_spoorwegen.sensor import (
     NSDepartureSensor,
     PlatformNotReady,
@@ -191,6 +192,21 @@ def test_sensor_next_trip_no_actual_time(
     attrs = sensor.extra_state_attributes
     assert attrs is not None
     assert attrs["next"] == mock_trip_delayed.departure_time_planned.strftime("%H:%M")
+
+
+def test_sensor_next_trip_no_planned_time(
+    mock_nsapi, mock_trip, mock_trip_delayed
+) -> None:
+    """Test next attribute when next trip has no planned or actual time."""
+    mock_trip_delayed.departure_time_actual = None
+    mock_trip_delayed.departure_time_planned = None
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
+    sensor._trips = [mock_trip, mock_trip_delayed]
+    sensor._first_trip = mock_trip
+    sensor._next_trip = mock_trip_delayed
+    attrs = sensor.extra_state_attributes
+    assert attrs is not None
+    assert attrs["next"] is None
 
 
 def test_sensor_extra_state_attributes_error_handling(mock_nsapi) -> None:
@@ -486,3 +502,96 @@ def test_extra_state_attributes_next_none(mock_nsapi, mock_trip) -> None:
     attrs = sensor.extra_state_attributes
     assert attrs is not None
     assert attrs["next"] is None
+
+
+def test_sensor_time_validation_string_conversion(mock_nsapi) -> None:
+    """Test sensor time string conversion and validation."""
+    # Test valid time string
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "08:30")
+    sensor.update()
+    assert isinstance(sensor._time, type(datetime(2023, 1, 1, 8, 30).time()))
+
+    # Test empty string time
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "")
+    sensor.update()
+    assert sensor._time is None
+
+    # Test only whitespace string time
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "   ")
+    sensor.update()
+    assert sensor._time is None
+
+
+def test_sensor_time_validation_invalid_format(
+    mock_nsapi, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test sensor time with invalid format logs error."""
+    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "invalid")
+    with caplog.at_level("ERROR"):
+        sensor.update()
+        assert "Invalid time format" in caplog.text
+        assert sensor._time is None
+
+
+def test_sensor_time_boundary_check(
+    monkeypatch: pytest.MonkeyPatch, mock_nsapi
+) -> None:
+    """Test sensor time boundary check for specific trip times."""
+    # Set time far in the future (more than 30 minutes)
+    future_time = (FIXED_NOW + timedelta(hours=2)).time()
+    sensor = NSDepartureSensor(
+        mock_nsapi, "Test Sensor", "AMS", "UTR", None, future_time
+    )
+
+    # Mock datetime.now to return FIXED_NOW
+    mock_datetime = MagicMock()
+    mock_datetime.now.return_value = FIXED_NOW
+    monkeypatch.setattr(
+        "homeassistant.components.nederlandse_spoorwegen.sensor.datetime", mock_datetime
+    )
+
+    sensor.update()
+    # Should exit early and not set state
+    assert sensor._state is None
+    assert sensor._trips is None
+    assert sensor._first_trip is None
+
+
+def test_sensor_trip_time_formatting(
+    monkeypatch: pytest.MonkeyPatch, mock_nsapi, mock_trip
+) -> None:
+    """Test sensor formats trip time correctly for API call."""
+
+    specific_time = datetime(2023, 1, 1, 8, 30).time()
+    sensor = NSDepartureSensor(
+        mock_nsapi, "Test Sensor", "AMS", "UTR", None, specific_time
+    )
+
+    # Mock datetime to avoid issues with time comparison
+
+    original_datetime = sensor_module.datetime
+
+    class MockDateTime:
+        @staticmethod
+        def now():
+            return datetime(
+                2023, 1, 1, 6, 0, 0
+            )  # 6 AM, so 8:30 is more than 30 min away
+
+        @staticmethod
+        def today():
+            return datetime(2023, 1, 1, 12, 0, 0)
+
+        @staticmethod
+        def strptime(date_string, format_str):
+            return original_datetime.strptime(date_string, format_str)
+
+    monkeypatch.setattr(sensor_module, "datetime", MockDateTime())
+
+    mock_nsapi.get_trips.return_value = [mock_trip]
+    mock_trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
+
+    sensor.update()
+
+    # Should exit early due to time boundary check
+    assert sensor._state is None
