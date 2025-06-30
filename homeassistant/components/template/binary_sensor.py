@@ -345,7 +345,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
-        for key in (CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
+        for key in (CONF_STATE, CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
@@ -390,7 +390,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
 
         raw = self._rendered.get(CONF_STATE)
         state: bool | None = None
-        if raw not in (None, "None", ""):
+        if raw is not None:
             state = template.result_as_boolean(raw)
 
         key = CONF_DELAY_ON if state else CONF_DELAY_OFF
