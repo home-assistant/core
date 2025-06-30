@@ -26,6 +26,7 @@
               'titleName': 'STAR WARS Jedi: Survivor™',
             }),
           ]),
+          'lastAvailableDate': '2025-06-30T01:42:15.391Z',
           'primaryPlatformInfo': dict({
             'onlineStatus': 'online',
             'platform': 'PS5',
