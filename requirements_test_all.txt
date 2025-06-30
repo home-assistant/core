@@ -363,7 +363,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.7.0
+aioshelly==13.7.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1864,7 +1864,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.8.9
+pypck==0.8.10
 
 # homeassistant.components.pglab
 pypglab==0.0.5
