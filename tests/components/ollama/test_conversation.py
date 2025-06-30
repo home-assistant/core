@@ -206,7 +206,7 @@ async def test_template_variables(
         ),
     ],
 )
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -293,7 +293,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
