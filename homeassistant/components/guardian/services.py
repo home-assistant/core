@@ -122,8 +122,9 @@ async def async_upgrade_firmware(call: ServiceCall, data: GuardianData) -> None:
     )
 
 
-def setup_services(hass: HomeAssistant) -> None:
-    """Register the Renault services."""
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register the guardian services."""
     for service_name, schema, method in (
         (
             SERVICE_NAME_PAIR_SENSOR,
