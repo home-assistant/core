@@ -121,8 +121,8 @@ async def test_migrate_error(
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            AccessDeniedError("Access Denied"),
-            "Cannot access or create backup path. Please check the path and permissions",
+            AccessDeniedError("/access_denied"),
+            "Access denied to /access_denied",
             ConfigEntryState.SETUP_ERROR,
         ),
     ],
