@@ -45,6 +45,11 @@
       "switch_output": {
         "name": "Relay Switch {index}"
       }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
     }
   }
 }
