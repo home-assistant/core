@@ -45,7 +45,10 @@ async def async_get_service(
 
 
 class LegacyProwlNotificationService(BaseNotificationService):
-    """Implement the notification service for Prowl."""
+    """Implement the notification service for Prowl.
+
+    This class is used for legacy configuration via configuration.yaml
+    """
 
     def __init__(self, hass, api_key):
         """Initialize the service."""
@@ -86,8 +89,11 @@ class LegacyProwlNotificationService(BaseNotificationService):
             _LOGGER.error("Timeout accessing Prowl at %s", url)
 
 
-class ProwlNotificationService(NotifyEntity):
-    """Implement the notification service for Prowl."""
+class ProwlNotificationEntity(NotifyEntity):
+    """Implement the notification service for Prowl.
+
+    This class is used for Prowl config entries.
+    """
 
     def __init__(self, hass: HomeAssistant, name: str, api_key: str) -> None:
         """Initialize the service."""

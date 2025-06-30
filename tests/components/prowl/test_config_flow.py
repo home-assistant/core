@@ -1,7 +1,5 @@
 """Test Prowl config flow."""
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.const import CONF_NAME
@@ -18,7 +16,6 @@ from .conftest import (
 )
 
 
-@pytest.mark.asyncio
 async def test_flow_user(hass: HomeAssistant, mock_pyprowl_success) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
@@ -36,7 +33,6 @@ async def test_flow_user(hass: HomeAssistant, mock_pyprowl_success) -> None:
     assert result["data"] == CONF_INPUT
 
 
-@pytest.mark.asyncio
 async def test_flow_reauth(
     hass: HomeAssistant, mock_pyprowl_config_entry, mock_pyprowl_success
 ) -> None:
@@ -58,7 +54,6 @@ async def test_flow_reauth(
     assert mock_pyprowl_config_entry.data["name"] == CONF_INPUT[CONF_NAME]
 
 
-@pytest.mark.asyncio
 async def test_flow_user_bad_key(hass: HomeAssistant, mock_pyprowl_forbidden) -> None:
     """Test user submitting a bad API key."""
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +70,6 @@ async def test_flow_user_bad_key(hass: HomeAssistant, mock_pyprowl_forbidden) ->
     assert result["errors"] == INVALID_API_KEY_ERROR
 
 
-@pytest.mark.asyncio
 async def test_flow_user_prowl_timeout(
     hass: HomeAssistant, mock_pyprowl_timeout
 ) -> None:
@@ -94,7 +88,6 @@ async def test_flow_user_prowl_timeout(
     assert result["errors"] == TIMEOUT_ERROR
 
 
-@pytest.mark.asyncio
 async def test_flow_api_failure(hass: HomeAssistant, mock_pyprowl_fail) -> None:
     """Test Prowl API failure."""
     result = await hass.config_entries.flow.async_init(
