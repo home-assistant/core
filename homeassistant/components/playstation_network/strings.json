@@ -78,6 +78,9 @@
       },
       "online_id": {
         "name": "Online-ID"
+      },
+      "last_online": {
+        "name": "Last online"
       }
     }
   }
