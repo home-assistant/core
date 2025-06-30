@@ -55,7 +55,7 @@ def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
     mapped_condition = CONDITION_MAP.get(condition, condition)
     if force_day and mapped_condition == ATTR_CONDITION_CLEAR_NIGHT:
-        # Meteo-France can return clear condition instead of sunny for daily weather, so we map it to sunny
+        # Meteo-France can return clear night condition instead of sunny for daily weather, so we map it to sunny
         return ATTR_CONDITION_SUNNY
     return mapped_condition
 
