@@ -7,7 +7,7 @@ import logging
 from typing import Any, Literal
 
 from hole import Hole, HoleV5, HoleV6
-from hole.exceptions import HoleError
+from hole.exceptions import HoleConnectionError, HoleError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -214,6 +214,12 @@ async def determine_api_version(
     holeV6 = api_by_version(hass, entry, 6, password="wrong_password")
     try:
         await holeV6.authenticate()
+    except HoleConnectionError as err:
+        _LOGGER.error(
+            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
+            holeV6.base_url,
+            err,
+        )
     # Ideally python-hole would raise a specific exception for authentication failures
     except HoleError as ex_v6:
         if str(ex_v6) == "Authentication failed: Invalid password":
@@ -225,12 +231,6 @@ async def determine_api_version(
             return 6
         _LOGGER.debug(
             "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
-        )
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.error(
-            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
-            holeV6.base_url,
-            err,
         )
     holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
@@ -246,7 +246,7 @@ async def determine_api_version(
             holeV5.base_url,
             str(holeV5.data),
         )
-    except Exception as err:  # noqa: BLE001
+    except HoleConnectionError as err:
         _LOGGER.error(
             "Failed to connect to Pi-hole v5 API at %s: %s", holeV5.base_url, err
         )
