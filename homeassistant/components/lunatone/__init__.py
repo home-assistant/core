@@ -34,7 +34,9 @@ class LunatoneDALIIoTData:
 type LunatoneDALIIoTConfigEntry = ConfigEntry[LunatoneDALIIoTData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: LunatoneDALIIoTConfigEntry
+) -> bool:
     """Set up Lunatone from a config entry."""
 
     auth = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
@@ -65,6 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: LunatoneDALIIoTConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
