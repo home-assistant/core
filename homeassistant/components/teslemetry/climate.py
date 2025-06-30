@@ -30,7 +30,7 @@ from . import TeslemetryConfigEntry
 from .const import DOMAIN, TeslemetryClimateSide
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingClimateEntity(
+                TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
@@ -74,7 +74,7 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingCabinOverheatProtectionEntity(
+                TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
@@ -91,7 +91,6 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Climate Control."""
 
     api: Vehicle
-
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
@@ -178,7 +177,9 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingClimateEntity(TeslemetryClimateEntity, TeslemetryVehicleEntity):
+class TeslemetryVehiclePollingClimateEntity(
+    TeslemetryClimateEntity, TeslemetryVehiclePollingEntity
+):
     """Polling vehicle climate entity."""
 
     _attr_supported_features = (
@@ -370,7 +371,6 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
     """Vehicle Cabin Overheat Protection."""
 
     api: Vehicle
-
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
     _attr_min_temp = 30
@@ -430,8 +430,8 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
         self.async_write_ha_state()
 
 
-class TeslemetryPollingCabinOverheatProtectionEntity(
-    TeslemetryVehicleEntity, TeslemetryCabinOverheatProtectionEntity
+class TeslemetryVehiclePollingCabinOverheatProtectionEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryCabinOverheatProtectionEntity
 ):
     """Vehicle Cabin Overheat Protection."""
 

@@ -17,6 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     DEFAULT_LANG,
+    MockResultStream,
     MockTTSEntity,
     MockTTSProvider,
     mock_config_entry_setup,
@@ -78,6 +79,7 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
     assert item_child.children is None
     assert item_child.can_play is False
     assert item_child.can_expand is True
+    assert item_child.thumbnail == "https://brands.home-assistant.io/_/test/logo.png"
 
     item_child = await media_source.async_browse_media(
         hass, item.children[0].media_content_id + "?message=bla"
@@ -196,6 +198,17 @@ async def test_resolving(
     assert message == "Bye World"
     assert language == "de_DE"
     assert mock_get_tts_audio.mock_calls[0][2]["options"] == {"voice": "Paulus"}
+
+    # Test with result stream
+    stream = MockResultStream(hass, "wav", b"")
+    media = await media_source.async_resolve_media(hass, stream.media_source_id, None)
+    assert media.url == stream.url
+    assert media.mime_type == stream.content_type
+
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(
+            hass, "media-source://tts/-stream-/not-a-valid-token", None
+        )
 
 
 @pytest.mark.parametrize(

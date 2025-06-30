@@ -25,6 +25,8 @@ from .entity import (
 )
 from .utils import async_remove_shelly_entity, get_device_entry_gen
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class BlockValveDescription(BlockEntityDescription, ValveEntityDescription):

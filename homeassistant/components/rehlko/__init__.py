@@ -10,6 +10,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_REFRESH_TOKEN,
@@ -21,14 +22,16 @@ from .const import (
 )
 from .coordinator import RehlkoConfigEntry, RehlkoRuntimeData, RehlkoUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bool:
     """Set up Rehlko from a config entry."""
     websession = async_get_clientsession(hass)
-    rehlko = AioKem(session=websession)
+    rehlko = AioKem(session=websession, home_timezone=dt_util.get_default_time_zone())
+    # If requests take more than 20 seconds; timeout and let the setup retry.
+    rehlko.set_timeout(20)
 
     async def async_refresh_token_update(refresh_token: str) -> None:
         """Handle refresh token update."""
@@ -40,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
         )
 
     rehlko.set_refresh_token_callback(async_refresh_token_update)
-    rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
 
     try:
         await rehlko.authenticate(
@@ -48,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
             entry.data[CONF_PASSWORD],
             entry.data.get(CONF_REFRESH_TOKEN),
         )
+        homes = await rehlko.get_homes()
     except AuthenticationError as ex:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -60,7 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
             translation_key="cannot_connect",
         ) from ex
     coordinators: dict[int, RehlkoUpdateCoordinator] = {}
-    homes = await rehlko.get_homes()
 
     entry.runtime_data = RehlkoRuntimeData(
         coordinators=coordinators,
@@ -86,6 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
             await coordinator.async_config_entry_first_refresh()
             coordinators[device_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Retrys enabled after successful connection to prevent blocking startup
+    rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
+    # Rehlko service can be slow to respond, increase timeout for polls.
+    rehlko.set_timeout(100)
     return True
 
 

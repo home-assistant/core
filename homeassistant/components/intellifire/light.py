@@ -15,12 +15,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
+from .const import LOGGER
+from .coordinator import IntellifireConfigEntry
 from .entity import IntellifireEntity
 
 
@@ -84,11 +83,11 @@ class IntellifireLight(IntellifireEntity, LightEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IntellifireConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if coordinator.data.has_light:
         async_add_entities(

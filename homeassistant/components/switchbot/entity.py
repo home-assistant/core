@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Mapping
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 from switchbot import Switchbot, SwitchbotDevice
+from switchbot.devices.device import SwitchbotOperationError
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,11 +90,33 @@ class SwitchbotEntity(
         await self._device.update()
 
 
+def exception_handler[_EntityT: SwitchbotEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate Switchbot calls to handle exceptions..
+
+    A decorator that wraps the passed in function, catches Switchbot errors.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except SwitchbotOperationError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="operation_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+    return handler
+
+
 class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
     """Base class for Switchbot entities that can be turned on and off."""
 
     _device: Switchbot
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.debug("Turn Switchbot device on %s", self._address)
@@ -102,6 +126,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
             self._attr_is_on = True
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.debug("Turn Switchbot device off %s", self._address)

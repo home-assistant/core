@@ -24,6 +24,7 @@ VIDEO_CODEC_LIBX264 = "libx264"
 AUDIO_CODEC_OPUS = "libopus"
 VIDEO_CODEC_H264_OMX = "h264_omx"
 VIDEO_CODEC_H264_V4L2M2M = "h264_v4l2m2m"
+VIDEO_CODEC_H264_QSV = "h264_qsv"  # Intel Quick Sync Video
 VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 AUDIO_CODEC_COPY = "copy"
 

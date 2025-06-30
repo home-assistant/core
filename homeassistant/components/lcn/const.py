@@ -15,12 +15,8 @@ PLATFORMS = [
 ]
 
 DOMAIN = "lcn"
-DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
 
-ADD_ENTITIES_CALLBACKS = "add_entities_callbacks"
-CONNECTION = "connection"
-DEVICE_CONNECTIONS = "device_connections"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
@@ -56,6 +52,7 @@ CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
+CONF_POSITIONING_MODE = "positioning_mode"
 
 DIM_MODES = ["STEPS50", "STEPS200"]
 
@@ -235,4 +232,6 @@ TIME_UNITS = [
     "D",
 ]
 
-MOTOR_REVERSE_TIME = ["RT70", "RT600", "RT1200"]
+MOTOR_REVERSE_TIMES = ["RT70", "RT600", "RT1200"]
+
+MOTOR_POSITIONING_MODES = ["NONE", "BS4", "MODULE"]
