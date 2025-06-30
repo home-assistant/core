@@ -29,6 +29,7 @@ from . import (
     CONFIG_DATA,
     CONFIG_DATA_DEFAULTS,
     CONFIG_ENTRY_WITHOUT_API_KEY,
+    DEFAULT_VERIFY_SSL,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_init_hole,
@@ -58,6 +59,7 @@ async def test_setup_api_v6(
             location=config_entry_data[CONF_LOCATION],
             protocol="http",
             version=6,
+            verify_tls=DEFAULT_VERIFY_SSL,
         )
 
 
@@ -84,6 +86,7 @@ async def test_setup_api_v5(
             location=config_entry_data[CONF_LOCATION],
             tls=config_entry_data[CONF_SSL],
             version=5,
+            verify_tls=DEFAULT_VERIFY_SSL,
         )
 
 

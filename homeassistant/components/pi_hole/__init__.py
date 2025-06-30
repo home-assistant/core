@@ -58,10 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     """Set up Pi-hole entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
-    use_tls = entry.data[CONF_SSL]
-    verify_tls = entry.data[CONF_VERIFY_SSL]
-    location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY, "")
     version = entry.data.get(CONF_API_VERSION)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
@@ -113,20 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_API_VERSION: version}
         )
-    session = async_get_clientsession(hass, verify_tls)
-    hole_kwargs = {
-        "host": host,
-        "session": session,
-        "location": location,
-        "version": version,
-    }
-    if version == 5:
-        hole_kwargs["tls"] = use_tls
-        hole_kwargs["api_token"] = api_key
-    if version == 6:
-        hole_kwargs["protocol"] = "https" if use_tls else "http"
-        hole_kwargs["password"] = api_key
-    api = Hole(**hole_kwargs)
+    # Once API version 5 is deprecated we should instantiate Hole directly
+    api = api_by_version(hass, dict(entry.data), version)
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
@@ -194,10 +178,10 @@ def api_by_version(
     version: int,
     password: str | None = None,
 ) -> HoleV5 | HoleV6:
-    """Create a pi-hole API object by API version number."""
+    """Create a pi-hole API object by API version number. Once V5 is deprecated this function can be removed."""
 
     if password is None:
-        password = entry.get(CONF_API_KEY)
+        password = entry.get(CONF_API_KEY, "")
     session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
     hole_kwargs = {
         "host": entry[CONF_HOST],
