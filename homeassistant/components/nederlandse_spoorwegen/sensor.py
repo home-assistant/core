@@ -126,6 +126,7 @@ async def async_setup_entry(
             route.get(CONF_TO),
             route.get(CONF_VIA),
             route.get(CONF_TIME),
+            entry.entry_id,  # Pass entry_id for unique_id
         )
         for route in routes
     ]
@@ -149,15 +150,18 @@ class NSDepartureSensor(SensorEntity):
     _attr_attribution = ATTR_ATTRIBUTION
     _attr_icon = ATTR_ICON
 
-    def __init__(self, nsapi, name, departure, heading, via, time) -> None:
+    def __init__(
+        self, nsapi, name, departure, heading, via, time, entry_id=None
+    ) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
-            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s, entry_id=%s",
             name,
             departure,
             heading,
             via,
             time,
+            entry_id,
         )
         self._nsapi = nsapi
         self._name = name
@@ -169,6 +173,15 @@ class NSDepartureSensor(SensorEntity):
         self._trips = None
         self._first_trip = None
         self._next_trip = None
+        self._entry_id = entry_id
+        # Set unique_id: entry_id + route name + from + to + via (if present)
+        if entry_id and name and departure and heading:
+            base = f"{entry_id}-{name}-{departure}-{heading}"
+            if via:
+                base += f"-{via}"
+            self._attr_unique_id = base.replace(" ", "_").lower()
+        else:
+            self._attr_unique_id = None
 
     @property
     def name(self) -> str | None:
