@@ -1,0 +1,25 @@
+{
+  "serviceWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "engineHoursToService": {
+    "value": 1266,
+    "unit": "h",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "distanceToService": {
+    "value": 29000,
+    "unit": "km",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "washerFluidLevelWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "timeToService": {
+    "value": 23,
+    "unit": "months",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  }
+}
