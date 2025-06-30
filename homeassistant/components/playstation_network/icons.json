@@ -26,6 +26,9 @@
       },
       "online_id": {
         "default": "mdi:account"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
       }
     }
   }
