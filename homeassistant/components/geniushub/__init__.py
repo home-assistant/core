@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import verify_domain_entity_control
 
 from .const import DOMAIN
 
@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_entity_control(DOMAIN)
     async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
