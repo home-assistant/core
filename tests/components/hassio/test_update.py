@@ -26,7 +26,6 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -246,7 +245,6 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
 
 async def setup_backup_integration(hass: HomeAssistant) -> None:
     """Set up the backup integration."""
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
