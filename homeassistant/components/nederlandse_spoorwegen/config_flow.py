@@ -52,7 +52,12 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Showing API key form to user")
         data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={
+                "station_list_url": "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"
+            },
         )
 
     async def async_step_routes(

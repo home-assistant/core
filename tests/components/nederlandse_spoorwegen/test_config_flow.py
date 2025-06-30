@@ -4,7 +4,6 @@ import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-import yaml
 
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -180,7 +179,7 @@ async def test_full_user_flow_multiple_routes(hass: HomeAssistant) -> None:
 
 @pytest.mark.asyncio
 async def test_options_flow_edit_routes(hass: HomeAssistant) -> None:
-    """Test editing routes via the options flow."""
+    """Test editing routes via the options flow (form-based, not YAML)."""
     # Use the config flow to create the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -198,15 +197,20 @@ async def test_options_flow_edit_routes(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    # Edit routes (add a new one)
-    routes = [ROUTE, {"name": "Test2", "from": "UTR", "to": "AMS"}]
-    routes_yaml = yaml.dump(routes, sort_keys=False, allow_unicode=True)
+    # Add a new route via the form
     result = await hass.config_entries.options.async_configure(
-        result.get("flow_id"), user_input={"routes_yaml": routes_yaml}
+        result.get("flow_id"), user_input={"action": "add"}
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "add_route"
+    # Submit new route
+    new_route = {"name": "Test2", "from": "UTR", "to": "AMS"}
+    result = await hass.config_entries.options.async_configure(
+        result.get("flow_id"), user_input=new_route
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("data", {}).get("routes") == routes
+    assert result.get("data", {}).get("routes") == [ROUTE, new_route]
     # Ensure config entry options are updated
     updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated_entry is not None
-    assert updated_entry.options.get("routes") == routes
+    assert updated_entry.options.get("routes") == [ROUTE, new_route]
