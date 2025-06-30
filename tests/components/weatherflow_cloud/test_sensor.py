@@ -26,7 +26,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -61,7 +61,7 @@ async def test_all_entities_with_lightning_error(
     """Test all entities."""
 
     get_observation_response_data = ObservationStationREST.from_json(
-        load_fixture("station_observation_error.json", DOMAIN)
+        await async_load_fixture(hass, "station_observation_error.json", DOMAIN)
     )
 
     with patch(
