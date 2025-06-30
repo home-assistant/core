@@ -79,7 +79,7 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
         self._auto_detect_language = auto_detect_language
 
         # Entity attributes
-        self._attr_unique_id = f"{entry_id}_STT"
+        self._attr_unique_id = entry_id
         self._attr_name = f"{title} STT"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
