@@ -27,6 +27,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
@@ -67,6 +68,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.addon_start_task: asyncio.Task | None = None
         self.addon_uninstall_task: asyncio.Task | None = None
         self.firmware_install_task: asyncio.Task | None = None
+        self.installing_firmware_name: str | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -152,8 +154,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
 
         if not self.firmware_install_task:
-            # We 100% need to install new firmware only if the wrong firmware is
-            # currently installed
+            # Keep track of the firmware we're working with, for error messages
+            self.installing_firmware_name = firmware_name
+
+            # Installing new firmware is only truly required if the wrong type is
+            # installed: upgrading to the latest release of the current firmware type
+            # isn't strictly necessary for functionality.
             firmware_install_required = self._probed_firmware_info is None or (
                 self._probed_firmware_info.firmware_type
                 != expected_installed_firmware_type
@@ -167,7 +173,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 fw_manifest = next(
                     fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
                 )
-            except (StopIteration, TimeoutError, ClientError, ManifestMissing) as err:
+            except (StopIteration, TimeoutError, ClientError, ManifestMissing):
                 _LOGGER.warning(
                     "Failed to fetch firmware update manifest", exc_info=True
                 )
@@ -179,13 +185,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     )
                     return self.async_show_progress_done(next_step_id=next_step_id)
 
-                raise AbortFlow(
-                    "fw_download_failed",
-                    description_placeholders={
-                        **self._get_translation_placeholders(),
-                        "firmware_name": firmware_name,
-                    },
-                ) from err
+                return self.async_show_progress_done(
+                    next_step_id="firmware_download_failed"
+                )
 
             if not firmware_install_required:
                 assert self._probed_firmware_info is not None
@@ -205,7 +207,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
             try:
                 fw_data = await client.async_fetch_firmware(fw_manifest)
-            except (TimeoutError, ClientError, ValueError) as err:
+            except (TimeoutError, ClientError, ValueError):
                 _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
 
                 # If we cannot download new firmware, we shouldn't block setup
@@ -216,13 +218,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     return self.async_show_progress_done(next_step_id=next_step_id)
 
                 # Otherwise, fail
-                raise AbortFlow(
-                    "fw_download_failed",
-                    description_placeholders={
-                        **self._get_translation_placeholders(),
-                        "firmware_name": firmware_name,
-                    },
-                ) from err
+                return self.async_show_progress_done(
+                    next_step_id="firmware_download_failed"
+                )
 
             self.firmware_install_task = self.hass.async_create_task(
                 async_flash_silabs_firmware(
@@ -249,7 +247,39 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 progress_task=self.firmware_install_task,
             )
 
+        try:
+            await self.firmware_install_task
+        except HomeAssistantError:
+            _LOGGER.exception("Failed to flash firmware")
+            return self.async_show_progress_done(next_step_id="firmware_install_failed")
+
         return self.async_show_progress_done(next_step_id=next_step_id)
+
+    async def async_step_firmware_download_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when firmware download failed."""
+        assert self.installing_firmware_name is not None
+        return self.async_abort(
+            reason="fw_download_failed",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "firmware_name": self.installing_firmware_name,
+            },
+        )
+
+    async def async_step_firmware_install_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when firmware install failed."""
+        assert self.installing_firmware_name is not None
+        return self.async_abort(
+            reason="fw_install_failed",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "firmware_name": self.installing_firmware_name,
+            },
+        )
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
