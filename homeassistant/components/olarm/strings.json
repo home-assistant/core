@@ -1,0 +1,169 @@
+{
+  "config": {
+    "step": {
+      "device": {
+        "title": "Select Device",
+        "description": "Choose the Olarm device you would like to integrate. If your device is not listed, please ensure you have enabled public API access in your Olarm account for that device.",
+        "data": {
+          "select_device": "Device",
+          "load_zones_bypass": "Would you like to also load entities for zone bypassing?"
+        },
+        "data_description": {
+          "select_device": "",
+          "load_zones_bypass": ""
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with Olarm",
+        "description": "We need to reauthenticate with Olarm. Please click submit to continue with the authentication process."
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication, please try again.",
+      "oauth_failed": "OAuth authentication failed, please try again."
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_timeout": "Timeout resolving OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "user_rejected_authorize": "Account linking rejected: {error}",
+      "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
+      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in your Olarm account for your device",
+      "reauth_account_not_found": "Account to reauthenticate not found.",
+      "reauth_successful": "Reauthentication successful"
+    },
+    "create_entry": {
+      "default": "Successfully authenticated"
+    }
+  },
+  "services": {
+    "zone_bypass": {
+      "name": "Zone Bypass",
+      "description": "Bypass a zone on the alarm system",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "zone_index": {
+          "name": "Zone Index",
+          "description": "The index of the zone to bypass (0-based)"
+        }
+      }
+    },
+    "zone_unbypass": {
+      "name": "Zone Unbypass",
+      "description": "Unbypass a zone on the alarm system",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "zone_index": {
+          "name": "Zone Index",
+          "description": "The index of the zone to unbypass (0-based)"
+        }
+      }
+    },
+    "pgm_command": {
+      "name": "PGM Command",
+      "description": "Send a PGM (Programmable Gate Module) command",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "pgm_index": {
+          "name": "PGM Index",
+          "description": "The index of the PGM to control (0-based)"
+        },
+        "pgm_action": {
+          "name": "PGM Action",
+          "description": "The action to perform on the PGM"
+        }
+      }
+    },
+    "utility_key": {
+      "name": "Utility Key",
+      "description": "Activate a utility key",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "ukey_index": {
+          "name": "Utility Key Index",
+          "description": "The index of the utility key to activate (0-based)"
+        }
+      }
+    },
+    "link_output_command": {
+      "name": "LINK Output Command",
+      "description": "Send a command to a LINK output",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "link_id": {
+          "name": "LINK ID",
+          "description": "The ID of the LINK device"
+        },
+        "output_index": {
+          "name": "Output Index",
+          "description": "The index of the output to control (0-based)"
+        },
+        "output_action": {
+          "name": "Output Action",
+          "description": "The action to perform on the output"
+        }
+      }
+    },
+    "link_relay_command": {
+      "name": "LINK Relay Command",
+      "description": "Send a command to a LINK relay",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "link_id": {
+          "name": "LINK ID",
+          "description": "The ID of the LINK device"
+        },
+        "relay_index": {
+          "name": "Relay Index",
+          "description": "The index of the relay to control (0-based)"
+        },
+        "relay_action": {
+          "name": "Relay Action",
+          "description": "The action to perform on the relay"
+        }
+      }
+    },
+    "max_output_command": {
+      "name": "MAX Output Command",
+      "description": "Send a command to a MAX output",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Olarm device"
+        },
+        "output_index": {
+          "name": "Output Index",
+          "description": "The index of the output to control (0-based)"
+        },
+        "output_action": {
+          "name": "Output Action",
+          "description": "The action to perform on the output"
+        }
+      }
+    }
+  }
+}
