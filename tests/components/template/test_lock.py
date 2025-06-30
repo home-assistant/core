@@ -25,7 +25,19 @@ from tests.common import assert_setup_component
 
 TEST_OBJECT_ID = "test_template_lock"
 TEST_ENTITY_ID = f"lock.{TEST_OBJECT_ID}"
-TEST_STATE_ENTITY_ID = "switch.test_state"
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
+
+TEST_STATE_TRIGGER = {
+    "trigger": {
+        "trigger": "state",
+        "entity_id": [TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID],
+    },
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "action": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+    ],
+}
 
 LOCK_ACTION = {
     "lock": {
@@ -113,6 +125,29 @@ async def async_setup_modern_format(
     await hass.async_block_till_done()
 
 
+async def async_setup_trigger_format(
+    hass: HomeAssistant, count: int, lock_config: dict[str, Any]
+) -> None:
+    """Do setup of lock integration via trigger format."""
+    config = {
+        "template": {
+            "lock": {"name": TEST_OBJECT_ID, **lock_config},
+            **TEST_STATE_TRIGGER,
+        }
+    }
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 async def setup_lock(
     hass: HomeAssistant,
@@ -125,6 +160,8 @@ async def setup_lock(
         await async_setup_legacy_format(hass, count, lock_config)
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(hass, count, lock_config)
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(hass, count, lock_config)
 
 
 @pytest.fixture
@@ -144,6 +181,12 @@ async def setup_base_lock(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass,
+            count,
+            {"state": state_template, **extra_config},
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass,
             count,
             {"state": state_template, **extra_config},
@@ -176,6 +219,15 @@ async def setup_state_lock(
                 "state": state_template,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **OPTIMISTIC_LOCK,
+                "state": state_template,
+            },
+        )
 
 
 @pytest.fixture
@@ -195,6 +247,12 @@ async def setup_state_lock_with_extra_config(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass,
+            count,
+            {**OPTIMISTIC_LOCK, "state": state_template, **extra_config},
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass,
             count,
             {**OPTIMISTIC_LOCK, "state": state_template, **extra_config},
@@ -228,13 +286,20 @@ async def setup_state_lock_with_attribute(
             count,
             {**OPTIMISTIC_LOCK, "state": state_template, **extra},
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {**OPTIMISTIC_LOCK, "state": state_template, **extra},
+        )
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
+    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state(hass: HomeAssistant) -> None:
@@ -260,10 +325,11 @@ async def test_template_state(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
-    [(1, "{{ states.switch.test_state.state }}", {"optimistic": True, **OPEN_ACTION})],
+    [(1, "{{ states.sensor.test_state.state }}", {"optimistic": True, **OPEN_ACTION})],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
 async def test_open_lock_optimistic(
@@ -293,18 +359,24 @@ async def test_open_lock_optimistic(
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 == 1 }}")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
     """Test the setting of the state with boolean on."""
+    # Ensure the trigger executes for trigger configurations
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.LOCKED
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 == 2 }}")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
@@ -315,7 +387,8 @@ async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "extra_config"),
@@ -326,7 +399,7 @@ async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
         (
             "{{ 1==1 }}",
             {
-                "not_value_template": "{{ states.switch.test_state.state }}",
+                "not_value_template": "{{ states.sensor.test_state.state }}",
                 **OPTIMISTIC_LOCK,
             },
         ),
@@ -345,6 +418,7 @@ async def test_template_syntax_error(hass: HomeAssistant) -> None:
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
@@ -355,7 +429,8 @@ async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 + 1 }}")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_static(hass: HomeAssistant) -> None:
@@ -371,7 +446,8 @@ async def test_template_static(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "expected"),
@@ -384,26 +460,33 @@ async def test_template_static(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_state_template(hass: HomeAssistant, expected: str) -> None:
     """Test state and value_template template."""
+    # Ensure the trigger executes for trigger configurations
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == expected
 
 
-@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1==1 }}")])
 @pytest.mark.parametrize(
-    "attribute_template",
-    ["{% if states.switch.test_state.state %}/local/switch.png{% endif %}"],
+    ("count", "state_template", "attribute"), [(1, "{{ 1==1 }}", "picture")]
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    "attribute_template",
+    ["{% if states.sensor.test_state.state %}/local/switch.png{% endif %}"],
+)
+@pytest.mark.parametrize(
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "picture"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-async def test_picture_template(hass: HomeAssistant) -> None:
+async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test entity_picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == initial_state
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
@@ -412,22 +495,25 @@ async def test_picture_template(hass: HomeAssistant) -> None:
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
 
-@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1==1 }}")])
 @pytest.mark.parametrize(
-    "attribute_template",
-    ["{% if states.switch.test_state.state %}mdi:eye{% endif %}"],
+    ("count", "state_template", "attribute"), [(1, "{{ 1==1 }}", "icon")]
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    "attribute_template",
+    ["{% if states.sensor.test_state.state %}mdi:eye{% endif %}"],
+)
+@pytest.mark.parametrize(
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "icon"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-async def test_icon_template(hass: HomeAssistant) -> None:
+async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test entity_picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == initial_state
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
@@ -437,10 +523,11 @@ async def test_icon_template(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
+    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -464,10 +551,11 @@ async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
+    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -492,10 +580,11 @@ async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> N
 
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
-    [(1, "{{ states.switch.test_state.state }}", OPEN_ACTION)],
+    [(1, "{{ states.sensor.test_state.state }}", OPEN_ACTION)],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -523,7 +612,7 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
     [
         (
             1,
-            "{{ states.switch.test_state.state }}",
+            "{{ states.sensor.test_state.state }}",
             "{{ '.+' }}",
         )
     ],
@@ -533,6 +622,7 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
@@ -564,7 +654,7 @@ async def test_lock_action_with_code(
     [
         (
             1,
-            "{{ states.switch.test_state.state }}",
+            "{{ states.sensor.test_state.state }}",
             "{{ '.+' }}",
         )
     ],
@@ -574,6 +664,7 @@ async def test_lock_action_with_code(
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
@@ -616,6 +707,7 @@ async def test_unlock_action_with_code(
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.parametrize(
@@ -630,6 +722,10 @@ async def test_lock_actions_fail_with_invalid_code(
     hass: HomeAssistant, calls: list[ServiceCall], test_action
 ) -> None:
     """Test invalid lock codes."""
+    # Ensure trigger entities updated
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         lock.DOMAIN,
         test_action,
@@ -656,17 +752,23 @@ async def test_lock_actions_fail_with_invalid_code(
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "attribute", "expected"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
-        (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.LEGACY, "code_format_template", 0),
+        (ConfigurationStyle.MODERN, "code_format", 0),
+        (ConfigurationStyle.TRIGGER, "code_format", 2),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_lock_actions_dont_execute_with_code_template_rendering_error(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall], expected: int
 ) -> None:
     """Test lock code format rendering fails block lock/unlock actions."""
+
+    # Ensure trigger entities updated
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
@@ -679,7 +781,10 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    # Trigger expects calls here because trigger based entities don't
+    # allow template exception resolutions into code_format property so
+    # the actions will fire using the previous code_format.
+    assert len(calls) == expected
 
 
 @pytest.mark.parametrize(
@@ -687,7 +792,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     [
         (
             1,
-            "{{ states.switch.test_state.state }}",
+            "{{ states.sensor.test_state.state }}",
             "{{ None }}",
         )
     ],
@@ -697,6 +802,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
@@ -729,7 +835,7 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     [
         (
             1,
-            "{{ states.switch.test_state.state }}",
+            "{{ states.sensor.test_state.state }}",
             "[12]{1",
         )
     ],
@@ -739,6 +845,7 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     [
         (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
@@ -774,10 +881,11 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.input_select.test_state.state }}")]
+    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "test_state", [LockState.UNLOCKING, LockState.LOCKING, LockState.JAMMED]
@@ -785,7 +893,7 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_state(hass: HomeAssistant, test_state) -> None:
     """Test value template."""
-    hass.states.async_set("input_select.test_state", test_state)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, test_state)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -797,7 +905,7 @@ async def test_lock_state(hass: HomeAssistant, test_state) -> None:
     [
         (
             1,
-            "{{ states('switch.test_state') }}",
+            "{{ states('sensor.test_state') }}",
             "{{ is_state('availability_state.state', 'on') }}",
         )
     ],
@@ -807,20 +915,21 @@ async def test_lock_state(hass: HomeAssistant, test_state) -> None:
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
     # When template returns true..
-    hass.states.async_set("availability_state.state", STATE_ON)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
     assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
-    hass.states.async_set("availability_state.state", STATE_OFF)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
@@ -842,15 +951,20 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
+    err = "'x' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])

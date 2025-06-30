@@ -89,11 +89,11 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Return a mapping with the default options."""
         return self._attr_default_options
 
-    @classmethod
-    def async_supports_streaming_input(cls) -> bool:
+    def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""
         return (
-            cls.async_stream_tts_audio is not TextToSpeechEntity.async_stream_tts_audio
+            self.__class__.async_stream_tts_audio
+            is not TextToSpeechEntity.async_stream_tts_audio
         )
 
     @callback
