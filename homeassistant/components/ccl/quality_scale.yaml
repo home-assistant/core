@@ -26,11 +26,8 @@ rules:
   test-before-configure:
     status: exempt
     comment: |
-      The integration only receives and reads data from devices, no connection is needed.
-  test-before-setup:
-    status: exempt
-    comment: |
-      The integration only receives and reads data from devices, no connection is needed.
+      Data cannot be pushed without registering a webhook.
+  test-before-setup: done
   unique-config-entry:
     status: exempt
     comment: |
