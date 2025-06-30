@@ -31,8 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CCLConfigEntry
-from .coordinator import CCLCoordinator
+from .coordinator import CCLConfigEntry, CCLCoordinator
 from .entity import CCLEntity
 
 PARALLEL_UPDATES = 0
@@ -94,6 +93,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     CCLSensorTypes.CH_SENSOR_TYPE: SensorEntityDescription(
         key="CH_SENSOR_TYPE",
         device_class=SensorDeviceClass.ENUM,
+        options=["thermo-hygro", "pool", "soil"],
     ),
     CCLSensorTypes.CO: SensorEntityDescription(
         key="CO",
@@ -113,9 +113,9 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
-    CCLSensorTypes.VOC: SensorEntityDescription(
-        key="VOC",
-        translation_key="voc",
+    CCLSensorTypes.VOC_LEVEL: SensorEntityDescription(
+        key="VOC_LEVEL",
+        translation_key="voc_level",
     ),
     CCLSensorTypes.PM10: SensorEntityDescription(
         key="PM10",
@@ -177,7 +177,7 @@ async def async_setup_entry(
     """Add sensors for passed config entry in HA."""
     coordinator = entry.runtime_data
 
-    def _new_sensor(sensor: CCLSensor) -> None:
+    def _new_sensor(sensor: CCLSensor) -> bool | None:
         """Add a sensor to the data entry."""
         if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
             entity_description = dataclasses.replace(
@@ -186,12 +186,14 @@ async def async_setup_entry(
                 name=sensor.name,
             )
             async_add_entities([CCLSensorEntity(coordinator, entity_description)])
+            return True
+        return None
 
-    coordinator.device.register_new_sensor_cb(_new_sensor)
-    entry.async_on_unload(lambda: coordinator.device.remove_new_sensor_cb(_new_sensor))
+    coordinator.device.set_new_sensor_callback(_new_sensor)
 
     if coordinator.data is not None:
-        _new_sensor(list(coordinator.data.values()))
+        for sensor in coordinator.data.values():
+            _new_sensor(sensor)
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):
@@ -209,6 +211,6 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> None | str | int | float:
+    def native_value(self) -> int | float | str | None:
         """Return the state of the sensor."""
         return self._internal.value

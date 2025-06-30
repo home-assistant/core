@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+import time
+
 from aioccl import CCLSensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -9,6 +12,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CCLCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CCLEntity(CoordinatorEntity[CCLCoordinator]):
@@ -25,6 +30,7 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
         super().__init__(coordinator)
         self._internal = internal
         self._device = coordinator.device
+        self._unavailable_logged: bool = False
 
         if internal.compartment is not None:
             self.device_id = (
@@ -49,6 +55,8 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
     @property
     def available(self) -> bool:
         """Return the availability."""
-        if super().available:
-            return self._internal.value is not None
-        return False
+        return (
+            self._internal.value is not None
+            and super().available
+            and time.monotonic() - self._internal.last_update_time <= 600
+        )

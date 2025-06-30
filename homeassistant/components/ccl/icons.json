@@ -12,7 +12,7 @@
       "uvi": {
         "default": "mdi:sun-wireless-outline"
       },
-      "voc": {
+      "voc_level": {
         "default": "mdi:molecule"
       },
       "aqi": {
