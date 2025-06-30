@@ -110,6 +110,14 @@ async def async_setup_entry(
     api_key = entry.data[CONF_API_KEY]
     nsapi = ns_api.NSAPI(api_key)
     routes = entry.data.get("routes", [])
+    _LOGGER.debug("async_setup_entry: routes from entry.data: %s", routes)
+    _LOGGER.debug("async_setup_entry: entry.options: %s", entry.options)
+    # If options has routes, prefer those (options override data)
+    if entry.options.get("routes") is not None:
+        routes = entry.options["routes"]
+        _LOGGER.debug("async_setup_entry: using routes from entry.options: %s", routes)
+    else:
+        _LOGGER.debug("async_setup_entry: using routes from entry.data: %s", routes)
     sensors = [
         NSDepartureSensor(
             nsapi,
@@ -273,6 +281,17 @@ class NSDepartureSensor(SensorEntity):
             self._time,
         )
 
+        # Ensure self._time is a datetime.time object if set as a string (e.g., from config flow)
+        if isinstance(self._time, str):
+            if self._time.strip() == "":
+                self._time = None
+            else:
+                try:
+                    self._time = datetime.strptime(self._time, "%H:%M").time()
+                except ValueError:
+                    _LOGGER.error("Invalid time format for self._time: %s", self._time)
+                    self._time = None
+
         # If looking for a specific trip time, update around that trip time only.
         if self._time and (
             (datetime.now() + timedelta(minutes=30)).time() < self._time
@@ -337,6 +356,15 @@ class NSDepartureSensor(SensorEntity):
                     self._first_trip = None
                     self._state = None
 
+        except KeyError as error:
+            _LOGGER.error(
+                "NS API response missing expected key: %s. This may indicate a malformed or error response. Check your API key and route configuration. Exception: %s",
+                error,
+                error,
+            )
+            self._trips = None
+            self._first_trip = None
+            self._state = None
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,

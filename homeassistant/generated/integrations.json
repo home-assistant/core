@@ -4271,7 +4271,7 @@
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "neff": {
