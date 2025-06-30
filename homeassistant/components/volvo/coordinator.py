@@ -24,6 +24,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
 
+VERY_SLOW_INTERVAL = 60
+SLOW_INTERVAL = 15
+MEDIUM_INTERVAL = 2
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -170,7 +174,7 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
             entry,
             api,
             vehicle,
-            timedelta(minutes=60),
+            timedelta(minutes=VERY_SLOW_INTERVAL),
             "Volvo very slow interval coordinator",
             ["diagnostics", "odometer", "statistics"],
         )
@@ -206,7 +210,7 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
             entry,
             api,
             vehicle,
-            timedelta(minutes=15),
+            timedelta(minutes=SLOW_INTERVAL),
             "Volvo slow interval coordinator",
             ["command_accessibility", "fuel"],
         )
@@ -229,7 +233,7 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             entry,
             api,
             vehicle,
-            timedelta(minutes=2),
+            timedelta(minutes=MEDIUM_INTERVAL),
             "Volvo medium interval coordinator",
             ["recharge_status"],
         )
