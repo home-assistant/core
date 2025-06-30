@@ -120,11 +120,11 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
 
         api.connect.return_value = Version("4.3.2")
         api.smile = build_smile(
-            hostname = "smile12345",
-            model = "Test Model",
-            model_id = "Test Model ID",
-            name = "Test Smile Name",
-            version = "4.3.2",
+            hostname="smile12345",
+            model="Test Model",
+            model_id="Test Model ID",
+            name="Test Smile Name",
+            version="4.3.2",
         )
 
         yield api
@@ -153,12 +153,12 @@ def mock_smile_adam() -> Generator[MagicMock]:
         api.heater_id = "90986d591dcd426cae3ec3e8111ff730"
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile_open_therm",
-            name = "Adam",
-            type = "thermostat",
-            version = "3.0.15",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.0.15",
         )
 
         yield api
@@ -182,12 +182,12 @@ def mock_smile_adam_heat_cool(
         api.heater_id = "056ee145a816487eaa69243c3280f8bf"
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile_open_therm",
-            name = "Adam",
-            type = "thermostat",
-            version = "3.6.4",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.6.4",
         )
 
         yield api
@@ -210,12 +210,12 @@ def mock_smile_adam_jip() -> Generator[MagicMock]:
         api.heater_id = "e4684553153b44afbef2200885f379dc"
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile_open_therm",
-            name = "Adam",
-            type = "thermostat",
-            version = "3.2.8",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.2.8",
         )
 
         yield api
@@ -237,12 +237,12 @@ def mock_smile_anna(chosen_env: str, cooling_present: bool) -> Generator[MagicMo
         api.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile_thermo",
-            name = "Smile Anna",
-            type = "thermostat",
-            version = "4.0.15",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_thermo",
+            name="Smile Anna",
+            type="thermostat",
+            version="4.0.15",
         )
 
         yield api
@@ -263,12 +263,12 @@ def mock_smile_p1(chosen_env: str, gateway_id: str) -> Generator[MagicMock]:
         api.heater_id = None
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile",
-            name = "Smile P1",
-            type = "power",
-            version = "4.4.2",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile",
+            name="Smile P1",
+            type="power",
+            version="4.4.2",
         )
 
         yield api
@@ -290,12 +290,12 @@ def mock_smile_legacy_anna() -> Generator[MagicMock]:
         api.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
         api.reboot = False
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = None,
-            name = "Smile Anna",
-            type = "thermostat",
-            version = "1.8.22",
+            hostname="smile98765",
+            model="Gateway",
+            model_id=None,
+            name="Smile Anna",
+            type="thermostat",
+            version="1.8.22",
         )
 
         yield api
@@ -317,12 +317,12 @@ def mock_stretch() -> Generator[MagicMock]:
         api.heater_id = None
         api.reboot = False
         api.smile = build_smile(
-            hostname = "stretch98765",
-            model = "Gateway",
-            model_id = None,
-            name = "Stretch",
-            type = "stretch",
-            version = "3.1.11",
+            hostname="stretch98765",
+            model="Gateway",
+            model_id=None,
+            name="Stretch",
+            type="stretch",
+            version="3.1.11",
         )
 
         yield api
