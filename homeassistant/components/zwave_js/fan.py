@@ -28,12 +28,12 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import ZwaveJSConfigEntry
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Fan from Config Entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:

@@ -26,10 +26,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZwaveJSConfigEntry
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave humidifier from config entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_humidifier(info: ZwaveDiscoveryInfo) -> None:

@@ -6,7 +6,7 @@ import asyncio
 from collections import defaultdict
 import contextlib
 import logging
-from typing import Any, Final, TypedDict
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -29,7 +29,7 @@ from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.persistent_notification import async_create
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
@@ -104,7 +104,6 @@ from .const import (
     CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
-    DATA_CLIENT,
     DOMAIN,
     DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -133,20 +132,10 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
+from .models import ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
-DATA_DRIVER_EVENTS: Final = "driver_events"
-
-
-class ZwaveJSData(TypedDict):
-    """TypedDict for zwave_js runtime data."""
-
-    client: ZwaveClient
-    driver_events: DriverEvents
-
-
-type ZwaveJSConfigEntry = ConfigEntry[ZwaveJSData]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -271,10 +260,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
     LOGGER.debug("Connection to Zwave JS Server initialized")
 
     driver_events = DriverEvents(hass, entry)
-    entry_runtime_data: ZwaveJSData = {
-        DATA_CLIENT: client,
-        DATA_DRIVER_EVENTS: driver_events,
-    }
+    entry_runtime_data = ZwaveJSData(
+        client=client,
+        driver_events=driver_events,
+    )
     entry.runtime_data = entry_runtime_data
 
     driver = client.driver
@@ -1089,7 +1078,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     entry_runtime_data = entry.runtime_data
-    client: ZwaveClient = entry_runtime_data[DATA_CLIENT]
+    client = entry_runtime_data.client
 
     if client.connected and (driver := client.driver):
         await async_disable_server_logging_if_needed(hass, entry, driver)

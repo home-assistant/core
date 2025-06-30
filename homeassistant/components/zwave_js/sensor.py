@@ -49,13 +49,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 
-from . import ZwaveJSConfigEntry
 from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
-    DATA_CLIENT,
     DOMAIN,
     ENTITY_DESC_KEY_BATTERY_LEVEL,
     ENTITY_DESC_KEY_BATTERY_LIST_STATE,
@@ -93,6 +91,7 @@ from .discovery_data_template import (
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -579,7 +578,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 

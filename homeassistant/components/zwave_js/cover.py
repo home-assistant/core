@@ -37,16 +37,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZwaveJSConfigEntry
-from .const import (
-    COVER_POSITION_PROPERTY_KEYS,
-    COVER_TILT_PROPERTY_KEYS,
-    DATA_CLIENT,
-    DOMAIN,
-)
+from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -57,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:

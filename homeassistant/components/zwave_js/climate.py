@@ -36,12 +36,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import ZwaveJSConfigEntry
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -99,7 +99,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave climate from config entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:

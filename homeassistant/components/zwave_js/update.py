@@ -34,9 +34,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
-from . import ZwaveJSConfigEntry
-from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
+from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave update entity from config entry."""
-    client = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
     cnt: Counter = Counter()
 
     @callback
