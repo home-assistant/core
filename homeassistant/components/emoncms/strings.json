@@ -7,7 +7,8 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "sync_mode": "Synchronization mode"
         },
         "data_description": {
           "url": "Server URL starting with the protocol (http or https)",
@@ -22,6 +23,14 @@
     },
     "abort": {
       "already_configured": "This server is already configured"
+    }
+  },
+  "selector": {
+    "sync_mode": {
+      "options": {
+        "auto": "Synchronize all available Feeds",
+        "manual": "Select which Feeds to synchronize"
+      }
     }
   },
   "entity": {
