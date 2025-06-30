@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -16,7 +15,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 LOCK_TYPES: dict[str, LockEntityDescription] = {
@@ -34,16 +33,6 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox lock entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user is authorized to lock, if so, add lock component
-    try:
-        await coordinator.async_set_lock_unlock(
-            coordinator.data[CHARGER_LOCKED_UNLOCKED_KEY]
-        )
-    except InvalidAuth:
-        return
-    except HomeAssistantError as exc:
-        raise PlatformNotReady from exc
-
     async_add_entities(
         WallboxLock(coordinator, description)
         for ent in coordinator.data
