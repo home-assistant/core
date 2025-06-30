@@ -11,8 +11,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_DATA_TOPIC, CONF_HEALTH_TOPIC
+from .const import CONF_DATA_TOPIC, CONF_HEALTH_TOPIC, DOMAIN
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
+from .services import handle_flow_rate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +51,9 @@ async def async_setup_entry(
 
     config_entry.runtime_data = droplet_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    hass.services.async_register(DOMAIN, "hello", handle_flow_rate)
+
     return True
 
 
