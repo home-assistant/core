@@ -27,7 +27,6 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.config_entries import (
     SOURCE_USB,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -62,11 +61,11 @@ from .const import (
     CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
-    DATA_CLIENT,
     DOMAIN,
     DRIVER_READY_TIMEOUT,
 )
 from .helpers import CannotConnect, async_get_version_info
+from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,7 +184,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.backup_filepath: Path | None = None
         self.use_addon = False
         self._migrating = False
-        self._reconfigure_config_entry: ConfigEntry | None = None
+        self._reconfigure_config_entry: ZwaveJSConfigEntry | None = None
         self._usb_discovery = False
         self._recommended_install = False
 
@@ -1443,7 +1442,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
         if config_entry.state != ConfigEntryState.LOADED:
             raise AbortFlow("Configuration entry is not loaded")
-        client: Client = config_entry.runtime_data[DATA_CLIENT]
+        client: Client = config_entry.runtime_data.client
         assert client.driver is not None
         return client.driver
 
