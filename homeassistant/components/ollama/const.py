@@ -2,6 +2,8 @@
 
 DOMAIN = "ollama"
 
+DEFAULT_NAME = "Ollama"
+
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 CONF_THINK = "think"

@@ -243,12 +243,12 @@ async def test_pipeline_api_audio(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_PROGRESS,
-                data={"tts_start_streaming": True},
+                data={"tts_start_streaming": "1"},
             )
         )
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
-            {"tts_start_streaming": True},
+            {"tts_start_streaming": "1"},
         )
 
         event_callback(
@@ -1774,6 +1774,78 @@ async def test_get_set_configuration(
 
     # Device should have been updated
     assert satellite.async_get_configuration() == updated_config
+
+
+async def test_intent_progress_optimization(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that intent progress events are only sent when early TTS streaming is available."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # Test that intent progress without tts_start_streaming is not sent
+    mock_client.send_voice_assistant_event.reset_mock()
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_PROGRESS,
+            data={"some_other_key": "value"},
+        )
+    )
+    mock_client.send_voice_assistant_event.assert_not_called()
+
+    # Test that intent progress with tts_start_streaming=False is not sent
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_PROGRESS,
+            data={"tts_start_streaming": False},
+        )
+    )
+    mock_client.send_voice_assistant_event.assert_not_called()
+
+    # Test that intent progress with tts_start_streaming=True is sent
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_PROGRESS,
+            data={"tts_start_streaming": True},
+        )
+    )
+    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
+        {"tts_start_streaming": "1"},
+    )
+
+    # Test that intent progress with tts_start_streaming as string "1" is sent
+    mock_client.send_voice_assistant_event.reset_mock()
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_PROGRESS,
+            data={"tts_start_streaming": "1"},
+        )
+    )
+    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
+        {"tts_start_streaming": "1"},
+    )
+
+    # Test that intent progress with no data is *not* sent
+    mock_client.send_voice_assistant_event.reset_mock()
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_PROGRESS,
+            data=None,
+        )
+    )
+    mock_client.send_voice_assistant_event.assert_not_called()
 
 
 async def test_wake_word_select(
