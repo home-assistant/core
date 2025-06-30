@@ -25,13 +25,14 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import _SENTINEL, Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ManualTriggerEntity,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -110,8 +111,8 @@ async def async_setup_entry(
         name: str = sensor_config[CONF_NAME]
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
-        value_template: Template | None = (
-            Template(value_string, hass) if value_string is not None else None
+        value_template: ValueTemplate | None = (
+            ValueTemplate(value_string, hass) if value_string is not None else None
         )
 
         trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
@@ -150,7 +151,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         select: str,
         attr: str | None,
         index: int,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         yaml: bool,
     ) -> None:
         """Initialize a web scrape sensor."""
@@ -161,7 +162,6 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         self._index = index
         self._value_template = value_template
         self._attr_native_value = None
-        self._available = True
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
@@ -176,7 +176,6 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
         value: str | list[str] | None
-        self._available = True
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
@@ -188,14 +187,12 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
                     value = tag.text
         except IndexError:
             _LOGGER.warning("Index '%s' not found in %s", self._index, self.entity_id)
-            value = None
-            self._available = False
+            return _SENTINEL
         except KeyError:
             _LOGGER.warning(
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
-            value = None
-            self._available = False
+            return _SENTINEL
         _LOGGER.debug("Parsed value: %s", value)
         return value
 
@@ -207,26 +204,32 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
 
     def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self._extract_value()
-        raw_value = value
+        self._attr_available = True
+        if (value := self._extract_value()) is _SENTINEL:
+            self._attr_available = False
+            return
+
+        variables = self._template_variables_with_value(value)
+        if not self._render_availability_template(variables):
+            return
 
         if (template := self._value_template) is not None:
-            value = template.async_render_with_possible_json_value(value, None)
+            value = template.async_render_as_value_template(
+                self.entity_id, variables, None
+            )
 
         if self.device_class not in {
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            self._attr_available = self._available
-            self._process_manual_data(raw_value)
+            self._process_manual_data(variables)
             return
 
         self._attr_native_value = async_parse_date_datetime(
             value, self.entity_id, self.device_class
         )
-        self._attr_available = self._available
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
 
     @property
     def available(self) -> bool:

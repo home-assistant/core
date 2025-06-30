@@ -115,7 +115,7 @@ DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
 
 @bind_hass
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 

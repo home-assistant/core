@@ -72,6 +72,7 @@ from .const import (
     MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
     __version__,
 )
 from .exceptions import (
@@ -178,8 +179,7 @@ class EventStateReportedData(EventStateEventData):
 
 
 def _deprecated_core_config() -> Any:
-    # pylint: disable-next=import-outside-toplevel
-    from . import core_config
+    from . import core_config  # noqa: PLC0415
 
     return core_config.Config
 
@@ -427,8 +427,7 @@ class HomeAssistant:
 
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
-        # pylint: disable-next=import-outside-toplevel
-        from .core_config import Config
+        from .core_config import Config  # noqa: PLC0415
 
         # This is a dictionary that any component can store any data on.
         self.data = HassDict()
@@ -451,13 +450,13 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.loop_thread_id = getattr(self.loop, "_thread_id")
+        self.loop_thread_id = self.loop._thread_id  # type: ignore[attr-defined] # noqa: SLF001
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
         if self.loop_thread_id != threading.get_ident():
             # frame is a circular import, so we import it here
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation(what)
 
@@ -521,8 +520,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable-next=import-outside-toplevel
-            from .helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling  # noqa: PLC0415
 
             async_register_signal_handling(self)
 
@@ -642,7 +640,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
@@ -698,7 +696,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
@@ -801,7 +799,7 @@ class HomeAssistant:
         target: target to call.
         """
         if self.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
@@ -972,7 +970,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
@@ -1516,7 +1514,7 @@ class EventBus:
         """
         _verify_event_type_length_or_raise(event_type)
         if self._hass.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.bus.async_fire")
         return self.async_fire_internal(
@@ -1621,7 +1619,7 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
@@ -1691,7 +1689,7 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",
@@ -1794,18 +1792,13 @@ class State:
     ) -> None:
         """Initialize a new state."""
         self._cache: dict[str, Any] = {}
-        state = str(state)
-
         if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
             )
-
-        validate_state(state)
-
         self.entity_id = entity_id
-        self.state = state
+        self.state = state if type(state) is str else str(state)
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
@@ -2234,7 +2227,6 @@ class StateMachine:
         This avoids a race condition where multiple entities with the same
         entity_id are added.
         """
-        entity_id = entity_id.lower()
         if entity_id in self._states_data or entity_id in self._reservations:
             raise HomeAssistantError(
                 "async_reserve must not be called once the state is in the state"
@@ -2271,9 +2263,11 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
+        state = str(new_state)
+        validate_state(state)
         self.async_set_internal(
             entity_id.lower(),
-            str(new_state),
+            state,
             attributes or {},
             force_update,
             context,
@@ -2298,6 +2292,8 @@ class StateMachine:
         and should not be considered a stable API. We will make
         breaking changes to this function in the future and it
         should not be used in integrations.
+
+        Callers are responsible for ensuring the entity_id is lower case.
 
         This method must be run in the event loop.
         """
@@ -2356,6 +2352,16 @@ class StateMachine:
             if TYPE_CHECKING:
                 assert old_state is not None
             attributes = old_state.attributes
+
+        if not same_state and len(new_state) > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "State %s for %s is longer than %s, falling back to %s",
+                new_state,
+                entity_id,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
+            )
+            new_state = STATE_UNKNOWN
 
         # This is intentionally called with positional only arguments for performance
         # reasons
