@@ -64,6 +64,7 @@ def mock_user() -> Generator[MagicMock]:
                         "conceptIconUrl": "https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png",
                     }
                 ],
+                "lastAvailableDate": "2025-06-30T01:42:15.391Z",
             }
         }
 

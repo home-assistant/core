@@ -4,16 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
@@ -29,7 +35,7 @@ PARALLEL_UPDATES = 0
 class PlaystationNetworkSensorEntityDescription(SensorEntityDescription):
     """PlayStation Network sensor description."""
 
-    value_fn: Callable[[PlaystationNetworkData], StateType]
+    value_fn: Callable[[PlaystationNetworkData], StateType | datetime]
     entity_picture: str | None = None
 
 
@@ -43,6 +49,7 @@ class PlaystationNetworkSensor(StrEnum):
     EARNED_TROPHIES_SILVER = "earned_trophies_silver"
     EARNED_TROPHIES_BRONZE = "earned_trophies_bronze"
     ONLINE_ID = "online_id"
+    LAST_ONLINE = "last_online"
 
 
 SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
@@ -102,6 +109,16 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         translation_key=PlaystationNetworkSensor.ONLINE_ID,
         value_fn=lambda psn: psn.username,
     ),
+    PlaystationNetworkSensorEntityDescription(
+        key=PlaystationNetworkSensor.LAST_ONLINE,
+        translation_key=PlaystationNetworkSensor.LAST_ONLINE,
+        value_fn=(
+            lambda psn: dt_util.parse_datetime(
+                psn.presence["basicPresence"]["lastAvailableDate"]
+            )
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
@@ -147,7 +164,7 @@ class PlaystationNetworkSensorEntity(
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)
