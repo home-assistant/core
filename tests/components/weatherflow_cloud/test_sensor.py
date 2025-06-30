@@ -61,7 +61,7 @@ async def test_all_entities_with_lightning_error(
     """Test all entities."""
 
     get_observation_response_data = ObservationStationREST.from_json(
-        await async_load_fixture("station_observation_error.json", DOMAIN)
+        await async_load_fixture(hass, "station_observation_error.json", DOMAIN)
     )
 
     with patch(
