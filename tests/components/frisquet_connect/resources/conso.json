@@ -1,0 +1,107 @@
+{
+    "CHF": [
+        {
+            "valeur": 1908,
+            "mois": 1,
+            "annee": "2024"
+        },
+        {
+            "valeur": 780,
+            "mois": 2,
+            "annee": "2024"
+        },
+        {
+            "valeur": 334,
+            "mois": 3,
+            "annee": "2024"
+        },
+        {
+            "valeur": 683,
+            "mois": 4,
+            "annee": "2024"
+        },
+        {
+            "valeur": 0,
+            "mois": 7,
+            "annee": "2024"
+        },
+        {
+            "valeur": 21,
+            "mois": 9,
+            "annee": "2024"
+        },
+        {
+            "valeur": 73,
+            "mois": 10,
+            "annee": "2024"
+        },
+        {
+            "valeur": 979,
+            "mois": 11,
+            "annee": "2024"
+        },
+        {
+            "valeur": 1530,
+            "mois": 12,
+            "annee": "2024"
+        },
+        {
+            "valeur": 1387,
+            "mois": 1,
+            "annee": "2025"
+        }
+    ],
+    "SAN": [
+        {
+            "valeur": 314,
+            "mois": 1,
+            "annee": "2024"
+        },
+        {
+            "valeur": 273,
+            "mois": 2,
+            "annee": "2024"
+        },
+        {
+            "valeur": 91,
+            "mois": 3,
+            "annee": "2024"
+        },
+        {
+            "valeur": 219,
+            "mois": 4,
+            "annee": "2024"
+        },
+        {
+            "valeur": 18,
+            "mois": 7,
+            "annee": "2024"
+        },
+        {
+            "valeur": 8,
+            "mois": 9,
+            "annee": "2024"
+        },
+        {
+            "valeur": 36,
+            "mois": 10,
+            "annee": "2024"
+        },
+        {
+            "valeur": 229,
+            "mois": 11,
+            "annee": "2024"
+        },
+        {
+            "valeur": 259,
+            "mois": 12,
+            "annee": "2024"
+        },
+        {
+            "valeur": 196,
+            "mois": 1,
+            "annee": "2025"
+        }
+    ],
+    "max": 5000
+}

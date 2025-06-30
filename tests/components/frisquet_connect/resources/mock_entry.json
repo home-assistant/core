@@ -1,0 +1,8 @@
+{
+    "data": {
+        "site_id": "12345678901234",
+        "email": "firstname.lastname@domain.com",
+        "password": "p@ssw0rd"
+    },
+    "unique_id": "mock_unique_id"
+}
