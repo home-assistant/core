@@ -363,7 +363,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.7.0
+aioshelly==13.7.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1427,7 +1427,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.6
+plugwise==1.7.7
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1864,7 +1864,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.8.9
+pypck==0.8.10
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2202,7 +2202,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.1
+reolink-aio==0.14.2
 
 # homeassistant.components.rflink
 rflink==0.0.67
