@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 
@@ -27,7 +27,6 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
@@ -360,7 +359,6 @@ async def test_update_addon(
 
 async def setup_backup_integration(hass: HomeAssistant) -> None:
     """Set up the backup integration."""
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 

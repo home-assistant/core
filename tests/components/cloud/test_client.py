@@ -468,7 +468,10 @@ async def test_async_create_repair_issue_known(
     await cloud.client.async_create_repair_issue(
         identifier=identifier,
         translation_key=translation_key,
-        placeholders={"custom_domains": "example.com"},
+        placeholders={
+            "account_url": "http://example.org",
+            "custom_domains": "example.com",
+        },
         severity="warning",
     )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
@@ -479,19 +482,53 @@ async def test_async_create_repair_issue_unknown(
     cloud: MagicMock,
     mock_cloud_setup: None,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test not creating repair issue for unknown repairs."""
     identifier = "abc123"
-    with pytest.raises(
-        ValueError,
-        match="Invalid translation key unknown_translation_key",
-    ):
-        await cloud.client.async_create_repair_issue(
-            identifier=identifier,
-            translation_key="unknown_translation_key",
-            placeholders={"custom_domains": "example.com"},
-            severity="error",
-        )
+    await cloud.client.async_create_repair_issue(
+        identifier=identifier,
+        translation_key="unknown_translation_key",
+        placeholders={"custom_domains": "example.com"},
+        severity="error",
+    )
+    assert (
+        "Invalid translation key unknown_translation_key for repair issue abc123"
+        in caplog.text
+    )
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
+    assert issue is None
+
+
+async def test_async_delete_repair_issue(
+    cloud: MagicMock,
+    mock_cloud_setup: None,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test delete repair issue."""
+    identifier = "test_identifier"
+    issue_registry.issues[(DOMAIN, identifier)] = ir.IssueEntry(
+        active=True,
+        breaks_in_ha_version=None,
+        created=dt_util.utcnow(),
+        data={},
+        dismissed_version=None,
+        domain=DOMAIN,
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=None,
+        issue_id=identifier,
+        learn_more_url=None,
+        severity="warning",
+        translation_key="test_translation_key",
+        translation_placeholders=None,
+    )
+
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
+    assert issue is not None
+
+    await cloud.client.async_delete_repair_issue(identifier=identifier)
+
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
     assert issue is None
 

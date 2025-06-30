@@ -172,6 +172,9 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "ir_brightness": {
+        "default": "mdi:led-off"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -216,6 +219,9 @@
       },
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
+      },
+      "cry_sensitivity": {
+        "default": "mdi:emoticon-cry-outline"
       },
       "crossline_sensitivity": {
         "default": "mdi:fence"
@@ -462,6 +468,12 @@
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
       },
+      "hardwired_chime_enabled": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
       "hdr": {
         "default": "mdi:hdr"
       },
@@ -475,6 +487,12 @@
         "default": "mdi:lightning-bolt-circle"
       },
       "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
+      "privacy_mask": {
         "default": "mdi:eye",
         "state": {
           "on": "mdi:eye-off"

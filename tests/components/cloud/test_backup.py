@@ -21,21 +21,12 @@ from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
 from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockStreamReader
+from homeassistant.util.aiohttp import MockStreamReaderChunked
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
-
-
-class MockStreamReaderChunked(MockStreamReader):
-    """Mock a stream reader with simulated chunked data."""
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        """Read bytes."""
-        return (self._content.read(), False)
 
 
 @pytest.fixture(autouse=True)
@@ -45,8 +36,7 @@ async def setup_integration(
     cloud: MagicMock,
     cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
-    """Set up cloud and backup integrations."""
-    async_initialize_backup(hass)
+    """Set up cloud integration."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
@@ -160,28 +150,32 @@ async def test_agents_list_backups(
             "addons": [],
             "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
             "backup_id": "23e64aec",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         },
         {
             "addons": [],
             "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
             "backup_id": "23e64aed",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         },
     ]
@@ -224,14 +218,16 @@ async def test_agents_list_backups_fail_cloud(
                 "addons": [],
                 "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
                 "backup_id": "23e64aec",
-                "date": "2024-11-22T11:48:48.727189+01:00",
                 "database_included": True,
+                "date": "2024-11-22T11:48:48.727189+01:00",
                 "extra_metadata": {},
+                "failed_addons": [],
+                "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0.dev0",
                 "name": "Core 2024.12.0.dev0",
-                "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
         ),

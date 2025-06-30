@@ -60,6 +60,9 @@
       },
       "charge_stop": {
         "name": "Charge stop"
+      },
+      "charging_schedule_override": {
+        "name": "Charging schedule override"
       }
     },
     "number": {

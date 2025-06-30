@@ -4,9 +4,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.gdacs.const import CONF_CATEGORIES
+from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
 from homeassistant.components.gdacs.sensor import (
     ATTR_CREATED,
     ATTR_LAST_UPDATE,
@@ -73,7 +72,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL.seconds,
         }
         config_entry = MockConfigEntry(
-            domain=gdacs.DOMAIN,
+            domain=DOMAIN,
             title=f"{latitude}, {longitude}",
             data=entry_data,
             unique_id="my_very_unique_id",

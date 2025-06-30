@@ -28,7 +28,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
-    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -527,7 +526,7 @@ class Person(
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
-            elif state.state == STATE_NOT_HOME:
+            else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_non_gps_home:

@@ -4,7 +4,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 import pytest
-from whirlpool import aircon, appliancesmanager, auth, washerdryer
+from whirlpool import aircon, appliancesmanager, auth, dryer, washer
 from whirlpool.backendselector import Brand, Region
 
 from .const import MOCK_SAID1, MOCK_SAID2
@@ -66,10 +66,8 @@ def fixture_mock_appliances_manager_api(
             mock_aircon1_api,
             mock_aircon2_api,
         ]
-        mock_appliances_manager.return_value.washer_dryers = [
-            mock_washer_api,
-            mock_dryer_api,
-        ]
+        mock_appliances_manager.return_value.washers = [mock_washer_api]
+        mock_appliances_manager.return_value.dryers = [mock_dryer_api]
         yield mock_appliances_manager
 
 
@@ -123,15 +121,13 @@ def fixture_mock_aircon2_api():
 @pytest.fixture
 def mock_washer_api():
     """Get a mock of a washer."""
-    mock_washer = Mock(spec=washerdryer.WasherDryer, said="said_washer")
+    mock_washer = Mock(spec=washer.Washer, said="said_washer")
     mock_washer.name = "Washer"
     mock_washer.appliance_info = Mock(
         data_model="washer", category="washer_dryer", model_number="12345"
     )
     mock_washer.get_online.return_value = True
-    mock_washer.get_machine_state.return_value = (
-        washerdryer.MachineState.RunningMainCycle
-    )
+    mock_washer.get_machine_state.return_value = washer.MachineState.RunningMainCycle
     mock_washer.get_door_open.return_value = False
     mock_washer.get_dispense_1_level.return_value = 3
     mock_washer.get_time_remaining.return_value = 3540
@@ -148,21 +144,14 @@ def mock_washer_api():
 @pytest.fixture
 def mock_dryer_api():
     """Get a mock of a dryer."""
-    mock_dryer = mock.Mock(spec=washerdryer.WasherDryer, said="said_dryer")
+    mock_dryer = mock.Mock(spec=dryer.Dryer, said="said_dryer")
     mock_dryer.name = "Dryer"
     mock_dryer.appliance_info = Mock(
         data_model="dryer", category="washer_dryer", model_number="12345"
     )
     mock_dryer.get_online.return_value = True
-    mock_dryer.get_machine_state.return_value = (
-        washerdryer.MachineState.RunningMainCycle
-    )
+    mock_dryer.get_machine_state.return_value = dryer.MachineState.RunningMainCycle
     mock_dryer.get_door_open.return_value = False
     mock_dryer.get_time_remaining.return_value = 3540
-    mock_dryer.get_cycle_status_filling.return_value = False
-    mock_dryer.get_cycle_status_rinsing.return_value = False
     mock_dryer.get_cycle_status_sensing.return_value = False
-    mock_dryer.get_cycle_status_soaking.return_value = False
-    mock_dryer.get_cycle_status_spinning.return_value = False
-    mock_dryer.get_cycle_status_washing.return_value = False
     return mock_dryer

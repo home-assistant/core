@@ -7,7 +7,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
     AddonInfo,
@@ -30,8 +30,6 @@ from homeassistant.components.backup.manager import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.backup import async_initialize_backup
-from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -87,14 +85,16 @@ TEST_MANAGER_BACKUP = ManagerBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
     agents={"test.test-agent": AgentBackupStatus(protected=True, size=0)},
     backup_id="backup-1",
-    date="1970-01-01T00:00:00.000Z",
     database_included=True,
+    date="1970-01-01T00:00:00.000Z",
     extra_metadata={"instance_id": "abc123", "with_automatic_settings": True},
+    failed_addons=[],
+    failed_agent_ids=[],
+    failed_folders=[],
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
     name="Test",
-    failed_agent_ids=[],
     with_automatic_settings=True,
 )
 
@@ -326,7 +326,15 @@ async def test_delete(
             "backups": [
                 {
                     "backup_id": "abc123",
+                    "failed_addons": [
+                        {
+                            "name": "Test add-on",
+                            "slug": "test_addon",
+                            "version": "1.0.0",
+                        }
+                    ],
                     "failed_agent_ids": ["test.remote"],
+                    "failed_folders": ["ssl"],
                 }
             ]
         },
@@ -4040,29 +4048,6 @@ async def test_subscribe_event(
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     assert await client.receive_json() == snapshot
     assert await client.receive_json() == snapshot
-
-    manager.async_on_backup_event(
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
-    )
-    assert await client.receive_json() == snapshot
-
-
-async def test_subscribe_event_early(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test subscribe event before backup integration has started."""
-    async_initialize_backup(hass)
-    await setup_backup_integration(hass, with_hassio=False)
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/subscribe_events"})
-    assert await client.receive_json() == snapshot
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    manager = hass.data[DATA_MANAGER]
 
     manager.async_on_backup_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)

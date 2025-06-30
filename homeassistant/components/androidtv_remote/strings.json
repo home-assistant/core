@@ -51,6 +51,10 @@
           "app_id": "Application ID",
           "app_icon": "Application icon",
           "app_delete": "Check to delete this application"
+        },
+        "data_description": {
+          "app_id": "E.g. com.plexapp.android for https://play.google.com/store/apps/details?id=com.plexapp.android",
+          "app_icon": "Image URL. From the Play Store app page, right click on the icon and select 'Copy image address' and then paste it here. Alternatively, download the image, upload it under /config/www/ and use the URL /local/filename"
         }
       }
     }
