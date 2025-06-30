@@ -76,7 +76,7 @@ async def async_setup_platform(
         if station_metadata is None:
             raise ConfigEntryError(f"Invalid station name: {station_name}")
 
-        def create_api(station_id):
+        def create_api(station_id: str) -> MvgApi:
             return MvgApi(station_id)
 
         api = await hass.async_add_executor_job(create_api, station_metadata["id"])
@@ -106,7 +106,7 @@ class MVGSensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        api,
+        api: MvgApi,
         station_name,
         destinations,
         lines,
@@ -184,7 +184,7 @@ class MVGData:
     def __init__(
         self,
         hass: HomeAssistant,
-        api,
+        api: MvgApi,
         destinations,
         lines,
         products,
