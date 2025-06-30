@@ -35,6 +35,22 @@
       }
     }
   },
+  "services": {
+    "query": {
+      "name": "Query",
+      "description": "Executes a SQL query and returns the result.",
+      "fields": {
+        "query": {
+          "name": "Query",
+          "description": "The SELECT query to execute."
+        },
+        "db_url": {
+          "name": "Database URL",
+          "description": "The URL of the database to connect to. If not provided, the default Home Assistant recorder database will be used."
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
