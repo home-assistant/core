@@ -1427,7 +1427,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.6
+plugwise==1.7.7
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2202,7 +2202,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.1
+reolink-aio==0.14.2
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2579,7 +2579,7 @@ wyoming==1.7.1
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.39.0
+xiaomi-ble==1.1.0
 
 # homeassistant.components.knx
 xknx==3.8.0
