@@ -31,7 +31,7 @@ async def async_setup_entry(
     config_entry: DreoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Fan from a config entry."""
+    """Set up the Fans from a config entry."""
 
     @callback
     def async_add_fan_devices() -> None:
