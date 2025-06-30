@@ -10,6 +10,7 @@ from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -23,17 +24,17 @@ DHCP_SERVICE_INFO = [
     DhcpServiceInfo(
         hostname="airthings-view",
         ip="192.168.1.100",
-        macaddress="00:00:00:00:00:00",
+        macaddress=dr.format_mac("00:00:00:00:00:00").replace(":", ""),
     ),
     DhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.101",
-        macaddress="D0:14:11:90:00:00",
+        macaddress=dr.format_mac("D0:14:11:90:00:00").replace(":", ""),
     ),
     DhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.102",
-        macaddress="70:B3:D5:2A:00:00",
+        macaddress=dr.format_mac("70:B3:D5:2A:00:00").replace(":", ""),
     ),
 ]
 
