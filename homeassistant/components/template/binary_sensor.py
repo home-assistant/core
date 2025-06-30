@@ -317,6 +317,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             state is None
             or (state and not self._delay_on)
             or (not state and not self._delay_off)
+            # We should directly reflect the state for previews (even if delay is set) for the best UX.
+            or self._preview_callback
         ):
             self._attr_is_on = state
             return

@@ -51,7 +51,11 @@ from .alarm_control_panel import (
     CONF_TRIGGER_ACTION,
     TemplateCodeFormat,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .number import (
     CONF_MAX,
@@ -117,6 +121,10 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 ),
             }
+        schema |= {
+            vol.Optional(CONF_DELAY_ON): selector.DurationSelector(),
+            vol.Optional(CONF_DELAY_OFF): selector.DurationSelector(),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
