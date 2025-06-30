@@ -33,11 +33,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     discovery_flow,
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -61,6 +62,9 @@ from .const import (
     DOMAIN,
     KNOWN_PLAYERS,
     KNOWN_SERVERS,
+    SERVER_MANUFACTURER,
+    SERVER_MODEL,
+    SERVER_MODEL_ID,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -125,9 +129,52 @@ async def async_setup_entry(
     """Set up the Squeezebox media_player platform from a server config entry."""
 
     # Add media player entities when discovered
-    async def _player_discovered(player: SqueezeBoxPlayerUpdateCoordinator) -> None:
-        _LOGGER.debug("Setting up media_player entity for player %s", player)
-        async_add_entities([SqueezeBoxMediaPlayerEntity(player)])
+    async def _player_discovered(
+        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+    ) -> None:
+        player = coordinator.player
+        _LOGGER.debug("Setting up media_player device and entity for player %s", player)
+        device_registry = dr.async_get(hass)
+        server_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, coordinator.server_uuid)},
+        )
+
+        name = player.name
+        model = player.model
+        manufacturer = player.creator
+        model_id = player.model_type
+        sw_version = ""
+        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        if (
+            server_device
+            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
+            in server_device.connections
+        ):
+            _LOGGER.debug("Shared server & player device %s", server_device)
+            name = server_device.name
+            sw_version = server_device.sw_version or sw_version
+            model = SERVER_MODEL + "/" + model if model else SERVER_MODEL
+            manufacturer = (
+                SERVER_MANUFACTURER + " / " + manufacturer
+                if manufacturer
+                else SERVER_MANUFACTURER
+            )
+            model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
+
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, player.player_id)},
+            connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+            name=name,
+            model=model,
+            manufacturer=manufacturer,
+            model_id=model_id,
+            hw_version=player.firmware,
+            sw_version=sw_version,
+            via_device=(DOMAIN, coordinator.server_uuid),
+        )
+        _LOGGER.debug("Creating / Updating player device %s", device)
+        async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)

@@ -94,6 +94,18 @@ async def test_device_registry(
     assert reg_device == snapshot
 
 
+async def test_device_registry_server_merged(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    configured_players: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test squeezebox device registered in the device registry."""
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
+    assert reg_device is not None
+    assert reg_device == snapshot
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
