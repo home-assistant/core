@@ -59,9 +59,7 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
             await self.coordinator.api.set_switch_state(
                 self.device.unique_id, new_state, self.coordinator.access_token
             )
-
-            self.device.state = STATE_ON if new_state else STATE_OFF
-            self.async_write_ha_state()
+        
              
         except RedgtechAuthError:
             try:

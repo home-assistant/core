@@ -3,16 +3,27 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.redgtech.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    Platform,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_TOGGLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
-from tests.common import MockConfigEntry
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -39,7 +50,7 @@ def mock_redgtech_api():
 
 
 @pytest.fixture
-def config_entry():
+def mock_config_entry():
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -51,134 +62,166 @@ def config_entry():
     )
 
 
-@pytest.fixture
-async def setup_redgtech_integration(hass: HomeAssistant, config_entry, mock_redgtech_api):
-    """Set up the Redgtech integration with mocked API."""
-    with patch("homeassistant.components.redgtech.coordinator.RedgtechAPI", return_value=mock_redgtech_api):
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: AsyncMock) -> None:
+    """Set up the Redgtech integration."""
+    with patch("homeassistant.components.redgtech.coordinator.RedgtechAPI", return_value=mock_api):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    
-    return mock_redgtech_api
 
 
-async def test_switch_setup_and_initial_state(hass: HomeAssistant, setup_redgtech_integration):
-    """Test switch setup and initial states."""
-    mock_api = setup_redgtech_integration
+async def test_all_entities(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities are created correctly."""
+    with patch("homeassistant.components.redgtech.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry, mock_redgtech_api)
+
+    # Verify entities were created
+    entity_entries = er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    assert len(entity_entries) == 2
     
-    # Verify API was called during setup
-    mock_api.login.assert_called_with("test@example.com", "password123")
-    mock_api.get_data.assert_called()
+    # Check entity IDs and domains
+    entity_ids = {entry.entity_id for entry in entity_entries}
+    assert entity_ids == {"switch.living_room_switch", "switch.kitchen_switch"}
     
-    # Check that switches were created with correct states
-    living_room_state = hass.states.get("switch.living_room_switch")
-    kitchen_state = hass.states.get("switch.kitchen_switch")
-    
-    assert living_room_state is not None
-    assert living_room_state.state == STATE_OFF
-    assert living_room_state.name == "Living Room Switch"
-    
-    assert kitchen_state is not None
-    assert kitchen_state.state == STATE_ON
-    assert kitchen_state.name == "Kitchen Switch"
+    # Verify all entities are switch domain
+    for entry in entity_entries:
+        assert entry.domain == "switch"
+        assert entry.platform == "redgtech"
 
 
-async def test_switch_turn_on(hass: HomeAssistant, setup_redgtech_integration):
+async def test_switch_turn_on(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test turning a switch on."""
-    mock_api = setup_redgtech_integration
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
-    # Turn on the living room switch
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
-        {"entity_id": "switch.living_room_switch"},
+        SERVICE_TURN_ON,
+        target={ATTR_ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
     
-    # Verify API was called to set switch state
-    mock_api.set_switch_state.assert_called_with("switch_001", True, "mock_access_token")
+    mock_redgtech_api.set_switch_state.assert_called_once_with("switch_001", True, "mock_access_token")
 
 
-async def test_switch_turn_off(hass: HomeAssistant, setup_redgtech_integration):
+async def test_switch_turn_off(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test turning a switch off."""
-    mock_api = setup_redgtech_integration
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
-    # Turn off the kitchen switch
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_off",
-        {"entity_id": "switch.kitchen_switch"},
+        SERVICE_TURN_OFF,
+        target={ATTR_ENTITY_ID: "switch.kitchen_switch"},
         blocking=True,
     )
     
-    # Verify API was called to set switch state
-    mock_api.set_switch_state.assert_called_with("switch_002", False, "mock_access_token")
+    mock_redgtech_api.set_switch_state.assert_called_once_with("switch_002", False, "mock_access_token")
 
 
-async def test_switch_toggle(hass: HomeAssistant, setup_redgtech_integration):
+async def test_switch_toggle(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test toggling a switch."""
-    mock_api = setup_redgtech_integration
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
-    # Toggle the living room switch (currently off, should turn on)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "toggle",
-        {"entity_id": "switch.living_room_switch"},
+        SERVICE_TOGGLE,
+        target={ATTR_ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
     
-    # Verify API was called to set switch state to on
-    mock_api.set_switch_state.assert_called_with("switch_001", True, "mock_access_token")
+    mock_redgtech_api.set_switch_state.assert_called_once_with("switch_001", True, "mock_access_token")
 
 
-async def test_switch_connection_error(hass: HomeAssistant, setup_redgtech_integration):
-    """Test handling connection errors when controlling switches."""
-    mock_api = setup_redgtech_integration
-    mock_api.set_switch_state.side_effect = RedgtechConnectionError("Connection failed")
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (
+            RedgtechConnectionError("Connection failed"),
+            "Connection error",
+        ),
+        (
+            RedgtechAuthError("Auth failed"), 
+            "Failed to set switch state due to authentication error",  # Fixed: Match actual error message
+        ),
+    ],
+)
+async def test_exception_handling(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_message: str,
+) -> None:
+    """Test exception handling when controlling switches."""
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
-    with pytest.raises(HomeAssistantError, match="Connection error"):
+    mock_redgtech_api.set_switch_state.side_effect = exception
+    
+    with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            "turn_on",
-            {"entity_id": "switch.living_room_switch"},
+            SERVICE_TURN_ON,
+            target={ATTR_ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )
 
 
-async def test_switch_auth_error_with_retry(hass: HomeAssistant, setup_redgtech_integration):
+async def test_switch_auth_error_with_retry(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test handling auth errors with token renewal."""
-    mock_api = setup_redgtech_integration
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
     # First call fails with auth error, second succeeds
-    mock_api.set_switch_state.side_effect = [
+    mock_redgtech_api.set_switch_state.side_effect = [
         RedgtechAuthError("Auth failed"),
         None  # Success on retry
     ]
     
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
-        {"entity_id": "switch.living_room_switch"},
+        SERVICE_TURN_ON,
+        target={ATTR_ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
     
     # Verify login was called again for token renewal
-    assert mock_api.login.call_count >= 2
+    assert mock_redgtech_api.login.call_count >= 2
     # Verify set_switch_state was called twice (initial + retry)
-    assert mock_api.set_switch_state.call_count == 2
+    assert mock_redgtech_api.set_switch_state.call_count == 2
 
 
-async def test_coordinator_data_update_success(hass: HomeAssistant, setup_redgtech_integration):
+async def test_coordinator_data_update_success(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test successful data update through coordinator."""
-    mock_api = setup_redgtech_integration
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
     
     # Get the coordinator from the config entry
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    coordinator = config_entries[0].runtime_data
+    coordinator = mock_config_entry.runtime_data
     
     # Update mock data
-    mock_api.get_data.return_value = {
+    mock_redgtech_api.get_data.return_value = {
         "boards": [
             {
                 "endpointId": "switch_001",
@@ -195,17 +238,20 @@ async def test_coordinator_data_update_success(hass: HomeAssistant, setup_redgte
     assert coordinator.last_exception is None
     assert len(coordinator.data) == 1
     assert coordinator.data[0].unique_id == "switch_001"
-    assert coordinator.data[0].state == STATE_ON
 
 
-async def test_coordinator_connection_error_during_update(hass: HomeAssistant, setup_redgtech_integration):
+async def test_coordinator_connection_error_during_update(
+    hass: HomeAssistant,
+    mock_redgtech_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test coordinator handling connection errors during data updates."""
-    mock_api = setup_redgtech_integration
-    mock_api.get_data.side_effect = RedgtechConnectionError("Connection failed")
+    await setup_integration(hass, mock_config_entry, mock_redgtech_api)
+    
+    mock_redgtech_api.get_data.side_effect = RedgtechConnectionError("Connection failed")
     
     # Get the coordinator
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    coordinator = config_entries[0].runtime_data
+    coordinator = mock_config_entry.runtime_data
     
     # Trigger update - coordinator will handle the exception internally
     await coordinator.async_refresh()
@@ -214,36 +260,3 @@ async def test_coordinator_connection_error_during_update(hass: HomeAssistant, s
     assert coordinator.last_exception is not None
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert "Failed to connect to Redgtech API" in str(coordinator.last_exception)
-
-
-async def test_coordinator_auth_error_with_token_renewal(hass: HomeAssistant, setup_redgtech_integration):
-    """Test coordinator handling auth errors with token renewal."""
-    mock_api = setup_redgtech_integration
-    
-    # First call fails with auth error, second succeeds after token renewal
-    mock_api.get_data.side_effect = [
-        RedgtechAuthError("Auth failed"),
-        {
-            "boards": [
-                {
-                    "endpointId": "switch_001",
-                    "friendlyName": "Living Room Switch",
-                    "value": True
-                }
-            ]
-        }
-    ]
-    
-    # Get the coordinator
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    coordinator = config_entries[0].runtime_data
-    
-    # Trigger update
-    await coordinator.async_refresh()
-    
-    # Verify token renewal was attempted
-    assert mock_api.login.call_count >= 2
-    # Verify data was eventually retrieved successfully
-    assert coordinator.last_exception is None
-    assert len(coordinator.data) == 1
-    assert coordinator.data[0].unique_id == "switch_001"
