@@ -112,6 +112,10 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
 
 
 async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    if handler.options.get("unit_prefix") == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
+        del handler.options["unit_prefix"]
+
     return vol.Schema(await _get_options_dict(handler))
 
 
