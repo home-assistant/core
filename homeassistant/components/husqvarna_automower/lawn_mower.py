@@ -124,6 +124,13 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         return LawnMowerActivity.ERROR
 
     @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return (
+            super().available and self.mower_attributes.mower.state != MowerStates.OFF
+        )
+
+    @property
     def work_areas(self) -> dict[int, WorkArea] | None:
         """Return the work areas of the mower."""
         return self.mower_attributes.work_areas
