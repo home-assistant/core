@@ -27,6 +27,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
@@ -248,6 +249,18 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
                 progress_task=self.firmware_install_task,
             )
+
+        try:
+            await self.firmware_install_task
+        except HomeAssistantError as err:
+            _LOGGER.exception("Failed to flash firmware")
+            raise AbortFlow(
+                "fw_install_failed",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "firmware_name": firmware_name,
+                },
+            ) from err
 
         return self.async_show_progress_done(next_step_id=next_step_id)
 
