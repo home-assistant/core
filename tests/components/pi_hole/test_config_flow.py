@@ -119,13 +119,13 @@ async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
 async def test_flow_user_invalid(hass: HomeAssistant) -> None:
     """Test user initialized flow with completely invalid server."""
     mocked_hole = _create_mocked_hole(raise_exception=True)
-    with _patch_config_flow_hole(mocked_hole):
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"api_key": "invalid_auth"}
 
 
 async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
@@ -133,13 +133,13 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
     mocked_hole = _create_mocked_hole(
         has_data=True, api_version=6, incorrect_app_password=True
     )
-    with _patch_config_flow_hole(mocked_hole):
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"api_key": "invalid_auth"}
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:

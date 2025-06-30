@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hole.exceptions import HoleError
+from hole.exceptions import HoleConnectionError, HoleError
 
 from homeassistant.components.pi_hole.const import (
     DEFAULT_LOCATION,
@@ -217,7 +217,9 @@ def _create_mocked_hole(
                 or incorrect_app_password
                 or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
-                raise HoleError("Authentication failed: Invalid password")
+                if api_version == 6:
+                    raise HoleError("Authentication failed: Invalid password")
+                raise HoleConnectionError
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""
