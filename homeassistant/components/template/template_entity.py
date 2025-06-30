@@ -481,10 +481,6 @@ class TemplateEntity(AbstractTemplateEntity):
                     event, update.template, update.last_result, update.result
                 )
 
-        self._write_state_and_update_preview()
-
-    @callback
-    def _write_state_and_update_preview(self):
         if not self._preview_callback:
             self.async_write_ha_state()
             return

@@ -317,6 +317,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             state is None
             or (state and not self._delay_on)
             or (not state and not self._delay_off)
+            # We should directly reflect the state for previews (even if delay is set) for the best UX.
+            or self._preview_callback
         ):
             self._attr_is_on = state
             return
@@ -325,7 +327,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         def _set_state(_):
             """Set state of template binary sensor."""
             self._attr_is_on = state
-            self._write_state_and_update_preview()
+            self.async_write_ha_state()
 
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
