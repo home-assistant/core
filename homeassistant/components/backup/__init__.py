@@ -2,9 +2,9 @@
 
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery_flow
-from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
@@ -37,7 +37,6 @@ from .manager import (
     IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
-    ManagerStateEvent,
     NewBackup,
     RestoreBackupEvent,
     RestoreBackupStage,
@@ -72,12 +71,12 @@ __all__ = [
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
-    "ManagerStateEvent",
     "NewBackup",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
     "WrittenBackup",
+    "async_get_manager",
     "suggested_filename",
     "suggested_filename_from_name_date",
 ]
@@ -104,13 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     backup_manager = BackupManager(hass, reader_writer)
     hass.data[DATA_MANAGER] = backup_manager
-    try:
-        await backup_manager.async_setup()
-    except Exception as err:
-        hass.data[DATA_BACKUP].manager_ready.set_exception(err)
-        raise
-    else:
-        hass.data[DATA_BACKUP].manager_ready.set_result(None)
+    await backup_manager.async_setup()
 
     async_register_websocket_handlers(hass, with_hassio)
 
@@ -143,3 +136,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+@callback
+def async_get_manager(hass: HomeAssistant) -> BackupManager:
+    """Get the backup manager instance.
+
+    Raises HomeAssistantError if the backup integration is not available.
+    """
+    if DATA_MANAGER not in hass.data:
+        raise HomeAssistantError("Backup integration is not available")
+
+    return hass.data[DATA_MANAGER]
