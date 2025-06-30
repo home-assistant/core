@@ -166,14 +166,11 @@ class OllamaBaseLLMEntity(Entity):
         self.subentry = subentry
         self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
-
-        model, _, version = subentry.data[CONF_MODEL].partition(":")
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Ollama",
-            model=model,
-            sw_version=version or "latest",
+            model=entry.data[CONF_MODEL],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
