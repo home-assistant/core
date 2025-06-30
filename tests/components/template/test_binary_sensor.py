@@ -253,7 +253,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
 @pytest.mark.parametrize(
     ("state_template", "expected_result"),
     [
-        ("{{ None }}", STATE_OFF),
+        ("{{ None }}", STATE_UNKNOWN),
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ 1 }}", STATE_ON),
@@ -263,7 +263,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
             "{% else %}"
             "{{ states('binary_sensor.three') == 'off' }}"
             "{% endif %}",
-            STATE_OFF,
+            STATE_UNKNOWN,
         ),
         ("{{ 1 / 0 == 10 }}", STATE_UNAVAILABLE),
     ],
@@ -1209,7 +1209,7 @@ async def test_restore_state(
     [
         (2, STATE_ON, "mdi:pirate", "/local/dogs.png", 3, 1, "si"),
         (1, STATE_OFF, "mdi:pirate", "/local/dogs.png", 2, 1, "si"),
-        (0, STATE_OFF, "mdi:pirate", "/local/dogs.png", 1, 1, "si"),
+        (0, STATE_UNKNOWN, "mdi:pirate", "/local/dogs.png", 1, 1, "si"),
         (-1, STATE_UNAVAILABLE, None, None, None, None, None),
     ],
 )
@@ -1274,12 +1274,20 @@ async def test_trigger_entity(
     assert state.attributes.get("another") == another_attr_update
 
     # Check None values
-    hass.bus.async_fire("test_event", {"beer": -1})
+    hass.bus.async_fire("test_event", {"beer": 0})
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get("binary_sensor.via_list")
     assert state.state == STATE_UNKNOWN
+
+    # Check impossible values
+    hass.bus.async_fire("test_event", {"beer": -1})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1306,7 +1314,7 @@ async def test_trigger_entity(
     [
         (2, STATE_UNKNOWN, STATE_ON, STATE_OFF),
         (1, STATE_OFF, STATE_OFF, STATE_OFF),
-        (0, STATE_OFF, STATE_OFF, STATE_OFF),
+        (0, STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN),
         (-1, STATE_UNAVAILABLE, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
     ],
 )
@@ -1645,50 +1653,3 @@ async def test_device_id(
     template_entity = entity_registry.async_get("binary_sensor.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
-
-
-@pytest.mark.parametrize(
-    ("state_template", "expected_result"),
-    [
-        ("{{ None }}", STATE_UNKNOWN),
-        ("{{ True }}", STATE_ON),
-        ("{{ False }}", STATE_OFF),
-        ("{{ 1 }}", STATE_ON),
-        (
-            "{% if states('binary_sensor.three') in ('unknown','unavailable') %}"
-            "{{ None }}"
-            "{% else %}"
-            "{{ states('binary_sensor.three') == 'off' }}"
-            "{% endif %}",
-            STATE_UNKNOWN,
-        ),
-    ],
-)
-async def test_state(
-    hass: HomeAssistant,
-    state_template: str,
-    expected_result: str,
-) -> None:
-    """Test the config flow."""
-    hass.states.async_set("binary_sensor.one", "on")
-    hass.states.async_set("binary_sensor.two", "off")
-    hass.states.async_set("binary_sensor.three", "unknown")
-
-    template_config_entry = MockConfigEntry(
-        data={},
-        domain=template.DOMAIN,
-        options={
-            "name": "My template",
-            "state": state_template,
-            "template_type": binary_sensor.DOMAIN,
-        },
-        title="My template",
-    )
-    template_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.my_template")
-    assert state is not None
-    assert state.state == expected_result
