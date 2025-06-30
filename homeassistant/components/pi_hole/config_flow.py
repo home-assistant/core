@@ -160,17 +160,18 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         str(pi_hole.data),
                     )
                     raise HoleError(pi_hole.data)  # noqa: TRY301
-                _LOGGER.debug(
-                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
-                    5,
-                )
-                self._config[CONF_API_VERSION] = 5
             except HoleError as ex_v5:
                 _LOGGER.warning(
                     "Connection to API version 5 failed: %s",
                     ex_v5,
                 )
                 return {"base": "cannot_connect"}
+            else:
+                _LOGGER.debug(
+                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    5,
+                )
+                self._config[CONF_API_VERSION] = 5
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(

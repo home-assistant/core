@@ -235,7 +235,14 @@ async def determine_api_version(
     holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
         await holeV5.get_data()
-        if holeV5.data == []:
+
+    except HoleConnectionError as err:
+        _LOGGER.error(
+            "Failed to connect to Pi-hole v5 API at %s: %s", holeV5.base_url, err
+        )
+    else:
+        # V5 API returns [] to unauthenticated requests
+        if not holeV5.data:
             _LOGGER.debug(
                 "Response '[]' from API without auth, pihole API version 5 probably detected at %s",
                 holeV5.base_url,
@@ -245,10 +252,6 @@ async def determine_api_version(
             "Unexpected response from Pi-hole API at %s: %s",
             holeV5.base_url,
             str(holeV5.data),
-        )
-    except HoleConnectionError as err:
-        _LOGGER.error(
-            "Failed to connect to Pi-hole v5 API at %s: %s", holeV5.base_url, err
         )
     _LOGGER.debug(
         "Could not determine pi-hole API version at: %s",
