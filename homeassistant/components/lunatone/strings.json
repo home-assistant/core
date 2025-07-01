@@ -21,5 +21,26 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "device_scan_method": "Select a device scan method"
+        }
+      },
+      "finish": {
+        "description": "Device scan completed successfully"
+      }
+    }
+  },
+  "selector": {
+    "device_scan_method": {
+      "options": {
+        "current_device_list": "Update current device list",
+        "system_extension": "System extension",
+        "new_installation": "New installation"
+      }
+    }
   }
 }
