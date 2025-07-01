@@ -1418,7 +1418,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
-    _type_data: EnumTypeData | IntegerTypeData | MealPlanTypeData | None = None
+    _type_data: EnumTypeData | IntegerTypeData | BaseTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
     def __init__(
