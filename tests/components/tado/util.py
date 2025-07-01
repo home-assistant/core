@@ -184,30 +184,12 @@ async def async_init_integration(
             "https://my.tado.com/api/v2/homes/1/zones/1/state",
             text=await async_load_fixture(hass, zone_1_state_fixture, DOMAIN),
         )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/1/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/2/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/3/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/4/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/5/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
-        m.get(
-            "https://my.tado.com/api/v2/homes/1/zones/6/control",
-            text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
-        )
+        zone_ids = [1, 2, 3, 4, 5, 6]
+        for zone_id in zone_ids:
+            m.get(
+                f"https://my.tado.com/api/v2/homes/1/zones/{zone_id}/control",
+                text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+            )
         m.post(
             "https://login.tado.com/oauth2/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
