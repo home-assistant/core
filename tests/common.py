@@ -87,6 +87,7 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
     translation,
+    trigger,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -295,6 +296,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
     hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
@@ -452,11 +454,9 @@ def async_fire_mqtt_message(
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
 
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.client import MQTTMessage
+    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt import MqttData
+    from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
@@ -567,6 +567,12 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
     return pathlib.Path(__file__).parent.joinpath(
         "components", integration, "fixtures", filename
     )
+
+
+@lru_cache
+def load_fixture_bytes(filename: str, integration: str | None = None) -> bytes:
+    """Load a fixture."""
+    return get_fixture_path(filename, integration).read_bytes()
 
 
 @lru_cache
@@ -1180,7 +1186,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
     async def start_subentry_reconfigure_flow(
         self,
         hass: HomeAssistant,
-        subentry_flow_type: str,
         subentry_id: str,
         *,
         show_advanced_options: bool = False,
@@ -1190,6 +1195,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
             raise ValueError(
                 "Config entry must be added to hass to start reconfiguration flow"
             )
+        # Derive subentry_flow_type from the subentry_id
+        subentry_flow_type = self.subentries[subentry_id].subentry_type
         return await hass.config_entries.subentries.async_init(
             (self.entry_id, subentry_flow_type),
             context={
@@ -1736,8 +1743,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.cloud import (
+    from homeassistant.components.cloud import (  # noqa: PLC0415
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
     )

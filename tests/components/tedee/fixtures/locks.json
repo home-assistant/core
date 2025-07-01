@@ -9,7 +9,8 @@
     "is_charging": false,
     "state_change_result": 0,
     "is_enabled_pullspring": 1,
-    "duration_pullspring": 2
+    "duration_pullspring": 2,
+    "door_state": 0
   },
   {
     "lock_name": "Lock-2C3D",
@@ -21,6 +22,7 @@
     "is_charging": false,
     "state_change_result": 0,
     "is_enabled_pullspring": 0,
-    "duration_pullspring": 0
+    "duration_pullspring": 0,
+    "door_state": 2
   }
 ]
