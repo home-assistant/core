@@ -305,7 +305,7 @@ async def test_migration_from_v2_1_to_v2_2(
 ) -> None:
     """Test migration from version 2.1 to version 2.2.
 
-    This tests we celan up the broken migration in Home Assistant Core
+    This tests we clean up the broken migration in Home Assistant Core
     2025.7.0b0-2025.7.0b1:
     - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
     """
