@@ -156,7 +156,7 @@ async def test_battery_sensor_voltage(
     matter_node: MatterNode,
 ) -> None:
     """Test battery voltage sensor."""
-    entity_id = "sensor.eve_door_voltage"
+    entity_id = "sensor.eve_door_battery_voltage"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "3.558"
@@ -523,6 +523,18 @@ async def test_water_heater(
     state = hass.states.get("sensor.water_heater_appliance_energy_state")
     assert state
     assert state.state == "offline"
+
+    # DeviceEnergyManagement -> OptOutState attribute
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "no_opt_out"
+
+    set_node_attribute(matter_node, 2, 152, 7, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "opt_out"
 
 
 @pytest.mark.parametrize("node_fixture", ["pump"])
