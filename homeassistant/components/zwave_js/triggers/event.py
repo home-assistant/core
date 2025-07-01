@@ -7,7 +7,6 @@ import functools
 
 from pydantic.v1 import ValidationError
 import voluptuous as vol
-from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
@@ -16,7 +15,7 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
@@ -26,7 +25,6 @@ from ..const import (
     ATTR_EVENT_SOURCE,
     ATTR_NODE_ID,
     ATTR_PARTIAL_DICT_MATCH,
-    DATA_CLIENT,
     DOMAIN,
 )
 from ..helpers import (
@@ -166,9 +164,9 @@ async def async_attach_trigger(
             if (
                 config[ATTR_PARTIAL_DICT_MATCH]
                 and isinstance(event_data[key], dict)
-                and isinstance(event_data_filter[key], dict)
+                and isinstance(val, dict)
             ):
-                for key2, val2 in event_data_filter[key].items():
+                for key2, val2 in val.items():
                     if key2 not in event_data[key] or event_data[key][key2] != val2:
                         return
                 continue
@@ -219,7 +217,7 @@ async def async_attach_trigger(
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
             entry = hass.config_entries.async_get_entry(entry_id)
             assert entry
-            client: Client = entry.runtime_data[DATA_CLIENT]
+            client = entry.runtime_data.client
             driver = client.driver
             assert driver
             drivers.add(driver)
@@ -251,3 +249,29 @@ async def async_attach_trigger(
     _create_zwave_listeners()
 
     return async_remove
+
+
+class EventTrigger(Trigger):
+    """Z-Wave JS event trigger."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+        self._config = config
+        self._hass = hass
+
+    @classmethod
+    async def async_validate_trigger_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return await async_validate_trigger_config(hass, config)
+
+    async def async_attach_trigger(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        return await async_attach_trigger(
+            self._hass, self._config, action, trigger_info
+        )

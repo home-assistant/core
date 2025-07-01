@@ -165,28 +165,36 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         return attr
 
     def set_percentage(self, percentage: int) -> None:
-        """Set the speed of the device."""
+        """Set the speed of the device.
+
+        If percentage is 0, turn off the fan. Otherwise, ensure the fan is on,
+        set manual mode if needed, and set the speed.
+        """
+        device_type = SKU_TO_BASE_DEVICE[self.device.device_type]
+        speed_range = SPEED_RANGE[device_type]
+
         if percentage == 0:
-            success = self.device.turn_off()
-            if not success:
+            # Turning off is a special case: do not set speed or mode
+            if not self.device.turn_off():
                 raise HomeAssistantError("An error occurred while turning off.")
-        elif not self.device.is_on:
-            success = self.device.turn_on()
-            if not success:
+            self.schedule_update_ha_state()
+            return
+
+        # If the fan is off, turn it on first
+        if not self.device.is_on:
+            if not self.device.turn_on():
                 raise HomeAssistantError("An error occurred while turning on.")
 
-        success = self.device.manual_mode()
-        if not success:
-            raise HomeAssistantError("An error occurred while manual mode.")
-        success = self.device.change_fan_speed(
-            math.ceil(
-                percentage_to_ranged_value(
-                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
-                )
-            )
-        )
-        if not success:
+        # Switch to manual mode if not already set
+        if self.device.mode != VS_FAN_MODE_MANUAL:
+            if not self.device.manual_mode():
+                raise HomeAssistantError("An error occurred while setting manual mode.")
+
+        # Calculate the speed level and set it
+        speed_level = math.ceil(percentage_to_ranged_value(speed_range, percentage))
+        if not self.device.change_fan_speed(speed_level):
             raise HomeAssistantError("An error occurred while changing fan speed.")
+
         self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
