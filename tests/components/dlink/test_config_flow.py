@@ -177,7 +177,7 @@ async def test_dhcp_unique_id_assignment(
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA | {CONF_HOST: "2.3.4.5"}
-    assert result["result"].unique_id == "11:22:33:44:55:66"
+    assert result["result"].unique_id == "112233445566"
 
 
 async def test_dhcp_changed_ip(
