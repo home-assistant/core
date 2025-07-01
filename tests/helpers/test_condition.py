@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -26,8 +26,11 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from tests.common import MockModule, mock_integration, mock_platform
 
 
 def assert_element(trace_element, expected_element, path):
@@ -2251,15 +2254,78 @@ async def test_trigger(hass: HomeAssistant) -> None:
     assert test(hass, {"trigger": {"id": "123456"}})
 
 
-async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> None:
-    """Test platform.async_validate_condition_config will be called if it exists."""
+async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
+    """Test platform.async_get_conditions will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     with patch(
-        "homeassistant.components.device_automation.condition.async_validate_condition_config",
-        AsyncMock(),
-    ) as device_automation_validate_condition_mock:
+        "homeassistant.components.device_automation.condition.async_get_conditions",
+        AsyncMock(return_value={"device": AsyncMock()}),
+    ) as device_automation_async_get_conditions_mock:
         await condition.async_validate_condition_config(hass, config)
-        device_automation_validate_condition_mock.assert_awaited()
+        device_automation_async_get_conditions_mock.assert_awaited()
+
+
+async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
+    """Test a condition platform with multiple conditions."""
+
+    class MockCondition(condition.Condition):
+        """Mock condition."""
+
+        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+            """Initialize condition."""
+
+        @classmethod
+        async def async_validate_condition_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    class MockCondition1(MockCondition):
+        """Mock condition 1."""
+
+        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+            """Evaluate state based on configuration."""
+            return lambda hass, vars: True
+
+    class MockCondition2(MockCondition):
+        """Mock condition 2."""
+
+        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+            """Evaluate state based on configuration."""
+            return lambda hass, vars: False
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[condition.Condition]]:
+        return {
+            "test": MockCondition1,
+            "test.cond_2": MockCondition2,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config_1 = {CONF_CONDITION: "test"}
+    config_2 = {CONF_CONDITION: "test.cond_2"}
+    config_3 = {CONF_CONDITION: "test.unknown_cond"}
+    assert await condition.async_validate_condition_config(hass, config_1) == config_1
+    assert await condition.async_validate_condition_config(hass, config_2) == config_2
+    with pytest.raises(
+        vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
+    ):
+        await condition.async_validate_condition_config(hass, config_3)
+
+    cond_func = await condition.async_from_config(hass, config_1)
+    assert cond_func(hass, {}) is True
+
+    cond_func = await condition.async_from_config(hass, config_2)
+    assert cond_func(hass, {}) is False
+
+    with pytest.raises(KeyError):
+        await condition.async_from_config(hass, config_3)
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
