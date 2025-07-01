@@ -11,6 +11,7 @@ from . import (
     CONFIG_DATA_DEFAULTS,
     CONFIG_ENTRY_WITH_API_KEY,
     CONFIG_FLOW_USER,
+    FTL_ERROR,
     NAME,
     ZERO_DATA,
     _create_mocked_hole,
@@ -168,3 +169,28 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert entry.data[CONF_API_KEY] == "newkey"
+
+
+async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
+    """Test user initialized flow with invalid server host address."""
+    mocked_hole = _create_mocked_hole(api_version=6, wrong_host=True)
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_error_response(hass: HomeAssistant) -> None:
+    """Test user initialized flow but dataotherbase errors occur."""
+    mocked_hole = _create_mocked_hole(api_version=5, ftl_error=True, has_data=False)
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER
+        )
+        assert mocked_hole.instances[-1].data == FTL_ERROR
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}

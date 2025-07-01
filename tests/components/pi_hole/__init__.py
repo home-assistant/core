@@ -104,6 +104,13 @@ ZERO_DATA_V6 = {
     "took": 0,
 }
 
+FTL_ERROR = {
+    "error": {
+        "key": "FTLnotrunning",
+        "message": "FTL not running",
+    }
+}
+
 SAMPLE_VERSIONS_WITH_UPDATES = {
     "core_current": "v5.5",
     "core_latest": "v5.6",
@@ -199,6 +206,8 @@ def _create_mocked_hole(
     has_data: bool = True,
     api_version: int = 5,
     incorrect_app_password: bool = False,
+    wrong_host: bool = False,
+    ftl_error: bool = False,
 ) -> MagicMock:
     """Return a mocked Hole API object with side effects based on constructor args."""
 
@@ -211,6 +220,8 @@ def _create_mocked_hole(
             setattr(mocked_hole, key, value)
 
         async def authenticate_side_effect(*_args, **_kwargs):
+            if wrong_host:
+                raise HoleConnectionError("Cannot authenticate with Pi-hole: err")
             password = getattr(mocked_hole, "password", None)
             if (
                 raise_exception
@@ -223,6 +234,8 @@ def _create_mocked_hole(
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""
+            if wrong_host:
+                raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
             password = getattr(mocked_hole, "password", None)
             api_token = getattr(mocked_hole, "api_token", None)
             if (
@@ -235,8 +248,16 @@ def _create_mocked_hole(
             elif password in ["newkey", "apikey"] or api_token in ["newkey", "apikey"]:
                 mocked_hole.data = ZERO_DATA_V6 if api_version == 6 else ZERO_DATA
 
+        async def ftl_side_effect():
+            mocked_hole.data = FTL_ERROR
+
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
+
+        if ftl_error:
+            # two unauthenticated instances are created in `determine_api_version` before aync_try_connect is called
+            if len(instances) > 1:
+                mocked_hole.get_data = AsyncMock(side_effect=ftl_side_effect)
         mocked_hole.get_versions = AsyncMock(return_value=None)
         mocked_hole.enable = AsyncMock()
         mocked_hole.disable = AsyncMock()
