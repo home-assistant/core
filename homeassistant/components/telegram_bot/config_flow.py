@@ -328,6 +328,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
@@ -350,7 +353,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input["advanced_settings"].get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
+                        CONF_PROXY_URL
+                    ),
                 },
                 options={
                     # this value may come from yaml import
@@ -412,12 +417,20 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config flow for webhook Telegram bot."""
 
         if not user_input:
+            default_trusted_networks = ",".join(
+                [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
+            )
+
             if self.source == SOURCE_RECONFIGURE:
+                suggested_values = dict(self._get_reconfigure_entry().data)
+                if CONF_TRUSTED_NETWORKS not in self._get_reconfigure_entry().data:
+                    suggested_values[CONF_TRUSTED_NETWORKS] = default_trusted_networks
+
                 return self.async_show_form(
                     step_id="webhooks",
                     data_schema=self.add_suggested_values_to_schema(
                         STEP_WEBHOOKS_DATA_SCHEMA,
-                        self._get_reconfigure_entry().data,
+                        suggested_values,
                     ),
                 )
 
@@ -426,9 +439,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_WEBHOOKS_DATA_SCHEMA,
                     {
-                        CONF_TRUSTED_NETWORKS: ",".join(
-                            [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
-                        ),
+                        CONF_TRUSTED_NETWORKS: default_trusted_networks,
                     },
                 ),
             )
@@ -479,12 +490,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str],
     ) -> None:
         # validate URL
-        if CONF_URL in user_input and not user_input[CONF_URL].startswith("https"):
-            errors["base"] = "invalid_url"
-            description_placeholders[ERROR_FIELD] = "URL"
-            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
-            return
-        if CONF_URL not in user_input:
+        url: str | None = user_input.get(CONF_URL)
+        if url is None:
             try:
                 get_url(self.hass, require_ssl=True, allow_internal=False)
             except NoURLAvailableError:
@@ -494,6 +501,11 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
+        elif not url.startswith("https"):
+            errors["base"] = "invalid_url"
+            description_placeholders[ERROR_FIELD] = "URL"
+            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
+            return
 
         # validate trusted networks
         csv_trusted_networks: list[str] = []

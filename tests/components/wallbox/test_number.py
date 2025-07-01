@@ -1,6 +1,6 @@
 """Test Wallbox Switch component."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import (
+    authorisation_response,
     http_403_error,
     http_404_error,
     http_429_error,
@@ -246,6 +247,35 @@ async def test_wallbox_number_class_icp_energy_auth_error(
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                ATTR_VALUE: 10,
+            },
+            blocking=True,
+        )
+
+
+async def test_wallbox_number_class_energy_auth_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
+            new=Mock(side_effect=http_403_error),
+        ),
+        pytest.raises(InvalidAuth),
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
                 ATTR_VALUE: 10,
             },
             blocking=True,
