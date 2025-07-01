@@ -56,7 +56,6 @@ async def async_setup_entry(
                 client,
                 config_entry.runtime_data.model,
                 config_entry.entry_id,
-                config_entry.title,
                 auto_detect_language=auto_detect,
             )
         ]
@@ -66,12 +65,14 @@ async def async_setup_entry(
 class ElevenLabsSTTEntity(SpeechToTextEntity):
     """The ElevenLabs STT API entity."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "elevenlabs_stt"
+
     def __init__(
         self,
         client: AsyncElevenLabs,
         model: Model,
         entry_id: str,
-        title: str,
         auto_detect_language: bool = False,
     ) -> None:
         """Init ElevenLabs TTS service."""
@@ -80,11 +81,11 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
 
         # Entity attributes
         self._attr_unique_id = entry_id
-        self._attr_name = f"{title} STT"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             manufacturer="ElevenLabs",
             model=model.name,
+            name="ElevenLabs",
             entry_type=DeviceEntryType.SERVICE,
         )
 

@@ -161,7 +161,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {},
@@ -171,7 +171,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
@@ -181,7 +181,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {ATTR_MODEL: "model2"},
@@ -191,7 +191,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2", ATTR_MODEL: "model2"},
@@ -251,7 +251,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
@@ -262,7 +262,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
@@ -314,7 +314,7 @@ async def test_tts_service_speak_lang_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
@@ -376,7 +376,7 @@ async def test_tts_service_speak_error(
             "mock_config_entry_setup_voice",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
@@ -434,7 +434,7 @@ async def test_tts_service_speak_voice_settings(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title_tts",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {},
