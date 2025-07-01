@@ -463,9 +463,6 @@ class Entity(
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
-    # If we reported this entity was added without its platform set
-    _no_platform_reported = False
-
     # If we reported the name translation placeholders do not match the name
     _name_translation_placeholders_reported = False
 
@@ -721,9 +718,6 @@ class Entity(
             # value.
             type.__getattribute__(self.__class__, "name")
             is type.__getattribute__(Entity, "name")
-            # The check for self.platform guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2024.1
-            and self.platform
         ):
             name = self._name_internal(
                 self._object_id_device_class_name,
@@ -736,10 +730,6 @@ class Entity(
     @cached_property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if not self.platform:
-            return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
             self.platform.platform_translations,
@@ -984,7 +974,7 @@ class Entity(
 
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]
+        if self.platform is None:
             report_issue = self._suggest_report_issue()  # type: ignore[unreachable]
             _LOGGER.warning(
                 (
@@ -996,7 +986,7 @@ class Entity(
                 type(self),
                 report_issue,
             )
-            self._no_platform_reported = True
+            raise HomeAssistantError("Entity does not have a platform")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
@@ -1015,8 +1005,6 @@ class Entity(
     @callback
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if not self.hass or not self._verified_state_writable:
-            self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
         self._async_write_ha_state()
@@ -1125,6 +1113,9 @@ class Entity(
         if self._platform_state is EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
             return
+
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
 
         if (entry := self.registry_entry) and entry.disabled_by:
             if not self._disabled_reported:
@@ -1486,10 +1477,7 @@ class Entity(
 
         Not to be extended by integrations.
         """
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform:
-            del entity_sources(self.hass)[self.entity_id]
+        del entity_sources(self.hass)[self.entity_id]
 
     @callback
     def _async_registry_updated(
@@ -1620,7 +1608,7 @@ class Entity(
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
         # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # EntityComponent which has not been allowed since HA Core 2024.1
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__

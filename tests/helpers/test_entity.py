@@ -101,6 +101,7 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
 
     ent = AsyncEntity()
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
 
     await ent.async_update_ha_state(True)
 
@@ -125,6 +126,7 @@ async def test_device_class(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.overwrite_hidden_true"
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -149,6 +151,7 @@ async def test_warn_slow_update(
 
     mock_entity = entity.Entity()
     mock_entity.hass = hass
+    mock_entity.platform = MockEntityPlatform(hass)
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
@@ -340,7 +343,9 @@ async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
             await test_lock.wait()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
+    ent_1.platform = MockEntityPlatform(hass)
     ent_2 = AsyncEntity("sensor.test_2", 2)
+    ent_2.platform = MockEntityPlatform(hass)
 
     try:
         ent_1.async_schedule_update_ha_state(True)
@@ -385,7 +390,9 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
 
     try:
         ent_1.async_schedule_update_ha_state(True)
+        ent_1.platform = MockEntityPlatform(hass)
         ent_2.async_schedule_update_ha_state(True)
+        ent_2.platform = MockEntityPlatform(hass)
 
         while True:
             if len(updates) >= 2:
@@ -421,8 +428,11 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
             await test_lock.acquire()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
+    ent_1.platform = MockEntityPlatform(hass)
     ent_2 = AsyncEntity("sensor.test_2", 2)
+    ent_2.platform = MockEntityPlatform(hass)
     ent_3 = AsyncEntity("sensor.test_3", 3)
+    ent_3.platform = MockEntityPlatform(hass)
 
     await test_lock.acquire()
 
@@ -497,9 +507,13 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
             await test_lock.acquire()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
+    ent_1.platform = MockEntityPlatform(hass)
     ent_2 = AsyncEntity("sensor.test_2", 2)
+    ent_2.platform = MockEntityPlatform(hass)
     ent_3 = AsyncEntity("sensor.test_3", 3)
+    ent_3.platform = MockEntityPlatform(hass)
     ent_4 = AsyncEntity("sensor.test_4", 4)
+    ent_4.platform = MockEntityPlatform(hass)
 
     await test_lock.acquire()
 
@@ -565,6 +579,8 @@ async def test_async_parallel_updates_with_one_using_executor(
             locked.append(self.parallel_updates.locked())
 
     entities = [SyncEntity(f"sensor.test_{i}") for i in range(3)]
+    for ent in entities:
+        ent.platform = MockEntityPlatform(hass)
 
     await asyncio.gather(
         *[
@@ -577,17 +593,6 @@ async def test_async_parallel_updates_with_one_using_executor(
     )
 
     assert locked == [True, True, True]
-
-
-async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
-    """Test async_remove method when no platform set."""
-    ent = entity.Entity()
-    ent.hass = hass
-    ent.entity_id = "test.test"
-    ent.async_write_ha_state()
-    assert len(hass.states.async_entity_ids()) == 1
-    await ent.async_remove()
-    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
@@ -659,6 +664,7 @@ async def test_set_context(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "hello.world"
+    ent.platform = MockEntityPlatform(hass)
     ent.async_set_context(context)
     ent.async_write_ha_state()
     assert hass.states.get("hello.world").context == context
@@ -672,6 +678,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        ent.platform = MockEntityPlatform(hass)
         ent.async_set_context(context)
         ent.async_write_ha_state()
 
@@ -758,6 +765,7 @@ async def test_capability_attrs(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        ent.platform = MockEntityPlatform(hass)
         ent.async_write_ha_state()
 
     state = hass.states.get("hello.world")
@@ -895,6 +903,7 @@ async def test_float_conversion(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        ent.platform = MockEntityPlatform(hass)
         ent.async_write_ha_state()
 
     state = hass.states.get("hello.world")
@@ -907,6 +916,7 @@ async def test_attribution_attribute(hass: HomeAssistant) -> None:
     mock_entity = entity.Entity()
     mock_entity.hass = hass
     mock_entity.entity_id = "hello.world"
+    mock_entity.platform = MockEntityPlatform(hass)
     mock_entity._attr_attribution = "Home Assistant"
 
     mock_entity.async_schedule_update_ha_state(True)
@@ -962,10 +972,12 @@ def test_entity_category_schema_error(value) -> None:
         schema(value)
 
 
-async def test_entity_description_fallback() -> None:
+async def test_entity_description_fallback(hass: HomeAssistant) -> None:
     """Test entity description has same defaults as entity."""
     ent = entity.Entity()
+    ent.platform = MockEntityPlatform(hass)
     ent_with_description = entity.Entity()
+    ent_with_description.platform = MockEntityPlatform(hass)
     ent_with_description.entity_description = entity.EntityDescription(key="test")
 
     for field in dataclasses.fields(entity.EntityDescription._dataclass):
@@ -1664,28 +1676,27 @@ async def test_warn_using_async_update_ha_state(
     assert error_message not in caplog.text
 
 
-async def test_warn_no_platform(
+async def test_raise_no_platform(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we warn am entity does not have a platform."""
+    """Test we raise if an entity does not have a platform."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.platform = None
+    ent.entity_id = "hello.world"
+    error_message = "does not have a platform"
+
+    # Without a platform, it should log a warning and raise an error
+    caplog.clear()
+    with pytest.raises(HomeAssistantError, match="Entity does not have a platform"):
+        ent.async_write_ha_state()
+    assert error_message in caplog.text
+
+    # No warning if the entity has a platform
     ent = entity.Entity()
     ent.hass = hass
     ent.platform = MockEntityPlatform(hass)
     ent.entity_id = "hello.world"
-    error_message = "does not have a platform"
-
-    # Without a platform, it should trigger the warning
-    ent.platform = None
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message in caplog.text
-
-    # Without a platform, it should not trigger the warning again
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message not in caplog.text
-
-    # No warning if the entity has a platform
     caplog.clear()
     ent.async_write_ha_state()
     assert error_message not in caplog.text
@@ -1698,6 +1709,7 @@ async def test_invalid_state(
     ent = entity.Entity()
     ent.entity_id = "test.test"
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
 
     ent._attr_state = "x" * 255
     ent.async_write_ha_state()
@@ -2605,6 +2617,7 @@ async def test_async_write_ha_state_thread_safety(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.any"
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id)
 
