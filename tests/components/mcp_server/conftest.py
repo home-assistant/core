@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="llm_hass_api")
-def llm_hass_api_fixture() -> str | list[str]:
+def llm_hass_api_fixture() -> list[str]:
     """Fixture for the config entry llm_hass_api."""
     return [llm.LLM_API_ASSIST]
 
