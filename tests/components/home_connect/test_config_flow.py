@@ -79,7 +79,7 @@ DHCP_DISCOVERY = (
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="NEFF-ABCDE1234-38B4D3000000",
-        macaddress="38b4d3:00:00:00",
+        macaddress="38b4d3000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
