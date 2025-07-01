@@ -58,15 +58,13 @@ async def test_change_api_5_to_6(
             "took": 0.0001430511474609375,
         }
 
-        # ensure an issue is created for the API version change
-        assert len(issue_registry.issues) == 1
-        assert (
-            issue_registry.async_get_issue(
-                issue_id=f"v5_to_v6_migration_{pihole_data.api.base_url}",
-                domain=pi_hole.DOMAIN,
-            )
-            is not None
-        )
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+        # ensure a re-auth flow is created
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert flows[0]["step_id"] == "reauth_confirm"
+        assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 async def test_app_password_changing(

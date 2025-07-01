@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -130,16 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
                         and "/admin/api" in hint
                     ):
                         _LOGGER.warning(
-                            "Pi-hole API v6 returned an error that is expected when using v5 endpoints we will create a repair issue"
-                        )
-                        ir.async_create_issue(
-                            hass,
-                            DOMAIN,
-                            issue_id=f"v5_to_v6_migration_{api.base_url}",
-                            is_fixable=False,
-                            severity=ir.IssueSeverity.ERROR,
-                            translation_key="v5_to_v6_migration",
-                            is_persistent=True,
+                            "Pi-hole API v6 returned an error that is expected when using v5 endpoints please re-configure your authentication"
                         )
                         raise ConfigEntryAuthFailed
         except HoleError as err:
