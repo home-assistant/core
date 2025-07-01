@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
+from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
@@ -116,6 +116,20 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         if value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+        self._attr_native_min_value = (
+            cast(
+                int,
+                self.get_matter_attribute_value(self.entity_description.min_attribute),
+            )
+            / 100
+        )
+        self._attr_native_max_value = (
+            cast(
+                int,
+                self.get_matter_attribute_value(self.entity_description.max_attribute),
+            )
+            / 100
+        )
 
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
