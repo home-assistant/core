@@ -184,7 +184,6 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
     RobotSensorEntityDescription[Pet](
         key="visits_today",
         translation_key="visits_today",
-        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         value_fn=(
             lambda pet: sum(
