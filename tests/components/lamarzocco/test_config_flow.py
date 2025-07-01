@@ -422,7 +422,7 @@ async def test_dhcp_discovery(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname=mock_lamarzocco.serial_number,
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
@@ -453,7 +453,7 @@ async def test_dhcp_discovery_abort_on_hostname_changed(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname="custom_name",
-            macaddress="00:00:00:00:00:00",
+            macaddress="000000000000",
         ),
     )
     assert result["type"] is FlowResultType.ABORT
@@ -475,7 +475,7 @@ async def test_dhcp_already_configured_and_update(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname=mock_lamarzocco.serial_number,
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
     assert result["type"] is FlowResultType.ABORT
