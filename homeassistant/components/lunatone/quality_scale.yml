@@ -21,12 +21,12 @@ rules:
     status: exempt
     comment: |
       Entities of this integration does not explicitly subscribe to events.
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
   test-before-configure: todo
   test-before-setup: todo
-  unique-config-entry: todo
+  unique-config-entry: done
 
   # # Silver
   # action-exceptions: todo
