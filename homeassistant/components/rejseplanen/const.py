@@ -10,6 +10,7 @@ CONF_DEPARTURE_TYPE = "departure_type"
 CONF_NAME = "name"
 
 DEFAULT_NAME = "Next departure"
+DEFAULT_STOP_NAME = "Unknown stop"
 
 BUS_TYPES = ["BUS", "EXB", "TB"]
 TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]

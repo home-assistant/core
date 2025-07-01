@@ -37,7 +37,7 @@ from .const import (
     CONF_NAME,
     CONF_ROUTE,
     CONF_STOP_ID,
-    DEFAULT_NAME,
+    DEFAULT_STOP_NAME,
     DOMAIN,
 )
 from .coordinator import RejseplanenDataUpdateCoordinator
@@ -80,7 +80,7 @@ async def async_setup_entry(
         coordinator = entry_data["coordinator"]
 
         config = subentry.data
-        name = config.get(CONF_NAME, DEFAULT_NAME)
+        name = config.get(CONF_NAME, DEFAULT_STOP_NAME)
         stop_id = int(config[CONF_STOP_ID])
         route = config.get(CONF_ROUTE, [])
         direction = config.get(CONF_DIRECTION, [])

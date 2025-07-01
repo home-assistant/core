@@ -29,6 +29,7 @@ from .const import (
     CONF_NAME,
     CONF_ROUTE,
     CONF_STOP_ID,
+    DEFAULT_STOP_NAME,
     DOMAIN,
     METRO_TYPES,
     TRAIN_TYPES,
@@ -48,7 +49,7 @@ CONFIG_STOP_SCHEMA = vol.Schema(
                 mode=NumberSelectorMode.BOX, min=1, max=99999999, step=1
             ),
         ),
-        vol.Optional(CONF_NAME, default="Stop"): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,
         vol.Optional(
             CONF_DEPARTURE_TYPE,
             default=[],
