@@ -251,7 +251,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unavailable',
+        'offline',
         'availabletoplay',
         'availabletocommunicate',
         'busy',
@@ -292,7 +292,7 @@
       'device_class': 'enum',
       'friendly_name': 'testuser Online status',
       'options': list([
-        'unavailable',
+        'offline',
         'availabletoplay',
         'availabletocommunicate',
         'busy',

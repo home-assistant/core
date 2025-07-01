@@ -38,7 +38,7 @@ class PlaystationNetworkData:
     presence: dict[str, Any] = field(default_factory=dict)
     username: str = ""
     account_id: str = ""
-    available: str = "unavailable"
+    availability: str = "unavailable"
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
     trophy_summary: TrophySummary | None = None
@@ -92,7 +92,7 @@ class PlaystationNetwork:
         data.username = self.user.online_id
         data.account_id = self.user.account_id
 
-        data.available = data.presence["basicPresence"]["availability"]
+        data.availability = data.presence["basicPresence"]["availability"]
 
         session = SessionData()
         session.platform = PlatformType(
