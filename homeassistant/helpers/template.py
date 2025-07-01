@@ -1734,6 +1734,14 @@ def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label description from a label ID."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.description
+    return None
+
+
 def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
     """Get the label ID from a label name or ID."""
     # If label_name returns a value, we know the input was an ID, otherwise we
@@ -2626,9 +2634,14 @@ def ordinal(value):
     )
 
 
-def from_json(value):
+def from_json(value, default=_SENTINEL):
     """Convert a JSON string to an object."""
-    return json_loads(value)
+    try:
+        return json_loads(value)
+    except JSON_DECODE_EXCEPTIONS:
+        if default is _SENTINEL:
+            raise_no_default("from_json", value)
+        return default
 
 
 def _to_json_default(obj: Any) -> None:
@@ -3313,6 +3326,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["label_name"] = hassfunction(label_name)
         self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_description"] = hassfunction(label_description)
+        self.filters["label_description"] = self.globals["label_description"]
 
         self.globals["label_areas"] = hassfunction(label_areas)
         self.filters["label_areas"] = self.globals["label_areas"]
