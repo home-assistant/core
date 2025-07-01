@@ -316,7 +316,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -430,7 +430,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -760,7 +760,7 @@ async def test_redacted_thinking(
     assert chat_log.content[2].content == "How can I help you today?"
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,

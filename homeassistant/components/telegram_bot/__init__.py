@@ -29,6 +29,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv
@@ -390,9 +391,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
         elif msgtype == SERVICE_LEAVE_CHAT:
-            messages = await notify_service.leave_chat(
-                context=service.context, **kwargs
-            )
+            await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
         else:
@@ -400,12 +399,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 msgtype, context=service.context, **kwargs
             )
 
-        if service.return_response and messages:
+        if service.return_response and messages is not None:
+            target: list[int] | None = service.data.get(ATTR_TARGET)
+            if not target:
+                target = notify_service.get_target_chat_ids(None)
+
+            failed_chat_ids = [chat_id for chat_id in target if chat_id not in messages]
+            if failed_chat_ids:
+                raise HomeAssistantError(
+                    f"Failed targets: {failed_chat_ids}",
+                    translation_domain=DOMAIN,
+                    translation_key="failed_chat_ids",
+                    translation_placeholders={
+                        "chat_ids": ", ".join([str(i) for i in failed_chat_ids]),
+                        "bot_name": config_entry.title,
+                    },
+                )
+
             return {
                 "chats": [
                     {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
                 ]
             }
+
         return None
 
     # Register notification services
