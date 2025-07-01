@@ -143,7 +143,7 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 
 
 class BleScannerFirmwareUpdateFlow(ShellyRpcRepairsFlow):
-    """Handler for an issue fixing flow."""
+    """Handler for BLE Scanner Firmware Update flow."""
 
     async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
@@ -164,7 +164,7 @@ class BleScannerFirmwareUpdateFlow(ShellyRpcRepairsFlow):
 
 
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
-    """Handler for an issue fixing flow."""
+    """Handler for Disable Outbound WebSocket flow."""
 
     async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
