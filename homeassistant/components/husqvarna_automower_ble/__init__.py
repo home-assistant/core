@@ -15,12 +15,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import LOGGER
 from .coordinator import HusqvarnaCoordinator
 
+type HusqvarnaConfigEntry = ConfigEntry[HusqvarnaCoordinator]
+
 PLATFORMS = [
     Platform.LAWN_MOWER,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
     address = entry.data[CONF_ADDRESS]
     channel_id = entry.data[CONF_CLIENT_ID]
@@ -54,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: HusqvarnaCoordinator = entry.runtime_data

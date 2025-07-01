@@ -30,6 +30,7 @@ from tests.common import MockConfigEntry, assert_setup_component, mock_restore_c
 TEST_OBJECT_ID = "test_template_panel"
 TEST_ENTITY_ID = f"alarm_control_panel.{TEST_OBJECT_ID}"
 TEST_STATE_ENTITY_ID = "alarm_control_panel.test"
+TEST_SWITCH = "switch.test_state"
 
 
 @pytest.fixture
@@ -110,6 +111,14 @@ TEMPLATE_ALARM_CONFIG = {
     **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
 }
 
+TEST_STATE_TRIGGER = {
+    "triggers": {"trigger": "state", "entity_id": [TEST_STATE_ENTITY_ID, TEST_SWITCH]},
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "actions": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+    ],
+}
+
 
 async def async_setup_legacy_format(
     hass: HomeAssistant, count: int, panel_config: dict[str, Any]
@@ -146,6 +155,24 @@ async def async_setup_modern_format(
     await hass.async_block_till_done()
 
 
+async def async_setup_trigger_format(
+    hass: HomeAssistant, count: int, panel_config: dict[str, Any]
+) -> None:
+    """Do setup of alarm control panel integration via trigger format."""
+    config = {"template": {"alarm_control_panel": panel_config, **TEST_STATE_TRIGGER}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 async def setup_panel(
     hass: HomeAssistant,
@@ -158,6 +185,8 @@ async def setup_panel(
         await async_setup_legacy_format(hass, count, panel_config)
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(hass, count, panel_config)
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(hass, count, panel_config)
 
 
 async def async_setup_state_panel(
@@ -180,6 +209,16 @@ async def async_setup_state_panel(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": state_template,
+                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass,
             count,
             {
@@ -228,6 +267,17 @@ async def setup_base_panel(
                 **panel_config,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        extra = {"state": state_template} if state_template else {}
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **extra,
+                **panel_config,
+            },
+        )
 
 
 @pytest.fixture
@@ -264,13 +314,25 @@ async def setup_single_attribute_state_panel(
                 **extra,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                "state": state_template,
+                **extra,
+            },
+        )
 
 
 @pytest.mark.parametrize(
     ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_panel")
 async def test_template_state_text(hass: HomeAssistant) -> None:
@@ -301,56 +363,72 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("state_template", "expected"),
+    ("state_template", "expected", "trigger_expected"),
     [
-        ("{{ 'disarmed' }}", AlarmControlPanelState.DISARMED),
-        ("{{ 'armed_home' }}", AlarmControlPanelState.ARMED_HOME),
-        ("{{ 'armed_away' }}", AlarmControlPanelState.ARMED_AWAY),
-        ("{{ 'armed_night' }}", AlarmControlPanelState.ARMED_NIGHT),
-        ("{{ 'armed_vacation' }}", AlarmControlPanelState.ARMED_VACATION),
-        ("{{ 'armed_custom_bypass' }}", AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
-        ("{{ 'pending' }}", AlarmControlPanelState.PENDING),
-        ("{{ 'arming' }}", AlarmControlPanelState.ARMING),
-        ("{{ 'disarming' }}", AlarmControlPanelState.DISARMING),
-        ("{{ 'triggered' }}", AlarmControlPanelState.TRIGGERED),
-        ("{{ x - 1 }}", STATE_UNKNOWN),
+        ("{{ 'disarmed' }}", AlarmControlPanelState.DISARMED, None),
+        ("{{ 'armed_home' }}", AlarmControlPanelState.ARMED_HOME, None),
+        ("{{ 'armed_away' }}", AlarmControlPanelState.ARMED_AWAY, None),
+        ("{{ 'armed_night' }}", AlarmControlPanelState.ARMED_NIGHT, None),
+        ("{{ 'armed_vacation' }}", AlarmControlPanelState.ARMED_VACATION, None),
+        (
+            "{{ 'armed_custom_bypass' }}",
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            None,
+        ),
+        ("{{ 'pending' }}", AlarmControlPanelState.PENDING, None),
+        ("{{ 'arming' }}", AlarmControlPanelState.ARMING, None),
+        ("{{ 'disarming' }}", AlarmControlPanelState.DISARMING, None),
+        ("{{ 'triggered' }}", AlarmControlPanelState.TRIGGERED, None),
+        ("{{ x - 1 }}", STATE_UNKNOWN, STATE_UNAVAILABLE),
     ],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_panel")
-async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
+async def test_state_template_states(
+    hass: HomeAssistant, expected: str, trigger_expected: str, style: ConfigurationStyle
+) -> None:
     """Test the state template."""
+
+    # Force a trigger
+    hass.states.async_set(TEST_STATE_ENTITY_ID, None)
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
+
+    if trigger_expected and style == ConfigurationStyle.TRIGGER:
+        expected = trigger_expected
+
     assert state.state == expected
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template"),
+    ("count", "state_template", "attribute_template", "attribute"),
     [
         (
             1,
             "{{ 'disarmed' }}",
             "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+            "icon",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "icon"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
-async def test_icon_template(
-    hass: HomeAssistant,
-) -> None:
+async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == initial_state
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_SWITCH, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -358,30 +436,30 @@ async def test_icon_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template"),
+    ("count", "state_template", "attribute_template", "attribute"),
     [
         (
             1,
             "{{ 'disarmed' }}",
             "{% if states.switch.test_state.state %}local/panel.png{% endif %}",
+            "picture",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "picture"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
-async def test_picture_template(
-    hass: HomeAssistant,
-) -> None:
+async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == initial_state
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_SWITCH, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -425,7 +503,8 @@ async def test_setup_config_entry(
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, None)])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "panel_config", [OPTIMISTIC_TEMPLATE_ALARM_CONFIG, EMPTY_ACTIONS]
@@ -459,7 +538,8 @@ async def test_optimistic_states(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("panel_config", "state_template", "msg"),
@@ -538,11 +618,15 @@ async def test_legacy_template_syntax_error(
     [
         (ConfigurationStyle.LEGACY, TEST_ENTITY_ID),
         (ConfigurationStyle.MODERN, "alarm_control_panel.template_alarm_panel"),
+        (ConfigurationStyle.TRIGGER, "alarm_control_panel.unnamed_device"),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
 async def test_name(hass: HomeAssistant, test_entity_id: str) -> None:
     """Test the accessibility of the name attribute."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "disarmed")
+    await hass.async_block_till_done()
+
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.attributes.get("friendly_name") == "Template Alarm Panel"
@@ -552,7 +636,8 @@ async def test_name(hass: HomeAssistant, test_entity_id: str) -> None:
     ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "service",
@@ -615,6 +700,21 @@ async def test_actions(
             ],
             ConfigurationStyle.MODERN,
         ),
+        (
+            [
+                {
+                    "name": "test_template_alarm_control_panel_01",
+                    "state": "{{ true }}",
+                    **UNIQUE_ID_CONFIG,
+                },
+                {
+                    "name": "test_template_alarm_control_panel_02",
+                    "state": "{{ false }}",
+                    **UNIQUE_ID_CONFIG,
+                },
+            ],
+            ConfigurationStyle.TRIGGER,
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_panel")
@@ -669,7 +769,8 @@ async def test_nested_unique_id(
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "disarmed")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("panel_config", "code_format", "code_arm_required"),
@@ -714,7 +815,8 @@ async def test_code_config(hass: HomeAssistant, code_format, code_arm_required) 
     ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("restored_state", "initial_state"),
