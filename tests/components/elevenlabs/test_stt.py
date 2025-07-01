@@ -190,7 +190,7 @@ async def test_stt_transcription_success(
     two_chunk_stream,
 ) -> None:
     """Test successful transcription with valid PCM/WAV input."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
     result = await entity.async_process_audio_stream(
         default_metadata, two_chunk_stream()
     )
@@ -216,7 +216,7 @@ async def test_stt_transcription_success_auto_language(
         channel=stt.AudioChannels.CHANNEL_MONO,
         bit_rate=stt.AudioBitRates.BITRATE_16,
     )
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
     result = await entity.async_process_audio_stream(metadata, simple_stream())
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "hello world"
@@ -243,7 +243,7 @@ async def test_stt_edge_cases(
     stream_fixture: str,
 ) -> None:
     """Test various error scenarios like unsupported language or bad format."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
     metadata = request.getfixturevalue(metadata_fixture)
     stream = request.getfixturevalue(stream_fixture)
     assert not entity._auto_detect_language
@@ -259,7 +259,7 @@ async def test_stt_timeout_during_stream(
     simple_stream,
 ) -> None:
     """Test timeout exception raised when stream is too slow."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
 
     async def fake_wait_for(coro, timeout):
         try:
@@ -282,7 +282,7 @@ async def test_stt_convert_api_error(
     simple_stream,
 ) -> None:
     """Test that API errors during convert are handled properly."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
     entity._client.speech_to_text.convert.side_effect = ApiError()
     result = await entity.async_process_audio_stream(default_metadata, simple_stream())
     assert result.result == stt.SpeechResultState.ERROR
@@ -297,7 +297,7 @@ async def test_supported_properties(
     setup: AsyncMock,
 ) -> None:
     """Test the advertised capabilities of the ElevenLabs STT entity."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.mock_title_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
     assert set(entity.supported_formats) == {stt.AudioFormats.WAV, stt.AudioFormats.OGG}
     assert set(entity.supported_codecs) == {stt.AudioCodecs.PCM, stt.AudioCodecs.OPUS}
     assert set(entity.supported_bit_rates) == {stt.AudioBitRates.BITRATE_16}
