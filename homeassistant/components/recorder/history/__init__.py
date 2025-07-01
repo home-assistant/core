@@ -45,7 +45,7 @@ def get_full_significant_states_with_session(
 ) -> dict[str, list[State]]:
     """Return a dict of significant states during a time period."""
     if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # pylint: disable=import-outside-toplevel
+        from .legacy import (  # noqa: PLC0415
             get_full_significant_states_with_session as _legacy_get_full_significant_states_with_session,
         )
 
@@ -70,7 +70,7 @@ def get_last_state_changes(
 ) -> dict[str, list[State]]:
     """Return the last number_of_states."""
     if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # pylint: disable=import-outside-toplevel
+        from .legacy import (  # noqa: PLC0415
             get_last_state_changes as _legacy_get_last_state_changes,
         )
 
@@ -94,7 +94,7 @@ def get_significant_states(
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Return a dict of significant states during a time period."""
     if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # pylint: disable=import-outside-toplevel
+        from .legacy import (  # noqa: PLC0415
             get_significant_states as _legacy_get_significant_states,
         )
 
@@ -130,7 +130,7 @@ def get_significant_states_with_session(
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Return a dict of significant states during a time period."""
     if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # pylint: disable=import-outside-toplevel
+        from .legacy import (  # noqa: PLC0415
             get_significant_states_with_session as _legacy_get_significant_states_with_session,
         )
 
@@ -164,7 +164,7 @@ def state_changes_during_period(
 ) -> dict[str, list[State]]:
     """Return a list of states that changed during a time period."""
     if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # pylint: disable=import-outside-toplevel
+        from .legacy import (  # noqa: PLC0415
             state_changes_during_period as _legacy_state_changes_during_period,
         )
 
