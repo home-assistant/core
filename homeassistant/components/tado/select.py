@@ -59,7 +59,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
         """Update the selected heating circuit."""
         heating_circuit_id = (
             None
-            if option is TRANSLATABLE_NO_HEATING_CIRCUIT
+            if option == TRANSLATABLE_NO_HEATING_CIRCUIT
             else self.coordinator.data["heating_circuits"].get(option, {}).get("number")
         )
         await self.coordinator.set_heating_circuit(self.zone_id, heating_circuit_id)
