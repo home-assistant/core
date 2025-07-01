@@ -70,7 +70,7 @@
           "motor_fault_short": "Motor shorted",
           "motor_ot_amps": "Motor overtorqued",
           "motor_disconnected": "Motor disconnected",
-          "empty": "Empty"
+          "empty": "[%key:common::state::empty%]"
         }
       },
       "last_seen": {
@@ -117,6 +117,10 @@
           "sdf": "Drawer full at startup",
           "spf": "Pinch detect at startup"
         }
+      },
+      "total_cycles": {
+        "name": "Total cycles",
+        "unit_of_measurement": "cycles"
       },
       "waste_drawer": {
         "name": "Waste drawer"
