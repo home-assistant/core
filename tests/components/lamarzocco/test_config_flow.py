@@ -436,7 +436,7 @@ async def test_dhcp_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         **USER_INPUT,
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "aabbccddeeff",
         CONF_TOKEN: None,
     }
 
@@ -482,7 +482,7 @@ async def test_dhcp_already_configured_and_update(
     assert result["reason"] == "already_configured"
 
     assert mock_config_entry.data[CONF_ADDRESS] != old_address
-    assert mock_config_entry.data[CONF_ADDRESS] == "aa:bb:cc:dd:ee:ff"
+    assert mock_config_entry.data[CONF_ADDRESS] == "aabbccddeeff"
 
 
 async def test_options_flow(
