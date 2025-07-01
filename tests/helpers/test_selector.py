@@ -868,7 +868,7 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 {},
                 {
                     # We do not allow entity_id when accept is set
-                    "enttity_id": "sensor.abc",
+                    "entity_id": "sensor.abc",
                     "media_content_id": "abc",
                     "media_content_type": "def",
                     "metadata": {},
