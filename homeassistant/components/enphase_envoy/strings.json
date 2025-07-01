@@ -363,7 +363,7 @@
           "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
           "charging": "[%key:common::state::charging%]",
-          "full": "Full"
+          "full": "[%key:common::state::full%]"
         }
       },
       "acb_available_energy": {
