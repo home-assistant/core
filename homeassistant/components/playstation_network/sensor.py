@@ -113,9 +113,9 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         key=PlaystationNetworkSensor.LAST_ONLINE,
         translation_key=PlaystationNetworkSensor.LAST_ONLINE,
         value_fn=(
-            lambda psn: dt_util.parse_datetime(
-                psn.presence["basicPresence"]["lastAvailableDate"]
-            )
+            lambda psn: dt_util.parse_datetime(dt)
+            if (dt := psn.presence["basicPresence"].get("lastAvailableDate"))
+            else dt_util.now()
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
