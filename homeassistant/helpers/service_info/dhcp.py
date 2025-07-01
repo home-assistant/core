@@ -20,4 +20,7 @@ class DhcpServiceInfo(BaseServiceInfo):
     """
 
     def __post_init__(self) -> None:
-        """Post init checks."""
+        """Post init checks.
+
+        Needed so it can be overridden in tests.
+        """
