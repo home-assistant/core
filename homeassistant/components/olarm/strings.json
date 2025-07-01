@@ -6,11 +6,11 @@
         "description": "Choose the Olarm device you would like to integrate. If your device is not listed, please ensure you have enabled public API access in your Olarm account for that device.",
         "data": {
           "select_device": "Device",
-          "load_zones_bypass": "Would you like to also load entities for zone bypassing?"
+          "load_zones_bypass": "Load entities for zone bypassing?"
         },
         "data_description": {
           "select_device": "",
-          "load_zones_bypass": ""
+          "load_zones_bypass": "Useful if you bypass zones on your alarm system regularly"
         }
       }
     },
@@ -19,8 +19,8 @@
       "oauth_failed": "OAuth authentication failed, please try again."
     },
     "abort": {
-      "already_configured": "Account is already configured",
-      "already_in_progress": "Configuration flow is already in progress",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "oauth_error": "Received invalid token data.",
       "oauth_failed": "Error while obtaining access token.",
       "oauth_timeout": "Timeout resolving OAuth token.",
