@@ -271,7 +271,7 @@ class ModbusHub:
         self._pb_params = {
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
-            "retries": 0,
+            "retries": 3,
         }
         if self._config_type == SERIAL:
             # serial configuration
