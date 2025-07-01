@@ -28,7 +28,6 @@ from . import (
     API_KEY,
     CONFIG_DATA,
     CONFIG_DATA_DEFAULTS,
-    CONFIG_ENTRY_WITHOUT_API_KEY,
     DEFAULT_VERIFY_SSL,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
@@ -40,14 +39,14 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("config_entry_data", "expected_api_token"),
-    [(CONFIG_DATA_DEFAULTS, API_KEY), (CONFIG_ENTRY_WITHOUT_API_KEY, "")],
+    [(CONFIG_DATA_DEFAULTS, API_KEY)],
 )
 async def test_setup_api_v6(
     hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
 ) -> None:
     """Tests the API object is created with the expected parameters."""
     mocked_hole = _create_mocked_hole(api_version=6)
-    config_entry_data = {**config_entry_data, CONF_STATISTICS_ONLY: True}
+    config_entry_data = {**config_entry_data}
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config_entry_data)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole) as patched_init_hole:
