@@ -112,6 +112,77 @@
             "active": null
           },
           "properties": {}
+        },
+        {
+          "id": "UL30",
+          "location": "Guest bedroom",
+          "locationId": 0,
+          "name": "CURTAINS",
+          "originalName": "CURTAINS",
+          "refId": "000001/108",
+          "type": "shutter",
+          "actions": {
+            "shutterDown": null,
+            "shutterStop": null,
+            "shutterUp": null
+          },
+          "properties": {
+            "state": {
+              "enumValues": ["up", "stop", "down"],
+              "read": true,
+              "type": "enumString",
+              "write": false
+            }
+          }
+        },
+        {
+          "actions": {
+            "shutterDown": null,
+            "shutterUp": null,
+            "slatDown": null,
+            "slatUp": null
+          },
+          "id": "UL31",
+          "location": "Living",
+          "locationId": 8,
+          "name": "SLATS",
+          "originalName": "SLATS",
+          "properties": {
+            "shutterPosition": {
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "write": true
+            },
+            "slatPosition": {
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "write": true
+            }
+          },
+          "refId": "000001/8",
+          "type": "shutter"
+        },
+        {
+          "actions": {
+            "shutterDown": null,
+            "shutterUp": null
+          },
+          "id": "UL32",
+          "location": "Kitchen",
+          "locationId": 8,
+          "name": "BLINDS",
+          "originalName": "BLINDS",
+          "properties": {
+            "shutterPosition": {
+              "read": true,
+              "type": "percent",
+              "write": true
+            }
+          },
+          "refId": "000001/4",
+          "type": "shutter"
         }
       ]
     }

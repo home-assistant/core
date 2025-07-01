@@ -71,6 +71,7 @@ MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
         "platform": "binary_sensor",
         "name": "Hatch",
         "device_class": "door",
+        "entity_category": None,
         "state_topic": "test-topic",
         "payload_on": "ON",
         "payload_off": "OFF",
@@ -86,6 +87,7 @@ MOCK_SUBENTRY_BUTTON_COMPONENT = {
         "name": "Restart",
         "device_class": "restart",
         "command_topic": "test-topic",
+        "entity_category": None,
         "payload_press": "PRESS",
         "command_template": "{{ value }}",
         "retain": False,
@@ -97,6 +99,7 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "platform": "cover",
         "name": "Blind",
         "device_class": "blind",
+        "entity_category": None,
         "command_topic": "test-topic",
         "payload_stop": None,
         "payload_stop_tilt": "STOP",
@@ -132,6 +135,7 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "platform": "fan",
         "name": "Breezer",
         "command_topic": "test-topic",
+        "entity_category": None,
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "value_template": "{{ value_json.value }}",
@@ -169,6 +173,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
         "name": "Milkman alert",
+        "entity_category": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/363a7ecad6be4a19b939a016ea93e994",
@@ -179,6 +184,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
     "6494827dac294fa0827c54b02459d309": {
         "platform": "notify",
         "name": "The second notifier",
+        "entity_category": None,
         "command_topic": "test-topic2",
         "entity_picture": "https://example.com/6494827dac294fa0827c54b02459d309",
     },
@@ -187,6 +193,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
         "name": None,
+        "entity_category": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
@@ -198,6 +205,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "device_class": "enum",
         "state_topic": "test-topic",
         "options": ["low", "medium", "high"],
@@ -210,6 +218,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
     "a0f85790a95d4889924602effff06b6e": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "state_class": "measurement",
         "state_topic": "test-topic",
         "entity_picture": "https://example.com/a0f85790a95d4889924602effff06b6e",
@@ -219,6 +228,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "state_class": "total",
         "last_reset_value_template": "{{ value_json.value }}",
         "state_topic": "test-topic",
@@ -229,6 +239,7 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
     "3faf1318016c46c5aea26707eeb6f12e": {
         "platform": "switch",
         "name": "Outlet",
+        "entity_category": None,
         "device_class": "outlet",
         "command_topic": "test-topic",
         "state_topic": "test-topic",
@@ -250,6 +261,7 @@ MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
         "payload_off": "OFF",
         "payload_on": "ON",
         "command_topic": "test-topic",
+        "entity_category": None,
         "schema": "basic",
         "state_topic": "test-topic",
         "color_temp_kelvin": True,

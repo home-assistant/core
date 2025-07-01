@@ -22,7 +22,8 @@ AUDIO_CODECS = {"aac", "mp3"}
 
 FORMAT_CONTENT_TYPE = {HLS_PROVIDER: "application/vnd.apple.mpegurl"}
 
-OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity
+OUTPUT_STARTUP_TIMEOUT = 60  # timeout due to no startup
+OUTPUT_IDLE_TIMEOUT = 30  # Idle timeout due to inactivity
 
 NUM_PLAYLIST_SEGMENTS = 3  # Number of segments to use in HLS playlist
 MAX_SEGMENTS = 5  # Max number of segments to keep around
