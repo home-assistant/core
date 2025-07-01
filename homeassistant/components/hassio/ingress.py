@@ -185,7 +185,7 @@ class HassIOIngress(HomeAssistantView):
                 content_type = "application/octet-stream"
 
             # Simple request
-            if empty_body := must_be_empty_body(result.method, result.status) or (
+            if (empty_body := must_be_empty_body(result.method, result.status)) or (
                 content_length is not UNDEFINED
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
