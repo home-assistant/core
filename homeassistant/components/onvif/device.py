@@ -538,6 +538,10 @@ class ONVIFDevice:
             preset_val,
         )
 
+        def is_action_not_implemented(error):
+            """Check if the error indicates that the action is not implemented."""
+            return "Action Not Implemented" in str(error)
+
         try:
             # list for extra functions in future, home mode as a possibility
             if move_mode != EMULATE_RELATIVE_MOVE:
@@ -562,25 +566,24 @@ class ONVIFDevice:
 
                 await ptz_service.ContinuousMove(req)
                 try:
-                    req = ptz_service.create_type("Stop")
-                    req.ProfileToken = profile.token
+                    stop_req = ptz_service.create_type("Stop")
+                    stop_req.ProfileToken = profile.token
 
                     # moved here to avoid waiting if there is an error
                     await asyncio.sleep(continuous_duration)
 
                     await ptz_service.Stop(
-                        {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
+                        {"ProfileToken": stop_req.ProfileToken, "PanTilt": True, "Zoom": False}
                     )
                 except Fault as e:
-                    if "Action Not Implemented" in str(e):
-                        time_to_move = calculate_sleep_time(continuous_duration, full_rotation_time=8)
-                        await asyncio.sleep(time_to_move)
-                        req = ptz_service.create_type(move_mode)
-                        req.ProfileToken = profile.token
-                        velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
-                        req.Velocity = velocity
-                        await ptz_service.ContinuousMove(req)
-                    raise
+                    if is_action_not_implemented(e):
+                        zero_req = ptz_service.create_type(CONTINUOUS_MOVE)
+                        zero_req.ProfileToken = profile.token
+                        velocity_zero = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                        zero_req.Velocity = velocity_zero
+                        await ptz_service.ContinuousMove(zero_req)
+                    else:
+                        raise
 
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
@@ -635,9 +638,10 @@ class ONVIFDevice:
 
 
                 except Fault as fault:
-                    if "Action Not Implemented" in str(e):
+                    if is_action_not_implemented(fault):
                         LOGGER.warning(
-                            "RelativeMove not supported on device '%s'", self.name
+                            "ContinuousMove not supported on device '%s', cannot emulate relative move",
+                            self.name
                         )
                     raise
 
@@ -694,14 +698,21 @@ class ONVIFDevice:
                 try:
                     await ptz_service.Stop(req)
                 except Fault as e:
-                    if "Action Not Implemented" in str(e):
-                        LOGGER.warning("Performing stop, using continuous move, device doesn't support stop command")
-                        if profile.ptz.continuous:
+                    if is_action_not_implemented(e):
+                        if profile.ptz and profile.ptz.continuous:
+                            LOGGER.warning(
+                                "Device doesn't support stop command, using continuous move to stop"
+                            )
                             req = ptz_service.create_type(CONTINUOUS_MOVE)
                             req.ProfileToken = profile.token
                             velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
                             req.Velocity = velocity
                             await ptz_service.ContinuousMove(req)
+                        else:
+                            LOGGER.warning(
+                                "Device doesn't support stop command and continuous move is not available"
+                            )
+                            raise ONVIFError("Cannot stop PTZ movement")
                     else:
                         raise # re-raise for other errors
 
