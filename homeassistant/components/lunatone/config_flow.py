@@ -70,7 +70,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.name = info.data.name
                 self.serial_number = info.data.device.serial
-                await self.async_set_unique_id(f"lunatone-{self.serial_number}")
+                await self.async_set_unique_id(str(self.serial_number))
                 if self.source == SOURCE_USER:
                     self._abort_if_unique_id_configured()
                     return self._create_entry()
