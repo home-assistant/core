@@ -148,4 +148,34 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 title=DEFAULT_NAME,
                 options={},
                 version=2,
+                minor_version=2,
             )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 2 and entry.minor_version == 1:
+        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                remove_config_entry_id=entry.entry_id,
+                remove_config_subentry_id=None,
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True
