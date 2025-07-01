@@ -106,7 +106,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-class BleScannerFirmwareUpdateFlow(RepairsFlow):
+class ShellyRpcRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(self, device: RpcDevice) -> None:
@@ -124,7 +124,7 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            return await self.async_step_update_firmware()
+            return await self._async_step_confirm()
 
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -136,6 +136,18 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
             data_schema=vol.Schema({}),
             description_placeholders=description_placeholders,
         )
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        raise NotImplementedError
+
+
+class BleScannerFirmwareUpdateFlow(ShellyRpcRepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        return await self.async_step_update_firmware()
 
     async def async_step_update_firmware(
         self, user_input: dict[str, str] | None = None
@@ -151,36 +163,12 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
         return self.async_create_entry(title="", data={})
 
 
-class DisableOutboundWebSocketFlow(RepairsFlow):
+class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, device: RpcDevice) -> None:
-        """Initialize."""
-        self._device = device
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the first step of a fix flow."""
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            return await self.async_step_disable_outbound_websocket()
-
-        issue_registry = ir.async_get(self.hass)
-        description_placeholders = None
-        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders=description_placeholders,
-        )
+        return await self.async_step_disable_outbound_websocket()
 
     async def async_step_disable_outbound_websocket(
         self, user_input: dict[str, str] | None = None
