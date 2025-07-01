@@ -4077,6 +4077,7 @@ async def test_subentry_reconfigure_update_device_properties(
             "model": "Beer bottle XL",
             "model_id": "bn003",
             "configuration_url": "https://example.com",
+            "mqtt_settings": {"qos": 1},
         },
     )
     assert result["type"] is FlowResultType.MENU
@@ -4090,12 +4091,15 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    # Check our device was updated
+    # Check our device and mqtt data was updated correctly
     device = deepcopy(dict(subentry.data))["device"]
     assert device["name"] == "Beer notifier"
     assert "hw_version" not in device
     assert device["model"] == "Beer bottle XL"
     assert device["model_id"] == "bn003"
+    assert device["sw_version"] == "1.1"
+    assert device["mqtt_settings"]["qos"] == 1
+    assert "qos" not in device
 
 
 @pytest.mark.parametrize(
