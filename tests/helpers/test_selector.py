@@ -836,7 +836,16 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                # We require entity_id when accept is not set
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
         ),
         (
             {
@@ -853,7 +862,18 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "enttity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
         ),
     ],
 )
