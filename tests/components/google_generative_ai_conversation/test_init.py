@@ -473,6 +473,7 @@ async def test_migration_from_v1_to_v2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 3
@@ -618,6 +619,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for entry in entries:
         assert entry.version == 2
+        assert entry.minor_version == 2
         assert not entry.options
         assert entry.title == DEFAULT_TITLE
         assert len(entry.subentries) == 2
@@ -716,6 +718,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 3
