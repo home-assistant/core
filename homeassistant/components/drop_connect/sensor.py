@@ -92,7 +92,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.water_used_today(),
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DROPSensorEntityDescription(
         key=AVERAGE_WATER_USED,
