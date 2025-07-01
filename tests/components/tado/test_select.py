@@ -16,6 +16,8 @@ from .util import async_init_integration
 HEATING_CIRCUIT_SELECT_ENTITY = "select.baseboard_heater_heating_circuit"
 NO_HEATING_CIRCUIT = "no_heating_circuit"
 HEATING_CIRCUIT_OPTION = "RU1234567890"
+ZONE_ID = 1
+HEATING_CIRCUIT_ID = 1
 
 
 async def test_heating_circuit_select(hass: HomeAssistant) -> None:
@@ -53,8 +55,7 @@ async def test_select_heating_circuit(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    mock_set_heating_circuit.assert_called_once()
-    # The heating circuit ID should be extracted from the coordinator data
+    mock_set_heating_circuit.assert_called_with(ZONE_ID, HEATING_CIRCUIT_ID)
     assert mock_refresh.called
 
 
@@ -82,9 +83,8 @@ async def test_select_no_heating_circuit(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    mock_set_heating_circuit.assert_called_once()
     # None should be passed when selecting "no_heating_circuit"
-    assert mock_set_heating_circuit.call_args[0][1] is None
+    mock_set_heating_circuit.assert_called_with(ZONE_ID, None)
     assert mock_refresh.called
 
 
