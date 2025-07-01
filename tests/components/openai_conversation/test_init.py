@@ -579,7 +579,7 @@ async def test_migration_from_v1_to_v2(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         device_id=device.id,
-        suggested_object_id="google_generative_ai_conversation",
+        suggested_object_id="chatgpt",
     )
 
     # Run migration
@@ -591,6 +591,7 @@ async def test_migration_from_v1_to_v2(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 2
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -703,6 +704,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
+        assert entry.minor_version == 2
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -797,6 +799,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
