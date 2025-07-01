@@ -67,6 +67,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 BASE_PRELOAD_PLATFORMS = [
     "backup",
+    "condition",
     "config",
     "config_flow",
     "diagnostics",
