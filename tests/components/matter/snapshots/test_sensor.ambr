@@ -3467,14 +3467,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Countdown time',
     'platform': 'matter',
@@ -3483,23 +3477,22 @@
     'supported_features': 0,
     'translation_key': 'countdown_time',
     'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateCountdownTime-96-2',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[microwave_oven][sensor.microwave_oven_countdown_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'date',
       'friendly_name': 'Microwave Oven Countdown time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.microwave_oven_countdown_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.5',
+    'state': '2025-07-01T15:42:40.013614',
   })
 # ---
 # name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-entry]
@@ -4367,14 +4360,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Countdown time',
     'platform': 'matter',
@@ -4383,23 +4370,22 @@
     'supported_features': 0,
     'translation_key': 'countdown_time',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-OperationalStateCountdownTime-96-2',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_countdown_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'date',
       'friendly_name': 'Dishwasher Countdown time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_countdown_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60.0',
+    'state': '2025-07-01T16:42:14.609277',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_current-entry]

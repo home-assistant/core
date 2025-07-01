@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
@@ -946,11 +946,13 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="OperationalStateCountdownTime",
-            translation_key="countdown_time",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            suggested_unit_of_measurement=UnitOfTime.MINUTES,
-            device_class=SensorDeviceClass.DURATION,
+            translation_key="estimated_end_time",
+            device_class=SensorDeviceClass.DATE,
             state_class=SensorStateClass.MEASUREMENT,
+            # Add countdown to current date to get the estimated end time
+            measurement_to_ha=lambda x: datetime.now() + timedelta(seconds=x)
+            if x > 0
+            else None,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.OperationalState.Attributes.CountdownTime,),
