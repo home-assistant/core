@@ -622,7 +622,7 @@
         "state": {
           "level_1": "[%key:common::state::low%]",
           "level_2": "[%key:common::state::medium%]",
-          "level_3": "Full"
+          "level_3": "[%key:common::state::full%]"
         }
       },
       "total_watering_time": {
