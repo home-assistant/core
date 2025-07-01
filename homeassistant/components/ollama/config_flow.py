@@ -73,6 +73,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
