@@ -184,13 +184,20 @@ class HassIOIngress(HomeAssistantView):
                 content_type = "application/octet-stream"
 
             # Simple request
-            if result.status in (204, 304) or (
-                content_length is not UNDEFINED
-                and (content_length_int := int(content_length))
-                <= MAX_SIMPLE_RESPONSE_SIZE
+            if (
+                result.status in (204, 304)
+                or result.method == "HEAD"
+                or (
+                    content_length is not UNDEFINED
+                    and (content_length_int := int(content_length))
+                    <= MAX_SIMPLE_RESPONSE_SIZE
+                )
             ):
                 # Return Response
-                body = await result.read()
+                if result.method == "HEAD":
+                    body = None
+                else:
+                    body = await result.read()
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,
