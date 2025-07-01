@@ -7,6 +7,7 @@ import random
 from typing import Any
 
 from automower_ble.mower import Mower
+from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import get_device
 import voluptuous as vol
@@ -153,7 +154,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors: dict[str, str] = {}
 
             (channel_id, mower) = await self.connect_mower(device)
-            if not await mower.connect(device):
+            if await mower.connect(device) is not ResponseResult.OK:
                 errors["base"] = "invalid_auth"
 
                 if ble_flow:
@@ -225,7 +226,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 (channel_id, mower) = await self.connect_mower(device)
 
-                if not await mower.connect(device):
+                if await mower.connect(device) is not ResponseResult.OK:
                     errors["base"] = "invalid_auth"
                 else:
                     data = {
