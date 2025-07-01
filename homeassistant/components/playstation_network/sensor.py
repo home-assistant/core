@@ -123,9 +123,9 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_STATUS,
         translation_key=PlaystationNetworkSensor.ONLINE_STATUS,
-        value_fn=lambda psn: psn.available.lower(),
+        value_fn=lambda psn: psn.available.lower().replace("unavailable", "offline"),
         device_class=SensorDeviceClass.ENUM,
-        options=["unavailable", "availabletoplay", "availabletocommunicate", "busy"],
+        options=["offline", "availabletoplay", "availabletocommunicate", "busy"],
     ),
 )
 

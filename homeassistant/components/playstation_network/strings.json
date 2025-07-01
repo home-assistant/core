@@ -85,7 +85,7 @@
       "online_status": {
         "name": "Online status",
         "state": {
-          "unavailable": "Offline",
+          "offline": "Offline",
           "availabletoplay": "Online",
           "availabletocommunicate": "Online on PS App",
           "busy": "Away"

@@ -35,7 +35,7 @@
         "state": {
           "busy": "mdi:account-cancel",
           "availabletocommunicate": "mdi:cellphone",
-          "unavailable": "mdi:account-off-outline"
+          "offline": "mdi:account-off-outline"
         }
       }
     }
