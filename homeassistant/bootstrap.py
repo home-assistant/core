@@ -75,7 +75,6 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
-    backup,
     category_registry,
     config_validation as cv,
     device_registry,
@@ -879,10 +878,6 @@ async def _async_set_up_integrations(
     # Initialize recorder
     if "recorder" in all_domains:
         recorder.async_initialize_recorder(hass)
-
-    # Initialize backup
-    if "backup" in all_domains:
-        backup.async_initialize_backup(hass)
 
     stages: list[tuple[str, set[str], int | None]] = [
         *(
