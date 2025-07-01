@@ -617,7 +617,7 @@
       "water_level": {
         "name": "Water level"
       },
-      "water_level_status": {
+      "water_level_state": {
         "name": "Water level",
         "state": {
           "level_1": "[%key:common::state::low%]",
