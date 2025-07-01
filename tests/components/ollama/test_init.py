@@ -82,6 +82,7 @@ async def test_migration_from_v1_to_v2(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 2
     assert mock_config_entry.data == TEST_USER_DATA
     assert mock_config_entry.options == {}
 
@@ -187,6 +188,7 @@ async def test_migration_from_v1_to_v2_with_multiple_urls(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
+        assert entry.minor_version == 2
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -274,6 +276,7 @@ async def test_migration_from_v1_to_v2_with_same_urls(
 
     entry = entries[0]
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
