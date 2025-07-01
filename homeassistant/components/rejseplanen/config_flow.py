@@ -50,6 +50,7 @@ CONFIG_STOP_SCHEMA = vol.Schema(
             ),
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,
+        vol.Optional(CONF_DIRECTION, default=[]): list[str],
         vol.Optional(
             CONF_DEPARTURE_TYPE,
             default=[],
