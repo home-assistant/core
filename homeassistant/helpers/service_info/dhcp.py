@@ -20,7 +20,4 @@ class DhcpServiceInfo(BaseServiceInfo):
     """
 
     def __post_init__(self) -> None:
-        """Post-init processing."""
-        # Ensure macaddress is always a lowercase string without colons
-        if self.macaddress != self.macaddress.lower().replace(":", ""):
-            raise ValueError("macaddress is not correctly formatted")
+        """Post init checks."""
