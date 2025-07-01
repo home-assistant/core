@@ -13,7 +13,7 @@
           'title_name': 'STAR WARS Jedi: Survivor™',
         }),
       }),
-      'available': True,
+      'available': 'availableToPlay',
       'presence': dict({
         'basicPresence': dict({
           'availability': 'availableToPlay',
