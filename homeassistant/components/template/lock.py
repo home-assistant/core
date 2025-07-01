@@ -194,6 +194,11 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         return self._state == LockState.OPEN
 
     @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._state == LockState.OPENING
+
+    @property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._code_format
