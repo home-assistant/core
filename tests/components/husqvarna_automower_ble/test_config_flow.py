@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 import pytest
 
@@ -73,7 +74,7 @@ async def test_user_selection_incorrect_pin(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = False
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -92,7 +93,7 @@ async def test_user_selection_incorrect_pin(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_automower_client.connect.return_value = True
+    mock_automower_client.connect.return_value = ResponseResult.OK
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -152,7 +153,7 @@ async def test_bluetooth_incorrect_pin(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    mock_automower_client.connect.return_value = False
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -162,7 +163,7 @@ async def test_bluetooth_incorrect_pin(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    mock_automower_client.connect.return_value = True
+    mock_automower_client.connect.return_value = ResponseResult.OK
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -206,7 +207,7 @@ async def test_successful_reauth(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = False
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -224,7 +225,7 @@ async def test_successful_reauth(
         },
     )
 
-    mock_automower_client.connect.return_value = True
+    mock_automower_client.connect.return_value = ResponseResult.OK
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -256,7 +257,7 @@ async def test_failed_reauth(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = False
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
