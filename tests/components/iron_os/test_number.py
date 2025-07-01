@@ -20,7 +20,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -248,3 +248,26 @@ async def test_set_value_exception(
             target={ATTR_ENTITY_ID: "number.pinecil_setpoint_temperature"},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "ble_device")
+async def test_boost_temp_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pynecil: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test boost temp input is unavailable when off."""
+    mock_pynecil.get_settings.return_value["boost_temp"] = 0
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get("number.pinecil_boost_temperature"))
+    assert state.state == STATE_UNAVAILABLE
