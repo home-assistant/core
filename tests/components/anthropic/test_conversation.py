@@ -415,7 +415,6 @@ async def test_function_call(
         llm.LLMContext(
             platform="anthropic",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,
@@ -510,7 +509,6 @@ async def test_function_exception(
         llm.LLMContext(
             platform="anthropic",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,

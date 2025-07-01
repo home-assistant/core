@@ -36,7 +36,6 @@ def llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="",
         context=None,
-        user_prompt=None,
         language=None,
         assistant=None,
         device_id=None,
@@ -162,7 +161,6 @@ async def test_assist_api(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=test_context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -237,7 +235,7 @@ async def test_assist_api(
             "area": {"value": "kitchen"},
             "floor": {"value": "ground_floor"},
         },
-        text_input="test_text",
+        text_input=None,
         context=test_context,
         language="*",
         assistant="conversation",
@@ -296,7 +294,7 @@ async def test_assist_api(
             "preferred_area_id": {"value": area.id},
             "preferred_floor_id": {"value": floor.floor_id},
         },
-        text_input="test_text",
+        text_input=None,
         context=test_context,
         language="*",
         assistant="conversation",
@@ -412,7 +410,6 @@ async def test_assist_api_prompt(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -760,7 +757,6 @@ async def test_script_tool(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -961,7 +957,6 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1241,7 +1236,6 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1344,7 +1338,6 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1451,7 +1444,6 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
