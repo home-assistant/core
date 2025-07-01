@@ -948,7 +948,7 @@ DISCOVERY_SCHEMAS = [
             key="OperationalStateCountdownTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.DATE,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=None,
             # Add countdown to current date to get the estimated end time
             measurement_to_ha=lambda x: datetime.now() + timedelta(seconds=x)
             if x > 0
