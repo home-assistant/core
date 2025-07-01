@@ -220,7 +220,7 @@ async def test_discovered_dhcp(
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
             ip="1.2.3.4",
-            macaddress=dr.format(MOCK_MAC_ADDR).replace(":", ""),
+            macaddress=dr.format_mac(MOCK_MAC_ADDR).replace(":", ""),
             hostname="mock_hostname",
         ),
     )
@@ -285,7 +285,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
             ip="1.2.3.4",
-            macaddress=dr.format(MOCK_MAC_ADDR).replace(":", ""),
+            macaddress=dr.format_mac(MOCK_MAC_ADDR).replace(":", ""),
             hostname="mock_hostname",
         ),
     )
