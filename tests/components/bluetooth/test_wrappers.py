@@ -132,7 +132,6 @@ def _generate_ble_device_and_adv_data(
         generate_ble_device(
             mac,
             "any",
-            delegate="",
             details={"path": f"/org/bluez/{interface}/dev_{mac}"},
         ),
         generate_advertisement_data(rssi=rssi),
