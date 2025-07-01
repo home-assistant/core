@@ -13,7 +13,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_SOURCE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -159,6 +158,7 @@ class OlarmOauth2FlowHandler(
         )
 
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
