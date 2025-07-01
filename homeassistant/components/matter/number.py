@@ -66,13 +66,6 @@ class MatterRangeNumberEntityDescription(
     command: Callable[[int], ClusterCommand]
 
 
-@dataclass(frozen=True, kw_only=True)
-class MatterLevelControNumberEntityDescription(
-    NumberEntityDescription, MatterEntityDescription
-):
-    """Describe Matter LevelControl Number Input entities."""
-
-
 class MatterNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -135,7 +128,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
-    entity_description: MatterLevelControNumberEntityDescription
+    entity_description: MatterNumberEntityDescription
 
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
@@ -275,7 +268,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
-        entity_description=MatterLevelControNumberEntityDescription(
+        entity_description=MatterNumberEntityDescription(
             key="pump_setpoint",
             native_unit_of_measurement=PERCENTAGE,
             translation_key="pump_setpoint",
