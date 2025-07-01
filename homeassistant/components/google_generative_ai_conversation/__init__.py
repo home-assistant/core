@@ -207,6 +207,8 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
 
 
@@ -218,6 +220,13 @@ async def async_unload_entry(
         return False
 
     return True
+
+
+async def async_update_options(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
@@ -299,4 +308,50 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 title=DEFAULT_TITLE,
                 options={},
                 version=2,
+                minor_version=2,
             )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
+    """Migrate entry."""
+    LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 2 and entry.minor_version == 1:
+        # Add TTS subentry which was missing in 2025.7.0b0
+        if not any(
+            subentry.subentry_type == "tts" for subentry in entry.subentries.values()
+        ):
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
+            )
+
+        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                remove_config_entry_id=entry.entry_id,
+                remove_config_subentry_id=None,
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True
