@@ -32,6 +32,7 @@ from .const import (
     FIRMWARE,
     FIRMWARE_VERSION,
     MANUFACTURER,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
     PID,
     PRODUCT,
     SERIAL_NUMBER,
@@ -45,19 +46,29 @@ _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
 
-    class TranslationPlaceholderProtocol(Protocol):
-        """Protocol describing `BaseFirmwareInstallFlow`'s translation placeholders."""
+    class FirmwareInstallFlowProtocol(Protocol):
+        """Protocol describing `BaseFirmwareInstallFlow` for a mixin."""
 
         def _get_translation_placeholders(self) -> dict[str, str]:
             return {}
 
+        async def _install_firmware_step(
+            self,
+            fw_update_url: str,
+            fw_type: str,
+            firmware_name: str,
+            expected_installed_firmware_type: ApplicationType,
+            step_id: str,
+            next_step_id: str,
+        ) -> ConfigFlowResult: ...
+
 else:
     # Multiple inheritance with `Protocol` seems to break
-    TranslationPlaceholderProtocol = object
+    FirmwareInstallFlowProtocol = object
 
 
-class SkyConnectTranslationMixin(ConfigEntryBaseFlow, TranslationPlaceholderProtocol):
-    """Translation placeholder mixin for Home Assistant SkyConnect."""
+class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
+    """Mixin for Home Assistant SkyConnect firmware methods."""
 
     context: ConfigFlowContext
 
@@ -72,9 +83,35 @@ class SkyConnectTranslationMixin(ConfigEntryBaseFlow, TranslationPlaceholderProt
 
         return placeholders
 
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="skyconnect_zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            step_id="install_zigbee_firmware",
+            next_step_id="pre_confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="skyconnect_openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            step_id="install_thread_firmware",
+            next_step_id="start_otbr_addon",
+        )
+
 
 class HomeAssistantSkyConnectConfigFlow(
-    SkyConnectTranslationMixin,
+    SkyConnectFirmwareMixin,
     firmware_config_flow.BaseFirmwareConfigFlow,
     domain=DOMAIN,
 ):
@@ -207,7 +244,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
 
 
 class HomeAssistantSkyConnectOptionsFlowHandler(
-    SkyConnectTranslationMixin, firmware_config_flow.BaseFirmwareOptionsFlow
+    SkyConnectFirmwareMixin, firmware_config_flow.BaseFirmwareOptionsFlow
 ):
     """Zigbee and Thread options flow handlers."""
 
