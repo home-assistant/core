@@ -417,7 +417,7 @@ async def test_migration_from_v2_1_to_v2_2(
         config_subentry_id="mock_id_2",
         identifiers={(DOMAIN, "mock_id_2")},
         name="Claude 2",
-        manufacturer="OlAnthropiclama",
+        manufacturer="Anthropic",
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
