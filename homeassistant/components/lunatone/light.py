@@ -46,6 +46,8 @@ class LunatoneLight(LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, device: Device, unique_id_prefix: str, interface_version: AwesomeVersion
@@ -56,11 +58,6 @@ class LunatoneLight(LightEntity):
         self._attr_unique_id = f"{unique_id_prefix}-device{self._device.data.id}"
 
     @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._device.data.name
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self._device.data.features.switchable.status
@@ -68,7 +65,9 @@ class LunatoneLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(identifiers={(DOMAIN, self.unique_id)}, name=self.name)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)}, name=self._device.data.name
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
