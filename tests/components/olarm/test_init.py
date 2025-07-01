@@ -35,9 +35,6 @@ async def test_setup_entry_success(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.olarm.coordinator.OlarmFlowClientCoordinator.init_mqtt"
         ) as mock_init_mqtt,
-        # patch(
-        #     "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        # ) as mock_impl,
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
         ) as mock_session,
