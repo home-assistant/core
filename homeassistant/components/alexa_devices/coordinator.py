@@ -12,10 +12,10 @@ from aioamazondevices.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CONF_LOGIN_DATA
+from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
 SCAN_INTERVAL = 30
 
@@ -55,4 +55,8 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         except (CannotConnect, CannotRetrieveData) as err:
             raise UpdateFailed(f"Error occurred while updating {self.name}") from err
         except CannotAuthenticate as err:
-            raise ConfigEntryError("Could not authenticate") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
