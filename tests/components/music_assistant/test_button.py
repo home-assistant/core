@@ -75,7 +75,7 @@ async def test_button_press_action(
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.PLAYER_CONFIG_UPDATED, mass_player_id
     )
-    with pytest.raises(HomeAssistantError, match="Player has no active source"):
+    with pytest.raises(HomeAssistantError, match="No current item to add to favorites"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
