@@ -30,6 +30,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "api_key": "bla",
         },
         version=2,
+        minor_version=3,
         subentries_data=[
             {
                 "data": {},

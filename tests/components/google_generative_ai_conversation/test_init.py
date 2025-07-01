@@ -8,12 +8,10 @@ from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_generative_ai_conversation.const import (
-    DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
-    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
@@ -477,10 +475,10 @@ async def test_migration_from_v1_to_v2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -499,6 +497,14 @@ async def test_migration_from_v1_to_v2(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
@@ -623,10 +629,10 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for entry in entries:
         assert entry.version == 2
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         assert not entry.options
         assert entry.title == DEFAULT_TITLE
-        assert len(entry.subentries) == 2
+        assert len(entry.subentries) == 3
         subentry = list(entry.subentries.values())[0]
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
@@ -635,6 +641,10 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert subentry.subentry_type == "tts"
         assert subentry.data == RECOMMENDED_TTS_OPTIONS
         assert subentry.title == DEFAULT_TTS_NAME
+        subentry = list(entry.subentries.values())[2]
+        assert subentry.subentry_type == "stt"
+        assert subentry.data == RECOMMENDED_STT_OPTIONS
+        assert subentry.title == DEFAULT_STT_NAME
 
         dev = device_registry.async_get_device(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
@@ -722,10 +732,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -744,6 +754,14 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
@@ -833,7 +851,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         ),
     ],
 )
-async def test_migration_from_v2_1_to_v2_2(
+async def test_migration_from_v2_1_to_v2_3(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -934,10 +952,10 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -956,6 +974,14 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
