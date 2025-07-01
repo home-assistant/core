@@ -37,6 +37,7 @@ from .const import (
 )
 from .entity import (
     BaseTypeData,
+    ElectricityTypeData,
     EnumTypeData,
     IntegerTypeData,
     MealPlanTypeData,
@@ -48,7 +49,7 @@ from .entity import (
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    raw_type: BaseTypeData | None = None
+    raw_type: BaseTypeData | ElectricityTypeData = None
     subkey: str | None = None
 
 
@@ -1444,18 +1445,14 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
-                self._attr_extra_state_attributes = (
-                    self.entity_description.raw_type.from_raw(value)
-                )
+                self._attr_extra_state_attributes = value
                 return value
             values = self.entity_description.raw_type.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
-                self._attr_extra_state_attributes = (
-                    self.entity_description.raw_type.from_raw(value)
-                )
+                self._attr_extra_state_attributes = value
                 return value
             values = self.entity_description.raw_type.from_raw(value)
             return getattr(values, self.entity_description.subkey)

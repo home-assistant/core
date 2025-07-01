@@ -131,7 +131,7 @@ class BaseTypeData:
 
     @classmethod
     def to_json(cls) -> str:
-        """Convert MealPlanTypeData to JSON."""
+        """Convert BaseTypeData to JSON."""
 
 
 @dataclass
