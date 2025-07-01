@@ -96,7 +96,7 @@ class OverseerrSensor(OverseerrEntity, SensorEntity):
         coordinator: OverseerrCoordinator,
         description: OverseerrSensorEntityDescription,
     ) -> None:
-        """Initialize airgradient sensor."""
+        """Initialize Overseerr sensor."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
         self._attr_translation_key = description.key

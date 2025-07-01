@@ -130,9 +130,7 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
             await self._appliance.set_power_on(False)
             return
 
-        if not (mode := HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)):
-            raise ValueError(f"Invalid hvac mode {hvac_mode}")
-
+        mode = HVAC_MODE_TO_AIRCON_MODE[hvac_mode]
         await self._appliance.set_mode(mode)
         if not self._appliance.get_power_on():
             await self._appliance.set_power_on(True)

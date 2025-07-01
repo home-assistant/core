@@ -28,6 +28,7 @@ from . import (
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
 )
@@ -49,6 +50,7 @@ INTEGRATION_PLUGINS = [
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
     config_flow,  # This needs to run last, after translations are processed

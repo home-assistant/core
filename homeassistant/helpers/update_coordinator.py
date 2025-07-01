@@ -138,6 +138,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         async def _on_hass_stop(_: Event) -> None:
             """Shutdown coordinator on HomeAssistant stop."""
+            # Already cleared on EVENT_HOMEASSISTANT_STOP, via async_fire_internal
+            self._unsub_shutdown = None
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(

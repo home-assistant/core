@@ -28,9 +28,8 @@ from homeassistant.util.dt import UTC
 
 from . import init_integration
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
@@ -74,6 +73,7 @@ async def test_form(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_province_no_alias(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
@@ -115,6 +115,7 @@ async def test_form_province_no_alias(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_country(hass: HomeAssistant) -> None:
     """Test we get the forms correctly without a country."""
 
@@ -154,6 +155,7 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     """Test we get the forms correctly without subdivision."""
 
@@ -196,6 +198,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form(hass: HomeAssistant) -> None:
     """Test we get the form in options."""
 
@@ -242,6 +245,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     """Test errors in setup entry."""
 
@@ -314,6 +318,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
     """Test errors in options."""
 
@@ -390,6 +395,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     """Test errors in options for duplicates."""
 
@@ -443,6 +449,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "already_configured"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     """Test errors in setup entry."""
 
@@ -515,6 +522,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
     """Test errors in options."""
 
@@ -589,9 +597,6 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
         "province": "BW",
         "language": "de",
     }
-
-
-pytestmark = pytest.mark.usefixtures()
 
 
 @pytest.mark.parametrize(

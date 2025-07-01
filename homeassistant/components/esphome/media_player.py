@@ -78,7 +78,7 @@ class EsphomeMediaPlayer(
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[static_info.unique_id] = cast(
+        self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
 
@@ -114,9 +114,8 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self._static_info.unique_id)
+            self._entry_data.media_player_formats.get(self.unique_id)
         )
 
         if (
@@ -139,7 +138,7 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.entity_id, None)
+        self._entry_data.media_player_formats.pop(self.unique_id, None)
 
     def _get_proxy_url(
         self,

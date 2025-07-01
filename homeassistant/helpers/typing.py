@@ -41,8 +41,7 @@ def _deprecated_typing_helper(attr: str) -> DeferredDeprecatedAlias:
     """Help to make a DeferredDeprecatedAlias."""
 
     def value_fn() -> Any:
-        # pylint: disable-next=import-outside-toplevel
-        import homeassistant.core
+        import homeassistant.core  # noqa: PLC0415
 
         return getattr(homeassistant.core, attr)
 

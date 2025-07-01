@@ -1,0 +1,22 @@
+{
+  "services": {
+    "generate_data": {
+      "name": "Generate data",
+      "description": "Uses AI to run a task that generates data.",
+      "fields": {
+        "task_name": {
+          "name": "Task name",
+          "description": "Name of the task."
+        },
+        "instructions": {
+          "name": "Instructions",
+          "description": "Instructions on what needs to be done."
+        },
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Entity ID to run the task on. If not provided, the preferred entity will be used."
+        }
+      }
+    }
+  }
+}

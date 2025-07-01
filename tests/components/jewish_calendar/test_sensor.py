@@ -3,6 +3,7 @@
 from datetime import datetime as dt
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -540,6 +541,34 @@ async def test_omer_sensor(hass: HomeAssistant, results: str) -> None:
 async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     """Test Daf Yomi sensor output."""
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
+
+
+@pytest.mark.parametrize(
+    ("test_time", "results"),
+    [
+        (
+            dt(2025, 6, 10, 17),
+            {
+                "initial_state": "14 Sivan 5785",
+                "move_to": dt(2025, 6, 10, 23, 0),
+                "new_state": "15 Sivan 5785",
+            },
+        ),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("setup_at_time")
+async def test_sensor_does_not_update_on_time_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
+) -> None:
+    """Test that the Jewish calendar sensor does not update after time advances (regression test for update bug)."""
+    sensor_id = "sensor.jewish_calendar_date"
+    assert hass.states.get(sensor_id).state == results["initial_state"]
+
+    freezer.move_to(results["move_to"])
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(sensor_id).state == results["new_state"]
 
 
 async def test_no_discovery_info(

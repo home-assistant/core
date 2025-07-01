@@ -8,12 +8,13 @@ from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -101,3 +102,28 @@ async def test_sensors_streaming(
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=f"{entity_id}-state")
+
+
+async def test_energy_history_no_time_series(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test energy history coordinator when time_series is not a list."""
+    # Mock energy history to return data without time_series as a list
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "sensor.energy_site_battery_discharged"
+    state = hass.states.get(entity_id)
+    assert state.state == "0.036"
+
+    mock_energy_history.return_value = ENERGY_HISTORY_EMPTY
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE

@@ -4,11 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from homeassistant.components.comelit.const import (
-    BRIDGE,
-    DOMAIN as COMELIT_DOMAIN,
-    VEDO,
-)
+from homeassistant.components.comelit.const import BRIDGE, DOMAIN, VEDO
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 
 from .const import (
@@ -60,7 +56,7 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
 def mock_serial_bridge_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit bridge."""
     return MockConfigEntry(
-        domain=COMELIT_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: BRIDGE_HOST,
             CONF_PORT: BRIDGE_PORT,
@@ -97,7 +93,7 @@ def mock_vedo() -> Generator[AsyncMock]:
 def mock_vedo_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit vedo."""
     return MockConfigEntry(
-        domain=COMELIT_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: VEDO_HOST,
             CONF_PORT: VEDO_PORT,

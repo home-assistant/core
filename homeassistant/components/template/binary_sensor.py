@@ -303,11 +303,9 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
-        state = (
-            None
-            if isinstance(result, TemplateError)
-            else template.result_as_boolean(result)
-        )
+        state: bool | None = None
+        if result is not None and not isinstance(result, TemplateError):
+            state = template.result_as_boolean(result)
 
         if state == self._attr_is_on:
             return
@@ -347,11 +345,13 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
-        for key in (CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
+        for key in (CONF_STATE, CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
+        self._last_delay_from: bool | None = None
+        self._last_delay_to: bool | None = None
         self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel: CALLBACK_TYPE | None = None
         self._auto_off_time: datetime | None = None
@@ -388,6 +388,22 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         """Handle update of the data."""
         self._process_data()
 
+        raw = self._rendered.get(CONF_STATE)
+        state: bool | None = None
+        if raw is not None:
+            state = template.result_as_boolean(raw)
+
+        key = CONF_DELAY_ON if state else CONF_DELAY_OFF
+        delay = self._rendered.get(key) or self._config.get(key)
+
+        if (
+            self._delay_cancel
+            and delay
+            and self._attr_is_on == self._last_delay_from
+            and state == self._last_delay_to
+        ):
+            return
+
         if self._delay_cancel:
             self._delay_cancel()
             self._delay_cancel = None
@@ -401,14 +417,8 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             self.async_write_ha_state()
             return
 
-        raw = self._rendered.get(CONF_STATE)
-        state = template.result_as_boolean(raw)
-
-        key = CONF_DELAY_ON if state else CONF_DELAY_OFF
-        delay = self._rendered.get(key) or self._config.get(key)
-
-        # state without delay. None means rendering failed.
-        if self._attr_is_on == state or state is None or delay is None:
+        # state without delay.
+        if self._attr_is_on == state or delay is None:
             self._set_state(state)
             return
 
@@ -422,6 +432,8 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
                 return
 
         # state with delay. Cancelled if new trigger received
+        self._last_delay_from = self._attr_is_on
+        self._last_delay_to = state
         self._delay_cancel = async_call_later(
             self.hass, delay.total_seconds(), partial(self._set_state, state)
         )

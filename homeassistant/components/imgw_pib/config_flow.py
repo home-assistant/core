@@ -45,7 +45,9 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 imgwpib = await ImgwPib.create(
-                    client_session, hydrological_station_id=station_id
+                    client_session,
+                    hydrological_station_id=station_id,
+                    hydrological_details=False,
                 )
                 hydrological_data = await imgwpib.get_hydrological_data()
             except (ClientError, TimeoutError, ApiError):

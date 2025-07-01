@@ -28,11 +28,22 @@ class MockStreamReader:
         return self._content.read(byte_count)
 
 
+class MockStreamReaderChunked(MockStreamReader):
+    """Mock a stream reader with simulated chunked data."""
+
+    async def readchunk(self) -> tuple[bytes, bool]:
+        """Read bytes."""
+        return (self._content.read(), False)
+
+
 class MockPayloadWriter:
     """Small mock to imitate payload writer."""
 
     def enable_chunking(self) -> None:
         """Enable chunking."""
+
+    def send_headers(self, *args: Any, **kwargs: Any) -> None:
+        """Write headers."""
 
     async def write_headers(self, *args: Any, **kwargs: Any) -> None:
         """Write headers."""

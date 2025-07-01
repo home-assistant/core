@@ -6,7 +6,6 @@ from typing import cast
 
 from uiprotect import ProtectApiClient
 from uiprotect.data import Bootstrap, Camera, ModelType
-from uiprotect.data.types import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -15,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
-from .const import CONF_ALLOW_EA
 from .data import UFPConfigEntry, async_get_data_for_entry_id
 from .utils import async_create_api_client
 
@@ -43,52 +41,6 @@ class ProtectRepair(RepairsFlow):
                 description_placeholders["learn_more"] = issue.learn_more_url
 
         return description_placeholders
-
-
-class EAConfirmRepair(ProtectRepair):
-    """Handler for an issue fixing flow."""
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the first step of a fix flow."""
-
-        return await self.async_step_start()
-
-    async def async_step_start(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is None:
-            placeholders = self._async_get_placeholders()
-            return self.async_show_form(
-                step_id="start",
-                data_schema=vol.Schema({}),
-                description_placeholders=placeholders,
-            )
-
-        nvr = await self._api.get_nvr()
-        if nvr.release_channel != FirmwareReleaseChannel.RELEASE:
-            return await self.async_step_confirm()
-        await self.hass.config_entries.async_reload(self._entry.entry_id)
-        return self.async_create_entry(data={})
-
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            options = dict(self._entry.options)
-            options[CONF_ALLOW_EA] = True
-            self.hass.config_entries.async_update_entry(self._entry, options=options)
-            return self.async_create_entry(data={})
-
-        placeholders = self._async_get_placeholders()
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders=placeholders,
-        )
 
 
 class CloudAccountRepair(ProtectRepair):
@@ -242,8 +194,6 @@ async def async_create_fix_flow(
         and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
     ):
         api = _async_get_or_create_api_client(hass, entry)
-        if issue_id == "ea_channel_warning":
-            return EAConfirmRepair(api=api, entry=entry)
         if issue_id == "cloud_user":
             return CloudAccountRepair(api=api, entry=entry)
         if issue_id.startswith("rtsp_disabled_"):

@@ -20,7 +20,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import setup_integration
 from .const import CLIENT_ID, USER_ID
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -84,7 +84,7 @@ async def test_full_flow(
     )
     aioclient_mock.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
-        text=load_fixture(fixture, DOMAIN),
+        text=await async_load_fixture(hass, fixture, DOMAIN),
         exc=exception,
     )
     with (

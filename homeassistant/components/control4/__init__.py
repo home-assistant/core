@@ -54,10 +54,10 @@ class Control4RuntimeData:
 type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
 
 
-async def call_c4_api_retry(func, *func_args):
+async def call_c4_api_retry(func, *func_args):  # noqa: RET503
     """Call C4 API function and retry on failure."""
     # Ruff doesn't understand this loop - the exception is always raised after the retries
-    for i in range(API_RETRY_TIMES):  # noqa: RET503
+    for i in range(API_RETRY_TIMES):
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:

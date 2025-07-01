@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     DurationSelector,
     DurationSelectorConfig,
     EntitySelector,
+    EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -66,6 +67,20 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
+        vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            EntitySelectorConfig(read_only=True)
+        ),
+        vol.Optional(CONF_STATE): TextSelector(
+            TextSelectorConfig(multiple=True, read_only=True)
+        ),
+        vol.Optional(CONF_TYPE): SelectSelector(
+            SelectSelectorConfig(
+                options=CONF_TYPE_KEYS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TYPE,
+                read_only=True,
+            )
+        ),
         vol.Optional(CONF_START): TemplateSelector(),
         vol.Optional(CONF_END): TemplateSelector(),
         vol.Optional(CONF_DURATION): DurationSelector(
@@ -92,7 +107,7 @@ OPTIONS_FLOW = {
 }
 
 
-class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
     config_flow = CONFIG_FLOW

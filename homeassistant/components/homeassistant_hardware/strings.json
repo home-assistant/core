@@ -10,25 +10,9 @@
             "pick_firmware_thread": "Thread"
           }
         },
-        "install_zigbee_flasher_addon": {
-          "title": "Installing flasher",
-          "description": "Installing the Silicon Labs Flasher add-on."
-        },
-        "run_zigbee_flasher_addon": {
-          "title": "Installing Zigbee firmware",
-          "description": "Installing Zigbee firmware. This will take about a minute."
-        },
-        "uninstall_zigbee_flasher_addon": {
-          "title": "Removing flasher",
-          "description": "Removing the Silicon Labs Flasher add-on."
-        },
-        "zigbee_flasher_failed": {
-          "title": "Zigbee installation failed",
-          "description": "The Zigbee firmware installation process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
-        },
         "confirm_zigbee": {
           "title": "Zigbee setup complete",
-          "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
+          "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration."
         },
         "install_otbr_addon": {
           "title": "Installing OpenThread Border Router add-on",
@@ -44,7 +28,7 @@
         },
         "confirm_otbr": {
           "title": "OpenThread Border Router setup complete",
-          "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration once you exit."
+          "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration."
         }
       },
       "abort": {
@@ -52,12 +36,12 @@
         "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
         "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
-        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
+        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device.",
+        "fw_download_failed": "{firmware_name} firmware for your {model} failed to download. Make sure Home Assistant has internet access and try again.",
+        "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information."
       },
       "progress": {
-        "install_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is installed, this may take a few minutes.",
-        "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
-        "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is being removed."
+        "install_firmware": "Please wait while {firmware_name} firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
       }
     }
   },
@@ -110,16 +94,6 @@
           "data": {
             "disable_multi_pan": "Disable multiprotocol support"
           }
-        },
-        "install_flasher_addon": {
-          "title": "The Silicon Labs Flasher add-on installation has started"
-        },
-        "configure_flasher_addon": {
-          "title": "The Silicon Labs Flasher add-on installation has started"
-        },
-        "start_flasher_addon": {
-          "title": "Installing firmware",
-          "description": "Zigbee firmware is now being installed. This will take a few minutes."
         }
       },
       "error": {

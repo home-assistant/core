@@ -79,37 +79,38 @@ async def test_block_get_block_channel_name(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block get block channel name."""
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel 1"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
+
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
+    )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel A"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
     monkeypatch.setitem(
         mock_block_device.settings, "relays", [{"name": "test-channel"}]
     )
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "test-channel"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
 
 async def test_is_block_momentary_input(
@@ -241,20 +242,19 @@ async def test_get_block_input_triggers(
 
 async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     """Test get RPC channel name."""
-    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test name input 0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name Input 3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test input 0"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Input 3"
 
 
 @pytest.mark.parametrize(
     ("component", "expected"),
     [
-        ("cover", "Cover"),
-        ("input", "Input"),
-        ("light", "Light"),
-        ("rgb", "RGB light"),
-        ("rgbw", "RGBW light"),
-        ("switch", "Switch"),
-        ("thermostat", "Thermostat"),
+        ("cover", None),
+        ("light", None),
+        ("rgb", None),
+        ("rgbw", None),
+        ("switch", None),
+        ("thermostat", None),
     ],
 )
 async def test_get_rpc_channel_name_multiple_components(
@@ -270,14 +270,9 @@ async def test_get_rpc_channel_name_multiple_components(
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {expected} 0"
-    )
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:1")
-        == f"Test name {expected} 1"
-    )
+    # we use sub-devices, so the entity name is not set
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:0") == expected
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:1") == expected
 
 
 async def test_get_rpc_input_triggers(

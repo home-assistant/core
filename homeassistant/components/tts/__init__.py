@@ -1185,6 +1185,21 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.manager = manager
 
+    async def head(self, request: web.Request, token: str) -> web.StreamResponse:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the token (file) exists and return its content type.
+        """
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        return web.Response(content_type=stream.content_type)
+
     async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""
         stream = self.manager.token_to_stream.get(token)

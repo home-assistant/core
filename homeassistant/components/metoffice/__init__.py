@@ -29,6 +29,7 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
 )
 from .helpers import fetch_data
 
@@ -59,6 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             fetch_data, connection, latitude, longitude, "daily"
         )
 
+    async def async_update_twice_daily() -> datapoint.Forecast:
+        return await hass.async_add_executor_job(
+            fetch_data, connection, latitude, longitude, "twice-daily"
+        )
+
     metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -77,10 +83,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    metoffice_twice_daily_coordinator = TimestampDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=f"MetOffice Twice Daily Coordinator for {site_name}",
+        update_method=async_update_twice_daily,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
+        METOFFICE_TWICE_DAILY_COORDINATOR: metoffice_twice_daily_coordinator,
         METOFFICE_NAME: site_name,
         METOFFICE_COORDINATES: coordinates,
     }

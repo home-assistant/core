@@ -38,7 +38,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration, trigger_update
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_devices(
@@ -140,7 +140,9 @@ async def test_create_subscription(
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
+        Subscription.from_json(
+            await async_load_fixture(hass, "subscription.json", DOMAIN)
+        ),
     )
 
 
@@ -371,11 +373,11 @@ async def test_hub_via_device(
 ) -> None:
     """Test hub with child devices."""
     mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
-        load_fixture("devices/hub.json", DOMAIN)
+        await async_load_fixture(hass, "devices/hub.json", DOMAIN)
     ).items
     mock_smartthings.get_device_status.side_effect = [
         DeviceStatus.from_json(
-            load_fixture(f"device_status/{fixture}.json", DOMAIN)
+            await async_load_fixture(hass, f"device_status/{fixture}.json", DOMAIN)
         ).components
         for fixture in ("hub", "multipurpose_sensor")
     ]

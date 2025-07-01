@@ -14,7 +14,7 @@ import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import (
     CONF_HOST,
@@ -112,7 +112,7 @@ def fixture_config_entry(
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     config_entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
+        domain=DOMAIN,
         entry_id="1",
         unique_id="1",
         data=config_entry_data,

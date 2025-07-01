@@ -14,11 +14,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import CONF_PRINTERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +39,6 @@ ATTR_PRINTER_STATE_REASON = "printer_state_reason"
 ATTR_PRINTER_TYPE = "printer_type"
 ATTR_PRINTER_URI_SUPPORTED = "printer_uri_supported"
 
-CONF_PRINTERS = "printers"
 CONF_IS_CUPS_SERVER = "is_cups_server"
 
 DEFAULT_HOST = "127.0.0.1"
@@ -71,6 +73,21 @@ def setup_platform(
     port: int = config[CONF_PORT]
     printers: list[str] = config[CONF_PRINTERS]
     is_cups: bool = config[CONF_IS_CUPS_SERVER]
+
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "CUPS",
+        },
+    )
 
     if is_cups:
         data = CupsData(host, port, None)

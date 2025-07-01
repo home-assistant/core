@@ -19,7 +19,6 @@ from homeassistant.components.azure_storage.const import (
 )
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -39,7 +38,6 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         await setup_integration(hass, mock_config_entry)
 
@@ -93,14 +91,16 @@ async def test_agents_list_backups(
                 }
             },
             "backup_id": "23e64aec",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
+            "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
-            "extra_metadata": {},
             "with_automatic_settings": None,
         }
     ]
@@ -129,14 +129,16 @@ async def test_agents_get_backup(
             }
         },
         "backup_id": "23e64aec",
-        "date": "2024-11-22T11:48:48.727189+01:00",
         "database_included": True,
+        "date": "2024-11-22T11:48:48.727189+01:00",
+        "extra_metadata": {},
+        "failed_addons": [],
+        "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
-        "extra_metadata": {},
         "name": "Core 2024.12.0.dev0",
-        "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
 

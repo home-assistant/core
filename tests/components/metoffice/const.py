@@ -35,20 +35,32 @@ METOFFICE_CONFIG_KINGSLYNN = {
 
 KINGSLYNN_SENSOR_RESULTS = {
     "weather": "rainy",
-    "temperature": "7.87",
+    "temperature": "7.9",
     "uv_index": "1",
     "probability_of_precipitation": "67",
     "pressure": "998.20",
     "wind_speed": "22.21",
+    "wind_direction": "180",
+    "wind_gust": "40.26",
+    "feels_like_temperature": "3.4",
+    "visibility_distance": "7478.00",
+    "humidity": "97.5",
+    "station_name": "King's Lynn",
 }
 
 WAVERTREE_SENSOR_RESULTS = {
     "weather": "rainy",
-    "temperature": "9.28",
+    "temperature": "9.3",
     "uv_index": "1",
     "probability_of_precipitation": "61",
     "pressure": "987.50",
     "wind_speed": "17.60",
+    "wind_direction": "176",
+    "wind_gust": "34.52",
+    "feels_like_temperature": "5.8",
+    "visibility_distance": "5106.00",
+    "humidity": "95.13",
+    "station_name": "Wavertree",
 }
 
 DEVICE_KEY_KINGSLYNN = {(DOMAIN, TEST_COORDINATES_KINGSLYNN)}

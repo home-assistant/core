@@ -16,6 +16,7 @@ from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
+from homeassistant.components.input_button import DOMAIN as DOMAIN_INPUT_BUTTON
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
@@ -42,7 +43,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
-from homeassistant.loader import async_get_integration
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.loader import (
+    Integration,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
@@ -1092,37 +1098,65 @@ async def test_async_get_all_descriptions_failing_integration(
     """Test async_get_all_descriptions when async_get_integrations returns an exception."""
     group_config = {DOMAIN_GROUP: {}}
     await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    descriptions = await service.async_get_all_descriptions(hass)
-
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
 
     logger_config = {DOMAIN_LOGGER: {}}
     await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
+
+    input_button_config = {DOMAIN_INPUT_BUTTON: {}}
+    await async_setup_component(hass, DOMAIN_INPUT_BUTTON, input_button_config)
+
+    async def wrap_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
+        integrations = await async_get_integrations(hass, domains)
+        integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
+        return integrations
+
+    async def wrap_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        translations = await async_get_translations(
+            hass, language, category, integrations, config_flow
+        )
+        return {
+            key: value
+            for key, value in translations.items()
+            if not key.startswith("component.logger.services.")
+        }
+
     with (
         patch(
             "homeassistant.helpers.service.async_get_integrations",
-            return_value={"logger": ImportError},
+            wraps=wrap_get_integrations,
         ),
         patch(
             "homeassistant.helpers.service.translation.async_get_translations",
-            return_value={},
+            wrap_get_translations,
         ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-    assert "Failed to load integration: logger" in caplog.text
+    assert len(descriptions) == 3
+    assert "Failed to load services.yaml for integration: logger" in caplog.text
 
     # Services are empty defaults if the load fails but should
     # not raise
+    assert descriptions[DOMAIN_GROUP]["remove"]["description"]
+    assert descriptions[DOMAIN_GROUP]["remove"]["fields"]
+
     assert descriptions[DOMAIN_LOGGER]["set_level"] == {
         "description": "",
         "fields": {},
         "name": "",
     }
+
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["description"]
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["fields"] == {}
+    assert "target" in descriptions[DOMAIN_INPUT_BUTTON]["press"]
 
     hass.services.async_register(DOMAIN_LOGGER, "new_service", lambda x: None, None)
     service.async_set_service_schema(

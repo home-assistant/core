@@ -15,11 +15,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
 from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -536,12 +536,9 @@ async def async_setup_entry(
     )
 
 
-class NextDnsSwitch(
-    CoordinatorEntity[NextDnsUpdateCoordinator[Settings]], SwitchEntity
-):
+class NextDnsSwitch(NextDnsEntity, SwitchEntity):
     """Define an NextDNS switch."""
 
-    _attr_has_entity_name = True
     entity_description: NextDnsSwitchEntityDescription
 
     def __init__(
@@ -550,11 +547,8 @@ class NextDnsSwitch(
         description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_is_on = description.state(coordinator.data)
-        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -843,7 +843,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
         SERVICE_EFFECT_SKY,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_PALETTE: [],
+            ATTR_PALETTE: None,
             ATTR_SKY_TYPE: "Clouds",
             ATTR_CLOUD_SATURATION_MAX: 180,
             ATTR_CLOUD_SATURATION_MIN: 50,
@@ -854,7 +854,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
     bulb.power_level = 65535
     bulb.effect = {
         "effect": "SKY",
-        "palette": [],
+        "palette": None,
         "sky_type": 2,
         "cloud_saturation_min": 50,
         "cloud_saturation_max": 180,

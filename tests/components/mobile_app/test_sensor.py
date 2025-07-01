@@ -26,8 +26,8 @@ from homeassistant.util.unit_system import (
 @pytest.mark.parametrize(
     ("unit_system", "state_unit", "state1", "state2"),
     [
-        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
-        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
+        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, 100, 123),
+        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, 212, 253.4),
     ],
 )
 async def test_sensor(
@@ -83,7 +83,7 @@ async def test_sensor(
     assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
-    assert entity.state == state1
+    assert float(entity.state) == state1
 
     assert (
         entity_registry.async_get("sensor.test_1_battery_temperature").entity_category
@@ -113,7 +113,7 @@ async def test_sensor(
     assert json["invalid_state"]["success"] is False
 
     updated_entity = hass.states.get("sensor.test_1_battery_temperature")
-    assert updated_entity.state == state2
+    assert float(updated_entity.state) == state2
     assert "foo" not in updated_entity.attributes
 
     assert len(device_registry.devices) == len(create_registrations)
@@ -135,21 +135,21 @@ async def test_sensor(
 @pytest.mark.parametrize(
     ("unique_id", "unit_system", "state_unit", "state1", "state2"),
     [
-        ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
+        ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, 100, 123),
         (
             "battery_temperature",
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
-            "212",
-            "253",
+            212,
+            253,
         ),
         # The unique_id doesn't match that of the mobile app's battery temperature sensor
         (
             "battery_temp",
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
-            "212",
-            "123",
+            212,
+            123,
         ),
     ],
 )
@@ -205,7 +205,7 @@ async def test_sensor_migration(
     assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
-    assert entity.state == state1
+    assert float(entity.state) == state1
 
     # Reload to verify state is restored
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -244,7 +244,7 @@ async def test_sensor_migration(
     assert update_resp.status == HTTPStatus.OK
 
     updated_entity = hass.states.get("sensor.test_1_battery_temperature")
-    assert updated_entity.state == state2
+    assert round(float(updated_entity.state), 0) == state2
     assert "foo" not in updated_entity.attributes
 
 

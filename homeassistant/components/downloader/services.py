@@ -10,7 +10,7 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -108,8 +108,7 @@ def download_file(service: ServiceCall) -> None:
                 _LOGGER.debug("%s -> %s", url, final_path)
 
                 with open(final_path, "wb") as fil:
-                    for chunk in req.iter_content(1024):
-                        fil.write(chunk)
+                    fil.writelines(req.iter_content(1024))
 
                 _LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(
@@ -141,7 +140,8 @@ def download_file(service: ServiceCall) -> None:
     threading.Thread(target=do_download).start()
 
 
-def register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the services for the downloader component."""
     async_register_admin_service(
         hass,

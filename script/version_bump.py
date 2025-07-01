@@ -198,7 +198,7 @@ def main() -> None:
 
 def test_bump_version() -> None:
     """Make sure it all works."""
-    import pytest
+    import pytest  # noqa: PLC0415
 
     assert bump_version(Version("0.56.0"), "beta") == Version("0.56.1b0")
     assert bump_version(Version("0.56.0b3"), "beta") == Version("0.56.0b4")

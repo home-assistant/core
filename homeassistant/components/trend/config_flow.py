@@ -34,6 +34,9 @@ async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
     """Get base options schema."""
     return vol.Schema(
         {
+            vol.Optional(CONF_ENTITY_ID): selector.EntitySelector(
+                selector.EntitySelectorConfig(multiple=False, read_only=True),
+            ),
             vol.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
                 selector.AttributeSelectorConfig(
                     entity_id=handler.options[CONF_ENTITY_ID]

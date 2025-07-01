@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, call
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    AreaInfo,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     HomeassistantServiceCall,
@@ -14,6 +15,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     LogLevel,
     RequiresEncryptionAPIError,
+    SubDeviceInfo,
     UserService,
     UserServiceArg,
     UserServiceArgType,
@@ -80,10 +82,7 @@ async def test_esphome_device_subscribe_logs(
     device = await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
-        entity_info=[],
-        user_service=[],
         device_info={},
-        states=[],
     )
     await hass.async_block_till_done()
 
@@ -141,14 +140,8 @@ async def test_esphome_device_service_calls_not_allowed(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with service calls not allowed."""
-    entity_info = []
-    states = []
-    user_service = []
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         device_info={"esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
@@ -182,17 +175,11 @@ async def test_esphome_device_service_calls_allowed(
 ) -> None:
     """Test a device with service calls are allowed."""
     await async_setup_component(hass, TAG_DOMAIN, {})
-    entity_info = []
-    states = []
-    user_service = []
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
     )
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         device_info={"esphome_version": "2023.3.0"},
         entry=mock_config_entry,
     )
@@ -337,14 +324,8 @@ async def test_esphome_device_with_old_bluetooth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
-    entity_info = []
-    states = []
-    user_service = []
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         device_info={"bluetooth_proxy_feature_flags": 1, "esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
@@ -364,10 +345,6 @@ async def test_esphome_device_with_password(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with legacy password creates an issue."""
-    entity_info = []
-    states = []
-    user_service = []
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -379,9 +356,6 @@ async def test_esphome_device_with_password(
     entry.add_to_hass(hass)
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         device_info={"bluetooth_proxy_feature_flags": 0, "esphome_version": "2023.3.0"},
         entry=entry,
     )
@@ -404,14 +378,8 @@ async def test_esphome_device_with_current_bluetooth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with recent bluetooth does not create an issue."""
-    entity_info = []
-    states = []
-    user_service = []
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         device_info={
             "bluetooth_proxy_feature_flags": 1,
             "esphome_version": STABLE_BLE_VERSION_STR,
@@ -857,9 +825,6 @@ async def test_state_subscription(
     """Test ESPHome subscribes to state changes."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     await hass.async_block_till_done()
     hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 3.0})
@@ -917,9 +882,6 @@ async def test_state_request(
     """Test ESPHome requests state change."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     await hass.async_block_till_done()
     hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 3.0})
@@ -944,9 +906,6 @@ async def test_debug_logging(
     assert await async_setup_component(hass, "logger", {"logger": {}})
     await mock_generic_device_entry(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     async with async_call_logger_set_level(
         "homeassistant.components.esphome", "DEBUG", hass=hass, caplog=caplog
@@ -966,8 +925,6 @@ async def test_esphome_device_with_dash_in_name_user_services(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services and a dash in the name."""
-    entity_info = []
-    states = []
     service1 = UserService(
         name="my_service",
         key=1,
@@ -991,10 +948,8 @@ async def test_esphome_device_with_dash_in_name_user_services(
     )
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
         user_service=[service1, service2],
         device_info={"name": "with-dash"},
-        states=states,
     )
     await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, "with_dash_my_service")
@@ -1018,9 +973,7 @@ async def test_esphome_device_with_dash_in_name_user_services(
     mock_client.execute_service.reset_mock()
 
     # Verify the service can be removed
-    mock_client.list_entities_services = AsyncMock(
-        return_value=(entity_info, [service1])
-    )
+    mock_client.list_entities_services = AsyncMock(return_value=([], [service1]))
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1035,8 +988,6 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services and a dash in the name."""
-    entity_info = []
-    states = []
     service1 = UserService(
         name="bad_service",
         key=1,
@@ -1053,10 +1004,8 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
     )
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
         user_service=[service1, service2],
         device_info={"name": "with-dash"},
-        states=states,
     )
     await hass.async_block_till_done()
     assert not hass.services.has_service(DOMAIN, "with_dash_bad_service")
@@ -1080,9 +1029,7 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
     mock_client.execute_service.reset_mock()
 
     # Verify the service can be removed
-    mock_client.list_entities_services = AsyncMock(
-        return_value=(entity_info, [service2])
-    )
+    mock_client.list_entities_services = AsyncMock(return_value=([], [service2]))
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1097,8 +1044,6 @@ async def test_esphome_user_service_fails(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test executing a user service fails due to disconnect."""
-    entity_info = []
-    states = []
     service1 = UserService(
         name="simple_service",
         key=2,
@@ -1108,10 +1053,8 @@ async def test_esphome_user_service_fails(
     )
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
         user_service=[service1],
         device_info={"name": "with-dash"},
-        states=states,
     )
     await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
@@ -1153,8 +1096,6 @@ async def test_esphome_user_services_changes(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services that change arguments."""
-    entity_info = []
-    states = []
     service1 = UserService(
         name="simple_service",
         key=2,
@@ -1164,10 +1105,8 @@ async def test_esphome_user_services_changes(
     )
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
         user_service=[service1],
         device_info={"name": "with-dash"},
-        states=states,
     )
     await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
@@ -1198,9 +1137,7 @@ async def test_esphome_user_services_changes(
     )
 
     # Verify the service can be updated
-    mock_client.list_entities_services = AsyncMock(
-        return_value=(entity_info, [new_service1])
-    )
+    mock_client.list_entities_services = AsyncMock(return_value=([], [new_service1]))
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1234,10 +1171,7 @@ async def test_esphome_device_with_suggested_area(
     """Test a device with suggested area."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"suggested_area": "kitchen"},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1245,6 +1179,29 @@ async def test_esphome_device_with_suggested_area(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.suggested_area == "kitchen"
+
+
+async def test_esphome_device_area_priority(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that device_info.area takes priority over suggested_area."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "suggested_area": "kitchen",
+            "area": AreaInfo(area_id=0, name="Living Room"),
+        },
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    # Should use device_info.area.name instead of suggested_area
+    assert dev.suggested_area == "Living Room"
 
 
 async def test_esphome_device_with_project(
@@ -1256,10 +1213,7 @@ async def test_esphome_device_with_project(
     """Test a device with a project."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"project_name": "mfr.model", "project_version": "2.2.2"},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1280,10 +1234,7 @@ async def test_esphome_device_with_manufacturer(
     """Test a device with a manufacturer."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"manufacturer": "acme"},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1302,10 +1253,7 @@ async def test_esphome_device_with_web_server(
     """Test a device with a web server."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"webserver_port": 80},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1335,10 +1283,7 @@ async def test_esphome_device_with_ipv6_web_server(
     device = await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
-        entity_info=[],
-        user_service=[],
         device_info={"webserver_port": 80},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1357,10 +1302,7 @@ async def test_esphome_device_with_compilation_time(
     """Test a device with a compilation_time."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"compilation_time": "comp_time"},
-        states=[],
     )
     await hass.async_block_till_done()
     entry = device.entry
@@ -1378,10 +1320,7 @@ async def test_disconnects_at_close_event(
     """Test the device is disconnected at the close event."""
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"compilation_time": "comp_time"},
-        states=[],
     )
     await hass.async_block_till_done()
 
@@ -1410,10 +1349,7 @@ async def test_start_reauth(
     """Test exceptions on connect error trigger reauth."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"compilation_time": "comp_time"},
-        states=[],
     )
     await hass.async_block_till_done()
 
@@ -1435,10 +1371,7 @@ async def test_no_reauth_wrong_mac(
     """Test exceptions on connect error trigger reauth."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={"compilation_time": "comp_time"},
-        states=[],
     )
     await hass.async_block_till_done()
 
@@ -1514,14 +1447,9 @@ async def test_device_adds_friendly_name(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a device with user services that change arguments."""
-    entity_info = []
-    states = []
     device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=[],
         device_info={"name": "nofriendlyname", "friendly_name": ""},
-        states=states,
     )
     await hass.async_block_till_done()
     dev_reg = dr.async_get(hass)
@@ -1582,10 +1510,7 @@ async def test_assist_in_progress_issue_deleted(
     )
     await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
         device_info={},
-        states=[],
         mock_storage=True,
     )
     assert (
@@ -1600,3 +1525,266 @@ async def test_assist_in_progress_issue_deleted(
         )
         is None
     )
+
+
+async def test_sub_device_creation(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are created in device registry."""
+    device_registry = dr.async_get(hass)
+
+    # Define areas
+    areas = [
+        AreaInfo(area_id=1, name="Living Room"),
+        AreaInfo(area_id=2, name="Bedroom"),
+        AreaInfo(area_id=3, name="Kitchen"),
+    ]
+
+    # Define sub devices
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=1),
+        SubDeviceInfo(device_id=22222222, name="Light Switch", area_id=1),
+        SubDeviceInfo(device_id=33333333, name="Temperature Sensor", area_id=2),
+    ]
+
+    device_info = {
+        "areas": areas,
+        "devices": sub_devices,
+        "area": AreaInfo(area_id=0, name="Main Hub"),
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Check main device is created
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert main_device is not None
+    assert main_device.suggested_area == "Main Hub"
+
+    # Check sub devices are created
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    assert sub_device_1.name == "Motion Sensor"
+    assert sub_device_1.suggested_area == "Living Room"
+    assert sub_device_1.via_device_id == main_device.id
+
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Light Switch"
+    assert sub_device_2.suggested_area == "Living Room"
+    assert sub_device_2.via_device_id == main_device.id
+
+    sub_device_3 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    )
+    assert sub_device_3 is not None
+    assert sub_device_3.name == "Temperature Sensor"
+    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.via_device_id == main_device.id
+
+
+async def test_sub_device_cleanup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are removed when they no longer exist."""
+    device_registry = dr.async_get(hass)
+
+    # Initial sub devices
+    sub_devices_initial = [
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Device 2", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices_initial,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Verify all sub devices exist
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        )
+        is not None
+    )
+
+    # Now update with fewer sub devices (device 2 removed)
+    sub_devices_updated = [
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+    ]
+
+    # Update device info
+    device.device_info = DeviceInfo(
+        name="test",
+        friendly_name="Test",
+        esphome_version="1.0.0",
+        mac_address="11:22:33:44:55:AA",
+        devices=sub_devices_updated,
+    )
+
+    # Update the mock client to return the new device info
+    mock_client.device_info = AsyncMock(return_value=device.device_info)
+
+    # Simulate reconnection which triggers device registry update
+    await device.mock_connect()
+    await hass.async_block_till_done()
+
+    # Verify device 2 was removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        )
+        is None
+    )  # Should be removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        )
+        is not None
+    )
+
+
+async def test_sub_device_with_empty_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices with empty names are handled correctly."""
+    device_registry = dr.async_get(hass)
+
+    # Define sub devices with empty names
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
+        SubDeviceInfo(device_id=22222222, name="Valid Name", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Check sub device with empty name
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    # Empty sub-device names should fall back to main device name
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert sub_device_1.name == main_device.name
+
+    # Check sub device with valid name
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Valid Name"
+
+
+async def test_sub_device_references_main_device_area(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices can reference the main device's area."""
+    device_registry = dr.async_get(hass)
+
+    # Define areas - note we don't include area_id=0 in the areas list
+    areas = [
+        AreaInfo(area_id=1, name="Living Room"),
+        AreaInfo(area_id=2, name="Bedroom"),
+    ]
+
+    # Define sub devices - one references the main device's area (area_id=0)
+    sub_devices = [
+        SubDeviceInfo(
+            device_id=11111111, name="Motion Sensor", area_id=0
+        ),  # Main device area
+        SubDeviceInfo(
+            device_id=22222222, name="Light Switch", area_id=1
+        ),  # Living Room
+        SubDeviceInfo(
+            device_id=33333333, name="Temperature Sensor", area_id=2
+        ),  # Bedroom
+    ]
+
+    device_info = {
+        "areas": areas,
+        "devices": sub_devices,
+        "area": AreaInfo(area_id=0, name="Main Hub Area"),
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Check main device has correct area
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert main_device is not None
+    assert main_device.suggested_area == "Main Hub Area"
+
+    # Check sub device 1 uses main device's area
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    assert sub_device_1.suggested_area == "Main Hub Area"
+
+    # Check sub device 2 uses Living Room
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.suggested_area == "Living Room"
+
+    # Check sub device 3 uses Bedroom
+    sub_device_3 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    )
+    assert sub_device_3 is not None
+    assert sub_device_3.suggested_area == "Bedroom"

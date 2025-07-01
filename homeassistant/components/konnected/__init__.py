@@ -58,7 +58,6 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
-    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
@@ -261,10 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # config entry specific data to enable unload
-    hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
-    }
+    entry.async_on_unload(entry.add_update_listener(async_entry_updated))
     return True
 
 
@@ -272,11 +268,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

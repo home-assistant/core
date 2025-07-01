@@ -25,7 +25,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS_WITH_DHW
@@ -160,8 +159,8 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
 async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_OFF of an evohome DHW zone."""
 
-    # Entity water_heater.xxx does not support this service
-    with pytest.raises(HomeAssistantError):
+    # turn_off
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_TURN_OFF,
@@ -171,13 +170,15 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
             blocking=True,
         )
 
+        mock_fcn.assert_awaited_once_with()
+
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_ON of an evohome DHW zone."""
 
-    # Entity water_heater.xxx does not support this service
-    with pytest.raises(HomeAssistantError):
+    # turn_on
+    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_TURN_ON,
@@ -186,3 +187,5 @@ async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
             },
             blocking=True,
         )
+
+        mock_fcn.assert_awaited_once_with()

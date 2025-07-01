@@ -42,7 +42,7 @@ def _format_tool(
 
 
 async def create_server(
-    hass: HomeAssistant, llm_api_id: str, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
 ) -> Server:
     """Create a new Model Context Protocol Server.
 

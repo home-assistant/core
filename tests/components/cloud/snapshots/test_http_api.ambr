@@ -9,6 +9,7 @@
   dev | False
   hassio | False
   docker | False
+  container_arch | None
   user | hass
   virtualenv | False
   python_version | 3.13.1

@@ -21,12 +21,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SCRUBBED  Air Temperature',
     'platform': 'omnilogic',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'SCRUBBED_SCRUBBED_air_temperature',
@@ -47,7 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21',
+    'state': '21.1111111111111',
   })
 # ---
 # name: test_sensors[sensor.scrubbed_spa_water_temperature-entry]
@@ -72,12 +76,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SCRUBBED  Spa Water Temperature',
     'platform': 'omnilogic',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'SCRUBBED_1_water_temperature',
@@ -98,6 +106,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': '21.6666666666667',
   })
 # ---

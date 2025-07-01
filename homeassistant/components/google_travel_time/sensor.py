@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import (
     ComputeRoutesRequest,
     Route,
@@ -58,7 +58,11 @@ from .const import (
     TRAVEL_MODES_TO_GOOGLE_SDK_ENUM,
     UNITS_TO_GOOGLE_SDK_ENUM,
 )
-from .helpers import convert_to_waypoint
+from .helpers import (
+    convert_to_waypoint,
+    create_routes_api_disabled_issue,
+    delete_routes_api_disabled_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,8 +275,14 @@ class GoogleTravelTimeSensor(SensorEntity):
                 response = await self._client.compute_routes(
                     request, metadata=[("x-goog-fieldmask", FIELD_MASK)]
                 )
+                _LOGGER.debug("Received response: %s", response)
                 if response is not None and len(response.routes) > 0:
                     self._route = response.routes[0]
+                delete_routes_api_disabled_issue(self.hass, self._config_entry)
+            except PermissionDenied:
+                _LOGGER.error("Routes API is disabled for this API key")
+                create_routes_api_disabled_issue(self.hass, self._config_entry)
+                self._route = None
             except GoogleAPIError as ex:
                 _LOGGER.error("Error getting travel time: %s", ex)
                 self._route = None

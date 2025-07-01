@@ -319,7 +319,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ45842",
-                macaddress=format_mac("3c:6a:2c:1c:8c:80"),
+                macaddress=format_mac("3c6a2c1c8c80"),
             ),
         )
         assert result["type"] is FlowResultType.FORM
@@ -365,7 +365,7 @@ async def test_dhcp_discovery_already_exists(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ45842".lower(),
-                macaddress=format_mac("3c:6a:2c:1c:8c:80"),
+                macaddress=format_mac("3c6a2c1c8c80"),
             ),
         )
         assert result["type"] is FlowResultType.ABORT
@@ -382,7 +382,7 @@ async def test_dhcp_discovery_short_name(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ",
-                macaddress=format_mac("3c:6a:2c:1c:8c:80"),
+                macaddress=format_mac("3c6a2c1c8c80"),
             ),
         )
         assert result["type"] is FlowResultType.FORM

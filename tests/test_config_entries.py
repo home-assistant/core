@@ -2226,7 +2226,7 @@ async def test_entry_subentry_no_context(
 
 @pytest.mark.parametrize(
     ("unique_id", "expected_result"),
-    [(None, does_not_raise()), ("test", pytest.raises(HomeAssistantError))],
+    [(None, does_not_raise()), ("test", pytest.raises(data_entry_flow.AbortFlow))],
 )
 async def test_entry_subentry_duplicate(
     hass: HomeAssistant,
@@ -6497,9 +6497,7 @@ async def test_update_subentry_and_abort(
     err: Exception
     with mock_config_flow("comp", TestFlow):
         try:
-            result = await entry.start_subentry_reconfigure_flow(
-                hass, "test", subentry_id
-            )
+            result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         except Exception as ex:  # noqa: BLE001
             err = ex
 
@@ -6556,7 +6554,7 @@ async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None
         mock_config_flow("comp", TestFlow),
         pytest.raises(ValueError, match="Source is reconfigure, expected user"),
     ):
-        await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+        await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     await hass.async_block_till_done()
 
@@ -8079,7 +8077,7 @@ async def test_subentry_get_entry(
 
     # A reconfigure flow finds the config entry and subentry
     with mock_config_flow("test", TestFlow):
-        result = await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert (
             result["reason"]
             == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
@@ -8825,7 +8823,7 @@ async def test_create_entry_existing_unique_id(
 
     log_text = (
         f"Detected that integration '{domain}' creates a config entry "
-        "when another entry with the same unique ID exists. Please "
-        "create a bug report at https:"
+        "when another entry with the same unique ID exists. This will stop "
+        "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log

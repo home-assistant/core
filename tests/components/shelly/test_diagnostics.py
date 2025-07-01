@@ -103,7 +103,6 @@ async def test_rpc_config_entry_diagnostics(
     )
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-
     assert result == {
         "entry": entry_dict | {"discovery_keys": {}},
         "bluetooth": {
@@ -147,11 +146,17 @@ async def test_rpc_config_entry_diagnostics(
                 ],
                 "last_detection": ANY,
                 "monotonic_time": ANY,
-                "name": "Mock Title (12:34:56:78:9A:BE)",
+                "name": "Test name (12:34:56:78:9A:BE)",
                 "scanning": True,
                 "start_time": ANY,
                 "source": "12:34:56:78:9A:BE",
                 "time_since_last_device_detection": {"AA:BB:CC:DD:EE:FF": ANY},
+                "raw_advertisement_data": {
+                    "AA:BB:CC:DD:EE:FF": {
+                        "__type": "<class 'bytes'>",
+                        "repr": "b'\\x02\\x01\\x06\\t\\xffY\\x00\\xd1\\xfb;t\\xc8\\x90\\x11\\x07\\x1b\\xc5\\xd5\\xa5\\x02\\x00\\xb8\\x9f\\xe6\\x11M\"\\x00\\r\\xa2\\xcb\\x06\\x16\\x00\\rH\\x10a'",
+                    }
+                },
                 "type": "ShellyBLEScanner",
             }
         },
