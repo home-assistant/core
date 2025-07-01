@@ -99,6 +99,7 @@ from homeassistant.helpers import (
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -2078,3 +2079,15 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+def _dhcp_service_info_post_init(self: DhcpServiceInfo) -> None:
+    """Post-init processing for DhcpServiceInfo.
+
+    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    """
+    if self.macaddress != self.macaddress.lower().replace(":", ""):
+        raise ValueError("macaddress is not correctly formatted")
+
+
+DhcpServiceInfo.__post_init__ = _dhcp_service_info_post_init
