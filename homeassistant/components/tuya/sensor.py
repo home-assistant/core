@@ -335,7 +335,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.WATER_LEVEL, translation_key="water_level"
+            key=DPCode.WATER_LEVEL, translation_key="water_level_state"
         ),
     ),
     # Air Quality Monitor
