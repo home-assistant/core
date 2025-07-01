@@ -13,7 +13,7 @@
       },
       "routes": {
         "title": "Add Route",
-        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and should be in HH:MM format (e.g., 08:00). If omitted, the next available train will be shown.",
+        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
           "from": "From station",
@@ -26,7 +26,7 @@
           "from": "Departure station code (e.g., AMS)",
           "to": "Arrival station code (e.g., UTR)",
           "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM (24h)"
+          "time": "Optional departure time in HH:MM:SS (24h)"
         }
       }
     },
@@ -46,6 +46,9 @@
         "description": "Configure the routes.",
         "data": {
           "action": "Action"
+        },
+        "data_description": {
+          "action": "Edit, add, or delete train routes for this integration."
         }
       },
       "select_route": {
@@ -53,11 +56,14 @@
         "description": "Choose a route to {action}.",
         "data": {
           "route_idx": "Route"
+        },
+        "data_description": {
+          "route_idx": "Select the route you want to edit or delete."
         }
       },
       "add_route": {
         "title": "Add Route",
-        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and should be in HH:MM format (e.g., 08:00). If omitted, the next available train will be shown.",
+        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
           "from": "From station",
@@ -70,12 +76,12 @@
           "from": "Departure station code (e.g., AMS)",
           "to": "Arrival station code (e.g., UTR)",
           "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM (24h)"
+          "time": "Optional departure time in HH:MM:SS (24h)"
         }
       },
       "edit_route": {
         "title": "Edit Route",
-        "description": "Edit the details for this route. [Find Dutch station codes here]({station_list_url}). Time is optional and should be in HH:MM format (e.g., 08:00). If omitted, the next available train will be shown.",
+        "description": "Edit the details for this route. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
           "from": "From station",
@@ -88,7 +94,7 @@
           "from": "Departure station code (e.g., AMS)",
           "to": "Arrival station code (e.g., UTR)",
           "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM (24h)"
+          "time": "Optional departure time in HH:MM:SS (24h)"
         }
       }
     },

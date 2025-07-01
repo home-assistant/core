@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import re
 
 import ns_api
 from ns_api import RequestParametersError
@@ -298,9 +299,12 @@ class NSDepartureSensor(SensorEntity):
         if isinstance(self._time, str):
             if self._time.strip() == "":
                 self._time = None
+            elif not re.match(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$", self._time):
+                _LOGGER.error("Invalid time format for self._time: %s", self._time)
+                self._time = None
             else:
                 try:
-                    self._time = datetime.strptime(self._time, "%H:%M").time()
+                    self._time = datetime.strptime(self._time, "%H:%M:%S").time()
                 except ValueError:
                     _LOGGER.error("Invalid time format for self._time: %s", self._time)
                     self._time = None

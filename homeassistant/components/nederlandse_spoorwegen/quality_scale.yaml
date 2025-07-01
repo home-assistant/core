@@ -25,7 +25,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      Entities of this integration does not explicitly subscribe to events.
+      Entities of this integration do not explicitly subscribe to events.
   entity-unique-id:
     status: done
     comment: |
@@ -42,36 +42,29 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: |
-      This integration does not have any configuration parameters.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: |
-      This integration does not have entities.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: |
-      This integration does not have entities.
+  log-when-unavailable: done
   parallel-updates:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not have platforms.
-  reauthentication-flow: done
+      This integration does not set PARALLEL_UPDATES in sensor.py.
+  reauthentication-flow:
+    status: todo
+    comment: |
+      This integration does not support a reauthentication flow and does not implement async_step_reauth.
   test-coverage: done
-
   # Gold
   devices:
-    status: exempt
+    status: todo
     comment: |
-      This integration connects to a single service.
+      Not implemented. No device is created for the NS API account. Required for gold.
   diagnostics:
-    status: exempt
+    status: todo
     comment: |
-      There is no data to diagnose.
+      Not implemented. No diagnostics handler is present. Required for gold.
   discovery-update-info:
     status: exempt
     comment: |
@@ -94,9 +87,9 @@ rules:
     comment: |
       This integration is a cloud service.
   docs-supported-functions:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
+      All supported functions are documented.
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
@@ -104,27 +97,30 @@ rules:
     comment: |
       This integration connects to a single service.
   entity-category:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
+      All entities are primary and do not require a category.
   entity-device-class:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
+      All entities are primary sensors.
   entity-disabled-by-default:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
+      No entities are disabled by default.
   entity-translations:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
+      All user-facing strings are translated.
   exception-translations: done
   icon-translations:
-    status: exempt
+    status: done
     comment: |
-      This integration does not have entities.
-  reconfiguration-flow: done
+      All user-facing icons are translated.
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      This integration does not support reconfiguration and does not implement async_step_reconfigure.
   repair-issues: done
   stale-devices:
     status: exempt
@@ -133,4 +129,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo
