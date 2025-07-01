@@ -538,9 +538,9 @@ class ONVIFDevice:
             preset_val,
         )
 
-        def is_action_not_implemented(error):
+        def handle_is_action_not_implemented(error):
             """Check if the error indicates that the action is not implemented."""
-            return "Action Not Implemented" in str(error)
+            return "Action Not Implemented" not in str(error)
 
         try:
             # list for extra functions in future, home mode as a possibility
@@ -576,14 +576,15 @@ class ONVIFDevice:
                         {"ProfileToken": stop_req.ProfileToken, "PanTilt": True, "Zoom": False}
                     )
                 except Fault as e:
-                    if is_action_not_implemented(e):
-                        zero_req = ptz_service.create_type(CONTINUOUS_MOVE)
-                        zero_req.ProfileToken = profile.token
-                        velocity_zero = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
-                        zero_req.Velocity = velocity_zero
-                        await ptz_service.ContinuousMove(zero_req)
-                    else:
+                    if handle_is_action_not_implemented(e):
                         raise
+                    zero_req = ptz_service.create_type(CONTINUOUS_MOVE)
+                    zero_req.ProfileToken = profile.token
+                    velocity_zero = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                    zero_req.Velocity = velocity_zero
+                    await ptz_service.ContinuousMove(zero_req)
+
+
 
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
@@ -638,12 +639,13 @@ class ONVIFDevice:
 
 
                 except Fault as fault:
-                    if is_action_not_implemented(fault):
-                        LOGGER.warning(
-                            "ContinuousMove not supported on device '%s', cannot emulate relative move",
-                            self.name
-                        )
-                    raise
+                    if handle_is_action_not_implemented(fault):
+                        raise
+                    LOGGER.warning(
+                        "ContinuousMove not supported on device '%s', cannot emulate relative move",
+                        self.name
+                    )
+
 
             elif move_mode == ABSOLUTE_MOVE:
                 # Guard against unsupported operation
@@ -698,25 +700,22 @@ class ONVIFDevice:
                 try:
                     await ptz_service.Stop(req)
                 except Fault as e:
-                    if is_action_not_implemented(e):
-                        if profile.ptz and profile.ptz.continuous:
-                            LOGGER.warning(
-                                "Device doesn't support stop command, using continuous move to stop"
-                            )
-                            req = ptz_service.create_type(CONTINUOUS_MOVE)
-                            req.ProfileToken = profile.token
-                            velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
-                            req.Velocity = velocity
-                            await ptz_service.ContinuousMove(req)
-                        else:
-                            LOGGER.warning(
-                                "Device doesn't support stop command and continuous move is not available"
-                            )
-                            raise ONVIFError("Cannot stop PTZ movement")
+                    if handle_is_action_not_implemented(e):
+                        raise  # re-raise for other errors
+                    if profile.ptz and profile.ptz.continuous:
+                        LOGGER.warning(
+                            "Device doesn't support stop command, using continuous move to stop"
+                        )
+                        req = ptz_service.create_type(CONTINUOUS_MOVE)
+                        req.ProfileToken = profile.token
+                        velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                        req.Velocity = velocity
+                        await ptz_service.ContinuousMove(req)
                     else:
-                        raise # re-raise for other errors
-
-
+                        LOGGER.warning(
+                            "Device doesn't support stop command and continuous move is not available"
+                        )
+                        raise ONVIFError("Cannot stop PTZ movement")
 
         except ONVIFError as err:
             if "Bad Request" in err.reason:
