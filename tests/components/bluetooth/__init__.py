@@ -301,6 +301,9 @@ class MockBleakClient(BleakClient):
         """Mock clear_cache."""
         return True
 
+    def set_disconnected_callback(self, callback, **kwargs):
+        """Mock set_disconnected_callback."""
+
 
 class FakeScannerMixin:
     def get_discovered_device_advertisement_data(
