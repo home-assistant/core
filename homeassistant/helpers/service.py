@@ -10,7 +10,7 @@ from functools import cache, partial
 import inspect
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, cast, overload, override
+from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 
 import voluptuous as vol
 
@@ -995,19 +995,7 @@ def async_register_admin_service(
     )
 
 
-# Overloads can be dropped when all core calls have been updated to drop hass argument
-@overload
-def verify_domain_control(
-    domain: str,
-) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]: ...
-@overload
-def verify_domain_control(
-    hass: HomeAssistant,
-    domain: str,
-) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]: ...
-
-
-@deprecate_hass_binding(breaks_in_ha_version="2026.2")  # type: ignore[misc]
+@deprecate_hass_binding(breaks_in_ha_version="2026.2")
 @callback
 def verify_domain_control(
     domain: str,
