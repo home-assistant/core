@@ -5,11 +5,19 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "user": {
-        "title": "Lunatone DALI IoT Gateway",
         "description": "Connect to the API of your Lunatone DALI IoT Gateway.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         }
+      },
+      "dali": {
+        "title": "DALI device scan",
+        "data": {
+          "device_scan_method": "Select a DALI device scan method"
+        }
+      },
+      "finish": {
+        "description": "DALI device scan completed successfully"
       }
     },
     "error": {
@@ -20,6 +28,19 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "progress": {
+      "device_scan": "Scanning for DALI devices..."
+    }
+  },
+  "selector": {
+    "device_scan_method": {
+      "options": {
+        "do_nothing": "No device scan",
+        "current_device_list": "Update current device list",
+        "system_extension": "Find new devices",
+        "new_installation": "New installation"
+      }
     }
   }
 }
