@@ -5,8 +5,7 @@ from unittest.mock import MagicMock
 from luftdaten.exceptions import LuftdatenConnectionError
 import pytest
 
-from homeassistant.components.luftdaten import DOMAIN
-from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
+from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
