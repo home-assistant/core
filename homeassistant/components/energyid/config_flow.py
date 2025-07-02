@@ -1,5 +1,6 @@
 """Config flow for EnergyID integration."""
 
+from collections.abc import Callable
 import logging
 import secrets
 from typing import Any
@@ -8,12 +9,16 @@ from aiohttp import ClientError
 from energyid_webhooks.client_v2 import WebhookClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from . import EnergyIDConfigEntry
 from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
@@ -21,7 +26,7 @@ from .const import (
     CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
-from .subentry_flow import EnergyIDSubentryFlowHandler
+from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,23 +34,17 @@ DEFAULT_ENERGYID_DEVICE_NAME_FOR_WEBHOOK = "Home Assistant"
 ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX = "homeassistant_eid_"
 
 
-def _generate_energyid_device_id_for_webhook() -> str:
-    """Generate a unique device ID for this Home Assistant instance to use with EnergyID webhook."""
-    return f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{secrets.token_hex(4)}"
-
-
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the EnergyID integration."""
 
     VERSION = 1
-    _config_entry_being_reconfigured: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow with default flow data."""
         self._flow_data: dict[str, Any] = {
             "provisioning_key": None,
             "provisioning_secret": None,
-            "webhook_device_id": _generate_energyid_device_id_for_webhook(),
+            "webhook_device_id": None,
             "webhook_device_name": DEFAULT_ENERGYID_DEVICE_NAME_FOR_WEBHOOK,
             "claim_info": None,
             "record_number": None,
@@ -54,34 +53,21 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _perform_auth_and_get_details(self) -> str | None:
         """Authenticate with EnergyID and retrieve device details."""
-        if (
-            not self._flow_data["provisioning_key"]
-            or not self._flow_data["provisioning_secret"]
-        ):
-            _LOGGER.error("Missing credentials for authentication")
-            return "missing_credentials"
-
         _LOGGER.debug(
-            "Attempting authentication with device ID: %s, device name: %s",
+            "Attempting auth with device ID: %s, name: %s",
             self._flow_data["webhook_device_id"],
             self._flow_data["webhook_device_name"],
         )
-
-        session = async_get_clientsession(self.hass)
         client = WebhookClient(
             provisioning_key=self._flow_data["provisioning_key"],
             provisioning_secret=self._flow_data["provisioning_secret"],
             device_id=self._flow_data["webhook_device_id"],
             device_name=self._flow_data["webhook_device_name"],
-            session=session,
+            session=async_get_clientsession(self.hass),
         )
-
         try:
             is_claimed = await client.authenticate()
         except ClientError:
-            _LOGGER.warning(
-                "Connection error during EnergyID authentication", exc_info=True
-            )
             return "cannot_connect"
         except RuntimeError:
             _LOGGER.exception("Unexpected runtime error during EnergyID authentication")
@@ -91,126 +77,44 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             self._flow_data["record_number"] = client.recordNumber
             self._flow_data["record_name"] = client.recordName
             self._flow_data["claim_info"] = None
-            _LOGGER.info(
-                "Successfully authenticated and claimed. Record: %s, Name: %s",
+            _LOGGER.debug(
+                "Successfully authenticated. Record: %s, Name: %s",
                 client.recordNumber,
                 client.recordName,
             )
             if not self._flow_data["record_number"]:
-                _LOGGER.error("Claimed, but no record number received from EnergyID")
                 return "missing_record_number"
             return None
 
         claim_details_dict = client.get_claim_info()
         self._flow_data["claim_info"] = claim_details_dict
-        _LOGGER.info("Device needs to be claimed. Claim info: %s", claim_details_dict)
+        _LOGGER.debug("Device needs to be claimed. Info: %s", claim_details_dict)
         if not claim_details_dict or not claim_details_dict.get("claim_code"):
-            _LOGGER.error(
-                "Failed to retrieve valid claim code. Info: %s", claim_details_dict
-            )
             return "cannot_retrieve_claim_info"
         return "needs_claim"
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        errors: dict[str, str] = {}
-
-        if not self._config_entry_being_reconfigured:
-            entry_id = self.context.get("entry_id")
-            if not entry_id:
-                _LOGGER.error("Reconfigure flow started without entry_id in context")
-                return self.async_abort(reason="unknown_error")
-            config_entry = self.hass.config_entries.async_get_entry(entry_id)
-            if not config_entry:
-                _LOGGER.error("Config entry %s not found for reconfigure", entry_id)
-                return self.async_abort(reason="unknown_error")
-            self._config_entry_being_reconfigured = config_entry
-
-        current_entry = self._config_entry_being_reconfigured
-
-        if not hasattr(self, "_flow_data") or not isinstance(self._flow_data, dict):
-            _LOGGER.warning("Re-initializing self._flow_data in reconfigure step")
-            self._flow_data = {
-                "provisioning_key": None,
-                "provisioning_secret": None,
-                "webhook_device_id": _generate_energyid_device_id_for_webhook(),
-                "webhook_device_name": DEFAULT_ENERGYID_DEVICE_NAME_FOR_WEBHOOK,
-                "claim_info": None,
-                "record_number": None,
-                "record_name": None,
-            }
-
-        if user_input is not None:
-            flow_data_for_auth = {
-                "provisioning_key": user_input[CONF_PROVISIONING_KEY],
-                "provisioning_secret": user_input[CONF_PROVISIONING_SECRET],
-                "webhook_device_id": current_entry.data[CONF_DEVICE_ID],
-                "webhook_device_name": user_input[CONF_DEVICE_NAME],
-                "claim_info": None,
-                "record_number": None,
-                "record_name": None,
-            }
-            self._flow_data = flow_data_for_auth
-
-            auth_status = await self._perform_auth_and_get_details()
-
-            if auth_status is None:
-                ...
-            if auth_status == "needs_claim":
-                ...
-            if auth_status is not None:
-                errors["base"] = auth_status
-            else:
-                errors["base"] = "unknown_error"
-
-        user_input_defaults = {
-            CONF_PROVISIONING_KEY: current_entry.data.get(CONF_PROVISIONING_KEY),
-            CONF_PROVISIONING_SECRET: current_entry.data.get(CONF_PROVISIONING_SECRET),
-            CONF_DEVICE_NAME: current_entry.data.get(CONF_DEVICE_NAME),
-        }
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_PROVISIONING_KEY,
-                    default=user_input_defaults.get(CONF_PROVISIONING_KEY),
-                ): str,
-                vol.Required(
-                    CONF_PROVISIONING_SECRET,
-                    default=user_input_defaults.get(CONF_PROVISIONING_SECRET),
-                ): str,
-                vol.Required(
-                    CONF_DEVICE_NAME, default=user_input_defaults.get(CONF_DEVICE_NAME)
-                ): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders={
-                "docs_url": "https://help.energyid.eu/en/developer/incoming-webhooks/",
-                "current_site_name": current_entry.title,
-            },
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step of the configuration flow."""
+        if self._flow_data.get("webhook_device_id") is None:
+            if (
+                hasattr(self.hass.config, "instance_id")
+                and self.hass.config.instance_id
+            ):
+                self._flow_data["webhook_device_id"] = (
+                    f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{self.hass.config.instance_id}"
+                )
+            else:
+                _LOGGER.warning("HA instance_id not found, using random token")
+                self._flow_data["webhook_device_id"] = (
+                    f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{secrets.token_hex(8)}"
+                )
+
         errors: dict[str, str] = {}
-        _LOGGER.debug("User step input: %s", user_input)
-
         if user_input is not None:
-            self._flow_data["provisioning_key"] = user_input[CONF_PROVISIONING_KEY]
-            self._flow_data["provisioning_secret"] = user_input[
-                CONF_PROVISIONING_SECRET
-            ]
+            self._flow_data.update(user_input)
             auth_status = await self._perform_auth_and_get_details()
-            _LOGGER.debug("Authentication status: %s", auth_status)
-
             if auth_status is None:
                 record_num_str = str(self._flow_data["record_number"])
                 await self.async_set_unique_id(record_num_str)
@@ -225,7 +129,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finalize()
             if auth_status == "needs_claim":
                 if not self._flow_data.get("claim_info"):
-                    _LOGGER.error("Claim info is missing despite 'needs_claim' status")
+                    _LOGGER.error("Claim info missing despite 'needs_claim' status")
                     return self.async_abort(reason="internal_error_no_claim_info")
                 return await self.async_step_auth_and_claim()
             errors["base"] = auth_status
@@ -249,60 +153,33 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the step for device claiming if needed."""
         errors: dict[str, str] = {}
-        _LOGGER.debug(
-            "Auth and claim step input: %s, claim info: %s",
-            user_input,
-            self._flow_data.get("claim_info"),
-        )
-
         if user_input is not None:
             auth_status = await self._perform_auth_and_get_details()
-            _LOGGER.debug("Authentication status after claim attempt: %s", auth_status)
             if auth_status is None:
                 if not self._flow_data.get("record_number"):
-                    _LOGGER.error("Claim successful but record number is missing")
                     errors["base"] = "missing_record_number"
                 else:
                     record_num_str = str(self._flow_data["record_number"])
                     await self.async_set_unique_id(record_num_str)
-                    self._abort_if_unique_id_configured(
-                        updates={
-                            CONF_PROVISIONING_KEY: self._flow_data["provisioning_key"],
-                            CONF_PROVISIONING_SECRET: self._flow_data[
-                                "provisioning_secret"
-                            ],
-                        }
-                    )
+                    self._abort_if_unique_id_configured()
                     return await self.async_step_finalize()
             elif auth_status == "needs_claim":
                 errors["base"] = "claim_failed_or_timed_out"
             else:
                 errors["base"] = auth_status
 
-        placeholders_for_form = {
-            "claim_url": "N/A",
-            "claim_code": "N/A",
-            "valid_until": "N/A",
-        }
-        current_claim_info = self._flow_data.get("claim_info")
-        if isinstance(current_claim_info, dict):
-            placeholders_for_form.update(
-                {
-                    "claim_url": current_claim_info.get("claim_url", "N/A"),
-                    "claim_code": current_claim_info.get("claim_code", "N/A"),
-                    "valid_until": current_claim_info.get("valid_until", "N/A"),
-                }
-            )
-        else:
-            _LOGGER.warning(
-                "Claim info is invalid or missing at claim step: %s", current_claim_info
-            )
-            if not errors.get("base"):
-                errors["base"] = "cannot_retrieve_claim_info"
+        placeholders = {"claim_url": "N/A", "claim_code": "N/A", "valid_until": "N/A"}
+        if isinstance(current_claim_info := self._flow_data.get("claim_info"), dict):
+            placeholders["claim_url"] = current_claim_info.get("claim_url", "N/A")
+            placeholders["claim_code"] = current_claim_info.get("claim_code", "N/A")
+            placeholders["valid_until"] = current_claim_info.get("valid_until", "N/A")
+        elif not errors.get("base"):
+            _LOGGER.warning("Claim info invalid/missing: %s", current_claim_info)
+            errors["base"] = "cannot_retrieve_claim_info"
 
         return self.async_show_form(
             step_id="auth_and_claim",
-            description_placeholders=placeholders_for_form,
+            description_placeholders=placeholders,
             data_schema=vol.Schema({}),
             errors=errors,
         )
@@ -311,55 +188,53 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Finalize the configuration flow and create the config entry."""
-        _LOGGER.debug("Finalize step input: %s", user_input)
-
-        required_keys = [
+        required = [
             "provisioning_key",
             "provisioning_secret",
             "webhook_device_id",
             "record_number",
         ]
-        if not all(self._flow_data.get(k) for k in required_keys):
+        if not all(self._flow_data.get(k) for k in required):
             _LOGGER.error("Incomplete flow data for finalize: %s", self._flow_data)
             return self.async_abort(reason="internal_flow_data_missing")
 
         if user_input is not None:
             self._flow_data["webhook_device_name"] = user_input[CONF_DEVICE_NAME]
-            config_data_to_store = {
+            data = {
                 CONF_PROVISIONING_KEY: self._flow_data["provisioning_key"],
                 CONF_PROVISIONING_SECRET: self._flow_data["provisioning_secret"],
                 CONF_DEVICE_ID: self._flow_data["webhook_device_id"],
                 CONF_DEVICE_NAME: self._flow_data["webhook_device_name"],
             }
-            ha_entry_title = (
+            title = (
                 self._flow_data.get("record_name")
                 or self._flow_data["webhook_device_name"]
             )
-            return self.async_create_entry(
-                title=str(ha_entry_title), data=config_data_to_store
+            return self.async_create_entry(title=str(title), data=data, options={})
+
+        suggested_name = self._flow_data.get("record_name") or self._flow_data.get(
+            "webhook_device_name"
+        )
+        placeholders = {
+            "ha_entry_title_to_be": str(
+                self._flow_data.get("record_name") or "your EnergyID site"
             )
-
-        suggested_name = self._flow_data.get("record_name")
-        if not suggested_name or str(suggested_name).lower() == "none":
-            suggested_name = self._flow_data["webhook_device_name"]
-
-        ha_title_value = self._flow_data.get("record_name") or "your EnergyID site"
-        placeholders_for_finalize = {"ha_entry_title_to_be": str(ha_title_value)}
+        }
 
         return self.async_show_form(
             step_id="finalize",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_NAME, default=str(suggested_name)): str,
-                }
+                {vol.Required(CONF_DEVICE_NAME, default=str(suggested_name)): str}
             ),
-            description_placeholders=placeholders_for_finalize,
+            description_placeholders=placeholders,
         )
 
-    @staticmethod
+    @classmethod
     @callback
-    def async_get_options_flow(
-        config_entry: EnergyIDConfigEntry,
-    ) -> EnergyIDSubentryFlowHandler:
-        """Return the options flow handler for the EnergyID integration."""
-        return EnergyIDSubentryFlowHandler()
+    def async_get_supported_subentry_types(  # type: ignore[override]
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, Callable[[], ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            "sensor_mapping": lambda: EnergyIDSensorMappingFlowHandler(config_entry)
+        }

@@ -130,7 +130,7 @@ rules:
     comment: |
       Diagnostic sensor uses a fixed mdi icon.
   reconfiguration-flow:
-    status: done
+    status: todo
   repair-issues:
     status: exempt
     comment: |
