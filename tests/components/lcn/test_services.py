@@ -138,7 +138,7 @@ async def test_service_relays(
     # wrong states string
     with (
         patch.object(MockModuleConnection, "control_relays") as control_relays,
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -149,6 +149,8 @@ async def test_service_relays(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_length_of_states_string"
 
 
 async def test_service_led(
@@ -344,7 +346,7 @@ async def test_service_send_keys_hit_deferred(
         patch.object(
             MockModuleConnection, "send_keys_hit_deferred"
         ) as send_keys_hit_deferred,
-        pytest.raises(ServiceValidationError),
+        pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -358,6 +360,8 @@ async def test_service_send_keys_hit_deferred(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_send_keys_action"
 
 
 async def test_service_lock_keys(
@@ -388,7 +392,7 @@ async def test_service_lock_keys(
     # wrong states string
     with (
         patch.object(MockModuleConnection, "lock_keys") as lock_keys,
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -400,6 +404,8 @@ async def test_service_lock_keys(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_length_of_states_string"
 
 
 async def test_service_lock_keys_tab_a_temporary(
@@ -438,7 +444,7 @@ async def test_service_lock_keys_tab_a_temporary(
         patch.object(
             MockModuleConnection, "lock_keys_tab_a_temporary"
         ) as lock_keys_tab_a_temporary,
-        pytest.raises(ServiceValidationError),
+        pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -452,6 +458,8 @@ async def test_service_lock_keys_tab_a_temporary(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_lock_keys_table"
 
 
 async def test_service_dyn_text(
