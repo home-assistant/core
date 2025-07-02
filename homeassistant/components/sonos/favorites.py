@@ -75,7 +75,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         if not (match := re.search(r"FV:2,(\d+)", container_ids)):
             return
 
-        container_id = int(match.groups()[0])
+        container_id = int(match.group(1))
         event_id = int(event_id.split(",")[-1])
 
         async with self.cache_update_lock:

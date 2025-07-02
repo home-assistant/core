@@ -107,7 +107,7 @@ class PsnMediaPlayerEntity(
         """Media Player state getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         if session and session.status == "online":
-            if self.coordinator.data.available and session.title_id is not None:
+            if session.title_id is not None:
                 return MediaPlayerState.PLAYING
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
