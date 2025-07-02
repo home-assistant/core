@@ -140,8 +140,6 @@ class PlatformData:
         self.hass = hass
         self.domain = domain
         self.platform_name = platform_name
-        # self.entity_namespace: str | None = None
-        # self.config_entry: config_entries.ConfigEntry | None = None
         self.component_translations: dict[str, str] = {}
         self.platform_translations: dict[str, str] = {}
         self.object_id_component_translations: dict[str, str] = {}
