@@ -113,7 +113,7 @@
         "name": "Detergent level",
         "state": {
           "unknown": "Unknown",
-          "empty": "Empty",
+          "empty": "[%key:common::state::empty%]",
           "25": "25%",
           "50": "50%",
           "100": "100%",
