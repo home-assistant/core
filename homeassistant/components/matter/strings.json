@@ -180,6 +180,9 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "pump_setpoint": {
+        "name": "Setpoint"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
       },
