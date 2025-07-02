@@ -22,17 +22,29 @@
           "password": "[%key:component::alexa_devices::common::data_description_password%]",
           "code": "[%key:component::alexa_devices::common::data_description_code%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "[%key:component::alexa_devices::common::data_code%]"
+        },
+        "data_description": {
+          "password": "[%key:component::alexa_devices::common::data_description_password%]",
+          "code": "[%key:component::alexa_devices::common::data_description_code%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "wrong_country": "Wrong country selected. Please select the country where your Amazon account is registered.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
