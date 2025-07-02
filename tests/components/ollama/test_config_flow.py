@@ -330,3 +330,134 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+
+async def test_form_invalid_url(hass: HomeAssistant) -> None:
+    """Test we handle invalid URL."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {ollama.CONF_URL: "not-a-valid-url"}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_url"}
+
+
+async def test_subentry_connection_error(
+    hass: HomeAssistant,
+    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation when connection to Ollama server fails."""
+    with patch(
+        "ollama.AsyncClient.list",
+        side_effect=ConnectError("Connection failed"),
+    ):
+        new_flow = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert new_flow["type"] is FlowResultType.ABORT
+    assert new_flow["reason"] == "cannot_connect"
+
+
+async def test_subentry_model_check_exception(
+    hass: HomeAssistant,
+    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation when checking model availability throws exception."""
+    with patch(
+        "ollama.AsyncClient.list",
+        side_effect=[
+            {"models": [{"model": TEST_MODEL}]},  # First call succeeds
+            RuntimeError("Failed to check models"),  # Second call fails
+        ],
+    ):
+        new_flow = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+        assert new_flow["type"] is FlowResultType.FORM
+        assert new_flow["step_id"] == "set_options"
+
+        # Configure with a model, should fail when checking availability
+        result = await hass.config_entries.subentries.async_configure(
+            new_flow["flow_id"],
+            {
+                ollama.CONF_MODEL: "new_model:latest",
+                CONF_NAME: "Test Conversation",
+                ollama.CONF_PROMPT: "test prompt",
+                ollama.CONF_MAX_HISTORY: 50,
+                ollama.CONF_NUM_CTX: 16384,
+                ollama.CONF_THINK: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_subentry_reconfigure_with_download(
+    hass: HomeAssistant,
+    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring subentry when model needs to be downloaded."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+
+    async def delayed_pull(self, model: str) -> None:
+        """Simulate a delayed model download."""
+        assert model == "llama3.2:latest"
+        await asyncio.sleep(0)  # yield the event loop
+
+    with (
+        patch(
+            "ollama.AsyncClient.list",
+            return_value={"models": [{"model": TEST_MODEL}]},
+        ),
+        patch("ollama.AsyncClient.pull", delayed_pull),
+    ):
+        reconfigure_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+        assert reconfigure_flow["type"] is FlowResultType.FORM
+        assert reconfigure_flow["step_id"] == "set_options"
+
+        # Reconfigure with a model that needs downloading
+        result = await hass.config_entries.subentries.async_configure(
+            reconfigure_flow["flow_id"],
+            {
+                ollama.CONF_MODEL: "llama3.2:latest",
+                ollama.CONF_PROMPT: "updated prompt",
+                ollama.CONF_MAX_HISTORY: 75,
+                ollama.CONF_NUM_CTX: 8192,
+                ollama.CONF_THINK: True,
+            },
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "download"
+
+        await hass.async_block_till_done()
+
+        # Finish download
+        result = await hass.config_entries.subentries.async_configure(
+            reconfigure_flow["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        ollama.CONF_MODEL: "llama3.2:latest",
+        ollama.CONF_PROMPT: "updated prompt",
+        ollama.CONF_MAX_HISTORY: 75.0,
+        ollama.CONF_NUM_CTX: 8192.0,
+        ollama.CONF_THINK: True,
+    }

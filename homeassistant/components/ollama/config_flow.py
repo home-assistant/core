@@ -387,11 +387,3 @@ def ollama_config_option_schema(
     )
 
     return schema
-
-
-def _get_title(model: str) -> str:
-    """Get title for config entry."""
-    if model.endswith(":latest"):
-        model = model.split(":", maxsplit=1)[0]
-
-    return model
