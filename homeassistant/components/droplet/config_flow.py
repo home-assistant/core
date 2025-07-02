@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_DATA_TOPIC,
@@ -32,6 +33,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _droplet_discovery: DropletDiscovery | None = None
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        _LOGGER.error(discovery_info)
+        return await self.async_step_confirm()
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo

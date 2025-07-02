@@ -7,9 +7,6 @@ MQTT = {
     "drop_connect": [
         "drop_connect/discovery/#",
     ],
-    "droplet": [
-        "droplet/discovery/#",
-    ],
     "dsmr_reader": [
         "dsmr/#",
     ],
