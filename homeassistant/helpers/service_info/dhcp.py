@@ -18,9 +18,3 @@ class DhcpServiceInfo(BaseServiceInfo):
     as a lowercase string without colons.
     eg. "AA:BB:CC:12:34:56" is stored as "aabbcc123456"
     """
-
-    def __post_init__(self) -> None:
-        """Post init checks.
-
-        Needed so it can be overridden in tests.
-        """

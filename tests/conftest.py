@@ -156,18 +156,6 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
-def _dhcp_service_info_post_init(self: DhcpServiceInfo) -> None:
-    """Post-init processing for DhcpServiceInfo.
-
-    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
-    """
-    if self.macaddress != self.macaddress.lower().replace(":", ""):
-        raise ValueError("macaddress is not correctly formatted")
-
-
-DhcpServiceInfo.__post_init__ = _dhcp_service_info_post_init
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
@@ -2091,3 +2079,19 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+_real_dhcp_service_info_init = DhcpServiceInfo.__init__
+
+
+def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
+    """Override __init__ for DhcpServiceInfo.
+
+    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    """
+    _real_dhcp_service_info_init(self, *args, **kwargs)
+    if self.macaddress != self.macaddress.lower().replace(":", ""):
+        raise ValueError("macaddress is not correctly formatted")
+
+
+DhcpServiceInfo.__init__ = _dhcp_service_info_init
