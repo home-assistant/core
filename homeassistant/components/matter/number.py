@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
+from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
@@ -18,6 +19,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfLength,
@@ -121,6 +123,31 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             )
             / 100
         )
+
+
+class MatterLevelControlNumber(MatterEntity, NumberEntity):
+    """Representation of a Matter Attribute as a Number entity."""
+
+    entity_description: MatterNumberEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set level value."""
+        send_value = int(value)
+        if value_convert := self.entity_description.ha_to_native_value:
+            send_value = value_convert(value)
+        await self.send_device_command(
+            clusters.LevelControl.Commands.MoveToLevel(
+                level=send_value,
+            )
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -238,6 +265,26 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
         vendor_id=(4874,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="pump_setpoint",
+            native_unit_of_measurement=PERCENTAGE,
+            translation_key="pump_setpoint",
+            native_max_value=100,
+            native_min_value=0.5,
+            native_step=0.5,
+            measurement_to_ha=(
+                lambda x: None if x is None else x / 2  # Matter range (1-200)
+            ),
+            ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterLevelControlNumber,
+        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        device_type=(device_types.Pump,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
