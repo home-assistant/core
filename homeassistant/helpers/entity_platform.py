@@ -126,7 +126,94 @@ class EntityPlatformModule(Protocol):
         """Set up an integration platform from a config entry."""
 
 
-class EntityPlatform:
+class BaseEntityPlatform:
+    """Base class for entity platforms.
+
+    This class has the functionality that is needed by entities themselves,
+    such as loading translations.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        domain: str,
+        platform_name: str,
+    ) -> None:
+        """Initialize the base entity platform."""
+        self.hass = hass
+        self.domain = domain
+        self.platform_name = platform_name
+        self.entity_namespace: str | None = None
+        self.config_entry: config_entries.ConfigEntry | None = None
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
+        self.object_id_component_translations: dict[str, str] = {}
+        self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
+
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
+    ) -> dict[str, str]:
+        """Get translations for a language, category, and integration."""
+        try:
+            return await translation.async_get_translations(
+                self.hass, language, category, {integration}
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug(
+                "Could not load translations for %s",
+                integration,
+                exc_info=err,
+            )
+        return {}
+
+    async def async_load_translations(self) -> None:
+        """Load translations."""
+        hass = self.hass
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
+        )
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
+        )
+        if object_id_language == config_language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await self._async_get_translations(
+                object_id_language, "entity_component", self.domain
+            )
+            self.object_id_platform_translations = await self._async_get_translations(
+                object_id_language, "entity", self.platform_name
+            )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
+            )
+
+    async def async_add_entities(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Add entities for a single platform async."""
+        raise NotImplementedError
+
+
+class EntityPlatform(BaseEntityPlatform):
     """Manage the entities for a single platform.
 
     An example of an entity platform is 'hue.light', which is managed by
@@ -145,23 +232,16 @@ class EntityPlatform:
         entity_namespace: str | None,
     ) -> None:
         """Initialize the entity platform."""
+        super().__init__(hass, domain=domain, platform_name=platform_name)
         self.hass = hass
         self.logger = logger
-        self.domain = domain
-        self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
         self.scan_interval_seconds = scan_interval.total_seconds()
         self.entity_namespace = entity_namespace
-        self.config_entry: config_entries.ConfigEntry | None = None
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, str] = {}
-        self.platform_translations: dict[str, str] = {}
-        self.object_id_component_translations: dict[str, str] = {}
-        self.object_id_platform_translations: dict[str, str] = {}
-        self.default_language_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -456,56 +536,6 @@ class EntityPlatform:
             return True
         finally:
             warn_task.cancel()
-
-    async def _async_get_translations(
-        self, language: str, category: str, integration: str
-    ) -> dict[str, str]:
-        """Get translations for a language, category, and integration."""
-        try:
-            return await translation.async_get_translations(
-                self.hass, language, category, {integration}
-            )
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug(
-                "Could not load translations for %s",
-                integration,
-                exc_info=err,
-            )
-        return {}
-
-    async def async_load_translations(self) -> None:
-        """Load translations."""
-        hass = self.hass
-        object_id_language = (
-            hass.config.language
-            if hass.config.language in languages.NATIVE_ENTITY_IDS
-            else languages.DEFAULT_LANGUAGE
-        )
-        config_language = hass.config.language
-        self.component_translations = await self._async_get_translations(
-            config_language, "entity_component", self.domain
-        )
-        self.platform_translations = await self._async_get_translations(
-            config_language, "entity", self.platform_name
-        )
-        if object_id_language == config_language:
-            self.object_id_component_translations = self.component_translations
-            self.object_id_platform_translations = self.platform_translations
-        else:
-            self.object_id_component_translations = await self._async_get_translations(
-                object_id_language, "entity_component", self.domain
-            )
-            self.object_id_platform_translations = await self._async_get_translations(
-                object_id_language, "entity", self.platform_name
-            )
-        if config_language == languages.DEFAULT_LANGUAGE:
-            self.default_language_platform_translations = self.platform_translations
-        else:
-            self.default_language_platform_translations = (
-                await self._async_get_translations(
-                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
-                )
-            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False

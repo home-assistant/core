@@ -66,7 +66,7 @@ from .typing import UNDEFINED, StateType, UndefinedType
 timer = time.time
 
 if TYPE_CHECKING:
-    from .entity_platform import EntityPlatform
+    from .entity_platform import BaseEntityPlatform
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -445,7 +445,7 @@ class Entity(
     # Owning platform instance. Set by EntityPlatform by calling add_to_platform_start
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    platform: EntityPlatform = None  # type: ignore[assignment]
+    platform: BaseEntityPlatform = None  # type: ignore[assignment]
 
     # Entity description instance for this Entity
     entity_description: EntityDescription
@@ -1333,7 +1333,7 @@ class Entity(
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: EntityPlatform,
+        platform: BaseEntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
