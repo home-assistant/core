@@ -5,14 +5,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.knx.const import KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import FIXTURE_PROJECT_DATA, KNXTestKit
+from .conftest import KNXTestKit
 
+from tests.common import async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -63,7 +64,9 @@ async def test_knx_project_file_process(
     """Test knx/project_file_process command for storing and loading new data."""
     _file_id = "1234"
     _password = "pw-test"
-    _parse_result = FIXTURE_PROJECT_DATA
+    fixture_project_data = await async_load_json_object_fixture(
+        hass, "project.json", DOMAIN
+    )
 
     await knx.setup_integration()
     client = await hass_ws_client(hass)
@@ -80,7 +83,9 @@ async def test_knx_project_file_process(
         patch(
             "homeassistant.components.knx.project.process_uploaded_file",
         ) as file_upload_mock,
-        patch("xknxproject.XKNXProj.parse", return_value=_parse_result) as parse_mock,
+        patch(
+            "xknxproject.XKNXProj.parse", return_value=fixture_project_data
+        ) as parse_mock,
     ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
@@ -90,7 +95,7 @@ async def test_knx_project_file_process(
 
     assert res["success"], res
     assert hass.data[KNX_MODULE_KEY].project.loaded
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == _parse_result
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == fixture_project_data
 
 
 async def test_knx_project_file_process_error(
@@ -152,6 +157,9 @@ async def test_knx_get_project(
     load_knxproj: None,
 ) -> None:
     """Test retrieval of kxnproject from store."""
+    fixture_project_data = await async_load_json_object_fixture(
+        hass, "project.json", DOMAIN
+    )
     await knx.setup_integration()
     client = await hass_ws_client(hass)
     assert hass.data[KNX_MODULE_KEY].project.loaded
@@ -160,7 +168,7 @@ async def test_knx_get_project(
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] == FIXTURE_PROJECT_DATA
+    assert res["result"]["knxproject"] == fixture_project_data
 
 
 async def test_knx_group_monitor_info_command(
