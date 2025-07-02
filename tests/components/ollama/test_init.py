@@ -54,12 +54,12 @@ async def test_init_error(
         assert error in caplog.text
 
 
-async def test_migration_from_v1_to_v2(
+async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2."""
+    """Test migration from version 1."""
     # Create a v1 config entry with conversation options and an entity
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -133,12 +133,12 @@ async def test_migration_from_v1_to_v2(
     }
 
 
-async def test_migration_from_v1_to_v2_with_multiple_urls(
+async def test_migration_from_v1_with_multiple_urls(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with different URLs."""
+    """Test migration from version 1 with different URLs."""
     # Create two v1 config entries with different URLs
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -223,12 +223,12 @@ async def test_migration_from_v1_to_v2_with_multiple_urls(
         assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
 
 
-async def test_migration_from_v1_to_v2_with_same_urls(
+async def test_migration_from_v1_with_same_urls(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with same URLs consolidates entries."""
+    """Test migration from version 1 with same URLs consolidates entries."""
     # Create two v1 config entries with the same URL
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -323,12 +323,12 @@ async def test_migration_from_v1_to_v2_with_same_urls(
         }
 
 
-async def test_migration_from_v2_1_to_v2_2(
+async def test_migration_from_v2_1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1 to version 2.2.
+    """Test migration from version 2.1.
 
     This tests we clean up the broken migration in Home Assistant Core
     2025.7.0b0-2025.7.0b1:
@@ -476,14 +476,9 @@ async def test_migration_from_v2_1_to_v2_2(
 
 
 async def test_migration_from_v2_2_to_v2_3(hass: HomeAssistant) -> None:
-    """Test migration from version 2.2 to version 2.3 moves model to subentry."""
-    # Create a v2.2 config entry with model still in main data and a subentry without model
-    subentry_data_without_model = {
-        ollama.CONF_PROMPT: "Test prompt",
-        ollama.CONF_MAX_HISTORY: 5,
-    }
+    """Test migration from version 2.2."""
     subentry_data = ConfigSubentryData(
-        data=subentry_data_without_model,  # No model in subentry yet
+        data=V21_TEST_USER_DATA,
         subentry_type="conversation",
         title="Test Conversation",
         unique_id=None,
@@ -517,6 +512,6 @@ async def test_migration_from_v2_2_to_v2_3(hass: HomeAssistant) -> None:
 
     subentry = next(iter(mock_config_entry.subentries.values()))
     assert subentry.data == {
-        **subentry_data_without_model,
+        **V21_TEST_USER_DATA,
         ollama.CONF_MODEL: "test_model:latest",
     }
