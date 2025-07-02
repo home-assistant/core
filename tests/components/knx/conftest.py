@@ -108,12 +108,6 @@ class KNXTestKit:
             self.xknx = args[0]
             return DEFAULT
 
-        def state_update_register_mock(*args, **kwargs):
-            """Mock the state updater registration."""
-            if state_updater:
-                return DEFAULT
-            return DEFAULT
-
         if config_store_fixture:
             self.hass_storage[
                 KNX_CONFIG_STORAGE_KEY
