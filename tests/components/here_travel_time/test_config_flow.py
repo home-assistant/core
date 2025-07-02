@@ -17,6 +17,7 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DOMAIN,
     ROUTE_MODE_FASTEST,
     TRAVEL_MODE_BICYCLE,
@@ -249,6 +250,7 @@ async def test_step_destination_entity(
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -441,6 +443,7 @@ async def test_options_flow_arrival_time_step(
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: "08:00:00",
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -465,6 +468,7 @@ async def test_options_flow_departure_time_step(
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_DEPARTURE_TIME: "08:00:00",
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -481,4 +485,5 @@ async def test_options_flow_no_time_step(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: True,
     }
