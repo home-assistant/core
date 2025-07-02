@@ -223,7 +223,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._device_info = info
             if not method:
                 LOGGER.debug("Host:%s did not return device info", self._host)
-                return result
         return self._connect_result
 
     async def _async_get_and_check_device_info(self) -> bool:
