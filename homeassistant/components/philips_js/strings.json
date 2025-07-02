@@ -10,7 +10,7 @@
       },
       "zeroconf_confirm": {
         "title": "Discovered Philips TV",
-        "description": "Do you want to add the TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+        "description": "Do you want to add the TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       },
       "pair": {
         "title": "Pair",
