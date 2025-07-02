@@ -118,7 +118,7 @@
       "water_level": {
         "name": "Water level",
         "state": {
-          "empty": "Empty",
+          "empty": "[%key:common::state::empty%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
           "high": "[%key:common::state::high%]"
