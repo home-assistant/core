@@ -28,7 +28,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import BaseEntityPlatform
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -173,7 +173,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: BaseEntityPlatform,
+        platform: EntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""

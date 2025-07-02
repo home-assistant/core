@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import BaseEntityPlatform
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.hass_dict import HassKey
 
@@ -367,7 +367,7 @@ class ScannerEntity(
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: BaseEntityPlatform,
+        platform: EntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""

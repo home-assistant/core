@@ -26,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import BaseEntityPlatform
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -205,7 +205,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: BaseEntityPlatform,
+        platform: EntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform.
@@ -523,7 +523,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Fourth priority: Unit translation
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
-            := self.platform.default_language_platform_translations.get(translation_key)
+            := self.platform_data.default_language_platform_translations.get(
+                translation_key
+            )
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(

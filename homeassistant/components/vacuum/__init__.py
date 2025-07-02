@@ -31,7 +31,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import BaseEntityPlatform
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
@@ -286,7 +286,7 @@ class StateVacuumEntity(
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: BaseEntityPlatform,
+        platform: EntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""

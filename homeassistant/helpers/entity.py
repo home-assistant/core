@@ -66,7 +66,7 @@ from .typing import UNDEFINED, StateType, UndefinedType
 timer = time.time
 
 if TYPE_CHECKING:
-    from .entity_platform import BaseEntityPlatform
+    from .entity_platform import EntityPlatform, PlatformData
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -445,7 +445,8 @@ class Entity(
     # Owning platform instance. Set by EntityPlatform by calling add_to_platform_start
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    platform: BaseEntityPlatform = None  # type: ignore[assignment]
+    platform: EntityPlatform = None  # type: ignore[assignment]
+    platform_data: PlatformData = None  # type: ignore[assignment]
 
     # Entity description instance for this Entity
     entity_description: EntityDescription
@@ -590,7 +591,7 @@ class Entity(
             return not self._attr_name
         if (
             name_translation_key := self._name_translation_key
-        ) and name_translation_key in self.platform.platform_translations:
+        ) and name_translation_key in self.platform_data.platform_translations:
             return False
         if hasattr(self, "entity_description"):
             return not self.entity_description.name
@@ -623,13 +624,13 @@ class Entity(
     def _object_id_device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
         return self._device_class_name_helper(
-            self.platform.object_id_component_translations
+            self.platform_data.object_id_component_translations
         )
 
     @cached_property
     def _device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        return self._device_class_name_helper(self.platform.component_translations)
+        return self._device_class_name_helper(self.platform_data.component_translations)
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
@@ -723,11 +724,11 @@ class Entity(
             is type.__getattribute__(Entity, "name")
             # The check for self.platform guards against integrations not using an
             # EntityComponent and can be removed in HA Core 2024.1
-            and self.platform
+            and self.platform_data
         ):
             name = self._name_internal(
                 self._object_id_device_class_name,
-                self.platform.object_id_platform_translations,
+                self.platform_data.object_id_platform_translations,
             )
         else:
             name = self.name
@@ -738,11 +739,11 @@ class Entity(
         """Return the name of the entity."""
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
-        if not self.platform:
+        if not self.platform_data:
             return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
-            self.platform.platform_translations,
+            self.platform_data.platform_translations,
         )
 
     @cached_property
@@ -1333,7 +1334,7 @@ class Entity(
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
-        platform: BaseEntityPlatform,
+        platform: EntityPlatform,
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
@@ -1345,6 +1346,7 @@ class Entity(
 
         self.hass = hass
         self.platform = platform
+        self.platform_data = platform.platform_data
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDED
 

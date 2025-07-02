@@ -126,12 +126,8 @@ class EntityPlatformModule(Protocol):
         """Set up an integration platform from a config entry."""
 
 
-class BaseEntityPlatform:
-    """Base class for entity platforms.
-
-    This class has the functionality that is needed by entities themselves,
-    such as loading translations.
-    """
+class PlatformData:
+    """Information about a platform, used by entities."""
 
     def __init__(
         self,
@@ -144,8 +140,8 @@ class BaseEntityPlatform:
         self.hass = hass
         self.domain = domain
         self.platform_name = platform_name
-        self.entity_namespace: str | None = None
-        self.config_entry: config_entries.ConfigEntry | None = None
+        # self.entity_namespace: str | None = None
+        # self.config_entry: config_entries.ConfigEntry | None = None
         self.component_translations: dict[str, str] = {}
         self.platform_translations: dict[str, str] = {}
         self.object_id_component_translations: dict[str, str] = {}
@@ -213,7 +209,7 @@ class BaseEntityPlatform:
         raise NotImplementedError
 
 
-class EntityPlatform(BaseEntityPlatform):
+class EntityPlatform:
     """Manage the entities for a single platform.
 
     An example of an entity platform is 'hue.light', which is managed by
@@ -232,13 +228,15 @@ class EntityPlatform(BaseEntityPlatform):
         entity_namespace: str | None,
     ) -> None:
         """Initialize the entity platform."""
-        super().__init__(hass, domain=domain, platform_name=platform_name)
         self.hass = hass
         self.logger = logger
+        self.domain = domain
+        self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
         self.scan_interval_seconds = scan_interval.total_seconds()
         self.entity_namespace = entity_namespace
+        self.config_entry: config_entries.ConfigEntry | None = None
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
@@ -274,6 +272,10 @@ class EntityPlatform(BaseEntityPlatform):
         self.domain_platform_entities = hass.data.setdefault(
             DATA_DOMAIN_PLATFORM_ENTITIES, {}
         ).setdefault(key, {})
+
+        self.platform_data = PlatformData(
+            hass, domain=domain, platform_name=platform_name
+        )
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -442,7 +444,7 @@ class EntityPlatform(BaseEntityPlatform):
         hass = self.hass
         full_name = f"{self.platform_name}.{self.domain}"
 
-        await self.async_load_translations()
+        await self.platform_data.async_load_translations()
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_at(

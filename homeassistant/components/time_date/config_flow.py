@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import BaseEntityPlatform
+from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -97,11 +97,9 @@ async def ws_start_preview(
     """Generate a preview."""
     validated = USER_SCHEMA(msg["user_input"])
 
-    # Create an EntityPlatform, needed for name translations
-    entity_platform = BaseEntityPlatform(
-        hass=hass, domain=SENSOR_DOMAIN, platform_name=DOMAIN
-    )
-    await entity_platform.async_load_translations()
+    # Create PlatformData, needed for name translations
+    platform_data = PlatformData(hass=hass, domain=SENSOR_DOMAIN, platform_name=DOMAIN)
+    await platform_data.async_load_translations()
 
     @callback
     def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
@@ -114,7 +112,7 @@ async def ws_start_preview(
 
     preview_entity = TimeDateSensor(validated[CONF_DISPLAY_OPTIONS])
     preview_entity.hass = hass
-    preview_entity.platform = entity_platform
+    preview_entity.platform_data = platform_data
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
