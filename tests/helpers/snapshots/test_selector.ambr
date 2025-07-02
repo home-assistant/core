@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_object_selector_uses_selectors
+  dict({
+    'selector': dict({
+      'object': dict({
+        'description_field': 'percentage',
+        'fields': dict({
+          'name': dict({
+            'required': True,
+            'selector': dict({
+              'text': dict({
+                'multiline': False,
+                'multiple': False,
+              }),
+            }),
+          }),
+          'percentage': dict({
+            'selector': dict({
+              'number': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'slider',
+                'step': 1.0,
+              }),
+            }),
+          }),
+        }),
+        'label_field': 'name',
+        'multiple': True,
+      }),
+    }),
+  })
+# ---

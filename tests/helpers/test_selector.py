@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.helpers import selector
@@ -720,6 +721,43 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
     _test_selector("object", schema, valid_selections, invalid_selections)
+
+
+def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "percentage": {
+                "selector": selector.NumberSelector(
+                    selector.NumberSelectorConfig(min=0, max=100)
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
