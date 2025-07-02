@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
 
@@ -9,6 +11,7 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
+from .const import CONF_DEVICE_CONFIG, DEFAULT_DEVICE_CONFIG
 from .coordinator import AirzoneCloudConfigEntry, AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -20,6 +23,8 @@ PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AirzoneCloudConfigEntry
@@ -28,6 +33,7 @@ async def async_setup_entry(
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
+        entry.data[CONF_DEVICE_CONFIG],
         True,
     )
 
@@ -59,3 +65,27 @@ async def async_unload_entry(
         await coordinator.airzone.logout()
 
     return unload_ok
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: AirzoneCloudConfigEntry
+) -> bool:
+    """Migrate an old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Add missing CONF_DEVICE_CONFIG
+        device_config = entry.data.get(CONF_DEVICE_CONFIG, DEFAULT_DEVICE_CONFIG)
+        new_data = entry.data.copy()
+        new_data[CONF_DEVICE_CONFIG] = device_config
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            minor_version=2,
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
