@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioamazondevices.api import AmazonEchoApi
-from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect, WrongCountry
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -36,6 +36,8 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
+            except WrongCountry:
+                errors["base"] = "wrong_country"
             else:
                 await self.async_set_unique_id(data["customer_info"]["user_id"])
                 self._abort_if_unique_id_configured()
