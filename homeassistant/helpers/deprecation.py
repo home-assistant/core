@@ -205,8 +205,9 @@ def _print_deprecation_warning_internal_impl(
     except MissingIntegrationFrame:
         if log_when_no_integration_is_found:
             logger.warning(
-                "%s is a deprecated %s%s. Use %s instead",
+                "%s was %s, is a deprecated %s%s. Use %s instead",
                 obj_name,
+                verb,
                 description,
                 breaks_in,
                 replacement,

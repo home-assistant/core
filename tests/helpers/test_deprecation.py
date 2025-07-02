@@ -154,7 +154,7 @@ def test_deprecated_function(
 
     mock_deprecated_function()
     assert (
-        f"mock_deprecated_function is a deprecated function{extra_msg}. "
+        f"mock_deprecated_function was called, this is a deprecated function{extra_msg}. "
         "Use new_function instead"
     ) in caplog.text
 
