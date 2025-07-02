@@ -12,11 +12,13 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_NAME,
@@ -33,7 +35,10 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -74,6 +79,36 @@ async def async_setup_platform(
 
     async_add_entities(
         [CompensationSensor(conf.get(CONF_UNIQUE_ID), name, source, attribute, conf)]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Compensation sensor entry."""
+    compensation = entry.entry_id
+    conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
+
+    source: str = conf[CONF_ENTITY_ID]
+    attribute: str | None = conf.get(CONF_ATTRIBUTE)
+    name = entry.title
+
+    async_add_entities(
+        [
+            CompensationSensor(
+                entry.entry_id,
+                name,
+                source,
+                attribute,
+                conf[CONF_PRECISION],
+                conf[CONF_POLYNOMIAL],
+                conf.get(CONF_UNIT_OF_MEASUREMENT),
+                conf[CONF_MINIMUM],
+                conf[CONF_MAXIMUM],
+            )
+        ]
     )
 
 

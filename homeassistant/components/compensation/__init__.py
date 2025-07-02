@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -39,6 +41,7 @@ from .const import (
     DEFAULT_DEGREE,
     DEFAULT_PRECISION,
     DOMAIN,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,59 +90,103 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def create_compensation_data(
+    hass: HomeAssistant, compensation: str, conf: ConfigType, should_raise: bool = False
+) -> None:
+    """Create compensation data."""
+    _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
+
+    degree = conf[CONF_DEGREE]
+
+    initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
+    sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
+
+    # get x values and y values from the x,y point pairs
+    x_values, y_values = zip(*initial_coefficients, strict=False)
+
+    # try to get valid coefficients for a polynomial
+    coefficients = None
+    with np.errstate(all="raise"):
+        try:
+            coefficients = np.polyfit(x_values, y_values, degree)
+        except FloatingPointError as error:
+            _LOGGER.error(
+                "Setup of %s encountered an error, %s",
+                compensation,
+                error,
+            )
+            if should_raise:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_error",
+                    translation_placeholders={
+                        "title": conf[CONF_NAME],
+                        "error": str(error),
+                    },
+                ) from error
+
+    if coefficients is not None:
+        data = {
+            k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
+        }
+        data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
+
+        if data[CONF_LOWER_LIMIT]:
+            data[CONF_MINIMUM] = sorted_coefficients[0]
+        else:
+            data[CONF_MINIMUM] = None
+
+        if data[CONF_UPPER_LIMIT]:
+            data[CONF_MAXIMUM] = sorted_coefficients[-1]
+        else:
+            data[CONF_MAXIMUM] = None
+
+        hass.data[DATA_COMPENSATION][compensation] = data
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
+    if DOMAIN not in config:
+        return True
 
     for compensation, conf in config[DOMAIN].items():
-        _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
-
-        degree = conf[CONF_DEGREE]
-
-        initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
-        sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
-
-        # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*initial_coefficients, strict=False)
-
-        # try to get valid coefficients for a polynomial
-        coefficients = None
-        with np.errstate(all="raise"):
-            try:
-                coefficients = np.polyfit(x_values, y_values, degree)
-            except FloatingPointError as error:
-                _LOGGER.error(
-                    "Setup of %s encountered an error, %s",
-                    compensation,
-                    error,
-                )
-
-        if coefficients is not None:
-            data = {
-                k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
-            }
-            data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
-
-            if data[CONF_LOWER_LIMIT]:
-                data[CONF_MINIMUM] = sorted_coefficients[0]
-            else:
-                data[CONF_MINIMUM] = None
-
-            if data[CONF_UPPER_LIMIT]:
-                data[CONF_MAXIMUM] = sorted_coefficients[-1]
-            else:
-                data[CONF_MAXIMUM] = None
-
-            hass.data[DATA_COMPENSATION][compensation] = data
-
-            hass.async_create_task(
-                async_load_platform(
-                    hass,
-                    SENSOR_DOMAIN,
-                    DOMAIN,
-                    {CONF_COMPENSATION: compensation},
-                    config,
-                )
+        await create_compensation_data(hass, compensation, conf)
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                SENSOR_DOMAIN,
+                DOMAIN,
+                {CONF_COMPENSATION: compensation},
+                config,
             )
+        )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Compensation from a config entry."""
+    config = dict(entry.options)
+    data_points = config[CONF_DATAPOINTS]
+    new_data_points = []
+    for data_point in data_points:
+        values = data_point.split(",", maxsplit=1)
+        new_data_points.append([float(values[0]), float(values[1])])
+    config[CONF_DATAPOINTS] = new_data_points
+
+    await create_compensation_data(hass, entry.entry_id, config, True)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Compensation config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
