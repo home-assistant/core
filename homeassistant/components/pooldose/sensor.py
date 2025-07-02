@@ -8,6 +8,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pooldose.request_handler import RequestStatus
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -130,6 +132,17 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             return None
 
         status, data = self.coordinator.data
+        if status != RequestStatus.SUCCESS:
+            _LOGGER.warning(
+                "PoolDose API returned status %s, entities will be unavailable", status
+            )
+            return None
+        if self._key not in data:
+            _LOGGER.warning(
+                "Key %s not found in PoolDose API data, entities will be unavailable",
+                self._key,
+            )
+            return None
         sensor_data = data[self._key]
         if not sensor_data:
             return None

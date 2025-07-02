@@ -28,7 +28,7 @@ def test_sensor_native_value(mock_coordinator, mock_client) -> None:
         mock_coordinator,  # coordinator
         mock_client,  # client
         "pool_temp_ist",  # translation_key
-        "PDPR1H1HAW100_FW539187_pool_temp_ist",  # key
+        "pool_temp_ist",  # key
         None,  # unit
         None,  # sensor device class
         "SN123456789",  # serialnumber
@@ -48,8 +48,8 @@ def test_sensor_native_value_missing(mock_coordinator, mock_client) -> None:
     sensor = PooldoseSensor(
         coordinator_no_data,  # coordinator
         mock_client,  # client
-        "pool_ph_ist",  # translation_key
-        "PDPR1H1HAW100_FW539187_pool_ph_ist",  # key
+        "ph",  # translation_key
+        "ph",  # key
         None,  # unit
         None,  # sensor device class
         "SN123456789",  # serialnumber

@@ -22,7 +22,7 @@ class PooldoseCoordinator(DataUpdateCoordinator):
         """Initialize the PoolDose coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            logger=_LOGGER,
             name="pooldose",
             update_interval=update_interval,
         )
@@ -33,10 +33,8 @@ class PooldoseCoordinator(DataUpdateCoordinator):
         try:
             return await self.client.instant_values()
         except Exception as err:
-            _LOGGER.warning(
-                "PoolDose update failed, entities will be unavailable: %s", err
-            )
-            raise UpdateFailed from err
+            # Raise UpdateFailed so last_update_success is set to False
+            raise UpdateFailed(f"Error fetching data: {err}") from err
 
     @property
     def available(self) -> bool:

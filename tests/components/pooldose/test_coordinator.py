@@ -27,14 +27,14 @@ async def test_coordinator_fetches_data(hass: HomeAssistant) -> None:
     await coordinator.async_refresh()
 
     assert coordinator.data is not None
-    mock_client.fetch_data.assert_called_once()
+    mock_client.instant_values.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_coordinator_handles_api_error(hass: HomeAssistant) -> None:
     """Test that the coordinator handles API errors."""
     mock_client = AsyncMock()
-    mock_client.fetch_data.side_effect = Exception("API error")
+    mock_client.instant_values.side_effect = Exception("API error")
 
     coordinator = PooldoseCoordinator(
         hass,
