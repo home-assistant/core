@@ -87,7 +87,7 @@ class MieleVacuumStateCode(MieleEnum):
 
 SUPPORTED_FEATURES = (
     VacuumEntityFeature.STATE
-    | VacuumEntityFeature.BATTERY
+    # | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
@@ -174,10 +174,10 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
             MieleVacuumStateCode(self.device.state_program_phase).value
         )
 
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level."""
-        return self.device.state_battery_level
+    # @property
+    # def battery_level(self) -> int | None:
+    #     """Return the battery level."""
+    #     return self.device.state_battery_level
 
     @property
     def fan_speed(self) -> str | None:

@@ -539,6 +539,16 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             options=sorted(StateDryingStep.keys()),
         ),
     ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.ROBOT_VACUUM_CLEANER,),
+        description=MieleSensorDescription(
+            key="state_battery",
+            value_fn=lambda value: value.state_battery_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.BATTERY,
+        ),
+    ),
 )
 
 
