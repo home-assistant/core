@@ -200,7 +200,7 @@ class MatterSensor(MatterEntity, SensorEntity):
 
 
 class MatterMeterSensor(MatterEntity, SensorEntity):
-    """Representation of a Matter  Meter sensor."""
+    """Representation of a Matter Meter sensor."""
 
     entity_description: MatterSensorEntityDescription
 
