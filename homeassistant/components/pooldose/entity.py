@@ -9,17 +9,16 @@ class PooldoseEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator,
-        api,
+        client,
         translation_key,
-        uid,
         key,
         serialnumber,
         device_info_dict,
-        enabled_by_default=True,
+        enabled_by_default,
     ) -> None:
         """Initialize the base Pooldose entity."""
         super().__init__(coordinator)
-        self._api = api
+        self._client = client
         self._attr_translation_key = translation_key
         self._attr_unique_id = f"{serialnumber}_{key}"
         self._key = key

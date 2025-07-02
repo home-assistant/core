@@ -2,151 +2,62 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
-import json
 import logging
 
-import aiohttp
+from pooldose.client import PooldoseClient
+from pooldose.request_handler import RequestStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_SERIALNUMBER,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
-    SOFTWARE_VERSION,
-)
+from .const import CONF_INCLUDE_SENSITIVE_DATA, DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT
 from .coordinator import PooldoseCoordinator
-from .pooldose_api import PooldoseAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-"""Configure the Seko Pooldose entry."""
+"""Configure the Seko PoolDose entry."""
 
 
-async def async_update_device_info(host: str) -> dict[str, str | None]:
+async def async_update_device_info(client: PooldoseClient) -> dict[str, str | None]:
     """Fetch latest device info from all relevant endpoints."""
     device_info: dict[str, str | None] = {}
-
-    headers = {"Content-Type": "application/json"}
-
-    async with aiohttp.ClientSession() as session:
-        # Station Info
-        try:
-            url = f"http://{host}/api/v1/network/wifi/getStation"
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with session.post(url, headers=headers, timeout=timeout) as resp:
-                data = await resp.json()
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            # server sometimes returns bad response due to an internal bug, however result can be parsed...
-            text = str(err)
-            text = text.replace("\\\\n", "").replace("\\\\t", "")
-            json_start = text.find("{")
-            json_end = text.rfind("}") + 1
-            if json_start != -1 and json_end != -1:
-                data = json.loads(text[json_start:json_end])
-
-        try:
-            device_info["SSID"] = data.get("SSID")
-            device_info["MAC"] = data.get("MAC")
-            device_info["IP"] = data.get("IP")
-        except json.JSONDecodeError as err:
-            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
-
-        await asyncio.sleep(1)
-        # Network Info
-        try:
-            url = f"http://{host}/api/v1/network/info/getInfo"
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with session.post(url, headers=headers, timeout=timeout) as resp:
-                data = await resp.json()
-                device_info["SYSTEMNAME"] = data.get("SYSTEMNAME")
-                device_info["OWNERID"] = data.get("OWNERID")
-                device_info["GROUPNAME"] = data.get("GROUPNAME")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
-
-        await asyncio.sleep(1)
-        # Access Point Info
-        try:
-            url = f"http://{host}/api/v1/network/wifi/getAccessPoint"
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with session.post(url, headers=headers, timeout=timeout) as resp:
-                text = await resp.text()
-                json_start = text.find("{")
-                json_end = text.rfind("}") + 1
-                if json_start != -1 and json_end != -1:
-                    data = json.loads(text[json_start:json_end])
-                    device_info["AP_SSID"] = data.get("SSID")
-                    device_info["AP_KEY"] = data.get("KEY")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
-
-        await asyncio.sleep(1)
-        # InfoRelease
-        try:
-            url = f"http://{host}/api/v1/infoRelease"
-            payload = {"SOFTWAREVERSION": SOFTWARE_VERSION}
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with session.post(
-                url, json=payload, headers=headers, timeout=timeout
-            ) as resp:
-                data = await resp.json()
-                device_info["APIVERSION_GATEWAY"] = data.get("APIVERSION_GATEWAY")
-                device_info["SERIAL_NUMBER"] = data.get("SERIAL_NUMBER")
-                device_info["SOFTWAREVERSION_GATEWAY"] = data.get(
-                    "SOFTWAREVERSION_GATEWAY"
-                )
-                device_info["FIRMWARERELEASE_DEVICE"] = data.get(
-                    "FIRMWARERELEASE_DEVICE"
-                )
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
-
-        await asyncio.sleep(1)
-        # Model Info from /api/v1/debug/config
-        try:
-            url = f"http://{host}/api/v1/debug/config"
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with session.get(url, timeout=timeout) as resp:
-                data = await resp.json()
-                if (device := data.get("DEVICES")[0]) is not None:
-                    device_info["NAME"] = device.get("NAME")
-                    device_info["PRODUCT_CODE"] = device.get("PRODUCT_CODE")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            _LOGGER.error("Failed to fetch model info from %s: %s", url, err)
-
+    if client.device_info is None:
+        _LOGGER.error("Device info is not available from PoolDose client")
+    else:
+        device_info = client.device_info
     return device_info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Seko Pooldose from a config entry."""
+    """Set up Seko PoolDose from a config entry."""
     # Obtain values, preferring options (re‑configure) over static data
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
-    serial = entry.data[CONF_SERIALNUMBER]  # serial never changes
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     timeout = entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-
-    api = PooldoseAPIClient(
-        host=host,
-        serial_number=serial,
-        timeout=timeout,
-        scan_interval=scan_interval,
+    include_sensitive_data = entry.options.get(
+        CONF_INCLUDE_SENSITIVE_DATA, entry.data.get(CONF_INCLUDE_SENSITIVE_DATA, False)
     )
 
-    coordinator = PooldoseCoordinator(hass, api, timedelta(seconds=scan_interval))
+    # Create the PoolDose API client
+    client_status, client = await PooldoseClient.create(
+        host, timeout, include_sensitive_data
+    )
+    if client_status != RequestStatus.SUCCESS:
+        _LOGGER.error("Failed to create PoolDose client: %s", client_status)
+        return False
+
+    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=scan_interval))
     await coordinator.async_config_entry_first_refresh()
 
     # Update device info on every reload
-    device_info = await async_update_device_info(host)
+    device_info = await async_update_device_info(client)
 
     hass.data.setdefault("pooldose", {})[entry.entry_id] = {
-        "api": api,
+        "client": client,
         "coordinator": coordinator,
         "device_info": device_info,
     }
@@ -157,5 +68,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload the Seko Pooldose entry."""
+    """Unload the Seko PoolDose entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

@@ -5,23 +5,22 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
+from pooldose.client import PooldoseClient
+from pooldose.request_handler import RequestHandler, RequestStatus
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    APIVERSION,
+    CONF_INCLUDE_SENSITIVE_DATA,
     CONF_SERIALNUMBER,
     DEFAULT_HOST,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    SOFTWARE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,35 +32,9 @@ SCHEMA_DEVICE = vol.Schema(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_INCLUDE_SENSITIVE_DATA, default=False): cv.boolean,
     }
 )
-
-
-async def get_device_info(host: str) -> dict[str, Any] | None:
-    """Fetch and validate device info from the Pooldose API."""
-    url = f"http://{host}/api/v1/infoRelease"
-    payload = {"SOFTWAREVERSION": SOFTWARE_VERSION}
-    headers = {"Content-Type": "application/json"}
-    try:
-        timeout = aiohttp.ClientTimeout(total=5)
-        async with (
-            aiohttp.ClientSession() as session,
-            session.post(url, json=payload, headers=headers, timeout=timeout) as resp,
-        ):
-            return await resp.json()
-    except (aiohttp.ClientError, TimeoutError, OSError) as err:
-        _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
-    return None
-
-
-def validate_api_version(api_version: str) -> tuple[bool, dict[str, str] | None]:
-    """Validate if the API version is supported."""
-    if api_version != APIVERSION:
-        return False, {
-            "api_version_is": api_version,
-            "api_version_should": APIVERSION,
-        }
-    return True, None
 
 
 class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -77,32 +50,42 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         error_placeholders = None
         if user_input is not None:
             host = user_input[CONF_HOST]
-            try:
-                info = await get_device_info(host)
-            except (aiohttp.ClientError, TimeoutError, OSError) as err:
-                _LOGGER.error("Failed to fetch device info from %s: %s", host, err)
+            include_sensitive = user_input[CONF_INCLUDE_SENSITIVE_DATA]
+
+            # test connection to host
+            status, handler = await RequestHandler.create(host, 5)
+            if status == RequestStatus.HOST_UNREACHABLE:
                 errors["base"] = "cannot_connect"
-                info = None
-            except Exception:
-                _LOGGER.exception("Unexpected exception during device info fetch")
-                errors["base"] = "unknown"
-                info = None
-            if not info and "base" not in errors:
-                errors["base"] = "cannot_connect"
-            elif info:
-                api_ver = info["APIVERSION_GATEWAY"]
-                valid, placeholders = validate_api_version(api_ver)
-                if not valid:
+            elif status == RequestStatus.PARAMS_FETCH_FAILED:
+                errors["base"] = "parama_fetch_failed"
+            else:  # SUCCESS
+                _LOGGER.debug("Connected to device at %s", host)
+                # Check API version
+                api_status, api_versions = handler.check_apiversion_supported()
+                if api_status == RequestStatus.NO_DATA:
+                    errors["base"] = "api_not_set"
+                elif api_status == RequestStatus.API_VERSION_UNSUPPORTED:
                     errors["base"] = "api_not_supported"
-                    error_placeholders = placeholders
-                else:
-                    serial_number = info["SERIAL_NUMBER"]
-                    await self.async_set_unique_id(serial_number)
-                    self._abort_if_unique_id_configured()
-                    entry_data = {CONF_HOST: host, CONF_SERIALNUMBER: serial_number}
-                    return self.async_create_entry(
-                        title=f"PoolDose {serial_number}", data=entry_data
+                    error_placeholders = api_versions
+                else:  # SUCCESS
+                    client_status, client = await PooldoseClient.create(
+                        host, 5, include_sensitive
                     )
+                    if client_status != RequestStatus.SUCCESS:
+                        # All cases handled by RequestHandler before
+                        errors["base"] = "cannot_connect"
+                    else:  # SUCCESS
+                        serial_number = client.device_info.get("SERIAL_NUMBER")
+                        await self.async_set_unique_id(serial_number)
+                        self._abort_if_unique_id_configured()
+                        entry_data = {
+                            CONF_HOST: host,
+                            CONF_SERIALNUMBER: serial_number,
+                            CONF_INCLUDE_SENSITIVE_DATA: include_sensitive,
+                        }
+                        return self.async_create_entry(
+                            title=f"PoolDose {serial_number}", data=entry_data
+                        )
 
         return self.async_show_form(
             step_id="user",
@@ -133,14 +116,21 @@ class PooldoseOptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         error_placeholders = None
         if user_input is not None:
-            # Only allow changing scan interval and timeout, not host
             return self.async_create_entry(title="", data=user_input)
 
         defaults = {
             CONF_SCAN_INTERVAL: self.entry.options.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                CONF_SCAN_INTERVAL,
+                self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ),
-            CONF_TIMEOUT: self.entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            CONF_TIMEOUT: self.entry.options.get(
+                CONF_TIMEOUT,
+                self.entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ),
+            CONF_INCLUDE_SENSITIVE_DATA: self.entry.options.get(
+                CONF_INCLUDE_SENSITIVE_DATA,
+                self.entry.data.get(CONF_INCLUDE_SENSITIVE_DATA, False),
+            ),
         }
 
         return self.async_show_form(
@@ -153,12 +143,12 @@ class PooldoseOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_TIMEOUT, default=defaults[CONF_TIMEOUT]
                     ): cv.positive_int,
+                    vol.Optional(
+                        CONF_INCLUDE_SENSITIVE_DATA,
+                        default=defaults[CONF_INCLUDE_SENSITIVE_DATA],
+                    ): cv.boolean,
                 }
             ),
             errors=errors,
             description_placeholders=error_placeholders,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

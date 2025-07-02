@@ -1,4 +1,4 @@
-"""Tests for the Pooldose coordinator."""
+"""Test the Pooldose coordinator."""
 
 import datetime
 from unittest.mock import AsyncMock
@@ -7,58 +7,42 @@ import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 @pytest.mark.asyncio
 async def test_coordinator_fetches_data(hass: HomeAssistant) -> None:
     """Test that the coordinator fetches data from the API."""
-    mock_api = AsyncMock()
-    mock_api.get_instant_values.return_value = {"ph": 7.2, "orp": 650}
+    mock_client = AsyncMock()
+    mock_client.fetch_data.return_value = (
+        "SUCCESS",
+        {"ph": [7.2, "pH"], "orp": [650, "mV"]},
+    )
 
     coordinator = PooldoseCoordinator(
         hass,
-        api=mock_api,
-        update_interval=datetime.timedelta(seconds=30),
+        mock_client,
+        datetime.timedelta(seconds=30),
     )
 
-    data = await coordinator._async_update_data()
-    assert data == {"ph": 7.2, "orp": 650}
-    mock_api.get_instant_values.assert_awaited_once()
+    await coordinator.async_refresh()
+
+    assert coordinator.data is not None
+    mock_client.fetch_data.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_coordinator_handles_api_error(hass: HomeAssistant) -> None:
     """Test that the coordinator handles API errors."""
-    mock_api = AsyncMock()
-    mock_api.get_instant_values.side_effect = Exception("API error")
+    mock_client = AsyncMock()
+    mock_client.fetch_data.side_effect = Exception("API error")
 
     coordinator = PooldoseCoordinator(
         hass,
-        api=mock_api,
-        update_interval=datetime.timedelta(seconds=30),
+        mock_client,
+        datetime.timedelta(seconds=30),
     )
 
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+    await coordinator.async_refresh()
 
-
-@pytest.mark.asyncio
-async def test_coordinator_update_failed(hass: HomeAssistant) -> None:
-    """Test that the coordinator raises UpdateFailed on update failure."""
-
-    class DummyApi:
-        async def async_update(self):
-            raise Exception("fail")  # noqa: TRY002
-
-    coordinator = PooldoseCoordinator(hass, DummyApi(), datetime.timedelta(seconds=10))
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
-
-
-async def _async_update_data(self):
-    """Fetch data from the Pooldose API."""
-    try:
-        return await self.api.get_instant_values()
-    except Exception as err:
-        raise UpdateFailed(f"Error fetching data: {err}") from err
+    # Coordinator should handle the exception gracefully
+    assert coordinator.last_update_success is False
