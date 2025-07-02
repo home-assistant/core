@@ -339,6 +339,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         """Initialize."""
         super().__init__(hass, coordinator, config)
 
+        self._parse_result.add(CONF_STATE)
         if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:
             if last_reset_template.is_static:
                 self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template

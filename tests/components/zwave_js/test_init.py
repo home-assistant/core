@@ -27,7 +27,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -366,6 +366,7 @@ async def test_listen_done_after_setup(
 
 
 @pytest.mark.usefixtures("client")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_new_entity_on_value_added(
     hass: HomeAssistant,
     multisensor_6: Node,
@@ -1812,7 +1813,8 @@ async def test_disabled_node_status_entity_on_node_replaced(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_disabled_entity_on_value_removed(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
     zp3111: Node,
     client: MagicMock,
@@ -1822,15 +1824,6 @@ async def test_disabled_entity_on_value_removed(
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-
-    # must reload the integration when enabling an entity
-    await hass.config_entries.async_unload(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.NOT_LOADED
-    integration.add_to_hass(hass)
-    await hass.config_entries.async_setup(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.LOADED
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
