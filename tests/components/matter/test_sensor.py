@@ -1,7 +1,9 @@
 """Test Matter sensors."""
 
+from datetime import datetime, tzinfo
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -9,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .common import (
     set_node_attribute,
@@ -331,6 +334,8 @@ async def test_operational_state_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info,
 ) -> None:
     """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
@@ -351,6 +356,15 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+    # OperationalState Cluster / CountdownTime (1/96/2)
+    test_time = datetime(2025, 1, 1, 21, 0, 0, tzinfo=hass_tz_info)
+
+    freezer.move_to(test_time)
+    state = hass.states.get("sensor.dishwasher_estimated_end_time")
+    assert state
+    assert state.state == "2025-01-01T22:00:00+00:00"
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
@@ -567,3 +581,9 @@ async def test_pump(
     state = hass.states.get("sensor.mock_pump_rotation_speed")
     assert state
     assert state.state == "500"
+
+
+@pytest.fixture
+def hass_tz_info(hass: HomeAssistant) -> tzinfo | None:
+    """Return timezone info for the hass timezone."""
+    return dt_util.get_time_zone(hass.config.time_zone)

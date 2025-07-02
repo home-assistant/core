@@ -3466,7 +3466,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Estimated end time',
     'platform': 'matter',
@@ -3481,7 +3481,7 @@
 # name: test_sensors[microwave_oven][sensor.microwave_oven_estimated_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'Microwave Oven Estimated end time',
     }),
     'context': <ANY>,
@@ -3489,7 +3489,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-07-01T16:52:44.979405',
+    'state': '2025-07-02T21:16:52+00:00',
   })
 # ---
 # name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-entry]
@@ -4474,7 +4474,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Estimated end time',
     'platform': 'matter',
@@ -4489,7 +4489,7 @@
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_estimated_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'Dishwasher Estimated end time',
     }),
     'context': <ANY>,
@@ -4497,7 +4497,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-07-01T17:52:17.074341',
+    'state': '2025-07-02T22:16:42+00:00',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_state-entry]
