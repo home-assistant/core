@@ -10,7 +10,7 @@ from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     ATTR_SAFE_MODE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
+    DOMAIN,
     SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -24,6 +24,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -667,14 +668,13 @@ async def test_deprecated_installation_issue_32bit_core(
             return_value=True,
         ),
     ):
-        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, "deprecated_method_architecture"
-    )
-    assert issue.domain == HOMEASSISTANT_DOMAIN
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_method_architecture")
+    assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
         "installation_type": "Core",
@@ -708,12 +708,13 @@ async def test_deprecated_installation_issue_64bit_core(
             return_value=False,
         ),
     ):
-        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_method")
-    assert issue.domain == HOMEASSISTANT_DOMAIN
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_method")
+    assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
         "installation_type": "Core",
@@ -740,6 +741,7 @@ async def test_deprecated_installation_issue_32bit(
             "homeassistant.components.homeassistant.async_get_system_info",
             return_value={
                 "installation_type": "Home Assistant Container",
+                "container_arch": arch,
                 "arch": arch,
             },
         ),
@@ -747,16 +749,13 @@ async def test_deprecated_installation_issue_32bit(
             "homeassistant.components.homeassistant._is_32_bit",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.homeassistant._get_arch",
-            return_value=arch,
-        ),
     ):
-        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_container")
-    assert issue.domain == HOMEASSISTANT_DOMAIN
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_container")
+    assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"arch": arch}

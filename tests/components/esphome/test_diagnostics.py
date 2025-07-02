@@ -52,9 +52,6 @@ async def test_diagnostics_with_dashboard_data(
     )
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     await MockDashboardRefresh(hass).async_refresh()
     result = await get_diagnostics_for_config_entry(
@@ -127,9 +124,12 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "area": {"area_id": 0, "name": ""},
+                "areas": [],
                 "bluetooth_mac_address": "**REDACTED**",
                 "bluetooth_proxy_feature_flags": 63,
                 "compilation_time": "",
+                "devices": [],
                 "esphome_version": "1.0.0",
                 "friendly_name": "Test",
                 "has_deep_sleep": False,
