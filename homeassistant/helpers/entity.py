@@ -1127,11 +1127,12 @@ class Entity(
         """Write the state to the state machine."""
         # The check for self.platform guards against integrations not using an
         # EntityComponent (which has not been allowed since HA Core 2024.1)
-        if (
-            self.platform and self._platform_state is not EntityPlatformState.ADDED
-        ) or self._platform_state is EntityPlatformState.REMOVED:
-            # Don't write state if the entity is not added to the platform.
-            if self.platform and (entry := self.registry_entry) and entry.disabled_by:
+        if not self.platform:
+            if self._platform_state is EntityPlatformState.REMOVED:
+                # Don't write state if the entity is not added to the platform.
+                return
+        elif self._platform_state is not EntityPlatformState.ADDED:
+            if (entry := self.registry_entry) and entry.disabled_by:
                 if not self._disabled_reported:
                     self._disabled_reported = True
                     _LOGGER.warning(
