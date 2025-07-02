@@ -6,11 +6,6 @@ from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sleep_as_android.const import (
-    ATTR_EVENT,
-    ATTR_VALUE1,
-    ATTR_VALUE2,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -144,9 +139,6 @@ async def test_webhook_event(
 
     assert (state := hass.states.get(f"event.sleep_as_android_{entity}"))
     assert state.state == "2025-01-01T03:30:00.000+00:00"
-    assert state.attributes.get(ATTR_EVENT) == payload.get(ATTR_EVENT)
-    assert state.attributes.get(ATTR_VALUE1) == payload.get(ATTR_VALUE1)
-    assert state.attributes.get(ATTR_VALUE2) == payload.get(ATTR_VALUE2)
 
 
 async def test_webhook_invalid(

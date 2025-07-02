@@ -152,7 +152,6 @@ class SleepAsAndroidEventEntity(SleepAsAndroidEntity, EventEntity):
         ):
             self._trigger_event(
                 data[ATTR_EVENT],
-                data,
             )
             self.async_write_ha_state()
 
