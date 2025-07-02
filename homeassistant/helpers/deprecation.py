@@ -138,6 +138,32 @@ def deprecated_function[**_P, _R](
     return deprecated_decorator
 
 
+def deprecate_hass_binding[**_P, _T](
+    breaks_in_ha_version: str | None = None,
+) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
+    """Decorate function to indicate that first argument hass will be ignored."""
+
+    def _decorator(func: Callable[_P, _T]) -> Callable[_P, _T]:
+        @functools.wraps(func)
+        def _inner(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+            from homeassistant.core import HomeAssistant  # noqa: PLC0415
+
+            if isinstance(args[0], HomeAssistant):
+                _print_deprecation_warning(
+                    func,
+                    "without hass",
+                    "argument",
+                    "called with hass as the first argument",
+                    breaks_in_ha_version,
+                )
+                args = args[1:]  # type: ignore[assignment]
+            return func(*args, **kwargs)
+
+        return _inner
+
+    return _decorator
+
+
 def _print_deprecation_warning(
     obj: Any,
     replacement: str,

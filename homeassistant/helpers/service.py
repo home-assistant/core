@@ -10,7 +10,7 @@ from functools import cache, partial
 import inspect
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, TypedDict, cast, overload, override
 
 import voluptuous as vol
 
@@ -60,7 +60,7 @@ from . import (
     template,
     translation,
 )
-from .deprecation import deprecated_class, deprecated_function
+from .deprecation import deprecate_hass_binding, deprecated_class, deprecated_function
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -995,10 +995,22 @@ def async_register_admin_service(
     )
 
 
-@bind_hass
+# Overloads can be dropped when all core calls have been updated to drop hass argument
+@overload
+def verify_domain_control(
+    domain: str,
+) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]: ...
+@overload
+def verify_domain_control(
+    hass: HomeAssistant,
+    domain: str,
+) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]: ...
+
+
+@deprecate_hass_binding(breaks_in_ha_version="2026.2")  # type: ignore[misc]
 @callback
 def verify_domain_control(
-    hass: HomeAssistant, domain: str
+    domain: str,
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
@@ -1014,6 +1026,7 @@ def verify_domain_control(
             if not call.context.user_id:
                 return await service_handler(call)
 
+            hass = call.hass
             user = await hass.auth.async_get_user(call.context.user_id)
 
             if user is None:
