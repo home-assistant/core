@@ -330,9 +330,7 @@ class StateVacuumEntity(
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
-                integration_domain=self.platform.platform_name
-                if self.platform
-                else None,
+                integration_domain=self.platform.platform_name,
                 exclude_integrations={DOMAIN},
             )
 
