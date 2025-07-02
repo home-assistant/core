@@ -16,6 +16,11 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN, LOGGER
 
@@ -79,7 +84,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.NUMBER,
+                        ),
+                    ),
                 },
             ),
         )
@@ -101,7 +110,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.NUMBER,
+                        ),
+                    ),
                 },
             ),
         )
@@ -162,7 +175,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         step_id="bluetooth_confirm",
                         data_schema=vol.Schema(
                             {
-                                vol.Required(CONF_PIN): str,
+                                vol.Required(CONF_PIN): TextSelector(
+                                    TextSelectorConfig(
+                                        type=TextSelectorType.NUMBER,
+                                    ),
+                                ),
                             },
                         ),
                         errors=errors,
@@ -172,7 +189,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): str,
-                            vol.Required(CONF_PIN): str,
+                            vol.Required(CONF_PIN): TextSelector(
+                                TextSelectorConfig(
+                                    type=TextSelectorType.NUMBER,
+                                ),
+                            ),
                         },
                     ),
                     errors=errors,
@@ -246,7 +267,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.NUMBER,
+                        ),
+                    ),
                 },
             ),
             errors=errors,
