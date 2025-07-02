@@ -59,7 +59,7 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import create_eager_task, run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -185,11 +185,12 @@ async def _register_condition_platform(
         )
         return
 
-    tasks: list[asyncio.Task[None]] = [
-        create_eager_task(listener(new_conditions))
-        for listener in hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS]
-    ]
-    await asyncio.gather(*tasks)
+    # We don't use gather here because gather adds additional overhead
+    # when wrapping each coroutine in a task, and we expect our listeners
+    # to call condition.async_get_all_descriptions which will only yield
+    # the first time it's called, after that it returns cached data.
+    for listener in hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS]:
+        await listener(new_conditions)
 
 
 class Condition(abc.ABC):
