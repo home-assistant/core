@@ -44,21 +44,18 @@ from .const import (
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
     CONF_GA_HUE,
-    CONF_GA_PASSIVE,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
     CONF_GA_SENSOR,
-    CONF_GA_STATE,
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
     CONF_GA_UP_DOWN,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
-    CONF_GA_WRITE,
 )
 from .knx_selector import GASelector, GroupSelect
 
@@ -86,24 +83,6 @@ BASE_ENTITY_SCHEMA = vol.All(
         msg="One of `Device` or `Name` is required",
     ),
 )
-
-
-def optional_ga_schema(key: str, ga_selector: GASelector) -> VolDictType:
-    """Validate group address schema or remove key if no address is set."""
-    # frontend will return {key: {"write": None, "state": None}} for unused GA sets
-    # -> remove this entirely for optional keys
-    # if one GA is set, validate as usual
-    return {
-        vol.Optional(key): ga_selector,
-        vol.Remove(key): vol.Schema(
-            {
-                vol.Optional(CONF_GA_WRITE): None,
-                vol.Optional(CONF_GA_STATE): None,
-                vol.Optional(CONF_GA_PASSIVE): vol.IsFalse(),  # None or empty list
-            },
-            extra=vol.ALLOW_EXTRA,
-        ),
-    }
 
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
