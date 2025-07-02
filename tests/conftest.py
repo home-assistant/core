@@ -2081,6 +2081,8 @@ def disable_block_async_io() -> Generator[None]:
     calls.clear()
 
 
+# Ensure that incorrectly formatted mac addresses are rejected during
+# DhcpServiceInfo initialisation
 _real_dhcp_service_info_init = DhcpServiceInfo.__init__
 
 
