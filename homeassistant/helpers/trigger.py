@@ -147,11 +147,12 @@ async def _register_trigger_platform(
         )
         return
 
-    tasks: list[asyncio.Task[None]] = [
-        create_eager_task(listener(new_triggers))
-        for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]
-    ]
-    await asyncio.gather(*tasks)
+    # We don't use gather here because gather adds additional overhead
+    # when wrapping each coroutine in a task, and we expect our listeners
+    # to call condition.async_get_all_descriptions which will only yield
+    # the first time it's called, after that it returns cached data.
+    for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]:
+        await listener(new_triggers)
 
 
 class Trigger(abc.ABC):
