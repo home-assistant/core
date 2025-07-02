@@ -5,7 +5,6 @@ import logging
 from sensor_state_data import DeviceKey
 from victron_ble_ha_parser import Keys, Units
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
@@ -30,8 +29,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+
+from . import VictronBLEConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -220,7 +222,9 @@ def _device_key_to_bluetooth_entity_key(
     return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
 
-def sensor_update_to_bluetooth_data_update(sensor_update):
+def sensor_update_to_bluetooth_data_update(
+    sensor_update,
+) -> PassiveBluetoothDataUpdate:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -246,10 +250,12 @@ def sensor_update_to_bluetooth_data_update(sensor_update):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VictronBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Victron BLE sensor."""
+    if not entry.runtime_data.coordinator:
+        raise ConfigEntryError("Bluetooth coordinator is not set up")
     coordinator: PassiveBluetoothProcessorCoordinator = entry.runtime_data.coordinator
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
