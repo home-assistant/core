@@ -14,7 +14,10 @@ from homeassistant.components.conversation import (
     async_handle_sentence_triggers,
     default_agent,
 )
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.const import (
+    DATA_DEFAULT_ENTITY,
+    HOME_ASSISTANT_AGENT,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -28,8 +31,6 @@ from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -205,8 +206,8 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
-    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == agent_info
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == snapshot
     assert (
         conversation.async_get_agent_info(hass, mock_conversation_agent.agent_id)
         == snapshot
@@ -223,7 +224,7 @@ async def test_get_agent_info(
     default_agent = conversation.async_get_agent(hass)
     default_agent._attr_supports_streaming = True
     assert (
-        conversation.async_get_agent_info(hass, "homeassistant").supports_streaming
+        conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT).supports_streaming
         is True
     )
 
