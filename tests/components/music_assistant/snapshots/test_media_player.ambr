@@ -136,7 +136,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'playing',
   })
 # ---
 # name: test_media_player[media_player.test_player_1-entry]
