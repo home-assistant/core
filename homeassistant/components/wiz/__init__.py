@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
