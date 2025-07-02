@@ -45,6 +45,12 @@ DHCP_DISCOVERY_DUPLICATE_001 = DhcpServiceInfo(
     macaddress="0015bb00abcd",
 )
 
+DHCP_DISCOVERY_DUPLICATE_001 = DhcpServiceInfo(
+    ip="1.1.1.1",
+    hostname="SMA123456789-001",
+    macaddress="0015bb00abcd",
+)
+
 
 async def test_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_sma_client: AsyncMock
