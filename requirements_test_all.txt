@@ -234,6 +234,9 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==32.2.1
 
+# homeassistant.components.eway
+aioeway==1.0.1
+
 # homeassistant.components.flo
 aioflo==2021.11.0
 

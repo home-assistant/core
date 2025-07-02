@@ -185,6 +185,7 @@ FLOWS = {
         "esphome",
         "eufylife_ble",
         "evil_genius_labs",
+        "eway",
         "ezviz",
         "faa_delays",
         "fastdotcom",
