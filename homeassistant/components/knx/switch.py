@@ -36,13 +36,8 @@ from .const import (
 )
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
-from .storage.const import (
-    CONF_ENTITY,
-    CONF_GA_PASSIVE,
-    CONF_GA_STATE,
-    CONF_GA_SWITCH,
-    CONF_GA_WRITE,
-)
+from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
+from .storage.util import ConfigExtractor
 
 
 async def async_setup_entry(
@@ -142,15 +137,13 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
+        knx_conf = ConfigExtractor(config[DOMAIN])
         self._device = XknxSwitch(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
-            group_address_state=[
-                config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
-                *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
-            ],
-            respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
-            sync_state=config[DOMAIN][CONF_SYNC_STATE],
-            invert=config[DOMAIN][CONF_INVERT],
+            group_address=knx_conf.get_write(CONF_GA_SWITCH),
+            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SWITCH),
+            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
+            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            invert=knx_conf.get(CONF_INVERT),
         )
