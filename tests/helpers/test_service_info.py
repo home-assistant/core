@@ -1,14 +1,23 @@
 """Test service_info helpers."""
 
+import pytest
+
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-# Ensure that DhcpServiceInfo.__post_init__ is called, even on a constant outside of a test
+# Ensure that incorrectly formatted mac addresses are rejected, even
+# on a constant outside of a test
 try:
     _ = DhcpServiceInfo(ip="", hostname="", macaddress="AA:BB:CC:DD:EE:FF")
 except ValueError:
     pass
 else:
     raise RuntimeError(
-        "DhcpServiceInfo.__post_init__ was not called. "
-        "Please ensure that the __post_init__ method is correctly defined."
+        "DhcpServiceInfo incorrectly formatted mac address was not rejected. "
+        "Please ensure that the DhcpServiceInfo is correctly patched."
     )
+
+
+def test_invalid_macaddress() -> None:
+    """Test that DhcpServiceInfo raises ValueError for unformatted macaddress."""
+    with pytest.raises(ValueError):
+        DhcpServiceInfo(ip="", hostname="", macaddress="AA:BB:CC:DD:EE:FF")
