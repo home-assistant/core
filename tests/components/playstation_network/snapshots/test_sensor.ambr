@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.testuser_next_trophy_level',
+    'entity_id': 'sensor.testuser_next_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,7 +171,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Next trophy level',
+    'original_name': 'Next level',
     'platform': 'playstation_network',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -181,14 +181,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.testuser_next_trophy_level-state]
+# name: test_sensors[sensor.testuser_next_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Next trophy level',
+      'friendly_name': 'testuser Next level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.testuser_next_trophy_level',
+    'entity_id': 'sensor.testuser_next_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -220,7 +220,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Online ID',
+    'original_name': 'Online-ID',
     'platform': 'playstation_network',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -234,7 +234,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
-      'friendly_name': 'testuser Online ID',
+      'friendly_name': 'testuser Online-ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_online_id',
