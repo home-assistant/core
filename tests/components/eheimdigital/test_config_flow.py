@@ -17,9 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .conftest import init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.eheimdigital.conftest import init_integration
-from tests.components.fronius.test_config_flow import assert_abort_flow_with_logger
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.0.2.1"),
@@ -281,6 +281,11 @@ async def test_reconfigure_different_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_RECONFIGURE
 
-    await assert_abort_flow_with_logger(
-        hass, result["flow_id"], reason="unique_id_mismatch"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
     )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
