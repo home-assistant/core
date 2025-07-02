@@ -54,9 +54,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "online_status": {
-        "name": "Online"
-      },
       "ps_plus_status": {
         "name": "Subscribed to PlayStation Plus"
       }

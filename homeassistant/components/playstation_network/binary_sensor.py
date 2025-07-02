@@ -13,11 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import (
-    PlaystationNetworkConfigEntry,
-    PlaystationNetworkCoordinator,
-    PlaystationNetworkData,
-)
+from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
 from .entity import PlaystationNetworkServiceEntity
 
 PARALLEL_UPDATES = 0
@@ -33,18 +29,12 @@ class PlaystationNetworkBinarySensorEntityDescription(BinarySensorEntityDescript
 class PlaystationNetworkBinarySensor(StrEnum):
     """PlayStation Network binary sensors."""
 
-    ONLINE_STATUS = "online_status"
     PS_PLUS_STATUS = "ps_plus_status"
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[
     PlaystationNetworkBinarySensorEntityDescription, ...
 ] = (
-    PlaystationNetworkBinarySensorEntityDescription(
-        key=PlaystationNetworkBinarySensor.ONLINE_STATUS,
-        translation_key=PlaystationNetworkBinarySensor.ONLINE_STATUS,
-        is_on_fn=lambda psn: psn.available,
-    ),
     PlaystationNetworkBinarySensorEntityDescription(
         key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         translation_key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
@@ -73,14 +63,6 @@ class PlaystationNetworkBinarySensorEntity(
     """Representation of a PlayStation Network binary sensor entity."""
 
     entity_description: PlaystationNetworkBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PlaystationNetworkCoordinator,
-        description: PlaystationNetworkBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a binary sensor entity."""
-        super().__init__(coordinator, description)
 
     @property
     def is_on(self) -> bool:

@@ -13,12 +13,12 @@ from .coordinator import PlaystationNetworkCoordinator
 class PlaystationNetworkServiceEntity(CoordinatorEntity[PlaystationNetworkCoordinator]):
     """Common entity class for PlayStationNetwork Service entities."""
 
+    coordinator: PlaystationNetworkCoordinator
     _attr_has_entity_name = True
 
     def __init__(self, coordinator, entity_description: EntityDescription) -> None:
         """Initialize PlayStation Network Service Entity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
         self.entity_description = entity_description
