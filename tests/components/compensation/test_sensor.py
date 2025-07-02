@@ -47,11 +47,9 @@ TEST_CONFIG = {
 }
 
 
-async def async_setup_compensation(
-    hass: HomeAssistant, count: int, config: dict[str, Any]
-) -> None:
+async def async_setup_compensation(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Do setup of a compensation integration sensor."""
-    with assert_setup_component(count, DOMAIN):
+    with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -64,28 +62,14 @@ async def async_setup_compensation(
 
 
 @pytest.fixture
-async def setup_compensation(
-    hass: HomeAssistant, count: int, config: dict[str, Any]
-) -> None:
+async def setup_compensation(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Do setup of a compensation integration sensor."""
-    await async_setup_compensation(hass, count, config)
-
-
-@pytest.fixture
-async def setup_compensation_with_extra_config(
-    hass: HomeAssistant,
-    count: int,
-    config: dict[str, Any],
-    extra_config: dict[str, Any],
-) -> None:
-    """Do setup of a compensation integration sensor."""
-    await async_setup_compensation(hass, count, {**config, **extra_config})
+    await async_setup_compensation(hass, config)
 
 
 @pytest.fixture
 async def setup_compensation_with_limits(
     hass: HomeAssistant,
-    count: int,
     config: dict[str, Any],
     upper: bool,
     lower: bool,
@@ -93,7 +77,6 @@ async def setup_compensation_with_limits(
     """Do setup of a compensation integration sensor with extra config."""
     await async_setup_compensation(
         hass,
-        count,
         {
             **config,
             "lower_limit": lower,
@@ -108,10 +91,7 @@ async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     return caplog.text
 
 
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, TEST_CONFIG)],
-)
+@pytest.mark.parametrize("config", [TEST_CONFIG])
 @pytest.mark.usefixtures("setup_compensation")
 async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test compensation sensor state."""
@@ -138,10 +118,7 @@ async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, {"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG})],
-)
+@pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])
 @pytest.mark.usefixtures("setup_compensation")
 async def test_attributes_come_from_source(hass: HomeAssistant) -> None:
     """Test compensation sensor state."""
@@ -165,10 +142,7 @@ async def test_attributes_come_from_source(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, {"attribute": "value", **TEST_CONFIG})],
-)
+@pytest.mark.parametrize("config", [{"attribute": "value", **TEST_CONFIG}])
 @pytest.mark.usefixtures("setup_compensation")
 async def test_linear_state_from_attribute(
     hass: HomeAssistant, config: dict[str, Any]
@@ -197,34 +171,31 @@ async def test_linear_state_from_attribute(
 
 
 @pytest.mark.parametrize(
-    ("count", "config"),
+    "config",
     [
-        (
-            1,
-            {
-                "name": TEST_OBJECT_ID,
-                "source": TEST_SOURCE,
-                "data_points": [
-                    [50, 3.3],
-                    [50, 2.8],
-                    [50, 2.9],
-                    [70, 2.3],
-                    [70, 2.6],
-                    [70, 2.1],
-                    [80, 2.5],
-                    [80, 2.9],
-                    [80, 2.4],
-                    [90, 3.0],
-                    [90, 3.1],
-                    [90, 2.8],
-                    [100, 3.3],
-                    [100, 3.5],
-                    [100, 3.0],
-                ],
-                "degree": 2,
-                "precision": 3,
-            },
-        )
+        {
+            "name": TEST_OBJECT_ID,
+            "source": TEST_SOURCE,
+            "data_points": [
+                [50, 3.3],
+                [50, 2.8],
+                [50, 2.9],
+                [70, 2.3],
+                [70, 2.6],
+                [70, 2.1],
+                [80, 2.5],
+                [80, 2.9],
+                [80, 2.4],
+                [90, 3.0],
+                [90, 3.1],
+                [90, 2.8],
+                [100, 3.3],
+                [100, 3.5],
+                [100, 3.0],
+            ],
+            "degree": 2,
+            "precision": 3,
+        },
     ],
 )
 @pytest.mark.usefixtures("setup_compensation")
@@ -241,18 +212,15 @@ async def test_quadratic_state(hass: HomeAssistant, config: dict[str, Any]) -> N
 
 
 @pytest.mark.parametrize(
-    ("count", "config"),
+    "config",
     [
-        (
-            1,
-            {
-                "source": TEST_SOURCE,
-                "data_points": [
-                    [0.0, 1.0],
-                    [0.0, 1.0],
-                ],
-            },
-        )
+        {
+            "source": TEST_SOURCE,
+            "data_points": [
+                [0.0, 1.0],
+                [0.0, 1.0],
+            ],
+        },
     ],
 )
 @pytest.mark.usefixtures("setup_compensation")
@@ -285,10 +253,7 @@ async def test_datapoints_greater_than_degree(
     assert "data_points must have at least 3 data_points" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, TEST_CONFIG)],
-)
+@pytest.mark.parametrize("config", [TEST_CONFIG])
 @pytest.mark.usefixtures("setup_compensation")
 async def test_new_state_is_none(hass: HomeAssistant) -> None:
     """Tests catch for empty new states."""
@@ -306,22 +271,19 @@ async def test_new_state_is_none(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("count", "config"),
+    "config",
     [
-        (
-            1,
-            {
-                "name": TEST_OBJECT_ID,
-                "source": TEST_SOURCE,
-                "data_points": [
-                    [1.0, 0.0],
-                    [3.0, 2.0],
-                    [2.0, 1.0],
-                ],
-                "precision": 2,
-                "unit_of_measurement": "a",
-            },
-        )
+        {
+            "name": TEST_OBJECT_ID,
+            "source": TEST_SOURCE,
+            "data_points": [
+                [1.0, 0.0],
+                [3.0, 2.0],
+                [2.0, 1.0],
+            ],
+            "precision": 2,
+            "unit_of_measurement": "a",
+        },
     ],
 )
 @pytest.mark.usefixtures("setup_compensation_with_limits")
@@ -341,26 +303,22 @@ async def test_limits(hass: HomeAssistant, lower: bool, upper: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, TEST_BASE_CONFIG)],
-)
-@pytest.mark.parametrize(
-    ("extra_config", "expected"),
+    ("config", "expected"),
     [
-        ({}, "sensor.compensation_sensor_uncompensated"),
-        ({"attribute": "value"}, "sensor.compensation_sensor_uncompensated_value"),
+        (TEST_BASE_CONFIG, "sensor.compensation_sensor_uncompensated"),
+        (
+            {"attribute": "value", **TEST_BASE_CONFIG},
+            "sensor.compensation_sensor_uncompensated_value",
+        ),
     ],
 )
-@pytest.mark.usefixtures("setup_compensation_with_extra_config")
+@pytest.mark.usefixtures("setup_compensation")
 async def test_default_name(hass: HomeAssistant, expected: str) -> None:
     """Test default configuration name."""
     assert hass.states.get(expected) is not None
 
 
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, TEST_CONFIG)],
-)
+@pytest.mark.parametrize("config", [TEST_CONFIG])
 @pytest.mark.parametrize(
     ("source_state", "expected"),
     [(STATE_UNKNOWN, STATE_UNKNOWN), (STATE_UNAVAILABLE, STATE_UNAVAILABLE)],
@@ -408,7 +366,7 @@ async def test_source_state_none(hass: HomeAssistant) -> None:
         ]
     }
     await async_setup_component(hass, "sensor", config)
-    await async_setup_compensation(hass, 1, TEST_CONFIG)
+    await async_setup_compensation(hass, TEST_CONFIG)
 
     hass.states.async_set("sensor.test_state", 4)
 
