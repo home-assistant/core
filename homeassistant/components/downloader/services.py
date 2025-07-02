@@ -68,7 +68,7 @@ def download_file(service: ServiceCall) -> None:
                     if match := re.search(
                         r"filename=(\S+)", req.headers["content-disposition"]
                     ):
-                        filename = match.group(1).strip("'\"")
+                        filename = match.group(1).strip("'\" ")
 
                 if not filename:
                     filename = os.path.basename(url).strip()
