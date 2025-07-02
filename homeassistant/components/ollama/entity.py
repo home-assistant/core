@@ -170,7 +170,7 @@ class OllamaBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Ollama",
-            model=entry.data[CONF_MODEL],
+            model=subentry.data[CONF_MODEL],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 

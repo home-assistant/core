@@ -68,7 +68,7 @@ async def test_chat(
         args = mock_chat.call_args.kwargs
         prompt = args["messages"][0]["content"]
 
-        assert args["model"] == "test model"
+        assert args["model"] == "test_model:latest"
         assert args["messages"] == [
             Message(role="system", content=prompt),
             Message(role="user", content="test message"),
@@ -128,7 +128,7 @@ async def test_chat_stream(
         args = mock_chat.call_args.kwargs
         prompt = args["messages"][0]["content"]
 
-        assert args["model"] == "test model"
+        assert args["model"] == "test_model:latest"
         assert args["messages"] == [
             Message(role="system", content=prompt),
             Message(role="user", content="test message"),
@@ -158,6 +158,7 @@ async def test_template_variables(
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
             ),
+            ollama.CONF_MODEL: "test_model:latest",
         },
     )
     with (
@@ -524,7 +525,9 @@ async def test_message_history_unlimited(
     ):
         subentry = next(iter(mock_config_entry.subentries.values()))
         hass.config_entries.async_update_subentry(
-            mock_config_entry, subentry, data={ollama.CONF_MAX_HISTORY: 0}
+            mock_config_entry,
+            subentry,
+            data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
         )
         for i in range(100):
             result = await conversation.async_converse(
@@ -573,6 +576,7 @@ async def test_template_error(
         mock_config_entry,
         subentry,
         data={
+            **subentry.data,
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
@@ -679,6 +683,7 @@ async def test_reasoning_filter(
         mock_config_entry,
         subentry,
         data={
+            **subentry.data,
             ollama.CONF_THINK: think,
         },
     )
