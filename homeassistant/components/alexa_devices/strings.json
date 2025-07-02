@@ -1,8 +1,7 @@
 {
   "common": {
-    "data_country": "Country code",
     "data_code": "One-time password (OTP code)",
-    "data_description_country": "The country of your Amazon account.",
+    "data_description_country": "The country where your Amazon account is registered.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
     "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported."
@@ -12,10 +11,10 @@
     "step": {
       "user": {
         "data": {
-          "country": "[%key:component::alexa_devices::common::data_country%]",
+          "country": "[%key:common::config_flow::data::country%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "code": "[%key:component::alexa_devices::common::data_description_code%]"
+          "code": "[%key:component::alexa_devices::common::data_code%]"
         },
         "data_description": {
           "country": "[%key:component::alexa_devices::common::data_description_country%]",
@@ -34,6 +33,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "wrong_country": "Wrong country selected. Please select the country where your Amazon account is registered.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -41,6 +41,21 @@
     "binary_sensor": {
       "bluetooth": {
         "name": "Bluetooth"
+      },
+      "baby_cry_detection": {
+        "name": "Baby crying"
+      },
+      "beeping_appliance_detection": {
+        "name": "Beeping appliance"
+      },
+      "cough_detection": {
+        "name": "Coughing"
+      },
+      "dog_bark_detection": {
+        "name": "Dog barking"
+      },
+      "water_sounds_detection": {
+        "name": "Water sounds"
       }
     },
     "notify": {
@@ -55,6 +70,14 @@
       "do_not_disturb": {
         "name": "Do not disturb"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
     }
   }
 }

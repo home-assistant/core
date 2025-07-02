@@ -8,7 +8,7 @@ from unittest.mock import Mock
 from pyfritzhome import LoginError
 from requests.exceptions import ConnectionError, HTTPError
 
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
@@ -26,8 +26,8 @@ async def test_coordinator_update_after_reboot(
 ) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -46,8 +46,8 @@ async def test_coordinator_update_after_password_change(
 ) -> None:
     """Test coordinator after password change."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -66,8 +66,8 @@ async def test_coordinator_update_when_unreachable(
 ) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -106,8 +106,8 @@ async def test_coordinator_automatic_registry_cleanup(
         )
     ]
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)

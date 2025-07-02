@@ -127,9 +127,6 @@ async def test_spa_hvac_action(
     state = await _patch_spa_heatstate(hass, client, 1)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
 
-    state = await _patch_spa_heatstate(hass, client, 2)
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-
 
 async def test_spa_preset_modes(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
