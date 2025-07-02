@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -72,7 +72,12 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
+from .conftest import (
+    FAKE_VALID_ITEM_ID,
+    TEST_MAC,
+    TEST_VOLUME_STEP,
+    configure_squeezebox_media_player_platform,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -89,6 +94,18 @@ async def test_device_registry(
     assert reg_device == snapshot
 
 
+async def test_device_registry_server_merged(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    configured_players: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test squeezebox device registered in the device registry."""
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
+    assert reg_device is not None
+    assert reg_device == snapshot
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -98,6 +115,33 @@ async def test_entity_registry(
 ) -> None:
     """Test squeezebox media_player entity registered in the entity registry."""
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_squeezebox_new_player_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+    player_factory: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test discovery of a new squeezebox player."""
+    # Initial setup with one player (from the 'lms' fixture)
+    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("media_player.test_player") is not None
+    assert hass.states.get("media_player.test_player_2") is None
+
+    # Simulate a new player appearing
+    new_player_mock = player_factory(TEST_MAC[1])
+    lms.async_get_players.return_value = [
+        lms.async_get_players.return_value[0],
+        new_player_mock,
+    ]
+
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.test_player_2") is not None
 
 
 async def test_squeezebox_player_rediscovery(
@@ -798,6 +842,8 @@ async def test_squeezebox_server_discovery(
     async def mock_async_discover(callback):
         """Mock the async_discover function of pysqueezebox."""
         return callback(lms_factory(2))
+
+    lms.async_prepared_status.return_value = {}
 
     with (
         patch(

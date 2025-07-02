@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,14 +12,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
 
+from . import GeonetnzVolcanoConfigEntry
 from .const import (
     ATTR_ACTIVITY,
     ATTR_DISTANCE,
     ATTR_EXTERNAL_ID,
     ATTR_HAZARDS,
     DEFAULT_ICON,
-    DOMAIN,
-    FEED,
     IMPERIAL_UNITS,
 )
 
@@ -32,11 +30,11 @@ ATTR_LAST_UPDATE_SUCCESSFUL = "feed_last_update_successful"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GeonetnzVolcanoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Volcano Feed platform."""
-    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager = entry.runtime_data
 
     @callback
     def async_add_sensor(feed_manager, external_id, unit_system):

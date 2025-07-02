@@ -56,7 +56,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 9
+STORAGE_VERSION_MINOR = 11
 
 CLEANUP_DELAY = 10
 
@@ -266,6 +266,48 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
+@lru_cache(maxsize=512)
+def format_mac(mac: str) -> str:
+    """Format the mac address string for entry into dev reg."""
+    to_test = mac
+
+    if len(to_test) == 17 and to_test.count(":") == 5:
+        return to_test.lower()
+
+    if len(to_test) == 17 and to_test.count("-") == 5:
+        to_test = to_test.replace("-", "")
+    elif len(to_test) == 14 and to_test.count(".") == 2:
+        to_test = to_test.replace(".", "")
+
+    if len(to_test) == 12:
+        # no : included
+        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
+
+
+def _normalize_connections(
+    connections: Iterable[tuple[str, str]],
+) -> set[tuple[str, str]]:
+    """Normalize connections to ensure we can match mac addresses."""
+    return {
+        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
+        for key, value in connections
+    }
+
+
+def _normalize_connections_validator(
+    instance: Any,
+    attribute: Any,
+    connections: Iterable[tuple[str, str]],
+) -> None:
+    """Check connections normalization used as attrs validator."""
+    for key, value in connections:
+        if key == CONNECTION_NETWORK_MAC and format_mac(value) != value:
+            raise ValueError(f"Invalid mac address format: {value}")
+
+
 @attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
@@ -274,7 +316,9 @@ class DeviceEntry:
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     config_entries_subentries: dict[str, set[str | None]] = attr.ib(factory=dict)
     configuration_url: str | None = attr.ib(default=None)
-    connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    connections: set[tuple[str, str]] = attr.ib(
+        converter=set, factory=set, validator=_normalize_connections_validator
+    )
     created_at: datetime = attr.ib(factory=utcnow)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
@@ -394,14 +438,20 @@ class DeviceEntry:
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
+    area_id: str | None = attr.ib()
     config_entries: set[str] = attr.ib()
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
-    connections: set[tuple[str, str]] = attr.ib()
-    identifiers: set[tuple[str, str]] = attr.ib()
+    connections: set[tuple[str, str]] = attr.ib(
+        validator=_normalize_connections_validator
+    )
+    created_at: datetime = attr.ib()
+    disabled_by: DeviceEntryDisabler | None = attr.ib()
     id: str = attr.ib()
+    identifiers: set[tuple[str, str]] = attr.ib()
+    labels: set[str] = attr.ib()
+    modified_at: datetime = attr.ib()
+    name_by_user: str | None = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
-    created_at: datetime = attr.ib(factory=utcnow)
-    modified_at: datetime = attr.ib(factory=utcnow)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
@@ -413,14 +463,18 @@ class DeletedDeviceEntry:
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
+            area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
             config_entries={config_entry_id},  # type: ignore[arg-type]
             config_entries_subentries={config_entry_id: {config_subentry_id}},
             connections=self.connections & connections,  # type: ignore[arg-type]
             created_at=self.created_at,
+            disabled_by=self.disabled_by,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
+            labels=self.labels,  # type: ignore[arg-type]
+            name_by_user=self.name_by_user,
         )
 
     @under_cached_property
@@ -429,6 +483,7 @@ class DeletedDeviceEntry:
         return json_fragment(
             json_bytes(
                 {
+                    "area_id": self.area_id,
                     # The config_entries list can be removed from the storage
                     # representation in HA Core 2026.2
                     "config_entries": list(self.config_entries),
@@ -438,40 +493,22 @@ class DeletedDeviceEntry:
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
+                    "disabled_by": self.disabled_by,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
-                    "orphaned_timestamp": self.orphaned_timestamp,
+                    "labels": list(self.labels),
                     "modified_at": self.modified_at,
+                    "name_by_user": self.name_by_user,
+                    "orphaned_timestamp": self.orphaned_timestamp,
                 }
             )
         )
 
 
-@lru_cache(maxsize=512)
-def format_mac(mac: str) -> str:
-    """Format the mac address string for entry into dev reg."""
-    to_test = mac
-
-    if len(to_test) == 17 and to_test.count(":") == 5:
-        return to_test.lower()
-
-    if len(to_test) == 17 and to_test.count("-") == 5:
-        to_test = to_test.replace("-", "")
-    elif len(to_test) == 14 and to_test.count(".") == 2:
-        to_test = to_test.replace(".", "")
-
-    if len(to_test) == 12:
-        # no : included
-        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
-
-    # Not sure how formatted, return original
-    return mac
-
-
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -540,6 +577,23 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         config_entry_id: {None}
                         for config_entry_id in device["config_entries"]
                     }
+            if old_minor_version < 10:
+                # Introduced in 2025.6
+                for device in old_data["deleted_devices"]:
+                    device["area_id"] = None
+                    device["disabled_by"] = None
+                    device["labels"] = []
+                    device["name_by_user"] = None
+            if old_minor_version < 11:
+                # Normalization of stored CONNECTION_NETWORK_MAC, introduced in 2025.8
+                for device in old_data["devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
+                for device in old_data["deleted_devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
 
         if old_major_version > 2:
             raise NotImplementedError
@@ -575,9 +629,11 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         """Unindex an entry."""
         old_entry = self.data[key]
         for connection in old_entry.connections:
-            del self._connections[connection]
+            if connection in self._connections:
+                del self._connections[connection]
         for identifier in old_entry.identifiers:
-            del self._identifiers[identifier]
+            if identifier in self._identifiers:
+                del self._identifiers[identifier]
 
     def get_entry(
         self,
@@ -997,8 +1053,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and old.area_id is None
         ):
             # Circular dep
-            # pylint: disable-next=import-outside-toplevel
-            from . import area_registry as ar
+            from . import area_registry as ar  # noqa: PLC0415
 
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
@@ -1236,12 +1291,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
+            area_id=device.area_id,
             config_entries=device.config_entries,
             config_entries_subentries=device.config_entries_subentries,
             connections=device.connections,
             created_at=device.created_at,
+            disabled_by=device.disabled_by,
             identifiers=device.identifiers,
             id=device.id,
+            labels=device.labels,
+            modified_at=utcnow(),
+            name_by_user=device.name_by_user,
             orphaned_timestamp=None,
         )
         for other_device in list(self.devices.values()):
@@ -1313,6 +1373,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Introduced in 0.111
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
+                    area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     config_entries_subentries={
                         config_entry_id: set(subentries)
@@ -1322,9 +1383,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     },
                     connections={tuple(conn) for conn in device["connections"]},
                     created_at=datetime.fromisoformat(device["created_at"]),
+                    disabled_by=(
+                        DeviceEntryDisabler(device["disabled_by"])
+                        if device["disabled_by"]
+                        else None
+                    ),
                     identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
+                    labels=set(device["labels"]),
                     modified_at=datetime.fromisoformat(device["modified_at"]),
+                    name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
 
@@ -1445,12 +1513,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear area id from registry entries."""
         for device in self.devices.get_devices_for_area_id(area_id):
             self.async_update_device(device.id, area_id=None)
+        for deleted_device in list(self.deleted_devices.values()):
+            if deleted_device.area_id != area_id:
+                continue
+            self.deleted_devices[deleted_device.id] = attr.evolve(
+                deleted_device, area_id=None
+            )
+            self.async_schedule_save()
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
         for device in self.devices.get_devices_for_label(label_id):
             self.async_update_device(device.id, labels=device.labels - {label_id})
+        for deleted_device in list(self.deleted_devices.values()):
+            if label_id not in deleted_device.labels:
+                continue
+            self.deleted_devices[deleted_device.id] = attr.evolve(
+                deleted_device, labels=deleted_device.labels - {label_id}
+            )
+            self.async_schedule_save()
 
 
 @callback
@@ -1574,8 +1656,7 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import entity_registry, label_registry as lr
+    from . import entity_registry, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _label_removed_from_registry_filter(
@@ -1650,11 +1731,3 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         debounced_cleanup.async_cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
-
-
-def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
-    """Normalize connections to ensure we can match mac addresses."""
-    return {
-        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
-        for key, value in connections
-    }

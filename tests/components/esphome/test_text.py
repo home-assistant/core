@@ -12,11 +12,13 @@ from homeassistant.components.text import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_generic_text_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic text entity."""
     entity_info = [
@@ -39,14 +41,14 @@ async def test_generic_text_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == "hello world"
 
     await hass.services.async_call(
         TEXT_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "text.test_mytext", ATTR_VALUE: "goodbye"},
+        {ATTR_ENTITY_ID: "text.test_my_text", ATTR_VALUE: "goodbye"},
         blocking=True,
     )
     mock_client.text_command.assert_has_calls([call(1, "goodbye")])
@@ -56,7 +58,7 @@ async def test_generic_text_entity(
 async def test_generic_text_entity_no_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic text entity that has no state."""
     entity_info = [
@@ -79,7 +81,7 @@ async def test_generic_text_entity_no_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -87,7 +89,7 @@ async def test_generic_text_entity_no_state(
 async def test_generic_text_entity_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic text entity that has no state."""
     entity_info = [
@@ -110,6 +112,6 @@ async def test_generic_text_entity_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == STATE_UNKNOWN

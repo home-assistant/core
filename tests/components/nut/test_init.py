@@ -222,7 +222,10 @@ async def test_auth_fails(
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_serial_number(hass: HomeAssistant) -> None:
+async def test_serial_number(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for serial number set on device."""
     mock_serial_number = "A00000000000"
     await async_init_integration(
@@ -234,9 +237,6 @@ async def test_serial_number(hass: HomeAssistant) -> None:
         list_commands_return_value=[],
     )
 
-    device_registry = dr.async_get(hass)
-    assert device_registry is not None
-
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_serial_number)}
     )
@@ -245,7 +245,10 @@ async def test_serial_number(hass: HomeAssistant) -> None:
     assert device_entry.serial_number == mock_serial_number
 
 
-async def test_device_location(hass: HomeAssistant) -> None:
+async def test_device_location(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for suggested location on device."""
     mock_serial_number = "A00000000000"
     mock_device_location = "XYZ Location"
@@ -260,9 +263,6 @@ async def test_device_location(hass: HomeAssistant) -> None:
         list_ups={"ups1": "UPS 1"},
         list_commands_return_value=[],
     )
-
-    device_registry = dr.async_get(hass)
-    assert device_registry is not None
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_serial_number)}

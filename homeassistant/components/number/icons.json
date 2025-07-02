@@ -111,6 +111,9 @@
     "pressure": {
       "default": "mdi:gauge"
     },
+    "reactive_energy": {
+      "default": "mdi:lightning-bolt"
+    },
     "reactive_power": {
       "default": "mdi:flash"
     },

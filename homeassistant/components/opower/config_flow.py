@@ -10,6 +10,7 @@ from opower import (
     CannotConnect,
     InvalidAuth,
     Opower,
+    create_cookie_jar,
     get_supported_utility_names,
     select_utility,
 )
@@ -39,7 +40,7 @@ async def _validate_login(
 ) -> dict[str, str]:
     """Validate login data and return any errors."""
     api = Opower(
-        async_create_clientsession(hass),
+        async_create_clientsession(hass, cookie_jar=create_cookie_jar()),
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],

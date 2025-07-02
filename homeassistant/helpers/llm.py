@@ -24,6 +24,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -159,11 +160,19 @@ class LLMContext:
     """Tool input to be processed."""
 
     platform: str
+    """Integration that is handling the LLM request."""
+
     context: Context | None
-    user_prompt: str | None
+    """Context of the LLM request."""
+
     language: str | None
+    """Language of the LLM request."""
+
     assistant: str | None
+    """Assistant domain that is handling the LLM request."""
+
     device_id: str | None
+    """Device that is making the request."""
 
 
 @dataclass(slots=True)
@@ -207,8 +216,7 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
-        # pylint: disable=import-outside-toplevel
-        from homeassistant.components.conversation import (
+        from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationTraceEventType,
             async_conversation_trace_append,
         )
@@ -301,7 +309,7 @@ class IntentTool(Tool):
             platform=llm_context.platform,
             intent_type=self.name,
             slots=slots,
-            text_input=llm_context.user_prompt,
+            text_input=None,
             context=llm_context.context,
             language=llm_context.language,
             assistant=llm_context.assistant,
@@ -576,6 +584,14 @@ class AssistAPI(API):
                 for info in exposed_entities[CALENDAR_DOMAIN].values():
                     names.extend(info["names"].split(", "))
                 tools.append(CalendarGetEventsTool(names))
+
+            if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
+                names = []
+                for info in exposed_entities["entities"].values():
+                    if info["domain"] != TODO_DOMAIN:
+                        continue
+                    names.extend(info["names"].split(", "))
+                tools.append(TodoGetItemsTool(names))
 
             tools.extend(
                 ScriptTool(self.hass, script_entity_id)
@@ -884,6 +900,12 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}.{action}"
+        # Note: _get_cached_action_parameters only works for services which
+        # add their description directly to the service description cache.
+        # This is not the case for most services, but it is for scripts.
+        # If we want to use `ActionTool` for services other than scripts, we
+        # need to add a coroutine function to fetch the non-cached description
+        # and schema.
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )
@@ -1024,6 +1046,65 @@ class CalendarGetEventsTool(Tool):
         return {"success": True, "result": events}
 
 
+class TodoGetItemsTool(Tool):
+    """LLM Tool allowing querying a to-do list."""
+
+    name = "todo_get_items"
+    description = (
+        "Query a to-do list to find out what items are on it. "
+        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Filters items by status (needs_action, completed, all)."
+    )
+
+    def __init__(self, todo_lists: list[str]) -> None:
+        """Init the get items tool."""
+        self.parameters = vol.Schema(
+            {
+                vol.Required("todo_list"): vol.In(todo_lists),
+                vol.Optional(
+                    "status",
+                    description="Filter returned items by status, by default returns incomplete items",
+                    default="needs_action",
+                ): vol.In(["needs_action", "completed", "all"]),
+            }
+        )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Query a to-do list."""
+        data = self.parameters(tool_input.tool_args)
+        result = intent.async_match_targets(
+            hass,
+            intent.MatchTargetsConstraints(
+                name=data["todo_list"],
+                domains=[TODO_DOMAIN],
+                assistant=llm_context.assistant,
+            ),
+        )
+        if not result.is_match:
+            return {"success": False, "error": "To-do list not found"}
+        entity_id = result.states[0].entity_id
+        service_data: dict[str, Any] = {"entity_id": entity_id}
+        if status := data.get("status"):
+            if status == "all":
+                service_data["status"] = ["needs_action", "completed"]
+            else:
+                service_data["status"] = [status]
+        service_result = await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.GET_ITEMS,
+            service_data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+        if not service_result:
+            return {"success": False, "error": "To-do list not found"}
+        items = cast(dict, service_result)[entity_id]["items"]
+        return {"success": True, "result": items}
+
+
 class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
@@ -1034,10 +1115,10 @@ class GetLiveContextTool(Tool):
 
     name = "GetLiveContext"
     description = (
-        "Use this tool when the user asks a question about the CURRENT state, "
-        "value, or mode of a specific device, sensor, entity, or area in the "
-        "smart home, and the answer can be improved with real-time data not "
-        "available in the static device overview list. "
+        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
+        "Use this tool for: "
+        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
+        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
     )
 
     async def async_call(

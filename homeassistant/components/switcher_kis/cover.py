@@ -69,12 +69,6 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     )
     _cover_id: int
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_data()
-        self.async_write_ha_state()
-
     def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherShutter, self.coordinator.data)

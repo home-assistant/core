@@ -221,8 +221,8 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         elif command in ["off", "alloff"]:
             self._state = False
         # dimmable device accept 'set_level=(0-15)' commands
-        elif re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
-            self._brightness = rflink_to_brightness(int(command.split("=")[1]))
+        elif match := re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
+            self._brightness = rflink_to_brightness(int(match.group(1)))
             self._state = True
 
     @property

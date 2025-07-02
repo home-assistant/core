@@ -3,7 +3,7 @@
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from homeassistant.components.flo.const import DOMAIN
 from homeassistant.components.flo.switch import (
     ATTR_REVERT_TO_MODE,
     ATTR_SLEEP_MINUTES,
@@ -36,7 +36,7 @@ async def test_services(
     assert aioclient_mock.call_count == 8
 
     await hass.services.async_call(
-        FLO_DOMAIN,
+        DOMAIN,
         SERVICE_RUN_HEALTH_TEST,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
@@ -45,7 +45,7 @@ async def test_services(
     assert aioclient_mock.call_count == 9
 
     await hass.services.async_call(
-        FLO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_AWAY_MODE,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
@@ -54,7 +54,7 @@ async def test_services(
     assert aioclient_mock.call_count == 10
 
     await hass.services.async_call(
-        FLO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_HOME_MODE,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
@@ -63,7 +63,7 @@ async def test_services(
     assert aioclient_mock.call_count == 11
 
     await hass.services.async_call(
-        FLO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_SLEEP_MODE,
         {
             ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
@@ -77,7 +77,7 @@ async def test_services(
 
     # test calling with a string value to ensure it is converted to int
     await hass.services.async_call(
-        FLO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_SLEEP_MODE,
         {
             ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
@@ -92,7 +92,7 @@ async def test_services(
     # test calling with a non string -> int value and ensure exception is thrown
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
-            FLO_DOMAIN,
+            DOMAIN,
             SERVICE_SET_SLEEP_MODE,
             {
                 ATTR_ENTITY_ID: SWITCH_ENTITY_ID,

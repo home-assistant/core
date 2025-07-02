@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -39,6 +40,7 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
+    @bridge_api_call
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
         await self.coordinator.api.set_device_status(LIGHT, self._device.index, state)

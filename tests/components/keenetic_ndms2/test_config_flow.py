@@ -6,10 +6,11 @@ from unittest.mock import Mock, patch
 from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import keenetic_ndms2 as keenetic
-from homeassistant.components.keenetic_ndms2 import const
+from homeassistant.components.keenetic_ndms2 import CONF_INTERFACES, const
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -87,19 +88,16 @@ async def test_options(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
     # fake router
-    hass.data.setdefault(keenetic.DOMAIN, {})
-    hass.data[keenetic.DOMAIN][entry.entry_id] = {
-        keenetic.ROUTER: Mock(
-            client=Mock(
-                get_interfaces=Mock(
-                    return_value=[
-                        InterfaceInfo.from_dict({"id": name, "type": "bridge"})
-                        for name in MOCK_OPTIONS[const.CONF_INTERFACES]
-                    ]
-                )
+    entry.runtime_data = Mock(
+        client=Mock(
+            get_interfaces=Mock(
+                return_value=[
+                    InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                    for name in MOCK_OPTIONS[const.CONF_INTERFACES]
+                ]
             )
         )
-    }
+    )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -146,6 +144,70 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_not_initialized(hass: HomeAssistant) -> None:
+    """Test the error when the integration is not initialized."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # not setting entry.runtime_data
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_initialized"
+
+
+async def test_options_connection_error(hass: HomeAssistant) -> None:
+    """Test updating options."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    def get_interfaces_error():
+        raise ConnectionException("Mocked failure")
+
+    # fake with connection error
+    entry.runtime_data = Mock(
+        client=Mock(get_interfaces=Mock(wraps=get_interfaces_error))
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_options_interface_filter(hass: HomeAssistant) -> None:
+    """Test the case when the default Home interface is missing on the router."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # fake interfaces
+    entry.runtime_data = Mock(
+        client=Mock(
+            get_interfaces=Mock(
+                return_value=[
+                    InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                    for name in ("not_a_home", "also_not_home")
+                ]
+            )
+        )
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    interfaces_schema = next(
+        i
+        for i, s in result["data_schema"].schema.items()
+        if i.schema == CONF_INTERFACES
+    )
+    assert isinstance(interfaces_schema, vol.Required)
+    assert interfaces_schema.default() == []
 
 
 async def test_ssdp_works(hass: HomeAssistant, connect) -> None:

@@ -24,7 +24,7 @@
       },
       "authorize": {
         "title": "Authorize",
-        "description": "Press the button on the HomeWizard Energy device, then select the button below."
+        "description": "Press the button on the HomeWizard Energy device for two seconds, then select the button below."
       },
       "reconfigure": {
         "description": "Update configuration for {title}.",
@@ -152,14 +152,27 @@
       "cloud_connection": {
         "name": "Cloud connection"
       }
+    },
+    "select": {
+      "battery_group_mode": {
+        "name": "Battery group mode",
+        "state": {
+          "zero": "Zero mode",
+          "to_full": "Manual charge mode",
+          "standby": "Standby"
+        }
+      }
     }
   },
   "exceptions": {
     "api_disabled": {
       "message": "The local API is disabled."
     },
+    "api_unauthorized": {
+      "message": "The local API is unauthorized. Restore API access by following the instructions in the repair issue."
+    },
     "communication_error": {
-      "message": "An error occurred while communicating with HomeWizard device"
+      "message": "An error occurred while communicating with your HomeWizard Energy device"
     }
   },
   "issues": {

@@ -19,7 +19,6 @@ from .mocks import HomeControlMock, HomeControlMockBinarySensor
 from tests.typing import WebSocketGenerator
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
     entry = configure_integration(hass)
@@ -44,7 +43,6 @@ async def test_setup_entry_maintenance(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_setup_gateway_offline(hass: HomeAssistant) -> None:
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)

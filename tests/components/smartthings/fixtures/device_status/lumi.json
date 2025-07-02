@@ -1,0 +1,56 @@
+{
+  "components": {
+    "main": {
+      "configuration": {},
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 27.24,
+          "unit": "%",
+          "timestamp": "2025-05-11T23:31:11.979Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": {
+            "minimum": -58.0,
+            "maximum": 482.0
+          },
+          "unit": "F",
+          "timestamp": "2025-05-07T14:34:47.868Z"
+        },
+        "temperature": {
+          "value": 76.0,
+          "unit": "F",
+          "timestamp": "2025-05-11T23:31:11.904Z"
+        }
+      },
+      "atmosphericPressureMeasurement": {
+        "atmosphericPressure": {
+          "value": 100,
+          "unit": "kPa",
+          "timestamp": "2025-05-11T23:31:11.979Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-05-11T23:11:16.463Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "legendabsolute60149.atmosPressure": {
+        "atmosPressure": {
+          "value": 1004,
+          "unit": "mBar",
+          "timestamp": "2025-05-11T23:31:11.979Z"
+        }
+      }
+    }
+  }
+}

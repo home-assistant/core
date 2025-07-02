@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
-from pylamarzocco import LaMarzoccoMachine
-from pylamarzocco.const import FirmwareType
+from pylamarzocco.const import FirmwareType, MachineState, WidgetType
+from pylamarzocco.models import MachineStatus
 
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.helpers.device_registry import (
@@ -23,7 +24,7 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
-    available_fn: Callable[[LaMarzoccoMachine], bool] = lambda _: True
+    available_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
 
 
@@ -33,6 +34,7 @@ class LaMarzoccoBaseEntity(
     """Common elements for all entities."""
 
     _attr_has_entity_name = True
+    _unavailable_when_machine_off = True
 
     def __init__(
         self,
@@ -64,6 +66,21 @@ class LaMarzoccoBaseEntity(
         if connections:
             self._attr_device_info.update(DeviceInfo(connections=connections))
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        machine_state = (
+            cast(
+                MachineStatus,
+                self.coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
+            ).status
+            if WidgetType.CM_MACHINE_STATUS in self.coordinator.device.dashboard.config
+            else MachineState.OFF
+        )
+        return super().available and not (
+            self._unavailable_when_machine_off and machine_state is MachineState.OFF
+        )
+
 
 class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     """Common elements for all entities."""
@@ -74,7 +91,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         if super().available:
-            return self.entity_description.available_fn(self.coordinator.device)
+            return self.entity_description.available_fn(self.coordinator)
         return False
 
     def __init__(

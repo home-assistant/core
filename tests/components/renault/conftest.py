@@ -6,7 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from renault_api.kamereon import exceptions, schemas
+from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
 from homeassistant.components.renault.const import DOMAIN
@@ -69,13 +69,25 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
 @pytest.fixture(name="patch_get_vehicles")
 def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
     """Mock fixtures."""
+    fixture_code = vehicle_type if vehicle_type in MOCK_VEHICLES else "zoe_40"
+    return_value: models.KamereonVehiclesResponse = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture(f"renault/vehicle_{fixture_code}.json")
+        )
+    )
+
+    if vehicle_type == "missing_details":
+        return_value.vehicleLinks[0].vehicleDetails = None
+    elif vehicle_type == "multi":
+        return_value.vehicleLinks.extend(
+            schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture("renault/vehicle_captur_fuel.json")
+            ).vehicleLinks
+        )
+
     with patch(
         "renault_api.renault_account.RenaultAccount.get_vehicles",
-        return_value=(
-            schemas.KamereonVehiclesResponseSchema.loads(
-                load_fixture(f"renault/vehicle_{vehicle_type}.json")
-            )
-        ),
+        return_value=return_value,
     ):
         yield
 

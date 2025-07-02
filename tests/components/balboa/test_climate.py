@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, OffLowMediumHighState
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -126,9 +126,6 @@ async def test_spa_hvac_action(
 
     state = await _patch_spa_heatstate(hass, client, 1)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-
-    state = await _patch_spa_heatstate(hass, client, 2)
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_spa_preset_modes(

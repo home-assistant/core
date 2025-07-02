@@ -23,7 +23,6 @@ from huawei_lte_api.exceptions import (
 from requests.exceptions import Timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -90,36 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-NOTIFY_SCHEMA = vol.Any(
-    None,
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_RECIPIENT): vol.Any(
-                None, vol.All(cv.ensure_list, [cv.string])
-            ),
-        }
-    ),
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_URL): cv.url,
-                        vol.Optional(CONF_USERNAME): cv.string,
-                        vol.Optional(CONF_PASSWORD): cv.string,
-                        vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 

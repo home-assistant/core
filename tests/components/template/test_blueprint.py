@@ -16,6 +16,22 @@ from homeassistant.components.blueprint import (
     DomainBlueprints,
 )
 from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.template.config import (
+    DOMAIN_ALARM_CONTROL_PANEL,
+    DOMAIN_BINARY_SENSOR,
+    DOMAIN_COVER,
+    DOMAIN_FAN,
+    DOMAIN_IMAGE,
+    DOMAIN_LIGHT,
+    DOMAIN_LOCK,
+    DOMAIN_NUMBER,
+    DOMAIN_SELECT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+    DOMAIN_VACUUM,
+    DOMAIN_WEATHER,
+)
+from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -212,11 +228,16 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
     assert not_inverted.state == "on"
 
 
+@pytest.mark.parametrize(
+    ("blueprint"),
+    ["test_event_sensor.yaml", "test_event_sensor_legacy_schema.yaml"],
+)
 async def test_trigger_event_sensor(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    blueprint: str,
 ) -> None:
     """Test event sensor blueprint."""
-    blueprint = "test_event_sensor.yaml"
     assert await async_setup_component(
         hass,
         "template",
@@ -242,6 +263,101 @@ async def test_trigger_event_sensor(
         hass.bus.async_fire(
             "my_custom_event", {"foo": "bar", "beer": 2}, context=context
         )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.my_custom_event")
+    assert date_state is not None
+    assert date_state.state == now.isoformat(timespec="seconds")
+    data = date_state.attributes.get("data")
+    assert data is not None
+    assert data != ""
+    assert data.get("foo") == "bar"
+    assert data.get("beer") == 2
+
+    inverted_foo_template = template.helpers.blueprint_in_template(
+        hass, "sensor.my_custom_event"
+    )
+    assert inverted_foo_template == blueprint
+
+    inverted_binary_sensor_blueprint_entity_ids = (
+        template.helpers.templates_with_blueprint(hass, blueprint)
+    )
+    assert len(inverted_binary_sensor_blueprint_entity_ids) == 1
+
+    with pytest.raises(BlueprintInUse):
+        await template.async_get_blueprints(hass).async_remove_blueprint(blueprint)
+
+
+@pytest.mark.parametrize(
+    ("blueprint", "override"),
+    [
+        # Override a blueprint with modern schema with legacy schema
+        (
+            "test_event_sensor.yaml",
+            {"trigger": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with modern schema with modern schema
+        (
+            "test_event_sensor.yaml",
+            {"triggers": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with legacy schema with legacy schema
+        (
+            "test_event_sensor_legacy_schema.yaml",
+            {"trigger": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with legacy schema with modern schema
+        (
+            "test_event_sensor_legacy_schema.yaml",
+            {"triggers": {"platform": "event", "event_type": "override"}},
+        ),
+    ],
+)
+async def test_blueprint_template_override(
+    hass: HomeAssistant, blueprint: str, override: dict
+) -> None:
+    """Test blueprint template where the template config overrides the blueprint."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "use_blueprint": {
+                        "path": blueprint,
+                        "input": {
+                            "event_type": "my_custom_event",
+                            "event_data": {"foo": "bar"},
+                        },
+                    },
+                    "name": "My Custom Event",
+                }
+                | override,
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.my_custom_event")
+    assert date_state is not None
+    assert date_state.state == "unknown"
+
+    context = Context()
+    now = dt_util.utcnow()
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire(
+            "my_custom_event", {"foo": "bar", "beer": 2}, context=context
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.my_custom_event")
+    assert date_state is not None
+    assert date_state.state == "unknown"
+
+    context = Context()
+    now = dt_util.utcnow()
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("override", {"foo": "bar", "beer": 2}, context=context)
         await hass.async_block_till_done()
 
     date_state = hass.states.get("sensor.my_custom_event")
@@ -359,3 +475,51 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
         template.helpers.blueprint_in_template(hass, "binary_sensor.test_entity")
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("domain", "set_state", "expected"),
+    [
+        (DOMAIN_ALARM_CONTROL_PANEL, STATE_ON, "armed_home"),
+        (DOMAIN_BINARY_SENSOR, STATE_ON, STATE_ON),
+        (DOMAIN_COVER, STATE_ON, "open"),
+        (DOMAIN_FAN, STATE_ON, STATE_ON),
+        (DOMAIN_IMAGE, "test.jpg", "2025-06-13T00:00:00+00:00"),
+        (DOMAIN_LIGHT, STATE_ON, STATE_ON),
+        (DOMAIN_LOCK, STATE_ON, "locked"),
+        (DOMAIN_NUMBER, "1", "1.0"),
+        (DOMAIN_SELECT, "option1", "option1"),
+        (DOMAIN_SENSOR, "foo", "foo"),
+        (DOMAIN_SWITCH, STATE_ON, STATE_ON),
+        (DOMAIN_VACUUM, "cleaning", "cleaning"),
+        (DOMAIN_WEATHER, "sunny", "sunny"),
+    ],
+)
+@pytest.mark.freeze_time("2025-06-13 00:00:00+00:00")
+async def test_variables_for_entity(
+    hass: HomeAssistant, domain: str, set_state: str, expected: str
+) -> None:
+    """Test regular template entities via blueprint with variables defined."""
+    hass.states.async_set("sensor.test_state", set_state)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "use_blueprint": {
+                        "path": f"test_{domain}_with_variables.yaml",
+                        "input": {"sensor": "sensor.test_state"},
+                    },
+                    "name": "Test",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state is not None
+    assert state.state == expected

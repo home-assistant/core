@@ -40,6 +40,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
@@ -276,11 +277,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         url = url_normalize(
-            discovery_info.upnp.get(
-                ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
-            )
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location).hostname}/"
         )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert url is not None
 
         unique_id = discovery_info.upnp.get(
             ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
@@ -308,8 +310,11 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
-                    or "Huawei LTE"
+                    CONF_NAME: (
+                        discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
+                        or discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+                        or "Huawei LTE"
+                    )
                 }
             }
         )

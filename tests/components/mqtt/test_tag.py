@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock
 import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -403,7 +403,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
         device_entry.id, mqtt_config_entry.entry_id
     )
@@ -590,7 +590,7 @@ async def test_cleanup_tag(
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
         device_entry1.id, mqtt_config_entry.entry_id
     )

@@ -1,21 +1,12 @@
 """Test ESPHome cameras."""
 
-from collections.abc import Awaitable, Callable
-
-from aioesphomeapi import (
-    APIClient,
-    CameraInfo,
-    CameraState as ESPHomeCameraState,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, CameraInfo, CameraState as ESPHomeCameraState
 
 from homeassistant.components.camera import CameraState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType
 
 from tests.typing import ClientSessionGenerator
 
@@ -30,10 +21,7 @@ SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 async def test_camera_single_image(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera single image request."""
@@ -53,7 +41,7 @@ async def test_camera_single_image(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
 
@@ -63,9 +51,9 @@ async def test_camera_single_image(
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
+    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
 
@@ -78,10 +66,7 @@ async def test_camera_single_image(
 async def test_camera_single_image_unavailable_before_requested(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera that goes unavailable before the request."""
@@ -101,15 +86,15 @@ async def test_camera_single_image_unavailable_before_requested(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
     await mock_device.mock_disconnect(False)
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
+    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -119,10 +104,7 @@ async def test_camera_single_image_unavailable_before_requested(
 async def test_camera_single_image_unavailable_during_request(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera that goes unavailable before the request."""
@@ -142,7 +124,7 @@ async def test_camera_single_image_unavailable_during_request(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
 
@@ -152,9 +134,9 @@ async def test_camera_single_image_unavailable_during_request(
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
+    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -164,10 +146,7 @@ async def test_camera_single_image_unavailable_during_request(
 async def test_camera_stream(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera stream."""
@@ -187,7 +166,7 @@ async def test_camera_stream(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
     remaining_responses = 3
@@ -203,9 +182,9 @@ async def test_camera_stream(
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy_stream/camera.test_mycamera")
+    resp = await client.get("/api/camera_proxy_stream/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
 
@@ -224,10 +203,7 @@ async def test_camera_stream(
 async def test_camera_stream_unavailable(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera stream when the device is disconnected."""
@@ -247,16 +223,16 @@ async def test_camera_stream_unavailable(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
 
     await mock_device.mock_disconnect(False)
 
     client = await hass_client()
-    await client.get("/api/camera_proxy_stream/camera.test_mycamera")
+    await client.get("/api/camera_proxy_stream/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -264,10 +240,7 @@ async def test_camera_stream_unavailable(
 async def test_camera_stream_with_disconnection(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test a generic camera stream that goes unavailable during the request."""
@@ -287,7 +260,7 @@ async def test_camera_stream_with_disconnection(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == CameraState.IDLE
     remaining_responses = 3
@@ -305,8 +278,8 @@ async def test_camera_stream_with_disconnection(
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    await client.get("/api/camera_proxy_stream/camera.test_mycamera")
+    await client.get("/api/camera_proxy_stream/camera.test_my_camera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_mycamera")
+    state = hass.states.get("camera.test_my_camera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

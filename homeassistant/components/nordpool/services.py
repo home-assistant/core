@@ -22,6 +22,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -66,6 +67,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> NordPoolConfigEntry:
     return entry
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Nord Pool integration."""
 
@@ -97,11 +99,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from error
-        except NordPoolEmptyResponseError as error:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="empty_response",
-            ) from error
+        except NordPoolEmptyResponseError:
+            return {area: [] for area in areas}
         except NordPoolError as error:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

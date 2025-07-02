@@ -7,12 +7,12 @@
     "step": {
       "user": {
         "data": {
-          "advertise_ip": "Advertise IP Address",
-          "advertise_port": "Advertise Port",
-          "host_ip": "Host IP Address",
-          "listen_port": "Listen Port",
+          "advertise_ip": "Advertise IP address",
+          "advertise_port": "Advertise port",
+          "host_ip": "Host IP address",
+          "listen_port": "Listen port",
           "name": "[%key:common::config_flow::data::name%]",
-          "upnp_bind_multicast": "Bind multicast (True/False)"
+          "upnp_bind_multicast": "Bind multicast"
         },
         "title": "Define server configuration"
       }

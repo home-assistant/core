@@ -56,7 +56,10 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -91,7 +94,9 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(
@@ -108,7 +113,9 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -134,7 +141,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
@@ -150,7 +159,9 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -36,6 +36,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "source": input_sensor_entity_id,
                 "time_window": {"seconds": 0},
                 "unit_time": "min",
+                "max_sub_interval": {"minutes": 1},
             },
         )
         await hass.async_block_till_done()
@@ -49,6 +50,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1.0},
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -60,19 +62,9 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1.0},
     }
     assert config_entry.title == "My derivative"
-
-
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -89,6 +81,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "time_window": {"seconds": 0.0},
             "unit_prefix": "k",
             "unit_time": "min",
+            "max_sub_interval": {"seconds": 30},
         },
         title="My derivative",
     )
@@ -104,10 +97,10 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "round") == 1.0
-    assert get_suggested(schema, "time_window") == {"seconds": 0.0}
-    assert get_suggested(schema, "unit_prefix") == "k"
-    assert get_suggested(schema, "unit_time") == "min"
+    assert get_schema_suggested_value(schema, "round") == 1.0
+    assert get_schema_suggested_value(schema, "time_window") == {"seconds": 0.0}
+    assert get_schema_suggested_value(schema, "unit_prefix") == "k"
+    assert get_schema_suggested_value(schema, "unit_time") == "min"
 
     source = schema["source"]
     assert isinstance(source, selector.EntitySelector)

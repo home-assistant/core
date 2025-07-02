@@ -5,7 +5,6 @@ from __future__ import annotations
 from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import Any, cast
@@ -47,8 +46,8 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_EXECUTIONS_TIME_WINDOW = 15 * 60  # 15 minutes
-MAX_EXECUTIONS = 5
+MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
+MAX_EXECUTIONS = 8
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
@@ -137,11 +136,8 @@ class HomeConnectCoordinator(
         self.__dict__.pop("context_listeners", None)
 
         def remove_listener_and_invalidate_context_listeners() -> None:
-            # There are cases where the remove_listener will be called
-            # although it has been already removed somewhere else
-            with suppress(KeyError):
-                remove_listener()
-                self.__dict__.pop("context_listeners", None)
+            remove_listener()
+            self.__dict__.pop("context_listeners", None)
 
         return remove_listener_and_invalidate_context_listeners
 

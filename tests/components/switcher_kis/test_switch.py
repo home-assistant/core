@@ -2,8 +2,9 @@
 
 from unittest.mock import patch
 
-from aioswitcher.api import Command, ShutterChildLock, SwitcherBaseResponse
-from aioswitcher.device import DeviceState
+from aioswitcher.api import Command
+from aioswitcher.api.messages import SwitcherBaseResponse
+from aioswitcher.device import DeviceState, ShutterChildLock
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -84,6 +85,45 @@ async def test_switch(
         mock_control_device.assert_called_once_with(Command.OFF)
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
+async def test_switch_ignore_previous_async_state(
+    hass: HomeAssistant, mock_bridge, mock_api
+) -> None:
+    """Test switch ignores previous async state."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    device = DUMMY_WATER_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    # Test initial state - on
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    # Test turning off
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
+    ) as mock_control_device:
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    # Push old state and makge sure it is ignored
+    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
+    await hass.async_block_till_done()
+
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(Command.OFF)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    # Verify new state is not ignored
+    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)
@@ -238,6 +278,44 @@ async def test_child_lock_switch(
         mock_control_device.assert_called_once_with(ShutterChildLock.OFF, cover_id)
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
+async def test_child_lock_switch_ignore_previous_async_state(
+    hass: HomeAssistant, mock_bridge, mock_api
+) -> None:
+    """Test child lock switch ignores previous async state."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(DEVICE.name)}_child_lock"
+
+    # Test initial state - on
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    # Test turning off
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_shutter_child_lock"
+    ) as mock_control_device:
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    # Push old state and makge sure it is ignored
+    mock_bridge.mock_callbacks([DEVICE])
+    await hass.async_block_till_done()
+
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(ShutterChildLock.OFF, 0)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    # Verify new state is not ignored
+    mock_bridge.mock_callbacks([DEVICE])
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

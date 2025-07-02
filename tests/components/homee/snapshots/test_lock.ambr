@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00055511EECC-1-1',

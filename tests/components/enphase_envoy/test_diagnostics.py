@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,11 +11,12 @@ from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
 )
+from homeassistant.components.enphase_envoy.coordinator import MAC_VERIFICATION_DELAY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -89,4 +91,25 @@ async def test_entry_diagnostics_with_fixtures_with_error(
     mock_envoy.request.side_effect = EnvoyError("Test")
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
+    ) == snapshot(exclude=limit_diagnostic_attrs)
+
+
+async def test_entry_diagnostics_with_interface_information(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test config entry diagnostics including interface data."""
+    await setup_integration(hass, config_entry)
+
+    # move time forward so interface information is collected
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
     ) == snapshot(exclude=limit_diagnostic_attrs)

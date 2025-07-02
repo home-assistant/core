@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
@@ -28,7 +27,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -56,9 +54,11 @@ from .const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
-    DATA_CLIENT,
     DOMAIN,
-    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_BATTERY_LEVEL,
+    ENTITY_DESC_KEY_BATTERY_LIST_STATE,
+    ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+    ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
@@ -91,20 +91,37 @@ from .discovery_data_template import (
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
-# These descriptions should include device class.
-ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
-    tuple[str, str], SensorEntityDescription
-] = {
-    (ENTITY_DESC_KEY_BATTERY, PERCENTAGE): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_BATTERY,
+# These descriptions should have a non None unit of measurement.
+ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] = {
+    (ENTITY_DESC_KEY_BATTERY_LEVEL, PERCENTAGE): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    (ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    (
+        ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
+        UnitOfTemperature.CELSIUS,
+    ): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     (ENTITY_DESC_KEY_CURRENT, UnitOfElectricCurrent.AMPERE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CURRENT,
@@ -285,8 +302,14 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
     ),
 }
 
-# These descriptions are without device class.
+# These descriptions are without unit of measurement.
 ENTITY_DESCRIPTION_KEY_MAP = {
+    ENTITY_DESC_KEY_BATTERY_LIST_STATE: SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_LIST_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO,
         state_class=SensorStateClass.MEASUREMENT,
@@ -538,7 +561,7 @@ def get_entity_description(
     """Return the entity description for the given data."""
     data_description_key = data.entity_description_key or ""
     data_unit = data.unit_of_measurement or ""
-    return ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP.get(
+    return ENTITY_DESCRIPTION_KEY_UNIT_MAP.get(
         (data_description_key, data_unit),
         ENTITY_DESCRIPTION_KEY_MAP.get(
             data_description_key,
@@ -551,11 +574,11 @@ def get_entity_description(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 
@@ -585,6 +608,10 @@ async def async_setup_entry(
             # prevent duplicate entities for values that are already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
+            entities.append(
+                ZWaveListSensor(config_entry, driver, info, entity_description)
+            )
+        elif info.platform_hint == "list":
             entities.append(
                 ZWaveListSensor(config_entry, driver, info, entity_description)
             )
@@ -688,7 +715,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -727,7 +754,7 @@ class ZWaveNumericSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -802,7 +829,7 @@ class ZWaveListSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -841,7 +868,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -877,7 +904,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     _attr_translation_key = "node_status"
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
@@ -939,7 +966,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "controller_status"
 
-    def __init__(self, config_entry: ConfigEntry, driver: Driver) -> None:
+    def __init__(self, config_entry: ZwaveJSConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.controller = driver.controller
@@ -1001,7 +1028,7 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         statistics_src: ZwaveNode | Controller,
         description: ZWaveJSStatisticsSensorEntityDescription,
