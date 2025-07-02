@@ -97,12 +97,22 @@
 # ---
 # name: test_get_statistics[water-energy]
   list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 6.8,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 5.0,
+    }),
   ])
 # ---
 # name: test_get_values_by_type[heating]
   dict({
+    'additionalUnit': 'kWh',
     'additionalValue': '38,0',
     'type': 'heating',
+    'unit': 'Einheiten',
     'value': '35',
   })
 # ---
@@ -114,8 +124,10 @@
 # ---
 # name: test_get_values_by_type[warmwater]
   dict({
+    'additionalUnit': 'kWh',
     'additionalValue': '57,0',
     'type': 'warmwater',
+    'unit': 'm³',
     'value': '1,0',
   })
 # ---
@@ -128,6 +140,7 @@
 # name: test_get_values_by_type[water]
   dict({
     'type': 'water',
+    'unit': 'm³',
     'value': '5,0',
   })
 # ---

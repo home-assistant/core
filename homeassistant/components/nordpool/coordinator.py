@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+import aiohttp
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
@@ -91,6 +92,8 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         except (
             NordPoolResponseError,
             NordPoolError,
+            TimeoutError,
+            aiohttp.ClientError,
         ) as error:
             LOGGER.debug("Connection error: %s", error)
             self.async_set_update_error(error)
