@@ -51,6 +51,7 @@ class PlaystationNetworkSensor(StrEnum):
     EARNED_TROPHIES_BRONZE = "earned_trophies_bronze"
     ONLINE_ID = "online_id"
     LAST_ONLINE = "last_online"
+    ONLINE_STATUS = "online_status"
 
 
 SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
@@ -120,6 +121,13 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         ),
         available_fn=lambda psn: "lastAvailableDate" in psn.presence["basicPresence"],
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    PlaystationNetworkSensorEntityDescription(
+        key=PlaystationNetworkSensor.ONLINE_STATUS,
+        translation_key=PlaystationNetworkSensor.ONLINE_STATUS,
+        value_fn=lambda psn: psn.availability.lower().replace("unavailable", "offline"),
+        device_class=SensorDeviceClass.ENUM,
+        options=["offline", "availabletoplay", "availabletocommunicate", "busy"],
     ),
 )
 

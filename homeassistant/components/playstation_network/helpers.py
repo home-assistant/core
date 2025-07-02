@@ -38,7 +38,7 @@ class PlaystationNetworkData:
     presence: dict[str, Any] = field(default_factory=dict)
     username: str = ""
     account_id: str = ""
-    available: bool = False
+    availability: str = "unavailable"
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
     trophy_summary: TrophySummary | None = None
@@ -92,10 +92,7 @@ class PlaystationNetwork:
         data.username = self.user.online_id
         data.account_id = self.user.account_id
 
-        data.available = (
-            data.presence.get("basicPresence", {}).get("availability")
-            == "availableToPlay"
-        )
+        data.availability = data.presence["basicPresence"]["availability"]
 
         session = SessionData()
         session.platform = PlatformType(
@@ -127,8 +124,6 @@ class PlaystationNetwork:
             if (game_title_info := presence[0] if presence else {}) and game_title_info[
                 "onlineStatus"
             ] == "online":
-                data.available = True
-
                 platform = PlatformType(game_title_info["platform"])
 
                 if platform is PlatformType.PS4:

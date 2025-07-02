@@ -81,6 +81,15 @@
       },
       "last_online": {
         "name": "Last online"
+      },
+      "online_status": {
+        "name": "Online status",
+        "state": {
+          "offline": "Offline",
+          "availabletoplay": "Online",
+          "availabletocommunicate": "Online on PS App",
+          "busy": "Away"
+        }
       }
     }
   }
