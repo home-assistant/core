@@ -94,8 +94,8 @@ async def test_migration_from_v1(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 1
     # After migration, parent entry should only have URL
     assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
@@ -203,8 +203,8 @@ async def test_migration_from_v1_with_multiple_urls(
     assert len(entries) == 2
 
     for idx, entry in enumerate(entries):
-        assert entry.version == 2
-        assert entry.minor_version == 3
+        assert entry.version == 3
+        assert entry.minor_version == 1
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -294,8 +294,8 @@ async def test_migration_from_v1_with_same_urls(
     assert len(entries) == 1
 
     entry = entries[0]
-    assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.version == 3
+    assert entry.minor_version == 1
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
@@ -414,8 +414,8 @@ async def test_migration_from_v2_1(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
-    assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.version == 3
+    assert entry.minor_version == 1
     assert not entry.options
     assert entry.title == "Ollama"
     assert len(entry.subentries) == 2
@@ -475,7 +475,7 @@ async def test_migration_from_v2_1(
     }
 
 
-async def test_migration_from_v2_2_to_v2_3(hass: HomeAssistant) -> None:
+async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     """Test migration from version 2.2."""
     subentry_data = ConfigSubentryData(
         data=V21_TEST_USER_DATA,
@@ -502,9 +502,9 @@ async def test_migration_from_v2_2_to_v2_3(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check migration to v2.3
-    assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 3
+    # Check migration to v3.1
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 1
 
     # Check that model was moved from main data to subentry
     assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}

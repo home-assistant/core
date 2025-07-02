@@ -64,8 +64,8 @@ _LOGGER = logging.getLogger(__name__)
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
-    VERSION = 2
-    MINOR_VERSION = 3
+    VERSION = 3
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize config flow."""

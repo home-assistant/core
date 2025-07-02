@@ -162,8 +162,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 # Update parent entry to only keep URL, remove model
                 data={CONF_URL: entry.data[CONF_URL]},
                 options={},
-                version=2,
-                minor_version=3,
+                version=3,
+                minor_version=1,
             )
 
 
@@ -171,7 +171,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-    if entry.version > 2:
+    if entry.version > 3:
         # This means the user has downgraded from a future version
         return False
 
@@ -204,7 +204,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
         hass.config_entries.async_update_entry(
             entry,
             data={CONF_URL: entry.data[CONF_URL]},
-            minor_version=3,
+            version=3,
+            minor_version=1,
         )
 
     _LOGGER.debug(
