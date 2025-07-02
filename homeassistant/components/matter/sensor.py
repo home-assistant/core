@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
@@ -950,7 +950,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
             # Add countdown to current date to get the estimated end time
-            measurement_to_ha=lambda x: datetime.now() + timedelta(seconds=x)
+            measurement_to_ha=lambda x: datetime.now(tz=UTC) + timedelta(seconds=x)
             if x > 0
             else None,
         ),
