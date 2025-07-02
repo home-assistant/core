@@ -3,24 +3,17 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "model": "Model"
+          "url": "[%key:common::config_flow::data::url%]"
         }
-      },
-      "download": {
-        "title": "Downloading model"
       }
     },
     "abort": {
-      "download_failed": "Model downloading failed",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
+      "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "progress": {
-      "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
     }
   },
   "config_subentries": {
@@ -33,6 +26,7 @@
       "step": {
         "set_options": {
           "data": {
+            "model": "Model",
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "Instructions",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
@@ -47,11 +41,19 @@
             "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
             "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."
           }
+        },
+        "download": {
+          "title": "Downloading model"
         }
       },
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled.",
+        "download_failed": "Model downloading failed",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "progress": {
+        "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
       }
     }
   }
