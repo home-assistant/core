@@ -1763,8 +1763,8 @@ _DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE = (
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
-        (service.verify_domain_control, True),  # deprecated with hass
-        (lambda _, domain: service.verify_domain_control(domain), False),
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
     ],
 )
 async def test_domain_control_not_async(
@@ -1791,8 +1791,8 @@ async def test_domain_control_not_async(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
-        (service.verify_domain_control, True),  # deprecated with hass
-        (lambda _, domain: service.verify_domain_control(domain), False),
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
     ],
 )
 async def test_domain_control_unknown(
@@ -1836,8 +1836,8 @@ async def test_domain_control_unknown(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
-        (service.verify_domain_control, True),  # deprecated with hass
-        (lambda _, domain: service.verify_domain_control(domain), False),
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
     ],
 )
 async def test_domain_control_unauthorized(
@@ -1889,8 +1889,8 @@ async def test_domain_control_unauthorized(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
-        (service.verify_domain_control, True),  # deprecated with hass
-        (lambda _, domain: service.verify_domain_control(domain), False),
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
     ],
 )
 async def test_domain_control_admin(
@@ -1941,8 +1941,8 @@ async def test_domain_control_admin(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
-        (service.verify_domain_control, True),  # deprecated with hass
-        (lambda _, domain: service.verify_domain_control(domain), False),
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
     ],
 )
 async def test_domain_control_no_user(
