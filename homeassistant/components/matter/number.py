@@ -275,9 +275,10 @@ DISCOVERY_SCHEMAS = [
             native_max_value=100,
             native_min_value=0.5,
             native_step=0.5,
-            measurement_to_ha=lambda x: None
-            if x is None
-            else x / 2,  # Matter range (1-200)
+            measurement_to_ha=(lambda x:
+                None if x is None
+                else x / 2,  # Matter range (1-200)
+            )
             ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
         ),
