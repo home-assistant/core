@@ -143,6 +143,83 @@
       "menu_render_error": "Failed to display the management menu. Please try again."
     }
   },
+  "config_subentries": {
+    "sensor_mapping": {
+      "initiate_flow": {
+        "user": "Add Sensor Mapping",
+        "reconfigure": "Reconfigure Mapping"
+      },
+      "entry_type": "Sensor Mapping",
+      "step": {
+        "user": {
+          "title": "Manage EnergyID Sensor Mappings",
+          "description": "Select a sensor mapping to view or edit details.",
+          "data": {
+            "selected_mapping": "Select mapping"
+          },
+          "data_description": {
+            "selected_mapping": "Choose the mapping you want to manage."
+          }
+        },
+        "add_mapping": {
+          "title": "Add sensor mapping",
+          "description": "Select a Home Assistant sensor and enter the EnergyID metric key to map it.",
+          "data": {
+            "ha_entity_id": "Home Assistant sensor",
+            "energyid_key": "EnergyID metric key"
+          },
+          "data_description": {
+            "ha_entity_id": "Select the sensor from Home Assistant.",
+            "energyid_key": "Enter the corresponding metric key for EnergyID (e.g., 'el', 'pv', 'temp.living'). No spaces."
+          }
+        },
+        "manage_mappings": {
+          "title": "Manage existing mappings",
+          "description": "Select a mapping to modify or delete.",
+          "data": {
+            "selected_mapping": "Select mapping"
+          },
+          "data_description": {
+            "selected_mapping": "Select the mapping you want to modify or delete."
+          }
+        },
+        "mapping_action": {
+          "title": "Modify or delete mapping",
+          "description": "Choose an action for the selected mapping.",
+          "menu_options": {
+            "edit_mapping": "Update EnergyID key",
+            "delete_mapping": "Delete this mapping"
+          }
+        },
+        "edit_mapping": {
+          "title": "Update EnergyID key",
+          "description": "Update the EnergyID key for the selected entity.",
+          "data": {
+            "energyid_key": "New EnergyID metric key"
+          },
+          "data_description": {
+            "energyid_key": "Enter the new EnergyID key. No spaces allowed."
+          }
+        },
+        "delete_mapping": {
+          "title": "Confirm delete mapping",
+          "description": "Are you sure you want to stop sending data from this entity? The EnergyID key will no longer be updated by this entity."
+        }
+      },
+      "error": {
+        "invalid_key_empty": "EnergyID key cannot be empty.",
+        "invalid_key_spaces": "EnergyID key cannot contain spaces.",
+        "entity_already_mapped": "This Home Assistant entity is already mapped.",
+        "entity_required": "You must select a sensor entity."
+      },
+      "abort": {
+        "no_mappings_to_manage": "There are no mappings configured yet. Please add one first.",
+        "no_mapping_selected": "No mapping was selected.",
+        "mapping_not_found": "The selected mapping could not be found or was removed.",
+        "menu_render_error": "Failed to display the management menu. Please try again."
+      }
+    }
+  },
   "exceptions": {
     "auth_failed_on_setup": {
       "message": "Failed to authenticate with EnergyID for device {device_name}. Setup will be retried. Details: {error_details}"
