@@ -16,7 +16,7 @@ import hashlib
 import json
 import logging
 import math
-from operator import contains
+from operator import contains, itemgetter
 import pathlib
 import random
 import re
@@ -2902,6 +2902,31 @@ def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any
     return list(set(value) ^ set(other))
 
 
+def sort_naturally_filter(
+    lst: list[Any], attribute: str | None = None, reverse: bool = False
+) -> list[Any]:
+    """Return elements sorted naturally."""
+
+    def natural_key(value: Any) -> list[Any]:
+        """Return the key to sort on."""
+        parts = re.split(r"(-?\d+\.?\d*)", str(value))
+        return [
+            float(part) if re.fullmatch(r"-?\d+\.?\d*", part) else part.lower()
+            for part in parts
+            if part
+        ]
+
+    def get_value(item: Any) -> Any:
+        """Return the item to sort."""
+        if attribute is None:
+            return item
+        return itemgetter(item)
+
+    lst.sort(key=lambda x: natural_key(get_value(x)), reverse=reverse)
+
+    return lst
+
+
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
     """Combine multiple dictionaries into one."""
     if not args:
@@ -3151,6 +3176,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["urlencode"] = urlencode
         self.globals["version"] = version
+        self.globals["sort_naturally"] = sort_naturally_filter
         self.globals["zip"] = zip
 
         self.filters["acos"] = arc_cosine
@@ -3216,7 +3242,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
-
+        self.filters["sort_naturally"] = sort_naturally_filter
         self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
