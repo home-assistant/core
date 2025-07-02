@@ -947,7 +947,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="OperationalStateCountdownTime",
             translation_key="estimated_end_time",
-            device_class=SensorDeviceClass.DATE,
+            device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
             # Add countdown to current date to get the estimated end time
             measurement_to_ha=lambda x: datetime.now() + timedelta(seconds=x)
