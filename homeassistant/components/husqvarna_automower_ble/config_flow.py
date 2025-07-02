@@ -167,8 +167,17 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors: dict[str, str] = {}
 
             (channel_id, mower) = await self.connect_mower(device)
-            if await mower.connect(device) is not ResponseResult.OK:
-                errors["base"] = "invalid_auth"
+
+            response_result = await mower.connect(device)
+
+            if response_result is not ResponseResult.OK:
+                if (
+                    response_result is ResponseResult.INVALID_PIN
+                    or response_result is ResponseResult.NOT_ALLOWED
+                ):
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
 
                 if ble_flow:
                     return self.async_show_form(
@@ -247,8 +256,14 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 (channel_id, mower) = await self.connect_mower(device)
 
-                if await mower.connect(device) is not ResponseResult.OK:
+                response_result = await mower.connect(device)
+                if (
+                    response_result is ResponseResult.INVALID_PIN
+                    or response_result is ResponseResult.NOT_ALLOWED
+                ):
                     errors["base"] = "invalid_auth"
+                elif response_result is not ResponseResult.OK:
+                    errors["base"] = "cannot_connect"
                 else:
                     data = {
                         CONF_ADDRESS: self.address,
