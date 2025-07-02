@@ -289,7 +289,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "A Z-Wave adapter of model {controller_model} was connected to the {config_entry_title} configuration entry. This adapter has a different ID ({new_unique_id}) than the previously connected adapter ({old_unique_id}) .\n\nReasons for a different adapter ID could be:\n\n1. The adapter was factory reset using a 3rd party application.\n2. A backup of the adapter's non-volatile memory was restored to the adapter using a 3rd party application.\n3. A different adapter was connected to this configuration entry.\n\nIf a different adapter was connected, you should instead set up a new configuration entry for the new adapter.\n\nIf you are sure that the current adapter is the correct adapter, confirm by pressing Submit.  The configuration entry will remember the new adapter ID.",
+            "description": "A Z-Wave adapter of model {controller_model} was connected to the {config_entry_title} configuration entry. This adapter has a different ID ({new_unique_id}) than the previously connected adapter ({old_unique_id}).\n\nReasons for a different adapter ID could be:\n\n1. The adapter was factory reset using a 3rd party application.\n2. A backup of the adapter's non-volatile memory was restored to the adapter using a 3rd party application.\n3. A different adapter was connected to this configuration entry.\n\nIf a different adapter was connected, you should instead set up a new configuration entry for the new adapter.\n\nIf you are sure that the current adapter is the correct adapter, confirm by pressing Submit. The configuration entry will remember the new adapter ID.",
             "title": "An unknown adapter was detected"
           }
         }
