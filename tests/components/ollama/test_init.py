@@ -337,20 +337,20 @@ async def test_migration_from_v2_1(
     # Create a v2.1 config entry with 2 subentries, devices and entities
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=V1_TEST_USER_DATA,
+        data=V21_TEST_USER_DATA,
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
         subentries_data=[
             ConfigSubentryData(
-                data=V1_TEST_OPTIONS,
+                data=V21_TEST_OPTIONS,
                 subentry_id="mock_id_1",
                 subentry_type="conversation",
                 title="Ollama",
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=V1_TEST_OPTIONS,
+                data=V21_TEST_OPTIONS,
                 subentry_id="mock_id_2",
                 subentry_type="conversation",
                 title="Ollama 2",
