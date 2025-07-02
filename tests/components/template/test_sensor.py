@@ -1527,7 +1527,7 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize(("source_event_value"), [None, "None", "none"])
+@pytest.mark.parametrize(("source_event_value"), [None, "None"])
 async def test_numeric_trigger_entity_set_unknown(
     hass: HomeAssistant, source_event_value: str | None
 ) -> None:

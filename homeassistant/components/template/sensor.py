@@ -339,6 +339,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         """Initialize."""
         super().__init__(hass, coordinator, config)
 
+        self._parse_result.add(CONF_STATE)
         if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:
             if last_reset_template.is_static:
                 self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template
@@ -384,13 +385,9 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
             else:
                 self._attr_last_reset = parsed_timestamp
 
-        # Ensure that the state is set to None only if the rendered result is "None"
-        state = self._rendered.get(CONF_STATE)
-        if state and state.lower() == "none":
-            self._rendered[CONF_STATE] = None
-            return
-
-        if state is None or self.device_class not in (
+        if (
+            state := self._rendered.get(CONF_STATE)
+        ) is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         ):
