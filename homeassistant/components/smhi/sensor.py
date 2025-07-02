@@ -136,5 +136,4 @@ class SMHISensor(SmhiWeatherBaseEntity, SensorEntity):
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.daily:
-            # print(self.entity_description.key, self.coordinator.current)
             self._attr_native_value = self.entity_description.value_fn(self)

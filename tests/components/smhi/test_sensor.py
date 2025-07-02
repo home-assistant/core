@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
     "load_platforms",
     [[Platform.SENSOR]],
 )
-async def test_setup_hass(
+async def test_sensor_setup(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     load_int: MockConfigEntry,

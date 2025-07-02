@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_hass[load_platforms0][sensor.test_frozen_precipitation-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_frozen_precipitation-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -49,7 +49,7 @@
     'state': '0',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_high_cloud_coverage-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -84,7 +84,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_high_cloud_coverage-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -99,7 +99,7 @@
     'state': '88',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_low_cloud_coverage-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -134,7 +134,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_low_cloud_coverage-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -149,7 +149,7 @@
     'state': '100',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_medium_cloud_coverage-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -184,7 +184,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_medium_cloud_coverage-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -199,7 +199,7 @@
     'state': '88',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_precipitation_category-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -244,7 +244,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_precipitation_category-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -268,7 +268,7 @@
     'state': '0',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_thunder_probability-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -303,7 +303,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_thunder_probability-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
@@ -318,7 +318,7 @@
     'state': '37',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_total_cloud_coverage-entry]
+# name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -353,7 +353,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_hass[load_platforms0][sensor.test_total_cloud_coverage-state]
+# name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
