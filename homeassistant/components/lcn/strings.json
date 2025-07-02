@@ -420,6 +420,9 @@
     "invalid_device_id": {
       "message": "LCN device for given device ID {device_id} has not been configured."
     },
+    "invalid_domain": {
+      "message": "Invalid domain {domain}."
+    },
     "invalid_send_keys_action": {
       "message": "Invalid state for sending keys. Only 'hit' allowed for deferred sending."
     },
