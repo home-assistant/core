@@ -61,6 +61,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+    }
+)
+
+
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
@@ -71,28 +80,13 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.url: str | None = None
 
-    @callback
-    def _get_user_schema(self, user_input: dict[str, Any] | None) -> vol.Schema:
-        """Return the schema for the user step."""
-        if user_input is None:
-            user_input = {}
-
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_URL,
-                    description={"suggested_value": user_input.get(CONF_URL, "")},
-                ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-            }
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=self._get_user_schema(user_input)
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
         errors = {}
@@ -101,11 +95,21 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_URL: url})
 
         try:
-            client = ollama.AsyncClient(host=cv.url(url), verify=get_default_context())
-            async with asyncio.timeout(DEFAULT_TIMEOUT):
-                await client.list()
+            url = cv.url(url)
         except vol.Invalid:
             errors["base"] = "invalid_url"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        try:
+            client = ollama.AsyncClient(host=url, verify=get_default_context())
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
+                await client.list()
         except (TimeoutError, httpx.ConnectError):
             errors["base"] = "cannot_connect"
         except Exception:
@@ -115,7 +119,9 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(
                 step_id="user",
-                data_schema=self._get_user_schema(user_input),
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
                 errors=errors,
             )
 
@@ -171,7 +177,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except Exception:
+            except (TimeoutError, httpx.ConnectError, httpx.HTTPError):
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
