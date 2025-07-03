@@ -73,7 +73,7 @@
     }
   },
   "selector": {
-    "answers": {
+    "data_points": {
       "fields": {
         "uncompensated_value": "Uncompensated value",
         "compensated_value": "Compensated value"
