@@ -248,8 +248,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         player = self.player
         active_queue = self.active_queue
         # update generic attributes
-        if player.powered and active_queue is not None:
-            self._attr_state = MediaPlayerState(active_queue.state.value)
         if player.powered and player.playback_state is not None:
             self._attr_state = MediaPlayerState(player.playback_state.value)
         else:
