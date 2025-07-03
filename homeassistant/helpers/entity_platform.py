@@ -196,16 +196,6 @@ class PlatformData:
                 )
             )
 
-    async def async_add_entities(
-        self,
-        new_entities: Iterable[Entity],
-        update_before_add: bool = False,
-        *,
-        config_subentry_id: str | None = None,
-    ) -> None:
-        """Add entities for a single platform async."""
-        raise NotImplementedError
-
 
 class EntityPlatform:
     """Manage the entities for a single platform.
