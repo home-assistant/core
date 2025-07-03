@@ -50,41 +50,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_device_with_fault() -> CustomerDevice:
-    """Mock Tuya device with fault bitmap data."""
-    device = MagicMock(spec=CustomerDevice)
-    device.id = "test_device_with_fault_id"
-    device.name = "Test Device With Fault"
-    device.product_name = "Test Device With Fault"
-    device.product_id = "test_product"
-    device.category = "test_category"
-    device.online = True
-    device.status = {DPCode.FAULT: 0}
-    device.status_range = {
-        DPCode.FAULT: MagicMock(
-            type="Bitmap",
-            values='{"label": ["Fault 1", "Fault 2", "Fault 3"]}',
-        ),
-    }
-    return device
-
-
-@pytest.fixture
-def mock_device_without_fault() -> CustomerDevice:
-    """Mock Tuya device without fault bitmap data."""
-    device = MagicMock(spec=CustomerDevice)
-    device.id = "test_device_without_fault_id"
-    device.name = "Test Device Without Fault"
-    device.product_name = "Test Device Without Fault"
-    device.product_id = "test_product"
-    device.category = "test_category"
-    device.online = True
-    device.status = {}
-    device.status_range = {}
-    return device
-
-
-@pytest.fixture
 def device_listener(hass: HomeAssistant, mock_manager: ManagerCompat) -> DeviceListener:
     """Create a DeviceListener for testing."""
     listener = DeviceListener(hass, mock_manager)
@@ -96,16 +61,14 @@ async def test_fault_sensor_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device_with_fault: CustomerDevice,
-    mock_device_without_fault: CustomerDevice,
+    mock_device_arete_two_12l_dehumidifier_air_purifier: CustomerDevice,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fault sensor entity discovery and setup."""
     # Setup
     mock_manager.device_map = {
-        mock_device_with_fault.id: mock_device_with_fault,
-        mock_device_without_fault.id: mock_device_without_fault,
+        mock_device_arete_two_12l_dehumidifier_air_purifier.id: mock_device_arete_two_12l_dehumidifier_air_purifier,
     }
     mock_config_entry.add_to_hass(hass)
 
@@ -123,26 +86,87 @@ async def test_fault_sensor_setup_and_discovery(
 @pytest.mark.parametrize(
     ("fault_value", "expected_states"),
     [
-        (0, [STATE_OFF, STATE_OFF, STATE_OFF]),  # No faults
-        (1, [STATE_ON, STATE_OFF, STATE_OFF]),  # Fault 1 only
-        (2, [STATE_OFF, STATE_ON, STATE_OFF]),  # Fault 2 only
-        (3, [STATE_ON, STATE_ON, STATE_OFF]),  # Fault 1 and 2
-        (4, [STATE_OFF, STATE_OFF, STATE_ON]),  # Fault 3 only
-        (7, [STATE_ON, STATE_ON, STATE_ON]),  # All faults
+        (  # No faults
+            0,
+            [
+                STATE_OFF,  # tankfull
+                STATE_OFF,  # defrost
+                STATE_OFF,  # E1
+                STATE_OFF,  # E2
+                STATE_OFF,  # L2
+                STATE_OFF,  # L3
+                STATE_OFF,  # L4
+                STATE_OFF,  # wet
+            ],
+        ),
+        (  # Fault 1 only
+            1,
+            [
+                STATE_ON,  # tankfull
+                STATE_OFF,  # defrost
+                STATE_OFF,  # E1
+                STATE_OFF,  # E2
+                STATE_OFF,  # L2
+                STATE_OFF,  # L3
+                STATE_OFF,  # L4
+                STATE_OFF,  # wet
+            ],
+        ),
+        (  # Fault 2 only
+            2,
+            [
+                STATE_OFF,  # tankfull
+                STATE_ON,  # defrost
+                STATE_OFF,  # E1
+                STATE_OFF,  # E2
+                STATE_OFF,  # L2
+                STATE_OFF,  # L3
+                STATE_OFF,  # L4
+                STATE_OFF,  # wet
+            ],
+        ),
+        (  # Fault 1 and 2
+            3,
+            [
+                STATE_ON,  # tankfull
+                STATE_ON,  # defrost
+                STATE_OFF,  # E1
+                STATE_OFF,  # E2
+                STATE_OFF,  # L2
+                STATE_OFF,  # L3
+                STATE_OFF,  # L4
+                STATE_OFF,  # wet
+            ],
+        ),
+        (  # Fault 3 only
+            4,
+            [
+                STATE_OFF,  # tankfull
+                STATE_OFF,  # defrost
+                STATE_ON,  # E1
+                STATE_OFF,  # E2
+                STATE_OFF,  # L2
+                STATE_OFF,  # L3
+                STATE_OFF,  # L4
+                STATE_OFF,  # wet
+            ],
+        ),
     ],
 )
 async def test_fault_sensor_state_updates(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device_with_fault: CustomerDevice,
+    mock_device_arete_two_12l_dehumidifier_air_purifier: CustomerDevice,
     device_listener: DeviceListener,
     fault_value: int,
     expected_states: list[str],
 ) -> None:
     """Test fault sensor state updates based on bitmap values."""
     # Setup
-    mock_manager.device_map = {mock_device_with_fault.id: mock_device_with_fault}
+    mock_manager.device_map = {
+        mock_device_arete_two_12l_dehumidifier_air_purifier.id: mock_device_arete_two_12l_dehumidifier_air_purifier
+    }
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -152,15 +176,24 @@ async def test_fault_sensor_state_updates(
         await hass.async_block_till_done()
 
     # Update fault status
-    mock_device_with_fault.status[DPCode.FAULT] = fault_value
-    device_listener.update_device(mock_device_with_fault, [DPCode.FAULT])
+    mock_device_arete_two_12l_dehumidifier_air_purifier.status[DPCode.FAULT] = (
+        fault_value
+    )
+    device_listener.update_device(
+        mock_device_arete_two_12l_dehumidifier_air_purifier, [DPCode.FAULT]
+    )
     await hass.async_block_till_done()
 
     # Verify states
     fault_sensors = [
-        "binary_sensor.test_device_with_fault_fault_1",
-        "binary_sensor.test_device_with_fault_fault_2",
-        "binary_sensor.test_device_with_fault_fault_3",
+        "binary_sensor.dehumidifier_tank_full",
+        "binary_sensor.dehumidifier_defrost",
+        "binary_sensor.dehumidifier_e1",
+        "binary_sensor.dehumidifier_e2",
+        "binary_sensor.dehumidifier_l2",
+        "binary_sensor.dehumidifier_l3",
+        "binary_sensor.dehumidifier_l4",
+        "binary_sensor.dehumidifier_wet",
     ]
 
     for sensor_id, expected_state in zip(fault_sensors, expected_states, strict=True):
