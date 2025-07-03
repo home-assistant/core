@@ -22,3 +22,13 @@ def get_first_geofence(
         (geofence for geofence in geofences if geofence["id"] in target),
         None,
     )
+
+def get_geofence_ids(
+    device: DeviceModel,
+    position: PositionModel,
+) -> list[int]:
+    if "geofenceIds" in device:
+        return device["geofenceIds"]
+    elif "geofenceIds" in position:
+        return position["geofenceIds"]
+    return []
