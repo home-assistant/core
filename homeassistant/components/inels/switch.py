@@ -23,54 +23,58 @@ class InelsSwitchEntityDescription(SwitchEntityDescription):
     """Class describing iNELS switch entities."""
 
     icon: str = ICON_SWITCH
-    name: str | None = None
     value_fn: Callable[[Device, int], bool | None]
     set_fn: Callable[[Device, int, bool], None]
-    name_fn: Callable[[Device, str, int | None], str]
     get_state_fn: Callable[[Device, int], Any]
     get_last_state_fn: Callable[[Device, int], Any]
     alerts: list[tuple[str, str]] | None = None
+    placeholder_fn: Callable[[Device, int, int], dict[str, str]]
 
 
 SWITCH_TYPES = [
     InelsSwitchEntityDescription(
         key="bit",
+        translation_key="bit",
         value_fn=lambda device, index: device.state.bit[index].is_on,
         set_fn=lambda device, index, value: setattr(
             device.state.bit[index], "is_on", value
         ),
-        name_fn=lambda device, key, index: f"{key} {device.state.bit[index].addr}",
         get_state_fn=lambda device, index: device.state.bit[index],
         get_last_state_fn=lambda device, index: device.last_values.ha_value.bit[index],
+        placeholder_fn=lambda device, index, values_cnt: {
+            "addr": device.state.bit[index].addr
+        },
     ),
     InelsSwitchEntityDescription(
         key="simple_relay",
+        translation_key="simple_relay",
         value_fn=lambda device, index: device.state.simple_relay[index].is_on,
         set_fn=lambda device, index, value: setattr(
             device.state.simple_relay[index], "is_on", value
-        ),
-        name_fn=(
-            lambda device, key, index: key if index is None else f"{key} {index + 1}"
         ),
         get_state_fn=lambda device, index: device.state.simple_relay[index],
         get_last_state_fn=(
             lambda device, index: device.last_values.ha_value.simple_relay[index]
         ),
+        placeholder_fn=lambda device, index, values_cnt: {
+            "index": "" if values_cnt == 1 else str(index + 1)
+        },
     ),
     InelsSwitchEntityDescription(
         key="relay",
+        translation_key="relay",
         value_fn=lambda device, index: device.state.relay[index].is_on,
         set_fn=lambda device, index, value: setattr(
             device.state.relay[index], "is_on", value
-        ),
-        name_fn=(
-            lambda device, key, index: key if index is None else f"{key} {index + 1}"
         ),
         get_state_fn=lambda device, index: device.state.relay[index],
         get_last_state_fn=(
             lambda device, index: device.last_values.ha_value.relay[index]
         ),
         alerts=[("overflow", "Relay overflow in %s of %s")],
+        placeholder_fn=lambda device, index, values_cnt: {
+            "index": "" if values_cnt == 1 else str(index + 1)
+        },
     ),
 ]
 
@@ -88,12 +92,13 @@ async def async_setup_entry(
             if hasattr(device.state, description.key):
                 values_cnt = len(getattr(device.state, description.key))
                 for idx in range(values_cnt):
-                    name = description.name_fn(
-                        device,
-                        description.key,
-                        None if values_cnt == 1 else idx,
+                    translation_placeholders = description.placeholder_fn(
+                        device, idx, values_cnt
                     )
-                    entity_description = replace(description, name=name)
+
+                    entity_description = replace(
+                        description, translation_placeholders=translation_placeholders
+                    )
                     entities.append(
                         InelsSwitch(
                             device=device,
@@ -124,7 +129,6 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         unique_key = f"{description.key}{index}" if index else description.key
 
         self._attr_unique_id = slugify(f"{self._attr_unique_id}_{unique_key}")
-        self._attr_name = description.name
 
     @property
     def available(self) -> bool:
