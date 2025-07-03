@@ -464,6 +464,16 @@ class IronOSTemperatureNumberEntity(IronOSNumberEntity):
             else super().native_max_value
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if (
+            self.entity_description.key is PinecilNumber.BOOST_TEMP
+            and self.native_value == 0
+        ):
+            return False
+        return super().available
+
 
 class IronOSSetpointNumberEntity(IronOSTemperatureNumberEntity):
     """IronOS setpoint temperature entity."""

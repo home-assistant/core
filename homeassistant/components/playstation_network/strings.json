@@ -77,7 +77,19 @@
         "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
       },
       "online_id": {
-        "name": "Online-ID"
+        "name": "Online ID"
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "online_status": {
+        "name": "Online status",
+        "state": {
+          "offline": "Offline",
+          "availabletoplay": "Online",
+          "availabletocommunicate": "Online on PS App",
+          "busy": "Away"
+        }
       }
     }
   }
