@@ -1,7 +1,8 @@
 """Tests for init module."""
 
 from asyncio import Event
-from datetime import datetime
+from collections.abc import Callable
+from datetime import datetime, timedelta
 import http
 import time
 from unittest.mock import AsyncMock, patch
@@ -221,6 +222,70 @@ async def test_device_info(
     assert reg_device == snapshot
 
 
+async def test_constant_polling(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Verify that receiving a WebSocket update does not interrupt the regular polling cycle.
+
+    The test simulates a WebSocket update that changes an entity's state, then advances time
+    to trigger a scheduled poll to confirm polled data also arrives.
+    """
+    callback_holder: dict[str, Callable] = {}
+
+    def fake_register_data_callback(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_data_callback
+    )
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    freezer.tick(SCAN_INTERVAL - timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_automower_client.register_data_callback.called
+    assert "cb" in callback_holder
+
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "100"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "40"
+
+    values[TEST_MOWER_ID].battery.battery_percent = 77
+
+    callback_holder["cb"](values)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "77"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "40"
+
+    values[TEST_MOWER_ID].work_areas[123456].progress = 50
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "77"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "50"
+
+
 async def test_coordinator_automatic_registry_cleanup(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -234,7 +299,6 @@ async def test_coordinator_automatic_registry_cleanup(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.async_block_till_done()
-
     # Count current entitties and devices
     current_entites = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
