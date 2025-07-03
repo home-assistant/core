@@ -10,6 +10,15 @@ import voluptuous as vol
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
@@ -18,7 +27,14 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import trigger
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+    label_registry as lr,
+    trigger,
+)
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
@@ -27,6 +43,7 @@ from homeassistant.helpers.trigger import (
     TriggerInfo,
     _async_get_trigger_platform,
     async_initialize_triggers,
+    async_track_target_selector_state_change_event,
     async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -34,7 +51,13 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -738,3 +761,216 @@ async def test_invalid_trigger_platform(
     await async_setup_component(hass, "test", {})
 
     assert "Integration test does not provide trigger support, skipping" in caplog.text
+
+
+async def test_async_track_target_selector_state_change_event_empty_selector(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_target_selector_state_change_event with empty selector."""
+    calls = []
+
+    @callback
+    def state_change_callback(event):
+        """Handle state change events."""
+        calls.append(event)
+
+    unsub = async_track_target_selector_state_change_event(
+        hass, {}, state_change_callback
+    )
+
+    assert "Target selector {} does not have any selectors defined" in caplog.text
+
+    # Test that no state changes are tracked
+    hass.states.async_set("light.test", "on")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_async_track_target_selector_state_change_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_target_selector_state_change_event with multiple targets."""
+    calls = []
+
+    @callback
+    def state_change_callback(event):
+        """Handle state change events."""
+        calls.append(event)
+
+    async def set_state(entity_id, state):
+        """Set the state of an entity."""
+        hass.states.async_set(entity_id, state)
+        await hass.async_block_till_done()
+
+    def assert_entity_calls_and_reset(entity_id: str) -> None:
+        assert len(calls) == 1
+        assert calls[0].data["entity_id"] == entity_id
+        calls.clear()
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device_reg = dr.async_get(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device_1")},
+    )
+
+    untargeted_device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "area_device")},
+    )
+
+    entity_reg = er.async_get(hass)
+    device_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="device_light",
+        device_id=device_entry.id,
+    ).entity_id
+
+    untargeted_device_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="area_device_light",
+        device_id=untargeted_device_entry.id,
+    ).entity_id
+
+    untargeted_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="untargeted_light",
+    ).entity_id
+
+    targeted_entity = "light.test_light"
+
+    for entity_id in (targeted_entity, device_entity, untargeted_entity):
+        hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    label = lr.async_get(hass).async_create("Test Label").name
+    area = ar.async_get(hass).async_create("Test Area").id
+    floor = fr.async_get(hass).async_create("Test Floor").floor_id
+
+    selector_config = {
+        ATTR_ENTITY_ID: targeted_entity,
+        ATTR_DEVICE_ID: device_entry.id,
+        ATTR_AREA_ID: area,
+        ATTR_FLOOR_ID: floor,
+        ATTR_LABEL_ID: label,
+    }
+    unsub = async_track_target_selector_state_change_event(
+        hass, selector_config, state_change_callback
+    )
+
+    # Test directly targeted entity and device
+    await set_state(targeted_entity, STATE_ON)
+    await set_state(device_entity, STATE_ON)
+
+    assert len(calls) == 2
+    assert calls[0].data["entity_id"] == targeted_entity
+    assert calls[0].data["old_state"].state == STATE_OFF
+    assert calls[0].data["new_state"].state == STATE_ON
+    assert calls[1].data["entity_id"] == device_entity
+    assert calls[1].data["old_state"].state == STATE_OFF
+    assert calls[1].data["new_state"].state == STATE_ON
+    calls.clear()
+
+    # Add new entity to the targeted device -> should trigger on state change
+    device_entity_2 = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="device_light_2",
+        device_id=device_entry.id,
+    ).entity_id
+    await hass.async_block_till_done()
+
+    await set_state(device_entity_2, STATE_ON)
+
+    assert_entity_calls_and_reset(device_entity_2)
+
+    # Test untargeted entity -> should not trigger
+    await set_state(untargeted_entity, STATE_ON)
+
+    assert len(calls) == 0
+    calls.clear()
+
+    # Add label to untargeted entity -> should trigger now
+    entity_reg.async_update_entity(untargeted_entity, labels={label})
+    await hass.async_block_till_done()
+    await set_state(untargeted_entity, STATE_OFF)
+
+    assert_entity_calls_and_reset(untargeted_entity)
+
+    # Remove label from untargeted entity -> should not trigger anymore
+    entity_reg.async_update_entity(untargeted_entity, labels={})
+    await hass.async_block_till_done()
+    await set_state(untargeted_entity, STATE_ON)
+    await set_state(untargeted_entity, STATE_OFF)
+
+    assert len(calls) == 0
+
+    # Add area to untargeted entity -> should trigger now
+    entity_reg.async_update_entity(untargeted_entity, area_id=area)
+    await hass.async_block_till_done()
+    await set_state(untargeted_entity, STATE_ON)
+
+    assert_entity_calls_and_reset(untargeted_entity)
+
+    # Remove area from untargeted entity -> should not trigger anymore
+    entity_reg.async_update_entity(untargeted_entity, area_id=None)
+    await hass.async_block_till_done()
+    await set_state(untargeted_entity, STATE_ON)
+    await set_state(untargeted_entity, STATE_OFF)
+
+    assert len(calls) == 0
+
+    # Add area to untargeted device -> should trigger on state change
+    device_reg.async_update_device(untargeted_device_entry.id, area_id=area)
+    await hass.async_block_till_done()
+
+    await set_state(untargeted_device_entity, STATE_ON)
+
+    assert_entity_calls_and_reset(untargeted_device_entity)
+
+    # Remove area from untargeted device -> should not trigger anymore
+    device_reg.async_update_device(untargeted_device_entry.id, area_id=None)
+    await hass.async_block_till_done()
+    await set_state(untargeted_device_entity, STATE_OFF)
+    await set_state(untargeted_device_entity, STATE_ON)
+
+    assert len(calls) == 0
+
+    # Set the untargeted area on the untargeted entity -> should not trigger
+    untracked_area = ar.async_get(hass).async_create("Untargeted Area").id
+    entity_reg.async_update_entity(untargeted_entity, area_id=untracked_area)
+    await hass.async_block_till_done()
+
+    await set_state(untargeted_entity, STATE_ON)
+    assert len(calls) == 0
+
+    # Set targeted floor on the untargeted area -> should trigger now
+    ar.async_get(hass).async_update(untracked_area, floor_id=floor)
+    await hass.async_block_till_done()
+
+    await set_state(untargeted_entity, STATE_OFF)
+    assert_entity_calls_and_reset(untargeted_entity)
+
+    # Remove untargeted area from targeted floor -> should not trigger anymore
+    ar.async_get(hass).async_update(untracked_area, floor_id=None)
+    await hass.async_block_till_done()
+
+    await set_state(untargeted_entity, STATE_ON)
+    await set_state(untargeted_entity, STATE_OFF)
+    assert len(calls) == 0
+
+    # After unsubscribing, changes should not trigger
+    unsub()
+
+    for entity_id in (targeted_entity, device_entity, untargeted_entity):
+        await set_state(entity_id, STATE_OFF)
+        await set_state(entity_id, STATE_ON)
+    assert len(calls) == 0
