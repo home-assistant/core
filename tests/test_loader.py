@@ -1143,7 +1143,6 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", None, CORE_ISSUE_TRACKER_HUE),
         ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
-        # Integration domain is not currently deduced from module
         (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
         # Loaded custom integration with known issue tracker
@@ -1220,8 +1219,7 @@ async def test_async_get_issue_tracker(
         ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", None, CORE_ISSUE_TRACKER_HUE),
         ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
-        # Integration domain is not currently deduced from module
-        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
         # Custom integration with known issue tracker - can't find it without hass
         ("bla_custom", "custom_components.bla_custom.sensor", None),
