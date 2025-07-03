@@ -96,19 +96,7 @@ async def async_setup_entry(
     name = entry.title
 
     async_add_entities(
-        [
-            CompensationSensor(
-                entry.entry_id,
-                name,
-                source,
-                attribute,
-                conf[CONF_PRECISION],
-                conf[CONF_POLYNOMIAL],
-                conf.get(CONF_UNIT_OF_MEASUREMENT),
-                conf[CONF_MINIMUM],
-                conf[CONF_MAXIMUM],
-            )
-        ]
+        [CompensationSensor(conf.get(CONF_UNIQUE_ID), name, source, attribute, conf)]
     )
 
 
