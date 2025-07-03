@@ -2,6 +2,7 @@
 
 from asyncio import Event
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import datetime, timedelta
 import http
 import time
@@ -234,6 +235,7 @@ async def test_constant_polling(
     The test simulates a WebSocket update that changes an entity's state, then advances time
     to trigger a scheduled poll to confirm polled data also arrives.
     """
+    test_values = deepcopy(values)
     callback_holder: dict[str, Callable] = {}
 
     def fake_register_data_callback(
@@ -247,10 +249,6 @@ async def test_constant_polling(
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    freezer.tick(SCAN_INTERVAL - timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     assert mock_automower_client.register_data_callback.called
     assert "cb" in callback_holder
 
@@ -261,9 +259,13 @@ async def test_constant_polling(
     assert state is not None
     assert state.state == "40"
 
-    values[TEST_MOWER_ID].battery.battery_percent = 77
+    test_values[TEST_MOWER_ID].battery.battery_percent = 77
 
-    callback_holder["cb"](values)
+    freezer.tick(SCAN_INTERVAL - timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    callback_holder["cb"](test_values)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_mower_1_battery")
@@ -273,11 +275,12 @@ async def test_constant_polling(
     assert state is not None
     assert state.state == "40"
 
-    values[TEST_MOWER_ID].work_areas[123456].progress = 50
-    mock_automower_client.get_status.return_value = values
-    freezer.tick(timedelta(seconds=1))
+    test_values[TEST_MOWER_ID].work_areas[123456].progress = 50
+    mock_automower_client.get_status.return_value = test_values
+    freezer.tick(timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_automower_client.get_status.assert_awaited()
     state = hass.states.get("sensor.test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
