@@ -54,6 +54,7 @@ async def async_setup_entry(
             ElevenLabsSTTEntity(
                 client,
                 config_entry.runtime_data.model,
+                config_entry.runtime_data.stt_model,
                 config_entry.entry_id,
                 auto_detect_language=auto_detect,
             )
@@ -71,12 +72,14 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
         self,
         client: AsyncElevenLabs,
         model: Model,
+        stt_model: str,
         entry_id: str,
         auto_detect_language: bool = False,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
         self._auto_detect_language = auto_detect_language
+        self._stt_model = stt_model
 
         # Entity attributes
         self._attr_unique_id = entry_id
@@ -126,7 +129,8 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
     ) -> stt.SpeechResult:
         """Process an audio stream to STT service."""
         _LOGGER.debug(
-            "Processing audio stream for STT: language=%s, format=%s, codec=%s, sample_rate=%s, channels=%s, bit_rate=%s",
+            "Processing audio stream for STT: model=%s, language=%s, format=%s, codec=%s, sample_rate=%s, channels=%s, bit_rate=%s",
+            self._stt_model,
             metadata.language,
             metadata.format,
             metadata.codec,
@@ -180,7 +184,7 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
             response = await self._client.speech_to_text.convert(
                 file=BytesIO(audio),
                 file_format=file_format,
-                model_id="scribe_v1",
+                model_id=self._stt_model,
                 language_code=lang_code,
                 tag_audio_events=False,
                 num_speakers=1,
