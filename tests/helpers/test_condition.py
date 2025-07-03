@@ -2771,18 +2771,13 @@ async def test_subscribe_conditions(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test condition_platforms/subscribe command."""
+    """Test condition.async_subscribe_platform_events."""
     sun_condition_descriptions = """
         sun: {}
         """
-    device_automation_condition_descriptions = """
-        device: {}
-        """
 
     def _load_yaml(fname, secrets=None):
-        if fname.endswith("device_automation/conditions.yaml"):
-            condition_descriptions = device_automation_condition_descriptions
-        elif fname.endswith("sun/conditions.yaml"):
+        if fname.endswith("sun/conditions.yaml"):
             condition_descriptions = sun_condition_descriptions
         else:
             raise FileNotFoundError
