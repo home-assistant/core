@@ -722,8 +722,8 @@ class Entity(
             # value.
             type.__getattribute__(self.__class__, "name")
             is type.__getattribute__(Entity, "name")
-            # The check for self.platform guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2024.1
+            # The check for self.platform_data guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2026.8
             and self.platform_data
         ):
             name = self._name_internal(
@@ -737,8 +737,8 @@ class Entity(
     @cached_property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # The check for self.platform_data guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2026.8
         if not self.platform_data:
             return self._name_internal(None, {})
         return self._name_internal(
@@ -984,7 +984,7 @@ class Entity(
             raise RuntimeError(f"Attribute hass is None for {self}")
 
         # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # EntityComponent and can be removed in HA Core 2026.8
         if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]
             report_issue = self._suggest_report_issue()  # type: ignore[unreachable]
             _LOGGER.warning(
@@ -1489,7 +1489,7 @@ class Entity(
         Not to be extended by integrations.
         """
         # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # EntityComponent and can be removed in HA Core 2026.8
         if self.platform:
             del entity_sources(self.hass)[self.entity_id]
 
@@ -1621,8 +1621,8 @@ class Entity(
 
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # The check for self.platform_data guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2026.8
         platform_name = self.platform_data.platform_name if self.platform_data else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
