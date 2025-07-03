@@ -193,7 +193,7 @@
         "name": "Occupied to unoccupied delay"
       },
       "auto_relock_timer": {
-        "name": "Automatic relock timer"
+        "name": "Autorelock time"
       }
     },
     "light": {
