@@ -27,10 +27,10 @@ def get_geofence_ids(
     device: DeviceModel,
     position: PositionModel,
 ) -> list[int]:
+    # For Traccar >=5.8 https://github.com/traccar/traccar/commit/30bafaed42e74863c5ca68a33c87f39d1e2de93d
+    if "geofenceIds" in position:
+        return position["geofenceIds"]
     # For Traccar <5.8
     if "geofenceIds" in device:
         return device["geofenceIds"]
-    # For Traccar >=5.8 https://github.com/traccar/traccar/commit/30bafaed42e74863c5ca68a33c87f39d1e2de93d
-    elif "geofenceIds" in position:
-        return position["geofenceIds"]
     return []
