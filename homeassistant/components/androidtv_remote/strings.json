@@ -49,7 +49,7 @@
           "enable_ime": "Enable IME"
         },
         "data_description": {
-          "apps": "Here you can define applications where the keys are app IDs and the values are app names and icons that will be displayed in the UI.",
+          "apps": "Here you can define the list of applications, specify names and icons that will be displayed in the UI.",
           "enable_ime": "Enable this option to be able to get the current app name and send text as keyboard input. Disable it for devices that show 'Use keyboard on mobile device screen' instead of the on-screen keyboard."
         }
       },
