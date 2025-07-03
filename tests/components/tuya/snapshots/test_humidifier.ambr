@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][humidifier.dehumidifier-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][humidifier.dehumidifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -37,7 +37,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][humidifier.dehumidifier-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][humidifier.dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 47,

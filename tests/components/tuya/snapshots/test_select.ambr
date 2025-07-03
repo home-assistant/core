@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][select.dehumidifier_countdown-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][select.dehumidifier_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][select.dehumidifier_countdown-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][select.dehumidifier_countdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifier Countdown',
