@@ -299,6 +299,7 @@ async def test_coordinator_automatic_registry_cleanup(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.async_block_till_done()
+
     # Count current entitties and devices
     current_entites = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
