@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from tuya_sharing import CustomerDevice
 
-from homeassistant.components.tuya import DeviceListener, ManagerCompat
+from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import (
     CONF_APP_TYPE,
     CONF_ENDPOINT,
@@ -19,7 +19,6 @@ from homeassistant.components.tuya.const import (
     DPCode,
     DPType,
 )
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -94,14 +93,6 @@ def mock_manager() -> ManagerCompat:
     manager.device_map = {}
     manager.mq = MagicMock()
     return manager
-
-
-@pytest.fixture
-def device_listener(hass: HomeAssistant, mock_manager: ManagerCompat) -> DeviceListener:
-    """Create a DeviceListener for testing."""
-    listener = DeviceListener(hass, mock_manager)
-    mock_manager.add_device_listener(listener)
-    return listener
 
 
 @pytest.fixture
