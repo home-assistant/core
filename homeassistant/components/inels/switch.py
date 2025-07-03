@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import InelsConfigEntry
-from .const import ICON_SWITCH, LOGGER
+from .const import ICON_SWITCH
 from .entity import InelsBaseEntity
 
 
@@ -133,23 +133,17 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        if self.entity_description.alerts:
-            try:
-                last_state = self.entity_description.get_last_state_fn(
-                    self._device, self._index
-                )
-            except (KeyError, IndexError, AttributeError):
-                last_state = None
+        if not self.entity_description.alerts:
+            return super().available
 
-            current_value = self.entity_description.get_state_fn(
-                self._device, self._index
+        current_value = self.entity_description.get_state_fn(self._device, self._index)
+        return (
+            not any(
+                getattr(current_value, alert_key, None)
+                for alert_key, _ in self.entity_description.alerts
             )
-            for alert_key, alert_msg in self.entity_description.alerts:
-                if getattr(current_value, alert_key, None):
-                    if not last_state or not getattr(last_state, alert_key, None):
-                        LOGGER.warning(alert_msg, self.name, self._device.state_topic)
-                    return False
-        return super().available
+            and super().available
+        )
 
     @callback
     def _async_update_attrs(self) -> None:

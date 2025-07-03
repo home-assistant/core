@@ -1,6 +1,5 @@
 """iNELS switch platform testing."""
 
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -98,50 +97,6 @@ async def test_switch_availability(
 
     assert switch is not None
     assert switch.state == expected_state
-
-
-@pytest.mark.parametrize(
-    ("entity_config", "alert_key", "expected_log", "last_value"),
-    [
-        ("relay", "overflow", "Relay overflow", "switch_on_value"),
-        ("relay", "overflow", "Relay overflow", None),
-    ],
-    indirect=["entity_config"],
-)
-@pytest.mark.parametrize(
-    ("gw_available", "device_available", "expected_state"),
-    [
-        (True, True, STATE_UNAVAILABLE),
-    ],
-)
-async def test_switch_availability_with_alerts(
-    hass: HomeAssistant,
-    setup_entity,
-    entity_config,
-    alert_key,
-    expected_log,
-    last_value,
-    gw_available,
-    device_available,
-    expected_state,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test switch entity behavior under different alert conditions."""
-    caplog.set_level(logging.WARNING)
-
-    last_value_param = entity_config[last_value] if last_value else None
-
-    switch = await setup_entity(
-        entity_config,
-        status_value=entity_config["alerts"][alert_key],
-        gw_available=gw_available,
-        device_available=device_available,
-        last_value=last_value_param,
-    )
-
-    assert switch is not None
-    assert switch.state == expected_state
-    assert any(expected_log in record.message for record in caplog.records)
 
 
 @pytest.mark.parametrize(
