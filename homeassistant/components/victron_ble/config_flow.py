@@ -15,7 +15,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 
-from .const import DOMAIN
+from .const import DOMAIN, VICTRON_IDENTIFIER
 
 _LOGGER = logging.getLogger(__name__)
 
