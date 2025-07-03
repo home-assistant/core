@@ -17,7 +17,17 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import (
+    CONF_ACTION,
+    CONF_FROM,
+    CONF_NAME,
+    CONF_ROUTE_IDX,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    DOMAIN,
+    STATION_LIST_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +75,11 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         ROUTE_SCHEMA = vol.Schema(
             {
-                vol.Required("name"): str,
-                vol.Required("from"): str,
-                vol.Required("to"): str,
-                vol.Optional("via"): str,
-                vol.Optional("time"): str,
+                vol.Required(CONF_NAME): str,
+                vol.Required(CONF_FROM): str,
+                vol.Required(CONF_TO): str,
+                vol.Optional(CONF_VIA): str,
+                vol.Optional(CONF_TIME): str,
             }
         )
         if user_input is not None:
@@ -85,9 +95,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="routes",
             data_schema=ROUTE_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "station_list_url": "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"
-            },
+            description_placeholders={"station_list_url": STATION_LIST_URL},
         )
 
     @staticmethod
@@ -181,7 +189,7 @@ class NSOptionsFlowHandler(OptionsFlow):
             "edit": "Edit route",
             "delete": "Delete route",
         }
-        data_schema = vol.Schema({vol.Required("action"): vol.In(ACTIONS)})
+        data_schema = vol.Schema({vol.Required(CONF_ACTION): vol.In(ACTIONS)})
         _LOGGER.debug(
             "Options flow: async_step_options_init called with user_input=%s",
             user_input,
@@ -212,8 +220,8 @@ class NSOptionsFlowHandler(OptionsFlow):
         )
         # Use self._action if not present in user_input
         action = (
-            user_input.get("action")
-            if user_input and "action" in user_input
+            user_input.get(CONF_ACTION)
+            if user_input and CONF_ACTION in user_input
             else self._action
         )
         route_summaries = [
@@ -226,7 +234,7 @@ class NSOptionsFlowHandler(OptionsFlow):
             return await self.async_step_init()
         data_schema = vol.Schema(
             {
-                vol.Required("route_idx"): vol.In(
+                vol.Required(CONF_ROUTE_IDX): vol.In(
                     {str(i): s for i, s in enumerate(route_summaries)}
                 )
             }
@@ -236,11 +244,11 @@ class NSOptionsFlowHandler(OptionsFlow):
             user_input,
         )
         _LOGGER.debug("Options flow: action=%s, routes=%s", action, routes)
-        if user_input is not None and "route_idx" in user_input:
+        if user_input is not None and CONF_ROUTE_IDX in user_input:
             _LOGGER.debug(
-                "Options flow: route_idx selected: %s", user_input["route_idx"]
+                "Options flow: route_idx selected: %s", user_input[CONF_ROUTE_IDX]
             )
-            idx = int(user_input["route_idx"])
+            idx = int(user_input[CONF_ROUTE_IDX])
             if action == "edit":
                 # Go to edit form for this route
                 return await self.async_step_edit_route({"idx": idx})
@@ -261,11 +269,11 @@ class NSOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         ROUTE_SCHEMA = vol.Schema(
             {
-                vol.Required("name"): str,
-                vol.Required("from"): str,
-                vol.Required("to"): str,
-                vol.Optional("via"): str,
-                vol.Optional("time"): str,
+                vol.Required(CONF_NAME): str,
+                vol.Required(CONF_FROM): str,
+                vol.Required(CONF_TO): str,
+                vol.Optional(CONF_VIA): str,
+                vol.Optional(CONF_TIME): str,
             }
         )
         routes = (
@@ -280,9 +288,9 @@ class NSOptionsFlowHandler(OptionsFlow):
             _LOGGER.debug("Options flow: adding route: %s", user_input)
             # Validate required fields
             if (
-                not user_input.get("name")
-                or not user_input.get("from")
-                or not user_input.get("to")
+                not user_input.get(CONF_NAME)
+                or not user_input.get(CONF_FROM)
+                or not user_input.get(CONF_TO)
             ):
                 errors["base"] = "missing_fields"
             else:
@@ -293,9 +301,7 @@ class NSOptionsFlowHandler(OptionsFlow):
             step_id="add_route",
             data_schema=ROUTE_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "station_list_url": "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"
-            },
+            description_placeholders={"station_list_url": STATION_LIST_URL},
         )
 
     async def async_step_edit_route(self, user_input=None) -> ConfigFlowResult:
@@ -318,37 +324,37 @@ class NSOptionsFlowHandler(OptionsFlow):
         route = routes[idx]
         ROUTE_SCHEMA = vol.Schema(
             {
-                vol.Required("name", default=route.get("name", "")): str,
-                vol.Required("from", default=route.get("from", "")): str,
-                vol.Required("to", default=route.get("to", "")): str,
-                vol.Optional("via", default=route.get("via", "")): str,
-                vol.Optional("time", default=route.get("time", "")): str,
+                vol.Required(CONF_NAME, default=route.get(CONF_NAME, "")): str,
+                vol.Required(CONF_FROM, default=route.get(CONF_FROM, "")): str,
+                vol.Required(CONF_TO, default=route.get(CONF_TO, "")): str,
+                vol.Optional(CONF_VIA, default=route.get(CONF_VIA, "")): str,
+                vol.Optional(CONF_TIME, default=route.get(CONF_TIME, "")): str,
             }
         )
         _LOGGER.debug(
             "Options flow: async_step_edit_route called with user_input=%s", user_input
         )
         if user_input is not None and any(
-            k in user_input for k in ("name", "from", "to")
+            k in user_input for k in (CONF_NAME, CONF_FROM, CONF_TO)
         ):
             _LOGGER.debug(
                 "Options flow: editing route idx=%s with data=%s", idx, user_input
             )
             # Validate required fields
             if (
-                not user_input.get("name")
-                or not user_input.get("from")
-                or not user_input.get("to")
+                not user_input.get(CONF_NAME)
+                or not user_input.get(CONF_FROM)
+                or not user_input.get(CONF_TO)
             ):
                 errors["base"] = "missing_fields"
             else:
                 routes = routes.copy()
                 routes[idx] = {
-                    "name": user_input["name"],
-                    "from": user_input["from"],
-                    "to": user_input["to"],
-                    "via": user_input.get("via", ""),
-                    "time": user_input.get("time", ""),
+                    CONF_NAME: user_input[CONF_NAME],
+                    CONF_FROM: user_input[CONF_FROM],
+                    CONF_TO: user_input[CONF_TO],
+                    CONF_VIA: user_input.get(CONF_VIA, ""),
+                    CONF_TIME: user_input.get(CONF_TIME, ""),
                 }
                 # Clean up idx after edit
                 if hasattr(self, "_edit_idx"):
@@ -358,7 +364,5 @@ class NSOptionsFlowHandler(OptionsFlow):
             step_id="edit_route",
             data_schema=ROUTE_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "station_list_url": "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"
-            },
+            description_placeholders={"station_list_url": STATION_LIST_URL},
         )
