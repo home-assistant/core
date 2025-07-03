@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_knx_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register KNX integration services."""
     hass.services.async_register(
         DOMAIN,

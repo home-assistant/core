@@ -504,14 +504,17 @@
       "ext_lens_1": {
         "name": "Balanced lens 1"
       },
-      "autotrack_sub": {
-        "name": "Autotrack fluent"
+      "telephoto_sub": {
+        "name": "Telephoto fluent"
       },
-      "autotrack_snapshots_sub": {
-        "name": "Autotrack snapshots fluent"
+      "telephoto_main": {
+        "name": "Telephoto clear"
       },
-      "autotrack_snapshots_main": {
-        "name": "Autotrack snapshots clear"
+      "telephoto_snapshots_sub": {
+        "name": "Telephoto snapshots fluent"
+      },
+      "telephoto_snapshots_main": {
+        "name": "Telephoto snapshots clear"
       }
     },
     "light": {

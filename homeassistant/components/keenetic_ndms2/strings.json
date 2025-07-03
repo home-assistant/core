@@ -36,6 +36,10 @@
           "include_associated": "Use Wi-Fi AP associations data (ignored if hotspot data used)"
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_initialized": "The integration is not initialized yet. Can't display available options."
     }
   }
 }

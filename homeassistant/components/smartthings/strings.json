@@ -595,6 +595,9 @@
       },
       "water_consumption": {
         "name": "Water consumption"
+      },
+      "water_filter_usage": {
+        "name": "Water filter usage"
       }
     },
     "switch": {

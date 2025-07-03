@@ -90,7 +90,9 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return the available attribute of the entity."""
-        return self.entity_description.available_fn(self.mower_attributes)
+        return super().available and self.entity_description.available_fn(
+            self.mower_attributes
+        )
 
     @handle_sending_exception()
     async def async_press(self) -> None:

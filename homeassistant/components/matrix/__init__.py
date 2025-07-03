@@ -55,7 +55,7 @@ from .const import (
     DOMAIN,
     FORMAT_HTML,
 )
-from .services import register_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[CONF_COMMANDS],
     )
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True
 

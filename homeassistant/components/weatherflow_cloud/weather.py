@@ -19,8 +19,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
 from .const import DOMAIN, STATE_MAP
-from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 from .entity import WeatherFlowCloudEntity
 
 
@@ -30,21 +30,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator: WeatherFlowCloudDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         [
-            WeatherFlowWeather(coordinator, station_id=station_id)
-            for station_id, data in coordinator.data.items()
+            WeatherFlowWeatherREST(coordinators.rest, station_id=station_id)
+            for station_id, data in coordinators.rest.data.items()
         ]
     )
 
 
-class WeatherFlowWeather(
+class WeatherFlowWeatherREST(
     WeatherFlowCloudEntity,
-    SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator],
+    SingleCoordinatorWeatherEntity[WeatherFlowCloudUpdateCoordinatorREST],
 ):
     """Implementation of a WeatherFlow weather condition."""
 
@@ -59,7 +57,7 @@ class WeatherFlowWeather(
 
     def __init__(
         self,
-        coordinator: WeatherFlowCloudDataUpdateCoordinator,
+        coordinator: WeatherFlowCloudUpdateCoordinatorREST,
         station_id: int,
     ) -> None:
         """Initialise the platform with a data instance and station."""

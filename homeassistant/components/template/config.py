@@ -157,11 +157,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
-        DOMAIN_ALARM_CONTROL_PANEL,
         DOMAIN_BUTTON,
-        DOMAIN_FAN,
-        DOMAIN_LOCK,
-        DOMAIN_VACUUM,
     ),
 )
 

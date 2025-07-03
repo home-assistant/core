@@ -48,13 +48,13 @@ from homeassistant.components.backup import (
     RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
+    async_get_manager as async_get_backup_manager,
     suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -839,7 +839,7 @@ async def backup_addon_before_update(
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
     """Prepare for updating core."""
-    backup_manager = await async_get_backup_manager(hass)
+    backup_manager = async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     try:

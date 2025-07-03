@@ -1,20 +1,35 @@
 """Tests for the Sonos battery sensor platform."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.components.sonos.sensor import (
+    HA_POWER_SOURCE_BATTERY,
+    HA_POWER_SOURCE_CHARGING_BASE,
+    HA_POWER_SOURCE_USB,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
-from .conftest import SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent
 
 from tests.common import async_fire_time_changed
 
@@ -42,8 +57,10 @@ async def test_entity_registry_supported(
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
     assert "binary_sensor.zone_a_charging" in entity_registry.entities
+    assert "sensor.zone_a_power_source" in entity_registry.entities
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
@@ -59,6 +76,71 @@ async def test_battery_attributes(
     assert (
         power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "SONOS_CHARGING_RING"
     )
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == HA_POWER_SOURCE_CHARGING_BASE
+    assert power_source_state.attributes.get("device_class") == SensorDeviceClass.ENUM
+    assert power_source_state.attributes.get("options") == [
+        HA_POWER_SOURCE_BATTERY,
+        HA_POWER_SOURCE_CHARGING_BASE,
+        HA_POWER_SOURCE_USB,
+    ]
+    result = translation.async_translate_state(
+        hass,
+        power_source_state.state,
+        Platform.SENSOR,
+        DOMAIN,
+        power_source.translation_key,
+        None,
+    )
+    assert result == "Charging base"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_power_source_unknown_state(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test bad value for power source."""
+    soco.get_battery_info.return_value = {
+        "Level": 100,
+        "PowerSource": "BAD_POWER_SOURCE",
+    }
+
+    with caplog.at_level("WARNING"):
+        await async_setup_sonos()
+        assert "Unknown power source" in caplog.text
+        assert "BAD_POWER_SOURCE" in caplog.text
+        assert "Zone A" in caplog.text
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_power_source_none(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test none value for power source."""
+    soco.get_battery_info.return_value = {
+        "Level": 100,
+        "PowerSource": None,
+    }
+
+    await async_setup_sonos()
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == STATE_UNAVAILABLE
 
 
 async def test_battery_on_s1(

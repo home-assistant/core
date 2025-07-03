@@ -111,6 +111,23 @@ async def test_lock_changed_by(
     assert hass.states.get("lock.test_lock").attributes["changed_by"] == expected
 
 
+async def test_lock_changed_by_unknown_user(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test lock changed by entries."""
+    mock_homee.nodes = [build_mock_node("lock.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    mock_homee.get_user_by_id.return_value = None  # Simulate unknown user
+    attribute = mock_homee.nodes[0].attributes[0]
+    attribute.changed_by = 2
+    attribute.changed_by_id = 1
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("lock.test_lock").attributes["changed_by"] == "user-Unknown"
+
+
 async def test_lock_snapshot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

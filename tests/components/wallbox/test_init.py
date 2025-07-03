@@ -1,16 +1,15 @@
 """Test Wallbox Init Component."""
 
-import requests_mock
+from unittest.mock import Mock, patch
 
-from homeassistant.components.wallbox.const import (
-    CHARGER_MAX_CHARGING_CURRENT_KEY,
-    DOMAIN,
-)
+from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import (
     authorisation_response,
+    http_403_error,
+    http_429_error,
     setup_integration,
     setup_integration_connection_error,
     setup_integration_no_eco_mode,
@@ -53,18 +52,16 @@ async def test_wallbox_refresh_failed_connection_error_auth(
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=404,
-        )
-        mock_request.get(
-            "https://api.wall-box.com/chargers/status/12345",
-            json=test_response,
-            status_code=200,
-        )
-
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(side_effect=http_429_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            new=Mock(return_value=test_response),
+        ),
+    ):
         wallbox = hass.data[DOMAIN][entry.entry_id]
 
         await wallbox.async_refresh()
@@ -81,18 +78,68 @@ async def test_wallbox_refresh_failed_invalid_auth(
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=403,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
-            status_code=403,
-        )
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(side_effect=http_403_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            new=Mock(side_effect=http_403_error),
+        ),
+    ):
+        wallbox = hass.data[DOMAIN][entry.entry_id]
 
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_wallbox_refresh_failed_http_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox setup with authentication error."""
+
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(side_effect=http_403_error),
+        ),
+    ):
+        wallbox = hass.data[DOMAIN][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_wallbox_refresh_failed_too_many_requests(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox setup with authentication error."""
+
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(side_effect=http_429_error),
+        ),
+    ):
         wallbox = hass.data[DOMAIN][entry.entry_id]
 
         await wallbox.async_refresh()
@@ -109,18 +156,16 @@ async def test_wallbox_refresh_failed_connection_error(
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.get(
-            "https://api.wall-box.com/chargers/status/12345",
-            json=test_response,
-            status_code=403,
-        )
-
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            new=Mock(side_effect=http_403_error),
+        ),
+    ):
         wallbox = hass.data[DOMAIN][entry.entry_id]
 
         await wallbox.async_refresh()

@@ -10,7 +10,6 @@ from typing import Any, cast
 
 import aiohttp
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     LOG_LEVEL_MAP,
     CommandClass,
@@ -30,7 +29,7 @@ from zwave_js_server.model.value import (
 from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -51,12 +50,11 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
-    DATA_CLIENT,
-    DATA_OLD_SERVER_LOG_LEVEL,
     DOMAIN,
     LIB_LOGGER,
     LOGGER,
 )
+from .models import ZwaveJSConfigEntry
 
 SERVER_VERSION_TIMEOUT = 10
 
@@ -143,7 +141,7 @@ async def async_enable_statistics(driver: Driver) -> None:
 
 
 async def async_enable_server_logging_if_needed(
-    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry, driver: Driver
 ) -> None:
     """Enable logging of zwave-js-server in the lib."""
     # If lib log level is set to debug, we want to enable server logging. First we
@@ -161,15 +159,14 @@ async def async_enable_server_logging_if_needed(
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
     ) > LIB_LOGGER.getEffectiveLevel():
-        entry_data = entry.runtime_data
-        entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+        entry.runtime_data.old_server_log_level = curr_server_log_level
         await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
     await driver.client.enable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
 
 
 async def async_disable_server_logging_if_needed(
-    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry, driver: Driver
 ) -> None:
     """Disable logging of zwave-js-server in the lib if still connected to server."""
     if (
@@ -180,10 +177,8 @@ async def async_disable_server_logging_if_needed(
         return
     LOGGER.info("Disabling zwave_js server logging")
     if (
-        DATA_OLD_SERVER_LOG_LEVEL in entry.runtime_data
-        and (old_server_log_level := entry.runtime_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
-        != driver.log_config.level
-    ):
+        old_server_log_level := entry.runtime_data.old_server_log_level
+    ) is not None and old_server_log_level != driver.log_config.level:
         LOGGER.info(
             (
                 "Server logging is currently set to %s as a result of server logging "
@@ -193,6 +188,7 @@ async def async_disable_server_logging_if_needed(
             old_server_log_level,
         )
         await driver.async_update_log_config(LogConfig(level=old_server_log_level))
+        entry.runtime_data.old_server_log_level = None
     driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
 
@@ -262,7 +258,7 @@ def async_get_node_from_device_id(
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    entry = next(
+    entry: ZwaveJSConfigEntry | None = next(
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
@@ -277,7 +273,7 @@ def async_get_node_from_device_id(
     if entry.state != ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    client = entry.runtime_data.client
     driver = client.driver
 
     if driver is None:
@@ -310,7 +306,7 @@ async def async_get_provisioning_entry_from_device_id(
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    entry = next(
+    entry: ZwaveJSConfigEntry | None = next(
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
@@ -325,7 +321,7 @@ async def async_get_provisioning_entry_from_device_id(
     if entry.state != ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    client = entry.runtime_data.client
     driver = client.driver
 
     if driver is None:
@@ -393,7 +389,7 @@ def async_get_nodes_from_area_id(
         for device in dr.async_entries_for_area(dev_reg, area_id)
         if any(
             cast(
-                ConfigEntry,
+                ZwaveJSConfigEntry,
                 hass.config_entries.async_get_entry(config_entry_id),
             ).domain
             == DOMAIN
@@ -487,7 +483,7 @@ def async_get_node_status_sensor_entity_id(
 
     entry = hass.config_entries.async_get_entry(entry_id)
     assert entry
-    client = entry.runtime_data[DATA_CLIENT]
+    client = entry.runtime_data.client
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
     return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
@@ -565,7 +561,7 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
 
 
 def get_network_identifier_for_notification(
-    hass: HomeAssistant, config_entry: ConfigEntry, controller: Controller
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, controller: Controller
 ) -> str:
     """Return the network identifier string for persistent notifications."""
     home_id = str(controller.home_id)

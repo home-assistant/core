@@ -1,0 +1,9 @@
+{
+  "domain": "ai_task",
+  "name": "AI Task",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/ai_task",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

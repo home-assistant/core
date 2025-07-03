@@ -91,7 +91,7 @@ from .schema import (
     TimeSchema,
     WeatherSchema,
 )
-from .services import register_knx_services
+from .services import async_setup_services
 from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY, KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
@@ -138,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is not None:
         hass.data[_KNX_YAML_CONFIG] = dict(conf)
 
-    register_knx_services(hass)
+    async_setup_services(hass)
     return True
 
 

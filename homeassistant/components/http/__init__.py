@@ -278,8 +278,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ssl_certificate is not None
             and (hass.config.external_url or hass.config.internal_url) is None
         ):
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.cloud import (
+            from homeassistant.components.cloud import (  # noqa: PLC0415
                 CloudNotAvailable,
                 async_remote_ui_url,
             )

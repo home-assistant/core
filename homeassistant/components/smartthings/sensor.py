@@ -325,6 +325,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.CUSTOM_WATER_FILTER: {
+        Attribute.WATER_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_FILTER_USAGE,
+                translation_key="water_filter_usage",
+                native_unit_of_measurement=PERCENTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.DISHWASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(

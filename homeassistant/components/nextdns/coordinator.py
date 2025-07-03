@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import (
@@ -33,10 +33,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CoordinatorDataT = TypeVar("CoordinatorDataT", bound=NextDnsData)
 
-
-class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
+class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
+    DataUpdateCoordinator[CoordinatorDataT]
+):
     """Class to manage fetching NextDNS data API."""
 
     config_entry: NextDnsConfigEntry

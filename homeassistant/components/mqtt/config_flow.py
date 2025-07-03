@@ -66,6 +66,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DISCOVERY,
     CONF_EFFECT,
+    CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -84,6 +85,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
@@ -411,6 +413,14 @@ SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
         ): TEXT_SELECTOR,
     }
 )
+ENTITY_CATEGORY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[category.value for category in EntityCategory],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ENTITY_CATEGORY,
+        sort=True,
+    )
+)
 
 # Sensor specific selectors
 SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
@@ -429,6 +439,15 @@ BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[EntityCategory.DIAGNOSTIC.value],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ENTITY_CATEGORY,
+        sort=True,
+    )
+)
+
 BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[device_class.value for device_class in ButtonDeviceClass],
@@ -735,11 +754,24 @@ COMMON_ENTITY_FIELDS: dict[str, PlatformField] = {
     ),
 }
 
+SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
+    CONF_ENTITY_CATEGORY: PlatformField(
+        selector=ENTITY_CATEGORY_SELECTOR,
+        required=False,
+        default=None,
+    ),
+}
+
 PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
     Platform.BINARY_SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
             required=False,
+        ),
+        CONF_ENTITY_CATEGORY: PlatformField(
+            selector=SENSOR_ENTITY_CATEGORY_SELECTOR,
+            required=False,
+            default=None,
         ),
     },
     Platform.BUTTON.value: {
@@ -803,6 +835,11 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=OPTIONS_SELECTOR,
             required=False,
             conditions=({"device_class": "enum"},),
+        ),
+        CONF_ENTITY_CATEGORY: PlatformField(
+            selector=SENSOR_ENTITY_CATEGORY_SELECTOR,
+            required=False,
+            default=None,
         ),
     },
     Platform.SWITCH.value: {
@@ -1867,8 +1904,12 @@ ENTITY_CONFIG_VALIDATOR: dict[
 
 MQTT_DEVICE_PLATFORM_FIELDS = {
     ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
-    ATTR_SW_VERSION: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_HW_VERSION: PlatformField(selector=TEXT_SELECTOR, required=False),
+    ATTR_SW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    ),
+    ATTR_HW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    ),
     ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_CONFIGURATION_URL: PlatformField(
@@ -2070,8 +2111,6 @@ def data_schema_from_fields(
             if field_details.section == schema_section
             and field_details.exclude_from_reconfig
         }
-        if not data_element_options:
-            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
@@ -2690,6 +2729,19 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             for field_key, value in data_schema.schema.items()
         }
 
+    @callback
+    def get_suggested_values_from_device_data(
+        self, data_schema: vol.Schema
+    ) -> dict[str, Any]:
+        """Get suggestions from device data based on the data schema."""
+        device_data = self._subentry_data["device"]
+        return {
+            field_key: self.get_suggested_values_from_device_data(value.schema)
+            if isinstance(value, section)
+            else device_data.get(field_key)
+            for field_key, value in data_schema.schema.items()
+        }
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -2719,15 +2771,24 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             reconfig=True,
         )
         if user_input is not None:
+            new_device_data: dict[str, Any] = user_input.copy()
             _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
+            if "advanced_settings" in new_device_data:
+                new_device_data |= new_device_data.pop("advanced_settings")
             if not errors:
-                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
+                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
                 return await self.async_step_entity()
-        data_schema = self.add_suggested_values_to_schema(
-            data_schema, device_data if user_input is None else user_input
-        )
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, device_data if user_input is None else user_input
+            )
+        elif self.source == SOURCE_RECONFIGURE:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self.get_suggested_values_from_device_data(data_schema),
+            )
+
         return self.async_show_form(
             step_id=CONF_DEVICE,
             data_schema=data_schema,
@@ -2834,7 +2895,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
         platform = component_data[CONF_PLATFORM]
-        data_schema_fields = PLATFORM_ENTITY_FIELDS[platform]
+        data_schema_fields = (
+            SHARED_PLATFORM_ENTITY_FIELDS | PLATFORM_ENTITY_FIELDS[platform]
+        )
         errors: dict[str, str] = {}
 
         data_schema = data_schema_from_fields(
@@ -2845,8 +2908,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             component_data=component_data,
             user_input=user_input,
         )
-        if not data_schema.schema:
-            return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
             merged_user_input, errors = validate_user_input(
@@ -2940,6 +3001,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             platform = component_data[CONF_PLATFORM]
             platform_fields: dict[str, PlatformField] = (
                 COMMON_ENTITY_FIELDS
+                | SHARED_PLATFORM_ENTITY_FIELDS
                 | PLATFORM_ENTITY_FIELDS[platform]
                 | PLATFORM_MQTT_FIELDS[platform]
             )
@@ -3493,7 +3555,7 @@ def try_connection(
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+    import paho.mqtt.client as mqtt  # noqa: PLC0415
 
     mqtt_client_setup = MqttClientSetup(user_input)
     mqtt_client_setup.setup()

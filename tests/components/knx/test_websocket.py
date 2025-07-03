@@ -22,7 +22,7 @@ async def test_knx_info_command(
     """Test knx/info command."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/info"})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -41,7 +41,7 @@ async def test_knx_info_command_with_project(
     """Test knx/info command with loaded project."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/info"})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -69,9 +69,8 @@ async def test_knx_project_file_process(
     client = await hass_ws_client(hass)
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "knx/project_file_process",
             "file_id": _file_id,
             "password": _password,
@@ -104,9 +103,8 @@ async def test_knx_project_file_process_error(
     client = await hass_ws_client(hass)
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "knx/project_file_process",
             "file_id": "1234",
             "password": "",
@@ -139,7 +137,7 @@ async def test_knx_project_file_remove(
     client = await hass_ws_client(hass)
     assert hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json({"id": 6, "type": "knx/project_file_remove"})
+    await client.send_json_auto_id({"type": "knx/project_file_remove"})
     res = await client.receive_json()
 
     assert res["success"], res
@@ -158,7 +156,7 @@ async def test_knx_get_project(
     client = await hass_ws_client(hass)
     assert hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json({"id": 3, "type": "knx/get_knx_project"})
+    await client.send_json_auto_id({"type": "knx/get_knx_project"})
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is True
@@ -172,7 +170,7 @@ async def test_knx_group_monitor_info_command(
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 6, "type": "knx/group_monitor_info"})
+    await client.send_json_auto_id({"type": "knx/group_monitor_info"})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -234,7 +232,7 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
 
     # connect websocket after telegrams have been sent
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/group_monitor_info"})
+    await client.send_json_auto_id({"type": "knx/group_monitor_info"})
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
@@ -272,7 +270,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
         }
     )
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    await client.send_json_auto_id({"type": "knx/subscribe_telegrams"})
     res = await client.receive_json()
     assert res["success"], res
 
@@ -340,7 +338,7 @@ async def test_knx_subscribe_telegrams_command_project(
     """Test knx/subscribe_telegrams command with project data."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    await client.send_json_auto_id({"type": "knx/subscribe_telegrams"})
     res = await client.receive_json()
     assert res["success"], res
 

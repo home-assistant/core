@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -70,7 +70,8 @@ async def _handle_react(call: ServiceCall) -> None:
     await matrix_bot.handle_send_reaction(call)
 
 
-def register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Matrix bot component."""
 
     hass.services.async_register(

@@ -83,14 +83,14 @@ async def test_climate_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.COOL
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls([call(key=1, target_temperature=25.0)])
@@ -137,7 +137,7 @@ async def test_climate_entity_with_step_and_two_point(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.COOL
 
@@ -145,7 +145,7 @@ async def test_climate_entity_with_step_and_two_point(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
+            {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
             blocking=True,
         )
 
@@ -153,7 +153,7 @@ async def test_climate_entity_with_step_and_two_point(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_myclimate",
+            ATTR_ENTITY_ID: "climate.test_my_climate",
             ATTR_HVAC_MODE: HVACMode.AUTO,
             ATTR_TARGET_TEMP_LOW: 20,
             ATTR_TARGET_TEMP_HIGH: 30,
@@ -217,7 +217,7 @@ async def test_climate_entity_with_step_and_target_temp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.COOL
 
@@ -225,7 +225,7 @@ async def test_climate_entity_with_step_and_target_temp(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_myclimate",
+            ATTR_ENTITY_ID: "climate.test_my_climate",
             ATTR_HVAC_MODE: HVACMode.AUTO,
             ATTR_TEMPERATURE: 25,
         },
@@ -241,7 +241,7 @@ async def test_climate_entity_with_step_and_target_temp(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.test_myclimate",
+                ATTR_ENTITY_ID: "climate.test_my_climate",
                 ATTR_HVAC_MODE: HVACMode.AUTO,
                 ATTR_TARGET_TEMP_LOW: 20,
                 ATTR_TARGET_TEMP_HIGH: 30,
@@ -253,7 +253,7 @@ async def test_climate_entity_with_step_and_target_temp(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.test_myclimate",
+            ATTR_ENTITY_ID: "climate.test_my_climate",
             ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
@@ -271,7 +271,7 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_PRESET_MODE: "away"},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_PRESET_MODE: "away"},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -287,7 +287,7 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_PRESET_MODE: "preset1"},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_PRESET_MODE: "preset1"},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls([call(key=1, custom_preset="preset1")])
@@ -296,7 +296,7 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_FAN_MODE: FAN_HIGH},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_FAN_MODE: FAN_HIGH},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -307,7 +307,7 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_FAN_MODE: "fan2"},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_FAN_MODE: "fan2"},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls([call(key=1, custom_fan_mode="fan2")])
@@ -316,7 +316,7 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_SWING_MODE: SWING_BOTH},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_SWING_MODE: SWING_BOTH},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -368,7 +368,7 @@ async def test_climate_entity_with_humidity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.AUTO
     attributes = state.attributes
@@ -380,7 +380,7 @@ async def test_climate_entity_with_humidity(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_HUMIDITY: 23},
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_HUMIDITY: 23},
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls([call(key=1, target_humidity=23)])
@@ -430,7 +430,7 @@ async def test_climate_entity_with_inf_value(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.AUTO
     attributes = state.attributes
@@ -492,7 +492,7 @@ async def test_climate_entity_attributes(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == HVACMode.COOL
     assert state.attributes == snapshot(name="climate-entity-attributes")
@@ -526,6 +526,6 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("climate.test_myclimate")
+    state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
