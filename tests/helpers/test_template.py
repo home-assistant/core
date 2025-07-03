@@ -5183,7 +5183,7 @@ def test_state_with_unit_and_rounding(
 
     assert tpl.async_render() == "23.02 beers"
     assert tpl2.async_render() == "23.015 beers"
-    assert tpl3.async_render() == 23.015
+    assert tpl3.async_render() == 23.02
     assert tpl4.async_render() == 23.015
     assert tpl5.async_render() == "23.02 beers"
     assert tpl6.async_render() == "23.015 beers"

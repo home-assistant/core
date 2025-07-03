@@ -938,17 +938,15 @@ class AllStates:
     def __call__(
         self,
         entity_id: str,
-        rounded: bool | object = _SENTINEL,
+        rounded: bool = True,
         with_unit: bool = False,
     ) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         if state is None:
             return STATE_UNKNOWN
-        if rounded is _SENTINEL:
-            rounded = with_unit
         if rounded or with_unit:
-            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
+            return state.format_state(rounded, with_unit)
         return state.state
 
     def __repr__(self) -> str:
