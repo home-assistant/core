@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components.elevenlabs.const import (
     CONF_MODEL,
     CONF_STT_AUTO_LANGUAGE,
+    CONF_STT_MODEL,
     CONF_VOICE,
 )
 from homeassistant.const import CONF_API_KEY
@@ -152,6 +153,7 @@ def mock_entry() -> MockConfigEntry:
         options={
             CONF_MODEL: "model1",
             CONF_VOICE: "voice1",
+            CONF_STT_MODEL: "stt_model1",
             CONF_STT_AUTO_LANGUAGE: False,
         },
     )
@@ -160,6 +162,7 @@ def mock_entry() -> MockConfigEntry:
     }
 
     entry.voices = {"voice1": "voice1"}
+    entry.stt_models = {"stt_model1": "stt_model1"}
     return entry
 
 

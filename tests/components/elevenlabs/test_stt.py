@@ -11,6 +11,7 @@ from homeassistant.components import stt
 from homeassistant.components.elevenlabs.const import (
     CONF_MODEL,
     CONF_STT_AUTO_LANGUAGE,
+    CONF_STT_MODEL,
     CONF_VOICE,
     DOMAIN,
 )
@@ -158,6 +159,8 @@ async def mock_config_entry_setup(
     default_config_options = {
         CONF_VOICE: "voice1",
         CONF_MODEL: "model1",
+        CONF_STT_MODEL: "stt_model1",
+        CONF_STT_AUTO_LANGUAGE: False,
     }
     config_entry = MockConfigEntry(
         domain=DOMAIN,

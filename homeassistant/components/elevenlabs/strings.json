@@ -21,12 +21,14 @@
         "data": {
           "voice": "Voice",
           "model": "Model",
+          "stt_model": "Speech-to-Text Model",
           "stt_auto_language": "Auto-detect language",
           "configure_voice": "Configure advanced voice settings"
         },
         "data_description": {
           "voice": "Voice to use for text-to-speech.",
           "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
+          "stt_model": "Speech-to-Text model to use.",
           "stt_auto_language": "Automatically detect the spoken language for speech-to-text.",
           "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation."
         }

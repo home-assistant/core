@@ -10,13 +10,15 @@ from homeassistant.components.elevenlabs.const import (
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STT_AUTO_LANGUAGE,
+    CONF_STT_MODEL,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
-    DEFAULT_MODEL,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
+    DEFAULT_STT_MODEL,
     DEFAULT_STYLE,
+    DEFAULT_TTS_MODEL,
     DEFAULT_USE_SPEAKER_BOOST,
     DOMAIN,
 )
@@ -52,8 +54,9 @@ async def test_user_step(
         "api_key": "api_key",
     }
     assert result["options"] == {
-        CONF_MODEL: DEFAULT_MODEL,
+        CONF_MODEL: DEFAULT_TTS_MODEL,
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: DEFAULT_STT_MODEL,
         CONF_STT_AUTO_LANGUAGE: False,
     }
 
@@ -100,8 +103,9 @@ async def test_invalid_api_key(
         "api_key": "api_key",
     }
     assert result["options"] == {
-        CONF_MODEL: DEFAULT_MODEL,
+        CONF_MODEL: DEFAULT_TTS_MODEL,
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: DEFAULT_STT_MODEL,
         CONF_STT_AUTO_LANGUAGE: False,
     }
 
@@ -148,8 +152,9 @@ async def test_voices_error(
         "api_key": "api_key",
     }
     assert result["options"] == {
-        CONF_MODEL: DEFAULT_MODEL,
+        CONF_MODEL: DEFAULT_TTS_MODEL,
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: DEFAULT_STT_MODEL,
         CONF_STT_AUTO_LANGUAGE: False,
     }
 
@@ -196,8 +201,9 @@ async def test_models_error(
         "api_key": "api_key",
     }
     assert result["options"] == {
-        CONF_MODEL: DEFAULT_MODEL,
+        CONF_MODEL: DEFAULT_TTS_MODEL,
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: DEFAULT_STT_MODEL,
         CONF_STT_AUTO_LANGUAGE: False,
     }
 
@@ -225,6 +231,7 @@ async def test_options_flow_init(
         user_input={
             CONF_MODEL: "model1",
             CONF_VOICE: "voice1",
+            CONF_STT_MODEL: "scribe_v1_experimental",
             CONF_STT_AUTO_LANGUAGE: True,
         },
     )
@@ -233,6 +240,7 @@ async def test_options_flow_init(
     assert mock_entry.options == {
         CONF_MODEL: "model1",
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: "scribe_v1_experimental",
         CONF_STT_AUTO_LANGUAGE: True,
     }
 
@@ -259,6 +267,7 @@ async def test_options_flow_voice_settings_default(
         user_input={
             CONF_MODEL: "model1",
             CONF_VOICE: "voice1",
+            CONF_STT_MODEL: "scribe_v1_experimental",
             CONF_STT_AUTO_LANGUAGE: False,
             CONF_CONFIGURE_VOICE: True,
         },
@@ -275,6 +284,7 @@ async def test_options_flow_voice_settings_default(
     assert mock_entry.options == {
         CONF_MODEL: "model1",
         CONF_VOICE: "voice1",
+        CONF_STT_MODEL: "scribe_v1_experimental",
         CONF_STT_AUTO_LANGUAGE: False,
         CONF_SIMILARITY: DEFAULT_SIMILARITY,
         CONF_STABILITY: DEFAULT_STABILITY,
