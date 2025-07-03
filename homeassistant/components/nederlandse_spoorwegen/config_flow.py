@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -55,9 +56,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={
-                "station_list_url": "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"
-            },
         )
 
     async def async_step_routes(
@@ -99,6 +97,66 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> NSOptionsFlowHandler:
         """Return the options flow handler for this config entry."""
         return NSOptionsFlowHandler(config_entry)
+
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with a new API key."""
+        errors: dict[str, str] = {}
+        entry = self.context.get("entry")
+        if entry is None and "entry_id" in self.context:
+            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if user_input is not None and entry is not None:
+            entry = cast(ConfigEntry, entry)
+            api_key = user_input.get(CONF_API_KEY)
+            if not api_key:
+                errors[CONF_API_KEY] = "missing_fields"
+            else:
+                masked_api_key = (
+                    api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
+                )
+                _LOGGER.debug("Reauth: User provided new API key: %s", masked_api_key)
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_API_KEY: api_key}
+                )
+                return self.async_abort(reason="reauth_successful")
+        data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
+        return self.async_show_form(
+            step_id="reauth",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration (API key update)."""
+        errors: dict[str, str] = {}
+        entry = self.context.get("entry")
+        if entry is None and "entry_id" in self.context:
+            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if user_input is not None and entry is not None:
+            entry = cast(ConfigEntry, entry)
+            api_key = user_input.get(CONF_API_KEY)
+            if not api_key:
+                errors[CONF_API_KEY] = "missing_fields"
+            else:
+                masked_api_key = (
+                    api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
+                )
+                _LOGGER.debug(
+                    "Reconfigure: User provided new API key: %s", masked_api_key
+                )
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_API_KEY: api_key}
+                )
+                return self.async_abort(reason="reconfigure_successful")
+        data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
 
 class NSOptionsFlowHandler(OptionsFlow):

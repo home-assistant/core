@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import re
 
 import ns_api
 from ns_api import RequestParametersError
@@ -35,7 +36,10 @@ from .const import (
     CONF_TO,
     CONF_VIA,
     MIN_TIME_BETWEEN_UPDATES_SECONDS,
+    PARALLEL_UPDATES as _PARALLEL_UPDATES,
 )
+
+PARALLEL_UPDATES = _PARALLEL_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +130,7 @@ async def async_setup_entry(
             route.get(CONF_TO),
             route.get(CONF_VIA),
             route.get(CONF_TIME),
+            entry.entry_id,  # Pass entry_id for unique_id
         )
         for route in routes
     ]
@@ -149,15 +154,18 @@ class NSDepartureSensor(SensorEntity):
     _attr_attribution = ATTR_ATTRIBUTION
     _attr_icon = ATTR_ICON
 
-    def __init__(self, nsapi, name, departure, heading, via, time) -> None:
+    def __init__(
+        self, nsapi, name, departure, heading, via, time, entry_id=None
+    ) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
-            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s",
+            "Initializing NSDepartureSensor: name=%s, departure=%s, heading=%s, via=%s, time=%s, entry_id=%s",
             name,
             departure,
             heading,
             via,
             time,
+            entry_id,
         )
         self._nsapi = nsapi
         self._name = name
@@ -169,6 +177,15 @@ class NSDepartureSensor(SensorEntity):
         self._trips = None
         self._first_trip = None
         self._next_trip = None
+        self._entry_id = entry_id
+        # Set unique_id: entry_id + route name + from + to + via (if present)
+        if entry_id and name and departure and heading:
+            base = f"{entry_id}-{name}-{departure}-{heading}"
+            if via:
+                base += f"-{via}"
+            self._attr_unique_id = base.replace(" ", "_").lower()
+        else:
+            self._attr_unique_id = None
 
     @property
     def name(self) -> str | None:
@@ -285,9 +302,12 @@ class NSDepartureSensor(SensorEntity):
         if isinstance(self._time, str):
             if self._time.strip() == "":
                 self._time = None
+            elif not re.match(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$", self._time):
+                _LOGGER.error("Invalid time format for self._time: %s", self._time)
+                self._time = None
             else:
                 try:
-                    self._time = datetime.strptime(self._time, "%H:%M").time()
+                    self._time = datetime.strptime(self._time, "%H:%M:%S").time()
                 except ValueError:
                     _LOGGER.error("Invalid time format for self._time: %s", self._time)
                     self._time = None
