@@ -646,10 +646,10 @@ class TargetSelectorStateChangeTracker:
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
-        self._setup_tracking()
         self._setup_registry_listeners()
+        self._track_entities_state_change()
 
-    def _track_entities_state_change(self) -> CALLBACK_TYPE:
+    def _track_entities_state_change(self) -> None:
         """Set up state change tracking for currently selected entities."""
         selected = async_extract_referenced_entity_ids(
             self._hass, self._selector_data, expand_group=False
@@ -667,13 +667,9 @@ class TargetSelectorStateChangeTracker:
         tracked_entities = selected.referenced.union(selected.indirectly_referenced)
 
         _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
-        return async_track_state_change_event(
+        self._state_change_unsub = async_track_state_change_event(
             self._hass, tracked_entities, state_change_listener, job_type=self._job_type
         )
-
-    def _setup_tracking(self) -> None:
-        """Initialize state change tracking."""
-        self._state_change_unsub = self._track_entities_state_change()
 
     def _setup_registry_listeners(self) -> None:
         """Set up listeners for registry changes that require resubscription."""
@@ -683,7 +679,7 @@ class TargetSelectorStateChangeTracker:
             """Resubscribe to state change events when registry changes."""
             if self._state_change_unsub:
                 self._state_change_unsub()
-            self._state_change_unsub = self._track_entities_state_change()
+            self._track_entities_state_change()
 
         self._registry_unsubs = [
             self._hass.bus.async_listen(
