@@ -6,7 +6,7 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -18,7 +18,7 @@ from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
+from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> None:
     """Set up local media source."""
     source = LocalSource(hass)
-    hass.data[DOMAIN][DOMAIN] = source
+    hass.data[MEDIA_SOURCE_DATA][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
     hass.http.register_view(UploadMediaView(hass, source))
     websocket_api.async_register_command(hass, websocket_remove_media)
@@ -352,7 +352,7 @@ async def websocket_remove_media(
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
-    source: LocalSource = hass.data[DOMAIN][DOMAIN]
+    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][DOMAIN])
 
     try:
         source_dir_id, location = source.async_parse_identifier(item)
