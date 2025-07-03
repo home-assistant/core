@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -45,27 +46,45 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self.channel_id = channel_id
         self.model = model
         self.mower = mower
+        self.lock = asyncio.Lock()
 
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
         LOGGER.debug("Shutdown")
         await super().async_shutdown()
-        if self.mower.is_connected():
-            await self.mower.disconnect()
+        async with self.lock:
+            if self.mower.is_connected():
+                await self.mower.disconnect()
+
+    async def async_keep_alive(self, dt) -> None:
+        """Send a keep alive to the mower."""
+        async with self.lock:
+            if not self.mower.is_connected():
+                return
+
+            LOGGER.debug("Sending keep alive")
+            try:
+                await self.mower.command("KeepAlive")
+            except BleakError as err:
+                LOGGER.warning("Failed to send keep alive: %s", err)
 
     async def _async_find_device(self):
-        LOGGER.debug("Trying to reconnect")
-        await close_stale_connections_by_address(self.address)
+        async with self.lock:
+            if self.mower.is_connected():
+                return
 
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self.address, connectable=True
-        )
+            LOGGER.debug("Trying to reconnect")
+            await close_stale_connections_by_address(self.address)
 
-        try:
-            if not await self.mower.connect(device):
-                raise UpdateFailed("Failed to connect")
-        except BleakError as err:
-            raise UpdateFailed("Failed to connect") from err
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+
+            try:
+                if not await self.mower.connect(device):
+                    raise UpdateFailed("Failed to connect")
+            except BleakError as err:
+                raise UpdateFailed("Failed to connect") from err
 
     async def _async_update_data(self) -> dict[str, bytes]:
         """Poll the device."""
@@ -73,30 +92,20 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         data: dict[str, bytes] = {}
 
-        try:
-            if not self.mower.is_connected():
-                await self._async_find_device()
-        except BleakError as err:
-            raise UpdateFailed("Failed to connect") from err
+        await self._async_find_device()
 
         try:
-            data["battery_level"] = await self.mower.battery_level()
-            LOGGER.debug("battery_level" + str(data["battery_level"]))
-            if data["battery_level"] is None:
-                await self._async_find_device()
-                raise UpdateFailed("Error getting data from device")
+            async with self.lock:
+                data["battery_level"] = await self.mower.battery_level()
+                data["activity"] = await self.mower.mower_activity()
+                data["state"] = await self.mower.mower_state()
 
-            data["activity"] = await self.mower.mower_activity()
-            LOGGER.debug("activity:" + str(data["activity"]))
-            if data["activity"] is None:
-                await self._async_find_device()
-                raise UpdateFailed("Error getting data from device")
+            LOGGER.debug(data)
 
-            data["state"] = await self.mower.mower_state()
-            LOGGER.debug("state:" + str(data["state"]))
-            if data["state"] is None:
-                await self._async_find_device()
-                raise UpdateFailed("Error getting data from device")
+            for key, value in data.items():
+                if value is None:
+                    await self._async_find_device()
+                    raise UpdateFailed(f"Error getting data from device: {key} is None")
 
         except BleakError as err:
             LOGGER.error("Error getting data from device")
