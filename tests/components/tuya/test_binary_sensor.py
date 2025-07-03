@@ -62,6 +62,7 @@ async def test_fault_sensor_setup_and_discovery(
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
     mock_device_arete_two_12l_dehumidifier_air_purifier: CustomerDevice,
+    mock_device_door_sensor: CustomerDevice,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -69,6 +70,7 @@ async def test_fault_sensor_setup_and_discovery(
     # Setup
     mock_manager.device_map = {
         mock_device_arete_two_12l_dehumidifier_air_purifier.id: mock_device_arete_two_12l_dehumidifier_air_purifier,
+        mock_device_door_sensor.id: mock_device_door_sensor,  # device without faults, for test coverage
     }
     mock_config_entry.add_to_hass(hass)
 
