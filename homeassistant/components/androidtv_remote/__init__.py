@@ -82,13 +82,17 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry: %s", entry.data)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> None:
     """Handle options update."""
     _LOGGER.debug(
         "async_update_options: data: %s options: %s", entry.data, entry.options
