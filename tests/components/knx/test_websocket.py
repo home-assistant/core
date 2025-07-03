@@ -11,7 +11,7 @@ from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import FIXTURE_PROJECT_DATA, KNXTestKit
+from .conftest import KNXTestKit
 
 from tests.typing import WebSocketGenerator
 
@@ -32,11 +32,11 @@ async def test_knx_info_command(
     assert res["result"]["project"] is None
 
 
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_info_command_with_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
 ) -> None:
     """Test knx/info command with loaded project."""
     await knx.setup_integration()
@@ -59,11 +59,11 @@ async def test_knx_project_file_process(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    project_data: dict[str, Any],
 ) -> None:
     """Test knx/project_file_process command for storing and loading new data."""
     _file_id = "1234"
     _password = "pw-test"
-    _parse_result = FIXTURE_PROJECT_DATA
 
     await knx.setup_integration()
     client = await hass_ws_client(hass)
@@ -80,7 +80,7 @@ async def test_knx_project_file_process(
         patch(
             "homeassistant.components.knx.project.process_uploaded_file",
         ) as file_upload_mock,
-        patch("xknxproject.XKNXProj.parse", return_value=_parse_result) as parse_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=project_data) as parse_mock,
     ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
@@ -90,7 +90,7 @@ async def test_knx_project_file_process(
 
     assert res["success"], res
     assert hass.data[KNX_MODULE_KEY].project.loaded
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == _parse_result
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == project_data
 
 
 async def test_knx_project_file_process_error(
@@ -124,11 +124,11 @@ async def test_knx_project_file_process_error(
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
 
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_project_file_remove(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test knx/project_file_remove command."""
@@ -145,11 +145,12 @@ async def test_knx_project_file_remove(
     assert not hass_storage.get(KNX_PROJECT_STORAGE_KEY)
 
 
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_get_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
+    project_data: dict[str, Any],
 ) -> None:
     """Test retrieval of kxnproject from store."""
     await knx.setup_integration()
@@ -160,7 +161,7 @@ async def test_knx_get_project(
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] == FIXTURE_PROJECT_DATA
+    assert res["result"]["knxproject"] == project_data
 
 
 async def test_knx_group_monitor_info_command(
