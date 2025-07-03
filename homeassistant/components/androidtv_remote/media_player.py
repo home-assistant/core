@@ -100,9 +100,9 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        if self._api.current_app:
+        if self._api.current_app is not None:
             self._update_current_app(self._api.current_app)
-        if self._api.volume_info:
+        if self._api.volume_info is not None:
             self._update_volume_info(self._api.volume_info)
 
         self._api.add_current_app_updated_callback(self._current_app_updated)

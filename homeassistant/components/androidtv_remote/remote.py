@@ -63,7 +63,8 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         self._attr_activity_list = [
             app.get(CONF_APP_NAME, "") for app in self._apps.values()
         ]
-        self._update_current_app(self._api.current_app)
+        if self._api.current_app is not None:
+            self._update_current_app(self._api.current_app)
         self._api.add_current_app_updated_callback(self._current_app_updated)
 
     async def async_will_remove_from_hass(self) -> None:
