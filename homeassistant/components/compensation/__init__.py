@@ -168,11 +168,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Compensation from a config entry."""
     config = dict(entry.options)
-    data_points = config[CONF_DATAPOINTS]
-    new_data_points = []
-    for data_point in data_points:
-        values = data_point.split(",", maxsplit=1)
-        new_data_points.append([float(values[0]), float(values[1])])
+    data_points: list[dict[str, float]] = config[CONF_DATAPOINTS]
+    new_data_points = [
+        [data_point["compensated_value"], data_point["uncompensated_value"]]
+        for data_point in data_points
+    ]
     config[CONF_DATAPOINTS] = new_data_points
 
     await create_compensation_data(hass, entry.entry_id, config, True)

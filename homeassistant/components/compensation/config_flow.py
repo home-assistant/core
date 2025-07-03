@@ -61,11 +61,15 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                     fields={
                         "uncompensated_value": ObjectSelectorField(
                             required=True,
-                            selector=TextSelector(),
+                            selector=NumberSelector(
+                                NumberSelectorConfig(mode=NumberSelectorMode.BOX)
+                            ),
                         ),
                         "compensated_value": ObjectSelectorField(
                             required=True,
-                            selector=TextSelector(),
+                            selector=NumberSelector(
+                                NumberSelectorConfig(mode=NumberSelectorMode.BOX)
+                            ),
                         ),
                     },
                 )
