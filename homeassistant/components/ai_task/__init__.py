@@ -1,11 +1,12 @@
 """Integration to offer AI tasks to Home Assistant."""
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
 from homeassistant.core import (
     HassJobType,
     HomeAssistant,
@@ -14,12 +15,14 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers import config_validation as cv, storage
+from homeassistant.helpers import config_validation as cv, selector, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
     ATTR_INSTRUCTIONS,
+    ATTR_REQUIRED,
+    ATTR_STRUCTURE,
     ATTR_TASK_NAME,
     DATA_COMPONENT,
     DATA_PREFERENCES,
@@ -47,6 +50,29 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+STRUCTURE_FIELD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(ATTR_REQUIRED): bool,
+        vol.Required(CONF_SELECTOR): selector.validate_selector,
+    }
+)
+
+
+def _validate_structure(value: dict[str, Any]) -> vol.Schema:
+    """Validate the structure for the generate data task."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Structure must be a dictionary")
+    fields = {}
+    for k, v in value.items():
+        if not isinstance(v, dict):
+            raise vol.Invalid(f"Structure field '{k}' must be a dictionary")
+        field_class = vol.Required if v.get(ATTR_REQUIRED, False) else vol.Optional
+        fields[field_class(k, description=v.get(CONF_DESCRIPTION))] = selector.selector(
+            v[CONF_SELECTOR]
+        )
+    return vol.Schema(fields)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
@@ -64,6 +90,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Required(ATTR_TASK_NAME): cv.string,
                 vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
                 vol.Required(ATTR_INSTRUCTIONS): cv.string,
+                vol.Optional(ATTR_STRUCTURE): vol.All(
+                    vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
+                    _validate_structure,
+                ),
             }
         ),
         supports_response=SupportsResponse.ONLY,

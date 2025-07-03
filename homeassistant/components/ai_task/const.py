@@ -21,6 +21,8 @@ SERVICE_GENERATE_DATA = "generate_data"
 
 ATTR_INSTRUCTIONS: Final = "instructions"
 ATTR_TASK_NAME: Final = "task_name"
+ATTR_STRUCTURE: Final = "structure"
+ATTR_REQUIRED: Final = "required"
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a Home Assistant expert and help users with their tasks."
@@ -32,3 +34,6 @@ class AITaskEntityFeature(IntFlag):
 
     GENERATE_DATA = 1
     """Generate data based on instructions."""
+
+    GENERATE_STRUCTURED_DATA = 2
+    """Generate structured data based on instructions."""
