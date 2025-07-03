@@ -70,10 +70,6 @@ class SnmpScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner after testing the target device."""
-        if not hasattr(self, "_target"):
-            raise RuntimeError(
-                f"Please call .create() to construct {self.__class__.__name__} object"
-            )
 
         community = config[CONF_COMMUNITY]
         baseoid = config[CONF_BASEOID]
@@ -100,6 +96,7 @@ class SnmpScanner(DeviceScanner):
                 community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]
             )
 
+        self._target: UdpTransportTarget | Udp6TransportTarget
         self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
         self.last_results = []
@@ -107,8 +104,7 @@ class SnmpScanner(DeviceScanner):
 
     @classmethod
     async def create(cls, config):
-        """Asynchronously test the target device bftore fully initializing the scanner."""
-        self = cls.__new__(cls)
+        """Asynchronously test the target device before fully initializing the scanner."""
         host = config[CONF_HOST]
 
         try:
@@ -125,17 +121,17 @@ class SnmpScanner(DeviceScanner):
             except PySnmpError as err:
                 _LOGGER.error("Invalid SNMP host: %s", err)
                 return None
-        self._target = target  # pylint: disable=attribute-defined-outside-init
+        instance = cls(config)
+        instance._target = target
 
-        self.__init__(config)  # pylint: disable=unnecessary-dunder-call
-        return self
+        return instance
 
     async def async_init(self, hass: HomeAssistant) -> None:
         """Make a one-off read to check if the target device is reachable and readable."""
         self.request_args = await async_create_request_cmd_args(
             hass,
             self._auth_data,
-            self._target,  # type: ignore[attr-defined]
+            self._target,
             self.baseoid,
         )
         data = await self.async_get_snmp_data()
