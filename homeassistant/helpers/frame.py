@@ -185,6 +185,16 @@ def report_usage(
     """
     if (hass := _hass.hass) is None:
         raise RuntimeError("Frame helper not set up")
+    integration_frame: IntegrationFrame | None = None
+    integration_frame_err: MissingIntegrationFrame | None = None
+    if not integration_domain:
+        try:
+            integration_frame = get_integration_frame(
+                exclude_integrations=exclude_integrations
+            )
+        except MissingIntegrationFrame as err:
+            if core_behavior is ReportBehavior.ERROR:
+                integration_frame_err = err
     _report_usage_partial = functools.partial(
         _report_usage,
         hass,
@@ -193,8 +203,9 @@ def report_usage(
         core_behavior=core_behavior,
         core_integration_behavior=core_integration_behavior,
         custom_integration_behavior=custom_integration_behavior,
-        exclude_integrations=exclude_integrations,
         integration_domain=integration_domain,
+        integration_frame=integration_frame,
+        integration_frame_err=integration_frame_err,
         level=level,
     )
     if hass.loop_thread_id != threading.get_ident():
@@ -212,8 +223,9 @@ def _report_usage(
     core_behavior: ReportBehavior,
     core_integration_behavior: ReportBehavior,
     custom_integration_behavior: ReportBehavior,
-    exclude_integrations: set[str] | None,
     integration_domain: str | None,
+    integration_frame: IntegrationFrame | None,
+    integration_frame_err: MissingIntegrationFrame | None,
     level: int,
 ) -> None:
     """Report incorrect code usage.
@@ -235,12 +247,10 @@ def _report_usage(
         _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, None)
         return
 
-    try:
-        integration_frame = get_integration_frame(
-            exclude_integrations=exclude_integrations
+    if not integration_frame:
+        _report_usage_no_integration(
+            what, core_behavior, breaks_in_ha_version, integration_frame_err
         )
-    except MissingIntegrationFrame as err:
-        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, err)
         return
 
     integration_behavior = core_integration_behavior
