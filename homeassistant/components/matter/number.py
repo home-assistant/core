@@ -53,7 +53,7 @@ class MatterRangeNumberEntityDescription(
 ):
     """Describe Matter Number Input entities with min and max values."""
 
-    ha_to_native_value: Callable[[Any], Any]
+    ha_to_device: Callable[[Any], Any]
 
     # attribute descriptors to get the min and max value
     min_attribute: type[ClusterAttributeDescriptor]
@@ -72,7 +72,7 @@ class MatterNumber(MatterEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         sendvalue = int(value)
-        if value_convert := self.entity_description.ha_to_native_value:
+        if value_convert := self.entity_description.ha_to_device:
             sendvalue = value_convert(value)
         await self.write_attribute(
             value=sendvalue,
@@ -82,7 +82,7 @@ class MatterNumber(MatterEntity, NumberEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -94,7 +94,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        send_value = self.entity_description.ha_to_native_value(value)
+        send_value = self.entity_description.ha_to_device(value)
         # custom command defined to set the new value
         await self.send_device_command(
             self.entity_description.command(send_value),
@@ -104,7 +104,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
         self._attr_native_min_value = (
@@ -135,8 +135,8 @@ DISCOVERY_SCHEMAS = [
             native_min_value=0,
             mode=NumberMode.BOX,
             # use 255 to indicate that the value should revert to the default
-            measurement_to_ha=lambda x: 255 if x is None else x,
-            ha_to_native_value=lambda x: None if x == 255 else int(x),
+            device_to_ha=lambda x: 255 if x is None else x,
+            ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
             native_unit_of_measurement=None,
         ),
@@ -153,8 +153,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="on_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_native_value=lambda x: round(x * 10),
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
@@ -172,8 +172,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="off_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_native_value=lambda x: round(x * 10),
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
@@ -191,8 +191,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="on_off_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_native_value=lambda x: round(x * 10),
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
@@ -229,8 +229,8 @@ DISCOVERY_SCHEMAS = [
             native_min_value=-50,
             native_step=0.5,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            measurement_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_native_value=lambda x: round(x * 10),
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
@@ -279,8 +279,8 @@ DISCOVERY_SCHEMAS = [
                 targetTemperature=value
             ),
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            measurement_to_ha=lambda x: None if x is None else x / 100,
-            ha_to_native_value=lambda x: round(x * 100),
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
             min_attribute=clusters.TemperatureControl.Attributes.MinTemperature,
             max_attribute=clusters.TemperatureControl.Attributes.MaxTemperature,
             mode=NumberMode.SLIDER,
