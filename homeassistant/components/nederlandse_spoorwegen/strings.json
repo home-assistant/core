@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Nederlandse Spoorwegen Setup",
-        "description": "Set up your Nederlandse Spoorwegen integration. [Find Dutch station codes here]({station_list_url}).",
+        "description": "Set up your Nederlandse Spoorwegen integration.",
         "data": {
           "api_key": "API key"
         },
@@ -28,6 +28,26 @@
           "via": "Optional via station code (e.g., RTD)",
           "time": "Optional departure time in HH:MM:SS (24h)"
         }
+      },
+      "reauth": {
+        "title": "Re-authenticate",
+        "description": "Your NS API key needs to be updated.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Enter your new NS API key."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure",
+        "description": "Update your NS API key.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Enter your new NS API key."
+        }
       }
     },
     "error": {
@@ -36,7 +56,9 @@
       "unknown": "Unknown error occurred."
     },
     "abort": {
-      "already_configured": "This API key is already configured."
+      "already_configured": "This API key is already configured.",
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Reconfiguration successful."
     }
   },
   "options": {

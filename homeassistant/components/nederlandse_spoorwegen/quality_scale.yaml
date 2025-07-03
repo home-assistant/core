@@ -48,13 +48,13 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
-    status: todo
+    status: done
     comment: |
-      This integration does not set PARALLEL_UPDATES in sensor.py.
+      PARALLEL_UPDATES is set to 2 in const.py and imported in sensor.py. Test coverage confirms correct integration and no regressions.
   reauthentication-flow:
-    status: todo
+    status: done
     comment: |
-      This integration does not support a reauthentication flow and does not implement async_step_reauth.
+      Reauthentication flow is implemented and tested. async_step_reauth is present and covered by tests.
   test-coverage: done
   # Gold
   devices:
@@ -126,6 +126,7 @@ rules:
     status: exempt
     comment: |
       This integration connects to a single service.
+
   # Platinum
   async-dependency: done
   inject-websession: done

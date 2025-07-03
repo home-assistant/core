@@ -36,7 +36,10 @@ from .const import (
     CONF_TO,
     CONF_VIA,
     MIN_TIME_BETWEEN_UPDATES_SECONDS,
+    PARALLEL_UPDATES as _PARALLEL_UPDATES,
 )
+
+PARALLEL_UPDATES = _PARALLEL_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 

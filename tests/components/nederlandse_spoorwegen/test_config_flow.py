@@ -498,3 +498,45 @@ async def test_options_flow_edit_route_form_submission(hass: HomeAssistant) -> N
     errors = result.get("errors", {})
     assert errors is not None and "base" in errors
     assert errors["base"] == "missing_fields"
+
+
+@pytest.mark.asyncio
+async def test_config_flow_reauth_and_reconfigure(hass: HomeAssistant) -> None:
+    """Test reauthentication and reconfiguration steps update the API key."""
+    # Create initial entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=ROUTE
+    )
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    entry = entries[0]
+    # Test reauth
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth", "entry_id": entry.entry_id}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={CONF_API_KEY: "newkey123"}
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_API_KEY] == "newkey123"
+    # Test reconfigure
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={CONF_API_KEY: "anotherkey456"}
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_API_KEY] == "anotherkey456"
