@@ -755,9 +755,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "topic", "subentry_id"
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, "subentry_id")
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -774,7 +772,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
             data={CONF_TOPIC: "mytopic", CONF_NAME: "mytopic_displayname"},
             subentry_id="subentry_id",
             subentry_type="topic",
-            title="mytopic_displayname",
+            title="mytopic",
             unique_id="mytopic",
         )
     }

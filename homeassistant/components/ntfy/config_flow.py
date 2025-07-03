@@ -436,7 +436,6 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 entry=entry,
                 subentry=subentry,
-                title=user_input[CONF_NAME] or subentry_data[CONF_TOPIC],
                 data_updates=user_input,
             )
 
