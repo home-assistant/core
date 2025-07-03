@@ -123,6 +123,30 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         )
 
 
+# intensities in inovelli LEDs are represented by a number from 0 to 75 but only 11
+# values are actually used when one of 11 levels is set by manually configuring the dimmer
+inovelli_intensity_map = {
+    0: 0,
+    1: 1,
+    2: 8,
+    3: 15,
+    4: 24,
+    5: 33,
+    6: 42,
+    7: 50,
+    8: 59,
+    9: 68,
+    10: 75,
+}
+
+inovelli_reverse_intensity_map = {}
+for i in range(10):
+    start = inovelli_intensity_map[i]
+    end = inovelli_intensity_map[i + 1]
+    for j in range(start, end):
+        inovelli_reverse_intensity_map[j] = i
+inovelli_reverse_intensity_map[inovelli_intensity_map[10]] = 10
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -290,6 +314,46 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.TemperatureSetpoint,
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="InovelliLEDIndicatorIntensityOff",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator_intensity_off",
+            native_max_value=75,
+            native_min_value=0,
+            native_step=1,
+            ha_to_native_value=lambda x: inovelli_intensity_map[x],
+            measurement_to_ha=lambda x: None
+            if x is None
+            else inovelli_reverse_intensity_map[x],
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOff,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="InovelliLEDIndicatorIntensityOn",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator_intensity_on",
+            native_max_value=75,
+            native_min_value=0,
+            native_step=1,
+            ha_to_native_value=lambda x: inovelli_intensity_map[x],
+            measurement_to_ha=lambda x: None
+            if x is None
+            else inovelli_reverse_intensity_map[x],
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
     ),
 ]

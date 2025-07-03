@@ -191,6 +191,12 @@
       },
       "auto_relock_timer": {
         "name": "Automatic relock timer"
+      },
+      "led_indicator_intensity_off": {
+        "name": "LED Off Intensity"
+      },
+      "led_indicator_intensity_on": {
+        "name": "LED On Intensity"
       }
     },
     "light": {
