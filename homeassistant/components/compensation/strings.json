@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "incorrect_datapoints": "Datapoints needs to be provided in the right format, ex. '1.0, 0.0'.",
       "not_enough_datapoints": "The number of datapoints needs to be more than the configured degree."
     },
     "step": {
@@ -20,7 +19,7 @@
         }
       },
       "options": {
-        "description": "Read the documention for further details on how to configure the statistics sensor using these options.",
+        "description": "Read the documentation for further details on how to configure the statistics sensor using these options.",
         "data": {
           "data_points": "Data points",
           "attribute": "Attribute",
@@ -31,10 +30,10 @@
           "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "data_points": "Add a collection of data point conversions with uncompensated value and the compensated value. The number of required data point sets is equal to the polynomial degree + 1.",
+          "data_points": "Add a collection of data point conversions with the uncompensated value and the compensated value. The number of required data point sets is equal to the polynomial degree + 1.",
           "attribute": "Attribute from the source to monitor/compensate.",
-          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data collections (data_points) greatest uncompensated value.",
-          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data collections (data_points) lowest uncompensated value.",
+          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data collection's (data_points) greatest uncompensated value.",
+          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data collection's (data_points) lowest uncompensated value.",
           "precision": "Defines the precision of the calculated values, through the argument of round().",
           "degree": "The degree of a polynomial.",
           "unit_of_measurement": "Defines the units of measurement of the sensor, if any."
@@ -47,7 +46,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "incorrect_datapoints": "[%key:component::compensation::config::error::incorrect_datapoints%]",
       "not_enough_datapoints": "[%key:component::compensation::config::error::not_enough_datapoints%]"
     },
     "step": {
@@ -84,7 +82,7 @@
   },
   "exceptions": {
     "setup_error": {
-      "message": "Setup of {title} could not be setup due to {error}"
+      "message": "Setup of {title} could not be completed due to {error}"
     }
   }
 }
