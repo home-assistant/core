@@ -1,6 +1,7 @@
 """Media player entity for the PlayStation Network Integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from psnawp_api.models.trophies import PlatformType
 
@@ -89,7 +90,8 @@ class PsnMediaPlayerEntity(
     ) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
-
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform.value}"
         self.key = platform
         self._attr_device_info = DeviceInfo(
@@ -97,6 +99,7 @@ class PsnMediaPlayerEntity(
             name=PLATFORM_MAP[platform],
             manufacturer="Sony Interactive Entertainment",
             model=PLATFORM_MAP[platform],
+            via_device=(DOMAIN, coordinator.config_entry.unique_id),
         )
 
     @property
@@ -104,7 +107,7 @@ class PsnMediaPlayerEntity(
         """Media Player state getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         if session and session.status == "online":
-            if self.coordinator.data.available and session.title_id is not None:
+            if session.title_id is not None:
                 return MediaPlayerState.PLAYING
             return MediaPlayerState.ON
         return MediaPlayerState.OFF

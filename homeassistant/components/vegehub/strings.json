@@ -27,8 +27,8 @@
       "cannot_connect": "Failed to connect to the device. Please try again.",
       "timeout_connect": "Timed out connecting. Ensure VegeHub is awake, and try again.",
       "already_in_progress": "Device already detected. Check discovered devices.",
-      "already_configured": "Device is already configured.",
-      "unknown_error": "An unknown error has occurred."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
