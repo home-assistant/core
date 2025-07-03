@@ -5,7 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -35,6 +35,7 @@ async def _async_service_handle(service: ServiceCall) -> None:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_RESTART, entity_ids)
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register FFmpeg services."""
 
