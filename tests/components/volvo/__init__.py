@@ -15,7 +15,7 @@ _MODEL_SPECIFIC_RESPONSES = {
     "ex30_2024": ["vehicle"],
     "ex30_2024_no_colour": ["vehicle"],
     "s90_diesel_2018": ["diagnostics", "statistics", "vehicle"],
-    "xc40_electric_2024": ["vehicle"],
+    "xc40_electric_2024": ["vehicle", "energy_capabilities", "energy_state"],
     "xc90_petrol_2019": ["commands", "vehicle"],
 }
 

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, replace
+from typing import Any, cast
 
 from volvocarsapi.models import (
     VolvoCarsApiBaseModel,
     VolvoCarsValue,
     VolvoCarsValueField,
+    VolvoCarsValueStatusField,
     VolvoCarsVehicle,
 )
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfEnergyDistance,
     UnitOfLength,
+    UnitOfPower,
     UnitOfSpeed,
     UnitOfTime,
     UnitOfVolume,
@@ -34,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_BATTERY_CAPACITY
-from .coordinator import VolvoConfigEntry
+from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
@@ -44,6 +46,7 @@ PARALLEL_UPDATES = 0
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
+    source_fields: list[str] | None = None
     value_fn: Callable[[VolvoCarsValue], Any] | None = None
     unit_fn: Callable[[VolvoCarsValue], Any] | None = None
     available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
@@ -62,14 +65,16 @@ def _determine_time_to_service_unit(field: VolvoCarsValue) -> UnitOfTime:
     )
 
 
-def _remove_charging_system_prefix(field: VolvoCarsValue) -> str:
-    value = str(field.value)
-    return value.lower().removeprefix("charging_system_")
+def _charging_power_value(field: VolvoCarsValue) -> int:
+    return (
+        int(field.value)
+        if isinstance(field, VolvoCarsValueStatusField) and field.status == "OK"
+        else 0
+    )
 
 
-def _remove_connection_status_prefix(field: VolvoCarsValue) -> str:
-    value = str(field.value)
-    return value.lower().removeprefix("connection_status_")
+def _to_capitalize(field: VolvoCarsValue) -> str:
+    return cast(str, field.value).replace("_", " ").lower().capitalize()
 
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
@@ -151,7 +156,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # fuel & recharge-status endpoint
+    # fuel & energy state endpoint
     VolvoSensorDescription(
         key="battery_charge_level",
         api_field="batteryChargeLevel",
@@ -160,21 +165,19 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
-    # recharge-status endpoint
+    # energy state endpoint
     VolvoSensorDescription(
-        key="charging_connection_status",
-        api_field="chargingConnectionStatus",
+        key="charger_connection_status",
+        api_field="chargerConnectionStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "connected_ac",
-            "connected_dc",
+            "connected",
             "disconnected",
             "fault",
         ],
-        value_fn=_remove_connection_status_prefix,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
-    # recharge-status endpoint
+    # energy state endpoint
     VolvoSensorDescription(
         key="charging_current_limit",
         api_field="chargingCurrentLimit",
@@ -183,25 +186,55 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
-    # recharge-status endpoint
+    # energy state endpoint
     VolvoSensorDescription(
-        key="charging_system_status",
-        api_field="chargingSystemStatus",
+        key="charging_power",
+        api_field="chargingPower",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        available_fn=lambda vehicle: vehicle.has_battery_engine(),
+        value_fn=_charging_power_value,
+    ),
+    # energy state endpoint
+    VolvoSensorDescription(
+        key="charging_power_status",
+        api_field="chargerPowerStatus",
+        value_fn=_to_capitalize,
+        available_fn=lambda vehicle: vehicle.has_battery_engine(),
+    ),
+    # energy state endpoint
+    VolvoSensorDescription(
+        key="charging_status",
+        api_field="chargingStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "charging",
+            "discharging",
             "done",
-            "fault",
+            "error",
             "idle",
             "scheduled",
         ],
-        value_fn=_remove_charging_system_prefix,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
-    # statistics endpoint
+    # energy state endpoint
+    VolvoSensorDescription(
+        key="charging_type",
+        api_field="chargingType",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "ac",
+            "dc",
+            "none",
+        ],
+        available_fn=lambda vehicle: vehicle.has_battery_engine(),
+    ),
+    # statistics & energy state endpoint
     VolvoSensorDescription(
         key="distance_to_empty_battery",
-        api_field="distanceToEmptyBattery",
+        api_field="",
+        source_fields=["distanceToEmptyBattery", "electricRange"],
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -232,10 +265,10 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # recharge-status endpoint
+    # energy state endpoint
     VolvoSensorDescription(
         key="estimated_charging_time",
-        api_field="estimatedChargingTime",
+        api_field="estimatedChargingTimeToTargetBatteryChargeLevel",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -258,7 +291,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    # recharge-status endpoint
+    # energy state endpoint
     VolvoSensorDescription(
         key="target_battery_charge_level",
         api_field="targetBatteryChargeLevel",
@@ -299,14 +332,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
 
+    entities: list[VolvoSensor] = []
+    added_keys: set[str] = set()
+
+    def _add_entity(
+        coordinator: VolvoBaseCoordinator, description: VolvoSensorDescription
+    ) -> None:
+        entities.append(VolvoSensor(coordinator, description))
+        added_keys.add(description.key)
+
     coordinators = entry.runtime_data
-    entities = [
-        VolvoSensor(coordinator, description)
-        for coordinator in coordinators
-        for description in _DESCRIPTIONS
-        if description.api_field in coordinator.data
-        and description.available_fn(coordinator.vehicle)
-    ]
+
+    for coordinator in coordinators:
+        for description in _DESCRIPTIONS:
+            if description.key in added_keys or not description.available_fn(
+                coordinator.vehicle
+            ):
+                continue
+
+            if description.source_fields:
+                for field in description.source_fields:
+                    if field in coordinator.data:
+                        description = replace(description, api_field=field)
+                        _add_entity(coordinator, description)
+            elif description.api_field in coordinator.data:
+                _add_entity(coordinator, description)
 
     async_add_entities(entities)
 

@@ -135,6 +135,8 @@ def _mock_api_failure(mock_api: VolvoCarsApi) -> AsyncMock:
     mock_api.async_get_commands.side_effect = VolvoApiException()
     mock_api.async_get_diagnostics.side_effect = VolvoApiException()
     mock_api.async_get_doors_status.side_effect = VolvoApiException()
+    mock_api.async_get_energy_capabilities.side_effect = VolvoApiException()
+    mock_api.async_get_energy_state.side_effect = VolvoApiException()
     mock_api.async_get_engine_status.side_effect = VolvoApiException()
     mock_api.async_get_engine_warnings.side_effect = VolvoApiException()
     mock_api.async_get_fuel_status.side_effect = VolvoApiException()

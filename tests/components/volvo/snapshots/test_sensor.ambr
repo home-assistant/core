@@ -723,7 +723,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '58.0',
+    'state': '53',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery_capacity-entry]
@@ -848,8 +848,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'connected_ac',
-        'connected_dc',
+        'connected',
         'disconnected',
         'fault',
       ]),
@@ -878,8 +877,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'charging_connection_status',
-    'unique_id': 'yv1abcdefg1234567_charging_connection_status',
+    'translation_key': 'charger_connection_status',
+    'unique_id': 'yv1abcdefg1234567_charger_connection_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -889,8 +888,7 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging connection status',
       'options': list([
-        'connected_ac',
-        'connected_dc',
+        'connected',
         'disconnected',
         'fault',
       ]),
@@ -900,7 +898,167 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'connected_ac',
+    'state': 'connected',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Charging limit',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_current_limit',
+    'unique_id': 'yv1abcdefg1234567_charging_current_limit',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Volvo XC40 Charging limit',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Charging power',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_power',
+    'unique_id': 'yv1abcdefg1234567_charging_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Volvo XC40 Charging power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_power_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging power status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_power_status',
+    'unique_id': 'yv1abcdefg1234567_charging_power_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Charging power status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_power_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Providing power',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_status-entry]
@@ -911,8 +1069,9 @@
     'capabilities': dict({
       'options': list([
         'charging',
+        'discharging',
         'done',
-        'fault',
+        'error',
         'idle',
         'scheduled',
       ]),
@@ -941,8 +1100,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'charging_system_status',
-    'unique_id': 'yv1abcdefg1234567_charging_system_status',
+    'translation_key': 'charging_status',
+    'unique_id': 'yv1abcdefg1234567_charging_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -953,8 +1112,9 @@
       'friendly_name': 'Volvo XC40 Charging status',
       'options': list([
         'charging',
+        'discharging',
         'done',
-        'fault',
+        'error',
         'idle',
         'scheduled',
       ]),
@@ -964,7 +1124,67 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'charging',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ac',
+        'dc',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging type',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_type',
+    'unique_id': 'yv1abcdefg1234567_charging_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Charging type',
+      'options': list([
+        'ac',
+        'dc',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ac',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_empty_battery-entry]
@@ -1020,7 +1240,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '250',
+    'state': '220',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_service-entry]
@@ -1188,7 +1408,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '780',
+    'state': '1440',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_odometer-entry]
@@ -1245,6 +1465,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_target_battery_charge_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_target_battery_charge_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target battery charge level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_battery_charge_level',
+    'unique_id': 'yv1abcdefg1234567_target_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_target_battery_charge_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Target battery charge level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_target_battery_charge_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_service-entry]

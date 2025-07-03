@@ -9,6 +9,7 @@ from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
     VolvoCarsLocation,
+    VolvoCarsValueField,
     VolvoCarsVehicle,
 )
 
@@ -90,6 +91,16 @@ async def mock_api(hass: HomeAssistant, full_model: str) -> AsyncGenerator[Async
             hass, "diagnostics", full_model
         )
         doors = await async_load_fixture_as_value_field(hass, "doors", full_model)
+        energy_capabilities = await async_load_fixture_as_json(
+            hass, "energy_capabilities", full_model
+        )
+        energy_state_data = await async_load_fixture_as_json(
+            hass, "energy_state", full_model
+        )
+        energy_state = {
+            key: VolvoCarsValueField.from_dict(value)
+            for key, value in energy_state_data.items()
+        }
         engine_status = await async_load_fixture_as_value_field(
             hass, "engine_status", full_model
         )
@@ -116,6 +127,8 @@ async def mock_api(hass: HomeAssistant, full_model: str) -> AsyncGenerator[Async
         api.async_get_commands = AsyncMock(return_value=commands)
         api.async_get_diagnostics = AsyncMock(return_value=diagnostics)
         api.async_get_doors_status = AsyncMock(return_value=doors)
+        api.async_get_energy_capabilities = AsyncMock(return_value=energy_capabilities)
+        api.async_get_energy_state = AsyncMock(return_value=energy_state)
         api.async_get_engine_status = AsyncMock(return_value=engine_status)
         api.async_get_engine_warnings = AsyncMock(return_value=engine_warnings)
         api.async_get_fuel_status = AsyncMock(return_value=fuel_status)

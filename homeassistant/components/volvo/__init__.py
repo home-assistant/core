@@ -37,10 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     api = await _async_auth_and_create_api(hass, entry)
     vehicle = await _async_load_vehicle(api)
 
+    # Order is important! Faster intervals must come first.
     coordinators = (
-        VolvoVerySlowIntervalCoordinator(hass, entry, api, vehicle),
-        VolvoSlowIntervalCoordinator(hass, entry, api, vehicle),
         VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
+        VolvoSlowIntervalCoordinator(hass, entry, api, vehicle),
+        VolvoVerySlowIntervalCoordinator(hass, entry, api, vehicle),
     )
 
     await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))

@@ -31,14 +31,23 @@
       "battery_charge_level": {
         "default": "mdi:battery"
       },
-      "charging_connection_status": {
+      "charger_connection_status": {
         "default": "mdi:ev-plug-ccs2"
       },
-      "charging_current_limit": {
-        "default": "mdi:current-ac"
+      "charging_power": {
+        "default": "mdi:gauge"
       },
-      "charging_system_status": {
+      "charging_power_status": {
+        "default": "mdi:power-plug-outline"
+      },
+      "charging_status": {
         "default": "mdi:ev-station"
+      },
+      "charging_type": {
+        "default": "mdi:current-ac",
+        "state": {
+          "dc": "mdi:current-dc"
+        }
       },
       "distance_to_empty_battery": {
         "default": "mdi:gauge-empty"

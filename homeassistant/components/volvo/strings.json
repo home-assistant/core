@@ -86,26 +86,40 @@
       "battery_charge_level": {
         "name": "Battery charge level"
       },
-      "charging_current_limit": {
-        "name": "Charging limit"
-      },
-      "charging_connection_status": {
+      "charger_connection_status": {
         "name": "Charging connection status",
         "state": {
-          "connected_ac": "Connected AC",
-          "connected_dc": "Connected DC",
+          "connected": "[%key:common::state::connected%]",
           "disconnected": "[%key:common::state::disconnected%]",
           "fault": "[%key:common::state::error%]"
         }
       },
-      "charging_system_status": {
+      "charging_current_limit": {
+        "name": "Charging limit"
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_power_status": {
+        "name": "Charging power status"
+      },
+      "charging_status": {
         "name": "Charging status",
         "state": {
           "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
           "done": "Done",
-          "fault": "[%key:common::state::error%]",
+          "error": "[%key:common::state::error%]",
           "idle": "[%key:common::state::idle%]",
           "scheduled": "Scheduled"
+        }
+      },
+      "charging_type": {
+        "name": "Charging type",
+        "state": {
+          "ac": "AC",
+          "dc": "DC",
+          "none": "None"
         }
       },
       "distance_to_empty_battery": {

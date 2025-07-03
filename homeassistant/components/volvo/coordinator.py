@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
@@ -48,7 +49,6 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
         vehicle: VolvoCarsVehicle,
         update_interval: timedelta,
         name: str,
-        api_calls: list[str],
     ) -> None:
         """Initialize the coordinator."""
 
@@ -62,37 +62,28 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         self.api = api
         self.vehicle = vehicle
-        self._api_calls = api_calls
 
-        self._refresh_conditions = {
-            "command_accessibility": (self.api.async_get_command_accessibility, True),
-            "diagnostics": (self.api.async_get_diagnostics, True),
-            "fuel": (
-                self.api.async_get_fuel_status,
-                self.vehicle.has_combustion_engine(),
-            ),
-            "odometer": (self.api.async_get_odometer, True),
-            "recharge_status": (
-                self.api.async_get_recharge_status,
-                self.vehicle.has_battery_engine(),
-            ),
-            "statistics": (self.api.async_get_statistics, True),
-        }
+        self._api_calls: list[Callable[[], Coroutine[Any, Any, Any]]] = []
+
+    async def _async_setup(self) -> None:
+        self._api_calls = await self._async_determine_api_calls()
+
+        if not self._api_calls:
+            self.update_interval = None
 
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data from API."""
 
-        api_calls = self._get_api_calls()
         data: CoordinatorData = {}
 
-        if not api_calls:
+        if not self._api_calls:
             return data
 
         valid = False
         exception: Exception | None = None
 
         results = await asyncio.gather(
-            *(call() for call in api_calls), return_exceptions=True
+            *(call() for call in self._api_calls), return_exceptions=True
         )
 
         for result in results:
@@ -147,14 +138,11 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         return self.data.get(api_field) if api_field else None
 
-    def _get_api_calls(
+    @abstractmethod
+    async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        return [
-            api_call
-            for key, (api_call, condition) in self._refresh_conditions.items()
-            if condition and key in self._api_calls
-        ]
+        raise NotImplementedError
 
 
 class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
@@ -176,8 +164,16 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
             vehicle,
             timedelta(minutes=VERY_SLOW_INTERVAL),
             "Volvo very slow interval coordinator",
-            ["diagnostics", "odometer", "statistics"],
         )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        return [
+            self.api.async_get_diagnostics,
+            self.api.async_get_odometer,
+            self.api.async_get_statistics,
+        ]
 
     async def _async_update_data(self) -> CoordinatorData:
         data = await super()._async_update_data()
@@ -212,8 +208,18 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
             vehicle,
             timedelta(minutes=SLOW_INTERVAL),
             "Volvo slow interval coordinator",
-            ["command_accessibility", "fuel"],
         )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        if self.vehicle.has_combustion_engine():
+            return [
+                self.api.async_get_command_accessibility,
+                self.api.async_get_fuel_status,
+            ]
+
+        return [self.api.async_get_command_accessibility]
 
 
 class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
@@ -235,5 +241,15 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             vehicle,
             timedelta(minutes=MEDIUM_INTERVAL),
             "Volvo medium interval coordinator",
-            ["recharge_status"],
         )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        if self.vehicle.has_battery_engine():
+            capabilities = await self.api.async_get_energy_capabilities()
+
+            if capabilities.get("isSupported", False):
+                return [self.api.async_get_energy_state]
+
+        return []
