@@ -1,18 +1,20 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][switch.dehumidifier_child_lock-entry]
+# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][sensor.dehumidifier_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dehumidifier_child_lock',
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dehumidifier_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,29 +24,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:account-lock',
-    'original_name': 'Child lock',
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqchild_lock',
-    'unit_of_measurement': None,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgqhumidity_indoor',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][switch.dehumidifier_child_lock-state]
+# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][sensor.dehumidifier_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dehumidifier Child lock',
-      'icon': 'mdi:account-lock',
+      'device_class': 'humidity',
+      'friendly_name': 'Dehumidifier Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dehumidifier_child_lock',
+    'entity_id': 'sensor.dehumidifier_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': '47.0',
   })
 # ---

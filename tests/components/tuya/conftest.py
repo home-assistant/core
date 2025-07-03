@@ -50,6 +50,30 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+async def mock_loaded_entry(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> MockConfigEntry:
+    """Mock a config entry."""
+    # Setup
+    mock_manager.device_map = {
+        mock_device.id: mock_device,
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    # Initialize the component
+    with (
+        patch("homeassistant.components.tuya.ManagerCompat", return_value=mock_manager),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
