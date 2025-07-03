@@ -916,7 +916,7 @@ async def test_if_fires_using_weekday_single(
 
     # Fire on Tuesday at the same time - should not trigger
     tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
-    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    async_fire_time_changed(hass, tuesday_trigger)
     await hass.async_block_till_done()
 
     # Should still be only 1 call
@@ -963,20 +963,20 @@ async def test_if_fires_using_weekday_multiple(
 
     # Fire on Tuesday - should not trigger
     tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
-    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    async_fire_time_changed(hass, tuesday_trigger)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
 
     # Fire on Wednesday - should trigger
     wednesday_trigger = dt_util.as_utc(datetime(2023, 1, 4, 5, 0, 0, 0))
-    async_fire_time_changed(hass, wednesday_trigger + timedelta(seconds=1))
+    async_fire_time_changed(hass, wednesday_trigger)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert "Wednesday" in service_calls[1].data["some"]
 
     # Fire on Friday - should trigger
     friday_trigger = dt_util.as_utc(datetime(2023, 1, 6, 5, 0, 0, 0))
-    async_fire_time_changed(hass, friday_trigger + timedelta(seconds=1))
+    async_fire_time_changed(hass, friday_trigger)
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert "Friday" in service_calls[2].data["some"]
@@ -1041,7 +1041,7 @@ async def test_if_fires_using_weekday_with_entity(
 
     # Fire on Tuesday - should not trigger
     tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
-    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
+    async_fire_time_changed(hass, tuesday_trigger)
     await hass.async_block_till_done()
     automation_calls = [call for call in service_calls if call.domain == "test"]
     assert len(automation_calls) == 1
