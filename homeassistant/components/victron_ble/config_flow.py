@@ -72,7 +72,7 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # see if we can create a device with the access token
             device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
             if device.validate_advertisement_key(
-                discovery_info.manufacturer_data[0x02E1]
+                discovery_info.manufacturer_data[VICTRON_IDENTIFIER]
             ):
                 return self.async_create_entry(
                     title=title,
