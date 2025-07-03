@@ -43,7 +43,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
-    _LOGGER.debug("STT async_setup_entry called")
     client = config_entry.runtime_data.client
     auto_detect = config_entry.options.get(
         CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
