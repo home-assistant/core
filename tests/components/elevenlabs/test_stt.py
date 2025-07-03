@@ -252,29 +252,6 @@ async def test_stt_edge_cases(
     assert result.text is None
 
 
-async def test_stt_timeout_during_stream(
-    hass: HomeAssistant,
-    setup: AsyncMock,
-    default_metadata: stt.SpeechMetadata,
-    simple_stream,
-) -> None:
-    """Test timeout exception raised when stream is too slow."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
-
-    async def fake_wait_for(coro, timeout):
-        try:
-            await coro  # ensure coroutine is awaited to prevent warning
-        finally:
-            raise TimeoutError
-
-    with patch("asyncio.wait_for", side_effect=fake_wait_for):
-        result = await entity.async_process_audio_stream(
-            default_metadata, simple_stream()
-        )
-    assert result.result == stt.SpeechResultState.ERROR
-    assert result.text is None
-
-
 async def test_stt_convert_api_error(
     hass: HomeAssistant,
     setup: AsyncMock,

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterable
 from io import BytesIO
 import logging
@@ -159,17 +158,9 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
         else:
             file_format = "other"
 
-        async def read_stream_to_bytes(stream: AsyncIterable[bytes]) -> bytes:
-            audio = b""
-            async for chunk in stream:
-                audio += chunk
-            return audio
-
-        try:
-            audio = await asyncio.wait_for(read_stream_to_bytes(stream), timeout=60)
-        except TimeoutError:
-            _LOGGER.warning("Timeout while waiting for audio data")
-            return stt.SpeechResult(None, SpeechResultState.ERROR)
+        audio = b""
+        async for chunk in stream:
+            audio += chunk
 
         _LOGGER.debug("Finished reading audio stream, total size: %d bytes", len(audio))
         if not audio:
@@ -191,6 +182,8 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
                 file_format=file_format,
                 model_id="scribe_v1",
                 language_code=lang_code,
+                tag_audio_events=False,
+                num_speakers=1,
                 diarize=False,
             )
         except ApiError as exc:
