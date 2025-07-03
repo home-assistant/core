@@ -149,10 +149,13 @@ async def _register_trigger_platform(
 
     # We don't use gather here because gather adds additional overhead
     # when wrapping each coroutine in a task, and we expect our listeners
-    # to call condition.async_get_all_descriptions which will only yield
+    # to call trigger.async_get_all_descriptions which will only yield
     # the first time it's called, after that it returns cached data.
     for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]:
-        await listener(new_triggers)
+        try:
+            await listener(new_triggers)
+        except Exception:
+            _LOGGER.exception("Error while notifying trigger platform listener")
 
 
 class Trigger(abc.ABC):
