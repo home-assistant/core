@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytraccar import DeviceModel, GeofenceModel
+from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
 
 def get_device(device_id: int, devices: list[DeviceModel]) -> DeviceModel | None:
@@ -33,5 +33,5 @@ def get_geofence_ids(
         return position["geofenceIds"]
     # For Traccar <5.8
     if "geofenceIds" in device:
-        return device["geofenceIds"]
+        return device["geofenceIds"] # type: ignore[typeddict-item]
     return []
