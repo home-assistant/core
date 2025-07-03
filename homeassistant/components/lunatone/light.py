@@ -42,6 +42,8 @@ async def async_setup_entry(
 class LunatoneLight(LightEntity):
     """Representation of a Lunatone Light."""
 
+    unique_id: str
+
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
@@ -64,15 +66,9 @@ class LunatoneLight(LightEntity):
         return self._device.data.features.switchable.status
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        if self.unique_id is None:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
-            manufacturer="Lunatone",
-        )
+        return DeviceInfo(identifiers={(DOMAIN, self.unique_id)}, name=self.name)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
