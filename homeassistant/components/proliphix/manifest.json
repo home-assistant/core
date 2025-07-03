@@ -1,8 +1,10 @@
 {
   "domain": "proliphix",
   "name": "Proliphix",
-  "codeowners": [],
+  "codeowners": ["@frenck"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proliphix",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["proliphix"],
   "quality_scale": "legacy",

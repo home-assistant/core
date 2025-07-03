@@ -1193,6 +1193,8 @@ build.json @home-assistant/supervisor
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet
 /tests/components/progettihwsw/ @ardaseremet
+/homeassistant/components/proliphix/ @frenck
+/tests/components/proliphix/ @frenck
 /homeassistant/components/prometheus/ @knyar
 /tests/components/prometheus/ @knyar
 /homeassistant/components/prosegur/ @dgomes

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "import_failed": "Failed to import the YAML configuration."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Proliphix thermostat on your home network.",
+          "username": "The username to authenticate with your Proliphix thermostat.",
+          "password": "The password to authenticate with your Proliphix thermostat."
+        },
+        "description": "Set up your Proliphix thermostat to integrate with Home Assistant.\n\nTo do so, you will need to get the IP address of your Proliphix thermostat and the username and password you use to authenticate with it."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

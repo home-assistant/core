@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_climate_entities[climate.living_room_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 7.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.living_room_thermostat',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Living Room Thermostat',
+    'platform': 'proliphix',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '01JZ8Z7KKH3FIXEDTESTENTRY01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.living_room_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22.5,
+      'fan': 'Auto',
+      'friendly_name': 'Living Room Thermostat',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 7.0,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'temperature': 21.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
