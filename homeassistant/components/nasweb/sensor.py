@@ -6,7 +6,6 @@ import logging
 import time
 
 from webio_api import Input as NASwebInput, TempSensor
-from webio_api.const import KEY_TEMP_SENSOR
 
 from homeassistant.components.sensor import (
     DOMAIN as DOMAIN_SENSOR,
@@ -26,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import NASwebConfigEntry
-from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import DOMAIN, KEY_TEMP_SENSOR, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 SENSOR_INPUT_TRANSLATION_KEY = "sensor_input"
 STATE_UNDEFINED = "undefined"

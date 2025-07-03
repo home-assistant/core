@@ -11,22 +11,18 @@ from typing import Any
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
-from webio_api.const import (
-    KEY_DEVICE_SERIAL,
-    KEY_INPUTS,
-    KEY_OUTPUTS,
-    KEY_TEMP_SENSOR,
-    KEY_TYPE,
-    TYPE_STATUS_UPDATE,
-)
+from webio_api.const import KEY_DEVICE_SERIAL, KEY_TYPE, TYPE_STATUS_UPDATE
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
-from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import KEY_TEMP_SENSOR, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_INPUTS = "inputs"
+KEY_OUTPUTS = "outputs"
 
 
 class NotificationCoordinator:
