@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
+from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
 
 
 @dataclass(slots=True)
@@ -70,7 +70,7 @@ class MediaSourceItem:
                         can_play=False,
                         can_expand=True,
                     )
-                    for source in self.hass.data[DOMAIN].values()
+                    for source in self.hass.data[MEDIA_SOURCE_DATA].values()
                 ),
                 key=lambda item: item.title,
             )
@@ -85,7 +85,9 @@ class MediaSourceItem:
     @callback
     def async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
-        return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
+        if TYPE_CHECKING:
+            assert self.domain is not None
+        return self.hass.data[MEDIA_SOURCE_DATA][self.domain]
 
     @classmethod
     def from_uri(
