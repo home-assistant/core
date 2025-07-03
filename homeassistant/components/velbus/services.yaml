@@ -1,10 +1,5 @@
 sync_clock:
   fields:
-    interface:
-      example: "192.168.1.5:27015"
-      default: ""
-      selector:
-        text:
     config_entry:
       selector:
         config_entry:
@@ -12,11 +7,6 @@ sync_clock:
 
 scan:
   fields:
-    interface:
-      example: "192.168.1.5:27015"
-      default: ""
-      selector:
-        text:
     config_entry:
       selector:
         config_entry:
@@ -24,11 +14,6 @@ scan:
 
 clear_cache:
   fields:
-    interface:
-      example: "192.168.1.5:27015"
-      default: ""
-      selector:
-        text:
     config_entry:
       selector:
         config_entry:
@@ -42,11 +27,6 @@ clear_cache:
 
 set_memo_text:
   fields:
-    interface:
-      example: "192.168.1.5:27015"
-      default: ""
-      selector:
-        text:
     config_entry:
       selector:
         config_entry:
