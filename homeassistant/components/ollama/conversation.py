@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -56,9 +56,6 @@ class OllamaConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
-        self.entry.async_on_unload(
-            self.entry.add_update_listener(self._async_entry_update_listener)
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -102,10 +99,3 @@ class OllamaConversationEntity(
             conversation_id=chat_log.conversation_id,
             continue_conversation=chat_log.continue_conversation,
         )
-
-    async def _async_entry_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
-    ) -> None:
-        """Handle options update."""
-        # Reload as we update device info + entity name + supported features
-        await hass.config_entries.async_reload(entry.entry_id)

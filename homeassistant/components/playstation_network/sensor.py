@@ -37,6 +37,7 @@ class PlaystationNetworkSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[PlaystationNetworkData], StateType | datetime]
     entity_picture: str | None = None
+    available_fn: Callable[[PlaystationNetworkData], bool] = lambda _: True
 
 
 class PlaystationNetworkSensor(StrEnum):
@@ -50,6 +51,7 @@ class PlaystationNetworkSensor(StrEnum):
     EARNED_TROPHIES_BRONZE = "earned_trophies_bronze"
     ONLINE_ID = "online_id"
     LAST_ONLINE = "last_online"
+    ONLINE_STATUS = "online_status"
 
 
 SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
@@ -117,7 +119,15 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
                 psn.presence["basicPresence"]["lastAvailableDate"]
             )
         ),
+        available_fn=lambda psn: "lastAvailableDate" in psn.presence["basicPresence"],
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    PlaystationNetworkSensorEntityDescription(
+        key=PlaystationNetworkSensor.ONLINE_STATUS,
+        translation_key=PlaystationNetworkSensor.ONLINE_STATUS,
+        value_fn=lambda psn: psn.availability.lower().replace("unavailable", "offline"),
+        device_class=SensorDeviceClass.ENUM,
+        options=["offline", "availabletoplay", "availabletocommunicate", "busy"],
     ),
 )
 
@@ -183,3 +193,12 @@ class PlaystationNetworkSensorEntity(
             )
 
         return super().entity_picture
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        return (
+            self.entity_description.available_fn(self.coordinator.data)
+            and super().available
+        )
