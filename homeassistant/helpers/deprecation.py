@@ -190,11 +190,10 @@ def _print_deprecation_warning_internal_impl(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import async_get_hass_or_none
-    from homeassistant.loader import async_suggest_report_issue
+    from homeassistant.core import async_get_hass_or_none  # noqa: PLC0415
+    from homeassistant.loader import async_suggest_report_issue  # noqa: PLC0415
 
-    from .frame import MissingIntegrationFrame, get_integration_frame
+    from .frame import MissingIntegrationFrame, get_integration_frame  # noqa: PLC0415
 
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:

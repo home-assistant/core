@@ -21,7 +21,7 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -63,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -115,8 +115,6 @@ async def async_unload_entry(
     hap = entry.runtime_data
     assert hap.reset_connection_listener is not None
     hap.reset_connection_listener()
-
-    await async_unload_services(hass)
 
     return await hap.async_reset()
 

@@ -28,6 +28,7 @@ from tests.common import MockConfigEntry, async_load_fixture, get_sensor_display
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -78,6 +79,7 @@ async def test_one_sensor_site_running(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
@@ -38,6 +38,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -73,6 +74,11 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+}
+
+RVC_OPERATIONAL_STATE_MAP = {
+    # enum with known Operation state values which we can translate
+    **OPERATIONAL_STATE_MAP,
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
@@ -82,6 +88,21 @@ BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
+}
+
+CHARGE_STATE_MAP = {
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknown: None,
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsNotCharging: "not_charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsCharging: "charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsAtFullCharge: "full_charge",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknownEnumValue: None,
+}
+
+DEM_OPT_OUT_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut: "no_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut: "local_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut: "grid_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut: "opt_out",
 }
 
 ESA_STATE_MAP = {
@@ -155,6 +176,10 @@ class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescriptio
     state_list_attribute: type[ClusterAttributeDescriptor] = (
         clusters.OperationalState.Attributes.OperationalStateList
     )
+    state_attribute: type[ClusterAttributeDescriptor] = (
+        clusters.OperationalState.Attributes.OperationalState
+    )
+    state_map: dict[int, str] = field(default_factory=lambda: OPERATIONAL_STATE_MAP)
 
 
 class MatterSensor(MatterEntity, SensorEntity):
@@ -229,15 +254,15 @@ class MatterOperationalStateSensor(MatterSensor):
         for state in operational_state_list:
             # prefer translateable (known) state from mapping,
             # fallback to the raw state label as given by the device/manufacturer
-            states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
-                state.operationalStateID, slugify(state.operationalStateLabel)
+            states_map[state.operationalStateID] = (
+                self.entity_description.state_map.get(
+                    state.operationalStateID, slugify(state.operationalStateLabel)
+                )
             )
         self.states_map = states_map
         self._attr_options = list(states_map.values())
         self._attr_native_value = states_map.get(
-            self.get_matter_attribute_value(
-                clusters.OperationalState.Attributes.OperationalState
-            )
+            self.get_matter_attribute_value(self.entity_description.state_attribute)
         )
 
 
@@ -345,6 +370,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatVoltage",
+            translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
@@ -353,6 +379,47 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeRemaining",
+            translation_key="battery_time_remaining",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeRemaining,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatChargeState",
+            translation_key="battery_charge_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=[state for state in CHARGE_STATE_MAP.values() if state is not None],
+            measurement_to_ha=CHARGE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeToFullCharge",
+            translation_key="battery_time_to_full_charge",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeToFullCharge,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -941,6 +1008,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.RvcOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.RvcOperationalState.Attributes.OperationalState,
+            state_map=RVC_OPERATIONAL_STATE_MAP,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -958,6 +1027,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalState,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -1107,6 +1177,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAOptOutState",
+            translation_key="esa_opt_out_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(DEM_OPT_OUT_STATE_MAP.values()),
+            measurement_to_ha=DEM_OPT_OUT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.OptOutState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

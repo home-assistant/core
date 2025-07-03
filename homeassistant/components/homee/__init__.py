@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     entry.runtime_data = homee
     entry.async_on_unload(homee.disconnect)
 
-    def _connection_update_callback(connected: bool) -> None:
+    async def _connection_update_callback(connected: bool) -> None:
         """Call when the device is notified of changes."""
         if connected:
             _LOGGER.warning("Reconnected to Homee at %s", entry.data[CONF_HOST])

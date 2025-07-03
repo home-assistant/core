@@ -1119,6 +1119,7 @@ class PipelineRun:
                 ) is not None:
                     # Sentence trigger matched
                     agent_id = "sentence_trigger"
+                    processed_locally = True
                     intent_response = intent.IntentResponse(
                         self.pipeline.conversation_language
                     )
@@ -1206,6 +1207,15 @@ class PipelineRun:
                     return
 
                 self._streamed_response_text = True
+
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "tts_start_streaming": True,
+                        },
+                    )
+                )
 
                 async def tts_input_stream_generator() -> AsyncGenerator[str]:
                     """Yield TTS input stream."""

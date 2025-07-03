@@ -184,6 +184,8 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
 class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     """Sensor for La Marzocco statistics."""
 
+    _unavailable_when_machine_off = False
+
     @property
     def native_value(self) -> StateType | datetime | None:
         """Return the value of the sensor."""

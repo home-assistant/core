@@ -95,6 +95,22 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
 }
 
 
+def build_device_unique_id(mac: str, entity_info: EntityInfo) -> str:
+    """Build unique ID for entity, appending @device_id if it belongs to a sub-device.
+
+    This wrapper around build_unique_id ensures that entities belonging to sub-devices
+    have their device_id appended to the unique_id to handle proper migration when
+    entities move between devices.
+    """
+    base_unique_id = build_unique_id(mac, entity_info)
+
+    # If entity belongs to a sub-device, append @device_id
+    if entity_info.device_id:
+        return f"{base_unique_id}@{entity_info.device_id}"
+
+    return base_unique_id
+
+
 class StoreData(TypedDict, total=False):
     """ESPHome storage data."""
 
@@ -160,6 +176,7 @@ class RuntimeEntryData:
     assist_satellite_set_wake_word_callbacks: list[Callable[[str], None]] = field(
         default_factory=list
     )
+    device_id_to_name: dict[int, str] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -222,7 +239,9 @@ class RuntimeEntryData:
         ent_reg = er.async_get(hass)
         for info in static_infos:
             if entry := ent_reg.async_get_entity_id(
-                INFO_TYPE_TO_PLATFORM[type(info)], DOMAIN, build_unique_id(mac, info)
+                INFO_TYPE_TO_PLATFORM[type(info)],
+                DOMAIN,
+                build_device_unique_id(mac, info),
             ):
                 ent_reg.async_remove(entry)
 
@@ -278,7 +297,8 @@ class RuntimeEntryData:
             if (
                 (old_unique_id := info.unique_id)
                 and (old_entry := registry_get_entity(platform, DOMAIN, old_unique_id))
-                and (new_unique_id := build_unique_id(mac, info)) != old_unique_id
+                and (new_unique_id := build_device_unique_id(mac, info))
+                != old_unique_id
                 and not registry_get_entity(platform, DOMAIN, new_unique_id)
             ):
                 ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
