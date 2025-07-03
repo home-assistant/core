@@ -2793,7 +2793,7 @@ async def test_subscribe_conditions(
     condition_events = []
 
     async def good_subscriber(new_conditions: set[str]):
-        """Simulate a broken subscriber."""
+        """Simulate a working subscriber."""
         condition_events.append(new_conditions)
 
     condition.async_subscribe_platform_events(hass, broken_subscriber)
