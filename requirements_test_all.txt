@@ -550,7 +550,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==3.0.0
+bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.0.0
