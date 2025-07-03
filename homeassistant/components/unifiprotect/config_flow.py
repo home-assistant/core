@@ -272,7 +272,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
         except ClientError as ex:
-            _LOGGER.debug(ex)
+            _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
