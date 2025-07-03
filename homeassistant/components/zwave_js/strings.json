@@ -548,8 +548,8 @@
       "description": "Sets the configuration for a lock.",
       "fields": {
         "auto_relock_time": {
-          "description": "Duration in seconds until lock returns to secure state. Only enforced when operation type is `constant`.",
-          "name": "Auto relock time"
+          "description": "Duration in seconds until lock returns to locked state. Only enforced when operation type is `constant`.",
+          "name": "Autorelock time"
         },
         "block_to_block": {
           "description": "Whether the lock should run the motor until it hits resistance.",
