@@ -616,7 +616,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.16.0
+bleak-esphome==3.0.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.0.0
@@ -648,12 +648,10 @@ bluetooth-adapters==2.0.0
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.5.2
 
+# homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.2
-
-# homeassistant.components.bluetooth
 bluetooth-data-tools==1.28.2
 
 # homeassistant.components.bond
