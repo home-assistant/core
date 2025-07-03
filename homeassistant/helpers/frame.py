@@ -193,7 +193,8 @@ def report_usage(
                 exclude_integrations=exclude_integrations
             )
         except MissingIntegrationFrame as err:
-            integration_frame_err = err
+            if core_behavior is ReportBehavior.ERROR:
+                integration_frame_err = err
     _report_usage_partial = functools.partial(
         _report_usage,
         hass,
