@@ -44,7 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -950,7 +950,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
             # Add countdown to current date to get the estimated end time
-            measurement_to_ha=lambda x: datetime.now(tz=UTC) + timedelta(seconds=x)
+            measurement_to_ha=lambda x: dt_util.now(time_zone=UTC)
+            + timedelta(seconds=x)
             if x > 0
             else None,
         ),
