@@ -2761,3 +2761,50 @@ async def test_invalid_condition_platform(
     assert (
         "Integration test does not provide condition support, skipping" in caplog.text
     )
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+async def test_subscribe_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test condition_platforms/subscribe command."""
+    sun_condition_descriptions = """
+        sun: {}
+        """
+    device_automation_condition_descriptions = """
+        device: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("device_automation/conditions.yaml"):
+            condition_descriptions = device_automation_condition_descriptions
+        elif fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    async def broken_subscriber(_):
+        """Simulate a broken subscriber."""
+        raise Exception("Boom!")  # noqa: TRY002
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a broken subscriber."""
+        condition_events.append(new_conditions)
+
+    condition.async_subscribe_platform_events(hass, broken_subscriber)
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "sun", {})
+
+    assert condition_events == [{"sun"}]
+    assert "Error while notifying condition platform listener" in caplog.text

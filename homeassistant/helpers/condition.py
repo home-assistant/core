@@ -190,7 +190,10 @@ async def _register_condition_platform(
     # to call condition.async_get_all_descriptions which will only yield
     # the first time it's called, after that it returns cached data.
     for listener in hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS]:
-        await listener(new_conditions)
+        try:
+            await listener(new_conditions)
+        except Exception:
+            _LOGGER.exception("Error while notifying condition platform listener")
 
 
 class Condition(abc.ABC):
