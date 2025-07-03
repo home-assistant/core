@@ -16,7 +16,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -33,7 +32,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
-from .helpers import create_api, get_enable_ime
+from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -220,7 +219,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AndroidTVRemoteConfigEntry,
     ) -> AndroidTVRemoteOptionsFlowHandler:
         """Create the options flow."""
         return AndroidTVRemoteOptionsFlowHandler(config_entry)
@@ -229,7 +228,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
     """Android TV Remote options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: AndroidTVRemoteConfigEntry) -> None:
         """Initialize options flow."""
         self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
         self._conf_app_id: str | None = None

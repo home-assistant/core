@@ -20,9 +20,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AndroidTVRemoteConfigEntry
 from .const import CONF_APP_ICON, CONF_APP_NAME, DOMAIN
 from .entity import AndroidTVRemoteBaseEntity
+from .helpers import AndroidTVRemoteConfigEntry
 
 PARALLEL_UPDATES = 0
 
