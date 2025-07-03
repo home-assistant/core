@@ -1540,6 +1540,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1550,7 +1553,7 @@
     'supported_features': 0,
     'translation_key': 'time_to_service',
     'unique_id': 'yv1abcdefg1234567_time_to_service',
-    'unit_of_measurement': <UnitOfTime.MONTHS: 'm'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_service-state]
@@ -1559,14 +1562,14 @@
       'device_class': 'duration',
       'friendly_name': 'Volvo XC40 Time to service',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MONTHS: 'm'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.volvo_xc40_time_to_service',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '23',
+    'state': '690',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_average_speed-entry]

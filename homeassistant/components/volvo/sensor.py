@@ -48,7 +48,6 @@ class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
 
     source_fields: list[str] | None = None
     value_fn: Callable[[VolvoCarsValue], Any] | None = None
-    unit_fn: Callable[[VolvoCarsValue], Any] | None = None
     available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
 
 
@@ -57,12 +56,14 @@ def _availability_status(field: VolvoCarsValue) -> str:
     return reason if reason else str(field.value)
 
 
-def _determine_time_to_service_unit(field: VolvoCarsValue) -> UnitOfTime:
-    return (
-        UnitOfTime.MONTHS
-        if isinstance(field, VolvoCarsValueField) and field.unit == "months"
-        else UnitOfTime.DAYS
-    )
+def _calculate_time_to_service(field: VolvoCarsValue) -> int:
+    value = int(field.value)
+
+    # Always express value in days
+    if isinstance(field, VolvoCarsValueField) and field.unit == "months":
+        return value * 30
+
+    return value
 
 
 def _charging_power_value(field: VolvoCarsValue) -> int:
@@ -302,9 +303,10 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     VolvoSensorDescription(
         key="time_to_service",
         api_field="timeToService",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        unit_fn=_determine_time_to_service_unit,
+        value_fn=_calculate_time_to_service,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -390,8 +392,3 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             )
 
         self._attr_native_value = native_value
-
-        if self.entity_description.unit_fn:
-            self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                api_field
-            )
