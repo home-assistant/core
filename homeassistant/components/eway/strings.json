@@ -2,24 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "Eway Inverter Setup",
+        "title": "Eway inverter setup",
         "description": "Configure your Eway micro inverter connection",
         "data": {
-          "mqtt_host": "MQTT Host",
-          "mqtt_port": "MQTT Port",
-          "mqtt_username": "MQTT Username",
-          "mqtt_password": "MQTT Password",
+          "mqtt_host": "MQTT host",
+          "mqtt_port": "MQTT port",
+          "mqtt_username": "MQTT username",
+          "mqtt_password": "MQTT password",
           "device_id": "Device ID",
-          "device_sn": "Device Serial Number",
-          "device_model": "Device Model",
-          "scan_interval": "Scan Interval (seconds)"
+          "device_sn": "Device serial number",
+          "device_model": "Device model",
+          "scan_interval": "Scan interval (seconds)"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to MQTT broker",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error occurred。"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "Device is already configured"
