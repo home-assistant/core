@@ -73,7 +73,6 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         schedule = self.mower_attributes.calendar
         cursor = schedule.timeline.active_after(dt_util.now())
         program_event = next(cursor, None)
-        _LOGGER.debug("program_event %s", program_event)
         if not program_event:
             return None
         work_area_name = None

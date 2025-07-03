@@ -98,7 +98,7 @@ def find_references(
             continue
 
         if match := re.match(RE_REFERENCE, value):
-            found.append({"source": f"{prefix}::{key}", "ref": match.groups()[0]})
+            found.append({"source": f"{prefix}::{key}", "ref": match.group(1)})
 
 
 def removed_title_validator(
@@ -570,7 +570,7 @@ def validate_translation_file(
                 "translations",
                 "Lokalise supports only one level of references: "
                 f'"{reference["source"]}" should point to directly '
-                f'to "{match.groups()[0]}"',
+                f'to "{match.group(1)}"',
             )
 
 

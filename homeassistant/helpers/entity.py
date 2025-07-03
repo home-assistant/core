@@ -215,16 +215,19 @@ class StateInfo(TypedDict):
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # Not Added: Not yet added to a platform, polling updates
-    # are written to the state machine.
+    # Not Added: Not yet added to a platform, states are not written to the
+    # state machine.
     NOT_ADDED = auto()
 
-    # Added: Added to a platform, polling updates
-    # are written to the state machine.
+    # Adding: Preparing for adding to a platform, states are not written to the
+    # state machine.
+    ADDING = auto()
+
+    # Added: Added to a platform, states are written to the state machine.
     ADDED = auto()
 
-    # Removed: Removed from a platform, polling updates
-    # are not written to the state machine.
+    # Removed: Removed from a platform, states are not written to the
+    # state machine.
     REMOVED = auto()
 
 
@@ -1122,21 +1125,24 @@ class Entity(
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if self._platform_state is EntityPlatformState.REMOVED:
-            # Polling returned after the entity has already been removed
-            return
-
-        if (entry := self.registry_entry) and entry.disabled_by:
-            if not self._disabled_reported:
-                self._disabled_reported = True
-                _LOGGER.warning(
-                    (
-                        "Entity %s is incorrectly being triggered for updates while it"
-                        " is disabled. This is a bug in the %s integration"
-                    ),
-                    self.entity_id,
-                    self.platform.platform_name,
-                )
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent (which has not been allowed since HA Core 2024.1)
+        if not self.platform:
+            if self._platform_state is EntityPlatformState.REMOVED:
+                # Don't write state if the entity is not added to the platform.
+                return
+        elif self._platform_state is not EntityPlatformState.ADDED:
+            if (entry := self.registry_entry) and entry.disabled_by:
+                if not self._disabled_reported:
+                    self._disabled_reported = True
+                    _LOGGER.warning(
+                        (
+                            "Entity %s is incorrectly being triggered for updates while it"
+                            " is disabled. This is a bug in the %s integration"
+                        ),
+                        self.entity_id,
+                        self.platform.platform_name,
+                    )
             return
 
         state_calculate_start = timer()
@@ -1145,7 +1151,7 @@ class Entity(
         )
         time_now = timer()
 
-        if entry:
+        if entry := self.registry_entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
             supported_features = supported_features or 0
@@ -1346,7 +1352,7 @@ class Entity(
         self.hass = hass
         self.platform = platform
         self.parallel_updates = parallel_updates
-        self._platform_state = EntityPlatformState.ADDED
+        self._platform_state = EntityPlatformState.ADDING
 
     def _call_on_remove_callbacks(self) -> None:
         """Call callbacks registered by async_on_remove."""
@@ -1370,6 +1376,7 @@ class Entity(
         """Finish adding an entity to a platform."""
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
+        self._platform_state = EntityPlatformState.ADDED
         self.async_write_ha_state()
 
     @final

@@ -63,8 +63,8 @@ from .utils import get_device_macs, non_verifying_requests_session
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle Huawei LTE config flow."""
+class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Huawei LTE config flow."""
 
     VERSION = 3
 
@@ -75,9 +75,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
+    ) -> HuaweiLteOptionsFlow:
         """Get options flow."""
-        return OptionsFlowHandler()
+        return HuaweiLteOptionsFlow()
 
     async def _async_show_user_form(
         self,
@@ -354,7 +354,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_update_reload_and_abort(entry, data=new_data)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class HuaweiLteOptionsFlow(OptionsFlow):
     """Huawei LTE options flow."""
 
     async def async_step_init(
