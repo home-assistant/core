@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    "mock_device_code", ["arete_two_12l_dehumidifier_air_purifier"]
+    "mock_device_code", ["cs_arete_two_12l_dehumidifier_air_purifier"]
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
 async def test_platform_setup_and_discovery(
