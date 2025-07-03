@@ -2543,7 +2543,7 @@ watchdog==6.0.0
 watergate-local-api==2024.4.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.3.1
+weatherflow4py==1.4.1
 
 # homeassistant.components.nasweb
 webio-api==0.1.11
