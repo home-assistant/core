@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pynecil import CharSetting, SettingsDataResponse
+from pynecil import CharSetting, SettingsDataResponse, TempUnit
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IronOSConfigEntry
+from .const import MIN_BOOST_TEMP, MIN_BOOST_TEMP_F
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -39,6 +40,7 @@ class IronOSSwitch(StrEnum):
     INVERT_BUTTONS = "invert_buttons"
     DISPLAY_INVERT = "display_invert"
     CALIBRATE_CJC = "calibrate_cjc"
+    BOOST = "boost"
 
 
 SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
@@ -94,6 +96,13 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
+    IronOSSwitchEntityDescription(
+        key=IronOSSwitch.BOOST,
+        translation_key=IronOSSwitch.BOOST,
+        characteristic=CharSetting.BOOST_TEMP,
+        is_on_fn=lambda x: bool(x.get("boost_temp")),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 
@@ -136,7 +145,15 @@ class IronOSSwitchEntity(IronOSBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.settings.write(self.entity_description.characteristic, True)
+        if self.entity_description.key is IronOSSwitch.BOOST:
+            await self.settings.write(
+                self.entity_description.characteristic,
+                MIN_BOOST_TEMP_F
+                if self.settings.data.get("temp_unit") is TempUnit.FAHRENHEIT
+                else MIN_BOOST_TEMP,
+            )
+        else:
+            await self.settings.write(self.entity_description.characteristic, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
