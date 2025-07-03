@@ -133,3 +133,28 @@ def mock_device_arete_two_12l_dehumidifier_air_purifier() -> CustomerDevice:
         DPCode.FAULT: 0,
     }
     return device
+
+
+@pytest.fixture
+def mock_device_door_sensor() -> CustomerDevice:
+    """Mock a Door Sensor device."""
+    device = MagicMock(spec=CustomerDevice)
+    device.id = "bf5cccf9027080e2dbb9w3"
+    device.name = "Door Sensor"
+    device.category = "mcs"
+    device.product_id = "7jIGJAymiH8OsFFb"
+    device.product_name = "Door Sensor"
+    device.online = True
+    device.function = {}
+    device.status_range = {
+        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
+        DPCode.BATTERY: MagicMock(
+            type=DPType.INTEGER,
+            value='{"unit": "", "min": 0, "max": 500, "scale": 0, "step": 1}',
+        ),
+    }
+    device.status = {
+        DPCode.SWITCH: False,
+        DPCode.BATTERY: 100,
+    }
+    return device
