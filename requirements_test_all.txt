@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.104.0
+hass-nabucasa==0.105.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
