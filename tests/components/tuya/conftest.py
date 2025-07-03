@@ -95,12 +95,20 @@ def mock_manager() -> ManagerCompat:
 
 
 @pytest.fixture
-async def mock_device_arete_two_12l_dehumidifier_air_purifier(
-    hass: HomeAssistant,
-) -> CustomerDevice:
-    """Mock a Tuya Arete Two 12L Dehumidifier/Air Purifier device."""
+def mock_device_code() -> str:
+    """Fixture to parametrize the type of the mock device.
+
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("mock_device_code", ["device_code_1", "device_code_2"])
+    """
+    return None
+
+
+@pytest.fixture
+async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Mock a Tuya CustomerDevice."""
     details = await async_load_json_object_fixture(
-        hass, "arete_two_12l_dehumidifier_air_purifier.json", DOMAIN
+        hass, f"{mock_device_code}.json", DOMAIN
     )
     device = MagicMock(spec=CustomerDevice)
     device.id = details["id"]

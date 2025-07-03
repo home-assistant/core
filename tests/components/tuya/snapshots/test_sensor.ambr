@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[sensor.dehumidifier_humidity-entry]
+# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][sensor.dehumidifier_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -36,7 +36,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.dehumidifier_humidity-state]
+# name: test_platform_setup_and_discovery[arete_two_12l_dehumidifier_air_purifier][sensor.dehumidifier_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',

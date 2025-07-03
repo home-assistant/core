@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
@@ -15,18 +16,21 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    "mock_device_code", ["arete_two_12l_dehumidifier_air_purifier"]
+)
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device_arete_two_12l_dehumidifier_air_purifier: CustomerDevice,
+    mock_device: CustomerDevice,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
     # Setup
     mock_manager.device_map = {
-        mock_device_arete_two_12l_dehumidifier_air_purifier.id: mock_device_arete_two_12l_dehumidifier_air_purifier,
+        mock_device.id: mock_device,
     }
     mock_config_entry.add_to_hass(hass)
 
