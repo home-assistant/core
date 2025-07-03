@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
-from tests.common import load_json_object_fixture
+from tests.common import async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -454,5 +454,7 @@ async def test_migration_1_to_2(
     await knx.setup_integration(
         config_store_fixture="config_store_light_v1.json", state_updater=False
     )
-    new_data = load_json_object_fixture("config_store_light.json", "knx")
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_light.json", "knx"
+    )
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
