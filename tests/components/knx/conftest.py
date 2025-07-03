@@ -332,14 +332,19 @@ async def knx(
 
 
 @pytest.fixture
-async def load_knxproj(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
+async def project_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return the fixture project data."""
+    return await async_load_json_object_fixture(hass, "project.json", DOMAIN)
+
+
+@pytest.fixture
+async def load_knxproj(
+    project_data: dict[str, Any], hass_storage: dict[str, Any]
+) -> None:
     """Mock KNX project data."""
-    fixture_project_data = await async_load_json_object_fixture(
-        hass, "project.json", DOMAIN
-    )
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,
-        "data": fixture_project_data,
+        "data": project_data,
     }
 
 
