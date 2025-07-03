@@ -63,7 +63,7 @@ jobs:
               body: `Hi @${issueAuthor}, thank you for your contribution!\n\n` +
                     `Task issues are restricted to Open Home Foundation staff, authorized contributors, and integration code owners.\n\n` +
                     `If you would like to:\n` +
-                    `- Report a bug: Please use the [bug report form](https://github.com/home-assistant/core/issues/new/choose)\n` +
+                    `- Report a bug: Please use the [bug report form](https://github.com/home-assistant/core/issues/new?template=bug_report.yml)\n` +
                     `- Request a feature: Please submit to [Feature Requests](https://github.com/orgs/home-assistant/discussions)\n\n` +
                     `If you believe you should have access to create Task issues, please contact the maintainers.`
             });
