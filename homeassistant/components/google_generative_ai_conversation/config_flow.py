@@ -92,6 +92,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     async def async_step_api(
         self, user_input: dict[str, Any] | None = None
@@ -329,13 +330,14 @@ async def google_generative_ai_config_option_schema(
     api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
-            label=api_model.display_name,
+            label=api_model.name.lstrip("models/"),
             value=api_model.name,
         )
-        for api_model in sorted(api_models, key=lambda x: x.display_name or "")
+        for api_model in sorted(
+            api_models, key=lambda x: x.name.lstrip("models/") or ""
+        )
         if (
-            api_model.display_name
-            and api_model.name
+            api_model.name
             and ("tts" in api_model.name) == (subentry_type == "tts")
             and "vision" not in api_model.name
             and api_model.supported_actions
