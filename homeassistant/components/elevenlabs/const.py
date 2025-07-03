@@ -8,14 +8,16 @@ CONF_CONFIGURE_VOICE = "configure_voice"
 CONF_STABILITY = "stability"
 CONF_SIMILARITY = "similarity"
 CONF_STT_AUTO_LANGUAGE = "stt_auto_language"
+CONF_STT_MODEL = "stt_model"
 CONF_STYLE = "style"
 CONF_USE_SPEAKER_BOOST = "use_speaker_boost"
 DOMAIN = "elevenlabs"
 
-DEFAULT_MODEL = "eleven_multilingual_v2"
+DEFAULT_TTS_MODEL = "eleven_multilingual_v2"
 DEFAULT_STABILITY = 0.5
 DEFAULT_SIMILARITY = 0.75
 DEFAULT_STT_AUTO_LANGUAGE = False
+DEFAULT_STT_MODEL = "scribe_v1"
 DEFAULT_STYLE = 0
 DEFAULT_USE_SPEAKER_BOOST = True
 
@@ -120,3 +122,8 @@ STT_LANGUAGES = [
     "xh-ZA",  # Xhosa
     "zu-ZA",  # Zulu
 ]
+
+STT_MODELS = {
+    "scribe_v1": "Scribe v1",
+    "scribe_v1_experimental": "Scribe v1 Experimental",
+}

@@ -19,7 +19,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_MODEL
+from .const import CONF_MODEL, CONF_STT_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ class ElevenLabsData:
 
     client: AsyncElevenLabs
     model: Model
+    stt_model: str
 
 
 type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
@@ -68,7 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     if model is None or (not model.languages):
         raise ConfigEntryError("Model could not be resolved")
 
-    entry.runtime_data = ElevenLabsData(client=client, model=model)
+    entry.runtime_data = ElevenLabsData(
+        client=client, model=model, stt_model=entry.options[CONF_STT_MODEL]
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -84,3 +87,44 @@ async def update_listener(
 ) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ElevenLabsConfigEntry
+) -> bool:
+    """Migrate old config entry to new format."""
+
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        new_options = {**config_entry.options}
+
+        if config_entry.minor_version < 2:
+            # Add defaults only if they’re not already present
+            if "stt_auto_language" not in new_options:
+                new_options["stt_auto_language"] = False
+            if "stt_model" not in new_options:
+                new_options["stt_model"] = "scribe_v1"
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options=new_options,
+            minor_version=2,
+            version=1,
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True  # already up to date
