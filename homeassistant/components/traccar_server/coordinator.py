@@ -187,7 +187,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             self.data[device_id]["attributes"] = attr
             self.data[device_id]["geofence"] = get_first_geofence(
                 self._geofences,
-                get_geofence_ids(device, position),  # pylint: disable=undefined-loop-variable
+                get_geofence_ids(self.data[device_id]["device"], position),
             )
             update_devices.add(device_id)
 
