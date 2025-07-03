@@ -129,7 +129,6 @@ class InputStateSensor(BaseSensorEntity):
         STATE_NORMAL,
         STATE_PROBLEM,
     ]
-    _attr_icon = "mdi:import"
     _attr_translation_key = SENSOR_INPUT_TRANSLATION_KEY
 
     def __init__(
