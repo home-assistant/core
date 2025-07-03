@@ -98,6 +98,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
     params=[
         "da_ac_airsensor_01001",
         "da_ac_rac_000001",
+        "da_ac_rac_000002",
         "da_ac_rac_000003",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
