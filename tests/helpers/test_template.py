@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import gc
 import json
 import logging
 import math
@@ -5344,6 +5345,7 @@ async def test_cache_garbage_collection() -> None:
     del tpl
     assert template._NO_HASS_ENV.template_cache.get(template_string)
     del tpl2
+    gc.collect()
     assert not template._NO_HASS_ENV.template_cache.get(template_string)
 
 
