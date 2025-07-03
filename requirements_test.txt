@@ -11,7 +11,7 @@ astroid==3.3.10
 coverage==7.9.1
 freezegun==1.5.2
 go2rtc-client==0.2.1
-license-expression==30.4.1
+license-expression==30.4.3
 mock-open==1.4.0
 mypy-dev==1.17.0a4
 pre-commit==4.2.0

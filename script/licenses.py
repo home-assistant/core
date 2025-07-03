@@ -205,11 +205,17 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
 }
 
+# fmt: off
 TODO = {
+    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
+    "caldav": AwesomeVersion("1.6.0"),  # None -- GPL -- ['GNU General Public License (GPL)', 'Apache Software License']  # https://github.com/python-caldav/caldav
+    "pyiskra": AwesomeVersion("0.1.21"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
+    "xbox-webapi": AwesomeVersion("2.1.0"),  # None -- GPL -- ['MIT License']
 }
+# fmt: on
 
 EXCEPTIONS_AND_TODOS = EXCEPTIONS.union(TODO)
 
