@@ -162,6 +162,9 @@ test_response_no_power_boost = {
 http_404_error = requests.exceptions.HTTPError()
 http_404_error.response = requests.Response()
 http_404_error.response.status_code = HTTPStatus.NOT_FOUND
+http_429_error = requests.exceptions.HTTPError()
+http_429_error.response = requests.Response()
+http_429_error.response.status_code = HTTPStatus.TOO_MANY_REQUESTS
 
 authorisation_response = {
     "data": {
@@ -192,6 +195,24 @@ authorisation_response_unauthorised = {
     }
 }
 
+invalid_reauth_response = {
+    "jwt": "fakekeyhere",
+    "refresh_token": "refresh_fakekeyhere",
+    "user_id": 12345,
+    "ttl": 145656758,
+    "refresh_token_ttl": 145756758,
+    "error": False,
+    "status": 200,
+}
+
+http_403_error = requests.exceptions.HTTPError()
+http_403_error.response = requests.Response()
+http_403_error.response.status_code = HTTPStatus.FORBIDDEN
+
+http_404_error = requests.exceptions.HTTPError()
+http_404_error.response = requests.Response()
+http_404_error.response.status_code = HTTPStatus.NOT_FOUND
+
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test wallbox sensor class setup."""
@@ -204,6 +225,31 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
+            status_code=HTTPStatus.OK,
+        )
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_no_eco_mode(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class setup."""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response_no_power_boost,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(

@@ -113,6 +113,10 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             ).last_cleaning_start_time
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            is not ModelName.GS3_MP
+        ),
     ),
 )
 
@@ -179,6 +183,8 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
 
 class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     """Sensor for La Marzocco statistics."""
+
+    _unavailable_when_machine_off = False
 
     @property
     def native_value(self) -> StateType | datetime | None:

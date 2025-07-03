@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
+from miio import Device as MiioDevice
 from miio.fan_common import LedBrightness as FanLedBrightness
 from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     DisplayOrientation as AirfreshT2017DisplayOrientation,
@@ -32,6 +33,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -87,7 +89,7 @@ class AttributeEnumMapping(NamedTuple):
     enum_class: type
 
 
-MODEL_TO_ATTR_MAP: dict[str, list] = {
+MODEL_TO_ATTR_MAP: dict[str, list[AttributeEnumMapping]] = {
     MODEL_AIRFRESH_T2017: [
         AttributeEnumMapping(ATTR_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
         AttributeEnumMapping(ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
@@ -232,10 +234,21 @@ async def async_setup_entry(
     )
 
 
-class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
+class XiaomiSelector(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], SelectEntity
+):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    entity_description: XiaomiMiioSelectDescription
+
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSelectDescription,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
@@ -244,9 +257,15 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 class XiaomiGenericSelector(XiaomiSelector):
     """Representation of a Xiaomi generic selector."""
 
-    entity_description: XiaomiMiioSelectDescription
-
-    def __init__(self, device, entry, unique_id, coordinator, description, enum_class):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSelectDescription,
+        enum_class: type,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator, description)
         self._current_attr = enum_class(
@@ -257,10 +276,10 @@ class XiaomiGenericSelector(XiaomiSelector):
 
         if description.options_map:
             self._options_map = {}
-            for key, val in enum_class._member_map_.items():
+            for key, val in enum_class._member_map_.items():  # type: ignore[attr-defined]
                 self._options_map[description.options_map[key]] = val
         else:
-            self._options_map = enum_class._member_map_
+            self._options_map = enum_class._member_map_  # type: ignore[attr-defined]
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 

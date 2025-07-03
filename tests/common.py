@@ -87,6 +87,7 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
     translation,
+    trigger,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -295,6 +296,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
     hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
@@ -452,11 +454,9 @@ def async_fire_mqtt_message(
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
 
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.client import MQTTMessage
+    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt import MqttData
+    from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
@@ -570,9 +570,22 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
 
 @lru_cache
+def load_fixture_bytes(filename: str, integration: str | None = None) -> bytes:
+    """Load a fixture."""
+    return get_fixture_path(filename, integration).read_bytes()
+
+
+@lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text(encoding="utf8")
+
+
+async def async_load_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> str:
+    """Load a fixture."""
+    return await hass.async_add_executor_job(load_fixture, filename, integration)
 
 
 def load_json_value_fixture(
@@ -589,11 +602,25 @@ def load_json_array_fixture(
     return json_loads_array(load_fixture(filename, integration))
 
 
+async def async_load_json_array_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> JsonArrayType:
+    """Load a JSON object from a fixture."""
+    return json_loads_array(await async_load_fixture(hass, filename, integration))
+
+
 def load_json_object_fixture(
     filename: str, integration: str | None = None
 ) -> JsonObjectType:
     """Load a JSON object from a fixture."""
     return json_loads_object(load_fixture(filename, integration))
+
+
+async def async_load_json_object_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> JsonObjectType:
+    """Load a JSON object from a fixture."""
+    return json_loads_object(await async_load_fixture(hass, filename, integration))
 
 
 def json_round_trip(obj: Any) -> Any:
@@ -674,6 +701,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
+    suggested_object_id: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
@@ -1158,7 +1186,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
     async def start_subentry_reconfigure_flow(
         self,
         hass: HomeAssistant,
-        subentry_flow_type: str,
         subentry_id: str,
         *,
         show_advanced_options: bool = False,
@@ -1168,6 +1195,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
             raise ValueError(
                 "Config entry must be added to hass to start reconfiguration flow"
             )
+        # Derive subentry_flow_type from the subentry_id
+        subentry_flow_type = self.subentries[subentry_id].subentry_type
         return await hass.config_entries.subentries.async_init(
             (self.entry_id, subentry_flow_type),
             context={
@@ -1714,8 +1743,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.cloud import (
+    from homeassistant.components.cloud import (  # noqa: PLC0415
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
     )
@@ -1958,3 +1986,28 @@ def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
                 return None
             return schema_key.description["suggested_value"]
     return None
+
+
+def get_sensor_display_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
+) -> str:
+    """Return the state rounded for presentation."""
+    state = hass.states.get(entity_id)
+    assert state
+    value = state.state
+
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is None:
+        return value
+
+    if (
+        precision := entity_entry.options.get("sensor", {}).get(
+            "suggested_display_precision"
+        )
+    ) is None:
+        return value
+
+    with suppress(TypeError, ValueError):
+        numerical_value = float(value)
+        value = f"{numerical_value:z.{precision}f}"
+    return value

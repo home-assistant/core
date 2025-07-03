@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
+from typing import Any
 
-from miio import Device
+from miio import Device as MiioDevice
 
 from homeassistant.components.number import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -350,17 +351,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
+class XiaomiNumberEntity(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], NumberEntity
+):
     """Representation of a generic Xiaomi attribute selector."""
 
     entity_description: XiaomiMiioNumberDescription
 
     def __init__(
         self,
-        device: Device,
+        device: MiioDevice,
         entry: XiaomiMiioConfigEntry,
         unique_id: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Any],
         description: XiaomiMiioNumberDescription,
     ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
@@ -402,7 +405,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the target motor speed of the miio device failed.",
-            self._device.set_speed,
+            self._device.set_speed,  # type: ignore[attr-defined]
             motor_speed,
         )
 
@@ -410,7 +413,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the favorite level."""
         return await self._try_command(
             "Setting the favorite level of the miio device failed.",
-            self._device.set_favorite_level,
+            self._device.set_favorite_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -418,7 +421,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the fan level."""
         return await self._try_command(
             "Setting the fan level of the miio device failed.",
-            self._device.set_fan_level,
+            self._device.set_fan_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -426,21 +429,23 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the volume."""
         return await self._try_command(
             "Setting the volume of the miio device failed.",
-            self._device.set_volume,
+            self._device.set_volume,  # type: ignore[attr-defined]
             volume,
         )
 
     async def async_set_oscillation_angle(self, angle: int) -> bool:
         """Set the volume."""
         return await self._try_command(
-            "Setting angle of the miio device failed.", self._device.set_angle, angle
+            "Setting angle of the miio device failed.",
+            self._device.set_angle,  # type: ignore[attr-defined]
+            angle,
         )
 
     async def async_set_delay_off_countdown(self, delay_off_countdown: int) -> bool:
         """Set the delay off countdown."""
         return await self._try_command(
             "Setting delay off miio device failed.",
-            self._device.delay_off,
+            self._device.delay_off,  # type: ignore[attr-defined]
             delay_off_countdown,
         )
 
@@ -448,7 +453,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
-            self._device.set_led_brightness_level,
+            self._device.set_led_brightness_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -456,7 +461,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
-            self._device.set_led_brightness,
+            self._device.set_led_brightness,  # type: ignore[attr-defined]
             level,
         )
 
@@ -464,6 +469,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the favorite rpm of the miio device failed.",
-            self._device.set_favorite_rpm,
+            self._device.set_favorite_rpm,  # type: ignore[attr-defined]
             rpm,
         )

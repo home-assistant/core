@@ -164,8 +164,6 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode not in self._attr_hvac_modes:
-            raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
         if len(self._attr_hvac_modes) == 2:  # Only allow turn on and off thermostat
             await self.hub.api.sensors.thermostat.set_config(
