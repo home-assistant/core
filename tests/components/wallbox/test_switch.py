@@ -45,7 +45,7 @@ async def test_wallbox_switch_class(
     )
 
 
-async def test_wallbox_switch_class_connection_error(
+async def test_wallbox_switch_class_error_handling(
     hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
 ) -> None:
     """Test wallbox switch class connection error."""
@@ -65,14 +65,6 @@ async def test_wallbox_switch_class_connection_error(
             },
             blocking=True,
         )
-
-
-async def test_wallbox_switch_class_too_many_requests(
-    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
-) -> None:
-    """Test wallbox switch class connection error."""
-
-    await setup_integration(hass, entry)
 
     with (
         patch.object(mock_wallbox, "resumeChargingSession", side_effect=http_429_error),

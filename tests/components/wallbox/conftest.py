@@ -14,6 +14,8 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_DATA_POST_L1_KEY,
+    CHARGER_DATA_POST_L2_KEY,
     CHARGER_ECO_SMART_KEY,
     CHARGER_ECO_SMART_MODE_KEY,
     CHARGER_ECO_SMART_STATUS_KEY,
@@ -22,6 +24,7 @@ from homeassistant.components.wallbox.const import (
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_POST_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
@@ -235,11 +238,29 @@ def mock_wallbox():
     with patch("homeassistant.components.wallbox.Wallbox") as mock:
         wallbox = MagicMock()
         wallbox.authenticate = Mock(return_value=authorisation_response)
-        wallbox.lockCharger = Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: True})
-        wallbox.unlockCharger = Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: False})
+        wallbox.lockCharger = Mock(
+            return_value={
+                CHARGER_DATA_POST_L1_KEY: {
+                    CHARGER_DATA_POST_L2_KEY: {CHARGER_LOCKED_UNLOCKED_KEY: True}
+                }
+            }
+        )
+        wallbox.unlockCharger = Mock(
+            return_value={
+                CHARGER_DATA_POST_L1_KEY: {
+                    CHARGER_DATA_POST_L2_KEY: {CHARGER_LOCKED_UNLOCKED_KEY: True}
+                }
+            }
+        )
         wallbox.setEnergyCost = Mock(return_value={CHARGER_ENERGY_PRICE_KEY: 0.25})
         wallbox.setMaxChargingCurrent = Mock(
-            return_value={CHARGER_MAX_CHARGING_CURRENT_KEY: 10}
+            return_value={
+                CHARGER_DATA_POST_L1_KEY: {
+                    CHARGER_DATA_POST_L2_KEY: {
+                        CHARGER_MAX_CHARGING_CURRENT_POST_KEY: True
+                    }
+                }
+            }
         )
         wallbox.setIcpMaxCurrent = Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 25})
         wallbox.getChargerStatus = Mock(return_value=test_response)
