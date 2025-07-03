@@ -1,6 +1,6 @@
 """The tests for the time automation."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -885,16 +885,10 @@ async def test_if_fires_using_weekday_single(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing on a specific weekday."""
-    # Freeze time to Monday, January 2, 2023 at 4:59:00
-    now = dt_util.now()
-    monday_before_trigger = now.replace(
-        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
-    )
-    monday_trigger = now.replace(
-        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
-    )
+    # Freeze time to Monday, January 2, 2023 at 5:00:00
+    monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
 
-    freezer.move_to(monday_before_trigger)
+    freezer.move_to(monday_trigger)
 
     assert await async_setup_component(
         hass,
@@ -921,9 +915,7 @@ async def test_if_fires_using_weekday_single(
     assert service_calls[0].data["some"] == "time - Monday"
 
     # Fire on Tuesday at the same time - should not trigger
-    tuesday_trigger = now.replace(
-        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
-    )
+    tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
     async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
 
@@ -937,13 +929,10 @@ async def test_if_fires_using_weekday_multiple(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing on multiple weekdays."""
-    # Freeze time to Monday, January 2, 2023 at 4:59:00
-    now = dt_util.now()
-    monday_before_trigger = now.replace(
-        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
-    )
+    # Freeze time to Monday, January 2, 2023 at 5:00:00
+    monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
 
-    freezer.move_to(monday_before_trigger)
+    freezer.move_to(monday_trigger)
 
     assert await async_setup_component(
         hass,
@@ -967,35 +956,26 @@ async def test_if_fires_using_weekday_multiple(
     await hass.async_block_till_done()
 
     # Fire on Monday - should trigger
-    monday_trigger = now.replace(
-        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
-    )
     async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert "Monday" in service_calls[0].data["some"]
 
     # Fire on Tuesday - should not trigger
-    tuesday_trigger = now.replace(
-        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
-    )
+    tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
     async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
 
     # Fire on Wednesday - should trigger
-    wednesday_trigger = now.replace(
-        year=2023, month=1, day=4, hour=5, minute=0, second=0, microsecond=0
-    )
+    wednesday_trigger = dt_util.as_utc(datetime(2023, 1, 4, 5, 0, 0, 0))
     async_fire_time_changed(hass, wednesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert "Wednesday" in service_calls[1].data["some"]
 
     # Fire on Friday - should trigger
-    friday_trigger = now.replace(
-        year=2023, month=1, day=6, hour=5, minute=0, second=0, microsecond=0
-    )
+    friday_trigger = dt_util.as_utc(datetime(2023, 1, 6, 5, 0, 0, 0))
     async_fire_time_changed(hass, friday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 3
@@ -1014,14 +994,8 @@ async def test_if_fires_using_weekday_with_entity(
         {"input_datetime": {"trigger": {"has_date": False, "has_time": True}}},
     )
 
-    # Freeze time to Monday, January 2, 2023 at 4:59:00
-    now = dt_util.now()
-    monday_before_trigger = now.replace(
-        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
-    )
-    monday_trigger = now.replace(
-        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
-    )
+    # Freeze time to Monday, January 2, 2023 at 5:00:00
+    monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
 
     await hass.services.async_call(
         "input_datetime",
@@ -1033,7 +1007,7 @@ async def test_if_fires_using_weekday_with_entity(
         blocking=True,
     )
 
-    freezer.move_to(monday_before_trigger)
+    freezer.move_to(monday_trigger)
 
     assert await async_setup_component(
         hass,
@@ -1066,9 +1040,7 @@ async def test_if_fires_using_weekday_with_entity(
     assert automation_calls[0].data["entity"] == "input_datetime.trigger"
 
     # Fire on Tuesday - should not trigger
-    tuesday_trigger = now.replace(
-        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
-    )
+    tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
     async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     automation_calls = [call for call in service_calls if call.domain == "test"]
