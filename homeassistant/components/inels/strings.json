@@ -31,5 +31,18 @@
       "unauthorized": "Unauthorized connection",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "bit": {
+        "name": "Bit {addr}"
+      },
+      "simple_relay": {
+        "name": "Simple relay {index}"
+      },
+      "relay": {
+        "name": "Relay {index}"
+      }
+    }
   }
 }
