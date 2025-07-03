@@ -828,6 +828,23 @@ def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
     ).async_render() == ["Hey, Alice!", "Hey, Bob!"]
 
 
+def test_as_function(hass: HomeAssistant) -> None:
+    """Test as_function."""
+    assert (
+        template.Template(
+            """
+            {%- macro macro_double(num, returns) -%}
+            {%- do returns(num * 2) -%}
+            {%- endmacro -%}
+            {%- set double = macro_double | as_function -%}
+            {{ double(5) }}
+            """,
+            hass,
+        ).async_render()
+        == 10
+    )
+
+
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [
@@ -1474,6 +1491,15 @@ def test_from_json(hass: HomeAssistant) -> None:
     expected_result = "Bar"
     actual_result = template.Template(
         '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
+    ).async_render()
+    assert actual_result == expected_result
+
+    info = render_to_info(hass, "{{ 'garbage string' | from_json }}")
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    actual_result = template.Template(
+        "{{ 'garbage string' | from_json('Bar') }}", hass
     ).async_render()
     assert actual_result == expected_result
 
@@ -6275,6 +6301,40 @@ async def test_label_name(
 
     info = render_to_info(hass, f"{{{{ '{label.label_id}' | label_name }}}}")
     assert_result_info(info, label.name)
+    assert info.rate_limit is None
+
+
+async def test_label_description(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test label_description function."""
+    # Test non existing label ID
+    info = render_to_info(hass, "{{ label_description('1234567890') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ '1234567890' | label_description }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ label_description(42) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 42 | label_description }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test valid label ID
+    label = label_registry.async_create("choo choo", description="chugga chugga")
+    info = render_to_info(hass, f"{{{{ label_description('{label.label_id}') }}}}")
+    assert_result_info(info, label.description)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{label.label_id}' | label_description }}}}")
+    assert_result_info(info, label.description)
     assert info.rate_limit is None
 
 

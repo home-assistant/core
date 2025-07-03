@@ -40,7 +40,18 @@
         "name": "Cooking"
       },
       "cook_state": {
-        "name": "Cook state"
+        "name": "Cook state",
+        "state": {
+          "not_started": "Not started",
+          "configured": "Configured",
+          "started": "Started",
+          "ready_for_resting": "Ready for resting",
+          "resting": "Resting",
+          "slightly_underdone": "Slightly underdone",
+          "finished": "Finished",
+          "slightly_overdone": "Slightly overdone",
+          "overcooked": "Overcooked"
+        }
       },
       "cook_target_temp": {
         "name": "Target temperature"

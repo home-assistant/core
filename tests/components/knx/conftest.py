@@ -26,7 +26,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
     DEFAULT_ROUTING_IA,
-    DOMAIN as KNX_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.storage.config_store import (
@@ -40,10 +40,8 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
-
-FIXTURE_PROJECT_DATA = load_json_object_fixture("project.json", KNX_DOMAIN)
 
 
 class KNXTestKit:
@@ -110,20 +108,22 @@ class KNXTestKit:
             return DEFAULT
 
         if config_store_fixture:
-            self.hass_storage[KNX_CONFIG_STORAGE_KEY] = load_json_object_fixture(
-                config_store_fixture, KNX_DOMAIN
+            self.hass_storage[
+                KNX_CONFIG_STORAGE_KEY
+            ] = await async_load_json_object_fixture(
+                self.hass, config_store_fixture, DOMAIN
             )
 
         if add_entry_to_hass:
             self.mock_config_entry.add_to_hass(self.hass)
 
-        knx_config = {KNX_DOMAIN: yaml_config or {}}
+        knx_config = {DOMAIN: yaml_config or {}}
         with patch(
             "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
-            await async_setup_component(self.hass, KNX_DOMAIN, knx_config)
+            await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
 
     ########################
@@ -307,7 +307,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
@@ -332,11 +332,19 @@ async def knx(
 
 
 @pytest.fixture
-def load_knxproj(hass_storage: dict[str, Any]) -> None:
+async def project_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return the fixture project data."""
+    return await async_load_json_object_fixture(hass, "project.json", DOMAIN)
+
+
+@pytest.fixture
+async def load_knxproj(
+    project_data: dict[str, Any], hass_storage: dict[str, Any]
+) -> None:
     """Mock KNX project data."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,
-        "data": FIXTURE_PROJECT_DATA,
+        "data": project_data,
     }
 
 
