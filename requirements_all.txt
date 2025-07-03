@@ -619,7 +619,7 @@ bizkaibus==0.1.1
 bleak-esphome==2.16.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.9.0
+bleak-retry-connector==4.0.0
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -643,16 +643,18 @@ bluemaestro-ble==0.4.1
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.21.4
+bluetooth-adapters==2.0.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.5.2
 
-# homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.28.1
+
+# homeassistant.components.bluetooth
+bluetooth-data-tools==1.28.2
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1124,7 +1126,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
-habluetooth==3.49.0
+habluetooth==4.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.104.0
