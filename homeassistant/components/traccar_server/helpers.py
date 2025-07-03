@@ -27,6 +27,7 @@ def get_geofence_ids(
     device: DeviceModel,
     position: PositionModel,
 ) -> list[int]:
+    """Compatibility helper to return a list of geofence IDs."""
     # For Traccar >=5.8 https://github.com/traccar/traccar/commit/30bafaed42e74863c5ca68a33c87f39d1e2de93d
     if "geofenceIds" in position:
         return position["geofenceIds"]
