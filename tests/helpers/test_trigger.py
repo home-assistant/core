@@ -770,7 +770,7 @@ async def test_subscribe_triggers(
     trigger_events = []
 
     async def good_subscriber(new_triggers: set[str]):
-        """Simulate a broken subscriber."""
+        """Simulate a working subscriber."""
         trigger_events.append(new_triggers)
 
     trigger.async_subscribe_platform_events(hass, broken_subscriber)
