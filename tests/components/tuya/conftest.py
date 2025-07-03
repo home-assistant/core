@@ -6,8 +6,15 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tuya_sharing import CustomerDevice
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import (
+    CONF_APP_TYPE,
+    CONF_USER_CODE,
+    DOMAIN,
+    DPCode,
+    DPType,
+)
 
 from tests.common import MockConfigEntry
 
@@ -68,3 +75,61 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
             },
         )
         yield login_control
+
+
+@pytest.fixture
+def mock_device_arete_two_12l_dehumidifier_air_purifier() -> CustomerDevice:
+    """Mock a Tuya Arete Two 12L Dehumidifier/Air Purifier device."""
+    device = MagicMock(spec=CustomerDevice)
+    device.id = "bf3fce6af592f12df3gbgq"
+    device.name = "Dehumidifier"
+    device.category = "cs"
+    device.product_id = "zibqa9dutqyaxym2"
+    device.product_name = "Arete\u00ae Two 12L Dehumidifier/Air Purifier"
+    device.online = True
+    device.function = {
+        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
+        DPCode.DEHUMIDITY_SET_VALUE: MagicMock(
+            type=DPType.INTEGER,
+            values='{"unit": "%", "min": 35, "max": 70, "scale": 0, "step": 5}',
+        ),
+        DPCode.CHILD_LOCK: MagicMock(type=DPType.BOOLEAN, value="{}"),
+        DPCode.COUNTDOWN_SET: MagicMock(
+            type=DPType.ENUM,
+            values='{"range": ["cancel", "1h", "2h", "3h"]}',
+        ),
+    }
+    device.status_range = {
+        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
+        DPCode.DEHUMIDITY_SET_VALUE: MagicMock(
+            type=DPType.INTEGER,
+            values='{"unit": "%", "min": 35, "max": 70, "scale": 0, "step": 5}',
+        ),
+        DPCode.CHILD_LOCK: MagicMock(type=DPType.BOOLEAN, value="{}"),
+        DPCode.HUMIDITY_INDOOR: MagicMock(
+            type=DPType.INTEGER,
+            values='{"unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1}',
+        ),
+        DPCode.COUNTDOWN_SET: MagicMock(
+            type=DPType.ENUM,
+            values='{"range": ["cancel", "1h", "2h", "3h"]}',
+        ),
+        DPCode.COUNTDOWN_LEFT: MagicMock(
+            type=DPType.INTEGER,
+            values='{"unit": "h", "min": 0, "max": 24, "scale": 0, "step": 1}',
+        ),
+        DPCode.FAULT: MagicMock(
+            type=DPType.BITMAP,
+            values='{"label": ["tankfull", "defrost", "E1", "E2", "L2", "L3", "L4", "wet"]}',
+        ),
+    }
+    device.status = {
+        DPCode.SWITCH: True,
+        DPCode.DEHUMIDITY_SET_VALUE: 50,
+        DPCode.CHILD_LOCK: False,
+        DPCode.HUMIDITY_INDOOR: 47,
+        DPCode.COUNTDOWN_SET: "cancel",
+        DPCode.COUNTDOWN_LEFT: 0,
+        DPCode.FAULT: 0,
+    }
+    return device
