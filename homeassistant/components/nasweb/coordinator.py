@@ -99,10 +99,11 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
         self._job = HassJob(self._handle_max_update_interval, job_name)
         self._unsub_last_update_check: CALLBACK_TYPE | None = None
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        data: dict[str, Any] = {}
-        data[KEY_OUTPUTS] = self.webio_api.outputs
-        data[KEY_INPUTS] = self.webio_api.inputs
-        data[KEY_TEMP_SENSOR] = self.webio_api.temp_sensor
+        data: dict[str, Any] = {
+            KEY_OUTPUTS: self.webio_api.outputs,
+            KEY_INPUTS: self.webio_api.inputs,
+            KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+        }
         self.async_set_updated_data(data)
 
     def is_connection_confirmed(self) -> bool:
