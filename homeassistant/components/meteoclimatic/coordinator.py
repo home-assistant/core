@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Meteoclimatic weather data."""
 
-    entry: ConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
