@@ -1,4 +1,4 @@
-"""API for ActronAir bound to Home Assistant OAuth."""
+"""ActronAir API authentication using Home Assistant's OAuth2 integration."""
 
 from typing import cast
 
@@ -9,19 +9,19 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide actronair authentication tied to an OAuth2 based config entry."""
+    """Authentication handler for ActronAir using Home Assistant OAuth2 session."""
 
     def __init__(
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        """Initialize ActronAir auth."""
+        """Initialize the authentication handler with OAuth2 session and base URL."""
         super().__init__(websession, ACP_BASE_URL)
         self._oauth_session = oauth_session
 
     async def async_get_access_token(self) -> str:
-        """Return a valid access token."""
+        """Ensure the OAuth2 access token is valid and return it. Refreshes the token if expired and returns the active access token as a string."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
