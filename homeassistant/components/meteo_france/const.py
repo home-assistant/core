@@ -26,7 +26,6 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_RAIN = "coordinator_rain"
 COORDINATOR_ALERT = "coordinator_alert"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
