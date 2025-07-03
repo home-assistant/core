@@ -34,5 +34,5 @@ def get_geofence_ids(
         return position["geofenceIds"]
     # For Traccar <5.8
     if "geofenceIds" in device:
-        return device["geofenceIds"] # type: ignore[typeddict-item]
+        return device["geofenceIds"]
     return []
