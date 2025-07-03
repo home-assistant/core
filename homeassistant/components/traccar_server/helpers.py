@@ -23,6 +23,7 @@ def get_first_geofence(
         None,
     )
 
+
 def get_geofence_ids(
     device: DeviceModel,
     position: PositionModel,
