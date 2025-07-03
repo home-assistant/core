@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 class MedcomBleUpdateCoordinator(DataUpdateCoordinator[MedcomBleDevice]):
     """Coordinator for Medcom BLE radiation monitor data."""
 
-    entry: ConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, address: str) -> None:
         """Initialize the coordinator."""
