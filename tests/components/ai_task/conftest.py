@@ -63,19 +63,6 @@ class MockAITaskEntity(AITaskEntity):
             data=data,
         )
 
-    async def _async_generate_structured_data(
-        self, task: GenDataTask, chat_log: ChatLog, structure: dict[str, dict]
-    ) -> GenDataTaskResult:
-        """Mock handling of generate data task."""
-        self.mock_generate_data_tasks.append(task)
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(self.entity_id, "Mock result")
-        )
-        return GenDataTaskResult(
-            conversation_id=chat_log.conversation_id,
-            data="Mock result",
-        )
-
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
