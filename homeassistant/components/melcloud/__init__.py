@@ -31,7 +31,7 @@ type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDevice]]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
-    """Establish connection with MELClooud."""
+    """Establish connection with MELCloud."""
     conf = entry.data
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
