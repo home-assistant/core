@@ -108,15 +108,18 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if user_input is not None and entry is not None:
             entry = cast(ConfigEntry, entry)
-            api_key = user_input[CONF_API_KEY]
-            masked_api_key = (
-                api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
-            )
-            _LOGGER.debug("Reauth: User provided new API key: %s", masked_api_key)
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_API_KEY: api_key}
-            )
-            return self.async_abort(reason="reauth_successful")
+            api_key = user_input.get(CONF_API_KEY)
+            if not api_key:
+                errors[CONF_API_KEY] = "missing_fields"
+            else:
+                masked_api_key = (
+                    api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
+                )
+                _LOGGER.debug("Reauth: User provided new API key: %s", masked_api_key)
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_API_KEY: api_key}
+                )
+                return self.async_abort(reason="reauth_successful")
         data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
         return self.async_show_form(
             step_id="reauth",
@@ -134,15 +137,20 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if user_input is not None and entry is not None:
             entry = cast(ConfigEntry, entry)
-            api_key = user_input[CONF_API_KEY]
-            masked_api_key = (
-                api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
-            )
-            _LOGGER.debug("Reconfigure: User provided new API key: %s", masked_api_key)
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_API_KEY: api_key}
-            )
-            return self.async_abort(reason="reconfigure_successful")
+            api_key = user_input.get(CONF_API_KEY)
+            if not api_key:
+                errors[CONF_API_KEY] = "missing_fields"
+            else:
+                masked_api_key = (
+                    api_key[:3] + "***" + api_key[-2:] if len(api_key) > 5 else "***"
+                )
+                _LOGGER.debug(
+                    "Reconfigure: User provided new API key: %s", masked_api_key
+                )
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_API_KEY: api_key}
+                )
+                return self.async_abort(reason="reconfigure_successful")
         data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
         return self.async_show_form(
             step_id="reconfigure",
