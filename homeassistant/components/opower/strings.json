@@ -6,12 +6,24 @@
           "utility": "Utility name",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "utility": "The name of your utility provider",
+          "username": "The username for your utility account",
+          "password": "The password for your utility account"
         }
       },
       "mfa": {
         "description": "The TOTP secret below is not one of the 6-digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
         "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "totp_secret": "TOTP secret"
+        },
+        "data_description": {
+          "username": "[%key:component::opower::config::step::user::data_description::username%]",
+          "password": "[%key:component::opower::config::step::user::data_description::password%]",
+          "totp_secret": "The TOTP secret for your utility account, used for multi-factor authentication (MFA)."
         }
       },
       "reauth_confirm": {
@@ -20,6 +32,11 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "totp_secret": "[%key:component::opower::config::step::mfa::data::totp_secret%]"
+        },
+        "data_description": {
+          "username": "[%key:component::opower::config::step::user::data_description::username%]",
+          "password": "[%key:component::opower::config::step::user::data_description::password%]",
+          "totp_secret": "The TOTP secret for your utility account, used for multi-factor authentication (MFA)."
         }
       }
     },
