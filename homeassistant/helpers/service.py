@@ -80,6 +80,7 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
     from homeassistant.components import (  # noqa: PLC0415
+        ai_task,
         alarm_control_panel,
         assist_satellite,
         calendar,
@@ -101,6 +102,7 @@ def _base_components() -> dict[str, ModuleType]:
     )
 
     return {
+        "ai_task": ai_task,
         "alarm_control_panel": alarm_control_panel,
         "assist_satellite": assist_satellite,
         "calendar": calendar,
