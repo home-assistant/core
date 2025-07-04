@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Datadog agent's address and port.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "prefix": "Prefix",
+          "rate": "Rate"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Datadog agent.",
+          "port": "Port the Datadog agent is listening on",
+          "prefix": "Metric prefix to use",
+          "rate": "The sample rate of UDP packets sent to Datadog."
+        }
+      }
+    }
+  }
+}
