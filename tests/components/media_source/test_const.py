@@ -45,33 +45,6 @@ def test_valid_uri_patterns(
 
 
 @pytest.mark.parametrize(
-    "domain",
-    [
-        "_test",  # starts with underscore
-        "test_",  # ends with underscore
-        "_test_",  # starts and ends with underscore
-        "_",  # single underscore
-        "test-123",  # contains hyphen
-        "test.123",  # contains dot
-        "test 123",  # contains space
-        "TEST",  # uppercase letters
-        "Test",  # mixed case
-    ],
-)
-def test_invalid_domain_names(domain: str) -> None:
-    """Test invalid domain names that should not match."""
-    match = URI_SCHEME_REGEX.match(f"media-source://{domain}")
-    assert match is None, f"Domain '{domain}' should be invalid"
-
-
-def test_identifier_cannot_start_with_slash():
-    """Test that identifiers cannot start with forward slash."""
-    # This should not match because identifier starts with /
-    match = URI_SCHEME_REGEX.match("media-source://domain//invalid")
-    assert match is None
-
-
-@pytest.mark.parametrize(
     "uri",
     [
         "media-source:",  # missing //
@@ -87,6 +60,18 @@ def test_identifier_cannot_start_with_slash():
         "media-source://domain extra",  # extra content
         "prefix media-source://domain",  # prefix content
         "media-source://domain suffix",  # suffix content
+        # Invalid domain names
+        "media-source://_test",  # starts with underscore
+        "media-source://test_",  # ends with underscore
+        "media-source://_test_",  # starts and ends with underscore
+        "media-source://_",  # single underscore
+        "media-source://test-123",  # contains hyphen
+        "media-source://test.123",  # contains dot
+        "media-source://test 123",  # contains space
+        "media-source://TEST",  # uppercase letters
+        "media-source://Test",  # mixed case
+        # Identifier cannot start with slash
+        "media-source://domain//invalid",  # identifier starts with slash
     ],
 )
 def test_invalid_uris(uri: str) -> None:
