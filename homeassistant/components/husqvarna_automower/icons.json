@@ -3,9 +3,6 @@
     "binary_sensor": {
       "leaving_dock": {
         "default": "mdi:debug-step-out"
-      },
-      "returning_to_dock": {
-        "default": "mdi:debug-step-into"
       }
     },
     "button": {
