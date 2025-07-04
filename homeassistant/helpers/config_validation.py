@@ -1586,18 +1586,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-ZONE_CONDITION_SCHEMA = vol.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_ids,
-        vol.Required("zone"): entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
-    }
-)
-
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1745,7 +1733,6 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
     "template": TEMPLATE_CONDITION_SCHEMA,
     "time": TIME_CONDITION_SCHEMA,
     "trigger": TRIGGER_CONDITION_SCHEMA,
-    "zone": ZONE_CONDITION_SCHEMA,
 }
 
 
