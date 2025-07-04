@@ -41,7 +41,7 @@
     'area_id': None,
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'http://1.2.3.4:9000',
     'connections': set({
       tuple(
         'mac',

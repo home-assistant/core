@@ -324,6 +324,9 @@ def mock_pysqueezebox_server(
 
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
+        mock_lms.generate_image_url = MagicMock(
+            return_value="http://" + TEST_HOST + ":" + TEST_PORT
+        )
         mock_lms.async_query = AsyncMock(
             return_value={"uuid": uuid, "mac": TEST_MAC[2]}
         )

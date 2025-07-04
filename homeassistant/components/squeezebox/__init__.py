@@ -174,6 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, lms.uuid)},
         name=lms.name,
+        configuration_url=lms.generate_image_url(""),
         manufacturer=SERVER_MANUFACTURER,
         model=SERVER_MODEL,
         model_id=SERVER_MODEL_ID,
