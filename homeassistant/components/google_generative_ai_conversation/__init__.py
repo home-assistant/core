@@ -234,6 +234,7 @@ async def async_update_options(
 async def async_migrate_integration(hass: HomeAssistant) -> None:
     """Migrate integration entry structure."""
 
+    # Make sure we get enabled config entries first
     entries = sorted(
         hass.config_entries.async_entries(DOMAIN),
         key=lambda e: e.disabled_by is not None,
