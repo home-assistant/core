@@ -416,6 +416,22 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
                 slug_validator=translation_key_validator,
             ),
+            vol.Optional("conditions"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description_configured"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
             vol.Optional("triggers"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
