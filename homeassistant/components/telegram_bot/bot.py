@@ -374,9 +374,7 @@ class TelegramNotificationService:
         }
         if data is not None:
             if ATTR_PARSER in data:
-                params[ATTR_PARSER] = self._parsers.get(
-                    data[ATTR_PARSER], self.parse_mode
-                )
+                params[ATTR_PARSER] = data[ATTR_PARSER]
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
@@ -408,6 +406,8 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
+        if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
+            params[ATTR_PARSER] = None
         return params
 
     async def _send_msg(
