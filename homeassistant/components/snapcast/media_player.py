@@ -343,7 +343,7 @@ class SnapcastClientDevice(SnapcastBaseDevice):
             if self.is_volume_muted or self._current_group.muted:
                 return MediaPlayerState.IDLE
             return STREAM_STATUS.get(self._current_group.stream_status)
-        return MediaPlayerState.STANDBY
+        return MediaPlayerState.OFF
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
