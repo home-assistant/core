@@ -67,6 +67,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 BASE_PRELOAD_PLATFORMS = [
     "backup",
+    "condition",
     "config",
     "config_flow",
     "diagnostics",
@@ -856,6 +857,11 @@ class Integration:
         # If the integration does not explicitly set import_executor, we default to
         # True.
         return self.manifest.get("import_executor", True)
+
+    @cached_property
+    def has_conditions(self) -> bool:
+        """Return if the integration has conditions."""
+        return "conditions.yaml" in self._top_level_files
 
     @cached_property
     def has_services(self) -> bool:
