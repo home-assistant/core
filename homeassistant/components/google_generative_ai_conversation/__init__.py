@@ -267,15 +267,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     unique_id=None,
                 ),
             )
-            hass.config_entries.async_add_subentry(
-                parent_entry,
-                ConfigSubentry(
-                    data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
-                    subentry_type="ai_task_data",
-                    title=DEFAULT_AI_TASK_NAME,
-                    unique_id=None,
-                ),
-            )
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
@@ -319,7 +310,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 title=DEFAULT_TITLE,
                 options={},
                 version=2,
-                minor_version=3,
+                minor_version=2,
             )
 
 
