@@ -327,7 +327,7 @@ class StateVacuumEntity(
             " instead with a correct device class and link it to the same device",
             core_integration_behavior=ReportBehavior.LOG,
             custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.7",
+            breaks_in_ha_version="2026.8",
             integration_domain=self.platform.platform_name if self.platform else None,
             exclude_integrations={DOMAIN},
         )
@@ -346,7 +346,7 @@ class StateVacuumEntity(
             core_behavior=ReportBehavior.LOG,
             core_integration_behavior=ReportBehavior.LOG,
             custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.7",
+            breaks_in_ha_version="2026.8",
             integration_domain=self.platform.platform_name if self.platform else None,
             exclude_integrations={DOMAIN},
         )

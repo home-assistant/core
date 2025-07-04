@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from types import MappingProxyType
 
 import httpx
 import ollama
@@ -100,8 +101,12 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 
     for entry in entries:
         use_existing = False
+        # Create subentry with model from entry.data and options from entry.options
+        subentry_data = entry.options.copy()
+        subentry_data[CONF_MODEL] = entry.data[CONF_MODEL]
+
         subentry = ConfigSubentry(
-            data=entry.options,
+            data=MappingProxyType(subentry_data),
             subentry_type="conversation",
             title=entry.title,
             unique_id=None,
@@ -154,9 +159,11 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             hass.config_entries.async_update_entry(
                 entry,
                 title=DEFAULT_NAME,
+                # Update parent entry to only keep URL, remove model
+                data={CONF_URL: entry.data[CONF_URL]},
                 options={},
-                version=2,
-                minor_version=2,
+                version=3,
+                minor_version=1,
             )
 
 
@@ -164,7 +171,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-    if entry.version > 2:
+    if entry.version > 3:
         # This means the user has downgraded from a future version
         return False
 
@@ -181,6 +188,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
             )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    if entry.version == 2 and entry.minor_version == 2:
+        # Update subentries to include the model
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type == "conversation":
+                updated_data = dict(subentry.data)
+                updated_data[CONF_MODEL] = entry.data[CONF_MODEL]
+
+                hass.config_entries.async_update_subentry(
+                    entry, subentry, data=MappingProxyType(updated_data)
+                )
+
+        # Update main entry to remove model and bump version
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_URL: entry.data[CONF_URL]},
+            version=3,
+            minor_version=1,
+        )
 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
