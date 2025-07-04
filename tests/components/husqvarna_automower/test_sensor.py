@@ -153,13 +153,15 @@ async def test_restricted_reason_sensor(
     assert state.state == RestrictedReasons.EXTERNAL
 
     values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.EXTERNAL
-    values[TEST_MOWER_ID].planner.external_reason = ExternalReasons.IFTTT_WILDLIFE
+    values[
+        TEST_MOWER_ID
+    ].planner.external_reason = ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(sensor)
-    assert state.state == ExternalReasons.IFTTT_WILDLIFE
+    assert state.state == ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
