@@ -26,14 +26,6 @@ from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names()),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 
 async def _validate_login(
     hass: HomeAssistant, login_data: dict[str, str]
@@ -88,9 +80,24 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await _validate_login(self.hass, user_input)
             if not errors:
                 return self._async_create_opower_entry(user_input)
-
+        else:
+            user_input = {}
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UTILITY,
+                        default=user_input.get(CONF_UTILITY, vol.UNDEFINED),
+                    ): vol.In(get_supported_utility_names()),
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_mfa(
