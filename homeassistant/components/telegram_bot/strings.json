@@ -929,6 +929,9 @@
     },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
+    },
+    "action_failed": {
+      "message": "Action failed. {error}"
     }
   },
   "issues": {
