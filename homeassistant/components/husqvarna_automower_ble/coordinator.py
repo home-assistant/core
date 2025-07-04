@@ -59,12 +59,10 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     async def async_keep_alive(self, dt) -> None:
         """Send a keep alive to the mower."""
         async with self.lock:
-            if not self.mower.is_connected():
-                return
-
-            LOGGER.debug("Sending keep alive")
             try:
-                await self.mower.command("KeepAlive")
+                if self.mower.is_connected():
+                    LOGGER.debug("Sending keep alive")
+                    await self.mower.command("KeepAlive")
             except BleakError as err:
                 LOGGER.warning("Failed to send keep alive: %s", err)
 
@@ -92,7 +90,10 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         data: dict[str, bytes] = {}
 
-        await self._async_find_device()
+        try:
+            await self._async_find_device()
+        except BleakError as err:
+            raise UpdateFailed("Failed to connect") from err
 
         try:
             async with self.lock:
