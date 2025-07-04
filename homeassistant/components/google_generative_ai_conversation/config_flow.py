@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import logging
 from typing import Any, cast
 
@@ -46,12 +47,14 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_STT_PROMPT,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -76,12 +79,14 @@ STEP_API_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = genai.Client(api_key=data[CONF_API_KEY])
+    client = await hass.async_add_executor_job(
+        partial(genai.Client, api_key=data[CONF_API_KEY])
+    )
     await client.aio.models.list(
         config={
             "http_options": {
@@ -106,7 +111,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
             try:
-                await validate_input(user_input)
+                await validate_input(self.hass, user_input)
             except (APIError, Timeout) as err:
                 if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
                     errors["base"] = "invalid_auth"
@@ -141,6 +146,12 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "subentry_type": "tts",
                             "data": RECOMMENDED_TTS_OPTIONS,
                             "title": DEFAULT_TTS_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": RECOMMENDED_AI_TASK_OPTIONS,
+                            "title": DEFAULT_AI_TASK_NAME,
                             "unique_id": None,
                         },
                     ],
@@ -192,6 +203,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             "conversation": LLMSubentryFlowHandler,
             "stt": LLMSubentryFlowHandler,
             "tts": LLMSubentryFlowHandler,
+            "ai_task_data": LLMSubentryFlowHandler,
         }
 
 
@@ -225,6 +237,8 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
                 options: dict[str, Any]
                 if self._subentry_type == "tts":
                     options = RECOMMENDED_TTS_OPTIONS.copy()
+                elif self._subentry_type == "ai_task_data":
+                    options = RECOMMENDED_AI_TASK_OPTIONS.copy()
                 elif self._subentry_type == "stt":
                     options = RECOMMENDED_STT_OPTIONS.copy()
                 else:
@@ -301,6 +315,8 @@ async def google_generative_ai_config_option_schema(
             default_name = options[CONF_NAME]
         elif subentry_type == "tts":
             default_name = DEFAULT_TTS_NAME
+        elif subentry_type == "ai_task_data":
+            default_name = DEFAULT_AI_TASK_NAME
         elif subentry_type == "stt":
             default_name = DEFAULT_STT_NAME
         else:
@@ -341,6 +357,7 @@ async def google_generative_ai_config_option_schema(
                 ): TemplateSelector(),
             }
         )
+
     schema.update(
         {
             vol.Required(
@@ -356,13 +373,14 @@ async def google_generative_ai_config_option_schema(
     api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
-            label=api_model.display_name,
+            label=api_model.name.lstrip("models/"),
             value=api_model.name,
         )
-        for api_model in sorted(api_models, key=lambda x: x.display_name or "")
+        for api_model in sorted(
+            api_models, key=lambda x: x.name.lstrip("models/") or ""
+        )
         if (
-            api_model.display_name
-            and api_model.name
+            api_model.name
             and ("tts" in api_model.name) == (subentry_type == "tts")
             and "vision" not in api_model.name
             and api_model.supported_actions
@@ -470,4 +488,5 @@ async def google_generative_ai_config_option_schema(
                 ): bool,
             }
         )
+
     return schema

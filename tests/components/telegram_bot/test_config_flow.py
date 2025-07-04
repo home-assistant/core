@@ -383,7 +383,7 @@ async def test_subentry_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
-    assert subentry.title == "mock title"
+    assert subentry.title == "mock title (987654321)"
     assert subentry.unique_id == "987654321"
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 

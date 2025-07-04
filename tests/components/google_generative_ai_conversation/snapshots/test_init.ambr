@@ -46,7 +46,7 @@
       'identifiers': set({
         tuple(
           'google_generative_ai_conversation',
-          'ulid-stt',
+          'ulid-ai-task',
         ),
       }),
       'is_new': False,
@@ -55,7 +55,7 @@
       'manufacturer': 'Google',
       'model': 'gemini-2.5-flash',
       'model_id': None,
-      'name': 'Google AI STT',
+      'name': 'Google AI Task',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,

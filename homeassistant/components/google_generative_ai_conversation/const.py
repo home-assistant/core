@@ -13,6 +13,7 @@ DEFAULT_TITLE = "Google Generative AI"
 DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
 DEFAULT_STT_NAME = "Google AI STT"
 DEFAULT_TTS_NAME = "Google AI TTS"
+DEFAULT_AI_TASK_NAME = "Google AI Task"
 
 CONF_PROMPT = "prompt"
 DEFAULT_STT_PROMPT = "Transcribe the attached audio"
@@ -53,5 +54,9 @@ RECOMMENDED_STT_OPTIONS = {
 }
 
 RECOMMENDED_TTS_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }

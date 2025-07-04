@@ -24,7 +24,7 @@ bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.5.2
-bluetooth-data-tools==1.28.1
+bluetooth-data-tools==1.28.2
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
@@ -35,10 +35,10 @@ fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==3.49.0
-hass-nabucasa==0.104.0
+hass-nabucasa==0.105.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250627.0
+home-assistant-frontend==20250702.0
 home-assistant-intents==2025.6.23
 httpx==0.28.1
 ifaddr==0.2.0
@@ -48,7 +48,7 @@ mutagen==1.47.0
 orjson==3.10.18
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==11.2.1
+Pillow==11.3.0
 propcache==0.3.2
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
