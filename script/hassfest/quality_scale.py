@@ -580,7 +580,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "lightwave",
     "limitlessled",
     "linear_garage_door",
-    "linkplay",
     "linksys_smart",
     "linode",
     "linux_battery",
