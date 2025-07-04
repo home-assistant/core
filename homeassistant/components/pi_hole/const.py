@@ -5,7 +5,6 @@ from datetime import timedelta
 DOMAIN = "pi_hole"
 
 CONF_STATISTICS_ONLY = "statistics_only"
-CONF_APP_PASSWORD = "app_password"
 
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"
