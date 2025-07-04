@@ -2,17 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Nederlandse Spoorwegen Setup",
+        "title": "Nederlandse Spoorwegen setup",
         "description": "Set up your Nederlandse Spoorwegen integration.",
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your NS API key."
         }
       },
       "routes": {
-        "title": "Add Route",
+        "title": "Add route",
         "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
@@ -33,7 +33,7 @@
         "title": "Re-authenticate",
         "description": "Your NS API key needs to be updated.",
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Enter your new NS API key."
@@ -43,7 +43,7 @@
         "title": "Reconfigure",
         "description": "Update your NS API key.",
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Enter your new NS API key."
@@ -53,7 +53,7 @@
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
       "invalid_auth": "Invalid API key.",
-      "unknown": "Unknown error occurred."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "This API key is already configured.",
@@ -64,7 +64,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Routes",
+        "title": "Configure routes",
         "description": "Configure the routes.",
         "data": {
           "action": "Action"
@@ -74,7 +74,7 @@
         }
       },
       "select_route": {
-        "title": "Select Route",
+        "title": "Select route",
         "description": "Choose a route to {action}.",
         "data": {
           "route_idx": "Route"
@@ -84,8 +84,8 @@
         }
       },
       "add_route": {
-        "title": "Add Route",
-        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
+        "title": "Add route",
+        "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
         "data": {
           "name": "Route name",
           "from": "From station",
@@ -102,7 +102,7 @@
         }
       },
       "edit_route": {
-        "title": "Edit Route",
+        "title": "Edit route",
         "description": "Edit the details for this route. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
@@ -122,8 +122,8 @@
     },
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
-      "invalid_auth": "Invalid API key.",
-      "unknown": "Unknown error occurred.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_routes": "No routes configured yet.",
       "missing_fields": "Please fill in all required fields.",
       "invalid_route_index": "Invalid route selected."
@@ -132,7 +132,7 @@
   "entity": {
     "sensor": {
       "departure": {
-        "name": "Next Departure",
+        "name": "Next departure",
         "state": {
           "on_time": "On time",
           "delayed": "Delayed",
