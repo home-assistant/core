@@ -84,8 +84,8 @@
         }
       },
       "add_route": {
-        "title": "Add route",
-        "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
+        "title": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
+        "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::description%]",
         "data": {
           "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
           "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::from%]",
