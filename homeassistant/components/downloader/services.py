@@ -45,9 +45,9 @@ def download_file(service: ServiceCall) -> None:
     auth_type: str | None = service.data.get(ATTR_AUTH_TYPE)
     username: str | None = service.data.get(ATTR_AUTH_USERNAME)
     password: str | None = service.data.get(ATTR_AUTH_PASSWORD)
-    subdir = service.data.get(ATTR_SUBDIR)
-    target_filename = service.data.get(ATTR_FILENAME)
-    overwrite = service.data.get(ATTR_OVERWRITE)
+    subdir: str | None = service.data.get(ATTR_SUBDIR)
+    target_filename: str | None = service.data.get(ATTR_FILENAME)
+    overwrite: bool = service.data[ATTR_OVERWRITE]
 
     auth: AuthBase | None = None
     if auth_type:

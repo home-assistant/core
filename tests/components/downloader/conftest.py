@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-from requests_mock import Mocker
 
 from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -26,9 +25,3 @@ async def loaded_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     return config_entry
-
-
-@pytest.fixture
-def auth_requests_mock(requests_mock: Mocker) -> Mocker:
-    """Set up request mock."""
-    return requests_mock
