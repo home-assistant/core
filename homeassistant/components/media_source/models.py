@@ -45,6 +45,16 @@ class MediaSourceItem:
     identifier: str
     target_media_player: str | None
 
+    @property
+    def media_source_id(self) -> str:
+        """Return the media source ID."""
+        uri = URI_SCHEME
+        if self.domain:
+            uri += self.domain
+            if self.identifier:
+                uri += f"/{self.identifier}"
+        return uri
+
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
