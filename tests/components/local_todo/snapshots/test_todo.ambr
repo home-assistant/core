@@ -2,6 +2,7 @@
 # name: test_parse_existing_ics[completed]
   list([
     dict({
+      'completed': '2023-10-25T01:40:11+00:00',
       'status': 'completed',
       'summary': 'Complete Task',
       'uid': '077cb7f2-6c89-11ee-b2a9-0242ac110002',
