@@ -87,18 +87,18 @@
         "title": "Add route",
         "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
         "data": {
-          "name": "Route name",
-          "from": "From station",
-          "to": "To station",
-          "via": "Via station (optional)",
-          "time": "Departure time (optional)"
+          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
+          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::from%]",
+          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::to%]",
+          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::via%]",
+          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::time%]"
         },
         "data_description": {
-          "name": "A name for this route.",
-          "from": "Departure station code (e.g., AMS)",
-          "to": "Arrival station code (e.g., UTR)",
-          "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM:SS (24h)"
+          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::name%]",
+          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::from%]",
+          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::to%]",
+          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::via%]",
+          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::time%]"
         }
       },
       "edit_route": {
