@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
+from .conftest import (
     authorisation_response,
     authorisation_response_unauthorised,
     http_403_error,
@@ -38,7 +38,7 @@ test_response = {
 }
 
 
-async def test_show_set_form(hass: HomeAssistant) -> None:
+async def test_show_set_form(hass: HomeAssistant, mock_wallbox) -> None:
     """Test that the setup form is served."""
     flow = config_flow.WallboxConfigFlow()
     flow.hass = hass
@@ -53,7 +53,6 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.authenticate",
@@ -73,8 +72,8 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -82,7 +81,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.authenticate",
@@ -102,8 +100,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_validate_input(hass: HomeAssistant) -> None:
@@ -111,15 +109,14 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.authenticate",
-            new=Mock(return_value=authorisation_response),
+            return_value=authorisation_response,
         ),
         patch(
-            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
-            new=Mock(return_value=test_response),
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            return_value=test_response,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -135,20 +132,20 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     assert result2["data"]["station"] == "12345"
 
 
-async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+async def test_form_reauth(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
+) -> None:
     """Test we handle reauth flow."""
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
     with (
-        patch(
-            "homeassistant.components.wallbox.Wallbox.authenticate",
-            new=Mock(return_value=authorisation_response_unauthorised),
+        patch.object(
+            mock_wallbox,
+            "authenticate",
+            return_value=authorisation_response_unauthorised,
         ),
-        patch(
-            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
-            new=Mock(return_value=test_response),
-        ),
+        patch.object(mock_wallbox, "getChargerStatus", return_value=test_response),
     ):
         result = await entry.start_reauth_flow(hass)
 
@@ -161,27 +158,27 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+async def test_form_reauth_invalid(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
+) -> None:
     """Test we handle reauth invalid flow."""
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
     with (
-        patch(
-            "homeassistant.components.wallbox.Wallbox.authenticate",
-            new=Mock(return_value=authorisation_response_unauthorised),
+        patch.object(
+            mock_wallbox,
+            "authenticate",
+            return_value=authorisation_response_unauthorised,
         ),
-        patch(
-            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
-            new=Mock(return_value=test_response),
-        ),
+        patch.object(mock_wallbox, "getChargerStatus", return_value=test_response),
     ):
         result = await entry.start_reauth_flow(hass)
 
