@@ -8,9 +8,13 @@ from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_generative_ai_conversation.const import (
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
@@ -397,7 +401,7 @@ async def test_load_entry_with_unloaded_entries(
     assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
 
 
-async def test_migration_from_v1_to_v2(
+async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -473,10 +477,10 @@ async def test_migration_from_v1_to_v2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -495,6 +499,14 @@ async def test_migration_from_v1_to_v2(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
+    assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
 
     subentry = conversation_subentries[0]
 
@@ -542,7 +554,7 @@ async def test_migration_from_v1_to_v2(
     }
 
 
-async def test_migration_from_v1_to_v2_with_multiple_keys(
+async def test_migration_from_v1_with_multiple_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -619,10 +631,10 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for entry in entries:
         assert entry.version == 2
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         assert not entry.options
         assert entry.title == DEFAULT_TITLE
-        assert len(entry.subentries) == 2
+        assert len(entry.subentries) == 3
         subentry = list(entry.subentries.values())[0]
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
@@ -631,6 +643,10 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert subentry.subentry_type == "tts"
         assert subentry.data == RECOMMENDED_TTS_OPTIONS
         assert subentry.title == DEFAULT_TTS_NAME
+        subentry = list(entry.subentries.values())[2]
+        assert subentry.subentry_type == "ai_task_data"
+        assert subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+        assert subentry.title == DEFAULT_AI_TASK_NAME
 
         dev = device_registry.async_get_device(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
@@ -642,7 +658,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         }
 
 
-async def test_migration_from_v1_to_v2_with_same_keys(
+async def test_migration_from_v1_with_same_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -718,10 +734,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -740,6 +756,14 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
+    assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
 
     subentry = conversation_subentries[0]
 
@@ -829,7 +853,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         ),
     ],
 )
-async def test_migration_from_v2_1_to_v2_2(
+async def test_migration_from_v2_1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -837,12 +861,13 @@ async def test_migration_from_v2_1_to_v2_2(
     extra_subentries: list[ConfigSubentryData],
     expected_device_subentries: dict[str, set[str | None]],
 ) -> None:
-    """Test migration from version 2.1 to version 2.2.
+    """Test migration from version 2.1.
 
     This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
+    2025.7.0b0-2025.7.0b1 and add AI Task subentry:
     - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
     - Add TTS subentry (Added in Home Assistant Core 2025.7.0b1)
+    - Add AI Task subentry (Added in version 2.3)
     """
     # Create a v2.1 config entry with 2 subentries, devices and entities
     options = {
@@ -930,10 +955,10 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 3
+    assert len(entry.subentries) == 4
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -952,6 +977,14 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(tts_subentries) == 1
     assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
     assert tts_subentries[0].title == DEFAULT_TTS_NAME
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
+    assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
 
     subentry = conversation_subentries[0]
 
@@ -1011,3 +1044,80 @@ async def test_devices(
         device_registry, mock_config_entry.entry_id
     )
     assert devices == snapshot
+
+
+async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
+    """Test migration from version 2.2."""
+    # Create a v2.2 config entry with conversation and TTS subentries
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=2,
+        subentries_data=[
+            {
+                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "unique_id": None,
+            },
+            {
+                "data": RECOMMENDED_TTS_OPTIONS,
+                "subentry_type": "tts",
+                "title": DEFAULT_TTS_NAME,
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Verify initial state
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 2
+    assert len(mock_config_entry.subentries) == 2
+
+    # Run setup to trigger migration
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is True
+        await hass.async_block_till_done()
+
+    # Verify migration completed
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Check version and subversion were updated
+    assert entry.version == 2
+    assert entry.minor_version == 3
+
+    # Check we now have conversation, tts and ai_task_data subentries
+    assert len(entry.subentries) == 3
+
+    subentries = {
+        subentry.subentry_type: subentry for subentry in entry.subentries.values()
+    }
+    assert "conversation" in subentries
+    assert "tts" in subentries
+    assert "ai_task_data" in subentries
+
+    # Find and verify the ai_task_data subentry
+    ai_task_subentry = subentries["ai_task_data"]
+    assert ai_task_subentry is not None
+    assert ai_task_subentry.title == DEFAULT_AI_TASK_NAME
+    assert ai_task_subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+
+    # Verify conversation subentry is still there and unchanged
+    conversation_subentry = subentries["conversation"]
+    assert conversation_subentry is not None
+    assert conversation_subentry.title == DEFAULT_CONVERSATION_NAME
+    assert conversation_subentry.data == RECOMMENDED_CONVERSATION_OPTIONS
+
+    # Verify TTS subentry is still there and unchanged
+    tts_subentry = subentries["tts"]
+    assert tts_subentry is not None
+    assert tts_subentry.title == DEFAULT_TTS_NAME
+    assert tts_subentry.data == RECOMMENDED_TTS_OPTIONS

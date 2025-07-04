@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 import mimetypes
 from pathlib import Path
 from types import MappingProxyType
@@ -37,11 +38,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_PROMPT,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
@@ -53,6 +56,7 @@ CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
+    Platform.AI_TASK,
     Platform.CONVERSATION,
     Platform.TTS,
 )
@@ -187,11 +191,9 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-
-        def _init_client() -> Client:
-            return Client(api_key=entry.data[CONF_API_KEY])
-
-        client = await hass.async_add_executor_job(_init_client)
+        client = await hass.async_add_executor_job(
+            partial(Client, api_key=entry.data[CONF_API_KEY])
+        )
         await client.aio.models.get(
             model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
@@ -349,6 +351,19 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    if entry.version == 2 and entry.minor_version == 2:
+        # Add AI Task subentry with default options
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
