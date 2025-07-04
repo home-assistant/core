@@ -243,6 +243,11 @@ multidict>=6.4.2
 # Stable Alpine current only ships cargo 1.83.0
 # No wheels upstream available for armhf & armv7
 rpds-py==0.24.0
+
+# 1.4.0 added type arguments for FrozenList which
+# are incompatible with the recommended usage in aiohttp.
+# https://github.com/aio-libs/aiosignal/issues/720
+aiosignal!=1.4.0
 """
 
 GENERATED_MESSAGE = (
