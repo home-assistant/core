@@ -44,7 +44,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescription):
     """Describe Matter Number Input entities."""
 
@@ -133,7 +133,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
-        if value_convert := self.entity_description.ha_to_native_value:
+        if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevel(
@@ -145,7 +145,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -275,10 +275,10 @@ DISCOVERY_SCHEMAS = [
             native_max_value=100,
             native_min_value=0.5,
             native_step=0.5,
-            measurement_to_ha=(
+            device_to_ha=(
                 lambda x: None if x is None else x / 2  # Matter range (1-200)
             ),
-            ha_to_native_value=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,

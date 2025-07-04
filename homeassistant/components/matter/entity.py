@@ -54,7 +54,7 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 
