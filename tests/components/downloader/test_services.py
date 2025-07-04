@@ -1,6 +1,7 @@
 """Test downloader action."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -59,43 +60,32 @@ async def test_service_call(hass: HomeAssistant) -> None:
         assert auth_requests_mock.called
 
 
+@pytest.mark.parametrize(
+    ("extra_args", "error_code"),
+    [
+        ({ATTR_SUBDIR: "~"}, "invalid_subdir"),
+        ({ATTR_AUTH_TYPE: HTTP_BASIC_AUTHENTICATION}, "missing_credentials"),
+        ({ATTR_AUTH_TYPE: HTTP_DIGEST_AUTHENTICATION}, "missing_credentials"),
+    ],
+)
 @pytest.mark.usefixtures("loaded_config_entry")
-async def test_invalid_subdir(hass: HomeAssistant) -> None:
+async def test_validation(
+    hass: HomeAssistant, extra_args: dict[str, Any], error_code: str
+) -> None:
     """Test invalid subdirectory in downloader action."""
 
     TEST_URL = "http://example.com/resource"
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Subdirectory must be valid",
-    ):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DOWNLOAD_FILE,
-            {ATTR_URL: TEST_URL, ATTR_SUBDIR: "~"},
+            {ATTR_URL: TEST_URL, **extra_args},
             blocking=True,
         )
 
-
-@pytest.mark.usefixtures("loaded_config_entry")
-async def test_invalid_credentials(hass: HomeAssistant) -> None:
-    """Test invalid credentials in downloader action."""
-
-    TEST_URL = "http://example.com/resource"
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Username and password are required",
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_DOWNLOAD_FILE,
-            {
-                ATTR_URL: TEST_URL,
-                ATTR_AUTH_TYPE: HTTP_BASIC_AUTHENTICATION,
-            },
-            blocking=True,
-        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == error_code
 
 
 @pytest.mark.usefixtures("loaded_config_entry")
