@@ -68,6 +68,7 @@ FLOWS = {
         "aosmith",
         "apcupsd",
         "apple_tv",
+        "apprise",
         "aprilaire",
         "apsystems",
         "aquacell",
