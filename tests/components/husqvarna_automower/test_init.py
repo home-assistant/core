@@ -22,7 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -238,13 +238,14 @@ async def test_constant_polling(
     test_values = deepcopy(values)
     callback_holder: dict[str, Callable] = {}
 
-    def fake_register_data_callback(
+    @callback
+    def fake_register_websocket_response(
         cb: Callable[[dict[str, MowerAttributes]], None],
     ) -> None:
         callback_holder["cb"] = cb
 
     mock_automower_client.register_data_callback.side_effect = (
-        fake_register_data_callback
+        fake_register_websocket_response
     )
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
