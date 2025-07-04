@@ -412,12 +412,12 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
 
     def _register_effects_services(self) -> None:
         if self._effect_module.has_custom_effects:
-            self.platform.async_register_entity_service(  # type: ignore[attr-defined]
+            self.platform.async_register_entity_service(
                 SERVICE_RANDOM_EFFECT,
                 RANDOM_EFFECT_DICT,
                 "async_set_random_effect",
             )
-            self.platform.async_register_entity_service(  # type: ignore[attr-defined]
+            self.platform.async_register_entity_service(
                 SERVICE_SEQUENCE_EFFECT,
                 SEQUENCE_EFFECT_DICT,
                 "async_set_sequence_effect",
