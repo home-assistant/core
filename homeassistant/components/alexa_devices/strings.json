@@ -592,15 +592,13 @@
     }
   },
   "exceptions": {
-    "no_device_specified": { "message": "No device specified." },
-    "invalid_device_id": { "message": "Invalid device ID." }
-  },
-  "exceptions": {
     "cannot_connect": {
       "message": "Error connecting: {error}"
     },
     "cannot_retrieve_data": {
       "message": "Error retrieving data: {error}"
-    }
+    },
+    "no_device_specified": { "message": "No device specified" },
+    "invalid_device_id": { "message": "Invalid device ID specified" }
   }
 }
