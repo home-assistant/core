@@ -26,6 +26,8 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
@@ -596,6 +598,7 @@ async def test_migration_from_v1_first_disabled(
         manufacturer="Google",
         model="Generative AI",
         entry_type=dr.DeviceEntryType.SERVICE,
+        disabled_by=DeviceEntryDisabler.CONFIG_ENTRY,
     )
     entity_registry.async_get_or_create(
         "conversation",
@@ -604,6 +607,7 @@ async def test_migration_from_v1_first_disabled(
         config_entry=mock_config_entry,
         device_id=device_1.id,
         suggested_object_id="google_generative_ai_conversation",
+        disabled_by=RegistryEntryDisabler.CONFIG_ENTRY,
     )
 
     device_2 = device_registry.async_get_or_create(
@@ -675,6 +679,8 @@ async def test_migration_from_v1_first_disabled(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
+    assert entity.disabled_by is None
+
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
@@ -689,6 +695,7 @@ async def test_migration_from_v1_first_disabled(
     assert device.config_entries_subentries == {
         mock_config_entry_2.entry_id: {subentry.subentry_id}
     }
+    assert device.disabled_by is None
 
     subentry = conversation_subentries[1]
 
@@ -696,6 +703,7 @@ async def test_migration_from_v1_first_disabled(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
+    assert entity.disabled_by is RegistryEntryDisabler.DEVICE
 
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
@@ -711,6 +719,7 @@ async def test_migration_from_v1_first_disabled(
     assert device.config_entries_subentries == {
         mock_config_entry_2.entry_id: {subentry.subentry_id}
     }
+    assert device.disabled_by is DeviceEntryDisabler.USER
 
 
 async def test_migration_from_v1_with_multiple_keys(
