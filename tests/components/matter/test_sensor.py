@@ -355,13 +355,6 @@ async def test_operational_state_sensor(
     assert state
     assert state.state == "extra_state"
 
-    # OperationalState Cluster / CountdownTime (1/96/2)
-    state = hass.states.get("sensor.dishwasher_estimated_end_time")
-    assert state
-    # 1/96/2 = 3600 seconds = 1 hour. So an hour should be added to the current time.
-    assert state.state == "2025-01-01T22:00:00+00:00"
-    await hass.async_block_till_done()
-
 
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
 async def test_draft_electrical_measurement_sensor(
@@ -389,6 +382,21 @@ async def test_draft_electrical_measurement_sensor(
     state = hass.states.get("sensor.yndx_00540_power")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01T21:00:00+00:00")
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_countdown_time_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CountdownTime sensor."""
+    # OperationalState Cluster / CountdownTime (1/96/2)
+    state = hass.states.get("sensor.microwave_oven_estimated_end_time")
+    assert state
+    # 1/96/2 = 30 seconds So an 30s should be added to the current time.
+    assert state.state == "2025-01-01T21:00:30+00:00"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
