@@ -777,7 +777,23 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object", "additionalProperties": True}
+        result = {"type": "object"}
+        if fields := schema.config.get("fields"):
+            result["properties"] = {
+                field: convert(
+                    selector.selector(field_schema["selector"]),
+                    custom_serializer=_selector_serializer,
+                )
+                for field, field_schema in fields.items()
+            }
+        else:
+            result["additionalProperties"] = True
+        if schema.config.get("multiple"):
+            result = {
+                "type": "array",
+                "items": result,
+            }
+        return result
 
     if isinstance(schema, selector.SelectSelector):
         options = [
