@@ -193,6 +193,11 @@ def report_usage(
                 exclude_integrations=exclude_integrations
             )
         except MissingIntegrationFrame as err:
+            # We need to be careful with assigning the error here as it
+            # affects the cleanup of the raised error, as seen in
+            # https://github.com/home-assistant/core/pull/148021#discussion_r2182379834
+            # When core_behavior is ReportBehavior.ERROR, we will re-raise
+            # the error later, so we assign it to integration_frame_err.
             if core_behavior is ReportBehavior.ERROR:
                 integration_frame_err = err
     _report_usage_partial = functools.partial(
