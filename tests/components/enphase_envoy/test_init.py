@@ -229,6 +229,45 @@ async def test_coordinator_token_refresh_error(
     assert entity_state.state == "116"
 
 
+@respx.mock
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_coordinator_first_update_auth_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test coordinator update error handling."""
+    current_token = encode(
+        # some time in future
+        payload={"name": "envoy", "exp": 1927314600},
+        key="secret",
+        algorithm="HS256",
+    )
+
+    # mock envoy with expired token in config
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: current_token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=current_token,
+        envoy_serial="1234",
+        cloud_username="test_username",
+        cloud_password="test_password",
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    await setup_integration(hass, entry, ConfigEntryState.SETUP_ERROR)
+
+
 async def test_config_no_unique_id(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
