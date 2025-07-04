@@ -310,6 +310,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
+                    vol.Optional("unit_of_measurement"): cv.schema_with_slug_keys(
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
+                    ),
                     vol.Optional("fields"): cv.schema_with_slug_keys(str),
                 },
                 slug_validator=vol.Any("_", cv.slug),

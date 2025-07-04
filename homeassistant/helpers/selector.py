@@ -1066,6 +1066,7 @@ class NumberSelectorConfig(BaseSelectorConfig, total=False):
     step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
+    translation_key: str
 
 
 class NumberSelectorMode(StrEnum):
@@ -1106,6 +1107,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
+                vol.Optional("translation_key"): str,
             }
         ),
         validate_slider,
