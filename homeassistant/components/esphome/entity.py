@@ -281,7 +281,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
 
     _static_info: _InfoT
     _state: _StateT
-    _has_state: bool
+    _has_state: bool = False
     unique_id: str
 
     def __init__(

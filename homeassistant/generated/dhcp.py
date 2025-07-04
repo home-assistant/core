@@ -540,6 +540,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "D44B5E*",
     },
     {
+        "domain": "playstation_network",
+        "macaddress": "F8D0AC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "E86E3A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "FC0FE6*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "9C37CB*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "84E657*",
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },

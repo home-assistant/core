@@ -37,5 +37,57 @@
       "title": "Return to grid statistics for account: {utility_account_id}",
       "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue."
     }
+  },
+  "entity": {
+    "sensor": {
+      "elec_usage_to_date": {
+        "name": "Current bill electric usage to date"
+      },
+      "elec_forecasted_usage": {
+        "name": "Current bill electric forecasted usage"
+      },
+      "elec_typical_usage": {
+        "name": "Typical monthly electric usage"
+      },
+      "elec_cost_to_date": {
+        "name": "Current bill electric cost to date"
+      },
+      "elec_forecasted_cost": {
+        "name": "Current bill electric forecasted cost"
+      },
+      "elec_typical_cost": {
+        "name": "Typical monthly electric cost"
+      },
+      "elec_start_date": {
+        "name": "Current bill electric start date"
+      },
+      "elec_end_date": {
+        "name": "Current bill electric end date"
+      },
+      "gas_usage_to_date": {
+        "name": "Current bill gas usage to date"
+      },
+      "gas_forecasted_usage": {
+        "name": "Current bill gas forecasted usage"
+      },
+      "gas_typical_usage": {
+        "name": "Typical monthly gas usage"
+      },
+      "gas_cost_to_date": {
+        "name": "Current bill gas cost to date"
+      },
+      "gas_forecasted_cost": {
+        "name": "Current bill gas forecasted cost"
+      },
+      "gas_typical_cost": {
+        "name": "Typical monthly gas cost"
+      },
+      "gas_start_date": {
+        "name": "Current bill gas start date"
+      },
+      "gas_end_date": {
+        "name": "Current bill gas end date"
+      }
+    }
   }
 }
