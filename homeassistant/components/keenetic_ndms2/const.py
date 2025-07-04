@@ -5,7 +5,6 @@ from homeassistant.components.device_tracker import (
 )
 
 DOMAIN = "keenetic_ndms2"
-ROUTER = "router"
 DEFAULT_TELNET_PORT = 23
 DEFAULT_SCAN_INTERVAL = 120
 DEFAULT_CONSIDER_HOME = _DEFAULT_CONSIDER_HOME.total_seconds()

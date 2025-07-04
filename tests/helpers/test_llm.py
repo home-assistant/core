@@ -1125,7 +1125,7 @@ async def test_selector_serializer(
             "media_content_type": {"type": "string"},
             "metadata": {"type": "object", "additionalProperties": True},
         },
-        "required": ["entity_id", "media_content_id", "media_content_type"],
+        "required": ["media_content_id", "media_content_type"],
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
@@ -1138,6 +1138,59 @@ async def test_selector_serializer(
     assert selector_serializer(selector.ObjectSelector()) == {
         "type": "object",
         "additionalProperties": True,
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "percentage": {"type": "number", "minimum": 30, "maximum": 100},
+        },
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "percentage": {
+                    "type": "number",
+                    "minimum": 30,
+                    "maximum": 100,
+                },
+            },
+        },
     }
     assert selector_serializer(
         selector.SelectSelector(

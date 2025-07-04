@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,19 +21,15 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ADD_ENTITIES_CALLBACKS,
-    BINSENSOR_PORTS,
-    CONF_DOMAIN_DATA,
-    DOMAIN,
-    SETPOINTS,
-)
+from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, DOMAIN, SETPOINTS
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
@@ -53,7 +48,7 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
@@ -63,7 +58,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_BINARY_SENSOR: add_entities}
     )
 
@@ -79,7 +74,7 @@ async def async_setup_entry(
 class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for regulator locks."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN binary sensor."""
         super().__init__(config, config_entry)
 
@@ -138,7 +133,7 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
 class LcnBinarySensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for binary sensor ports."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN binary sensor."""
         super().__init__(config, config_entry)
 
@@ -174,7 +169,7 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
 class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN sensor for key locks."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
         super().__init__(config, config_entry)
 

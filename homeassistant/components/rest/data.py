@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from aiohttp import hdrs
 from multidict import CIMultiDictProxy
 import xmltodict
 
@@ -77,6 +78,12 @@ class RestData:
         """Set url."""
         self._resource = url
 
+    def _is_expected_content_type(self, content_type: str) -> bool:
+        """Check if the content type is one we expect (JSON or XML)."""
+        return content_type.startswith(
+            ("application/json", "text/json", *XML_MIME_TYPES)
+        )
+
     def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
         _LOGGER.debug("Data fetched from resource: %s", self.data)
@@ -84,7 +91,7 @@ class RestData:
             (value := self.data) is not None
             # If the http request failed, headers will be None
             and (headers := self.headers) is not None
-            and (content_type := headers.get("content-type"))
+            and (content_type := headers.get(hdrs.CONTENT_TYPE))
             and content_type.startswith(XML_MIME_TYPES)
         ):
             value = json_dumps(xmltodict.parse(value))
@@ -103,6 +110,12 @@ class RestData:
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
+        # Convert boolean values to lowercase strings for compatibility with aiohttp/yarl
+        if rendered_params:
+            for key, value in rendered_params.items():
+                if isinstance(value, bool):
+                    rendered_params[key] = str(value).lower()
+
         _LOGGER.debug("Updating from %s", self._resource)
         # Create request kwargs
         request_kwargs: dict[str, Any] = {
@@ -120,6 +133,7 @@ class RestData:
         # Handle data/content
         if self._request_data:
             request_kwargs["data"] = self._request_data
+        response = None
         try:
             # Make the request
             async with self._session.request(
@@ -143,3 +157,34 @@ class RestData:
             self.last_exception = ex
             self.data = None
             self.headers = None
+
+        # Log response details outside the try block so we always get logging
+        if response is None:
+            return
+
+        # Log response details for debugging
+        content_type = response.headers.get(hdrs.CONTENT_TYPE)
+        _LOGGER.debug(
+            "REST response from %s: status=%s, content-type=%s, length=%s",
+            self._resource,
+            response.status,
+            content_type or "not set",
+            len(self.data) if self.data else 0,
+        )
+
+        # If we got an error response with non-JSON/XML content, log a sample
+        # This helps debug issues like servers blocking with HTML error pages
+        if (
+            response.status >= 400
+            and content_type
+            and not self._is_expected_content_type(content_type)
+        ):
+            sample = self.data[:500] if self.data else "<empty>"
+            _LOGGER.warning(
+                "REST request to %s returned status %s with %s response: %s%s",
+                self._resource,
+                response.status,
+                content_type,
+                sample,
+                "..." if self.data and len(self.data) > 500 else "",
+            )
