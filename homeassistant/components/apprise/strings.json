@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Apprise notification service.",
+        "data": {
+          "name": "Name",
+          "url": "URL",
+          "config": "Config"
+        },
+        "data_description": {
+          "name": "The notifier will bind to the action `notify.NAME`.",
+          "url": "One or more Apprise URLs.",
+          "config": "One or more Apprise Configuration URLs."
+        }
+      }
+    }
+  }
+}
