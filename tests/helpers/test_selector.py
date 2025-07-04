@@ -396,7 +396,13 @@ def test_assist_pipeline_selector_schema(
         ({"min": -100, "max": 100, "step": 5}, (), ()),
         ({"min": -20, "max": -10, "mode": "box"}, (), ()),
         (
-            {"min": 0, "max": 100, "unit_of_measurement": "seconds", "mode": "slider"},
+            {
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "seconds",
+                "mode": "slider",
+                "translation_key": "foo",
+            },
             (),
             (),
         ),

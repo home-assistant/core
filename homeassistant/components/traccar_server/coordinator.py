@@ -31,7 +31,7 @@ from .const import (
     EVENTS,
     LOGGER,
 )
-from .helpers import get_device, get_first_geofence
+from .helpers import get_device, get_first_geofence, get_geofence_ids
 
 
 class TraccarServerCoordinatorDataDevice(TypedDict):
@@ -131,7 +131,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 "device": device,
                 "geofence": get_first_geofence(
                     geofences,
-                    position["geofenceIds"] or [],
+                    get_geofence_ids(device, position),
                 ),
                 "position": position,
                 "attributes": attr,
@@ -187,7 +187,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             self.data[device_id]["attributes"] = attr
             self.data[device_id]["geofence"] = get_first_geofence(
                 self._geofences,
-                position["geofenceIds"] or [],
+                get_geofence_ids(self.data[device_id]["device"], position),
             )
             update_devices.add(device_id)
 
