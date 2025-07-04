@@ -2065,6 +2065,9 @@ python-overseerr==0.7.1
 # homeassistant.components.picnic
 python-picnic-api2==1.3.1
 
+# homeassistant.components.pooldose
+python-pooldose==0.3.1
+
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
 
