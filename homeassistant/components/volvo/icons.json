@@ -35,7 +35,12 @@
         "default": "mdi:ev-plug-ccs2"
       },
       "charging_power": {
-        "default": "mdi:gauge"
+        "default": "mdi:gauge-empty",
+        "range": {
+          "1": "mdi:gauge-low",
+          "4200": "mdi:gauge",
+          "7400": "mdi:gauge-full"
+        }
       },
       "charging_power_status": {
         "default": "mdi:power-plug-outline"
