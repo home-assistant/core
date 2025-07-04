@@ -55,6 +55,7 @@
           "available": "Available",
           "car_in_use": "Car is in use",
           "no_internet": "No internet",
+          "ota_installation_in_progress": "Installing OTA update",
           "power_saving_mode": "Power saving mode",
           "unavailable": "Unavailable"
         }

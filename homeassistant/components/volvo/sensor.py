@@ -88,6 +88,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "available",
             "car_in_use",
             "no_internet",
+            "ota_installation_in_progress",
             "power_saving_mode",
         ],
         value_fn=_availability_status,
