@@ -1,6 +1,6 @@
 """Test Matter sensors."""
 
-from datetime import datetime, tzinfo
+from datetime import datetime
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -335,7 +336,6 @@ async def test_operational_state_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
-    hass_tz_info,
 ) -> None:
     """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
@@ -358,13 +358,24 @@ async def test_operational_state_sensor(
     assert state.state == "extra_state"
 
     # OperationalState Cluster / CountdownTime (1/96/2)
-    test_time = datetime(2025, 1, 1, 21, 0, 0, tzinfo=hass_tz_info)
-
+    config = {
+        "sensor": [
+            {
+                "platform": "matter",
+                "name": "dishwasher_estimated_end_time",
+                "after": "23:00",
+                "before": "12:00",
+            }
+        ]
+    }
+    test_time = datetime(2025, 1, 1, 21, 0, 0, tzinfo=dt_util.UTC)
     freezer.move_to(test_time)
+    await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.dishwasher_estimated_end_time")
     assert state
+    # 1/96/2 = 3600 seconds = 1 hour. So an hour should be added to the current time.
     assert state.state == "2025-01-01T22:00:00+00:00"
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
@@ -581,9 +592,3 @@ async def test_pump(
     state = hass.states.get("sensor.mock_pump_rotation_speed")
     assert state
     assert state.state == "500"
-
-
-@pytest.fixture
-def hass_tz_info(hass: HomeAssistant) -> tzinfo | None:
-    """Return timezone info for the hass timezone."""
-    return dt_util.get_time_zone(hass.config.time_zone)
