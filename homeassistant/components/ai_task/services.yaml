@@ -23,6 +23,3 @@ generate_data:
       example: '{ "name": { "selector": { "text": }, "description": "Name of the user", "required": "True" } } }, "age": { "selector": { "number": }, "description": "Age of the user" } }'
       selector:
         object:
-      filter:
-        supported_features:
-          - ai_task.AITaskEntityFeature.GENERATE_STRUCTURED_DATA

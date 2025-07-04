@@ -37,15 +37,6 @@ async def async_generate_data(
             f"AI Task entity {entity_id} does not support generating data"
         )
 
-    if structure is not None:
-        if (
-            AITaskEntityFeature.GENERATE_STRUCTURED_DATA
-            not in entity.supported_features
-        ):
-            raise HomeAssistantError(
-                f"AI Task entity {entity_id} does not support generating structured data"
-            )
-
     return await entity.internal_async_generate_data(
         GenDataTask(
             name=task_name,

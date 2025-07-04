@@ -35,9 +35,7 @@ class MockAITaskEntity(AITaskEntity):
     """Mock AI Task entity for testing."""
 
     _attr_name = "Test Task Entity"
-    _attr_supported_features = (
-        AITaskEntityFeature.GENERATE_DATA | AITaskEntityFeature.GENERATE_STRUCTURED_DATA
-    )
+    _attr_supported_features = AITaskEntityFeature.GENERATE_DATA
 
     def __init__(self) -> None:
         """Initialize the mock entity."""

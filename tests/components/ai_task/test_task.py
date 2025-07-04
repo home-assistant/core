@@ -3,14 +3,13 @@
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.ai_task import AITaskEntityFeature, async_generate_data
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, selector
+from homeassistant.helpers import chat_session
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
@@ -128,24 +127,3 @@ async def test_run_data_task_updates_chat_log(
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.content == snapshot
-
-
-async def test_run_task_structure_unsupported_feature(
-    hass: HomeAssistant,
-    init_components: None,
-    mock_ai_task_entity: MockAITaskEntity,
-) -> None:
-    """Test running a task with an unknown entity."""
-
-    mock_ai_task_entity.supported_features = AITaskEntityFeature.GENERATE_DATA
-    with pytest.raises(
-        HomeAssistantError,
-        match="AI Task entity ai_task.test_task_entity does not support generating structured data",
-    ):
-        await async_generate_data(
-            hass,
-            task_name="Test Task",
-            instructions="Test prompt",
-            entity_id=TEST_ENTITY_ID,
-            structure=vol.Schema({vol.Required("name"): selector.TextSelector()}),
-        )
