@@ -11,7 +11,6 @@ from aioautomower.model import (
     ExternalReasons,
     MowerAttributes,
     MowerModes,
-    MowerStates,
     RestrictedReasons,
     WorkArea,
 )
@@ -192,7 +191,10 @@ RESTRICTED_REASONS: list = [
     ExternalReasons.IFTTT,
     ExternalReasons.IFTTT_APPLETS,
     ExternalReasons.IFTTT_CALENDAR_CONNECTION,
-    ExternalReasons.IFTTT_WILDLIFE,
+    ExternalReasons.SMART_ROUTINE,
+    ExternalReasons.SMART_ROUTINE_FROST_GUARD,
+    ExternalReasons.SMART_ROUTINE_RAIN_GUARD,
+    ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"

@@ -248,12 +248,13 @@
           "amazon_alexa": "Amazon Alexa",
           "home_assistant": "Home Assistant",
           "ifttt": "IFTTT",
-          "ifttt_wildlife": "IFTTT wildlife protection",
-          "ifttt_frost_and_rain_guard": "IFTTT frost and rain guard",
           "ifttt_calendar_connection": "IFTTT calendar connection",
           "gardena_smart_system": "Gardena Smart System",
           "ifttt_applets": "IFTTT applets",
-          "developer_portal": "Developer Portal"
+          "smart_routine_rain_guard": "Rain guard",
+          "smart_routine_wildlife_protection": "Wildlife protection",
+          "smart_routine_frost_guard": "Frost guard",
+          "smart_routine": "Generic smart routine"
         }
       },
       "total_charging_time": {
