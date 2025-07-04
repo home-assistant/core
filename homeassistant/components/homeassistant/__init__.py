@@ -42,16 +42,16 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.issue_registry import IssueSeverity
-from homeassistant.helpers.selector import (
-    TargetSelectorData,
-    async_extract_referenced_entity_ids,
-)
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
