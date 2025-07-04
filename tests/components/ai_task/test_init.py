@@ -93,7 +93,7 @@ async def test_generate_data_service_structure_fields(
     init_components: None,
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
-    """Test the entity can generate structured data with a top level object schemea."""
+    """Test the entity can generate structured data with a top level object schema."""
     result = await hass.services.async_call(
         "ai_task",
         "generate_data",
