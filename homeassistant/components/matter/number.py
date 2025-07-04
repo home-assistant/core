@@ -33,6 +33,30 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+# intensities in inovelli LEDs are represented by a number from 0 to 75 but only 11
+# values are actually used when one of 11 levels is set by manually configuring the dimmer
+INOVELLI_LED_INTENSITY_MAP = {
+    0: 0,
+    1: 1,
+    2: 8,
+    3: 15,
+    4: 24,
+    5: 33,
+    6: 42,
+    7: 50,
+    8: 59,
+    9: 68,
+    10: 75,
+}
+
+INOVELLI_LED_INTENSITY_MAP_REVERSE = {}
+for i in range(10):
+    start = INOVELLI_LED_INTENSITY_MAP[i]
+    end = INOVELLI_LED_INTENSITY_MAP[i + 1]
+    for j in range(start, end):
+        INOVELLI_LED_INTENSITY_MAP_REVERSE[j] = i
+INOVELLI_LED_INTENSITY_MAP_REVERSE[INOVELLI_LED_INTENSITY_MAP[10]] = 10
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -148,31 +172,6 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
         if value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
-
-
-# intensities in inovelli LEDs are represented by a number from 0 to 75 but only 11
-# values are actually used when one of 11 levels is set by manually configuring the dimmer
-inovelli_intensity_map = {
-    0: 0,
-    1: 1,
-    2: 8,
-    3: 15,
-    4: 24,
-    5: 33,
-    6: 42,
-    7: 50,
-    8: 59,
-    9: 68,
-    10: 75,
-}
-
-inovelli_reverse_intensity_map = {}
-for i in range(10):
-    start = inovelli_intensity_map[i]
-    end = inovelli_intensity_map[i + 1]
-    for j in range(start, end):
-        inovelli_reverse_intensity_map[j] = i
-inovelli_reverse_intensity_map[inovelli_intensity_map[10]] = 10
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -373,10 +372,8 @@ DISCOVERY_SCHEMAS = [
             native_max_value=10,
             native_min_value=0,
             native_step=1,
-            ha_to_native_value=lambda x: inovelli_intensity_map[x],
-            measurement_to_ha=lambda x: None
-            if x is None
-            else inovelli_reverse_intensity_map[x],
+            ha_to_native_value=INOVELLI_LED_INTENSITY_MAP.get,
+            measurement_to_ha=INOVELLI_LED_INTENSITY_MAP_REVERSE.get,
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
@@ -393,10 +390,8 @@ DISCOVERY_SCHEMAS = [
             native_max_value=10,
             native_min_value=0,
             native_step=1,
-            ha_to_native_value=lambda x: inovelli_intensity_map[x],
-            measurement_to_ha=lambda x: None
-            if x is None
-            else inovelli_reverse_intensity_map[x],
+            ha_to_native_value=INOVELLI_LED_INTENSITY_MAP.get,
+            measurement_to_ha=INOVELLI_LED_INTENSITY_MAP_REVERSE.get,
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
