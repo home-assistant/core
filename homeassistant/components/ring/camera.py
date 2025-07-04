@@ -61,6 +61,10 @@ class RingCam(RingEntityMixin, Camera):
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream."""
+        return self._video_url
+
     async def async_added_to_hass(self):
         """Register callbacks."""
         await super().async_added_to_hass()
