@@ -48,6 +48,26 @@
       "work_area_progress": {
         "default": "mdi:collage"
       }
+    },
+    "switch": {
+      "my_lawn_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      },
+      "work_area_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      },
+      "stay_out_zones": {
+        "default": "mdi:rhombus-outline",
+        "state": {
+          "on": "mdi:rhombus"
+        }
+      }
     }
   },
   "services": {
