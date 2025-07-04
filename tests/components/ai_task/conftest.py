@@ -1,5 +1,7 @@
 """Test helpers for AI Task integration."""
 
+import json
+
 import pytest
 
 from homeassistant.components.ai_task import (
@@ -45,12 +47,18 @@ class MockAITaskEntity(AITaskEntity):
     ) -> GenDataTaskResult:
         """Mock handling of generate data task."""
         self.mock_generate_data_tasks.append(task)
+        if task.structure is not None:
+            data = {"name": "Tracy Chen", "age": 30}
+            data_chat_log = json.dumps(data)
+        else:
+            data = "Mock result"
+            data_chat_log = data
         chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(self.entity_id, "Mock result")
+            AssistantContent(self.entity_id, data_chat_log)
         )
         return GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
-            data="Mock result",
+            data=data,
         )
 
 
