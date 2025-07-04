@@ -23,7 +23,6 @@ from . import (
     http_429_error,
     setup_integration,
     setup_integration_bidir,
-    setup_integration_platform_not_ready,
 )
 from .const import (
     MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
@@ -56,7 +55,9 @@ async def test_wallbox_number_class(
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
-            new=Mock(return_value={CHARGER_MAX_CHARGING_CURRENT_KEY: 20}),
+            new=Mock(
+                return_value={"data": {"chargerData": {"maxChargingCurrent": 20}}}
+            ),
         ),
     ):
         state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
@@ -259,18 +260,6 @@ async def test_wallbox_number_class_energy_price_auth_error(
         )
 
 
-async def test_wallbox_number_class_platform_not_ready(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> None:
-    """Test wallbox lock not loaded on authentication error."""
-
-    await setup_integration_platform_not_ready(hass, entry)
-
-    state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
-
-    assert state is None
-
-
 async def test_wallbox_number_class_icp_energy(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
@@ -285,7 +274,7 @@ async def test_wallbox_number_class_icp_energy(
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
-            new=Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 10}),
+            new=Mock(return_value={"icp_max_current": 20}),
         ),
     ):
         await hass.services.async_call(
@@ -322,6 +311,35 @@ async def test_wallbox_number_class_icp_energy_auth_error(
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                ATTR_VALUE: 10,
+            },
+            blocking=True,
+        )
+
+
+async def test_wallbox_number_class_energy_auth_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
+            new=Mock(side_effect=http_403_error),
+        ),
+        pytest.raises(InvalidAuth),
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
                 ATTR_VALUE: 10,
             },
             blocking=True,
