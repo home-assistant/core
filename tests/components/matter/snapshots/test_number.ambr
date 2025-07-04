@@ -780,7 +780,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'LED Off Intensity',
+    'original_name': 'LED off intensity',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -793,7 +793,7 @@
 # name: test_numbers[multi_endpoint_light][number.inovelli_led_off_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED Off Intensity',
+      'friendly_name': 'Inovelli LED off intensity',
       'max': 10,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -837,7 +837,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'LED On Intensity',
+    'original_name': 'LED on intensity',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -850,7 +850,7 @@
 # name: test_numbers[multi_endpoint_light][number.inovelli_led_on_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED On Intensity',
+      'friendly_name': 'Inovelli LED on intensity',
       'max': 10,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
