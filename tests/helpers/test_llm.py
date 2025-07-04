@@ -1140,6 +1140,59 @@ async def test_selector_serializer(
         "additionalProperties": True,
     }
     assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "percentage": {"type": "number", "minimum": 30, "maximum": 100},
+        },
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "percentage": {
+                    "type": "number",
+                    "minimum": 30,
+                    "maximum": 100,
+                },
+            },
+        },
+    }
+    assert selector_serializer(
         selector.SelectSelector(
             {
                 "options": [
