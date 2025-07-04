@@ -1,6 +1,5 @@
 """Test Matter sensors."""
 
-from datetime import datetime
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,15 +10,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .common import (
     set_node_attribute,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
@@ -331,6 +327,7 @@ async def test_air_quality_sensor(
     assert state.state == "50.0"
 
 
+@pytest.mark.freeze_time("2025-01-01T21:00:00+00:00")
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
 async def test_operational_state_sensor(
     hass: HomeAssistant,
@@ -359,12 +356,6 @@ async def test_operational_state_sensor(
     assert state.state == "extra_state"
 
     # OperationalState Cluster / CountdownTime (1/96/2)
-    test_time = datetime(2025, 1, 1, 21, 0, 0, tzinfo=dt_util.UTC)
-    freezer.move_to(test_time)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # await async_setup_component(hass, "sensor", {})
     state = hass.states.get("sensor.dishwasher_estimated_end_time")
     assert state
     # 1/96/2 = 3600 seconds = 1 hour. So an hour should be added to the current time.

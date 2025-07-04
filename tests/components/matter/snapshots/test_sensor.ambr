@@ -3489,7 +3489,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-07-03T19:25:34+00:00',
+    'state': '2025-07-04T14:01:18+00:00',
   })
 # ---
 # name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-entry]
@@ -4497,7 +4497,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-07-03T20:25:08+00:00',
+    'state': '2025-07-04T15:00:52+00:00',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_state-entry]
