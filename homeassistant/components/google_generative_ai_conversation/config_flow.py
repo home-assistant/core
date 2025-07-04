@@ -137,12 +137,6 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "unique_id": None,
                         },
                         {
-                            "subentry_type": "stt",
-                            "data": RECOMMENDED_STT_OPTIONS,
-                            "title": DEFAULT_STT_NAME,
-                            "unique_id": None,
-                        },
-                        {
                             "subentry_type": "tts",
                             "data": RECOMMENDED_TTS_OPTIONS,
                             "title": DEFAULT_TTS_NAME,
@@ -152,6 +146,12 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "subentry_type": "ai_task_data",
                             "data": RECOMMENDED_AI_TASK_OPTIONS,
                             "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "stt",
+                            "data": RECOMMENDED_STT_OPTIONS,
+                            "title": DEFAULT_STT_NAME,
                             "unique_id": None,
                         },
                     ],

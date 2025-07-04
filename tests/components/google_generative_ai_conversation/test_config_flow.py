@@ -247,7 +247,7 @@ async def test_creating_stt_subentry(
     assert result2["title"] == "Mock STT"
     assert result2["data"] == RECOMMENDED_STT_OPTIONS
 
-    assert len(mock_config_entry.subentries) == 4
+    assert len(mock_config_entry.subentries) == 5
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -292,7 +292,7 @@ async def test_creating_tts_subentry(
     assert result2["title"] == "Mock TTS"
     assert result2["data"] == RECOMMENDED_TTS_OPTIONS
 
-    assert len(mock_config_entry.subentries) == 4
+    assert len(mock_config_entry.subentries) == 5
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -337,7 +337,7 @@ async def test_creating_ai_task_subentry(
     assert result2["title"] == "Mock AI Task"
     assert result2["data"] == RECOMMENDED_AI_TASK_OPTIONS
 
-    assert len(mock_config_entry.subentries) == 4
+    assert len(mock_config_entry.subentries) == 5
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
