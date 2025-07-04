@@ -915,6 +915,9 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_inline_keyboard": {
+      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+    },
     "failed_chat_ids": {
       "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
     },

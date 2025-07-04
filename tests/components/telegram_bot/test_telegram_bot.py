@@ -269,6 +269,28 @@ async def test_send_message_with_inline_keyboard(
     assert (response["chats"][0]["message_id"]) == 12345
 
 
+async def test_send_message_with_invalid_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_platform,
+) -> None:
+    """Test the send_message service with invalid inline keyboard."""
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "invalid_inline_keyboard"
+
+
 @patch(
     "builtins.open",
     mock_open(

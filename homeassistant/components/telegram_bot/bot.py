@@ -358,7 +358,11 @@ class TelegramNotificationService:
                             InlineKeyboardButton(text_btn, callback_data=data_btn)
                         )
             else:
-                raise TypeError(str(row_keyboard))
+                raise ServiceValidationError(
+                    "Invalid value for inline keyboard. Only strings or lists are accepted.",
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_inline_keyboard",
+                )
             return buttons
 
         # Defaults
