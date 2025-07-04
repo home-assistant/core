@@ -5,25 +5,17 @@ from __future__ import annotations
 from asyncio import timeout
 import logging
 
-from androidtvremote2 import (
-    AndroidTVRemote,
-    CannotConnect,
-    ConnectionClosed,
-    InvalidAuth,
-)
+from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .helpers import create_api, get_enable_ime
+from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
-
-AndroidTVRemoteConfigEntry = ConfigEntry[AndroidTVRemote]
 
 
 async def async_setup_entry(
@@ -82,13 +74,17 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry: %s", entry.data)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> None:
     """Handle options update."""
     _LOGGER.debug(
         "async_update_options: data: %s options: %s", entry.data, entry.options

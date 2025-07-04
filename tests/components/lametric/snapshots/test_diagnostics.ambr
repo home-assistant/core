@@ -15,7 +15,7 @@
     }),
     'bluetooth': dict({
       'active': False,
-      'address': 'AA:BB:CC:DD:EE:FF',
+      'address': 'AA:BB:CC:DD:EE:EE',
       'available': True,
       'discoverable': True,
       'name': '**REDACTED**',

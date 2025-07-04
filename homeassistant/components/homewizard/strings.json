@@ -24,7 +24,7 @@
       },
       "authorize": {
         "title": "Authorize",
-        "description": "Press the button on the HomeWizard Energy device, then select the button below."
+        "description": "Press the button on the HomeWizard Energy device for two seconds, then select the button below."
       },
       "reconfigure": {
         "description": "Update configuration for {title}.",

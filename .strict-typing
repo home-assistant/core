@@ -381,6 +381,7 @@ homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
@@ -503,6 +504,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
+homeassistant.components.telegram_bot.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*

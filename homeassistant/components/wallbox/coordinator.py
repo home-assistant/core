@@ -14,11 +14,13 @@ from wallbox import Wallbox
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CHARGER_CURRENCY_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_DATA_POST_L1_KEY,
+    CHARGER_DATA_POST_L2_KEY,
     CHARGER_ECO_SMART_KEY,
     CHARGER_ECO_SMART_MODE_KEY,
     CHARGER_ECO_SMART_STATUS_KEY,
@@ -26,6 +28,7 @@ from .const import (
     CHARGER_FEATURES_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_POST_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
@@ -192,10 +195,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 429:
-                raise HomeAssistantError(
+                raise UpdateFailed(
                     translation_domain=DOMAIN, translation_key="too_many_requests"
                 ) from wallbox_connection_error
-            raise HomeAssistantError(
+            raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
@@ -204,10 +207,19 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return await self.hass.async_add_executor_job(self._get_data)
 
     @_require_authentication
-    def _set_charging_current(self, charging_current: float) -> None:
+    def _set_charging_current(
+        self, charging_current: float
+    ) -> dict[str, dict[str, dict[str, Any]]]:
         """Set maximum charging current for Wallbox."""
         try:
-            self._wallbox.setMaxChargingCurrent(self._station, charging_current)
+            result = self._wallbox.setMaxChargingCurrent(
+                self._station, charging_current
+            )
+            data = self.data
+            data[CHARGER_MAX_CHARGING_CURRENT_KEY] = result[CHARGER_DATA_POST_L1_KEY][
+                CHARGER_DATA_POST_L2_KEY
+            ][CHARGER_MAX_CHARGING_CURRENT_POST_KEY]
+            return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
@@ -221,16 +233,19 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
-        await self.hass.async_add_executor_job(
+        data = await self.hass.async_add_executor_job(
             self._set_charging_current, charging_current
         )
-        await self.async_request_refresh()
+        self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_icp_current(self, icp_current: float) -> None:
+    def _set_icp_current(self, icp_current: float) -> dict[str, Any]:
         """Set maximum icp current for Wallbox."""
         try:
-            self._wallbox.setIcpMaxCurrent(self._station, icp_current)
+            result = self._wallbox.setIcpMaxCurrent(self._station, icp_current)
+            data = self.data
+            data[CHARGER_MAX_ICP_CURRENT_KEY] = result[CHARGER_MAX_ICP_CURRENT_KEY]
+            return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
@@ -244,14 +259,19 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_icp_current(self, icp_current: float) -> None:
         """Set maximum icp current for Wallbox."""
-        await self.hass.async_add_executor_job(self._set_icp_current, icp_current)
-        await self.async_request_refresh()
+        data = await self.hass.async_add_executor_job(
+            self._set_icp_current, icp_current
+        )
+        self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_energy_cost(self, energy_cost: float) -> None:
+    def _set_energy_cost(self, energy_cost: float) -> dict[str, Any]:
         """Set energy cost for Wallbox."""
         try:
-            self._wallbox.setEnergyCost(self._station, energy_cost)
+            result = self._wallbox.setEnergyCost(self._station, energy_cost)
+            data = self.data
+            data[CHARGER_ENERGY_PRICE_KEY] = result[CHARGER_ENERGY_PRICE_KEY]
+            return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -263,17 +283,24 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
-        await self.hass.async_add_executor_job(self._set_energy_cost, energy_cost)
-        await self.async_request_refresh()
+        data = await self.hass.async_add_executor_job(
+            self._set_energy_cost, energy_cost
+        )
+        self.async_set_updated_data(data)
 
     @_require_authentication
-    def _set_lock_unlock(self, lock: bool) -> None:
+    def _set_lock_unlock(self, lock: bool) -> dict[str, dict[str, dict[str, Any]]]:
         """Set wallbox to locked or unlocked."""
         try:
             if lock:
-                self._wallbox.lockCharger(self._station)
+                result = self._wallbox.lockCharger(self._station)
             else:
-                self._wallbox.unlockCharger(self._station)
+                result = self._wallbox.unlockCharger(self._station)
+            data = self.data
+            data[CHARGER_LOCKED_UNLOCKED_KEY] = result[CHARGER_DATA_POST_L1_KEY][
+                CHARGER_DATA_POST_L2_KEY
+            ][CHARGER_LOCKED_UNLOCKED_KEY]
+            return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
@@ -287,8 +314,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
-        await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
-        await self.async_request_refresh()
+        data = await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
+        self.async_set_updated_data(data)
 
     @_require_authentication
     def _pause_charger(self, pause: bool) -> None:

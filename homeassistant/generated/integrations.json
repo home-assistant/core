@@ -1483,12 +1483,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dweet": {
-      "name": "dweet.io",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "hub",
@@ -3165,8 +3159,7 @@
       "name": "Jellyfin",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
+      "iot_class": "local_polling"
     },
     "jewish_calendar": {
       "name": "Jewish Calendar",
@@ -3180,12 +3173,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "juicenet": {
-      "name": "JuiceNet",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "justnimbus": {
       "name": "JustNimbus",
@@ -6235,6 +6222,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Sony Songpal"
+        },
+        "playstation_network": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "PlayStation Network"
         }
       }
     },
@@ -7123,6 +7116,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "vegehub": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "velbus": {
       "name": "Velbus",
       "integration_type": "hub",
@@ -7922,6 +7920,7 @@
     "trend",
     "uptime",
     "utility_meter",
+    "vegehub",
     "version",
     "waze_travel_time",
     "workday",

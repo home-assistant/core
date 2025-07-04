@@ -75,6 +75,7 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
+    condition,
     device_registry as dr,
     entity,
     entity_platform,
@@ -87,6 +88,7 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
     translation,
+    trigger,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -295,6 +297,8 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await condition.async_setup(hass)
+    await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
     hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
@@ -1184,7 +1188,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
     async def start_subentry_reconfigure_flow(
         self,
         hass: HomeAssistant,
-        subentry_flow_type: str,
         subentry_id: str,
         *,
         show_advanced_options: bool = False,
@@ -1194,6 +1197,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
             raise ValueError(
                 "Config entry must be added to hass to start reconfiguration flow"
             )
+        # Derive subentry_flow_type from the subentry_id
+        subentry_flow_type = self.subentries[subentry_id].subentry_type
         return await hass.config_entries.subentries.async_init(
             (self.entry_id, subentry_flow_type),
             context={

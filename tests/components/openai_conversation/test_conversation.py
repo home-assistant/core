@@ -153,20 +153,18 @@ async def test_entity(
     mock_init_component,
 ) -> None:
     """Test entity properties."""
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert state.attributes["supported_features"] == 0
 
-    hass.config_entries.async_update_entry(
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            CONF_LLM_HASS_API: "assist",
-        },
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: "assist"},
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert (
         state.attributes["supported_features"]
@@ -261,7 +259,7 @@ async def test_incomplete_response(
         "Please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -285,7 +283,7 @@ async def test_incomplete_response(
         "please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -324,7 +322,7 @@ async def test_failed_response(
         "next natural number please",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -583,7 +581,7 @@ async def test_function_call(
         "Please call the test function",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.call_args.kwargs["input"][2] == {
@@ -630,7 +628,7 @@ async def test_function_call_without_reasoning(
         "Please call the test function",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -686,7 +684,7 @@ async def test_function_call_invalid(
             "Please call the test function",
             "mock-conversation-id",
             Context(),
-            agent_id="conversation.openai",
+            agent_id="conversation.openai_conversation",
         )
 
 
@@ -720,7 +718,7 @@ async def test_assist_api_tools_conversion(
     ]
 
     await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.openai"
+        hass, "hello", None, Context(), agent_id="conversation.openai_conversation"
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
@@ -735,10 +733,12 @@ async def test_web_search(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test web_search_tool."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -764,7 +764,7 @@ async def test_web_search(
         "What's on the latest news?",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [

@@ -50,6 +50,13 @@ async def test_wallbox_select_solar_charging_class(
 ) -> None:
     """Test wallbox select class."""
 
+    if mode == EcoSmartMode.OFF:
+        response = test_response
+    elif mode == EcoSmartMode.ECO_MODE:
+        response = test_response_eco_mode
+    elif mode == EcoSmartMode.FULL_SOLAR:
+        response = test_response_full_solar
+
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
@@ -58,6 +65,10 @@ async def test_wallbox_select_solar_charging_class(
         patch(
             "homeassistant.components.wallbox.Wallbox.disableEcoSmart",
             new=Mock(return_value={CHARGER_STATUS_ID_KEY: 193}),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(return_value=response),
         ),
     ):
         await setup_integration_select(hass, entry, response)
@@ -110,6 +121,10 @@ async def test_wallbox_select_class_error(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=error),
         ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(return_value=test_response_eco_mode),
+        ),
         pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
@@ -143,6 +158,10 @@ async def test_wallbox_select_too_many_requests_error(
         patch(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=http_429_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(return_value=test_response_eco_mode),
         ),
         pytest.raises(HomeAssistantError),
     ):

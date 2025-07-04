@@ -44,7 +44,8 @@ async def test_button_app_next(
     assert device_entry
     assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
@@ -91,7 +92,8 @@ async def test_button_app_previous(
     assert device_entry
     assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
@@ -139,7 +141,8 @@ async def test_button_dismiss_current_notification(
     assert device_entry
     assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
@@ -187,7 +190,8 @@ async def test_button_dismiss_all_notifications(
     assert device_entry
     assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}

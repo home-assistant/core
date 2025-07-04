@@ -38,6 +38,8 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
+PARALLEL_UPDATES = 0
+
 DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
     pypck.lcn_defs.VarUnit.KELVIN: SensorDeviceClass.TEMPERATURE,
