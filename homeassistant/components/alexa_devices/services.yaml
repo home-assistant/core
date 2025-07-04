@@ -5,7 +5,7 @@ send_text_command:
       selector:
         device:
           multiple: true
-          integration: amazon_devices
+          integration: alexa_devices
     text_command:
       required: true
       example: "Play B.B.C. on TuneIn"
@@ -19,7 +19,7 @@ send_sound:
       selector:
         device:
           multiple: true
-          integration: amazon_devices
+          integration: alexa_devices
     sound_variant:
       required: true
       example: 1
