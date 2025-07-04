@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
+from .const import ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
@@ -167,15 +168,6 @@ ERROR_KEYS = [
     "zone_generator_problem",
 ]
 
-ERROR_STATES = [
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.ERROR,
-    MowerStates.FATAL_ERROR,
-    MowerStates.OFF,
-    MowerStates.STOPPED,
-    MowerStates.WAIT_POWER_UP,
-    MowerStates.WAIT_UPDATING,
-]
 
 ERROR_KEY_LIST = list(
     dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])

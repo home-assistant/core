@@ -134,20 +134,27 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
-            "sw_version": "Software version",
-            "hw_version": "Hardware version",
             "model": "Model",
             "model_id": "Model ID"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
-            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
-            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
             "model": "E.g. 'Cleanmaster Pro'.",
             "model_id": "E.g. '123NK2PRO'."
           },
           "sections": {
+            "advanced_settings": {
+              "name": "Advanced device settings",
+              "data": {
+                "sw_version": "Software version",
+                "hw_version": "Hardware version"
+              },
+              "data_description": {
+                "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+                "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'."
+              }
+            },
             "mqtt_settings": {
               "name": "MQTT settings",
               "data": {
