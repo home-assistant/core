@@ -83,7 +83,7 @@ async def async_setup_entry(
                 name.lower(),  # translation_key is the same as key for dynamic sensors
                 name,  # key
                 None,  # sensor.unit,
-                SensorDeviceClass.TEMPERATURE if sensor.key == "temp_actual" else None,
+                device_class,
                 serialnumber,
                 entity_category,
                 device_info_dict,
