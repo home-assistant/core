@@ -50,6 +50,8 @@ class RadioMediaSource(MediaSource):
     @property
     def radios(self) -> RadioBrowser:
         """Return the radio browser."""
+        if not hasattr(self.entry, "runtime_data") or self.entry.runtime_data is None:
+            raise Unresolvable("Radio Browser integration not properly loaded")
         return self.entry.runtime_data
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
