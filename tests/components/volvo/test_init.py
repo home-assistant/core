@@ -112,7 +112,7 @@ async def test_no_vehicle(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_vehcile_auth_failure(
+async def test_vehicle_auth_failure(
     mock_config_entry: MockConfigEntry,
     setup_integration: Callable[[], Awaitable[bool]],
     mock_api: VolvoCarsApi,
