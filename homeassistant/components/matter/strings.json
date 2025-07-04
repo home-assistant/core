@@ -196,10 +196,10 @@
         "name": "Automatic relock timer"
       },
       "led_indicator_intensity_off": {
-        "name": "LED Off Intensity"
+        "name": "LED off intensity"
       },
       "led_indicator_intensity_on": {
-        "name": "LED On Intensity"
+        "name": "LED on intensity"
       }
     },
     "light": {
