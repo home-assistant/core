@@ -253,7 +253,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
 @pytest.mark.parametrize(
     ("state_template", "expected_result"),
     [
-        ("{{ None }}", STATE_OFF),
+        ("{{ None }}", STATE_UNKNOWN),
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ 1 }}", STATE_ON),
@@ -263,7 +263,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
             "{% else %}"
             "{{ states('binary_sensor.three') == 'off' }}"
             "{% endif %}",
-            STATE_OFF,
+            STATE_UNKNOWN,
         ),
         ("{{ 1 / 0 == 10 }}", STATE_UNAVAILABLE),
     ],
@@ -1090,18 +1090,18 @@ async def test_availability_icon_picture(hass: HomeAssistant, entity_id: str) ->
         ({"delay_on": 5}, STATE_ON, STATE_OFF, STATE_OFF),
         ({"delay_on": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN),
         ({"delay_on": 5}, STATE_ON, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({}, None, STATE_ON, STATE_OFF),
-        ({}, None, STATE_OFF, STATE_OFF),
-        ({}, None, STATE_UNAVAILABLE, STATE_OFF),
-        ({}, None, STATE_UNKNOWN, STATE_OFF),
-        ({"delay_off": 5}, None, STATE_ON, STATE_ON),
-        ({"delay_off": 5}, None, STATE_OFF, STATE_OFF),
+        ({}, None, STATE_ON, STATE_UNKNOWN),
+        ({}, None, STATE_OFF, STATE_UNKNOWN),
+        ({}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
+        ({}, None, STATE_UNKNOWN, STATE_UNKNOWN),
+        ({"delay_off": 5}, None, STATE_ON, STATE_UNKNOWN),
+        ({"delay_off": 5}, None, STATE_OFF, STATE_UNKNOWN),
         ({"delay_off": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
         ({"delay_off": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_ON, STATE_OFF),
-        ({"delay_on": 5}, None, STATE_OFF, STATE_OFF),
-        ({"delay_on": 5}, None, STATE_UNAVAILABLE, STATE_OFF),
-        ({"delay_on": 5}, None, STATE_UNKNOWN, STATE_OFF),
+        ({"delay_on": 5}, None, STATE_ON, STATE_UNKNOWN),
+        ({"delay_on": 5}, None, STATE_OFF, STATE_UNKNOWN),
+        ({"delay_on": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
+        ({"delay_on": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_restore_state(
@@ -1209,7 +1209,7 @@ async def test_restore_state(
     [
         (2, STATE_ON, "mdi:pirate", "/local/dogs.png", 3, 1, "si"),
         (1, STATE_OFF, "mdi:pirate", "/local/dogs.png", 2, 1, "si"),
-        (0, STATE_OFF, "mdi:pirate", "/local/dogs.png", 1, 1, "si"),
+        (0, STATE_UNKNOWN, "mdi:pirate", "/local/dogs.png", 1, 1, "si"),
         (-1, STATE_UNAVAILABLE, None, None, None, None, None),
     ],
 )
@@ -1273,6 +1273,22 @@ async def test_trigger_entity(
     assert state.state == final_state
     assert state.attributes.get("another") == another_attr_update
 
+    # Check None values
+    hass.bus.async_fire("test_event", {"beer": 0})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == STATE_UNKNOWN
+
+    # Check impossible values
+    hass.bus.async_fire("test_event", {"beer": -1})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == STATE_UNAVAILABLE
+
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
@@ -1298,7 +1314,7 @@ async def test_trigger_entity(
     [
         (2, STATE_UNKNOWN, STATE_ON, STATE_OFF),
         (1, STATE_OFF, STATE_OFF, STATE_OFF),
-        (0, STATE_OFF, STATE_OFF, STATE_OFF),
+        (0, STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN),
         (-1, STATE_UNAVAILABLE, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
     ],
 )
