@@ -249,8 +249,6 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType | date:
         """Return the state."""
-        if self.coordinator.data is not None:
-            return self.entity_description.value_fn(
-                self.coordinator.data[self.utility_account_id]
-            )
-        return None
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.utility_account_id]
+        )
