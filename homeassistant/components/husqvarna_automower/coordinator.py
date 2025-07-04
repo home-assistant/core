@@ -53,6 +53,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
         self.api = api
         self.ws_connected: bool = False
+        self.message_data_available: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
@@ -83,7 +84,19 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
         self._async_add_remove_devices_and_entities(data)
-        return data
+
+        # We only fetch message data once, and get updates via websocket
+        if not self.message_data_available:
+            try:
+                await asyncio.gather(
+                    *(self.api.async_get_message(mower_id) for mower_id in data)
+                )
+            except ApiError as err:
+                raise UpdateFailed(err) from err
+            except AuthError as err:
+                raise ConfigEntryAuthFailed(err) from err
+            self.message_data_available = True
+        return self.api.data
 
     @callback
     def callback(self, ws_data: MowerDictionary) -> None:
