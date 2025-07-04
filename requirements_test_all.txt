@@ -36,7 +36,7 @@ PSNAWP==3.0.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.2.1
+Pillow==11.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.6.0
+aioautomower==1.2.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -396,7 +396,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==83
+aiounifi==84
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -730,7 +730,7 @@ eagle100==0.1.1
 easyenergy==2.1.2
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.2.0
+eheimdigital==1.3.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -1259,7 +1259,7 @@ mozart-api==4.1.1.116.4
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.2.3
+music-assistant-client==1.2.4
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -1427,7 +1427,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.6
+plugwise==1.7.7
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1864,7 +1864,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.8.9
+pypck==0.8.10
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2035,7 +2035,7 @@ python-linkplay==0.2.12
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==7.0.0
+python-matter-server==8.0.0
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.0
@@ -2364,7 +2364,7 @@ subarulink==0.7.13
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.5.0
+switchbot-api==2.7.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.1.5
@@ -2555,7 +2555,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.20.0
+whirlpool-sixth-sense==0.21.1
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2579,7 +2579,7 @@ wyoming==1.7.1
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.39.0
+xiaomi-ble==1.1.0
 
 # homeassistant.components.knx
 xknx==3.8.0
@@ -2634,7 +2634,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.61
+zha==0.0.62
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.65.0
