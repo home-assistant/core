@@ -74,7 +74,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
             await self.api.connect()
-            self.api.register_data_callback(self.callback)
+            self.api.register_data_callback(self.handle_websocket_updates)
             self.ws_connected = True
         try:
             data = await self.api.get_status()
@@ -86,10 +86,26 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         return data
 
     @callback
-    def callback(self, ws_data: MowerDictionary) -> None:
+    def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)
         self._async_add_remove_devices_and_entities(ws_data)
+
+    @callback
+    def async_set_updated_data(self, data: MowerDictionary) -> None:
+        """Override DataUpdateCoordinator to preserve fixed polling interval.
+
+        The built-in implementation resets the polling timer on every websocket
+        update. Since websockets do not deliver all required data (e.g. statistics
+        or work area details), we enforce a constant REST polling cadence.
+        """
+        self.data = data
+        self.last_update_success = True
+        self.logger.debug(
+            "Manually updated %s data",
+            self.name,
+        )
+        self.async_update_listeners()
 
     async def client_listen(
         self,
