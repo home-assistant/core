@@ -57,10 +57,6 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             ).ready_start_time
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
-        available_fn=(
-            lambda coordinator: WidgetType.CM_COFFEE_BOILER
-            in coordinator.device.dashboard.config
-        ),
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",
@@ -187,6 +183,8 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
 
 class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     """Sensor for La Marzocco statistics."""
+
+    _unavailable_when_machine_off = False
 
     @property
     def native_value(self) -> StateType | datetime | None:

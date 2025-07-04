@@ -108,8 +108,7 @@ def download_file(service: ServiceCall) -> None:
                 _LOGGER.debug("%s -> %s", url, final_path)
 
                 with open(final_path, "wb") as fil:
-                    for chunk in req.iter_content(1024):
-                        fil.write(chunk)
+                    fil.writelines(req.iter_content(1024))
 
                 _LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(

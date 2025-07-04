@@ -1141,7 +1141,7 @@ async def test_async_get_all_descriptions_failing_integration(
         descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 3
-    assert "Failed to load integration: logger" in caplog.text
+    assert "Failed to load services.yaml for integration: logger" in caplog.text
 
     # Services are empty defaults if the load fails but should
     # not raise

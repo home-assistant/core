@@ -216,8 +216,7 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
-        # pylint: disable=import-outside-toplevel
-        from homeassistant.components.conversation import (
+        from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationTraceEventType,
             async_conversation_trace_append,
         )
@@ -778,7 +777,23 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object", "additionalProperties": True}
+        result = {"type": "object"}
+        if fields := schema.config.get("fields"):
+            result["properties"] = {
+                field: convert(
+                    selector.selector(field_schema["selector"]),
+                    custom_serializer=_selector_serializer,
+                )
+                for field, field_schema in fields.items()
+            }
+        else:
+            result["additionalProperties"] = True
+        if schema.config.get("multiple"):
+            result = {
+                "type": "array",
+                "items": result,
+            }
+        return result
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -901,6 +916,12 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}.{action}"
+        # Note: _get_cached_action_parameters only works for services which
+        # add their description directly to the service description cache.
+        # This is not the case for most services, but it is for scripts.
+        # If we want to use `ActionTool` for services other than scripts, we
+        # need to add a coroutine function to fetch the non-cached description
+        # and schema.
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )

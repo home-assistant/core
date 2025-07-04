@@ -81,6 +81,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
+    "alexa_devices": {"marisa-trie": {"setuptools"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
@@ -244,11 +245,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
-    },
-    "ovo_energy": {
-        # https://github.com/timmo001/ovoenergy/issues/132
-        # ovoenergy > incremental > setuptools
-        "incremental": {"setuptools"}
     },
     "pi_hole": {"hole": {"async-timeout"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},

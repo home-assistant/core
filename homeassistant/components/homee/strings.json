@@ -177,9 +177,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "upper": "[%key;component::homee::entity::event::button_state::state_attributes::event_type::state::upper%]",
-              "lower": "[%key;component::homee::entity::event::button_state::state_attributes::event_type::state::lower%]",
-              "released": "[%key;component::homee::entity::event::button_state::state_attributes::event_type::state::released%]"
+              "upper": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::upper%]",
+              "lower": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::lower%]",
+              "released": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]"
             }
           }
         }
@@ -189,7 +189,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "release": "[%key;component::homee::entity::event::button_state::state_attributes::event_type::state::released%]",
+              "release": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]",
               "up": "Up",
               "down": "Down",
               "stop": "Stop",

@@ -898,42 +898,12 @@ async def test_invalid_unit_of_measurement(
         "The unit of measurement `ppm` is not valid together with device class `energy`"
         in caplog.text
     )
-    # A repair issue was logged
+    # A repair issue was logged for the failing YAML config
     assert len(events) == 1
-    assert events[0].data["issue_id"] == "sensor.test"
-    # Assert the sensor works
-    async_fire_mqtt_message(hass, "test-topic", "100")
-    await hass.async_block_till_done()
+    assert events[0].data["domain"] == mqtt.DOMAIN
+    # Assert the sensor is not created
     state = hass.states.get("sensor.test")
-    assert state is not None
-    assert state.state == "100"
-
-    caplog.clear()
-
-    discovery_payload = {
-        "name": "bla",
-        "state_topic": "test-topic2",
-        "device_class": "temperature",
-        "unit_of_measurement": "C",
-    }
-    # Now discover an other invalid sensor
-    async_fire_mqtt_message(
-        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
-    )
-    await hass.async_block_till_done()
-    assert (
-        "The unit of measurement `C` is not valid together with device class `temperature`"
-        in caplog.text
-    )
-    # Assert the sensor works
-    async_fire_mqtt_message(hass, "test-topic2", "21")
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.bla")
-    assert state is not None
-    assert state.state == "21"
-
-    # No new issue was registered for the discovered entity
-    assert len(events) == 1
+    assert state is None
 
 
 @pytest.mark.parametrize(

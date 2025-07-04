@@ -590,7 +590,28 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
+    [
+        ({}, ("abc123",), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (),
+            (),
+        ),
+    ],
+    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
@@ -810,6 +831,23 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
                 {
                     "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (None, "abc", {}),
+        ),
+        (
+            {
+                "accept": ["image/*"],
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
                     "media_content_id": "abc",
                     "media_content_type": "def",
                     "metadata": {},
@@ -1262,3 +1300,30 @@ def test_label_selector_schema(schema, valid_selections, invalid_selections) -> 
 def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test floor selector."""
     _test_selector("floor", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+        (
+            {"multiple": True},
+            (["sensor.temperature", "sensor:external_temperature"], []),
+            ("sensor.temperature",),
+        ),
+        (
+            {"multiple": False},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+    ],
+)
+def test_statistic_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test statistic selector."""
+    _test_selector("statistic", schema, valid_selections, invalid_selections)

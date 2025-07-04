@@ -54,7 +54,7 @@ async def test_with_pre_v7_firmware(
     await setup_integration(hass, config_entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
@@ -85,7 +85,7 @@ async def test_token_in_config_file(
     await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @respx.mock
@@ -128,7 +128,7 @@ async def test_expired_token_in_config(
     await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 async def test_coordinator_update_error(
@@ -226,7 +226,7 @@ async def test_coordinator_token_refresh_error(
         await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 async def test_config_no_unique_id(
