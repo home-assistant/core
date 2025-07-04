@@ -86,7 +86,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                     _client.get_router_info
                 )
             except ConnectionException:
-                errors[CONF_BASE] = "cannot_connect"
+                errors["base"] = "cannot_connect"
             else:
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
