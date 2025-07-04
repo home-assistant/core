@@ -823,29 +823,68 @@ async def test_warn_slow_write_state_custom_component(
     ) in caplog.text
 
 
-async def test_setup_source(hass: HomeAssistant) -> None:
+async def test_setup_source(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Check that we register sources correctly."""
     platform = MockEntityPlatform(hass)
 
-    entity_platform = MockEntity(name="Platform Config Source")
-    await platform.async_add_entities([entity_platform])
+    entity_platform = MockEntity(name="Platform Config Source 1")
+    entity_platform_uniq = MockEntity(name="Platform Config Source 2", unique_id="ABC")
+    await platform.async_add_entities([entity_platform, entity_platform_uniq])
 
     platform.config_entry = MockConfigEntry()
-    entity_entry = MockEntity(name="Config Entry Source")
-    await platform.async_add_entities([entity_entry])
+    platform.config_entry.add_to_hass(hass)
+    entity_entry = MockEntity(name="Config Entry Source 1")
+    entity_entry_uniq = MockEntity(name="Config Entry Source 2", unique_id="DEF")
+    await platform.async_add_entities([entity_entry, entity_entry_uniq])
 
+    assert {state.entity_id: state.state for state in hass.states.async_all()} == {
+        "test_domain.config_entry_source_1": "unknown",
+        "test_domain.config_entry_source_2": "unknown",
+        "test_domain.platform_config_source_1": "unknown",
+        "test_domain.platform_config_source_2": "unknown",
+    }
     assert entity.entity_sources(hass) == {
-        "test_domain.platform_config_source": {
+        "test_domain.platform_config_source_1": {
             "domain": "test_platform",
         },
-        "test_domain.config_entry_source": {
+        "test_domain.platform_config_source_2": {
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source_1": {
+            "config_entry": platform.config_entry.entry_id,
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source_2": {
             "config_entry": platform.config_entry.entry_id,
             "domain": "test_platform",
         },
     }
 
+    # Reset the platform to remove all the entities
     await platform.async_reset()
 
+    # Check that entities with unique IDs are still present
+    assert {state.entity_id: state.state for state in hass.states.async_all()} == {
+        "test_domain.config_entry_source_2": "unavailable",
+        "test_domain.platform_config_source_2": "unavailable",
+    }
+    assert entity.entity_sources(hass) == {
+        "test_domain.platform_config_source_2": {
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source_2": {
+            "config_entry": platform.config_entry.entry_id,
+            "domain": "test_platform",
+        },
+    }
+
+    # Remove the entity registry entries for the entities with unique IDs
+    entity_registry.async_remove("test_domain.platform_config_source_2")
+    entity_registry.async_remove("test_domain.config_entry_source_2")
+
+    assert hass.states.async_all() == []
     assert entity.entity_sources(hass) == {}
 
 
