@@ -1138,7 +1138,7 @@ lacrosse-view==1.1.1
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.5
+lcn-frontend==0.2.6
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1963,7 +1963,7 @@ pysmhi==1.0.2
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.6
+pysmlight==0.2.7
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2600,7 +2600,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.6.0
+yalexs-ble==3.0.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
