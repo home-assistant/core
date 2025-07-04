@@ -1826,9 +1826,9 @@ def import_and_test_deprecated_constant(
         module.__name__,
         logging.WARNING,
         (
-            f"{constant_name} was used from test_constant_deprecation,"
-            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
+            f"The deprecated constant {constant_name} was used from "
+            "test_constant_deprecation. It will be removed in HA Core "
+            f"{breaks_in_ha_version}. Use {replacement_name} instead, please report "
             "it to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
@@ -1860,9 +1860,9 @@ def import_and_test_deprecated_alias(
         module.__name__,
         logging.WARNING,
         (
-            f"{alias_name} was used from test_constant_deprecation,"
-            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
+            f"The deprecated alias {alias_name} was used from "
+            "test_constant_deprecation. It will be removed in HA Core "
+            f"{breaks_in_ha_version}. Use {replacement_name} instead, please report "
             "it to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
