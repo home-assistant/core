@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from json import JSONDecodeError
+
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -62,7 +64,7 @@ class GoogleGenerativeAITaskEntity(
 
         try:
             data = json_loads(text)
-        except ValueError as err:
+        except JSONDecodeError as err:
             LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
