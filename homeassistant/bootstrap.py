@@ -76,6 +76,7 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     category_registry,
+    condition,
     config_validation as cv,
     device_registry,
     entity,
@@ -452,6 +453,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
         create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
         create_eager_task(trigger.async_setup(hass)),
     )
 
