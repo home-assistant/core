@@ -341,7 +341,7 @@ class TestAsyncSetupEntry:
     ):
         """Test async setup entry creates all sensors."""
 
-        # 创建一个更完整的mock coordinator
+        # Create a more complete mock coordinator
         mock_coordinator = MagicMock(spec=EwayDataUpdateCoordinator)
         mock_coordinator.data = {
             "gen_power": 1000,

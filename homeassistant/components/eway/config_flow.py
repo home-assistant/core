@@ -73,8 +73,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         )
 
         # Test connection
-        await client.connect()
-        # await client.disconnect()
+        try:
+            await client.connect()
+        finally:
+            await client.disconnect()
 
     except ConnectionError as err:
         raise CannotConnect from err

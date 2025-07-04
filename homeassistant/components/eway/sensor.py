@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory  # type: ignore[attr-defined]
@@ -144,7 +145,7 @@ SENSOR_TYPES: tuple[EwaySensorEntityDescription, ...] = (
     EwaySensorEntityDescription(
         key=ATTR_DURATION,
         name="Working Duration",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
