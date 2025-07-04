@@ -1,0 +1,23 @@
+{
+  "domain": "tuneblade",
+  "name": "TuneBlade",
+  "bluetooth": [],
+  "codeowners": ["@spycle"],
+  "config_flow": true,
+  "dependencies": [],
+  "dhcp": [],
+  "documentation": "https://github.com/spycle/tuneblade",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/spycle/tuneblade/issues",
+  "mqtt": [],
+  "requirements": [],
+  "usb": [],
+  "version": "2025.06.8",
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*une?lade._http._tcp.local."
+    }
+  ]
+}

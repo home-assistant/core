@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TuneBlade",
+        "description": "TuneBlade Remote",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name"
+        }
+      },
+      "confirm": {
+        "title": "Confirm TuneBlade Remote",
+        "description": "TuneBlade was discovered at {ip}. Do you want to add {name}?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed.",
+      "cannot_connect": "Unable to connect to TuneBlade device."
+    }
+  }
+}
