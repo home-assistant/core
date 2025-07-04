@@ -59,19 +59,17 @@ STRUCTURE_FIELD_SCHEMA = vol.Schema(
 )
 
 
-def _validate_schema(value: dict[str, Any]) -> vol.Schema:
-    """Validate the structure for the generate data task and convert to a vol Schema."""
+def _validate_structure_fields(value: dict[str, Any]) -> vol.Schema:
+    """Validate the structure fields as a voluptuous Schema."""
     if not isinstance(value, dict):
         raise vol.Invalid("Structure must be a dictionary")
     fields = {}
     for k, v in value.items():
-        if not isinstance(v, dict):
-            raise vol.Invalid(f"Structure field '{k}' must be a dictionary")
         field_class = vol.Required if v.get(ATTR_REQUIRED, False) else vol.Optional
         fields[field_class(k, description=v.get(CONF_DESCRIPTION))] = selector.selector(
             v[CONF_SELECTOR]
         )
-    return vol.Schema(fields)
+    return vol.Schema(fields, extra=vol.PREVENT_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -92,7 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Required(ATTR_INSTRUCTIONS): cv.string,
                 vol.Optional(ATTR_STRUCTURE): vol.All(
                     vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
-                    _validate_schema,
+                    _validate_structure_fields,
                 ),
             }
         ),

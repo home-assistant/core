@@ -88,12 +88,12 @@ async def test_generate_data_service(
     assert result["data"] == "Mock result"
 
 
-async def test_generate_data_service_structure(
+async def test_generate_data_service_structure_fields(
     hass: HomeAssistant,
     init_components: None,
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
-    """Test the entity can generate structured data."""
+    """Test the entity can generate structured data with a top level object schemea."""
     result = await hass.services.async_call(
         "ai_task",
         "generate_data",
@@ -186,9 +186,9 @@ async def test_generate_data_service_structure(
             vol.Invalid,
             r"required key not provided.*selector.*",
         ),
-        (12345, vol.Invalid, r"expected a dictionary.*"),
-        ("name", vol.Invalid, r"expected a dictionary.*"),
-        (["name"], vol.Invalid, r"expected a dictionary.*"),
+        (12345, vol.Invalid, r"xpected a dictionary.*"),
+        ("name", vol.Invalid, r"xpected a dictionary.*"),
+        (["name"], vol.Invalid, r"xpected a dictionary.*"),
         (
             {
                 "name": {
@@ -200,6 +200,16 @@ async def test_generate_data_service_structure(
             vol.Invalid,
             r"extra keys not allowed .*",
         ),
+        (
+            {
+                "name": {
+                    "description": "First and last name of the user such as Alice Smith",
+                    "selector": "invalid-schema",
+                },
+            },
+            vol.Invalid,
+            r"xpected a dictionary for dictionary.",
+        ),
     ],
     ids=(
         "invalid-selector",
@@ -209,6 +219,7 @@ async def test_generate_data_service_structure(
         "structure-is-str-not-object",
         "structure-is-list-not-object",
         "extra-fields",
+        "invalid-selector-schema",
     ),
 )
 async def test_generate_data_service_invalid_structure(
