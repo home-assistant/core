@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util.json import JsonArrayType
@@ -22,7 +22,7 @@ async def test_lights(
     """Test if all v2 lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 8 entities should be created from test data
@@ -90,7 +90,7 @@ async def test_light_turn_on_service(
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_temperature_only"
 
@@ -276,7 +276,7 @@ async def test_light_turn_off_service(
     """Test calling the turn off service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_and_color_temperature_1"
 
@@ -364,7 +364,7 @@ async def test_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test new light added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_entity_id = "light.hue_mocked_device"
 
@@ -388,7 +388,7 @@ async def test_light_availability(
     """Test light availability property."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_and_color_temperature_1"
 
@@ -423,7 +423,7 @@ async def test_grouped_lights(
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
@@ -657,7 +657,7 @@ async def test_light_turn_on_service_deprecation(
 
     test_light_id = "light.hue_light_with_color_temperature_only"
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     event = {
         "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",

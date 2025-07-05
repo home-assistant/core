@@ -27,6 +27,7 @@
     'original_name': 'Charge start',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_start',
     'unique_id': '500006-charge_start',
@@ -74,6 +75,7 @@
     'original_name': 'Charge stop',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_stop',
     'unique_id': '500006-charge_stop',
@@ -87,6 +89,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_charge_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.1p7k_500006_charging_schedule_override-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.1p7k_500006_charging_schedule_override',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging schedule override',
+    'platform': 'lektrico',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_schedule_override',
+    'unique_id': '500006-charging_schedule_override',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.1p7k_500006_charging_schedule_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '1p7k_500006 Charging schedule override',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.1p7k_500006_charging_schedule_override',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -121,6 +171,7 @@
     'original_name': 'Restart',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006-reboot',

@@ -85,8 +85,8 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 @cache
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import (
+    from homeassistant.components import (  # noqa: PLC0415
+        ai_task,
         alarm_control_panel,
         assist_satellite,
         calendar,
@@ -108,6 +108,7 @@ def _base_components() -> dict[str, ModuleType]:
     )
 
     return {
+        "ai_task": ai_task,
         "alarm_control_panel": alarm_control_panel,
         "assist_satellite": assist_satellite,
         "calendar": calendar,
@@ -682,9 +683,12 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
-) -> list[JSON_TYPE]:
+) -> dict[str, JSON_TYPE]:
     """Load service files for multiple integrations."""
-    return [_load_services_file(hass, integration) for integration in integrations]
+    return {
+        integration.domain: _load_services_file(hass, integration)
+        for integration in integrations
+    }
 
 
 @callback
@@ -715,7 +719,6 @@ async def async_get_all_descriptions(
         for service_name in services_by_domain
     }
     # If we have a complete cache, check if it is still valid
-    all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
@@ -741,13 +744,16 @@ async def async_get_all_descriptions(
                 continue
             if TYPE_CHECKING:
                 assert isinstance(int_or_exc, Exception)
-            _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
+            _LOGGER.error(
+                "Failed to load services.yaml for integration: %s",
+                domain,
+                exc_info=int_or_exc,
+            )
 
         if integrations:
-            contents = await hass.async_add_executor_job(
+            loaded = await hass.async_add_executor_job(
                 _load_services_files, hass, integrations
             )
-            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -770,7 +776,7 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             domain_yaml = loaded.get(domain) or {}
             # The YAML may be empty for dynamically defined
-            # services (ie shell_command) that never call
+            # services (e.g. shell_command) that never call
             # service.async_set_service_schema for the dynamic
             # service
 
@@ -1291,8 +1297,7 @@ def async_register_entity_service(
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             "registers an entity service with a non entity service schema",

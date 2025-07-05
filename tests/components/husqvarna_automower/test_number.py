@@ -7,7 +7,7 @@ from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import EXECUTION_TIME_DELAY
 from homeassistant.const import Platform

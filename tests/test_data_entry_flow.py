@@ -886,13 +886,40 @@ async def test_show_progress_fires_only_when_changed(
     )  # change (description placeholder)
 
 
-async def test_abort_flow_exception(manager: MockFlowManager) -> None:
-    """Test that the AbortFlow exception works."""
+async def test_abort_flow_exception_step(manager: MockFlowManager) -> None:
+    """Test that the AbortFlow exception works in a step."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         async def async_step_init(self, user_input=None):
             raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    form = await manager.async_init("test")
+    assert form["type"] == data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form["description_placeholders"] == {"placeholder": "yo"}
+
+
+async def test_abort_flow_exception_finish_flow(hass: HomeAssistant) -> None:
+    """Test that the AbortFlow exception works when finishing a flow."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            """Return init form with one input field 'count'."""
+            return self.async_create_entry(title="init", data=input)
+
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_key, *, context, data):
+            """Create a test flow."""
+            return TestFlow()
+
+        async def async_finish_flow(self, flow, result):
+            """Raise AbortFlow."""
+            raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    manager = FlowManager(hass)
 
     form = await manager.async_init("test")
     assert form["type"] == data_entry_flow.FlowResultType.ABORT

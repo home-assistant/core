@@ -39,7 +39,33 @@
         },
         "data_description": {
           "password": "Enter the password corresponding to the aforementioned username to automatically create an access token",
-          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and click create access token"
+          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
+        }
+      },
+      "reconfigure": {
+        "title": "Configuration for {name}",
+        "description": "You can either log in with your **ntfy** username and password, and Home Assistant will automatically create an access token to authenticate with **ntfy**, or you can provide an access token directly",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "[%key:component::ntfy::config::step::user::sections::auth::data_description::username%]",
+          "password": "[%key:component::ntfy::config::step::user::sections::auth::data_description::password%]",
+          "token": "Enter a new or existing access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
+        }
+      },
+      "reconfigure_user": {
+        "title": "[%key:component::ntfy::config::step::reconfigure::title%]",
+        "description": "Enter the password for **{username}** below. Home Assistant will automatically create a new access token to authenticate with **ntfy**. You can also directly provide a valid access token",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ntfy::config::step::reauth_confirm::data_description::password%]",
+          "token": "[%key:component::ntfy::config::step::reconfigure::data_description::token%]"
         }
       }
     },
@@ -51,7 +77,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**"
+      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "config_subentries": {
@@ -90,6 +117,88 @@
       },
       "abort": {
         "already_configured": "Topic is already configured"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "messages": {
+        "name": "Messages published",
+        "unit_of_measurement": "messages"
+      },
+      "messages_remaining": {
+        "name": "Messages remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_limit": {
+        "name": "Messages usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_expiry_duration": {
+        "name": "Messages expiry duration"
+      },
+      "emails": {
+        "name": "Emails sent",
+        "unit_of_measurement": "emails"
+      },
+      "emails_remaining": {
+        "name": "Emails remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "emails_limit": {
+        "name": "Email usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "calls": {
+        "name": "Phone calls made",
+        "unit_of_measurement": "calls"
+      },
+      "calls_remaining": {
+        "name": "Phone calls remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "calls_limit": {
+        "name": "Phone calls usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "reservations": {
+        "name": "Reserved topics",
+        "unit_of_measurement": "topics"
+      },
+      "reservations_remaining": {
+        "name": "Reserved topics remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "reservations_limit": {
+        "name": "Reserved topics limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "attachment_total_size": {
+        "name": "Attachment storage"
+      },
+      "attachment_total_size_remaining": {
+        "name": "Attachment storage remaining"
+      },
+      "attachment_total_size_limit": {
+        "name": "Attachment storage limit"
+      },
+      "attachment_expiry_duration": {
+        "name": "Attachment expiry duration"
+      },
+      "attachment_file_size": {
+        "name": "Attachment file size limit"
+      },
+      "attachment_bandwidth": {
+        "name": "Attachment bandwidth limit"
+      },
+      "tier": {
+        "name": "Subscription tier",
+        "state": {
+          "free": "Free",
+          "supporter": "Supporter",
+          "pro": "Pro",
+          "business": "Business"
+        }
       }
     }
   },

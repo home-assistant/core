@@ -27,16 +27,18 @@ PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type EnergyFlipConfigEntry = ConfigEntry[EnergyFlipUpdateCoordinator]
+
 
 class EnergyFlipUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """EnergyFlip data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: EnergyFlipConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: EnergyFlipConfigEntry,
         energyflip: EnergyFlip,
     ) -> None:
         """Initialize the Huisbaasje data coordinator."""
