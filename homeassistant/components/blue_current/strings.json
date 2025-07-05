@@ -22,6 +22,16 @@
       "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "card": "Card"
+        },
+        "description": "Select the default charging card you want to use"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "activity": {
@@ -118,11 +128,37 @@
       "stop_charge_session": {
         "name": "Stop charge session"
       },
+      "start_charge_session": {
+        "name": "Start charge session"
+      },
       "reboot": {
         "name": "Reboot"
       },
       "reset": {
         "name": "Reset"
+      }
+    }
+  },
+  "selector": {
+    "select_charging_card": {
+      "options": {
+        "without_charging_card": "Without charging card"
+      }
+    }
+  },
+  "services": {
+    "start_charge_session": {
+      "name": "Start charge session",
+      "description": "Start a new charge session.",
+      "fields": {
+        "charging_card_id": {
+          "name": "Charging card ID",
+          "description": "Optional charging card ID that will be used to start a charge session. When not provided, the default charging card from the integration settings will be used."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The ID of the Blue Current charge point."
+        }
       }
     }
   }
