@@ -33,6 +33,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -234,7 +235,11 @@ async def async_update_options(
 async def async_migrate_integration(hass: HomeAssistant) -> None:
     """Migrate integration entry structure."""
 
-    entries = hass.config_entries.async_entries(DOMAIN)
+    # Make sure we get enabled config entries first
+    entries = sorted(
+        hass.config_entries.async_entries(DOMAIN),
+        key=lambda e: e.disabled_by is not None,
+    )
     if not any(entry.version == 1 for entry in entries):
         return
 
@@ -300,6 +305,10 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                     remove_config_subentry_id=None,
+                )
+            if device.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
+                device_registry.async_update_device(
+                    device.id, disabled_by=DeviceEntryDisabler.USER
                 )
 
         if not use_existing:
