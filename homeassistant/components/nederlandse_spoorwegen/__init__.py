@@ -60,5 +60,4 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading config entry: %s", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
