@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from smarttub import Spa, SpaState
+from smarttub import Spa, SpaSensor, SpaState
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -83,6 +83,6 @@ class SmartTubExternalSensorBase(SmartTubEntity):
         )
 
     @property
-    def sensor(self):
+    def sensor(self) -> SpaSensor:
         """Convenience property to access the smarttub.SpaSensor instance for this sensor."""
         return self.coordinator.data[self.spa.id][ATTR_SENSORS][self.sensor_address]
