@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TessieConfigEntry
+from .const import (
+    ATTR_DESTINATION,
+    ATTR_GPS,
+    ATTR_LOCALE,
+    ATTR_ORDER,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    SERVICE_NAVIGATION_GPS_REQUEST,
+    SERVICE_NAVIGATION_REQUEST,
+)
 from .entity import TessieEntity
 from .models import TessieVehicleData
 
@@ -29,6 +42,29 @@ async def async_setup_entry(
             TessieDeviceTrackerRouteEntity,
         )
         for vehicle in data.vehicles
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_NAVIGATION_GPS_REQUEST,
+        {
+            vol.Required(ATTR_GPS): {
+                vol.Required(CONF_LATITUDE): cv.latitude,
+                vol.Required(CONF_LONGITUDE): cv.longitude,
+            },
+            vol.Optional(ATTR_ORDER, default=0): cv.positive_int,
+        },
+        "navigation_gps_request",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_NAVIGATION_REQUEST,
+        {
+            vol.Required(ATTR_DESTINATION): cv.string,
+            vol.Optional(ATTR_LOCALE, default="en-US"): cv.string,
+        },
+        "navigation_request",
     )
 
 

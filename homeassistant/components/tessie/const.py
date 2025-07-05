@@ -23,6 +23,17 @@ TRANSLATED_ERRORS = {
     "no cable": "no_cable",
 }
 
+SERVICE_NAVIGATION_REQUEST = "navigation_request"
+SERVICE_NAVIGATION_GPS_REQUEST = "navigation_gps_request"
+
+ATTR_GPS = "gps"
+ATTR_DESTINATION = "destination"
+ATTR_LOCALE = "locale"
+ATTR_ORDER = "order"
+
+CONF_LATITUDE = "latitude"
+CONF_LONGITUDE = "longitude"
+
 
 class TessieState(StrEnum):
     """Tessie status."""

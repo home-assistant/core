@@ -1,0 +1,33 @@
+navigation_request:
+  target:
+    entity:
+      - integration: tessie
+        domain: device_tracker
+  fields:
+    destination:
+      required: true
+      example: "1600 Amphitheatre Pkwy, Mountain View, CA"
+      selector:
+        text:
+    locale:
+      required: false
+      default: "en-US"
+      selector:
+        text:
+
+navigation_gps_request:
+  target:
+    entity:
+      - integration: tessie
+        domain: device_tracker
+  fields:
+    gps:
+      required: true
+      selector:
+        location:
+          radius: false
+    order:
+      required: false
+      default: 0
+      selector:
+        number:

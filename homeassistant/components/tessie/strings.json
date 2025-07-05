@@ -529,5 +529,35 @@
     "command_failed": {
       "message": "Command failed, {message}"
     }
+  },
+  "services": {
+    "navigation_request": {
+      "name": "Set navigation address",
+      "description": "Sends a destination address to the onboard navigation system.",
+      "fields": {
+        "destination": {
+          "name": "Destination",
+          "description": "The address of the destination to navigate to, e.g., '1600 Amphitheatre Pkwy, Mountain View, CA'."
+        },
+        "locale": {
+          "name": "Locale",
+          "description": "The locale to use for the navigation, e.g., 'en-US'."
+        }
+      }
+    },
+    "navigation_gps_request": {
+      "name": "Set navigation GPS coordinates",
+      "description": "Sends destination GPS coordinates to the onboard navigation system.",
+      "fields": {
+        "gps": {
+          "description": "The GPS coordinates of the destination to navigate to.",
+          "name": "Location"
+        },
+        "order": {
+          "name": "Order",
+          "description": "The order of the request."
+        }
+      }
+    }
   }
 }

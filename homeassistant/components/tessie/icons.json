@@ -259,5 +259,13 @@
         }
       }
     }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "service": "mdi:navigation"
+    },
+    "navigation_request": {
+      "service": "mdi:navigation"
+    }
   }
 }
