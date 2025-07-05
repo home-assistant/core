@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_defrost-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_defrost-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_e1-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -83,7 +83,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_e1-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -97,7 +97,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_e2-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -132,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_e2-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -146,7 +146,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l2-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,7 +181,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l2-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -195,7 +195,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l3-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +230,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l3-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -244,7 +244,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l4-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -279,7 +279,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_l4-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -293,7 +293,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_tank_full-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -328,7 +328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_tank_full-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -342,7 +342,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_wet-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -377,7 +377,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.dehumidifier_wet-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -385,55 +385,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifier_wet',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.door_sensor_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.door_sensor_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Door',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3switch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_fault_sensor_setup_and_discovery[binary_sensor.door_sensor_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Door Sensor Door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.door_sensor_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
