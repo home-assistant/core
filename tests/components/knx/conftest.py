@@ -309,6 +309,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=DOMAIN,
         data={
+            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA has additional keys
+            # there are installations out there without these keys so we test with legacy data
+            # to ensure backwards compatibility (local_ip, telegram_log_size)
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
