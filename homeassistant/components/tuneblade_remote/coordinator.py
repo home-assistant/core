@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from tuneblade import TuneBladeApiClient
+from pytuneblade import TuneBladeApiClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):

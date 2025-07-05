@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from tuneblade import TuneBladeApiClient
+from pytuneblade import TuneBladeApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import TuneBladeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

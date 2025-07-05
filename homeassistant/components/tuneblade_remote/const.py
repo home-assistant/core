@@ -1,4 +1,4 @@
-"""Constants for TuneBlade integration."""
+"""Constants for TuneBlade Remote integration."""
 
 from enum import Enum, IntFlag
 
