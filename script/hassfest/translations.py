@@ -29,6 +29,7 @@ ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
     "emulated_roku",
+    "energenie_power_sockets",
     "faa_delays",
     "garages_amsterdam",
     "generic",
@@ -40,6 +41,7 @@ ALLOW_NAME_TRANSLATION = {
     "local_ip",
     "local_todo",
     "nmap_tracker",
+    "remote_calendar",
     "rpi_power",
     "swiss_public_transport",
     "waze_travel_time",
@@ -96,7 +98,7 @@ def find_references(
             continue
 
         if match := re.match(RE_REFERENCE, value):
-            found.append({"source": f"{prefix}::{key}", "ref": match.groups()[0]})
+            found.append({"source": f"{prefix}::{key}", "ref": match.group(1)})
 
 
 def removed_title_validator(
@@ -304,10 +306,15 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             ),
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
-                    "options": cv.schema_with_slug_keys(
+                    vol.Optional("options"): cv.schema_with_slug_keys(
                         translation_value_validator,
                         slug_validator=translation_key_validator,
-                    )
+                    ),
+                    vol.Optional("unit_of_measurement"): cv.schema_with_slug_keys(
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
+                    ),
+                    vol.Optional("fields"): cv.schema_with_slug_keys(str),
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),
@@ -407,6 +414,38 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         {
                             vol.Required("name"): str,
                             vol.Optional("description"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+            vol.Optional("conditions"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description_configured"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+            vol.Optional("triggers"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description_configured"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
                     ),
@@ -551,7 +590,7 @@ def validate_translation_file(
                 "translations",
                 "Lokalise supports only one level of references: "
                 f'"{reference["source"]}" should point to directly '
-                f'to "{match.groups()[0]}"',
+                f'to "{match.group(1)}"',
             )
 
 

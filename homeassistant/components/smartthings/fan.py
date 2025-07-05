@@ -116,7 +116,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -132,6 +132,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.FAN_MODE
         )
@@ -142,6 +144,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.SUPPORTED_AC_FAN_MODES
         )

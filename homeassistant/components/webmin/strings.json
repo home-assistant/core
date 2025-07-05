@@ -29,13 +29,13 @@
   "entity": {
     "sensor": {
       "load_1m": {
-        "name": "Load (1m)"
+        "name": "Load (1 min)"
       },
       "load_5m": {
-        "name": "Load (5m)"
+        "name": "Load (5 min)"
       },
       "load_15m": {
-        "name": "Load (15m)"
+        "name": "Load (15 min)"
       },
       "mem_total": {
         "name": "Memory total"

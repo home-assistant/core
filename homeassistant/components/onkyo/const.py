@@ -11,9 +11,6 @@ DOMAIN = "onkyo"
 DEVICE_INTERVIEW_TIMEOUT = 5
 DEVICE_DISCOVERY_TIMEOUT = 5
 
-CONF_SOURCES = "sources"
-CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
-
 type VolumeResolution = Literal[50, 80, 100, 200]
 OPTION_VOLUME_RESOLUTION = "volume_resolution"
 OPTION_VOLUME_RESOLUTION_DEFAULT: VolumeResolution = 50

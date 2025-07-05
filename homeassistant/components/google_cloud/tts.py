@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
+from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -215,7 +216,11 @@ class BaseGoogleCloudProvider:
             ),
         )
 
-        response = await self._client.synthesize_speech(request, timeout=10)
+        response = await self._client.synthesize_speech(
+            request,
+            timeout=10,
+            retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
+        )
 
         if encoding == texttospeech.AudioEncoding.MP3:
             extension = "mp3"

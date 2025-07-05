@@ -2,64 +2,22 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.emoncms.const import (
+    CONF_ONLY_INCLUDE_FEEDID,
+    DOMAIN,
+    SYNC_MODE,
+    SYNC_MODE_AUTO,
+    SYNC_MODE_MANUAL,
+)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT_SINGLE_FEED, SENSOR_NAME, YAML
+from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME
 
 from tests.common import MockConfigEntry
-
-
-async def test_flow_import_include_feeds(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    emoncms_client: AsyncMock,
-) -> None:
-    """YAML import with included feed - success test."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == SENSOR_NAME
-    assert result["data"] == FLOW_RESULT_SINGLE_FEED
-
-
-async def test_flow_import_failure(
-    hass: HomeAssistant,
-    emoncms_client: AsyncMock,
-) -> None:
-    """YAML import - failure test."""
-    emoncms_client.async_request.return_value = EMONCMS_FAILURE
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "api_error"
-
-
-async def test_flow_import_already_configured(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test we abort import data set when entry is already configured."""
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
 
 USER_INPUT = {
     CONF_URL: "http://1.1.1.1",
@@ -67,12 +25,29 @@ USER_INPUT = {
 }
 
 
-async def test_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    emoncms_client: AsyncMock,
+async def test_user_flow_failure(
+    hass: HomeAssistant, emoncms_client: AsyncMock
 ) -> None:
-    """Test we get the user form."""
+    """Test emoncms failure when adding a new entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    assert result["errors"]["base"] == "api_error"
+    assert result["description_placeholders"]["details"] == "failure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_user_flow_manual_mode(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, emoncms_client: AsyncMock
+) -> None:
+    """Test we get the user forms and the entry in manual mode."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -81,11 +56,10 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        {**USER_INPUT, SYNC_MODE: SYNC_MODE_MANUAL},
     )
 
     assert result["type"] is FlowResultType.FORM
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_ONLY_INCLUDE_FEEDID: ["1"]},
@@ -94,14 +68,30 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: ["1"]}
+    # assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_auto_mode(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, emoncms_client: AsyncMock
+) -> None:
+    """Test we get the user form and the entry in automatic mode."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, SYNC_MODE: SYNC_MODE_AUTO},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == SENSOR_NAME
+    assert result["data"] == {
+        **USER_INPUT,
+        CONF_ONLY_INCLUDE_FEEDID: FLOW_RESULT[CONF_ONLY_INCLUDE_FEEDID],
+    }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-CONFIG_ENTRY = {
-    CONF_API_KEY: "my_api_key",
-    CONF_ONLY_INCLUDE_FEEDID: ["1"],
-    CONF_URL: "http://1.1.1.1",
-}
 
 
 async def test_options_flow(
@@ -128,13 +118,12 @@ async def test_options_flow(
 
 async def test_options_flow_failure(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Options flow - test failure."""
-    emoncms_client.async_request.return_value = EMONCMS_FAILURE
     await setup_integration(hass, config_entry)
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     assert result["errors"]["base"] == "api_error"

@@ -16,8 +16,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import selector
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    selector,
+)
 
 from .const import (
     CONF_MESSAGE,
@@ -27,7 +31,9 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
-    LOGGER,
+    SYNC_MODE,
+    SYNC_MODE_AUTO,
+    SYNC_MODE_MANUAL,
 )
 
 
@@ -104,6 +110,17 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     "mode": "dropdown",
                     "multiple": True,
                 }
+                if user_input.get(SYNC_MODE) == SYNC_MODE_AUTO:
+                    return self.async_create_entry(
+                        title=sensor_name(self.url),
+                        data={
+                            CONF_URL: self.url,
+                            CONF_API_KEY: self.api_key,
+                            CONF_ONLY_INCLUDE_FEEDID: [
+                                feed[FEED_ID] for feed in result[CONF_MESSAGE]
+                            ],
+                        },
+                    )
                 return await self.async_step_choose_feeds()
         return self.async_show_form(
             step_id="user",
@@ -112,6 +129,15 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
+                        vol.Required(
+                            SYNC_MODE, default=SYNC_MODE_MANUAL
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key=SYNC_MODE,
+                            )
+                        ),
                     }
                 ),
                 user_input,
@@ -152,24 +178,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_info: ConfigType) -> ConfigFlowResult:
-        """Import config from yaml."""
-        url = import_info[CONF_URL]
-        api_key = import_info[CONF_API_KEY]
-        include_only_feeds = None
-        if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
-            include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        config = {
-            CONF_API_KEY: api_key,
-            CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
-            CONF_URL: url,
-        }
-        LOGGER.debug(config)
-        result = await self.async_step_user(config)
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
 
 
 class EmoncmsOptionsFlow(OptionsFlow):

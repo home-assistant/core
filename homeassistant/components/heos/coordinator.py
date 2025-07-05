@@ -6,7 +6,6 @@ entities to update. Entities subscribe to entity-specific updates within the ent
 """
 
 from collections.abc import Callable, Sequence
-from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -25,10 +24,10 @@ from pyheos import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -43,7 +42,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
         """Set up the coordinator and set in config_entry."""
-        self.host: str = config_entry.data[CONF_HOST]
         credentials: Credentials | None = None
         if config_entry.options:
             credentials = Credentials(
@@ -53,18 +51,30 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # media position update upon start of playback or when media changes
         self.heos = Heos(
             HeosOptions(
-                self.host,
+                config_entry.data[CONF_HOST],
                 all_progress_events=False,
                 auto_reconnect=True,
+                auto_failover=True,
                 credentials=credentials,
             )
         )
         self._platform_callbacks: list[Callable[[Sequence[HeosPlayer]], None]] = []
-        self._update_sources_pending: bool = False
+        self._update_sources_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            immediate=True,
+            cooldown=2.0,
+            function=self._async_update_sources,
+        )
         self._source_list: list[str] = []
         self._favorites: dict[int, MediaItem] = {}
         self._inputs: Sequence[MediaItem] = []
         super().__init__(hass, _LOGGER, config_entry=config_entry, name=DOMAIN)
+
+    @property
+    def host(self) -> str:
+        """Get the host address of the device."""
+        return self.heos.current_host
 
     @property
     def inputs(self) -> Sequence[MediaItem]:
@@ -159,43 +169,27 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_on_reconnected(self) -> None:
         """Handle when reconnected so resources are updated and entities marked available."""
-        await self._async_update_players()
+        assert self.config_entry is not None
+        if self.host != self.config_entry.data[CONF_HOST]:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data={CONF_HOST: self.host}
+            )
+            _LOGGER.warning("Successfully failed over to HEOS host %s", self.host)
+        else:
+            _LOGGER.warning("Successfully reconnected to HEOS host %s", self.host)
         await self._async_update_sources()
-        _LOGGER.warning("Successfully reconnected to HEOS host %s", self.host)
         self.async_update_listeners()
 
     async def _async_on_controller_event(
-        self, event: str, data: PlayerUpdateResult | None
+        self, event: str, data: PlayerUpdateResult | None = None
     ) -> None:
         """Handle a controller event, such as players or groups changed."""
         if event == const.EVENT_PLAYERS_CHANGED:
             assert data is not None
             self._async_handle_player_update_result(data)
-        elif (
-            event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED)
-            and not self._update_sources_pending
-        ):
-            # Update the sources after a brief delay as we may have received multiple qualifying
-            # events at once and devices cannot handle immediately attempting to refresh sources.
-            self._update_sources_pending = True
-
-            async def update_sources_job(_: datetime | None = None) -> None:
-                await self._async_update_sources()
-                self._update_sources_pending = False
-                self.async_update_listeners()
-
-            assert self.config_entry is not None
-            self.config_entry.async_on_unload(
-                async_call_later(
-                    self.hass,
-                    timedelta(seconds=1),
-                    HassJob(
-                        update_sources_job,
-                        "heos_update_sources",
-                        cancel_on_shutdown=True,
-                    ),
-                )
-            )
+        elif event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED):
+            # Debounce because we may have received multiple qualifying events in rapid succession.
+            await self._update_sources_debouncer.async_call()
         self.async_update_listeners()
 
     def _async_update_player_ids(self, updated_player_ids: dict[int, int]) -> None:
@@ -256,15 +250,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.error("Unable to retrieve input sources: %s", error)
         else:
             self._source_list.extend([source.name for source in self._inputs])
-
-    async def _async_update_players(self) -> None:
-        """Update players after reconnection."""
-        try:
-            player_updates = await self.heos.load_players()
-        except HeosError as error:
-            _LOGGER.error("Unable to refresh players: %s", error)
-            return
-        self._async_handle_player_update_result(player_updates)
 
     @callback
     def async_get_source_list(self) -> list[str]:

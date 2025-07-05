@@ -2,6 +2,7 @@
 
 import logging
 
+import pytest
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -48,6 +50,12 @@ AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 FIBARO_FGR_222_SHUTTER_COVER_ENTITY = "cover.fgr_222_test_cover"
 FIBARO_FGR_223_SHUTTER_COVER_ENTITY = "cover.fgr_223_test_cover"
 LOGGER.setLevel(logging.DEBUG)
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.COVER]
 
 
 async def test_window_cover(

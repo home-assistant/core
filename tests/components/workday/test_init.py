@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
+from holidays.utils import country_holidays
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -50,3 +51,18 @@ async def test_update_options(
     assert entry_check.state is ConfigEntryState.LOADED
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "off"
+
+
+async def test_workday_subdiv_aliases() -> None:
+    """Test subdiv aliases in holidays library."""
+
+    country = country_holidays(
+        country="FR",
+        years=2025,
+    )
+    subdiv_aliases = country.get_subdivision_aliases()
+    assert subdiv_aliases["GES"] == [  # codespell:ignore
+        "Alsace",
+        "Champagne-Ardenne",
+        "Lorraine",
+    ]

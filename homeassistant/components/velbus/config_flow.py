@@ -63,7 +63,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._device = "tls://"
             else:
                 self._device = ""
-            if user_input[CONF_PASSWORD] != "":
+            if CONF_PASSWORD in user_input and user_input[CONF_PASSWORD] != "":
                 self._device += f"{user_input[CONF_PASSWORD]}@"
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
             self._async_abort_entries_match({CONF_PORT: self._device})

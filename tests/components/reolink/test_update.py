@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import ApiError, ReolinkError
 from reolink_aio.software_version import NewSoftwareVersion
 
 from homeassistant.components.reolink.update import POLL_AFTER_INSTALL, POLL_PROGRESS
@@ -136,6 +136,17 @@ async def test_update_firm(
     assert hass.states.get(entity_id).attributes["update_percentage"] is None
 
     reolink_connect.update_firmware.side_effect = ReolinkError("Test error")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    reolink_connect.update_firmware.side_effect = ApiError(
+        "Test error", translation_key="firmware_rate_limit"
+    )
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,

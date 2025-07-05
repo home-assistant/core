@@ -552,6 +552,12 @@ def async_track_entity_registry_updated_event(
 
 
 @callback
+def async_has_entity_registry_updated_listeners(hass: HomeAssistant) -> bool:
+    """Check if async_track_entity_registry_updated_event has been called yet."""
+    return _KEYED_TRACK_ENTITY_REGISTRY_UPDATED.key in hass.data
+
+
+@callback
 def _async_device_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventDeviceRegistryUpdatedData]], Any]]],
@@ -860,19 +866,17 @@ def async_track_state_change_filtered(
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    track_states
-        A TrackStates data class.
-    action
-        Callable to call with results.
+    Args:
+        hass:
+            Home assistant object.
+        track_states:
+            A TrackStates data class.
+        action:
+            Callable to call with results.
 
-    Returns
-    -------
-    Object used to update the listeners (async_update_listeners) with a new
-    TrackStates or cancel the tracking (async_remove).
+    Returns:
+        Object used to update the listeners (async_update_listeners) with a new
+        TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -901,29 +905,26 @@ def async_track_template(
     exception, the listener will still be registered but will only
     fire if the template result becomes true without an exception.
 
-    Action arguments
-    ----------------
-    entity_id
-        ID of the entity that triggered the state change.
-    old_state
-        The old state of the entity that changed.
-    new_state
-        New state of the entity that changed.
+    Action args:
+        entity_id:
+            ID of the entity that triggered the state change.
+        old_state:
+            The old state of the entity that changed.
+        new_state:
+            New state of the entity that changed.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    template
-        The template to calculate.
-    action
-        Callable to call with results. See above for arguments.
-    variables
-        Variables to pass to the template.
+    Args:
+        hass:
+            Home assistant object.
+        template:
+            The template to calculate.
+        action:
+            Callable to call with results. See above for arguments.
+        variables:
+            Variables to pass to the template.
 
-    Returns
-    -------
-    Callable to unregister the listener.
+    Returns:
+        Callable to unregister the listener.
 
     """
     job = HassJob(action, f"track template {template}")
@@ -1355,26 +1356,24 @@ def async_track_template_result(
     Once the template returns to a non-error condition the result is sent
     to the action as usual.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    track_templates
-        An iterable of TrackTemplate.
-    action
-        Callable to call with results.
-    strict
-        When set to True, raise on undefined variables.
-    log_fn
-        If not None, template error messages will logging by calling log_fn
-        instead of the normal logging facility.
-    has_super_template
-        When set to True, the first template will block rendering of other
-        templates if it doesn't render as True.
+    Args:
+        hass:
+            Home assistant object.
+        track_templates:
+            An iterable of TrackTemplate.
+        action:
+            Callable to call with results.
+        strict:
+            When set to True, raise on undefined variables.
+        log_fn:
+            If not None, template error messages will logging by calling log_fn
+            instead of the normal logging facility.
+        has_super_template:
+            When set to True, the first template will block rendering of other
+            templates if it doesn't render as True.
 
-    Returns
-    -------
-    Info object used to unregister the listener, and refresh the template.
+    Returns:
+        Info object used to unregister the listener, and refresh the template.
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)

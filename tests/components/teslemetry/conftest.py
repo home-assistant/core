@@ -25,7 +25,7 @@ from .const import (
 def mock_metadata():
     """Mock Tesla Fleet Api metadata method."""
     with patch(
-        "homeassistant.components.teslemetry.Teslemetry.metadata", return_value=METADATA
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=METADATA
     ) as mock_products:
         yield mock_products
 
@@ -34,7 +34,7 @@ def mock_metadata():
 def mock_products():
     """Mock Tesla Fleet Api products method."""
     with patch(
-        "homeassistant.components.teslemetry.Teslemetry.products", return_value=PRODUCTS
+        "tesla_fleet_api.teslemetry.Teslemetry.products", return_value=PRODUCTS
     ) as mock_products:
         yield mock_products
 
@@ -43,7 +43,7 @@ def mock_products():
 def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.vehicle_data",
+        "tesla_fleet_api.teslemetry.Vehicle.vehicle_data",
         return_value=VEHICLE_DATA,
     ) as mock_vehicle_data:
         yield mock_vehicle_data
@@ -53,7 +53,7 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
 def mock_legacy():
     """Mock Tesla Fleet Api products method."""
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.pre2021", return_value=True
+        "tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True
     ) as mock_pre2021:
         yield mock_pre2021
 
@@ -62,7 +62,7 @@ def mock_legacy():
 def mock_wake_up():
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.wake_up",
+        "tesla_fleet_api.teslemetry.Vehicle.wake_up",
         return_value=WAKE_UP_ONLINE,
     ) as mock_wake_up:
         yield mock_wake_up
@@ -72,7 +72,7 @@ def mock_wake_up():
 def mock_vehicle() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.vehicle",
+        "tesla_fleet_api.teslemetry.Vehicle.vehicle",
         return_value=WAKE_UP_ONLINE,
     ) as mock_vehicle:
         yield mock_vehicle
@@ -82,7 +82,7 @@ def mock_vehicle() -> Generator[AsyncMock]:
 def mock_request():
     """Mock Tesla Fleet API Vehicle Specific class."""
     with patch(
-        "homeassistant.components.teslemetry.Teslemetry._request",
+        "tesla_fleet_api.teslemetry.Teslemetry._request",
         return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
@@ -92,7 +92,7 @@ def mock_request():
 def mock_live_status():
     """Mock Teslemetry Energy Specific live_status method."""
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.live_status",
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
     ) as mock_live_status:
         yield mock_live_status
@@ -102,7 +102,7 @@ def mock_live_status():
 def mock_site_info():
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.site_info",
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
@@ -112,7 +112,7 @@ def mock_site_info():
 def mock_energy_history():
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
         return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status
@@ -122,7 +122,7 @@ def mock_energy_history():
 def mock_add_listener():
     """Mock Teslemetry Stream listen method."""
     with patch(
-        "homeassistant.components.teslemetry.TeslemetryStream.async_add_listener",
+        "teslemetry_stream.TeslemetryStream.async_add_listener",
     ) as mock_add_listener:
         mock_add_listener.listeners = []
 
@@ -165,7 +165,7 @@ def mock_stream_update_config():
 def mock_stream_connected():
     """Mock Teslemetry Stream listen method."""
     with patch(
-        "homeassistant.components.teslemetry.TeslemetryStream.connected",
+        "teslemetry_stream.TeslemetryStream.connected",
         return_value=True,
     ) as mock_stream_connected:
         yield mock_stream_connected

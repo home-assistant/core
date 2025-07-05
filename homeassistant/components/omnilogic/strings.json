@@ -34,7 +34,7 @@
       "fields": {
         "speed": {
           "name": "Speed",
-          "description": "Speed for the VSP between min and max speed."
+          "description": "Speed for the pump between min and max speed."
         }
       }
     }

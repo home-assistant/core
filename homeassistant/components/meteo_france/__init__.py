@@ -23,7 +23,6 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     PLATFORMS,
-    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert isinstance(department, str)
         return await hass.async_add_executor_job(
-            client.get_warning_current_phenomenoms, department, 0, True
+            client.get_warning_current_phenomenons, department, 0, True
         )
 
     coordinator_forecast = DataUpdateCoordinator(
@@ -130,10 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.title,
         )
 
-    undo_listener = entry.add_update_listener(_async_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
     }
     if coordinator_rain and coordinator_rain.last_update_success:
@@ -163,7 +161,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)

@@ -1,9 +1,16 @@
 """Tests helpers."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
+    DEFAULT_TTS_NAME,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -22,6 +29,31 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "api_key": "bla",
         },
+        version=2,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": {},
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "subentry_id": "ulid-conversation",
+                "unique_id": None,
+            },
+            {
+                "data": {},
+                "subentry_type": "tts",
+                "title": DEFAULT_TTS_NAME,
+                "subentry_id": "ulid-tts",
+                "unique_id": None,
+            },
+            {
+                "data": {},
+                "subentry_type": "ai_task_data",
+                "title": DEFAULT_AI_TASK_NAME,
+                "subentry_id": "ulid-ai-task",
+                "unique_id": None,
+            },
+        ],
     )
     entry.runtime_data = Mock()
     entry.add_to_hass(hass)
@@ -34,8 +66,28 @@ async def mock_config_entry_with_assist(
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
     with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            next(iter(mock_config_entry.subentries.values())),
+            data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+        )
+        await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+async def mock_config_entry_with_google_search(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            next(iter(mock_config_entry.subentries.values())),
+            data={
+                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
         )
         await hass.async_block_till_done()
     return mock_config_entry
@@ -57,3 +109,22 @@ async def mock_init_component(
 async def setup_ha(hass: HomeAssistant) -> None:
     """Set up Home Assistant."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture
+def mock_send_message_stream() -> Generator[AsyncMock]:
+    """Mock stream response."""
+
+    async def mock_generator(stream):
+        for value in stream:
+            yield value
+
+    with patch(
+        "google.genai.chats.AsyncChat.send_message_stream",
+        AsyncMock(),
+    ) as mock_send_message_stream:
+        mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
+            mock_send_message_stream.return_value.pop(0)
+        )
+
+        yield mock_send_message_stream

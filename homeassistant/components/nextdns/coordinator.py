@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import (
@@ -24,7 +24,6 @@ from tenacity import RetryError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -34,10 +33,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CoordinatorDataT = TypeVar("CoordinatorDataT", bound=NextDnsData)
 
-
-class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
+class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
+    DataUpdateCoordinator[CoordinatorDataT]
+):
     """Class to manage fetching NextDNS data API."""
 
     config_entry: NextDnsConfigEntry
@@ -53,14 +52,6 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
         """Initialize."""
         self.nextdns = nextdns
         self.profile_id = profile_id
-        self.profile_name = nextdns.get_profile_name(profile_id)
-        self.device_info = DeviceInfo(
-            configuration_url=f"https://my.nextdns.io/{profile_id}/setup",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(profile_id))},
-            manufacturer="NextDNS Inc.",
-            name=self.profile_name,
-        )
 
         super().__init__(
             hass,
@@ -79,9 +70,20 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
             ClientConnectorError,
             RetryError,
         ) as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
         except InvalidApiKeyError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"entry": self.config_entry.title},
+            ) from err
 
     async def _async_update_data_internal(self) -> CoordinatorDataT:
         """Update data via library."""

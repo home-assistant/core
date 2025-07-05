@@ -14,8 +14,8 @@
         "eco": "Eco",
         "electric": "Electric",
         "gas": "Gas",
-        "high_demand": "High Demand",
-        "heat_pump": "Heat Pump",
+        "high_demand": "High demand",
+        "heat_pump": "Heat pump",
         "performance": "Performance"
       },
       "state_attributes": {

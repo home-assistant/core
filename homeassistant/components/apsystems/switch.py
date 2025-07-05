@@ -36,6 +36,8 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
         super().__init__(data)
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_inverter_status"
+        if data.coordinator.battery_system:
+            self._attr_available = False
 
     async def async_update(self) -> None:
         """Update switch status and availability."""

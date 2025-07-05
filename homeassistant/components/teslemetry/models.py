@@ -6,8 +6,8 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,15 +28,17 @@ class TeslemetryData:
     vehicles: list[TeslemetryVehicleData]
     energysites: list[TeslemetryEnergyData]
     scopes: list[Scope]
+    stream: TeslemetryStream
 
 
 @dataclass
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: VehicleSpecific
+    api: Vehicle
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
+    poll: bool
     stream: TeslemetryStream
     stream_vehicle: TeslemetryStreamVehicle
     vin: str
@@ -50,7 +52,7 @@ class TeslemetryVehicleData:
 class TeslemetryEnergyData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: EnergySpecific
+    api: EnergySite
     live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None

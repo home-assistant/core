@@ -11,6 +11,7 @@ from urllib.parse import quote
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
+from aiohttp.helpers import must_be_empty_body
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 from yarl import URL
@@ -45,6 +46,8 @@ RESPONSE_HEADERS_FILTER = {
 
 MIN_COMPRESSED_SIZE = 128
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
+
+DISABLED_TIMEOUT = ClientTimeout(total=None)
 
 
 @callback
@@ -107,6 +110,7 @@ class HassIOIngress(HomeAssistantView):
     delete = _handle
     patch = _handle
     options = _handle
+    head = _handle
 
     async def _handle_websocket(
         self, request: web.Request, token: str, path: str
@@ -167,7 +171,7 @@ class HassIOIngress(HomeAssistantView):
             params=request.query,
             allow_redirects=False,
             data=request.content if request.method != "GET" else None,
-            timeout=ClientTimeout(total=None),
+            timeout=DISABLED_TIMEOUT,
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
@@ -181,13 +185,16 @@ class HassIOIngress(HomeAssistantView):
                 content_type = "application/octet-stream"
 
             # Simple request
-            if result.status in (204, 304) or (
+            if (empty_body := must_be_empty_body(result.method, result.status)) or (
                 content_length is not UNDEFINED
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):
                 # Return Response
-                body = await result.read()
+                if empty_body:
+                    body = None
+                else:
+                    body = await result.read()
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,

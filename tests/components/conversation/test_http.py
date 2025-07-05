@@ -536,3 +536,60 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     # Trigger should not have been executed
     assert len(calls) == 0
+
+
+async def test_ws_hass_language_scores(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Sanity check
+    result = msg["result"]
+    assert result["languages"]["en-US"] == {
+        "cloud": 3,
+        "focused_local": 2,
+        "full_local": 3,
+    }
+
+
+async def test_ws_hass_language_scores_with_filter(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores with language/country filter."""
+    client = await hass_ws_client(hass)
+
+    # Language filter
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores", "language": "de"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # German should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "de-DE"
+
+    # Language/country filter
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/language_scores",
+            "language": "en",
+            "country": "GB",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # GB English should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "en-GB"

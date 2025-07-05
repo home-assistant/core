@@ -12,7 +12,6 @@ from typing import cast
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -26,7 +25,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -71,9 +70,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_ICP_CURRENT_KEY,
         translation_key="maximum_icp_current",
-        max_value_fn=lambda coordinator: cast(
-            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
-        ),
+        max_value_fn=lambda _: 255,
         min_value_fn=lambda _: 6,
         set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
         native_step=1,
@@ -88,16 +85,6 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox number entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user has sufficient rights to change values, if so, add number component:
-    try:
-        await coordinator.async_set_charging_current(
-            coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
-        )
-    except InvalidAuth:
-        return
-    except ConnectionError as exc:
-        raise PlatformNotReady from exc
-
     async_add_entities(
         WallboxNumber(coordinator, entry, description)
         for ent in coordinator.data

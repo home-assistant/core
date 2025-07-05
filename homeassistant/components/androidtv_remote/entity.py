@@ -6,7 +6,6 @@ from typing import Any
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -14,6 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_APPS, DOMAIN
+from .helpers import AndroidTVRemoteConfigEntry
 
 
 class AndroidTVRemoteBaseEntity(Entity):
@@ -23,7 +23,9 @@ class AndroidTVRemoteBaseEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, api: AndroidTVRemote, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, api: AndroidTVRemote, config_entry: AndroidTVRemoteConfigEntry
+    ) -> None:
         """Initialize the entity."""
         self._api = api
         self._host = config_entry.data[CONF_HOST]
@@ -73,7 +75,7 @@ class AndroidTVRemoteBaseEntity(Entity):
             self._api.send_key_command(key_code, direction)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
-                "Connection to Android TV device is closed"
+                translation_domain=DOMAIN, translation_key="connection_closed"
             ) from exc
 
     def _send_launch_app_command(self, app_link: str) -> None:
@@ -85,5 +87,5 @@ class AndroidTVRemoteBaseEntity(Entity):
             self._api.send_launch_app_command(app_link)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
-                "Connection to Android TV device is closed"
+                translation_domain=DOMAIN, translation_key="connection_closed"
             ) from exc

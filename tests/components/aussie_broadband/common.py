@@ -3,10 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.aussie_broadband.const import (
-    CONF_SERVICES,
-    DOMAIN as AUSSIE_BROADBAND_DOMAIN,
-)
+from homeassistant.components.aussie_broadband.const import CONF_SERVICES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -49,7 +46,7 @@ async def setup_platform(
 ):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(
-        domain=AUSSIE_BROADBAND_DOMAIN,
+        domain=DOMAIN,
         data=FAKE_DATA,
         options={
             CONF_SERVICES: ["12345678", "87654321", "23456789", "98765432"],

@@ -104,9 +104,9 @@ class KNXConfigEntryData(TypedDict, total=False):
     multicast_group: str
     multicast_port: int
     route_back: bool  # not required
-    host: str  # only required for tunnelling
-    port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
+    host: str  # only required for tunneling
+    port: int  # only required for tunneling
+    tunnel_endpoint_ia: str | None  # tunneling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required
@@ -160,6 +160,7 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
 }
@@ -182,3 +183,13 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
 }
+
+
+class CoverConf:
+    """Common config keys for cover."""
+
+    TRAVELLING_TIME_DOWN: Final = "travelling_time_down"
+    TRAVELLING_TIME_UP: Final = "travelling_time_up"
+    INVERT_UPDOWN: Final = "invert_updown"
+    INVERT_POSITION: Final = "invert_position"
+    INVERT_ANGLE: Final = "invert_angle"

@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
@@ -30,8 +30,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
-    CONF_RECEIVER_MAX_VOLUME,
-    CONF_SOURCES,
     DOMAIN,
     OPTION_INPUT_SOURCES,
     OPTION_LISTENING_MODES,
@@ -328,61 +326,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the receiver."""
         return await self.async_step_manual()
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        _LOGGER.debug("Import flow user input: %s", user_input)
-
-        host: str = user_input[CONF_HOST]
-        name: str | None = user_input.get(CONF_NAME)
-        user_max_volume: int = user_input[OPTION_MAX_VOLUME]
-        user_volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
-        user_sources: dict[InputSource, str] = user_input[CONF_SOURCES]
-
-        info: ReceiverInfo | None = user_input.get("info")
-        if info is None:
-            try:
-                info = await async_interview(host)
-            except Exception:
-                _LOGGER.exception("Import flow interview error for host %s", host)
-                return self.async_abort(reason="cannot_connect")
-
-        if info is None:
-            _LOGGER.error("Import flow interview error for host %s", host)
-            return self.async_abort(reason="cannot_connect")
-
-        unique_id = info.identifier
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        name = name or info.model_name
-
-        volume_resolution = VOLUME_RESOLUTION_ALLOWED[-1]
-        for volume_resolution_allowed in VOLUME_RESOLUTION_ALLOWED:
-            if user_volume_resolution <= volume_resolution_allowed:
-                volume_resolution = volume_resolution_allowed
-                break
-
-        max_volume = min(
-            100, user_max_volume * user_volume_resolution / volume_resolution
-        )
-
-        sources_store: dict[str, str] = {}
-        for source, source_name in user_sources.items():
-            sources_store[source.value] = source_name
-
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_HOST: host,
-            },
-            options={
-                OPTION_VOLUME_RESOLUTION: volume_resolution,
-                OPTION_MAX_VOLUME: max_volume,
-                OPTION_INPUT_SOURCES: sources_store,
-                OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
-            },
-        )
 
     @staticmethod
     @callback

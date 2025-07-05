@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 from tests.typing import ClientSessionGenerator
 
 
@@ -81,7 +81,7 @@ async def test_image_platform(
         )
 
         habitica.get_user.return_value = HabiticaUserResponse.from_json(
-            load_fixture("rogue_fixture.json", DOMAIN)
+            await async_load_fixture(hass, "rogue_fixture.json", DOMAIN)
         )
 
         freezer.tick(timedelta(seconds=60))
