@@ -9,7 +9,7 @@ DOMAIN: Final = "amberelectric"
 CONF_SITE_NAME = "site_name"
 CONF_SITE_ID = "site_id"
 
-ATTR_SITE_ID = CONF_SITE_ID
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_CHANNEL_TYPE = "channel_type"
 
 ATTRIBUTION = "Data provided by Amber Electric"

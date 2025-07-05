@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.amberelectric.const import DOMAIN, GET_FORECASTS_SERVICE
 from homeassistant.components.amberelectric.services import (
     ATTR_CHANNEL_TYPE,
-    ATTR_SITE_ID,
+    ATTR_CONFIG_ENTRY_ID,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -33,7 +33,7 @@ async def test_get_general_forecasts(
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
-        {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "general"},
+        {ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "general"},
         blocking=True,
         return_response=True,
     )
@@ -63,7 +63,7 @@ async def test_get_controlled_load_forecasts(
         DOMAIN,
         GET_FORECASTS_SERVICE,
         {
-            ATTR_SITE_ID: GENERAL_AND_CONTROLLED_SITE_ID,
+            ATTR_CONFIG_ENTRY_ID: GENERAL_AND_CONTROLLED_SITE_ID,
             ATTR_CHANNEL_TYPE: "controlled_load",
         },
         blocking=True,
@@ -94,7 +94,10 @@ async def test_get_feed_in_forecasts(
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
-        {ATTR_SITE_ID: GENERAL_AND_FEED_IN_SITE_ID, ATTR_CHANNEL_TYPE: "feed_in"},
+        {
+            ATTR_CONFIG_ENTRY_ID: GENERAL_AND_FEED_IN_SITE_ID,
+            ATTR_CHANNEL_TYPE: "feed_in",
+        },
         blocking=True,
         return_response=True,
     )
@@ -130,7 +133,10 @@ async def test_incorrect_channel_type(
         await hass.services.async_call(
             DOMAIN,
             GET_FORECASTS_SERVICE,
-            {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "incorrect"},
+            {
+                ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
+                ATTR_CHANNEL_TYPE: "incorrect",
+            },
             blocking=True,
             return_response=True,
         )
@@ -150,7 +156,10 @@ async def test_unavailable_channel_type(
         await hass.services.async_call(
             DOMAIN,
             GET_FORECASTS_SERVICE,
-            {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "controlled_load"},
+            {
+                ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
+                ATTR_CHANNEL_TYPE: "controlled_load",
+            },
             blocking=True,
             return_response=True,
         )
@@ -172,7 +181,10 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             GET_FORECASTS_SERVICE,
-            {ATTR_SITE_ID: mock_config_entry2.entry_id, ATTR_CHANNEL_TYPE: "general"},
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id,
+                ATTR_CHANNEL_TYPE: "general",
+            },
             blocking=True,
             return_response=True,
         )
@@ -184,7 +196,7 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             GET_FORECASTS_SERVICE,
-            {ATTR_SITE_ID: "bad-config_id", ATTR_CHANNEL_TYPE: "general"},
+            {ATTR_CONFIG_ENTRY_ID: "bad-config_id", ATTR_CHANNEL_TYPE: "general"},
             blocking=True,
             return_response=True,
         )

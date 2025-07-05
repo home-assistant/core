@@ -15,21 +15,26 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_CHANNEL_TYPE, ATTR_SITE_ID, DOMAIN, GET_FORECASTS_SERVICE
+from .const import (
+    ATTR_CHANNEL_TYPE,
+    ATTR_CONFIG_ENTRY_ID,
+    DOMAIN,
+    GET_FORECASTS_SERVICE,
+)
 from .coordinator import AmberConfigEntry
 from .helpers import format_cents_to_dollars, normalize_descriptor
 
 GET_FORECASTS_SCHEMA = vol.Schema(
     {
-        "site_id": vol.Any(str),
+        "config_entry_id": vol.Any(str),
         "channel_type": vol.In(["general", "controlled_load", "feed_in"]),
     }
 )
 
 
-def async_get_entry(hass: HomeAssistant, site_id: str) -> AmberConfigEntry:
+def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> AmberConfigEntry:
     """Get the Amber config entry."""
-    if not (entry := hass.config_entries.async_get_entry(site_id)):
+    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="integration_not_found",
@@ -98,7 +103,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:
         channel_type = call.data[ATTR_CHANNEL_TYPE]
-        entry = async_get_entry(hass, call.data[ATTR_SITE_ID])
+        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         coordinator = entry.runtime_data
         forecasts = get_forecasts(channel_type, coordinator.data)
         return {"forecasts": forecasts}

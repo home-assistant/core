@@ -27,9 +27,9 @@
       "name": "Get price forecasts",
       "description": "Retrieves price forecasts from Amber Electric for your property.",
       "fields": {
-        "site_id": {
-          "name": "Site",
-          "description": "The site to get forecasts from."
+        "config_entry_id": {
+          "name": "Entity",
+          "description": "Which entity should we fetch forecasts from?"
         },
         "channel_type": {
           "name": "Channel type",

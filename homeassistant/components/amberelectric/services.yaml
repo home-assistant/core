@@ -1,6 +1,6 @@
 get_forecasts:
   fields:
-    site_id:
+    config_entry_id:
       required: true
       selector:
         config_entry:
