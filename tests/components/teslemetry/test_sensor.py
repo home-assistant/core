@@ -1,5 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
@@ -127,3 +129,27 @@ async def test_energy_history_no_time_series(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tariff_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,  # Keep this if other parts of setup_platform need it
+    mock_site_info,  # Add fixture for energy site info
+    mock_live_status,  # Add fixture for energy site status
+) -> None:
+    """Tests that the tariff sensor entities are correct."""
+
+    TZ = dt_util.get_default_time_zone()
+    # Set time to a point where a known tariff period is active based on site_info.json
+    # Example: Summer, Off Peak (10:00 falls between 21:00 and 16:00 next day, crossing midnight)
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
+
+    # Ensure Platform.SENSOR is used for setup
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    # Assert specific tariff sensor entities
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
