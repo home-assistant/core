@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 def _assert_create_entry_result(
@@ -145,6 +145,14 @@ async def test_form_exceptions(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+    # On error, the form should have the previous user input
+    data_schema = result["data_schema"].schema
+    assert get_schema_suggested_value(data_schema, CONF_NAME) == "test-name"
+    assert get_schema_suggested_value(data_schema, CONF_API_KEY) == "test-api-key"
+    assert get_schema_suggested_value(data_schema, CONF_LOCATION) == {
+        CONF_LATITUDE: 10.1,
+        CONF_LONGITUDE: 20.1,
+    }
 
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
