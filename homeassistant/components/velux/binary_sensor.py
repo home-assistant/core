@@ -68,7 +68,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         """Get the updated status of the cover (limitations only)."""
         try:
             limitation = await self.node.get_limitation()
-            self.rain_detected = limitation.max_value == 93
+            self.rain_detected = limitation.min_value == 93
             LOGGER.info(
                 f"Rain sensor updated, limitation max/min_value={limitation.max_value}/{limitation.min_value} raw max/min_value={limitation.max_value_raw}/{limitation.min_value_raw}"
             )
