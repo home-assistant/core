@@ -301,7 +301,12 @@ async def _transform_stream(
 class GoogleGenerativeAILLMBaseEntity(Entity):
     """Google Generative AI base entity."""
 
-    def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        default_model: str = RECOMMENDED_CHAT_MODEL,
+    ) -> None:
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
@@ -312,7 +317,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Google",
-            model="Generative AI",
+            model=subentry.data.get(CONF_CHAT_MODEL, default_model).split("/")[-1],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 

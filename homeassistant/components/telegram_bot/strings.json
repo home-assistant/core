@@ -2,17 +2,25 @@
   "config": {
     "step": {
       "user": {
-        "title": "Telegram bot setup",
-        "description": "Create a new Telegram bot",
+        "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "data": {
           "platform": "Platform",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "proxy_url": "Proxy URL"
+          "api_key": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "platform": "Telegram bot implementation",
-          "api_key": "The API token of your bot.",
-          "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+          "api_key": "The API token of your bot."
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "proxy_url": "Proxy URL"
+            },
+            "data_description": {
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+            }
+          }
         }
       },
       "webhooks": {
@@ -30,12 +38,21 @@
         "title": "Telegram bot setup",
         "description": "Reconfigure Telegram bot",
         "data": {
-          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]",
-          "proxy_url": "[%key:component::telegram_bot::config::step::user::data::proxy_url%]"
+          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]"
         },
         "data_description": {
-          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]",
-          "proxy_url": "[%key:component::telegram_bot::config::step::user::data_description::proxy_url%]"
+          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]",
+            "data": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+            },
+            "data_description": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+            }
+          }
         }
       },
       "reauth_confirm": {
@@ -894,6 +911,12 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "invalid_chat_ids": {
+      "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
+    },
+    "failed_chat_ids": {
+      "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
     },
     "missing_input": {
       "message": "{field} is required."

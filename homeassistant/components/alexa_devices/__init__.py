@@ -29,5 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.api.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await coordinator.api.close()
+
+    return unload_ok

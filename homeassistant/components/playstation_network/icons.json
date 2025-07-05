@@ -26,6 +26,17 @@
       },
       "online_id": {
         "default": "mdi:account"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
+      },
+      "online_status": {
+        "default": "mdi:account-badge",
+        "state": {
+          "busy": "mdi:account-cancel",
+          "availabletocommunicate": "mdi:cellphone",
+          "offline": "mdi:account-off-outline"
+        }
       }
     }
   }
