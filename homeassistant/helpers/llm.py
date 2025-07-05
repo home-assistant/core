@@ -331,7 +331,7 @@ class NamespacedTool(Tool):
     def __init__(self, namespace: str, tool: Tool) -> None:
         """Init the class."""
         self.namespace = namespace
-        self.name = f"{namespace}.{tool.name}"
+        self.name = f"{namespace}__{tool.name}"
         self.description = tool.description
         self.parameters = tool.parameters
         self.tool = tool
@@ -915,7 +915,7 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}__{action}"
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.
