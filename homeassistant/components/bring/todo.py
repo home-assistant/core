@@ -13,7 +13,6 @@ from bring_api import (
     BringNotificationType,
     BringRequestException,
 )
-import voluptuous as vol
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -23,15 +22,9 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    DOMAIN,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from .const import DOMAIN
 from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
@@ -62,19 +55,6 @@ async def async_setup_entry(
 
     coordinator.async_add_listener(add_entities)
     add_entities()
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_PUSH_NOTIFICATION,
-        {
-            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                vol.Upper, vol.Coerce(BringNotificationType)
-            ),
-            vol.Optional(ATTR_ITEM_NAME): cv.string,
-        },
-        "async_send_message",
-    )
 
 
 class BringTodoListEntity(BringBaseEntity, TodoListEntity):
