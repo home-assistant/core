@@ -1132,7 +1132,6 @@ DISCOVERY_SCHEMAS = [
             translation_key="evse_soc",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
