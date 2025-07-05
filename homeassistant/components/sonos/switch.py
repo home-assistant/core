@@ -45,7 +45,6 @@ ATTR_LOUDNESS = "loudness"
 ATTR_MUSIC_PLAYBACK_FULL_VOLUME = "surround_mode"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_level"
-
 ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
