@@ -5,6 +5,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "victronenergy": {
+      "name": "Victron Energy",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "abode": {
       "name": "Abode",
       "integration_type": "hub",
