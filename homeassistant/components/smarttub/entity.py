@@ -70,14 +70,19 @@ class SmartTubOnboardSensorBase(SmartTubEntity):
 class SmartTubExternalSensorBase(SmartTubEntity):
     """Class for additional BLE wireless sensors sold separately."""
 
-    def __init__(self, coordinator, spa, sensor: smarttub.SpaSensor) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        sensor: SpaSensor,
+    ) -> None:
         """Initialize the external sensor entity."""
         self.sensor_address = sensor.address
         self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
         super().__init__(coordinator, spa, self._human_readable_name(sensor))
 
     @staticmethod
-    def _human_readable_name(sensor):
+    def _human_readable_name(sensor: SpaSensor) -> str:
         return " ".join(
             word.capitalize() for word in sensor.name.strip("{}").split("-")
         )

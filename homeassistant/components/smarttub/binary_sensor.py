@@ -76,7 +76,6 @@ async def async_setup_entry(
                     SmartTubCoverSensor(controller.coordinator, spa, sensor)
                 )
 
-
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
