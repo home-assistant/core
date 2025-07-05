@@ -5,6 +5,18 @@ download_file:
       example: "http://example.org/myfile"
       selector:
         text:
+    auth_type:
+      selector:
+        select:
+          options:
+            - basic
+            - digest
+    auth_username:
+      selector:
+        text:
+    auth_password:
+      selector:
+        text:
     subdir:
       example: "download_dir"
       selector:
