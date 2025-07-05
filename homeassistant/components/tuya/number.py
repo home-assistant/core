@@ -303,6 +303,31 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Alarm Host
+    # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
+    "mal": (
+        NumberEntityDescription(
+            key=DPCode.DELAY_SET,
+            translation_key="delay_set",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_DELAY_TIME,
+            translation_key="alarm_delay_time",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            translation_key="alarm_duration",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
