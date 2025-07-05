@@ -220,7 +220,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Online-ID',
+    'original_name': 'Online ID',
     'platform': 'playstation_network',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -234,7 +234,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
-      'friendly_name': 'testuser Online-ID',
+      'friendly_name': 'testuser Online ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_online_id',
