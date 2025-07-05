@@ -78,9 +78,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:
-            user_input = {}
-            user_input[CONF_HOST] = ""
-            user_input[CONF_PORT] = DEFAULT_PORT
+            user_input = {CONF_HOST: "", CONF_PORT: DEFAULT_PORT}
 
         return self.async_show_form(
             step_id="user",
