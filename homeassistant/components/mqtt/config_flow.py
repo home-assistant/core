@@ -2771,11 +2771,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             reconfig=True,
         )
         if user_input is not None:
-            new_device_data, errors = validate_user_input(
-                user_input, MQTT_DEVICE_PLATFORM_FIELDS
-            )
-            if "mqtt_settings" in user_input:
-                new_device_data["mqtt_settings"] = user_input["mqtt_settings"]
+            new_device_data: dict[str, Any] = user_input.copy()
+            _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
+            if "advanced_settings" in new_device_data:
+                new_device_data |= new_device_data.pop("advanced_settings")
             if not errors:
                 self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:
