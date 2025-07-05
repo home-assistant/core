@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import time
 
 from aioccl import CCLSensor
@@ -12,8 +11,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CCLCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CCLEntity(CoordinatorEntity[CCLCoordinator]):
@@ -30,7 +27,6 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
         super().__init__(coordinator)
         self._internal = internal
         self._device = coordinator.device
-        self._unavailable_logged: bool = False
 
         if internal.compartment is not None:
             self.device_id = (
@@ -51,6 +47,7 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
             manufacturer="CCL Electronics",
             sw_version=self._device.fw_ver,
         )
+        self._attr_should_poll = True
 
     @property
     def available(self) -> bool:

@@ -9,7 +9,7 @@ from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN
@@ -18,35 +18,32 @@ from .const import DOMAIN
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    _webhook_id: str
-    _host: str
-    _port: str
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        if user_input is None:
-            self._webhook_id = secrets.token_hex(4)
-            return self.async_show_form(step_id="user")
+        webhook_id = secrets.token_hex(4)
 
         url = URL(get_url(self.hass))
         assert url.host
 
-        self._host = url.host
-        self._port = str(url.port)
+        host = url.host
+        port = str(url.port)
 
-        return self.async_create_entry(
-            title="CCL Weather Station",
-            data={
-                CONF_WEBHOOK_ID: self._webhook_id,
-                CONF_HOST: self._host,
-                CONF_PORT: self._port,
-            },
-            description_placeholders={
-                "host": self._host,
-                "port": self._port,
-                "path": webhook.async_generate_path(self._webhook_id),
-            },
-        )
+        if user_input is not None:
+            return self.async_create_entry(
+                title="CCL Weather Station",
+                data={
+                    CONF_WEBHOOK_ID: webhook_id,
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                },
+                description_placeholders={
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_PATH: webhook.async_generate_path(webhook_id),
+                },
+            )
+
+        return self.async_show_form(step_id="user")

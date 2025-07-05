@@ -58,29 +58,26 @@ def mock_ccl() -> Generator[MagicMock]:
             "serial_no": "12345",
         }
 
-        ccl._data = {"binary_sensors": {}, "sensors": {}}
-
-        ccl.get_data.return_value = ccl._data
-
-        # Store callbacks
+        ccl._sensors = {}
         ccl._update_callback = None
-        ccl._new_sensor_callbacks = set()
+
+        ccl._new_sensors = {}
+        ccl._new_sensor_callbacks = None
+
+        def get_sensors():
+            return ccl._sensors
+
+        ccl.set_get_sensors.side_effect = get_sensors
 
         def set_update_callback(callback):
             ccl._update_callback = callback
 
         ccl.set_update_callback.side_effect = set_update_callback
 
-        def register_new_sensor_cb(callback):
-            ccl._new_sensor_callbacks.add(callback)
+        def set_new_sensor_callback(callback):
+            ccl._new_sensor_callback = callback
 
-        ccl.register_new_sensor_cb.side_effect = register_new_sensor_cb
-
-        def remove_new_sensor_cb(callback):
-            if callback in ccl._new_sensor_callbacks:
-                ccl._new_sensor_callbacks.remove(callback)
-
-        ccl.remove_new_sensor_cb.side_effect = remove_new_sensor_cb
+        ccl.set_new_sensor_callback.side_effect = set_new_sensor_callback
 
         def update_info(info):
             for key, value in info.items():
@@ -90,23 +87,22 @@ def mock_ccl() -> Generator[MagicMock]:
         ccl.update_info.side_effect = update_info
 
         def process_data(data):
+            assert ccl._new_sensor_callback is not None
+            assert ccl._update_callback is not None
+
             new_sensors = []
 
             for key, value in data.items():
-                if key not in ccl._data["sensors"]:
-                    sensor = CCLSensor(key)
-                    sensor.value = value
-                    ccl._data["sensors"][key] = sensor
-                    new_sensors.append(sensor)
-                else:
-                    ccl._data["sensors"][key].value = value
+                if key not in ccl._sensors:
+                    ccl._sensors[key] = CCLSensor(key)
+                    new_sensors.append(ccl._sensors[key])
+                ccl._sensors[key].value = value
 
             for sensor in new_sensors:
-                for callback in ccl._new_sensor_callbacks:
-                    callback(sensor)
+                ccl._new_sensor_callback(sensor)
+                ccl._new_sensors.remove(sensor)
 
-            if ccl._update_callback is not None:
-                ccl._update_callback(ccl._data)
+            ccl._update_callback(ccl._data)
 
         ccl.process_data.side_effect = process_data
 

@@ -42,9 +42,13 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
         self.device = device
 
     async def _async_update_data(self) -> dict[str, CCLSensor]:
-        _LOGGER.debug("Polling at %s", time.monotonic())
+        _LOGGER.debug(
+            "Checking for device(%s) availability at %s",
+            self.device.device_id,
+            time.monotonic(),
+        )
         if self.device.last_update_time is None:
             raise UpdateFailed("Device is offline or not ready")
         if time.monotonic() - self.device.last_update_time >= 600:
             raise UpdateFailed("Device is offline or not ready")
-        return self.device.get_sensors  # raise CCLDataUpdateException when failed
+        return self.device.get_sensors()  # raise CCLDataUpdateException when failed
