@@ -9,7 +9,7 @@
           "location": "[%key:common::config_flow::data::location%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "api_key": "App password or API Key"
+          "api_key": "App password or API key"
         }
       },
 
