@@ -80,7 +80,10 @@ async def test_generate_content_service_with_image(
         ) as mock_generate,
         patch(
             "google.genai.files.Files.upload",
-            return_value=b"some file",
+            side_effect=[
+                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
+                File(name="context.txt", state=FileState.ACTIVE),
+            ],
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
@@ -92,7 +95,7 @@ async def test_generate_content_service_with_image(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
+                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
             },
             blocking=True,
             return_response=True,
@@ -146,7 +149,7 @@ async def test_generate_content_file_processing_succeeds(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
+                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
             },
             blocking=True,
             return_response=True,
@@ -208,7 +211,7 @@ async def test_generate_content_file_processing_fails(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
+                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
             },
             blocking=True,
             return_response=True,

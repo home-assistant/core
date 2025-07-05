@@ -19,6 +19,10 @@
         "structure": {
           "name": "Structured output",
           "description": "When set, the AI Task will output fields with this in structure. The structure is a dictionary where the keys are the field names and the values contain a 'description', a 'selector', and an optional 'required' field."
+        },
+        "attachments": {
+          "name": "Attachments",
+          "description": "List of files to attach for multi-modal AI analysis."
         }
       }
     }
