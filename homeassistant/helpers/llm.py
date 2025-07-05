@@ -331,7 +331,7 @@ class NamespacedTool(Tool):
     def __init__(self, namespace: str, tool: Tool) -> None:
         """Init the class."""
         self.namespace = namespace
-        self.name = f"{namespace}.{tool.name}"
+        self.name = f"{namespace}__{tool.name}"
         self.description = tool.description
         self.parameters = tool.parameters
         self.tool = tool
@@ -777,7 +777,23 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object", "additionalProperties": True}
+        result = {"type": "object"}
+        if fields := schema.config.get("fields"):
+            result["properties"] = {
+                field: convert(
+                    selector.selector(field_schema["selector"]),
+                    custom_serializer=_selector_serializer,
+                )
+                for field, field_schema in fields.items()
+            }
+        else:
+            result["additionalProperties"] = True
+        if schema.config.get("multiple"):
+            result = {
+                "type": "array",
+                "items": result,
+            }
+        return result
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -899,7 +915,7 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}__{action}"
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.

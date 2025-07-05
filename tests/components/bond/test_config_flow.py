@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -319,7 +318,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ45842",
-                macaddress=format_mac("3c6a2c1c8c80"),
+                macaddress="3c6a2c1c8c80",
             ),
         )
         assert result["type"] is FlowResultType.FORM
@@ -365,7 +364,7 @@ async def test_dhcp_discovery_already_exists(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ45842".lower(),
-                macaddress=format_mac("3c6a2c1c8c80"),
+                macaddress="3c6a2c1c8c80",
             ),
         )
         assert result["type"] is FlowResultType.ABORT
@@ -382,7 +381,7 @@ async def test_dhcp_discovery_short_name(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
                 hostname="Bond-KVPRBDJ",
-                macaddress=format_mac("3c6a2c1c8c80"),
+                macaddress="3c6a2c1c8c80",
             ),
         )
         assert result["type"] is FlowResultType.FORM

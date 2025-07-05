@@ -771,6 +771,16 @@ ZEROCONF = {
             "domain": "onewire",
         },
     ],
+    "_philipstv_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
+    "_philipstv_s_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
