@@ -55,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload NS integration when options are updated."""
     ns_entry = entry
-    _LOGGER.debug("Reloading config entry: %s due to options update", ns_entry.entry_id)
     await hass.config_entries.async_reload(ns_entry.entry_id)
 
 
