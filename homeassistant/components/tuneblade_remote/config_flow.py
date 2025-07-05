@@ -6,18 +6,19 @@ import logging
 from typing import Any
 
 from aiohttp import ClientSession
+from tuneblade import TuneBladeApiClient
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .tuneblade import TuneBladeApiClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for TuneBlade Remote."""
 
     VERSION = 1
@@ -28,7 +29,7 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manual user setup step."""
         if user_input is not None:
             name = user_input.get("name", "TuneBlade").split("@")[0].strip()
@@ -58,7 +59,9 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
-    async def async_step_zeroconf(self, discovery_info: Any) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Discovered TuneBlade via Zeroconf: %s", discovery_info)
 
@@ -93,7 +96,7 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm addition after discovery."""
         if user_input is not None:
             return self.async_create_entry(

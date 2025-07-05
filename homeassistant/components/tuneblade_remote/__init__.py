@@ -3,6 +3,8 @@
 from datetime import timedelta
 import logging
 
+from tuneblade import TuneBladeApiClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -11,7 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 from .coordinator import TuneBladeDataUpdateCoordinator
-from .tuneblade import TuneBladeApiClient
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)

@@ -3,13 +3,9 @@
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MediaPlayerEntityFeature,
-    MediaPlayerState,
-)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MediaPlayerEntityFeature, MediaPlayerState
 
 _LOGGER = logging.getLogger(__name__)
 
