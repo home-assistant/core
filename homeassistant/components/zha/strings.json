@@ -1118,7 +1118,7 @@
         "name": "Comfort temperature"
       },
       "valve_state_auto_shutdown": {
-        "name": "Valve state autoshutdown"
+        "name": "Valve state auto-shutdown"
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
