@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, snapshot_platform
     "mock_device_code",
     ["cs_arete_two_12l_dehumidifier_air_purifier", "mcs_door_sensor"],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
