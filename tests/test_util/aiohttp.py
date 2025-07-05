@@ -263,7 +263,7 @@ class AiohttpClientMockResponse:
     @property
     def charset(self):
         """Return charset from Content-Type header."""
-        content_type = self._headers.get("content-type", "")
+        content_type = self._headers.get("content-type", "").lower()
         if "charset=" in content_type:
             return content_type.split("charset=")[1].split(";")[0].strip()
         return None
