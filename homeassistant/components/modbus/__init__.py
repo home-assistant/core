@@ -75,9 +75,11 @@ from .const import (
     CONF_FAN_MODE_MIDDLE,
     CONF_FAN_MODE_OFF,
     CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_READ_VALUES,
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
+    CONF_FAN_MODE_WRITE_VALUES,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -301,18 +303,48 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
-                        CONF_FAN_MODE_VALUES: {
-                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
-                        },
+                        vol.Required(CONF_FAN_MODE_VALUES): vol.All(
+                            {
+                                vol.Optional(CONF_FAN_MODE_READ_VALUES): {
+                                    vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                                    vol.Optional(
+                                        CONF_FAN_MODE_DIFFUSE
+                                    ): cv.positive_int,
+                                },
+                                vol.Optional(CONF_FAN_MODE_WRITE_VALUES): {
+                                    vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                                    vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                                    vol.Optional(
+                                        CONF_FAN_MODE_DIFFUSE
+                                    ): cv.positive_int,
+                                },
+                                vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                                vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                            }
+                        ),
                     },
                     duplicate_fan_mode_validator,
                 ),
