@@ -304,6 +304,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription( #Not supported yet until RAW is a valid input
+            key=DPCode.MEAL_PLAN,
+            translation_key="meal_plan",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        *BATTERY_SENSORS,
     ),
     # Pet Fountain
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r0as4ln
