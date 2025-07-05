@@ -156,25 +156,34 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         return attr
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed of the device."""
-        # has a regression bug that needs fixing when manual is already used. 
+        """Set the speed of the device.
+
+        If percentage is 0, turn off the fan. Otherwise, ensure the fan is on,
+        set manual mode if needed, and set the speed.
+        """
         if percentage == 0:
-            success = await self.device.turn_off()
-            if not success:
+            # Turning off is a special case: do not set speed or mode
+            if not await self.device.turn_off():
                 raise HomeAssistantError("An error occurred while turning off.")
-        elif not self.device.is_on:
-            success = await self.device.turn_on()
-            if not success:
+            self.schedule_update_ha_state()
+            return
+
+        # If the fan is off, turn it on first
+        if not self.device.is_on:
+            if not await self.device.turn_on():
                 raise HomeAssistantError("An error occurred while turning on.")
 
-        success = await self.device.set_manual_mode()
-        if not success:
-            raise HomeAssistantError("An error occurred while manual mode.")
-        success = await self.device.change_fan_speed(
+        # Switch to manual mode if not already set
+        if self.device.state.mode != VS_FAN_MODE_MANUAL:
+            if not await self.device.manual_mode():
+                raise HomeAssistantError("An error occurred while setting manual mode.")
+
+        # Calculate the speed level and set it
+        if not await self.device.change_fan_speed(
             percentage_to_ordered_list_item(self.device.fan_levels, percentage)
-        )
-        if not success:
+        ):
             raise HomeAssistantError("An error occurred while changing fan speed.")
+
         self.schedule_update_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
