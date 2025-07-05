@@ -114,6 +114,32 @@
           "description": "Currency to get prices in. If left empty it will use the currency already configured."
         }
       }
+    },
+    "get_price_indices_for_date": {
+      "name": "Get price indices for date",
+      "description": "Retrieves the price indices for a specific date.",
+      "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The Nord Pool configuration entry for this action."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Only dates two months in the past and one day in the future is allowed."
+        },
+        "areas": {
+          "name": "Areas",
+          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured."
+        },
+        "currency": {
+          "name": "Currency",
+          "description": "Currency to get prices in. If left empty it will use the currency already configured."
+        },
+        "resolution": {
+          "name": "Resolution",
+          "description": "Resolution time for the prices, can be any of 15, 30 and 60 minutes."
+        }
+      }
     }
   },
   "exceptions": {
