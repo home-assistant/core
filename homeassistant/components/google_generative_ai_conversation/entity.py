@@ -21,6 +21,7 @@ from google.genai.types import (
     Schema,
     Tool,
 )
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
@@ -324,6 +325,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -402,6 +404,18 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         generateContentConfig.automatic_function_calling = (
             AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
         )
+        if structure:
+            generateContentConfig.response_mime_type = "application/json"
+            generateContentConfig.response_schema = _format_schema(
+                convert(
+                    structure,
+                    custom_serializer=(
+                        chat_log.llm_api.custom_serializer
+                        if chat_log.llm_api
+                        else llm.selector_serializer
+                    ),
+                )
+            )
 
         if not supports_system_instruction:
             messages = [
