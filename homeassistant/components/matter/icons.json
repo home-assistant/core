@@ -66,6 +66,9 @@
       "operational_state": {
         "default": "mdi:play-pause"
       },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
       "tank_volume": {
         "default": "mdi:water-boiler"
       },
