@@ -1,0 +1,12 @@
+{
+  "domain": "eway",
+  "name": "Eway",
+  "codeowners": ["@PuuuTao"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eway",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aioeway"],
+  "quality_scale": "bronze",
+  "requirements": ["aioeway==1.0.1"]
+}

@@ -1860,6 +1860,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "eway": {
+      "name": "Eway",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ezviz": {
       "name": "EZVIZ",
       "integration_type": "hub",
