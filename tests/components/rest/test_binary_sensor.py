@@ -667,3 +667,55 @@ async def test_availability_blocks_value_template(
     await hass.async_block_till_done()
 
     assert error in caplog.text
+
+
+async def test_utf8_basic_auth(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test BasicAuth with UTF-8 characters including Unicode char \u2018."""
+    # Use a password with the Unicode character \u2018 (left single quotation mark)
+    username = "test_user"
+    password = "test\u2018password"
+
+    # Mock the endpoint with basic auth check
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        text="1",
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "name": "test_utf8_auth",
+                "username": username,
+                "password": password,
+                "authentication": "basic",
+                "value_template": "{{ value }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify the request was made with correct auth header
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check the auth header was included
+    call = aioclient_mock.mock_calls[0]
+    assert "auth" in call[2]
+    auth = call[2]["auth"]
+    assert isinstance(auth, aiohttp.BasicAuth)
+    assert auth.login == username
+    assert auth.password == password
+    assert auth.encoding == "utf-8"
+
+    # Verify the sensor state
+    state = hass.states.get("binary_sensor.test_utf8_auth")
+    assert state
+    assert state.state == STATE_ON
