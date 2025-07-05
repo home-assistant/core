@@ -1,5 +1,6 @@
 """Test Adax climate entity."""
 
+from homeassistant.components.adax.climate import AdaxDevice
 from homeassistant.components.adax.const import SCAN_INTERVAL
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, Platform
@@ -83,3 +84,46 @@ async def test_climate_local(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_climate_set_temperature_to_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_config_entry: MockConfigEntry,
+    mock_adax_cloud: AsyncMock,
+) -> None:
+    """Test states of the (cloud) Climate entity."""
+    mock_adax_cloud.set_room_target_temperature = AsyncMock()
+    mock_adax_cloud.set_room_target_temperature.return_value = None
+
+    await setup_integration(hass, mock_cloud_config_entry)
+    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
+    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+
+    device: AdaxDevice = hass.data["domain_entities"][Platform.CLIMATE][entity_id]
+
+    # Assert state before temp change
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert (
+        state.attributes[ATTR_TEMPERATURE] == CLOUD_DEVICE_DATA[0]["targetTemperature"]
+    )
+
+    # Set temperature to 0, which should turn-off the device
+    await device.async_set_temperature(temperature=0)
+    mock_adax_cloud.set_room_target_temperature.assert_called_once_with(
+        device._device_id, device._attr_min_temp, False
+    )
+    CLOUD_DEVICE_DATA[0]["heatingEnabled"] = False
+    CLOUD_DEVICE_DATA[0]["targetTemperature"] = 0
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Assert state after temp change
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] == 0
