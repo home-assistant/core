@@ -110,7 +110,6 @@ async def async_setup_entry(
                     features.append(feature_type)
             except SoCoSlaveException:
                 features.append(feature_type)
-
         return features
 
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
