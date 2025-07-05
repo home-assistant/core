@@ -4,8 +4,8 @@
       "user": {
         "description": "Enter your Datadog agent's address and port.",
         "data": {
-          "host": "Host",
-          "port": "Port",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "prefix": "Prefix",
           "rate": "Rate"
         },
@@ -16,6 +16,9 @@
           "rate": "The sample rate of UDP packets sent to Datadog."
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Datadog agent. Please check your settings."
     }
   }
 }
