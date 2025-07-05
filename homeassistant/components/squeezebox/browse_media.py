@@ -315,8 +315,7 @@ async def build_item_response(
                     title=item["title"],
                     media_content_type=item_type,
                     media_class=CONTENT_TYPE_MEDIA_CLASS[item_type]["item"],
-                    can_expand=CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]
-                    is not None,
+                    can_expand=bool(CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]),
                     can_play=True,
                 )
 
