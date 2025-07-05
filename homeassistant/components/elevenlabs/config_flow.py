@@ -23,19 +23,22 @@ from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
-    CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
+    CONF_STT_AUTO_LANGUAGE,
+    CONF_STT_MODEL,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
-    DEFAULT_MODEL,
-    DEFAULT_OPTIMIZE_LATENCY,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
+    DEFAULT_STT_AUTO_LANGUAGE,
+    DEFAULT_STT_MODEL,
     DEFAULT_STYLE,
+    DEFAULT_TTS_MODEL,
     DEFAULT_USE_SPEAKER_BOOST,
     DOMAIN,
+    STT_MODELS,
 )
 
 USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
@@ -51,7 +54,8 @@ async def get_voices_models(
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(api_key=api_key, httpx_client=httpx_client)
     voices = (await client.voices.get_all()).voices
-    models = await client.models.get_all()
+    models = await client.models.list()
+
     voices_dict = {
         voice.voice_id: voice.name
         for voice in sorted(voices, key=lambda v: v.name or "")
@@ -69,6 +73,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ElevenLabs text-to-speech."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,13 +83,23 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
-            except ApiError:
-                errors["base"] = "invalid_api_key"
+            except ApiError as exc:
+                errors["base"] = "unknown"
+                details = getattr(exc, "body", {}).get("detail", {})
+                if details:
+                    status = details.get("status")
+                    if status == "invalid_api_key":
+                        errors["base"] = "invalid_api_key"
             else:
                 return self.async_create_entry(
                     title="ElevenLabs",
                     data=user_input,
-                    options={CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: list(voices)[0]},
+                    options={
+                        CONF_MODEL: DEFAULT_TTS_MODEL,
+                        CONF_VOICE: list(voices)[0],
+                        CONF_STT_MODEL: DEFAULT_STT_MODEL,
+                        CONF_STT_AUTO_LANGUAGE: False,
+                    },
                 )
         return self.async_show_form(
             step_id="user", data_schema=USER_STEP_SCHEMA, errors=errors
@@ -109,6 +124,9 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         self.models: dict[str, str] = {}
         self.model: str | None = None
         self.voice: str | None = None
+        self.stt_models: dict[str, str] = STT_MODELS
+        self.stt_model: str | None = None
+        self.auto_language: bool | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -122,6 +140,8 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         if user_input is not None:
             self.model = user_input[CONF_MODEL]
             self.voice = user_input[CONF_VOICE]
+            self.stt_model = user_input[CONF_STT_MODEL]
+            self.auto_language = user_input[CONF_STT_AUTO_LANGUAGE]
             configure_voice = user_input.pop(CONF_CONFIGURE_VOICE)
             if configure_voice:
                 return await self.async_step_voice_settings()
@@ -161,6 +181,22 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
+                    vol.Required(
+                        CONF_STT_MODEL,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(label=model_name, value=model_id)
+                                for model_id, model_name in self.stt_models.items()
+                            ]
+                        )
+                    ),
+                    vol.Required(
+                        CONF_STT_AUTO_LANGUAGE,
+                        default=self.config_entry.options.get(
+                            CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
+                        ),
+                    ): bool,
                     vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
@@ -175,6 +211,8 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         if user_input is not None:
             user_input[CONF_MODEL] = self.model
             user_input[CONF_VOICE] = self.voice
+            user_input[CONF_STT_MODEL] = self.stt_model
+            user_input[CONF_STT_AUTO_LANGUAGE] = self.auto_language
             return self.async_create_entry(
                 title="ElevenLabs",
                 data=user_input,
@@ -206,12 +244,6 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                     vol.Coerce(float),
                     vol.Range(min=0, max=1),
                 ),
-                vol.Optional(
-                    CONF_OPTIMIZE_LATENCY,
-                    default=self.config_entry.options.get(
-                        CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
-                    ),
-                ): vol.All(int, vol.Range(min=0, max=4)),
                 vol.Optional(
                     CONF_STYLE,
                     default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),

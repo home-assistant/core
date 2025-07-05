@@ -2,7 +2,7 @@
 
 from elevenlabs.types import LanguageResponse, Model, Voice
 
-from homeassistant.components.elevenlabs.const import DEFAULT_MODEL
+from homeassistant.components.elevenlabs.const import DEFAULT_TTS_MODEL
 
 MOCK_VOICES = [
     Voice(
@@ -39,8 +39,8 @@ MOCK_MODELS = [
         ],
     ),
     Model(
-        model_id=DEFAULT_MODEL,
-        name=DEFAULT_MODEL,
+        model_id=DEFAULT_TTS_MODEL,
+        name=DEFAULT_TTS_MODEL,
         can_do_text_to_speech=True,
         languages=[
             LanguageResponse(language_id="en", name="English"),
