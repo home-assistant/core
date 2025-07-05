@@ -1,7 +1,7 @@
 {
   "domain": "songpal",
   "name": "Sony Songpal",
-  "codeowners": ["@rytilahti", "@shenxn"],
+  "codeowners": ["@rytilahti", "@shenxn", "@YoshiWalsh"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
   "iot_class": "local_push",
