@@ -6,13 +6,18 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
+from homeassistant.components.sonos.const import (
+    DATA_SONOS_DISCOVERY_MANAGER,
+    MODEL_SONOS_ARC_ULTRA,
+)
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
     ATTR_INCLUDE_LINKED_ZONES,
     ATTR_PLAY_MODE,
     ATTR_RECURRENCE,
+    ATTR_SPEECH_ENHANCEMENT,
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     ATTR_VOLUME,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -29,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent, create_rendering_control_event
 
 from tests.common import async_fire_time_changed
 
@@ -140,6 +145,48 @@ async def test_switch_attributes(
     touch_controls = entity_registry.entities["switch.zone_a_touch_controls"]
     touch_controls_state = hass.states.get(touch_controls.entity_id)
     assert touch_controls_state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("model", "attribute"),
+    [
+        ("Sonos One SL", ATTR_SPEECH_ENHANCEMENT),
+        (MODEL_SONOS_ARC_ULTRA.lower(), ATTR_SPEECH_ENHANCEMENT_ENABLED),
+    ],
+)
+async def test_switch_speech_enhancement(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+    model: str,
+    attribute: str,
+) -> None:
+    """Test for correct Sonos switch states."""
+    speaker_info["model_name"] = model
+    soco.get_speaker_info.return_value = speaker_info
+    setattr(soco, attribute, True)
+    await async_setup_sonos()
+    switch = entity_registry.entities["switch.zone_a_speech_enhancement"]
+    state = hass.states.get(switch.entity_id)
+    assert state.state == STATE_ON
+
+    event = create_rendering_control_event(soco)
+    event.variables[attribute] = False
+    soco.renderingControl.subscribe.return_value._callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(switch.entity_id)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.zone_a_speech_enhancement"},
+        blocking=True,
+    )
+    assert getattr(soco, attribute) is True
 
 
 @pytest.mark.parametrize(
