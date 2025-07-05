@@ -205,6 +205,93 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_discovered_connection()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                validate_input_data = dict(user_input)
+                validate_input_data[CONF_PREFIX] = reconfigure_entry.data.get(
+                    CONF_PREFIX, ""
+                )
+                info = await validate_input(
+                    validate_input_data, reconfigure_entry.unique_id
+                )
+            except TimeoutError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                _LOGGER.info(
+                    "Successfully reconfigured ElkM1 integration with host %s using %s protocol",
+                    user_input[CONF_ADDRESS],
+                    user_input[CONF_PROTOCOL],
+                )
+                self.hass.config_entries.async_update_entry(
+                    reconfigure_entry,
+                    data={
+                        CONF_HOST: info[CONF_HOST],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_AUTO_CONFIGURE: reconfigure_entry.data.get(
+                            CONF_AUTO_CONFIGURE, True
+                        ),
+                        CONF_PREFIX: info[CONF_PREFIX],
+                    },
+                )
+                await self.hass.config_entries.async_reload(reconfigure_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        existing_data = reconfigure_entry.data
+        current_host = hostname_from_url(existing_data[CONF_HOST])
+        current_proto = next(
+            (
+                k
+                for k, v in PROTOCOL_MAP.items()
+                if existing_data[CONF_HOST].startswith(v)
+            ),
+            DEFAULT_SECURE_PROTOCOL,
+        )
+        # Extract just the IP/hostname part from the current host URL
+        current_address = current_host.split("://")[-1]
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=existing_data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=existing_data.get(CONF_PASSWORD, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_ADDRESS,
+                        default=current_address,
+                    ): str,
+                    vol.Required(
+                        CONF_PROTOCOL,
+                        default=current_proto,
+                    ): vol.In(ALL_PROTOCOLS),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "current_host": current_host,
+                "current_protocol": current_proto,
+                "device_info": f"Reconfiguring ElkM1 at {current_address} (currently using {current_proto} connection)",
+            },
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -249,12 +336,14 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(user_input, self.unique_id)
-        except TimeoutError:
+        except TimeoutError as ex:
+            _LOGGER.debug("Connection timed out: %s", ex)
             return {"base": "cannot_connect"}, None
-        except InvalidAuth:
+        except InvalidAuth as ex:
+            _LOGGER.debug("Invalid auth for %s: %s", user_input.get(CONF_HOST), ex)
             return {CONF_PASSWORD: "invalid_auth"}, None
         except Exception:
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Unexpected error validating input")
             return {"base": "unknown"}, None
 
         if importing:
