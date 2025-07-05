@@ -84,19 +84,22 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util.file import write_utf8_file
 
 from tests.common import MockConfigEntry, async_capture_events
 from tests.typing import ClientSessionGenerator
 
 
-async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
+async def test_webhook_platform_init(
+    hass: HomeAssistant, webhook_platform: MockConfigEntry
+) -> None:
     """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
-async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
+async def test_polling_platform_init(
+    hass: HomeAssistant, polling_platform: MockConfigEntry
+) -> None:
     """Test initialization of the polling platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
@@ -154,7 +157,10 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
     ],
 )
 async def test_send_message(
-    hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
+    hass: HomeAssistant,
+    webhook_platform: MockConfigEntry,
+    service: str,
+    input: dict[str],
 ) -> None:
     """Test the send_message service. Tests any service that does not require files to be sent."""
     context = Context()
@@ -216,7 +222,7 @@ async def test_send_message(
 )
 async def test_send_message_with_inline_keyboard(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     input: dict[str, Any],
     expected: InlineKeyboardMarkup,
 ) -> None:
@@ -298,7 +304,9 @@ def _read_file_as_bytesio_mock(file_path):
         SERVICE_SEND_DOCUMENT,
     ],
 )
-async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) -> None:
+async def test_send_file(
+    hass: HomeAssistant, webhook_platform: MockConfigEntry, service: str
+) -> None:
     """Test the send_file service (photo, animation, video, document...)."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -330,7 +338,9 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
     assert (response["chats"][0]["message_id"]) == 12345
 
 
-async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
+async def test_send_message_thread(
+    hass: HomeAssistant, webhook_platform: MockConfigEntry
+) -> None:
     """Test the send_message service for threads."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -351,7 +361,7 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> Non
 
 async def test_webhook_endpoint_generates_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     update_message_text,
     mock_generate_secret_token,
@@ -374,11 +384,12 @@ async def test_webhook_endpoint_generates_telegram_text_event(
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_webhook_endpoint_generates_telegram_command_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     update_message_command,
     mock_generate_secret_token,
@@ -401,11 +412,12 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     assert len(events) == 1
     assert events[0].data["command"] == update_message_command["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
@@ -428,48 +440,30 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_polling_platform_message_text_update(
     hass: HomeAssistant,
-    config_polling,
+    polling_platform: MockConfigEntry,
     update_message_text,
     mock_external_calls: None,
 ) -> None:
     """Provide the `BaseTelegramBot.update_handler` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
 
-    with patch(
-        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
-    ) as application_builder_class:
-        # Set up the integration with the polling platform inside the patch context manager.
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
-        application.updater.start_polling = AsyncMock()
-        application.updater.stop = AsyncMock()
-        application.initialize = AsyncMock()
-        application.start = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
+    application = polling_platform.runtime_data.app.application
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-        await hass.async_block_till_done()
+    # Call the callback and assert events fired.
+    handler = application.add_handler.call_args[0][0]
+    handle_update_callback = handler.callback
 
-        # Then call the callback and assert events fired.
-        handler = application.add_handler.call_args[0][0]
-        handle_update_callback = handler.callback
+    # Create Update object using library API.
+    application.bot.defaults.tzinfo = None
+    update = Update.de_json(update_message_text, application.bot)
 
-        # Create Update object using library API.
-        application.bot.defaults.tzinfo = None
-        update = Update.de_json(update_message_text, application.bot)
-
-        # handle_update_callback == BaseTelegramBot.update_handler
-        await handle_update_callback(update, None)
+    # handle_update_callback == BaseTelegramBot.update_handler
+    await handle_update_callback(update, None)
 
     # Make sure event has fired
     await hass.async_block_till_done()
@@ -477,6 +471,7 @@ async def test_polling_platform_message_text_update(
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 @pytest.mark.parametrize(
@@ -493,7 +488,7 @@ async def test_polling_platform_message_text_update(
 )
 async def test_polling_platform_add_error_handler(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    polling_platform: MockConfigEntry,
     update_message_text: dict[str, Any],
     mock_external_calls: None,
     caplog: pytest.LogCaptureFixture,
@@ -501,32 +496,14 @@ async def test_polling_platform_add_error_handler(
     log_message: str,
 ) -> None:
     """Test polling add error handler."""
-    with patch(
-        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
-    ) as application_builder_class:
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
-        application.updater.stop = AsyncMock()
-        application.initialize = AsyncMock()
-        application.updater.start_polling = AsyncMock()
-        application.start = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
-        application.bot.defaults.tzinfo = None
+    application = polling_platform.runtime_data.app.application
+    application.bot.defaults.tzinfo = None
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-        await hass.async_block_till_done()
+    update = Update.de_json(update_message_text, application.bot)
+    process_error = application.add_error_handler.call_args[0][0]
+    await process_error(update, MagicMock(error=error))
 
-        update = Update.de_json(update_message_text, application.bot)
-        process_error = application.add_error_handler.call_args[0][0]
-        await process_error(update, MagicMock(error=error))
-
-        assert log_message in caplog.text
+    assert log_message in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -543,45 +520,27 @@ async def test_polling_platform_add_error_handler(
 )
 async def test_polling_platform_start_polling_error_callback(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    polling_platform: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     mock_external_calls: None,
     error: Exception,
     log_message: str,
 ) -> None:
     """Test polling add error handler."""
-    with patch(
-        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
-    ) as application_builder_class:
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
-        application.initialize = AsyncMock()
-        application.updater.start_polling = AsyncMock()
-        application.start = AsyncMock()
-        application.updater.stop = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
+    application = polling_platform.runtime_data.app.application
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
+    error_callback = application.updater.start_polling.call_args.kwargs[
+        "error_callback"
+    ]
 
-        await hass.async_block_till_done()
-        error_callback = application.updater.start_polling.call_args.kwargs[
-            "error_callback"
-        ]
+    error_callback(error)
 
-        error_callback(error)
-
-        assert log_message in caplog.text
+    assert log_message in caplog.text
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     unauthorized_update_message_text,
     mock_generate_secret_token,
@@ -606,7 +565,7 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
 
 async def test_webhook_endpoint_without_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     update_message_text,
 ) -> None:
@@ -623,7 +582,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
 
 async def test_webhook_endpoint_invalid_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     update_message_text,
     incorrect_secret_token,
@@ -643,7 +602,7 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
 async def test_multiple_config_entries_error(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
-    polling_platform,
+    polling_platform: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
     """Test multiple config entries error."""

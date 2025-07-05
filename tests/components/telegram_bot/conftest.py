@@ -18,55 +18,16 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.components.telegram_bot.const import (
     CONF_CHAT_ID,
+    CONF_USER_ID,
     PLATFORM_BROADCAST,
+    PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_webhooks() -> dict[str, Any]:
-    """Fixture for a webhooks platform configuration."""
-    return {
-        DOMAIN: [
-            {
-                CONF_PLATFORM: PLATFORM_WEBHOOKS,
-                CONF_URL: "https://test",
-                CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
-                CONF_API_KEY: "1234567890:ABC",
-                CONF_ALLOWED_CHAT_IDS: [
-                    # "me"
-                    12345678,
-                    # Some chat
-                    -123456789,
-                ],
-            }
-        ]
-    }
-
-
-@pytest.fixture
-def config_polling() -> dict[str, Any]:
-    """Fixture for a polling platform configuration."""
-    return {
-        DOMAIN: [
-            {
-                CONF_PLATFORM: "polling",
-                CONF_API_KEY: "1234567890:ABC",
-                CONF_ALLOWED_CHAT_IDS: [
-                    # "me"
-                    12345678,
-                    # Some chat
-                    -123456789,
-                ],
-            }
-        ]
-    }
 
 
 @pytest.fixture
@@ -275,17 +236,60 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
-            CONF_TRUSTED_NETWORKS: ["149.154.160.0/20", "91.108.4.0/22"],
+            CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="1234567890",
-                data={CONF_CHAT_ID: 1234567890},
+                data={
+                    CONF_CHAT_ID: 12345678,
+                    CONF_USER_ID: "d759909bf2954ef4b3faeac81baecfe0",
+                },
                 subentry_id="mock_id",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat",
-            )
+            ),
+            ConfigSubentryData(
+                unique_id="0987654321",
+                data={CONF_CHAT_ID: -123456789},
+                subentry_id="mock_id_2",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock group chat",
+            ),
+        ],
+    )
+
+
+@pytest.fixture
+def mock_polling_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry for polling platform."""
+    return MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_POLLING,
+            CONF_API_KEY: "1234567890:ABC",
+        },
+        options={ATTR_PARSER: PARSER_MD},
+        subentries_data=[
+            ConfigSubentryData(  # "me"
+                unique_id="1234567890",
+                data={
+                    CONF_CHAT_ID: 12345678,
+                    CONF_USER_ID: "d759909bf2954ef4b3faeac81baecfe0",
+                },
+                subentry_id="mock_id",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat",
+            ),
+            ConfigSubentryData(  # Some chat
+                unique_id="0987654321",
+                data={CONF_CHAT_ID: -123456789},
+                subentry_id="mock_id_2",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock group chat",
+            ),
         ],
     )
 
@@ -293,27 +297,28 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def webhook_platform(
     hass: HomeAssistant,
-    config_webhooks: dict[str, Any],
+    mock_webhooks_config_entry: MockConfigEntry,
     mock_register_webhook: None,
     mock_external_calls: None,
     mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Fixture for setting up the webhooks platform using appropriate config and mocks."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        config_webhooks,
-    )
+    mock_webhooks_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
     await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
+    yield mock_webhooks_config_entry
+    await hass.config_entries.async_unload(mock_webhooks_config_entry.entry_id)
 
 
 @pytest.fixture
 async def polling_platform(
-    hass: HomeAssistant, config_polling: dict[str, Any], mock_external_calls: None
-) -> None:
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> AsyncGenerator[MockConfigEntry]:
     """Fixture for setting up the polling platform using appropriate config and mocks."""
+    mock_polling_config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:
@@ -327,10 +332,7 @@ async def polling_platform(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
+        yield mock_polling_config_entry
+        await hass.config_entries.async_unload(mock_polling_config_entry.entry_id)

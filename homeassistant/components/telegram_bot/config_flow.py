@@ -27,6 +27,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -44,6 +45,7 @@ from .const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    CONF_USER_ID,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     ERROR_FIELD,
@@ -148,6 +150,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         )
     }
 )
+
+USER_ID_UNSPECIFIED: str = "unspecified"
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -637,6 +641,9 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            if user_input.get(CONF_USER_ID) == USER_ID_UNSPECIFIED:
+                user_input[CONF_USER_ID] = None
+
             config_entry: TelegramBotConfigEntry = self._get_entry()
             bot = config_entry.runtime_data.bot
 
@@ -645,16 +652,85 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             if chat_name:
                 return self.async_create_entry(
                     title=chat_name,
-                    data={CONF_CHAT_ID: chat_id},
+                    data=user_input,
                     unique_id=str(chat_id),
                 )
 
             errors["base"] = "chat_not_found"
 
+        users = [SelectOptionDict(value=USER_ID_UNSPECIFIED, label=USER_ID_UNSPECIFIED)]
+        users.extend(
+            SelectOptionDict(value=user.id, label=user.name or user.id)
+            for user in await self.hass.auth.async_get_users()
+            if not user.system_generated
+        )
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_CHAT_ID): vol.Coerce(int),
+                vol.Optional(CONF_USER_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=users,
+                        translation_key="user_id",
+                    )
+                ),
+            }
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Update subentry configuration."""
+        options = self._get_reconfigure_subentry().data.copy()
+
+        if user_input is not None:
+            if user_input.get(CONF_USER_ID) == USER_ID_UNSPECIFIED:
+                user_input[CONF_USER_ID] = None
+
+            options.update(user_input)
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=options,
+            )
+
+        users = [SelectOptionDict(value=USER_ID_UNSPECIFIED, label=USER_ID_UNSPECIFIED)]
+        users.extend(
+            SelectOptionDict(value=user.id, label=user.name or user.id)
+            for user in await self.hass.auth.async_get_users()
+            if not user.system_generated
+        )
+
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_USER_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=users,
+                        translation_key="user_id",
+                    )
+                ),
+            }
+        )
+
+        if options.setdefault(CONF_USER_ID, USER_ID_UNSPECIFIED) == USER_ID_UNSPECIFIED:
+            # If username in HA and Telegram match, use it as suggested value
+            title = self._get_reconfigure_subentry().title
+            for user in users:
+                if user["label"] == title:
+                    options[CONF_USER_ID] = user["value"]
+                    break
+
+        schema = self.add_suggested_values_to_schema(schema, options)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
         )
 
 

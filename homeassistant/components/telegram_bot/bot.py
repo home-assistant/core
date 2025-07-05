@@ -77,6 +77,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    CONF_USER_ID,
     DOMAIN,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
@@ -134,7 +135,7 @@ class BaseTelegramBot:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
 
-        event_context = Context()
+        event_context = self._get_event_context(update)
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
@@ -198,6 +199,19 @@ class BaseTelegramBot:
         event_data.update(self._get_command_event_data(callback_query.data))
 
         return event_type, event_data
+
+    def _get_event_context(self, update: Update) -> Context:
+        from_user = update.effective_user.id if update.effective_user else None
+        from_chat = update.effective_chat.id if update.effective_chat else None
+        users = {
+            subentry.data[CONF_CHAT_ID]: subentry.data[CONF_USER_ID]
+            for subentry in self.config.subentries.values()
+            if CONF_USER_ID in subentry.data
+        }
+        user_id = users.get(from_chat)
+        user_id = users.get(from_user, user_id)
+
+        return Context(user_id=user_id)
 
     def authorize_update(self, update: Update) -> bool:
         """Make sure either user or chat is in allowed_chat_ids."""
