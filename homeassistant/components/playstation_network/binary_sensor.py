@@ -24,6 +24,7 @@ class PlaystationNetworkBinarySensorEntityDescription(BinarySensorEntityDescript
     """PlayStation Network binary sensor description."""
 
     is_on_fn: Callable[[PlaystationNetworkData], bool]
+    entity_picture: str | None = None
 
 
 class PlaystationNetworkBinarySensor(StrEnum):
@@ -39,6 +40,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         translation_key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         is_on_fn=lambda psn: psn.profile["isPlus"],
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/psplus.png",
     ),
 )
 
@@ -69,3 +71,9 @@ class PlaystationNetworkBinarySensorEntity(
         """Return the state of the binary sensor."""
 
         return self.entity_description.is_on_fn(self.coordinator.data)
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+
+        return self.entity_description.entity_picture or super().entity_picture

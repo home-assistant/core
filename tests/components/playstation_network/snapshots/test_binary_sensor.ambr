@@ -37,6 +37,7 @@
 # name: test_sensors[binary_sensor.testuser_subscribed_to_playstation_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/psplus.png',
       'friendly_name': 'testuser Subscribed to PlayStation Plus',
     }),
     'context': <ANY>,
