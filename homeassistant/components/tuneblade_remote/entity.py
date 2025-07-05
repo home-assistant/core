@@ -2,7 +2,7 @@
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NAME, VERSION
+from .const import DOMAIN, NAME
 
 
 class TuneBladeEntity(CoordinatorEntity):
@@ -26,7 +26,6 @@ class TuneBladeEntity(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self.device_id)},
             "name": f"{self.device_name} {NAME}",
-            "model": VERSION,
             "manufacturer": NAME,
         }
 
