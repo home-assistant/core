@@ -220,8 +220,8 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "host": reauth_entry.data[CONF_HOST],
-                "port": reauth_entry.data[CONF_PORT],
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_PORT: reauth_entry.data[CONF_PORT],
             },
         )
 
