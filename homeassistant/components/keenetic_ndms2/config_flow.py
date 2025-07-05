@@ -15,7 +15,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
-    CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
