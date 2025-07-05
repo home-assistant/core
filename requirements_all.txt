@@ -1161,7 +1161,7 @@ hko==0.3.2
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.8.0
+hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
@@ -1319,7 +1319,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.5
+lcn-frontend==0.2.6
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -2360,7 +2360,7 @@ pysmhi==1.0.2
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.6
+pysmlight==0.2.7
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2502,7 +2502,7 @@ python-ripple-api==0.0.3
 python-roborock==2.18.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.39
+python-smarttub==0.0.44
 
 # homeassistant.components.snoo
 python-snoo==0.6.6
@@ -3150,7 +3150,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.6.0
+yalexs-ble==3.0.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
