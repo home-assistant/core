@@ -3,6 +3,9 @@
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MediaPlayerEntityFeature, MediaPlayerState
@@ -10,7 +13,11 @@ from .const import DOMAIN, MediaPlayerEntityFeature, MediaPlayerState
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up TuneBlade Remote from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     added_ids = set()
@@ -87,8 +94,9 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self.coordinator.client.set_volume(self.device_id, int(volume * 100))
         await self.coordinator.async_request_refresh()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the coordinator update listener."""
+        await super().async_added_to_hass()
         self.coordinator.async_add_listener(self._handle_coordinator_update)
         self._handle_coordinator_update()
 
@@ -180,8 +188,9 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self.coordinator.client.set_volume(self.device_id, int(volume * 100))
         await self.coordinator.async_request_refresh()
 
-    async def async_added_to_hass(self):
-        """Register callback when entity is added."""
+    async def async_added_to_hass(self) -> None:
+        """Register the coordinator update listener."""
+        await super().async_added_to_hass()
         self.coordinator.async_add_listener(self._handle_coordinator_update)
         self._handle_coordinator_update()
 
