@@ -591,6 +591,7 @@ FLOWS = {
         "snoo",
         "snooz",
         "solaredge",
+        "solaredge_modules",
         "solarlog",
         "solax",
         "soma",
