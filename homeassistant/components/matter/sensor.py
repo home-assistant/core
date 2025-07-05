@@ -1044,7 +1044,6 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="power_level",
             list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
-            native_unit_of_measurement=UnitOfPower.WATT,
         ),
         entity_class=MatterListSensor,
         required_attributes=(
