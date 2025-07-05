@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +17,7 @@ from .common import (
 )
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
@@ -327,13 +327,11 @@ async def test_air_quality_sensor(
     assert state.state == "50.0"
 
 
-@pytest.mark.freeze_time("2025-01-01T21:00:00+00:00")
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
 async def test_operational_state_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
@@ -384,7 +382,7 @@ async def test_draft_electrical_measurement_sensor(
     assert state.state == "unknown"
 
 
-@pytest.mark.freeze_time("2025-01-01T21:00:00+00:00")
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
 @pytest.mark.parametrize("node_fixture", ["microwave_oven"])
 async def test_countdown_time_sensor(
     hass: HomeAssistant,
@@ -396,7 +394,7 @@ async def test_countdown_time_sensor(
     state = hass.states.get("sensor.microwave_oven_estimated_end_time")
     assert state
     # 1/96/2 = 30 seconds So an 30s should be added to the current time.
-    assert state.state == "2025-01-01T21:00:30+00:00"
+    assert state.state == "2025-01-01T14:00:30+00:00"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
