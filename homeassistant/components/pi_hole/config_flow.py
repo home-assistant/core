@@ -161,7 +161,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     raise HoleError(pi_hole.data)  # noqa: TRY301
             except HoleError as ex_v5:
-                _LOGGER.warning(
+                _LOGGER.error(
                     "Connection to API version 5 failed: %s",
                     ex_v5,
                 )
