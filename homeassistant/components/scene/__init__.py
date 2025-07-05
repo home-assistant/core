@@ -97,6 +97,7 @@ class Scene(RestoreEntity):
     """A scene is a group of entities and the states we want them to be."""
 
     _attr_should_poll = False
+    _auto_set_last_activated = True
     __last_activated: str | None = None
 
     @property
@@ -107,15 +108,20 @@ class Scene(RestoreEntity):
             return None
         return self.__last_activated
 
-    @final
     async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene.
+        """Activate scene."""
+        if self._auto_set_last_activated:
+            self._set_activated()
+        await self.async_activate(**kwargs)
+
+    @final
+    def _set_activated(self) -> None:
+        """Call when the scene has been activated.
 
         Should not be overridden, handle setting last press timestamp.
         """
         self.__last_activated = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        await self.async_activate(**kwargs)
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
