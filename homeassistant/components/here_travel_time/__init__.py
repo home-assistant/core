@@ -6,7 +6,11 @@ import logging
 
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_started
 
 from .const import CONF_TRAFFIC_MODE, DOMAIN, TRAVEL_MODE_PUBLIC
@@ -52,13 +56,19 @@ def alert_for_multiple_entries(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             "multiple_here_travel_time_entries",
-            learn_more_url="https://github.com/home-assistant/home-assistant.io/pull/39653",
+            learn_more_url="https://www.home-assistant.io/integrations/here_travel_time/",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="multiple_here_travel_time_entries",
             translation_placeholders={
                 "pricing_page": "https://www.here.com/get-started/pricing",
             },
+        )
+    else:
+        async_delete_issue(
+            hass,
+            DOMAIN,
+            "multiple_here_travel_time_entries",
         )
 
 
