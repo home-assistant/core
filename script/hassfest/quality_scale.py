@@ -787,7 +787,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "private_ble_device",
     "profiler",
     "progettihwsw",
-    "proliphix",
     "prometheus",
     "prosegur",
     "prowl",
