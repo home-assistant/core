@@ -1,4 +1,4 @@
-"""Support for Velux covers."""
+"""Support for rain sensors build into some velux windows."""
 
 from __future__ import annotations
 
@@ -69,8 +69,8 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         try:
             limitation = await self.node.get_limitation()
             self.rain_detected = limitation.min_value == 93
-            LOGGER.info(
-                f"Rain sensor updated, limitation max/min_value={limitation.max_value}/{limitation.min_value} raw max/min_value={limitation.max_value_raw}/{limitation.min_value_raw}"
+            LOGGER.debug(
+                f"Rain sensor updated, limitation max/min_value={limitation.max_value}/{limitation.min_value}"
             )
         except PyVLXException:
             LOGGER.error("Error fetch limitation data for cover %s", self.name)
