@@ -1,5 +1,7 @@
 """Configuration for Sonos tests."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -107,13 +109,31 @@ class SonosMockAlarmClock(SonosMockService):
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables) -> None:
-        """Initialize the instance."""
+    def __init__(
+        self,
+        soco: MockSoCo,
+        service: SonosMockService,
+        variables: dict[str, str],
+        zone_player_uui_ds_in_group: str | None = None,
+    ) -> None:
+        """Initialize the instance.
+
+        Args:
+            soco: The mock SoCo device associated with this event.
+            service: The Sonos mock service that generated the event.
+            variables: A dictionary of event variables and their values.
+            zone_player_uui_ds_in_group: Optional comma-separated string of unique zone IDs in the group.
+
+        """
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
         self.service = service
         self.variables = variables
+        # In Soco events of the same type may or may not have this attribute present.
+        # Only create the attribute if it should be present.
+        if zone_player_uui_ds_in_group:
+            self.zone_player_uui_ds_in_group = zone_player_uui_ds_in_group
 
     def increment_variable(self, var_name):
         """Increment the value of the var_name key in variables dict attribute.
@@ -194,11 +214,24 @@ class MockSoCo(MagicMock):
     surround_level = 3
     music_surround_level = 4
     soundbar_audio_input_format = "Dolby 5.1"
+    factory: SoCoMockFactory | None = None
 
     @property
     def visible_zones(self):
         """Return visible zones and allow property to be overridden by device classes."""
         return {self}
+
+    @property
+    def all_zones(self) -> set[MockSoCo]:
+        """Return a set of all mock zones, or just self if no factory or zones."""
+        if self.factory is not None:
+            if zones := self.factory.mock_all_zones:
+                return zones
+        return {self}
+
+    def set_factory(self, factory: SoCoMockFactory) -> None:
+        """Set the factory for this mock."""
+        self.factory = factory
 
 
 class SoCoMockFactory:
@@ -224,11 +257,19 @@ class SoCoMockFactory:
         self.sonos_playlists = sonos_playlists
         self.sonos_queue = sonos_queue
 
+    @property
+    def mock_all_zones(self) -> set[MockSoCo]:
+        """Return a set of all mock zones."""
+        return {
+            mock for mock in self.mock_list.values() if mock.mock_include_in_all_zones
+        }
+
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
     ) -> MockSoCo:
         """Put a user created mock into the cache."""
         mock_soco.mock_add_spec(SoCo)
+        mock_soco.set_factory(self)
         mock_soco.ip_address = ip_address
         if ip_address != "192.168.42.2":
             mock_soco.uid += f"_{ip_address}"
@@ -240,6 +281,11 @@ class SoCoMockFactory:
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
+        # Generate a different MAC for the non-default speakers.
+        # otherwise new devices will not be created.
+        if ip_address != "192.168.42.2":
+            last_octet = ip_address.split(".")[-1]
+            my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
         mock_soco.add_uri_to_queue = Mock(return_value=10)
@@ -258,7 +304,7 @@ class SoCoMockFactory:
 
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
-        mock_soco.all_zones = {mock_soco}
+        mock_soco.mock_include_in_all_zones = True
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
@@ -823,3 +869,42 @@ async def sonos_setup_two_speakers(
     )
     await hass.async_block_till_done()
     return [soco_lr, soco_br]
+
+
+def create_zgs_sonos_event(
+    fixture_file: str,
+    soco_1: MockSoCo,
+    soco_2: MockSoCo,
+    create_uui_ds_in_group: bool = True,
+) -> SonosMockEvent:
+    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
+    zgs = load_fixture(fixture_file, DOMAIN)
+    variables = {}
+    variables["ZoneGroupState"] = zgs
+    # Sonos does not always send this variable with zgs events
+    if create_uui_ds_in_group:
+        variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
+    zone_player_uui_ds_in_group = (
+        f"{soco_1.uid},{soco_2.uid}" if create_uui_ds_in_group else None
+    )
+    return SonosMockEvent(
+        soco_1, soco_1.zoneGroupTopology, variables, zone_player_uui_ds_in_group
+    )
+
+
+def group_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
+    """Generate events to group two speakers together."""
+    event = create_zgs_sonos_event(
+        "zgs_group.xml", coordinator, group_member, create_uui_ds_in_group=True
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
+    """Generate events to ungroup two speakers."""
+    event = create_zgs_sonos_event(
+        "zgs_two_single.xml", coordinator, group_member, create_uui_ds_in_group=False
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)

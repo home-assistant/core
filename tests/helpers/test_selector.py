@@ -396,7 +396,13 @@ def test_assist_pipeline_selector_schema(
         ({"min": -100, "max": 100, "step": 5}, (), ()),
         ({"min": -20, "max": -10, "mode": "box"}, (), ()),
         (
-            {"min": 0, "max": 100, "unit_of_measurement": "seconds", "mode": "slider"},
+            {
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "seconds",
+                "mode": "slider",
+                "translation_key": "foo",
+            },
             (),
             (),
         ),
@@ -590,7 +596,28 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
+    [
+        ({}, ("abc123",), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (),
+            (),
+        ),
+    ],
+    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
@@ -815,7 +842,16 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                # We require entity_id when accept is not set
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
         ),
         (
             {
@@ -832,7 +868,18 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
         ),
     ],
 )

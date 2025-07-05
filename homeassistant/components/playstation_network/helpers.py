@@ -7,9 +7,8 @@ from functools import partial
 from typing import Any
 
 from psnawp_api import PSNAWP
-from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
 from psnawp_api.models.client import Client
-from psnawp_api.models.trophies import PlatformType
+from psnawp_api.models.trophies import PlatformType, TrophySummary
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
 
@@ -39,9 +38,11 @@ class PlaystationNetworkData:
     presence: dict[str, Any] = field(default_factory=dict)
     username: str = ""
     account_id: str = ""
-    available: bool = False
+    availability: str = "unavailable"
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
+    trophy_summary: TrophySummary | None = None
+    profile: dict[str, Any] = field(default_factory=dict)
 
 
 class PlaystationNetwork:
@@ -77,6 +78,9 @@ class PlaystationNetwork:
 
         data.presence = self.user.get_presence()
 
+        data.trophy_summary = self.client.trophy_summary()
+        data.profile = self.user.profile()
+
         # check legacy platforms if owned
         if LEGACY_PLATFORMS & data.registered_platforms:
             self.legacy_profile = self.client.get_profile_legacy()
@@ -88,10 +92,7 @@ class PlaystationNetwork:
         data.username = self.user.online_id
         data.account_id = self.user.account_id
 
-        data.available = (
-            data.presence.get("basicPresence", {}).get("availability")
-            == "availableToPlay"
-        )
+        data.availability = data.presence["basicPresence"]["availability"]
 
         session = SessionData()
         session.platform = PlatformType(
@@ -120,32 +121,29 @@ class PlaystationNetwork:
 
         if self.legacy_profile:
             presence = self.legacy_profile["profile"].get("presences", [])
-            game_title_info = presence[0] if presence else {}
-            session = SessionData()
+            if (game_title_info := presence[0] if presence else {}) and game_title_info[
+                "onlineStatus"
+            ] == "online":
+                platform = PlatformType(game_title_info["platform"])
 
-            # If primary console isn't online, check legacy platforms for status
-            if not data.available:
-                data.available = game_title_info["onlineStatus"] == "online"
+                if platform is PlatformType.PS4:
+                    media_image_url = game_title_info.get("npTitleIconUrl")
+                elif platform is PlatformType.PS3 and game_title_info.get("npTitleId"):
+                    media_image_url = self.psn.game_title(
+                        game_title_info["npTitleId"],
+                        platform=PlatformType.PS3,
+                        account_id="me",
+                        np_communication_id="",
+                    ).get_title_icon_url()
+                else:
+                    media_image_url = None
 
-            if "npTitleId" in game_title_info:
-                session.title_id = game_title_info["npTitleId"]
-                session.title_name = game_title_info["titleName"]
-                session.format = game_title_info["platform"]
-                session.platform = game_title_info["platform"]
-                session.status = game_title_info["onlineStatus"]
-                if PlatformType(session.format) is PlatformType.PS4:
-                    session.media_image_url = game_title_info["npTitleIconUrl"]
-                elif PlatformType(session.format) is PlatformType.PS3:
-                    try:
-                        title = self.psn.game_title(
-                            session.title_id, platform=PlatformType.PS3, account_id="me"
-                        )
-                    except PSNAWPNotFoundError:
-                        session.media_image_url = None
-
-                    if title:
-                        session.media_image_url = title.get_title_icon_url()
-
-            if game_title_info["onlineStatus"] == "online":
-                data.active_sessions[session.platform] = session
+                data.active_sessions[platform] = SessionData(
+                    platform=platform,
+                    title_id=game_title_info.get("npTitleId"),
+                    title_name=game_title_info.get("titleName"),
+                    format=platform,
+                    media_image_url=media_image_url,
+                    status=game_title_info["onlineStatus"],
+                )
         return data

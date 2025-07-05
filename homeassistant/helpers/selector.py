@@ -1010,8 +1010,10 @@ class LocationSelector(Selector[LocationSelectorConfig]):
         return location
 
 
-class MediaSelectorConfig(BaseSelectorConfig):
+class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
+
+    accept: list[str]
 
 
 @SELECTORS.register("media")
@@ -1041,9 +1043,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, float]:
+    def __call__(self, data: Any) -> dict[str, str]:
         """Validate the passed selection."""
-        media: dict[str, float] = self.DATA_SCHEMA(data)
+        schema = {
+            key: value
+            for key, value in self.DATA_SCHEMA.schema.items()
+            if key != "entity_id"
+        }
+
+        if "accept" not in self.config:
+            # If accept is not set, the entity_id field is required
+            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+
+        media: dict[str, str] = vol.Schema(schema)(data)
         return media
 
 
@@ -1055,6 +1067,7 @@ class NumberSelectorConfig(BaseSelectorConfig, total=False):
     step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
+    translation_key: str
 
 
 class NumberSelectorMode(StrEnum):
@@ -1095,6 +1108,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
+                vol.Optional("translation_key"): str,
             }
         ),
         validate_slider,
@@ -1117,8 +1131,22 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class ObjectSelectorField(TypedDict):
+    """Class to represent an object selector fields dict."""
+
+    label: str
+    required: bool
+    selector: dict[str, Any]
+
+
 class ObjectSelectorConfig(BaseSelectorConfig):
     """Class to represent an object selector config."""
+
+    fields: dict[str, ObjectSelectorField]
+    multiple: bool
+    label_field: str
+    description_field: bool
+    translation_key: str
 
 
 @SELECTORS.register("object")
@@ -1127,7 +1155,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("fields"): {
+                str: {
+                    vol.Required("selector"): dict,
+                    vol.Optional("required"): bool,
+                    vol.Optional("label"): str,
+                }
+            },
+            vol.Optional("multiple", default=False): bool,
+            vol.Optional("label_field"): str,
+            vol.Optional("description_field"): str,
+            vol.Optional("translation_key"): str,
+        }
+    )
 
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

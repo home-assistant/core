@@ -37,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -77,7 +76,6 @@ from .const import (
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
-    CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     DOMAIN,
     EVENT_TELEGRAM_CALLBACK,
@@ -289,24 +287,32 @@ class TelegramNotificationService:
             inline_message_id = msg_data["inline_message_id"]
         return message_id, inline_message_id
 
-    def _get_target_chat_ids(self, target: Any) -> list[int]:
+    def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
         """Validate chat_id targets or return default target (first).
 
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
         allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
-        default_user: int = allowed_chat_ids[0]
-        if target is not None:
-            if isinstance(target, int):
-                target = [target]
-            chat_ids = [t for t in target if t in allowed_chat_ids]
-            if chat_ids:
-                return chat_ids
-            _LOGGER.warning(
-                "Disallowed targets: %s, using default: %s", target, default_user
+
+        if target is None:
+            return [allowed_chat_ids[0]]
+
+        chat_ids = [target] if isinstance(target, int) else target
+        valid_chat_ids = [
+            chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids
+        ]
+        if not valid_chat_ids:
+            raise ServiceValidationError(
+                "Invalid chat IDs",
+                translation_domain=DOMAIN,
+                translation_key="invalid_chat_ids",
+                translation_placeholders={
+                    "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
+                    "bot_name": self.config.title,
+                },
             )
-        return [default_user]
+        return valid_chat_ids
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
@@ -368,9 +374,7 @@ class TelegramNotificationService:
         }
         if data is not None:
             if ATTR_PARSER in data:
-                params[ATTR_PARSER] = self._parsers.get(
-                    data[ATTR_PARSER], self.parse_mode
-                )
+                params[ATTR_PARSER] = data[ATTR_PARSER]
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
@@ -402,6 +406,8 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
+        if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
+            params[ATTR_PARSER] = None
         return params
 
     async def _send_msg(
@@ -416,9 +422,9 @@ class TelegramNotificationService:
         """Send one message."""
         try:
             out = await func_send(*args_msg, **kwargs_msg)
-            if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
+            if isinstance(out, Message):
                 chat_id = out.chat_id
-                message_id = out[ATTR_MESSAGEID]
+                message_id = out.message_id
                 self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
@@ -426,7 +432,7 @@ class TelegramNotificationService:
                     chat_id,
                 )
 
-                event_data = {
+                event_data: dict[str, Any] = {
                     ATTR_CHAT_ID: chat_id,
                     ATTR_MESSAGEID: message_id,
                 }
@@ -438,10 +444,6 @@ class TelegramNotificationService:
                     ]
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
-                )
-            elif not isinstance(out, bool):
-                _LOGGER.warning(
-                    "Update last message: out_type:%s, out=%s", type(out), out
                 )
         except TelegramError as exc:
             _LOGGER.error(
@@ -462,7 +464,7 @@ class TelegramNotificationService:
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
             msg = await self._send_msg(
                 self.bot.send_message,
@@ -490,7 +492,7 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> bool:
         """Delete a previously sent message."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
         deleted: bool = await self._send_msg(
@@ -515,7 +517,7 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> Any:
         """Edit a previously sent message."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -622,7 +624,7 @@ class TelegramNotificationService:
 
         msg_ids = {}
         if file_content:
-            for chat_id in self._get_target_chat_ids(target):
+            for chat_id in self.get_target_chat_ids(target):
                 _LOGGER.debug("Sending file to chat ID %s", chat_id)
 
                 if file_type == SERVICE_SEND_PHOTO:
@@ -740,7 +742,7 @@ class TelegramNotificationService:
 
         msg_ids = {}
         if stickerid:
-            for chat_id in self._get_target_chat_ids(target):
+            for chat_id in self.get_target_chat_ids(target):
                 msg = await self._send_msg(
                     self.bot.send_sticker,
                     "Error sending sticker",
@@ -771,7 +773,7 @@ class TelegramNotificationService:
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug(
                 "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
@@ -805,7 +807,7 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
             msg = await self._send_msg(
                 self.bot.send_poll,
@@ -828,12 +830,12 @@ class TelegramNotificationService:
 
     async def leave_chat(
         self,
-        chat_id: Any = None,
+        chat_id: int | None = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
         """Remove bot from chat."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
@@ -841,14 +843,14 @@ class TelegramNotificationService:
 
     async def set_message_reaction(
         self,
-        chat_id: int,
         reaction: str,
+        chat_id: int | None = None,
         is_big: bool = False,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> None:
         """Set the bot's reaction for a given message."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
 
@@ -877,52 +879,9 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
-    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        auth = None
-        if proxy_params is None:
-            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
-            proxy_params = {}
-        elif "username" in proxy_params and "password" in proxy_params:
-            # Auth can actually be stuffed into the URL, but the docs have previously
-            # indicated to put them here.
-            auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_auth_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_auth_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        else:
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "httpx": "httpx",
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
+        proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
