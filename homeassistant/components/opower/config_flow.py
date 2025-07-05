@@ -26,6 +26,7 @@ from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names()),
@@ -88,9 +89,15 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await _validate_login(self.hass, user_input)
             if not errors:
                 return self._async_create_opower_entry(user_input)
-
+        else:
+            user_input = {}
+        user_input.pop(CONF_PASSWORD, None)
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
     async def async_step_mfa(

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
 from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass(slots=True)
@@ -17,6 +20,7 @@ class PlayMedia:
 
     url: str
     mime_type: str
+    path: Path | None = field(kw_only=True, default=None)
 
 
 class BrowseMediaSource(BrowseMedia):
