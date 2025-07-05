@@ -5,6 +5,8 @@ import pytest
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -25,6 +27,11 @@ async def test_reproducing_states(
     """Test reproducing Water heater states."""
     hass.states.async_set("water_heater.entity_off", STATE_OFF, {})
     hass.states.async_set("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45})
+    hass.states.async_set(
+        "water_heater.entity_range",
+        STATE_ON,
+        {ATTR_TARGET_TEMP_HIGH: 45, ATTR_TARGET_TEMP_LOW: 20},
+    )
     hass.states.async_set("water_heater.entity_away", STATE_ON, {ATTR_AWAY_MODE: True})
     hass.states.async_set("water_heater.entity_gas", STATE_GAS, {})
     hass.states.async_set(
@@ -45,6 +52,11 @@ async def test_reproducing_states(
         [
             State("water_heater.entity_off", STATE_OFF),
             State("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45}),
+            State(
+                "water_heater.entity_range",
+                STATE_ON,
+                {ATTR_TARGET_TEMP_HIGH: 45, ATTR_TARGET_TEMP_LOW: 20},
+            ),
             State("water_heater.entity_away", STATE_ON, {ATTR_AWAY_MODE: True}),
             State("water_heater.entity_gas", STATE_GAS, {}),
             State(
@@ -79,6 +91,11 @@ async def test_reproducing_states(
         [
             State("water_heater.entity_on", STATE_OFF),
             State("water_heater.entity_off", STATE_ON, {ATTR_TEMPERATURE: 45}),
+            State(
+                "water_heater.entity_range",
+                STATE_ON,
+                {ATTR_TARGET_TEMP_HIGH: 50, ATTR_TARGET_TEMP_LOW: 20},
+            ),
             State("water_heater.entity_all", STATE_ECO, {ATTR_AWAY_MODE: False}),
             State("water_heater.entity_away", STATE_GAS, {}),
             State(
@@ -112,8 +129,13 @@ async def test_reproducing_states(
     valid_temp_calls = [
         {"entity_id": "water_heater.entity_off", ATTR_TEMPERATURE: 45},
         {"entity_id": "water_heater.entity_gas", ATTR_TEMPERATURE: 45},
+        {
+            "entity_id": "water_heater.entity_range",
+            ATTR_TARGET_TEMP_HIGH: 50,
+            ATTR_TARGET_TEMP_LOW: 20,
+        },
     ]
-    assert len(set_temp_calls) == 2
+    assert len(set_temp_calls) == 3
     for call in set_temp_calls:
         assert call.domain == "water_heater"
         assert call.data in valid_temp_calls
