@@ -1,18 +1,27 @@
-import logging
-from datetime import timedelta
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.core import HomeAssistant
+"""Integration to integrate TuneBlade Remote devices with Home Assistant."""
 
-from .tuneblade import TuneBladeApiClient
+from datetime import timedelta
+import logging
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .const import DOMAIN
+from .tuneblade import TuneBladeApiClient
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
+
 class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator to fetch data from the TuneBlade hub."""
 
-    def __init__(self, hass: HomeAssistant, client: TuneBladeApiClient, scan_interval: timedelta = SCAN_INTERVAL):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: TuneBladeApiClient,
+        scan_interval: timedelta = SCAN_INTERVAL,
+    ):
         """Initialize the coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
         self.client = client
@@ -30,4 +39,6 @@ class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):
 
         except Exception as err:
             _LOGGER.exception("Error fetching data from TuneBlade hub")
-            raise UpdateFailed(f"Error communicating with TuneBlade hub: {err}") from err
+            raise UpdateFailed(
+                f"Error communicating with TuneBlade hub: {err}"
+            ) from err

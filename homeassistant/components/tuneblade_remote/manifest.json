@@ -1,8 +1,10 @@
 {
-  "domain": "tuneblade",
-  "name": "TuneBlade",
+  "domain": "tuneblade_remote",
+  "name": "TuneBlade Remote",
   "bluetooth": [],
-  "codeowners": ["@spycle"],
+  "codeowners": [
+    "@spycle"
+  ],
   "config_flow": true,
   "dependencies": [],
   "dhcp": [],
@@ -13,7 +15,6 @@
   "mqtt": [],
   "requirements": [],
   "usb": [],
-  "version": "2025.06.8",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

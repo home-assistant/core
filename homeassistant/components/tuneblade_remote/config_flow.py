@@ -1,12 +1,15 @@
+"""Adds config flow for TuneBlade Remote."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
+from aiohttp import ClientSession
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-import voluptuous as vol
-from aiohttp import ClientSession
 
 from .const import DOMAIN
 from .tuneblade import TuneBladeApiClient
@@ -15,12 +18,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for TuneBlade Remote."""
+
     VERSION = 1
 
     def __init__(self) -> None:
+        """Initialize."""
         self._discovery_info: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manual user setup step."""
         if user_input is not None:
             name = user_input.get("name", "TuneBlade").split("@")[0].strip()
@@ -43,7 +51,7 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required("host", default='localhost'): str,
+                vol.Required("host", default="localhost"): str,
                 vol.Required("port", default=54412): int,
                 vol.Optional("name", default="TuneBlade"): str,
             }
@@ -83,18 +91,24 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm addition after discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.context.get("title_placeholders", {}).get("name", "TuneBlade"),
+                title=self.context.get("title_placeholders", {}).get(
+                    "name", "TuneBlade"
+                ),
                 data=self._discovery_info,
             )
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": self.context.get("title_placeholders", {}).get("name", "TuneBlade"),
+                "name": self.context.get("title_placeholders", {}).get(
+                    "name", "TuneBlade"
+                ),
                 "ip": self._discovery_info["host"],
             },
             data_schema=vol.Schema({}),

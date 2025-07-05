@@ -1,16 +1,17 @@
-import logging
+"""Integration to integrate TuneBlade Remote devices with Home Assistant."""
+
 from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .tuneblade import TuneBladeApiClient
-from .coordinator import TuneBladeDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import TuneBladeDataUpdateCoordinator
+from .tuneblade import TuneBladeApiClient
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -40,14 +41,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, ["media_player", "switch"])
+    await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload TuneBlade config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["media_player", "switch"])
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, ["media_player", "switch"]
+    )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

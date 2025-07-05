@@ -1,6 +1,9 @@
 """TuneBladeEntity base class."""
+
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .const import DOMAIN, NAME, VERSION
+
 
 class TuneBladeEntity(CoordinatorEntity):
     """Base entity for TuneBlade devices, including master hub."""

@@ -1,8 +1,11 @@
+"""TuneBlade Remote media player entity."""
+
 import logging
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MediaPlayerState,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -12,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up TuneBlade Remote from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     added_ids = set()
     entities = []
@@ -32,7 +36,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity = TuneBladeMediaPlayer(coordinator, device_id, device_data)
                 new_entities.append(entity)
                 added_ids.add(device_id)
-                _LOGGER.debug("Added new media player: %s", device_data.get("name", device_id))
+                _LOGGER.debug(
+                    "Added new media player: %s", device_data.get("name", device_id)
+                )
 
         if new_entities:
             async_add_entities(new_entities, True)
@@ -49,6 +55,7 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Media player representing the TuneBlade MASTER hub as a service."""
 
     def __init__(self, coordinator):
+        """Initialize the entity."""
         super().__init__(coordinator)
         self.device_id = "MASTER"
         self._attr_name = "Master"
@@ -63,24 +70,29 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def available(self) -> bool:
+        """Return True if the device is available."""
         return self.device_id in self.coordinator.data
 
     async def async_turn_on(self):
+        """Turn on the media player."""
         _LOGGER.debug("Connecting TuneBlade Hub MASTER")
         await self.coordinator.client.connect(self.device_id)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
+        """Turn off the media player."""
         _LOGGER.debug("Disconnecting TuneBlade Hub MASTER")
         await self.coordinator.client.disconnect(self.device_id)
         await self.coordinator.async_request_refresh()
 
     async def async_set_volume_level(self, volume):
-        _LOGGER.debug(f"Setting volume for TuneBlade Hub MASTER: {volume}")
+        """Set volume level for TuneBlade MASTER."""
+        _LOGGER.debug("Setting volume for TuneBlade Hub MASTER: %s", volume)
         await self.coordinator.client.set_volume(self.device_id, int(volume * 100))
         await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self):
+        """Register the coordinator update listener."""
         self.coordinator.async_add_listener(self._handle_coordinator_update)
         self._handle_coordinator_update()
 
@@ -107,6 +119,7 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self):
+        """Return extra attributes for the TuneBlade MASTER media player."""
         device_data = self.coordinator.data.get(self.device_id, {})
         code = str(device_data.get("status_code", "0"))
         status_map = {
@@ -124,6 +137,7 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def device_info(self):
+        """Return device info for the TuneBlade MASTER media player."""
         return {
             "identifiers": {(DOMAIN, "MASTER")},
             "name": self._attr_name,
@@ -136,6 +150,7 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Media player for individual TuneBlade devices."""
 
     def __init__(self, coordinator, device_id, device_data):
+        """Initialize the media player entity."""
         super().__init__(coordinator)
         self.device_id = device_id
         self._attr_name = device_data["name"]
@@ -151,17 +166,21 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def available(self) -> bool:
+        """Return True if the device is available."""
         return self.device_id in self.coordinator.data
 
     async def async_turn_on(self):
+        """Turn on the media player."""
         await self.coordinator.client.connect(self.device_id)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
+        """Turn off the media player."""
         await self.coordinator.client.disconnect(self.device_id)
         await self.coordinator.async_request_refresh()
 
     async def async_set_volume_level(self, volume):
+        """Set volume level for the media player."""
         await self.coordinator.client.set_volume(self.device_id, int(volume * 100))
         await self.coordinator.async_request_refresh()
 
@@ -193,6 +212,7 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self):
+        """Return extra attributes for the media player."""
         device_data = self.coordinator.data.get(self.device_id, {})
         code = str(device_data.get("status_code", "0"))
         status_map = {
@@ -210,6 +230,7 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def device_info(self):
+        """Return device info for the media player."""
         return {
             "identifiers": {(DOMAIN, self.device_id)},
             "via_device": (DOMAIN, "MASTER"),  # Link media player to hub device
