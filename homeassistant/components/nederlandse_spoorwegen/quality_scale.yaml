@@ -1,0 +1,133 @@
+# Home Assistant Integration Code Quality Rules for Nederlandse Spoorwegen
+# This file documents the quality scale and exemptions for this integration.
+
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not have any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration do not explicitly subscribe to events.
+  entity-unique-id:
+    status: done
+    comment: |
+      All entities have a unique_id property based on config entry and route.
+  has-entity-name:
+    status: done
+    comment: |
+      All entities implement the name property.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: done
+    comment: |
+      PARALLEL_UPDATES is set to 2 in const.py and imported in sensor.py. Test coverage confirms correct integration and no regressions.
+  reauthentication-flow:
+    status: done
+    comment: |
+      Reauthentication flow is implemented and tested. async_step_reauth is present and covered by tests.
+  test-coverage: done
+  # Gold
+  devices:
+    status: todo
+    comment: |
+      Not implemented. No device is created for the NS API account. Required for gold.
+  diagnostics:
+    status: todo
+    comment: |
+      Not implemented. No diagnostics handler is present. Required for gold.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is a cloud service and does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is a cloud service and does not support discovery.
+  docs-data-update:
+    status: exempt
+    comment: |
+      This integration does not poll or push.
+  docs-examples:
+    status: exempt
+    comment: |
+      This integration only serves backup.
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This integration is a cloud service.
+  docs-supported-functions:
+    status: done
+    comment: |
+      All supported functions are documented.
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single service.
+  entity-category:
+    status: done
+    comment: |
+      All entities are primary and do not require a category.
+  entity-device-class:
+    status: done
+    comment: |
+      All entities are primary sensors.
+  entity-disabled-by-default:
+    status: done
+    comment: |
+      No entities are disabled by default.
+  entity-translations:
+    status: done
+    comment: |
+      All user-facing strings are translated.
+  exception-translations: done
+  icon-translations:
+    status: done
+    comment: |
+      All user-facing icons are translated.
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      This integration does not support reconfiguration and does not implement async_step_reconfigure.
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single service.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
