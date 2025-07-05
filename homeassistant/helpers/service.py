@@ -85,8 +85,8 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 @cache
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import (
+    from homeassistant.components import (  # noqa: PLC0415
+        ai_task,
         alarm_control_panel,
         assist_satellite,
         calendar,
@@ -108,6 +108,7 @@ def _base_components() -> dict[str, ModuleType]:
     )
 
     return {
+        "ai_task": ai_task,
         "alarm_control_panel": alarm_control_panel,
         "assist_satellite": assist_satellite,
         "calendar": calendar,
@@ -1296,8 +1297,7 @@ def async_register_entity_service(
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             "registers an entity service with a non entity service schema",

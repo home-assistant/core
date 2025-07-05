@@ -65,12 +65,10 @@ def download_file(service: ServiceCall) -> None:
 
             else:
                 if filename is None and "content-disposition" in req.headers:
-                    match = re.findall(
+                    if match := re.search(
                         r"filename=(\S+)", req.headers["content-disposition"]
-                    )
-
-                    if match:
-                        filename = match[0].strip("'\" ")
+                    ):
+                        filename = match.group(1).strip("'\" ")
 
                 if not filename:
                     filename = os.path.basename(url).strip()
@@ -108,8 +106,7 @@ def download_file(service: ServiceCall) -> None:
                 _LOGGER.debug("%s -> %s", url, final_path)
 
                 with open(final_path, "wb") as fil:
-                    for chunk in req.iter_content(1024):
-                        fil.write(chunk)
+                    fil.writelines(req.iter_content(1024))
 
                 _LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(

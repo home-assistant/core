@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiotedee import TedeeLock
-from aiotedee.lock import TedeeLockState
+from aiotedee.lock import TedeeDoorState, TedeeLockState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -29,6 +29,8 @@ class TedeeBinarySensorEntityDescription(
     """Describes Tedee binary sensor entity."""
 
     is_on_fn: Callable[[TedeeLock], bool | None]
+    supported_fn: Callable[[TedeeLock], bool] = lambda _: True
+    available_fn: Callable[[TedeeLock], bool] = lambda _: True
 
 
 ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
@@ -61,6 +63,14 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    TedeeBinarySensorEntityDescription(
+        key="door_state",
+        is_on_fn=lambda lock: lock.door_state is TedeeDoorState.OPENED,
+        device_class=BinarySensorDeviceClass.DOOR,
+        supported_fn=lambda lock: lock.door_state is not TedeeDoorState.NOT_PAIRED,
+        available_fn=lambda lock: lock.door_state
+        not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED],
+    ),
 )
 
 
@@ -77,6 +87,7 @@ async def async_setup_entry(
             TedeeBinarySensorEntity(lock, coordinator, entity_description)
             for entity_description in ENTITIES
             for lock in locks
+            if entity_description.supported_fn(lock)
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
@@ -92,3 +103,8 @@ class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._lock)
+
+    @property
+    def available(self) -> bool:
+        """Return true if the binary sensor is available."""
+        return self.entity_description.available_fn(self._lock) and super().available

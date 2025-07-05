@@ -1119,6 +1119,7 @@ class PipelineRun:
                 ) is not None:
                     # Sentence trigger matched
                     agent_id = "sentence_trigger"
+                    processed_locally = True
                     intent_response = intent.IntentResponse(
                         self.pipeline.conversation_language
                     )

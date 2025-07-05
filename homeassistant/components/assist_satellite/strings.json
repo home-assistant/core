@@ -59,6 +59,44 @@
           "description": "Custom media ID to play before the start message or media."
         }
       }
+    },
+    "ask_question": {
+      "name": "Ask question",
+      "description": "Asks a question and gets the user's response.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Assist satellite entity to ask the question on."
+        },
+        "question": {
+          "name": "Question",
+          "description": "The question to ask."
+        },
+        "question_media_id": {
+          "name": "Question media ID",
+          "description": "The media ID of the question to use instead of text-to-speech."
+        },
+        "preannounce": {
+          "name": "Preannounce",
+          "description": "Play a sound before the start message or media."
+        },
+        "preannounce_media_id": {
+          "name": "Preannounce media ID",
+          "description": "Custom media ID to play before the start message or media."
+        },
+        "answers": {
+          "name": "Answers",
+          "description": "Possible answers to the question."
+        }
+      }
+    }
+  },
+  "selector": {
+    "answers": {
+      "fields": {
+        "id": "Answer ID",
+        "sentences": "Sentences"
+      }
     }
   }
 }

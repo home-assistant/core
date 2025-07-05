@@ -21,10 +21,11 @@ from google.genai.types import (
     Schema,
     Tool,
 )
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -301,28 +302,33 @@ async def _transform_stream(
 class GoogleGenerativeAILLMBaseEntity(Entity):
     """Google Generative AI base entity."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        default_model: str = RECOMMENDED_CHAT_MODEL,
+    ) -> None:
         """Initialize the agent."""
         self.entry = entry
+        self.subentry = subentry
+        self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
-        self._attr_unique_id = entry.entry_id
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Google",
-            model="Generative AI",
+            model=subentry.data.get(CONF_CHAT_MODEL, default_model).split("/")[-1],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
-        options = self.entry.options
+        options = self.subentry.data
 
         tools: list[Tool | Callable[..., Any]] | None = None
         if chat_log.llm_api:
@@ -338,7 +344,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
 
-        model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
             "gemma" not in model_name
@@ -390,48 +396,26 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-        generateContentConfig = GenerateContentConfig(
-            temperature=self.entry.options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-            ),
-            top_k=self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-            top_p=self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=self.entry.options.get(
-                CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-            ),
-            safety_settings=[
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold=self.entry.options.get(
-                        CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold=self.entry.options.get(
-                        CONF_HARASSMENT_BLOCK_THRESHOLD,
-                        RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold=self.entry.options.get(
-                        CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold=self.entry.options.get(
-                        CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-            ],
-            tools=tools or None,
-            system_instruction=prompt if supports_system_instruction else None,
-            automatic_function_calling=AutomaticFunctionCallingConfig(
-                disable=True, maximum_remote_calls=None
-            ),
+        generateContentConfig = self.create_generate_content_config()
+        generateContentConfig.tools = tools or None
+        generateContentConfig.system_instruction = (
+            prompt if supports_system_instruction else None
         )
+        generateContentConfig.automatic_function_calling = (
+            AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
+        )
+        if structure:
+            generateContentConfig.response_mime_type = "application/json"
+            generateContentConfig.response_schema = _format_schema(
+                convert(
+                    structure,
+                    custom_serializer=(
+                        chat_log.llm_api.custom_serializer
+                        if chat_log.llm_api
+                        else llm.selector_serializer
+                    ),
+                )
+            )
 
         if not supports_system_instruction:
             messages = [
@@ -473,3 +457,40 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
             if not chat_log.unresponded_tool_results:
                 break
+
+    def create_generate_content_config(self) -> GenerateContentConfig:
+        """Create the GenerateContentConfig for the LLM."""
+        options = self.subentry.data
+        return GenerateContentConfig(
+            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
+            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            safety_settings=[
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=options.get(
+                        CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=options.get(
+                        CONF_HARASSMENT_BLOCK_THRESHOLD,
+                        RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=options.get(
+                        CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=options.get(
+                        CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+            ],
+        )

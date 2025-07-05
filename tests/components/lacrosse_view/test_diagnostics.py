@@ -5,7 +5,7 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.lacrosse_view import DOMAIN
+from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_ENTRY_DATA, TEST_SENSOR
