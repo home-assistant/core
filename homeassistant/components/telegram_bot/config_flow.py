@@ -725,7 +725,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             # If username in HA and Telegram match, use it as suggested value
             telegram_user = self._get_reconfigure_subentry().title
             chat_id = self._get_reconfigure_subentry().data[CONF_CHAT_ID]
-            telegram_user = telegram_user.removesuffix(f" {chat_id}")
+            telegram_user = telegram_user.removesuffix(f" ({chat_id})")
             for user in users:
                 if user["label"] == telegram_user:
                     options[CONF_USER_ID] = user["value"]
