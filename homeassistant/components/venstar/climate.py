@@ -276,11 +276,11 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
         if set_temp:
             if client_mode == self._client.MODE_HEAT:
-                success = self._client.set_setpoints(temperature, self._client.cooltemp)
+                success = self._client.set_setpoints(round(temperature), self._client.cooltemp)
             elif client_mode == self._client.MODE_COOL:
-                success = self._client.set_setpoints(self._client.heattemp, temperature)
+                success = self._client.set_setpoints(self._client.heattemp, round(temperature))
             elif client_mode == self._client.MODE_AUTO:
-                success = self._client.set_setpoints(temp_low, temp_high)
+                success = self._client.set_setpoints(round(temp_low), round(temp_high))
             else:
                 success = False
                 _LOGGER.error(
