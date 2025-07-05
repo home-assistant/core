@@ -68,7 +68,11 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-async def test_options(hass: HomeAssistant, platform) -> None:
+@pytest.mark.parametrize(
+    "initial_unit_prefix",
+    [{"unit_prefix": "k"}],
+)
+async def test_options(hass: HomeAssistant, platform, initial_unit_prefix) -> None:
     """Test reconfiguring."""
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -79,7 +83,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "round": 1.0,
             "source": "sensor.input",
             "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
+            **initial_unit_prefix,
             "unit_time": "min",
             "max_sub_interval": {"seconds": 30},
         },
@@ -92,6 +96,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.invalid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -108,6 +113,11 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "sensor.input",
         "sensor.valid",
     ]
+
+    state = hass.states.get(f"{platform}.my_derivative")
+    assert state.attributes["unit_of_measurement"] == "kdog/min"
+    hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
