@@ -423,7 +423,7 @@ class TelegramNotificationService:
         context: Context | None = None,
         **kwargs_msg: Any,
     ) -> dict[int, int]:
-        chat_ids = self.get_target_chat_ids(kwargs_msg.get(ATTR_TARGET))
+        chat_ids = self.get_target_chat_ids(kwargs_msg.pop(ATTR_TARGET, None))
 
         if len(chat_ids) == 1:
             msg: Message = await self._send_msg(
@@ -506,7 +506,7 @@ class TelegramNotificationService:
         except TelegramError as exc:
             if not suppress_error:
                 raise HomeAssistantError(
-                    f"Error: {exc!s}",
+                    f"Action failed. {exc!s}",
                     translation_domain=DOMAIN,
                     translation_key="action_failed",
                     translation_placeholders={"error": str(exc)},
@@ -686,6 +686,7 @@ class TelegramNotificationService:
                 self.bot.send_photo,
                 "Error sending photo",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 photo=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -702,6 +703,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 sticker=file_content,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -716,6 +718,7 @@ class TelegramNotificationService:
                 self.bot.send_video,
                 "Error sending video",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 video=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -732,6 +735,7 @@ class TelegramNotificationService:
                 self.bot.send_document,
                 "Error sending document",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 document=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -748,6 +752,7 @@ class TelegramNotificationService:
                 self.bot.send_voice,
                 "Error sending voice",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 voice=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -763,6 +768,7 @@ class TelegramNotificationService:
             self.bot.send_animation,
             "Error sending animation",
             params[ATTR_MESSAGE_TAG],
+            target=kwargs.get(ATTR_TARGET),
             animation=file_content,
             caption=kwargs.get(ATTR_CAPTION),
             disable_notification=params[ATTR_DISABLE_NOTIF],
