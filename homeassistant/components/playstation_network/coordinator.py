@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -10,6 +11,7 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
     PSNAWPServerError,
 )
+from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,11 +23,19 @@ from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
 
-type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkCoordinator]
+type PlaystationNetworkConfigEntry = ConfigEntry[PlayStationNetworkCoordinators]
 
 
-class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData]):
-    """Data update coordinator for PSN."""
+@dataclass
+class PlayStationNetworkCoordinators:
+    """Dataclass holding PSN coordinators."""
+
+    coordinator: PlaystationNetworkCoordinator
+    trophy_titles: PlaystationNetworkTrophyTitlesCoordinator
+
+
+class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base coordinator for PSN."""
 
     config_entry: PlaystationNetworkConfigEntry
 
@@ -34,6 +44,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         hass: HomeAssistant,
         psn: PlaystationNetwork,
         config_entry: PlaystationNetworkConfigEntry,
+        update_interval: timedelta,
     ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
@@ -41,16 +52,31 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             name=DOMAIN,
             logger=_LOGGER,
             config_entry=config_entry,
-            update_interval=timedelta(seconds=30),
+            update_interval=update_interval,
         )
 
         self.psn = psn
+
+
+class PlaystationNetworkCoordinator(
+    PlayStationNetworkBaseCoordinator[PlaystationNetworkData]
+):
+    """Data update coordinator for PSN."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        psn: PlaystationNetwork,
+        config_entry: PlaystationNetworkConfigEntry,
+    ) -> None:
+        """Initialize the Coordinator."""
+        super().__init__(hass, psn, config_entry, update_interval=timedelta(seconds=30))
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
         try:
-            await self.psn.get_user()
+            await self.psn.async_setup()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -76,3 +102,37 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+
+
+class PlaystationNetworkTrophyTitlesCoordinator(
+    PlayStationNetworkBaseCoordinator[list[TrophyTitle]]
+):
+    """Trophy titles data update coordinator for PSN."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        psn: PlaystationNetwork,
+        config_entry: PlaystationNetworkConfigEntry,
+    ) -> None:
+        """Initialize the Coordinator."""
+        super().__init__(hass, psn, config_entry, update_interval=timedelta(minutes=60))
+
+    async def _async_update_data(self) -> list[TrophyTitle]:
+        """Update trophy titles data."""
+        try:
+            self.psn.trophy_titles = await self.hass.async_add_executor_job(
+                lambda: list(self.psn.user.trophy_titles())
+            )
+        except PSNAWPAuthenticationError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="not_ready",
+            ) from error
+        except (PSNAWPServerError, PSNAWPClientError) as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from error
+        else:
+            return self.psn.trophy_titles

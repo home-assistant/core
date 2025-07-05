@@ -131,7 +131,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities(
         PlaystationNetworkSensorEntity(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
