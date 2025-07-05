@@ -2,9 +2,7 @@
   "domain": "tuneblade_remote",
   "name": "TuneBlade Remote",
   "bluetooth": [],
-  "codeowners": [
-    "@spycle"
-  ],
+  "codeowners": "@spycle",
   "config_flow": true,
   "dependencies": [],
   "dhcp": [],
