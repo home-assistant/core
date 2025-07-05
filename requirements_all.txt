@@ -2474,7 +2474,7 @@ python-miio==0.5.12
 python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
-python-mystrom==2.2.0
+python-mystrom==2.4.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
