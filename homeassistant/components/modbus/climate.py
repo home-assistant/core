@@ -224,11 +224,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 if fan_mode_kw in mode_value_read:
                     read_value = mode_value_read[fan_mode_kw]
                     self._fan_mode_mapping_from_modbus[read_value] = fan_mode
-                    self._attr_fan_modes.append(fan_mode)
 
                 if fan_mode_kw in mode_value_write:
                     write_value = mode_value_write[fan_mode_kw]
                     self._fan_mode_mapping_to_modbus[fan_mode] = write_value
+
+                if fan_mode_kw in [*mode_value_write, *mode_value_read]:
+                    self._attr_fan_modes.append(fan_mode)
+
         else:
             # No FAN modes defined
             self._fan_mode_register = None
