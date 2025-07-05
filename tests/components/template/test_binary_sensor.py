@@ -1157,7 +1157,7 @@ async def test_restore_state(
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "binary_sensors": {
-                        "hello": {
+                        "hello_name": {
                             "friendly_name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "device_class": "battery",

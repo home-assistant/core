@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
+    ENTITY_ID_FORMAT,
     NumberEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -144,7 +144,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
     ) -> None:
         """Initialize the number."""
         super().__init__(hass, config=config, unique_id=unique_id)
-        assert self._attr_name is not None
+        self.initialize(config, ENTITY_ID_FORMAT)
+        if TYPE_CHECKING:
+            assert self._attr_name is not None
+
         self._value_template = config[CONF_STATE]
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
 
@@ -156,10 +159,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -224,6 +223,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+        self.initialize(config, ENTITY_ID_FORMAT)
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)

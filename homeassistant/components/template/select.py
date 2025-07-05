@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -11,6 +11,7 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -129,7 +129,11 @@ class TemplateSelect(TemplateEntity, SelectEntity):
     ) -> None:
         """Initialize the select."""
         super().__init__(hass, config=config, unique_id=unique_id)
-        assert self._attr_name is not None
+
+        self.initialize(config, ENTITY_ID_FORMAT)
+
+        if TYPE_CHECKING:
+            assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
@@ -138,10 +142,6 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
         self._attr_options = []
         self._attr_current_option = None
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -188,6 +188,7 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+        self.initialize(config, ENTITY_ID_FORMAT)
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(
