@@ -89,6 +89,7 @@ from . import (  # noqa: F401
     type_cameras,
     type_covers,
     type_fans,
+    type_heatercooler,  # <-- NEW: registers the HeaterCooler accessory
     type_humidifiers,
     type_lights,
     type_locks,
