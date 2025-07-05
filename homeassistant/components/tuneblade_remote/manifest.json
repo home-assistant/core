@@ -11,9 +11,7 @@
   "iot_class": "local_polling",
   "mqtt": [],
   "quality_scale": "bronze",
-  "requirements": [
-    "pytuneblade==0.1.0"
-  ],
+  "requirements": ["pytuneblade==0.1.1"],
   "usb": [],
   "zeroconf": [
     {

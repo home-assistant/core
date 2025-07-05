@@ -1,5 +1,6 @@
 """TuneBladeEntity base class."""
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, NAME
@@ -8,7 +9,9 @@ from .const import DOMAIN, NAME
 class TuneBladeEntity(CoordinatorEntity):
     """Base entity for TuneBlade devices, including master hub."""
 
-    def __init__(self, coordinator, config_entry, device_id=None, device_name=None):
+    def __init__(
+        self, coordinator, config_entry, device_id=None, device_name=None
+    ) -> None:
         """Initialize entity with coordinator, config entry, and optional device info."""
         super().__init__(coordinator)
         self.config_entry = config_entry
@@ -16,21 +19,21 @@ class TuneBladeEntity(CoordinatorEntity):
         self.device_name = device_name or "Master"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique ID for this entity."""
         return f"{self.config_entry.entry_id}_{self.device_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device info for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "name": f"{self.device_name} {NAME}",
-            "manufacturer": NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            name=f"{self.device_name} {NAME}",
+            manufacturer=NAME,
+        )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, object] | None:
         """Return extra attributes for the device."""
         data = self.coordinator.data or {}
         device_data = data.get(self.device_id, {})

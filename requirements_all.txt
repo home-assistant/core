@@ -2554,7 +2554,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.tuneblade_remote
-pytuneblade==0.1.0
+pytuneblade==0.1.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
