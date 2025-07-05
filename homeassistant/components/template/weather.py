@@ -31,12 +31,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.const import (
-    CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
@@ -52,11 +47,8 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .coordinator import TriggerUpdateCoordinator
-from .template_entity import (
-    TemplateEntity,
-    make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
-)
+from .helpers import async_setup_template_platform
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
@@ -138,33 +130,6 @@ WEATHER_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
 
 
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the weather entities."""
-    entities = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        entities.append(
-            WeatherTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(entities)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -172,36 +137,19 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template weather."""
-    if discovery_info is None:
-        config = rewrite_common_legacy_to_modern_conf(hass, config)
-        unique_id = config.get(CONF_UNIQUE_ID)
-        async_add_entities(
-            [
-                WeatherTemplate(
-                    hass,
-                    config,
-                    unique_id,
-                )
-            ]
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerWeatherEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        WEATHER_DOMAIN,
+        config,
+        StateWeatherEntity,
+        TriggerWeatherEntity,
+        async_add_entities,
+        discovery_info,
+        {},
     )
 
 
-class WeatherTemplate(TemplateEntity, WeatherEntity):
+class StateWeatherEntity(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False

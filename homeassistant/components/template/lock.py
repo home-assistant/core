@@ -31,12 +31,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import CONF_PICTURE, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
 
@@ -49,7 +48,7 @@ CONF_OPEN = "open"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
@@ -83,33 +82,6 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template fans."""
-    fans = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        fans.append(
-            TemplateLock(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(fans)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -117,27 +89,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template fans."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            [rewrite_common_legacy_to_modern_conf(hass, config, LEGACY_FIELDS)],
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerLockEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        LOCK_DOMAIN,
+        config,
+        StateLockEntity,
+        TriggerLockEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
     )
 
 
@@ -311,7 +271,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             )
 
 
-class TemplateLock(TemplateEntity, AbstractTemplateLock):
+class StateLockEntity(TemplateEntity, AbstractTemplateLock):
     """Representation of a template lock."""
 
     _attr_should_poll = False
