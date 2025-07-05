@@ -9,9 +9,8 @@ from aiohttp import ClientSession
 from tuneblade import TuneBladeApiClient
 import voluptuous as vol
 
+from homeassistant.components.zeroconf.models import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.service_info import ZeroconfServiceInfo
 
 from .const import DOMAIN
 

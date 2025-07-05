@@ -22,7 +22,7 @@ class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         client: TuneBladeApiClient,
         scan_interval: timedelta = SCAN_INTERVAL,
-    ):
+    ) -> None:  # Add this return type
         """Initialize the coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
         self.client = client
