@@ -12,7 +12,7 @@
       ),
     }),
     'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'entry_type': None,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
@@ -32,7 +32,48 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '',
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_device_registry_server_merged
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'ff:ee:dd:cc:bb:aa',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'squeezebox',
+        '12345678-1234-1234-1234-123456789012',
+      ),
+      tuple(
+        'squeezebox',
+        'ff:ee:dd:cc:bb:aa',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'https://lyrion.org/ / Ralph Irving & Adrian Smith',
+    'model': 'Lyrion Music Server/SqueezeLite',
+    'model_id': 'LMS',
+    'name': '1.2.3.4',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '',
     'via_device_id': <ANY>,
   })
 # ---
@@ -65,7 +106,8 @@
     'original_name': None,
     'platform': 'squeezebox',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 4126655>,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 8320959>,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff',
     'unit_of_measurement': None,
@@ -78,17 +120,13 @@
       'group_members': list([
       ]),
       'is_volume_muted': True,
-      'media_album_name': 'None',
-      'media_artist': 'None',
-      'media_channel': 'None',
       'media_duration': 1,
       'media_position': 1,
-      'media_title': 'None',
       'query_result': dict({
       }),
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
-      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.01,
     }),
     'context': <ANY>,

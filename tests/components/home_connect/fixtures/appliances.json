@@ -97,7 +97,7 @@
       "connected": true,
       "type": "Hob",
       "enumber": "HCS000000/05",
-      "haId": "BOSCH-HCS000000-D00000000005"
+      "haId": "BOSCH-HCS000000-68A40E000000"
     },
     {
       "name": "CookProcessor",
@@ -106,7 +106,7 @@
       "connected": true,
       "type": "CookProcessor",
       "enumber": "HCS000000/06",
-      "haId": "BOSCH-HCS000000-D00000000006"
+      "haId": "123456789012345678"
     },
     {
       "name": "DNE",

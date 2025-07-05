@@ -28,8 +28,10 @@ from homeassistant.util.unit_conversion import (
     EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -61,6 +63,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
         ),
+        vol.Optional("concentration"): vol.In(
+            MassVolumeConcentrationConverter.VALID_UNITS
+        ),
         vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
@@ -73,6 +78,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),

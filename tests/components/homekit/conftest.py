@@ -1,6 +1,6 @@
 """HomeKit session fixtures."""
 
-from asyncio import AbstractEventLoop
+import asyncio
 from collections.abc import Generator
 from contextlib import suppress
 import os
@@ -26,12 +26,13 @@ def iid_storage(hass: HomeAssistant) -> Generator[AccessoryIIDStorage]:
 
 @pytest.fixture
 def run_driver(
-    hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
+    hass: HomeAssistant, iid_storage: AccessoryIIDStorage
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
     This mock does not mock async_stop, so the driver will not be stopped
     """
+    event_loop = asyncio.get_event_loop()
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
         patch("pyhap.accessory_driver.AccessoryEncoder"),
@@ -55,9 +56,10 @@ def run_driver(
 
 @pytest.fixture
 def hk_driver(
-    hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
+    hass: HomeAssistant, iid_storage: AccessoryIIDStorage
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
+    event_loop = asyncio.get_event_loop()
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
         patch("pyhap.accessory_driver.AccessoryEncoder"),
@@ -85,11 +87,11 @@ def hk_driver(
 @pytest.fixture
 def mock_hap(
     hass: HomeAssistant,
-    event_loop: AbstractEventLoop,
     iid_storage: AccessoryIIDStorage,
     mock_zeroconf: MagicMock,
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
+    event_loop = asyncio.get_event_loop()
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
         patch("pyhap.accessory_driver.AccessoryEncoder"),

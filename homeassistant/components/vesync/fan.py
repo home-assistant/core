@@ -157,6 +157,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
+        # has a regression bug that needs fixing when manual is already used. 
         if percentage == 0:
             success = await self.device.turn_off()
             if not success:

@@ -14,12 +14,11 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import chat_session, intent, llm, template
+from homeassistant.helpers import chat_session, frame, intent, llm, template
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
-from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
@@ -359,7 +358,7 @@ class ChatLog:
         self,
         llm_context: llm.LLMContext,
         prompt: str,
-        language: str,
+        language: str | None,
         user_name: str | None = None,
     ) -> str:
         try:
@@ -373,7 +372,7 @@ class ChatLog:
             )
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=language)
+            intent_response = intent.IntentResponse(language=language or "")
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 "Sorry, I had a problem with my template",
@@ -392,15 +391,25 @@ class ChatLog:
         user_llm_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""
-        llm_context = llm.LLMContext(
-            platform=conversing_domain,
-            context=user_input.context,
-            user_prompt=user_input.text,
-            language=user_input.language,
-            assistant=DOMAIN,
-            device_id=user_input.device_id,
+        frame.report_usage(
+            "ChatLog.async_update_llm_data",
+            breaks_in_ha_version="2026.1",
+        )
+        return await self.async_provide_llm_data(
+            llm_context=user_input.as_llm_context(conversing_domain),
+            user_llm_hass_api=user_llm_hass_api,
+            user_llm_prompt=user_llm_prompt,
+            user_extra_system_prompt=user_input.extra_system_prompt,
         )
 
+    async def async_provide_llm_data(
+        self,
+        llm_context: llm.LLMContext,
+        user_llm_hass_api: str | list[str] | None = None,
+        user_llm_prompt: str | None = None,
+        user_extra_system_prompt: str | None = None,
+    ) -> None:
+        """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
 
         if user_llm_hass_api:
@@ -414,10 +423,12 @@ class ChatLog:
                 LOGGER.error(
                     "Error getting LLM API %s for %s: %s",
                     user_llm_hass_api,
-                    conversing_domain,
+                    llm_context.platform,
                     err,
                 )
-                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response = intent.IntentResponse(
+                    language=llm_context.language or ""
+                )
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     "Error preparing LLM API",
@@ -431,10 +442,10 @@ class ChatLog:
         user_name: str | None = None
 
         if (
-            user_input.context
-            and user_input.context.user_id
+            llm_context.context
+            and llm_context.context.user_id
             and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+                user := await self.hass.auth.async_get_user(llm_context.context.user_id)
             )
         ):
             user_name = user.name
@@ -444,7 +455,7 @@ class ChatLog:
             await self._async_expand_prompt_template(
                 llm_context,
                 (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                user_input.language,
+                llm_context.language,
                 user_name,
             )
         )
@@ -456,14 +467,14 @@ class ChatLog:
             await self._async_expand_prompt_template(
                 llm_context,
                 llm.BASE_PROMPT,
-                user_input.language,
+                llm_context.language,
                 user_name,
             )
         )
 
         if extra_system_prompt := (
             # Take new system prompt if one was given
-            user_input.extra_system_prompt or self.extra_system_prompt
+            user_extra_system_prompt or self.extra_system_prompt
         ):
             prompt_parts.append(extra_system_prompt)
 

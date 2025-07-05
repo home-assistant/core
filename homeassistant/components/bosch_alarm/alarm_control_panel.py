@@ -12,8 +12,8 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BoschAlarmConfigEntry
 from .entity import BoschAlarmAreaEntity
+from .types import BoschAlarmConfigEntry
 
 
 async def async_setup_entry(
@@ -34,6 +34,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 0
+
+
 class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
     """An alarm control panel entity for a bosch alarm panel."""
 
@@ -47,7 +50,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(panel, area_id, unique_id, False, False, True)
+        super().__init__(panel, area_id, unique_id, True, False, True)
         self._attr_unique_id = self._area_unique_id
 
     @property

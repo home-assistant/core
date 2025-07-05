@@ -11,7 +11,7 @@ from pylamarzocco.const import (
 )
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
