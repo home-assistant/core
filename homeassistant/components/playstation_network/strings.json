@@ -53,6 +53,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ps_plus_status": {
+        "name": "Subscribed to PlayStation Plus"
+      }
+    },
     "sensor": {
       "trophy_level": {
         "name": "Trophy level"
