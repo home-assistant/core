@@ -207,7 +207,16 @@
           "headlight": {
             "mode": "EVENING_ONLY"
           }
-        }
+        },
+        "messages": [
+          {
+            "time": 1751146587,
+            "code": 2,
+            "severity": "ERROR",
+            "latitude": 49,
+            "longitude": 10
+          }
+        ]
       }
     },
     {
@@ -270,7 +279,8 @@
             "mode": null
           }
         },
-        "statistics": {}
+        "statistics": {},
+        "messages": []
       }
     }
   ]

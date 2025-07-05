@@ -383,6 +383,14 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=_get_error_string,
     ),
     AutomowerSensorEntityDescription(
+        key="last_error",
+        translation_key="last_error",
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: ERROR_KEY_LIST,
+        exists_fn=lambda data: bool(data.messages),
+        value_fn=lambda data: data.messages[0].code,
+    ),
+    AutomowerSensorEntityDescription(
         key="restricted_reason",
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,

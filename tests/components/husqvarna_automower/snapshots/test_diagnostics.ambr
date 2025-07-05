@@ -63,7 +63,15 @@
       'stay_out_zones': True,
       'work_areas': True,
     }),
-    'messages': None,
+    'messages': list([
+      dict({
+        'code': 'no_loop_signal',
+        'latitude': 49.0,
+        'longitude': 10.0,
+        'severity': 'error',
+        'time': '2025-06-28T21:36:27+02:00',
+      }),
+    ]),
     'metadata': dict({
       'connected': True,
       'status_dateteime': '2023-06-05T00:00:00+00:00',

@@ -125,8 +125,11 @@ def mock_automower_client(
         spec_set=True,
     ) as mock:
         mock_instance = mock.return_value
+        mock_instance.data = values
         mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-        mock_instance.get_status = AsyncMock(return_value=values)
+        # nun liest get_status() immer aus mock_instance.data
+        mock_instance.get_status = AsyncMock(side_effect=lambda: mock_instance.data)
+        mock_instance.async_get_message = AsyncMock()
         mock_instance.start_listening = AsyncMock(side_effect=listen)
         mock_instance.commands = create_autospec(
             MowerCommands, instance=True, spec_set=True
