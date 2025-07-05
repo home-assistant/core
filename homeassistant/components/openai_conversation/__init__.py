@@ -90,11 +90,6 @@ def encode_file(file_path: str) -> tuple[str, str]:
         return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up OpenAI Conversation."""
-    await async_migrate_integration(hass)
-
-
 def _cleanup_images(image_storage: dict[str, ImageData], num_to_remove: int) -> None:
     """Remove old images to keep the storage size under the limit."""
     if num_to_remove <= 0:
@@ -258,6 +253,7 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenAI Conversation."""
+    await async_migrate_integration(hass)
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
         """Send a prompt to ChatGPT and return the response."""
