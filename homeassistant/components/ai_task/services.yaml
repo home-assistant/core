@@ -27,3 +27,5 @@ generate_data:
       required: false
       selector:
         media:
+          accept:
+            - "*"
