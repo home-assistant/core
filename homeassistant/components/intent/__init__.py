@@ -326,13 +326,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         match_result = intent.async_match_targets(
             hass, match_constraints, match_preferences
         )
-        if (
-            (not match_result.is_match)
-            and (match_result.no_match_reason is not None)
-            and (not match_result.no_match_reason.is_no_entities_reason())
-        ):
-            # Don't try to answer questions for certain errors.
-            # Other match failure reasons are OK.
+        if not match_result.is_match:
             raise intent.MatchFailedError(
                 result=match_result, constraints=match_constraints
             )
