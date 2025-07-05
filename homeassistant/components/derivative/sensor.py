@@ -368,7 +368,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
-            if new_state is not None and old_state is not None:
+            if old_state is not None:
                 calc_derivative(new_state, old_state.state, old_state.last_reported)
             else:
                 # On first state change from none, update availability

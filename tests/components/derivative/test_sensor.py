@@ -657,49 +657,6 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     assert actual_values == expected_values
 
 
-async def test_restore(
-    hass: HomeAssistant,
-) -> None:
-    """Test state and unit are restored on boot."""
-    restore_state = "10.00"
-    restore_unit = "kWh/h"
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            (
-                State(
-                    "sensor.power",
-                    restore_state,
-                    {
-                        "unit_of_measurement": restore_unit,
-                    },
-                ),
-                {
-                    "native_value": restore_state,
-                    "native_unit_of_measurement": restore_unit,
-                },
-            ),
-        ],
-    )
-
-    config = {
-        "platform": "derivative",
-        "name": "power",
-        "source": "sensor.energy",
-        "round": 2,
-        "unit_time": "s",
-    }
-
-    config = {"sensor": config}
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.power")
-    assert state is not None
-    assert state.state == restore_state
-    assert state.attributes.get("unit_of_measurement") == restore_unit
-
-
 async def test_device_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -838,12 +795,12 @@ async def test_unavailable_boot(
                     "sensor.power",
                     restore_state,
                     {
-                        "unit_of_measurement": "W",
+                        "unit_of_measurement": "kWh/s",
                     },
                 ),
                 {
                     "native_value": restore_state,
-                    "native_unit_of_measurement": "W",
+                    "native_unit_of_measurement": "kWh/s",
                 },
             ),
         ],
@@ -873,7 +830,7 @@ async def test_unavailable_boot(
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
         freezer.move_to(base + timedelta(seconds=1))
-        hass.states.async_set(entity_id, 10, {})
+        hass.states.async_set(entity_id, 10, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
@@ -883,10 +840,11 @@ async def test_unavailable_boot(
         assert state.state == restore_state
 
         freezer.move_to(base + timedelta(seconds=2))
-        hass.states.async_set(entity_id, 15, {})
+        hass.states.async_set(entity_id, 15, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
         assert state is not None
         # Now that the source sensor has two valid datapoints, we can calculate derivative
         assert state.state == "5.00"
+        assert state.attributes.get("unit_of_measurement") == "kWh/s"
