@@ -2502,11 +2502,7 @@ python-ripple-api==0.0.3
 python-roborock==2.18.2
 
 # homeassistant.components.smarttub
-<<<<<<< HEAD
 python-smarttub==0.0.44
-=======
-python-smarttub==0.0.39
->>>>>>> c82314878f0 (gen_requirements_all)
 
 # homeassistant.components.snoo
 python-snoo==0.6.6
