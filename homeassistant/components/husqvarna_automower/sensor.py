@@ -11,7 +11,6 @@ from aioautomower.model import (
     InactiveReasons,
     MowerAttributes,
     MowerModes,
-    MowerStates,
     RestrictedReasons,
     WorkArea,
 )
