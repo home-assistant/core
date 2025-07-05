@@ -147,6 +147,18 @@
       },
       "last_alarm_type_name": {
         "name": "Last alarm type name"
+      },
+      "record_mode": {
+        "name": "Record mode"
+      },
+      "battery_camera_work_mode": {
+        "name": "Battery work mode"
+      },
+      "power_status": {
+        "name": "Power status"
+      },
+      "online_status": {
+        "name": "Online status"
       }
     },
     "switch": {
