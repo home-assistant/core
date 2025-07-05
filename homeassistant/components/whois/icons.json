@@ -18,6 +18,9 @@
       },
       "reseller": {
         "default": "mdi:store"
+      },
+      "status": {
+        "default": "mdi:check-circle"
       }
     }
   }

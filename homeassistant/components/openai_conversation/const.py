@@ -25,10 +25,12 @@ class ImageData:
 
 DATA_IMAGES: HassKey[dict[str, ImageData]] = HassKey(DOMAIN)
 
+DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+DEFAULT_NAME = "OpenAI Conversation"
+
 CONF_CHAT_MODEL = "chat_model"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-CONF_PROMPT = "prompt"
 CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_RECOMMENDED = "recommended"

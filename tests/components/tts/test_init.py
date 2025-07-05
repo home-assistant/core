@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -921,6 +921,29 @@ async def test_web_view_wrong_file(
     [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
     indirect=["setup"],
 )
+async def test_web_view_wrong_file_with_head_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: str,
+    expected_url_suffix: str,
+) -> None:
+    """Set up a TTS platform and receive wrong file from web."""
+    client = await hass_client()
+
+    url = (
+        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+        f"_en-us_-_{expected_url_suffix}.mp3"
+    )
+
+    req = await client.head(url)
+    assert req.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    ("setup", "expected_url_suffix"),
+    [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
+    indirect=["setup"],
+)
 async def test_web_view_wrong_filename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -1523,6 +1546,45 @@ async def test_fetching_in_async(
 
 
 @pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+    ],
+    indirect=["setup"],
+)
+async def test_ws_list_engines_filter_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+) -> None:
+    """Test listing tts engines and supported languages."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "name": "Test",
+                "engine_id": engine_id,
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
+        ]
+    }
+
+    hass.data[tts.DATA_TTS_MANAGER].providers[engine_id].has_entity = True
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": []}
+
+
+@pytest.mark.parametrize(
     ("setup", "engine_id", "extra_data"),
     [
         ("mock_setup", "test", {"name": "Test"}),
@@ -1846,6 +1908,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.language == mock_tts_entity.default_language
     assert stream.options == (mock_tts_entity.default_options or {})
+    assert stream.supports_streaming_input is False
     assert tts.async_get_stream(hass, stream.token) is stream
     stream.async_set_message("beer")
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
@@ -1866,6 +1929,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         )
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     async def stream_message():
         """Mock stream message."""
@@ -1874,6 +1938,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         yield "o"
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.supports_streaming_input is True
     stream.async_set_message_stream(stream_message())
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
     assert result_data == b"hello"

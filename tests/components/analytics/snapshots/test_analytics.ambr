@@ -222,3 +222,16 @@
     'version': '1970.1.0',
   })
 # ---
+# name: test_submitting_legacy_integrations
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+      'legacy_binary_sensor',
+    ]),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---

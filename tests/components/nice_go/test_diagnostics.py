@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant

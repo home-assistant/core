@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather

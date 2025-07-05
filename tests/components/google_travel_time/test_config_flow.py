@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
-from google.api_core.exceptions import GatewayTimeout, GoogleAPIError, Unauthorized
+from google.api_core.exceptions import (
+    GatewayTimeout,
+    GoogleAPIError,
+    PermissionDenied,
+    Unauthorized,
+)
 import pytest
 
 from homeassistant.components.google_travel_time.const import (
@@ -98,6 +103,12 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
         (GoogleAPIError("test"), "cannot_connect"),
         (GatewayTimeout("Timeout error."), "timeout_connect"),
         (Unauthorized("Invalid API key."), "invalid_auth"),
+        (
+            PermissionDenied(
+                "Requests to this API routes.googleapis.com method google.maps.routing.v2.Routes.ComputeRoutes are blocked."
+            ),
+            "permission_denied",
+        ),
     ],
 )
 async def test_errors(

@@ -34,7 +34,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
       "reconfigure": {
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
@@ -288,6 +288,20 @@
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
+    },
+    "outbound_websocket_incorrectly_enabled": {
+      "title": "Outbound WebSocket is enabled for {device_name}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Outbound WebSocket is enabled for {device_name}",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
     }
   }
 }

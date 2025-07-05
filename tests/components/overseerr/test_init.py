@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from python_overseerr import OverseerrAuthenticationError, OverseerrConnectionError
 from python_overseerr.models import WebhookNotificationOptions
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud
 from homeassistant.components.cloud import CloudNotAvailable

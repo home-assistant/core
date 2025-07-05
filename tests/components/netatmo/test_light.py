@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,

@@ -27,9 +27,10 @@
     'original_name': 'Water price',
     'platform': 'suez_water',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_price',
-    'unique_id': 'test-counter_water_price',
+    'unique_id': '123456_water_price',
     'unit_of_measurement': '€',
   })
 # ---
@@ -71,15 +72,19 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water usage yesterday',
     'platform': 'suez_water',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_usage_yesterday',
-    'unique_id': 'test-counter_water_usage_yesterday',
+    'unique_id': '123456_water_usage_yesterday',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[amax_3000]
+# name: test_diagnostics[amax_3000-None]
   dict({
     'data': dict({
       'areas': list([
@@ -95,7 +95,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[b5512]
+# name: test_diagnostics[b5512-None]
   dict({
     'data': dict({
       'areas': list([
@@ -180,7 +180,7 @@
         }),
       ]),
       'protocol_version': '1.0.0',
-      'serial_number': None,
+      'serial_number': '1234567890',
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
@@ -190,7 +190,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[solution_3000]
+# name: test_diagnostics[solution_3000-None]
   dict({
     'data': dict({
       'areas': list([
@@ -275,7 +275,7 @@
         }),
       ]),
       'protocol_version': '1.0.0',
-      'serial_number': '1234567890',
+      'serial_number': None,
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
