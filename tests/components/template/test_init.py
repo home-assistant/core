@@ -364,6 +364,18 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "value_template": "{{ true }}",
             },
         ),
+        (
+            {
+                "template_type": "event",
+                "name": "My template",
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single', 'double'] }}",
+            },
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single', 'double'] }}",
+            },
+        ),
     ],
 )
 async def test_change_device(
