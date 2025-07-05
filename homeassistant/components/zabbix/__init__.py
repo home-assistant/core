@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 
 import voluptuous as vol
 from zabbix_utils import ItemValue, Sender, ZabbixAPI
-from zabbix_utils.exceptions import APIRequestError
+from zabbix_utils.exceptions import APIRequestError, ProcessingError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -288,6 +288,9 @@ class ZabbixThread(threading.Thread):
         while not self.shutdown:
             count, metrics = self.get_metrics()
             if metrics:
-                self.write_to_zabbix(metrics)
+                try:
+                    self.write_to_zabbix(metrics)
+                except ProcessingError as processing_exception:
+                    _LOGGER.error("Error writing to Zabbix: %s", processing_exception)
             for _ in range(count):
                 self.queue.task_done()
