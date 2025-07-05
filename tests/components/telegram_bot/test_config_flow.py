@@ -65,7 +65,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] is None
+    assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
 
 
 async def test_reconfigure_flow_broadcast(
@@ -119,6 +119,7 @@ async def test_reconfigure_flow_broadcast(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_webhooks_config_entry.data[CONF_PLATFORM] == PLATFORM_BROADCAST
+    assert mock_webhooks_config_entry.data[CONF_PROXY_URL] == "https://test"
 
 
 async def test_reconfigure_flow_webhooks(
@@ -398,7 +399,7 @@ async def test_subentry_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
-    assert subentry.title == "mock title"
+    assert subentry.title == "mock title (987654321)"
     assert subentry.unique_id == "987654321"
     assert subentry.data == {
         CONF_CHAT_ID: 987654321,

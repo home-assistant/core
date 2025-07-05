@@ -47,6 +47,7 @@ class HistoryStats:
         start: Template | None,
         end: Template | None,
         duration: datetime.timedelta | None,
+        preview: bool = False,
     ) -> None:
         """Init the history stats manager."""
         self.hass = hass
@@ -59,6 +60,7 @@ class HistoryStats:
         self._duration = duration
         self._start = start
         self._end = end
+        self._preview = preview
 
         self._pending_events: list[Event[EventStateChangedData]] = []
         self._query_count = 0
@@ -70,7 +72,9 @@ class HistoryStats:
         # Get previous values of start and end
         previous_period_start, previous_period_end = self._period
         # Parse templates
-        self._period = async_calculate_period(self._duration, self._start, self._end)
+        self._period = async_calculate_period(
+            self._duration, self._start, self._end, log_errors=not self._preview
+        )
         # Get the current period
         current_period_start, current_period_end = self._period
 

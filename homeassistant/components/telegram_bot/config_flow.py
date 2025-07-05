@@ -163,8 +163,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
-            if user_input[ATTR_PARSER] == PARSER_PLAIN_TEXT:
-                user_input[ATTR_PARSER] = None
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -241,12 +239,13 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
             subentries: list[ConfigSubentryData] = []
             allowed_chat_ids: list[int] = import_data[CONF_ALLOWED_CHAT_IDS]
+            assert self._bot is not None, "Bot should be initialized during import"
             for chat_id in allowed_chat_ids:
                 chat_name: str = await _async_get_chat_name(self._bot, chat_id)
                 subentry: ConfigSubentryData = ConfigSubentryData(
                     data={CONF_CHAT_ID: chat_id},
                     subentry_type=CONF_ALLOWED_CHAT_IDS,
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     unique_id=str(chat_id),
                 )
                 subentries.append(subentry)
@@ -332,6 +331,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
@@ -354,7 +356,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input["advanced_settings"].get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
+                        CONF_PROXY_URL
+                    ),
                 },
                 options={
                     # this value may come from yaml import
@@ -379,7 +383,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Shutdown the bot if it exists."""
         if self._bot:
             await self._bot.shutdown()
-            self._bot = None
 
     async def _validate_bot(
         self,
@@ -651,7 +654,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     data=user_input,
                     unique_id=str(chat_id),
                 )
@@ -720,9 +723,13 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
         if options.setdefault(CONF_USER_ID, USER_ID_UNSPECIFIED) == USER_ID_UNSPECIFIED:
             # If username in HA and Telegram match, use it as suggested value
-            title = self._get_reconfigure_subentry().title
+            telegram_user = self._get_reconfigure_subentry().title
+            chat_id = self._get_reconfigure_subentry().data[CONF_CHAT_ID]
+            chat_id_str = f" {chat_id}"
+            if telegram_user.endswith(chat_id_str):
+              telegram_user = telegram_user[:-len(chat_id_str)]
             for user in users:
-                if user["label"] == title:
+                if user["label"] == telegram_user:
                     options[CONF_USER_ID] = user["value"]
                     break
 
@@ -734,10 +741,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         )
 
 
-async def _async_get_chat_name(bot: Bot | None, chat_id: int) -> str:
-    if not bot:
-        return str(chat_id)
-
+async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
     try:
         chat_info: ChatFullInfo = await bot.get_chat(chat_id)
         return chat_info.effective_name or str(chat_id)

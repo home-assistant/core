@@ -14,7 +14,9 @@ announce:
     media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     preannounce:
       required: false
       default: true
@@ -23,7 +25,9 @@ announce:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
 start_conversation:
   target:
     entity:
@@ -40,7 +44,9 @@ start_conversation:
     start_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     extra_system_prompt:
       required: false
       selector:
@@ -53,7 +59,9 @@ start_conversation:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
 ask_question:
   fields:
     entity_id:
@@ -72,7 +80,9 @@ ask_question:
     question_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     preannounce:
       required: false
       default: true
@@ -81,7 +91,9 @@ ask_question:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     answers:
       required: false
       selector:
