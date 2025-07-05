@@ -110,21 +110,27 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception", "entry_state"),
+    ("exception_get_status", "exception_async_get_message", "entry_state"),
     [
-        (ApiError, ConfigEntryState.SETUP_RETRY),
-        (AuthError, ConfigEntryState.SETUP_ERROR),
+        (ApiError("Test error"), None, ConfigEntryState.SETUP_RETRY),
+        (AuthError("Test error"), None, ConfigEntryState.SETUP_ERROR),
+        (None, ApiError("Test error"), ConfigEntryState.SETUP_RETRY),
+        (None, AuthError("Test error"), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    values: dict[str, MowerAttributes],
+    exception_get_status: Exception | None,
+    exception_async_get_message: Exception | None,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
-    mock_automower_client.get_status.side_effect = exception("Test error")
+    mock_automower_client.get_status.side_effect = exception_get_status or None
+    mock_automower_client.get_status.return_value = values
+    mock_automower_client.async_get_message.side_effect = exception_async_get_message
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is entry_state
