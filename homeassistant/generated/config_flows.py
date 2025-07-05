@@ -78,6 +78,7 @@ FLOWS = {
         "autarco",
         "awair",
         "aws_s3",
+        "axion_dmx",
         "axis",
         "azure_data_explorer",
         "azure_devops",
