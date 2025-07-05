@@ -63,6 +63,7 @@ from . import (
     template,
     translation,
 )
+from .deprecation import deprecate_hass_binding
 from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
@@ -1153,10 +1154,10 @@ def async_register_admin_service(
     )
 
 
-@bind_hass
+@deprecate_hass_binding(breaks_in_ha_version="2026.2")
 @callback
 def verify_domain_control(
-    hass: HomeAssistant, domain: str
+    domain: str,
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
@@ -1172,6 +1173,7 @@ def verify_domain_control(
             if not call.context.user_id:
                 return await service_handler(call)
 
+            hass = call.hass
             user = await hass.auth.async_get_user(call.context.user_id)
 
             if user is None:
