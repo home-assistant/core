@@ -8,15 +8,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 from tuya_sharing import CustomerDevice
 
+from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import (
     CONF_APP_TYPE,
+    CONF_ENDPOINT,
+    CONF_TERMINAL_ID,
+    CONF_TOKEN_INFO,
     CONF_USER_CODE,
     DOMAIN,
-    DPCode,
-    DPType,
 )
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -32,13 +35,42 @@ def mock_old_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock an config entry."""
+    """Mock a config entry."""
     return MockConfigEntry(
-        title="12345",
+        title="Test Tuya entry",
         domain=DOMAIN,
-        data={CONF_USER_CODE: "12345"},
+        data={
+            CONF_ENDPOINT: "test_endpoint",
+            CONF_TERMINAL_ID: "test_terminal",
+            CONF_TOKEN_INFO: "test_token",
+            CONF_USER_CODE: "test_user_code",
+        },
         unique_id="12345",
     )
+
+
+@pytest.fixture
+async def mock_loaded_entry(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> MockConfigEntry:
+    """Mock a config entry."""
+    # Setup
+    mock_manager.device_map = {
+        mock_device.id: mock_device,
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    # Initialize the component
+    with (
+        patch("homeassistant.components.tuya.ManagerCompat", return_value=mock_manager),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
 
 
 @pytest.fixture
@@ -78,83 +110,44 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_device_arete_two_12l_dehumidifier_air_purifier() -> CustomerDevice:
-    """Mock a Tuya Arete Two 12L Dehumidifier/Air Purifier device."""
-    device = MagicMock(spec=CustomerDevice)
-    device.id = "bf3fce6af592f12df3gbgq"
-    device.name = "Dehumidifier"
-    device.category = "cs"
-    device.product_id = "zibqa9dutqyaxym2"
-    device.product_name = "Arete\u00ae Two 12L Dehumidifier/Air Purifier"
-    device.online = True
-    device.function = {
-        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
-        DPCode.DEHUMIDITY_SET_VALUE: MagicMock(
-            type=DPType.INTEGER,
-            values='{"unit": "%", "min": 35, "max": 70, "scale": 0, "step": 5}',
-        ),
-        DPCode.CHILD_LOCK: MagicMock(type=DPType.BOOLEAN, value="{}"),
-        DPCode.COUNTDOWN_SET: MagicMock(
-            type=DPType.ENUM,
-            values='{"range": ["cancel", "1h", "2h", "3h"]}',
-        ),
-    }
-    device.status_range = {
-        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
-        DPCode.DEHUMIDITY_SET_VALUE: MagicMock(
-            type=DPType.INTEGER,
-            values='{"unit": "%", "min": 35, "max": 70, "scale": 0, "step": 5}',
-        ),
-        DPCode.CHILD_LOCK: MagicMock(type=DPType.BOOLEAN, value="{}"),
-        DPCode.HUMIDITY_INDOOR: MagicMock(
-            type=DPType.INTEGER,
-            values='{"unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1}',
-        ),
-        DPCode.COUNTDOWN_SET: MagicMock(
-            type=DPType.ENUM,
-            values='{"range": ["cancel", "1h", "2h", "3h"]}',
-        ),
-        DPCode.COUNTDOWN_LEFT: MagicMock(
-            type=DPType.INTEGER,
-            values='{"unit": "h", "min": 0, "max": 24, "scale": 0, "step": 1}',
-        ),
-        DPCode.FAULT: MagicMock(
-            type=DPType.BITMAP,
-            values='{"label": ["tankfull", "defrost", "E1", "E2", "L2", "L3", "L4", "wet"]}',
-        ),
-    }
-    device.status = {
-        DPCode.SWITCH: True,
-        DPCode.DEHUMIDITY_SET_VALUE: 50,
-        DPCode.CHILD_LOCK: False,
-        DPCode.HUMIDITY_INDOOR: 47,
-        DPCode.COUNTDOWN_SET: "cancel",
-        DPCode.COUNTDOWN_LEFT: 0,
-        DPCode.FAULT: 0,
-    }
-    return device
+def mock_manager() -> ManagerCompat:
+    """Mock Tuya Manager."""
+    manager = MagicMock(spec=ManagerCompat)
+    manager.device_map = {}
+    manager.mq = MagicMock()
+    return manager
 
 
 @pytest.fixture
-def mock_device_door_sensor() -> CustomerDevice:
-    """Mock a Door Sensor device."""
+def mock_device_code() -> str:
+    """Fixture to parametrize the type of the mock device.
+
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("mock_device_code", ["device_code_1", "device_code_2"])
+    """
+    return None
+
+
+@pytest.fixture
+async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Mock a Tuya CustomerDevice."""
+    details = await async_load_json_object_fixture(
+        hass, f"{mock_device_code}.json", DOMAIN
+    )
     device = MagicMock(spec=CustomerDevice)
-    device.id = "bf5cccf9027080e2dbb9w3"
-    device.name = "Door Sensor"
-    device.category = "mcs"
-    device.product_id = "7jIGJAymiH8OsFFb"
-    device.product_name = "Door Sensor"
-    device.online = True
-    device.function = {}
+    device.id = details["id"]
+    device.name = details["name"]
+    device.category = details["category"]
+    device.product_id = details["product_id"]
+    device.product_name = details["product_name"]
+    device.online = details["online"]
+    device.function = {
+        key: MagicMock(type=value["type"], values=value["values"])
+        for key, value in details["function"].items()
+    }
     device.status_range = {
-        DPCode.SWITCH: MagicMock(type=DPType.BOOLEAN, value="{}"),
-        DPCode.BATTERY: MagicMock(
-            type=DPType.INTEGER,
-            value='{"unit": "", "min": 0, "max": 500, "scale": 0, "step": 1}',
-        ),
+        key: MagicMock(type=value["type"], values=value["values"])
+        for key, value in details["status_range"].items()
     }
-    device.status = {
-        DPCode.SWITCH: False,
-        DPCode.BATTERY: 100,
-    }
+    device.status = details["status"]
     return device

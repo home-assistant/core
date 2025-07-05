@@ -180,14 +180,20 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "pump_setpoint": {
+        "name": "Setpoint"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "temperature_setpoint": {
+        "name": "Temperature setpoint"
       },
       "pir_occupied_to_unoccupied_delay": {
         "name": "Occupied to unoccupied delay"
       },
       "auto_relock_timer": {
-        "name": "Automatic relock timer"
+        "name": "Autorelock time"
       }
     },
     "light": {

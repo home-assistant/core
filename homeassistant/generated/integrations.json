@@ -1483,12 +1483,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dweet": {
-      "name": "dweet.io",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "hub",
@@ -3165,8 +3159,7 @@
       "name": "Jellyfin",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
+      "iot_class": "local_polling"
     },
     "jewish_calendar": {
       "name": "Jewish Calendar",
