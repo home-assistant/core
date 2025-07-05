@@ -32,6 +32,15 @@ from .const import CONF_API_KEY_OPTIONS, CONF_REFERRER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_API_KEY_OPTIONS): section(
+            vol.Schema({vol.Optional(CONF_REFERRER): str}), {"collapsed": True}
+        ),
+    }
+)
+
 
 async def _validate_input(
     user_input: dict[str, Any],
@@ -56,24 +65,20 @@ async def _validate_input(
     return False
 
 
-def _get_location_schema(hass: HomeAssistant, user_input: dict[str, Any]) -> dict:
-    """Return the schema for a location prefilled from user_input or hass config."""
-    return {
-        vol.Required(
-            CONF_NAME,
-            default=user_input.get(CONF_NAME, hass.config.location_name),
-        ): str,
-        vol.Required(
-            CONF_LOCATION,
-            default=user_input.get(
+def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
+    """Return the schema for a location with default values from the hass config."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=hass.config.location_name): str,
+            vol.Required(
                 CONF_LOCATION,
-                {
+                default={
                     CONF_LATITUDE: hass.config.latitude,
                     CONF_LONGITUDE: hass.config.longitude,
                 },
-            ),
-        ): LocationSelector(LocationSelectorConfig(radius=False)),
-    }
+            ): LocationSelector(LocationSelectorConfig(radius=False)),
+        }
+    )
 
 
 def _is_location_already_configured(
@@ -137,26 +142,13 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         else:
             user_input = {}
-        schema = {
-            vol.Required(
-                CONF_API_KEY, default=user_input.get(CONF_API_KEY, vol.UNDEFINED)
-            ): str,
-            vol.Optional(CONF_API_KEY_OPTIONS): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_REFERRER,
-                            default=user_input.get(CONF_REFERRER, vol.UNDEFINED),
-                        ): str,
-                    }
-                ),
-                {"collapsed": True},
-            ),
-        }
-        schema.update(_get_location_schema(self.hass, user_input))
+        schema = STEP_USER_DATA_SCHEMA.schema.copy()
+        schema.update(_get_location_schema(self.hass).schema)
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(schema), user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -196,7 +188,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             user_input = {}
         return self.async_show_form(
             step_id="location",
-            data_schema=vol.Schema(_get_location_schema(self.hass, user_input)),
+            data_schema=self.add_suggested_values_to_schema(
+                _get_location_schema(self.hass), user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
