@@ -1,9 +1,10 @@
-"""Support for PurpleAir sensors."""
+"""PurpleAir sensors."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Final
 
 from aiopurpleair.models.sensors import SensorModel
 
@@ -26,16 +27,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SENSOR_INDICES
+from .const import CONF_SENSOR_INDEX
 from .coordinator import PurpleAirConfigEntry
 from .entity import PurpleAirEntity
 
-CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
+CONCENTRATION_PARTICLES_PER_100_MILLILITERS: Final[str] = (
+    f"particles/100{UnitOfVolume.MILLILITERS}"
+)
 
 
 @dataclass(frozen=True, kw_only=True)
 class PurpleAirSensorEntityDescription(SensorEntityDescription):
-    """Define an object to describe PurpleAir sensor entities."""
+    """Sensor entity descriptions."""
 
     value_fn: Callable[[SensorModel], float | str | None]
 
@@ -152,7 +155,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda sensor: sensor.uptime,
     ),
     PurpleAirSensorEntityDescription(
-        # This sensor is an air quality index for VOCs. More info at https://github.com/home-assistant/core/pull/84896
         key="voc",
         translation_key="voc_aqi",
         device_class=SensorDeviceClass.AQI,
@@ -167,16 +169,22 @@ async def async_setup_entry(
     entry: PurpleAirConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up PurpleAir sensors based on a config entry."""
-    async_add_entities(
-        PurpleAirSensorEntity(entry, sensor_index, description)
-        for sensor_index in entry.options[CONF_SENSOR_INDICES]
-        for description in SENSOR_DESCRIPTIONS
-    )
+    """Set up sensors."""
+    for subentry in entry.subentries.values():
+        for description in SENSOR_DESCRIPTIONS:
+            async_add_entities(
+                new_entities=[
+                    PurpleAirSensorEntity(
+                        entry, int(subentry.data[CONF_SENSOR_INDEX]), description
+                    )
+                ],
+                update_before_add=True,
+                config_subentry_id=subentry.subentry_id,
+            )
 
 
 class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
-    """Define a representation of a PurpleAir sensor."""
+    """Sensor entity."""
 
     entity_description: PurpleAirSensorEntityDescription
 
@@ -194,5 +202,5 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | str | None:
-        """Return the sensor value."""
+        """Return sensor value."""
         return self.entity_description.value_fn(self.sensor_data)
