@@ -9,7 +9,11 @@ from .const import CONF_NPSSO
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 from .helpers import PlaystationNetwork
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(
