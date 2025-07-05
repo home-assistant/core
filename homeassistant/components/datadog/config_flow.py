@@ -2,10 +2,12 @@
 
 from typing import Any
 
+from datadog import DogStatsd
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 
 from . import validate_datadog_connection
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_PREFIX, DEFAULT_RATE, DOMAIN
@@ -24,17 +26,11 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             # Validate connection to Datadog Agent
             success = await validate_datadog_connection(
-                user_input["host"],
-                user_input["port"],
-                user_input["prefix"],
+                DogStatsd(user_input["host"], user_input["port"], user_input["prefix"])
             )
             if not success:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input['host']}:{user_input['port']}"
-                )
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Datadog", data=user_input)
 
         return self.async_show_form(
@@ -53,3 +49,37 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         return await self.async_step_user(import_config)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return DatadogOptionsFlowHandler(config_entry)
+
+
+class DatadogOptionsFlowHandler(OptionsFlow):
+    """Handle Datadog options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the Datadog options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data = {**self._config_entry.data, **self._config_entry.options}
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("host", default=data["host"]): str,
+                    vol.Required("port", default=data["port"]): int,
+                    vol.Required("prefix", default=data["prefix"]): str,
+                    vol.Required("rate", default=data["rate"]): int,
+                }
+            ),
+        )

@@ -4,38 +4,76 @@ import asyncio
 import logging
 
 from datadog import DogStatsd, initialize
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_HOST,
+    EVENT_LOGBOOK_ENTRY,
+    EVENT_STATE_CHANGED,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_PREFIX, DOMAIN
+from .const import (
+    CONF_PREFIX,
+    CONF_RATE,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_PREFIX,
+    DEFAULT_RATE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 type DatadogConfigEntry = ConfigEntry[DogStatsd]
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Optional("port", default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+                vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Datadog component from YAML config."""
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=config[DOMAIN],
+        )
+    )
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
     """Set up Datadog from a config entry."""
 
-    conf = entry.data
-    host = conf.get("host", DEFAULT_HOST)
-    port = conf.get("port", DEFAULT_PORT)
-    sample_rate = conf.get("rate", 1)
-    prefix = conf.get("prefix", DEFAULT_PREFIX)
+    conf = {**entry.data, **entry.options}
+    host = conf["host"]
+    port = conf["port"]
+    prefix = conf["prefix"]
+    sample_rate = conf["rate"]
 
     statsd_client = DogStatsd(host=host, port=port, namespace=prefix)
-
     entry.runtime_data = statsd_client
 
     initialize(statsd_host=host, statsd_port=port)
@@ -75,24 +113,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ValueError:
             pass
 
-    hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
-    hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
     """Unload a Datadog config entry."""
+    runtime = entry.runtime_data
+    runtime.flush()
+    runtime.close_socket()
     return True
 
 
-async def validate_datadog_connection(host: str, port: int, prefix: str) -> bool:
+async def validate_datadog_connection(client: DogStatsd) -> bool:
     """Attempt to send a test metric to the Datadog agent."""
-    statsd_client = DogStatsd(host=host, port=port, namespace=prefix)
     loop = asyncio.get_running_loop()
 
     try:
-        await loop.run_in_executor(None, statsd_client.increment, "connection_test")
+        await loop.run_in_executor(None, client.increment, "connection_test")
     except OSError:
         # Connection issues like ECONNREFUSED
         return False
