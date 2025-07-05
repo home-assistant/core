@@ -1,0 +1,17 @@
+{
+  "items": [
+    {
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "locationId": "397678e5-9995-4a39-9d9f-ae6ba310236b",
+      "name": "Theater",
+      "backgroundImage": null
+    },
+    {
+      "roomId": "cdf080f0-0542-41d7-a606-aff69683e04c",
+      "locationId": "397678e5-9995-4a39-9d9f-ae6ba310236b",
+      "name": "Toilet",
+      "backgroundImage": null
+    }
+  ],
+  "_links": null
+}

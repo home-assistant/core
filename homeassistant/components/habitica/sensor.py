@@ -40,7 +40,13 @@ from homeassistant.util import dt as dt_util
 from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .util import get_attribute_points, get_attributes_total, inventory_list
+from .util import (
+    get_attribute_points,
+    get_attributes_total,
+    inventory_list,
+    pending_damage,
+    pending_quest_items,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +105,8 @@ class HabiticaSensorEntity(StrEnum):
     FOOD_TOTAL = "food_total"
     SADDLE = "saddle"
     QUEST_SCROLLS = "quest_scrolls"
+    PENDING_DAMAGE = "pending_damage"
+    PENDING_QUEST_ITEMS = "pending_quest_items"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -262,6 +270,18 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         value_fn=(lambda user, _: sum(n for n in user.items.quests.values())),
         entity_picture="inventory_quest_scroll_dustbunnies.png",
         attributes_fn=lambda user, content: inventory_list(user, content, "quests"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.PENDING_DAMAGE,
+        translation_key=HabiticaSensorEntity.PENDING_DAMAGE,
+        value_fn=pending_damage,
+        suggested_display_precision=1,
+        entity_picture=ha.DAMAGE,
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
+        translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
+        value_fn=pending_quest_items,
     ),
 )
 

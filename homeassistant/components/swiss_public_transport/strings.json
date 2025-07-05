@@ -83,8 +83,8 @@
   },
   "services": {
     "fetch_connections": {
-      "name": "Fetch Connections",
-      "description": "Fetch a list of connections from the swiss public transport.",
+      "name": "Fetch connections",
+      "description": "Fetches a list of connections from Swiss public transport.",
       "fields": {
         "config_entry_id": {
           "name": "Instance",
@@ -92,7 +92,7 @@
         },
         "limit": {
           "name": "Limit",
-          "description": "Number of connections to fetch from [1-15]"
+          "description": "Number of connections to fetch."
         }
       }
     }

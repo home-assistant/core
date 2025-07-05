@@ -223,7 +223,7 @@ async def test_service_say_timeout(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -269,7 +269,7 @@ async def test_service_say_http_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 

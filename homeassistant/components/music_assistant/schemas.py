@@ -15,6 +15,7 @@ from .const import (
     ATTR_ALBUM,
     ATTR_ALBUMS,
     ATTR_ARTISTS,
+    ATTR_AUDIOBOOKS,
     ATTR_BIT_DEPTH,
     ATTR_CONTENT_TYPE,
     ATTR_CURRENT_INDEX,
@@ -31,6 +32,7 @@ from .const import (
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
+    ATTR_PODCASTS,
     ATTR_PROVIDER,
     ATTR_QUEUE_ID,
     ATTR_QUEUE_ITEM_ID,
@@ -65,20 +67,20 @@ MEDIA_ITEM_SCHEMA = vol.Schema(
 
 def media_item_dict_from_mass_item(
     mass: MusicAssistantClient,
-    item: MediaItemType | ItemMapping | None,
-) -> dict[str, Any] | None:
+    item: MediaItemType | ItemMapping,
+) -> dict[str, Any]:
     """Parse a Music Assistant MediaItem."""
-    if not item:
-        return None
-    base = {
+    base: dict[str, Any] = {
         ATTR_MEDIA_TYPE: item.media_type,
         ATTR_URI: item.uri,
         ATTR_NAME: item.name,
         ATTR_VERSION: item.version,
         ATTR_IMAGE: mass.get_media_item_image_url(item),
     }
+    artists: list[ItemMapping] | None
     if artists := getattr(item, "artists", None):
         base[ATTR_ARTISTS] = [media_item_dict_from_mass_item(mass, x) for x in artists]
+    album: ItemMapping | None
     if album := getattr(item, "album", None):
         base[ATTR_ALBUM] = media_item_dict_from_mass_item(mass, album)
     return base
@@ -99,6 +101,12 @@ SEARCH_RESULT_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         vol.Required(ATTR_RADIO): vol.All(
+            cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
+        ),
+        vol.Required(ATTR_AUDIOBOOKS): vol.All(
+            cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
+        ),
+        vol.Required(ATTR_PODCASTS): vol.All(
             cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
         ),
     },
@@ -151,7 +159,11 @@ def queue_item_dict_from_mass_item(
         ATTR_QUEUE_ITEM_ID: item.queue_item_id,
         ATTR_NAME: item.name,
         ATTR_DURATION: item.duration,
-        ATTR_MEDIA_ITEM: media_item_dict_from_mass_item(mass, item.media_item),
+        ATTR_MEDIA_ITEM: (
+            media_item_dict_from_mass_item(mass, item.media_item)
+            if item.media_item
+            else None
+        ),
     }
     if streamdetails := item.streamdetails:
         base[ATTR_STREAM_TITLE] = streamdetails.stream_title

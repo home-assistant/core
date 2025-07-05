@@ -6,12 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.alarm_control_panel.const import CodeFormat
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -172,7 +173,7 @@ async def setup_alarm_control_panel_platform_test_entity(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
+            config_entry, [Platform.ALARM_CONTROL_PANEL]
         )
         return True
 
@@ -201,7 +202,7 @@ async def setup_alarm_control_panel_platform_test_entity(
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 

@@ -2,8 +2,8 @@
 
 from aiohttp import ClientTimeout
 from azure.core.exceptions import (
+    AzureError,
     ClientAuthenticationError,
-    HttpResponseError,
     ResourceNotFoundError,
 )
 from azure.core.pipeline.transport._aiohttp import (
@@ -13,7 +13,11 @@ from azure.storage.blob.aio import ContainerClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -35,11 +39,20 @@ async def async_setup_entry(
     session = async_create_clientsession(
         hass, timeout=ClientTimeout(connect=10, total=12 * 60 * 60)
     )
-    container_client = ContainerClient(
-        account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
-        container_name=entry.data[CONF_CONTAINER_NAME],
-        credential=entry.data[CONF_STORAGE_ACCOUNT_KEY],
-        transport=AioHttpTransport(session=session),
+
+    def create_container_client() -> ContainerClient:
+        """Create a ContainerClient."""
+
+        return ContainerClient(
+            account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
+            container_name=entry.data[CONF_CONTAINER_NAME],
+            credential=entry.data[CONF_STORAGE_ACCOUNT_KEY],
+            transport=AioHttpTransport(session=session),
+        )
+
+    # has a blocking call to open in cpython
+    container_client: ContainerClient = await hass.async_add_executor_job(
+        create_container_client
     )
 
     try:
@@ -52,12 +65,12 @@ async def async_setup_entry(
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except ClientAuthenticationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
-    except HttpResponseError as err:
+    except AzureError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

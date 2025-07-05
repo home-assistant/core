@@ -4,18 +4,12 @@ from unittest.mock import patch
 
 from homematicip.base.enums import EventType
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .helper import (
-    HAPID,
-    HomeFactory,
-    async_manipulate_test_data,
-    get_and_check_entity_basics,
-)
+from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 310
+    assert len(mock_hap.hmip_device_by_entity_id) == 325
 
 
 async def test_hmip_remove_device(
@@ -115,7 +109,7 @@ async def test_hmip_add_device(
 
     assert len(device_registry.devices) == pre_device_count
     assert len(entity_registry.entities) == pre_entity_count
-    new_hap = hass.data[HMIPC_DOMAIN][HAPID]
+    new_hap = hmip_config_entry.runtime_data
     assert len(new_hap.hmip_device_by_entity_id) == pre_mapping_count
 
 
@@ -257,14 +251,14 @@ async def test_hmip_reset_energy_counter_services(
         {"entity_id": "switch.pc"},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 2
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter_async"
+    assert len(hmip_device._connection.mock_calls) == 1
 
     await hass.services.async_call(
         "homematicip_cloud", "reset_energy_counter", {"entity_id": "all"}, blocking=True
     )
-    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 4
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter_async"
+    assert len(hmip_device._connection.mock_calls) == 2
 
 
 async def test_hmip_multi_area_device(

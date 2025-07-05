@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -20,7 +21,10 @@ from .mocks import HomeControlMock, HomeControlMockSwitch
 
 
 async def test_switch(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup and state change of a switch device."""
     entry = configure_integration(hass)
@@ -69,6 +73,14 @@ async def test_switch(
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert hass.states.get(f"{SWITCH_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert "Device Test is unavailable" in caplog.text
+
+    # Emulate websocket message: device went back online
+    test_gateway.devices["Test"].status = 0
+    test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{SWITCH_DOMAIN}.test").state == STATE_ON
+    assert "Device Test is back online" in caplog.text
 
 
 async def test_remove_from_hass(hass: HomeAssistant) -> None:

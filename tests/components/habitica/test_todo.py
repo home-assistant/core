@@ -37,7 +37,7 @@ from .conftest import ERROR_NOT_FOUND, ERROR_TOO_MANY_REQUESTS
 from tests.common import (
     MockConfigEntry,
     async_get_persistent_notifications,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
@@ -642,7 +642,7 @@ async def test_move_todo_item(
 ) -> None:
     """Test move todo items."""
     reorder_response = HabiticaTaskOrderResponse.from_json(
-        load_fixture(fixture, DOMAIN)
+        await async_load_fixture(hass, fixture, DOMAIN)
     )
     habitica.reorder_task.return_value = reorder_response
     config_entry.add_to_hass(hass)
@@ -788,7 +788,9 @@ async def test_next_due_date(
     dailies_entity = "todo.test_user_dailies"
 
     habitica.get_tasks.side_effect = [
-        HabiticaTasksResponse.from_json(load_fixture(fixture, DOMAIN)),
+        HabiticaTasksResponse.from_json(
+            await async_load_fixture(hass, fixture, DOMAIN)
+        ),
         HabiticaTasksResponse.from_dict({"success": True, "data": []}),
     ]
 

@@ -5,3 +5,16 @@ list_charge_slots:
       selector:
         config_entry:
           integration: ohme
+set_price_cap:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: ohme
+    price_cap:
+      required: true
+      selector:
+        number:
+          min: 0
+          mode: box

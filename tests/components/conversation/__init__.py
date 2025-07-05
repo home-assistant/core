@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from typing import Literal
 from unittest.mock import patch
@@ -49,7 +50,7 @@ class MockAgent(conversation.AbstractConversationAgent):
 
 
 @pytest.fixture
-async def mock_chat_log(hass: HomeAssistant) -> MockChatLog:
+async def mock_chat_log(hass: HomeAssistant) -> AsyncGenerator[MockChatLog]:
     """Return mock chat logs."""
     # pylint: disable-next=contextmanager-generator-missing-cleanup
     with (

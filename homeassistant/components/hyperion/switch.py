@@ -9,6 +9,7 @@ from hyperion import client
 from hyperion.const import (
     KEY_COMPONENT,
     KEY_COMPONENTID_ALL,
+    KEY_COMPONENTID_AUDIO,
     KEY_COMPONENTID_BLACKBORDER,
     KEY_COMPONENTID_BOBLIGHTSERVER,
     KEY_COMPONENTID_FORWARDER,
@@ -26,7 +27,6 @@ from hyperion.const import (
 )
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,12 +38,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import (
+    HyperionConfigEntry,
     get_hyperion_device_id,
     get_hyperion_unique_id,
     listen_for_instance_updates,
 )
 from .const import (
-    CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -60,6 +60,7 @@ COMPONENT_SWITCHES = [
     KEY_COMPONENTID_GRABBER,
     KEY_COMPONENTID_LEDDEVICE,
     KEY_COMPONENTID_V4L,
+    KEY_COMPONENTID_AUDIO,
 ]
 
 
@@ -84,17 +85,17 @@ def _component_to_translation_key(component: str) -> str:
         KEY_COMPONENTID_GRABBER: "platform_capture",
         KEY_COMPONENTID_LEDDEVICE: "led_device",
         KEY_COMPONENTID_V4L: "usb_capture",
+        KEY_COMPONENTID_AUDIO: "audio_capture",
     }[component]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HyperionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Hyperion platform from config entry."""
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    server_id = config_entry.unique_id
+    server_id = entry.unique_id
 
     @callback
     def instance_add(instance_num: int, instance_name: str) -> None:
@@ -106,7 +107,7 @@ async def async_setup_entry(
                 instance_num,
                 instance_name,
                 component,
-                entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                entry.runtime_data.instance_clients[instance_num],
             )
             for component in COMPONENT_SWITCHES
         )
@@ -123,7 +124,7 @@ async def async_setup_entry(
                 ),
             )
 
-    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
+    listen_for_instance_updates(hass, entry, instance_add, instance_remove)
 
 
 class HyperionComponentSwitch(SwitchEntity):

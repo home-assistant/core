@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
+from mastodon.Mastodon import (
+    Account,
+    Instance,
+    MastodonNetworkError,
+    MastodonUnauthorizedError,
+)
 import voluptuous as vol
 from yarl import URL
 
@@ -56,8 +61,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         client_secret: str,
         access_token: str,
     ) -> tuple[
-        dict[str, str] | None,
-        dict[str, str] | None,
+        Instance | None,
+        Account | None,
         dict[str, str],
     ]:
         """Check connection to the Mastodon instance."""

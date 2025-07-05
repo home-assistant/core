@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/chacon_dio",
   "iot_class": "cloud_push",
   "loggers": ["dio_chacon_api"],
-  "requirements": ["dio-chacon-wifi-api==1.2.1"]
+  "requirements": ["dio-chacon-wifi-api==1.2.2"]
 }

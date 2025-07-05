@@ -1,7 +1,7 @@
 """Test init."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

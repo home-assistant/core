@@ -1,5 +1,7 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
 
+from typing import Any
+
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -19,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN as OT_DOMAIN
+from . import DOMAIN
 
 
 async def async_setup_entry(
@@ -38,22 +40,22 @@ async def async_setup_entry(
 
     entities = []
     for dev_id in dev_ids:
-        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
+        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
         entities.append(entity)
 
     @callback
     def _receive_data(dev_id, **data):
         """Receive set location."""
-        entity = hass.data[OT_DOMAIN]["devices"].get(dev_id)
+        entity = hass.data[DOMAIN]["devices"].get(dev_id)
 
         if entity is not None:
             entity.update_data(data)
             return
 
-        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id, data)
+        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id, data)
         async_add_entities([entity])
 
-    hass.data[OT_DOMAIN]["context"].set_async_see(_receive_data)
+    hass.data[DOMAIN]["context"].set_async_see(_receive_data)
 
     async_add_entities(entities)
 
@@ -64,34 +66,34 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, dev_id, data=None):
+    def __init__(self, dev_id: str, data: dict[str, Any] | None = None) -> None:
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
         self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._dev_id
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get("battery")
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         return self._data.get("attributes")
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get("gps_accuracy")
+        return self._data.get("gps_accuracy", 0)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
@@ -100,7 +102,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
-    def longitude(self):
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
@@ -109,7 +111,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
-    def location_name(self):
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return self._data.get("location_name")
 
@@ -121,7 +123,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        device_info = DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)})
+        device_info = DeviceInfo(identifiers={(DOMAIN, self._dev_id)})
         if "host_name" in self._data:
             device_info["name"] = self._data["host_name"]
         return device_info

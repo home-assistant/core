@@ -113,11 +113,19 @@ CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
+
+CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE = "swing_horizontal_mode_command_template"
+CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC = "swing_horizontal_mode_command_topic"
+CONF_SWING_HORIZONTAL_MODE_LIST = "swing_horizontal_modes"
+CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE = "swing_horizontal_mode_state_template"
+CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC = "swing_horizontal_mode_state_topic"
+
 CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
 CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
 CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
 CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
+
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
 CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
 CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
@@ -145,6 +153,8 @@ MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
         climate.ATTR_MIN_TEMP,
         climate.ATTR_PRESET_MODE,
         climate.ATTR_PRESET_MODES,
+        climate.ATTR_SWING_HORIZONTAL_MODE,
+        climate.ATTR_SWING_HORIZONTAL_MODES,
         climate.ATTR_SWING_MODE,
         climate.ATTR_SWING_MODES,
         climate.ATTR_TARGET_TEMP_HIGH,
@@ -162,6 +172,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_MODE_STATE_TEMPLATE,
     CONF_ACTION_TEMPLATE,
     CONF_PRESET_MODE_VALUE_TEMPLATE,
+    CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,
     CONF_TEMP_HIGH_STATE_TEMPLATE,
     CONF_TEMP_LOW_STATE_TEMPLATE,
@@ -174,6 +185,7 @@ COMMAND_TEMPLATE_KEYS = {
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_POWER_COMMAND_TEMPLATE,
     CONF_PRESET_MODE_COMMAND_TEMPLATE,
+    CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
     CONF_SWING_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
     CONF_TEMP_HIGH_COMMAND_TEMPLATE,
@@ -194,6 +206,8 @@ TOPIC_KEYS = (
     CONF_POWER_COMMAND_TOPIC,
     CONF_PRESET_MODE_COMMAND_TOPIC,
     CONF_PRESET_MODE_STATE_TOPIC,
+    CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
+    CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC,
     CONF_SWING_MODE_COMMAND_TOPIC,
     CONF_SWING_MODE_STATE_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
@@ -302,6 +316,13 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(
+            CONF_SWING_HORIZONTAL_MODE_LIST, default=[SWING_ON, SWING_OFF]
+        ): cv.ensure_list,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(
@@ -515,6 +536,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     _attr_fan_mode: str | None = None
     _attr_hvac_mode: HVACMode | None = None
+    _attr_swing_horizontal_mode: str | None = None
     _attr_swing_mode: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
@@ -543,6 +565,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if (precision := config.get(CONF_PRECISION)) is not None:
             self._attr_precision = precision
         self._attr_fan_modes = config[CONF_FAN_MODE_LIST]
+        self._attr_swing_horizontal_modes = config[CONF_SWING_HORIZONTAL_MODE_LIST]
         self._attr_swing_modes = config[CONF_SWING_MODE_LIST]
         self._attr_target_temperature_step = config[CONF_TEMP_STEP]
 
@@ -568,6 +591,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_fan_mode = FAN_LOW
+        if (
+            self._topic[CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC] is None
+            or self._optimistic
+        ):
+            self._attr_swing_horizontal_mode = SWING_OFF
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_swing_mode = SWING_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
@@ -628,6 +656,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None
         ):
             support |= ClimateEntityFeature.FAN_MODE
+
+        if (self._topic[CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC] is not None) or (
+            self._topic[CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC] is not None
+        ):
+            support |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         if (self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None) or (
             self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None
@@ -745,6 +778,16 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             {"_attr_fan_mode"},
         )
         self.add_subscription(
+            CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC,
+            partial(
+                self._handle_mode_received,
+                CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE,
+                "_attr_swing_horizontal_mode",
+                CONF_SWING_HORIZONTAL_MODE_LIST,
+            ),
+            {"_attr_swing_horizontal_mode"},
+        )
+        self.add_subscription(
             CONF_SWING_MODE_STATE_TOPIC,
             partial(
                 self._handle_mode_received,
@@ -781,6 +824,20 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         )
 
         self.async_write_ha_state()
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new swing horizontal mode."""
+        payload = self._command_templates[CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE](
+            swing_horizontal_mode
+        )
+        await self._publish(CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC, payload)
+
+        if (
+            self._optimistic
+            or self._topic[CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC] is None
+        ):
+            self._attr_swing_horizontal_mode = swing_horizontal_mode
+            self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""

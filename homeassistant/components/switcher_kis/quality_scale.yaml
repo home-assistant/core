@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration uses entity services.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: make sure flows end with created entry or abort
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: devices are setup asynchronously and marked as unavailable until they are ready.
+  unique-config-entry:
+    status: exempt
+    comment: The integration only supports a single config entry.
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: There is no option to discover devices without adding the integration.
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: Migrate time sensors to timestamp or a duration device class
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: The integration does not have anything to reconfigure.
+  repair-issues:
+    status: exempt
+    comment: The integration does not have any issues to repair.
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: validate_token method does not allow to pass websession
+  strict-typing: done

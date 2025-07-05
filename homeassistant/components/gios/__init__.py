@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp.client_exceptions import ClientConnectorError
+from gios import Gios
+from gios.exceptions import GiosError
+
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -36,8 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 
     websession = async_get_clientsession(hass)
+    try:
+        gios = await Gios.create(websession, station_id)
+    except (GiosError, ConnectionError, ClientConnectorError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "entry": entry.title,
+                "error": repr(err),
+            },
+        ) from err
 
-    coordinator = GiosDataUpdateCoordinator(hass, entry, websession, station_id)
+    coordinator = GiosDataUpdateCoordinator(hass, entry, gios)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GiosData(coordinator)

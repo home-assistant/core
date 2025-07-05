@@ -30,6 +30,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
@@ -217,7 +218,7 @@ class KNXExposeTime:
         self.device = xknx_device_cls(
             self.xknx,
             name=expose_type.capitalize(),
-            localtime=True,
+            localtime=dt_util.get_default_time_zone(),
             group_address=config[KNX_ADDRESS],
         )
 

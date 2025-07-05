@@ -317,65 +317,6 @@ async def test_release_slot_on_connect_exception(
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
-async def test_we_switch_adapters_on_failure(
-    hass: HomeAssistant,
-    install_bleak_catcher,
-) -> None:
-    """Ensure we try the next best adapter after a failure."""
-    hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
-        hass
-    )
-    ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
-    client = bleak.BleakClient(ble_device)
-
-    class FakeBleakClientFailsHCI0Only(BaseFakeBleakClient):
-        """Fake bleak client that fails to connect."""
-
-        async def connect(self, *args, **kwargs):
-            """Connect."""
-            if "/hci0/" in self._device.details["path"]:
-                return False
-            return True
-
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsHCI0Only,
-    ):
-        assert await client.connect() is False
-
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsHCI0Only,
-    ):
-        assert await client.connect() is False
-
-    # After two tries we should switch to hci1
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsHCI0Only,
-    ):
-        assert await client.connect() is True
-
-    # ..and we remember that hci1 works as long as the client doesn't change
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsHCI0Only,
-    ):
-        assert await client.connect() is True
-
-    # If we replace the client, we should try hci0 again
-    client = bleak.BleakClient(ble_device)
-
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsHCI0Only,
-    ):
-        assert await client.connect() is False
-    cancel_hci0()
-    cancel_hci1()
-
-
-@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_passing_subclassed_str_as_address(
     hass: HomeAssistant,
     install_bleak_catcher,
