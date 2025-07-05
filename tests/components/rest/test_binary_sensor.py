@@ -669,22 +669,12 @@ async def test_availability_blocks_value_template(
     assert error in caplog.text
 
 
-async def test_utf8_basic_auth(
+async def test_setup_get_basic_auth_utf8(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test BasicAuth with UTF-8 characters including Unicode char \u2018."""
+    """Test setup with basic auth using UTF-8 characters including Unicode char \u2018."""
     # Use a password with the Unicode character \u2018 (left single quotation mark)
-    username = "test_user"
-    password = "test\u2018password"
-
-    # Mock the endpoint with basic auth check
-    aioclient_mock.get(
-        "http://localhost",
-        status=HTTPStatus.OK,
-        text="1",
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -693,23 +683,20 @@ async def test_utf8_basic_auth(
                 "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
-                "name": "test_utf8_auth",
-                "username": username,
-                "password": password,
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
                 "authentication": "basic",
-                "value_template": "{{ value }}",
+                "username": "test_user",
+                "password": "test\u2018password",  # Password with Unicode char
+                "headers": {"Accept": CONTENT_TYPE_JSON},
             }
         },
     )
+
     await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
-    # Verify the request was made
-    assert len(aioclient_mock.mock_calls) == 1
-
-    # The test verifies that the component sets up correctly with UTF-8 chars in password
-    # The actual auth encoding verification happens at the aiohttp level
-
-    # Verify the sensor state
-    state = hass.states.get("binary_sensor.test_utf8_auth")
-    assert state
+    state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_ON
