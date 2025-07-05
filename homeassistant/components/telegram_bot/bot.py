@@ -203,13 +203,13 @@ class BaseTelegramBot:
     def _get_event_context(self, update: Update) -> Context:
         from_user = update.effective_user.id if update.effective_user else None
         from_chat = update.effective_chat.id if update.effective_chat else None
-        users = {
+        chat_to_user = {
             subentry.data[CONF_CHAT_ID]: subentry.data[CONF_USER_ID]
             for subentry in self.config.subentries.values()
             if CONF_USER_ID in subentry.data
         }
-        user_id = users.get(from_chat)
-        user_id = users.get(from_user, user_id)
+        user_id = chat_to_user.get(from_chat)
+        user_id = chat_to_user.get(from_user, user_id)
 
         return Context(user_id=user_id)
 
