@@ -59,7 +59,7 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
     {
         vol.Optional(ATTR_RESOLUTION, default=60): vol.All(
-            cv.positive_int, vol.In((15, 30, 60))
+            cv.positive_int, vol.All(vol.Coerce(int), vol.In((15, 30, 60)))
         ),
     }
 )
