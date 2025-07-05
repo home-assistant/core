@@ -131,7 +131,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
+      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
       "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
       "invalid_ip_address": "Invalid IPv4 address.",
       "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",

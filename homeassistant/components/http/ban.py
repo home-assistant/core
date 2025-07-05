@@ -64,7 +64,7 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         """Initialize bans when app starts up."""
         await app[KEY_BAN_MANAGER].async_load()
 
-    app.on_startup.append(ban_startup)
+    app.on_startup.append(ban_startup)  # type: ignore[arg-type]
 
 
 @middleware
@@ -136,8 +136,7 @@ async def process_wrong_login(request: Request) -> None:
     _LOGGER.warning(log_msg)
 
     # Circular import with websocket_api
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components import persistent_notification
+    from homeassistant.components import persistent_notification  # noqa: PLC0415
 
     persistent_notification.async_create(
         hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN

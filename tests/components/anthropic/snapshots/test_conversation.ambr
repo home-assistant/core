@@ -16,7 +16,7 @@
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.claude',
+      'agent_id': 'conversation.claude_conversation',
       'content': 'Certainly, calling it now!',
       'role': 'assistant',
       'tool_calls': list([
@@ -30,14 +30,14 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.claude',
+      'agent_id': 'conversation.claude_conversation',
       'role': 'tool_result',
       'tool_call_id': 'toolu_0123456789AbCdEfGhIjKlM',
       'tool_name': 'test_tool',
       'tool_result': 'Test response',
     }),
     dict({
-      'agent_id': 'conversation.claude',
+      'agent_id': 'conversation.claude_conversation',
       'content': 'I have successfully called the function',
       'role': 'assistant',
       'tool_calls': None,

@@ -29,7 +29,7 @@ from . import api
 from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
-from .services import async_register_services
+from .services import async_setup_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -111,7 +111,7 @@ class YoLinkHomeStore:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up YoLink."""
 
-    async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 

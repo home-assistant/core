@@ -73,7 +73,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="weekly_portion",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda _: [str(p) for p in Parasha],
-        value_fn=lambda results: str(results.after_tzais_date.upcoming_shabbat.parasha),
+        value_fn=lambda results: results.after_tzais_date.upcoming_shabbat.parasha,
     ),
     JewishCalendarSensorDescription(
         key="holiday",
@@ -98,17 +98,13 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         key="omer_count",
         translation_key="omer_count",
         entity_registry_enabled_default=False,
-        value_fn=lambda results: (
-            results.after_shkia_date.omer.total_days
-            if results.after_shkia_date.omer
-            else 0
-        ),
+        value_fn=lambda results: results.after_shkia_date.omer.total_days,
     ),
     JewishCalendarSensorDescription(
         key="daf_yomi",
         translation_key="daf_yomi",
         entity_registry_enabled_default=False,
-        value_fn=lambda results: str(results.daytime_date.daf_yomi),
+        value_fn=lambda results: results.daytime_date.daf_yomi,
     ),
 )
 
@@ -225,7 +221,7 @@ async def async_setup_entry(
         JewishCalendarTimeSensor(config_entry, description)
         for description in TIME_SENSORS
     )
-    async_add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
@@ -233,12 +229,7 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        await self.async_update_data()
-
-    async def async_update_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
         _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
