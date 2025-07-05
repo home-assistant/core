@@ -14,7 +14,11 @@ from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -249,6 +253,15 @@ class ElkZone(ElkSensor):
         return None
 
     @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the device class of the sensor."""
+        if self._element.definition == ZoneType.TEMPERATURE:
+            return SensorDeviceClass.TEMPERATURE
+        if self._element.definition == ZoneType.ANALOG_ZONE:
+            return SensorDeviceClass.VOLTAGE
+        return None
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self._element.definition == ZoneType.TEMPERATURE:
@@ -262,7 +275,10 @@ class ElkZone(ElkSensor):
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif self._element.definition == ZoneType.ANALOG_ZONE:
             self._attr_native_value = f"{self._element.voltage}"
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_native_value = pretty_const(self._element.logical_status.name)
+            self._attr_state_class = None
