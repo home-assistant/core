@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
@@ -66,7 +65,6 @@ async def test_wallbox_refresh_failed_error_auth(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_wallbox,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Wallbox setup with authentication error."""
 
