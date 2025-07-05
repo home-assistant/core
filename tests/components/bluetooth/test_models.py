@@ -124,7 +124,7 @@ async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> N
             "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
         ),
     ):
-        assert await client.connect() is True
+        await client.connect()
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
@@ -215,7 +215,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
             "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
         ),
     ):
-        assert await client.connect() is True
+        await client.connect()
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
