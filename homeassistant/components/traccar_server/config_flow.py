@@ -167,7 +167,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         return await self.async_step_reauth_confirm()
