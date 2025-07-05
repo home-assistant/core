@@ -1033,7 +1033,7 @@ async def test_action_tool(hass: HomeAssistant) -> None:
                 action,
                 exposed_entities.get(domain, exposed_entities["entities"]),
             )
-            assert tool.name == f"{domain}_{action}"
+            assert tool.name == f"{domain}__{action}"
 
 
 @pytest.mark.parametrize(
