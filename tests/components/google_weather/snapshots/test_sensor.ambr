@@ -325,7 +325,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[sensor.home_precipitation_probability-entry]
@@ -649,7 +649,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16',
+    'state': '16.0',
   })
 # ---
 # name: test_sensor[sensor.home_weather_condition-entry]
@@ -862,7 +862,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18',
+    'state': '18.0',
   })
 # ---
 # name: test_sensor[sensor.home_wind_speed-entry]
@@ -918,6 +918,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8',
+    'state': '8.0',
   })
 # ---

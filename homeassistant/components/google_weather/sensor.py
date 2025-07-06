@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+
+from google_weather_api import CurrentConditionsResponse
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +41,7 @@ PARALLEL_UPDATES = 0
 class GoogleWeatherSensorDescription(SensorEntityDescription):
     """Class describing Google Weather sensor entities."""
 
-    value_fn: Callable[[dict[str, Any]], str | int | float | None]
+    value_fn: Callable[[CurrentConditionsResponse], str | int | float | None]
 
 
 SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
@@ -50,7 +51,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data["temperature"]["degrees"]),
+        value_fn=lambda data: data.temperature.degrees,
         translation_key="temperature",
     ),
     GoogleWeatherSensorDescription(
@@ -59,7 +60,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data["feelsLikeTemperature"]["degrees"]),
+        value_fn=lambda data: data.feels_like_temperature.degrees,
         translation_key="apparent_temperature",
     ),
     GoogleWeatherSensorDescription(
@@ -68,7 +69,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data["dewPoint"]["degrees"]),
+        value_fn=lambda data: data.dew_point.degrees,
         translation_key="dew_point",
     ),
     GoogleWeatherSensorDescription(
@@ -77,7 +78,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data["heatIndex"]["degrees"]),
+        value_fn=lambda data: data.heat_index.degrees,
         translation_key="heat_index",
     ),
     GoogleWeatherSensorDescription(
@@ -86,7 +87,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data["windChill"]["degrees"]),
+        value_fn=lambda data: data.wind_chill.degrees,
         translation_key="wind_chill",
     ),
     GoogleWeatherSensorDescription(
@@ -95,7 +96,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data["relativeHumidity"]),
+        value_fn=lambda data: data.relative_humidity,
         translation_key="humidity",
     ),
     GoogleWeatherSensorDescription(
@@ -103,7 +104,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
-        value_fn=lambda data: cast(int, data["uvIndex"]),
+        value_fn=lambda data: data.uv_index,
         translation_key="uv_index",
     ),
     GoogleWeatherSensorDescription(
@@ -111,9 +112,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(
-            int, data["precipitation"]["probability"]["percent"]
-        ),
+        value_fn=lambda data: data.precipitation.probability.percent,
         translation_key="precipitation_probability",
     ),
     GoogleWeatherSensorDescription(
@@ -122,7 +121,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data["precipitation"]["qpf"]["quantity"]),
+        value_fn=lambda data: data.precipitation.qpf.quantity,
         translation_key="precipitation_qpf",
     ),
     GoogleWeatherSensorDescription(
@@ -130,7 +129,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data["thunderstormProbability"]),
+        value_fn=lambda data: data.thunderstorm_probability,
         translation_key="thunderstorm_probability",
     ),
     GoogleWeatherSensorDescription(
@@ -140,7 +139,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
-        value_fn=lambda data: cast(float, data["airPressure"]["meanSeaLevelMillibars"]),
+        value_fn=lambda data: data.air_pressure.mean_sea_level_millibars,
         translation_key="pressure",
     ),
     GoogleWeatherSensorDescription(
@@ -149,7 +148,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         native_unit_of_measurement=DEGREE,
-        value_fn=lambda data: cast(int, data["wind"]["direction"]["degrees"]),
+        value_fn=lambda data: data.wind.direction.degrees,
         translation_key="wind_direction",
     ),
     GoogleWeatherSensorDescription(
@@ -158,7 +157,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data["wind"]["speed"]["value"]),
+        value_fn=lambda data: data.wind.speed.value,
         translation_key="wind_speed",
     ),
     GoogleWeatherSensorDescription(
@@ -167,7 +166,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data["wind"]["gust"]["value"]),
+        value_fn=lambda data: data.wind.gust.value,
         translation_key="wind_gust_speed",
     ),
     GoogleWeatherSensorDescription(
@@ -176,7 +175,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=lambda data: cast(float, data["visibility"]["distance"]),
+        value_fn=lambda data: data.visibility.distance,
         translation_key="visibility",
     ),
     GoogleWeatherSensorDescription(
@@ -184,15 +183,13 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data["cloudCover"]),
+        value_fn=lambda data: data.cloud_cover,
         translation_key="cloud_coverage",
     ),
     GoogleWeatherSensorDescription(
         key="weatherCondition",
         entity_registry_enabled_default=False,
-        value_fn=lambda data: cast(
-            str, data["weatherCondition"]["description"]["text"]
-        ),
+        value_fn=lambda data: data.weather_condition.description.text,
         translation_key="weather_condition",
     ),
 )

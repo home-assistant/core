@@ -157,9 +157,7 @@ async def test_state_update(
     assert state
     assert state.state == "13.7"
 
-    mock_google_weather_api.async_get_current_conditions.return_value["temperature"][
-        "degrees"
-    ] = 15.0
+    mock_google_weather_api.async_get_current_conditions.return_value.temperature.degrees = 15.0
 
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)
