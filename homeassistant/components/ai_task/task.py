@@ -52,18 +52,29 @@ async def async_generate_data(
         )
 
     # Resolve attachments
-    resolved_attachments: list[PlayMediaWithId] = []
+    resolved_attachments: list[PlayMediaWithId] | None = None
 
-    for attachment in attachments or []:
-        media = await media_source.async_resolve_media(
-            hass, attachment["media_content_id"], None
-        )
-        resolved_attachments.append(
-            PlayMediaWithId(
-                **{field.name: getattr(media, field.name) for field in fields(media)},
-                media_content_id=attachment["media_content_id"],
+    if attachments:
+        if AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features:
+            raise HomeAssistantError(
+                f"AI Task entity {entity_id} does not support attachments"
             )
-        )
+
+        resolved_attachments = []
+
+        for attachment in attachments:
+            media = await media_source.async_resolve_media(
+                hass, attachment["media_content_id"], None
+            )
+            resolved_attachments.append(
+                PlayMediaWithId(
+                    **{
+                        field.name: getattr(media, field.name)
+                        for field in fields(media)
+                    },
+                    media_content_id=attachment["media_content_id"],
+                )
+            )
 
     return await entity.internal_async_generate_data(
         GenDataTask(

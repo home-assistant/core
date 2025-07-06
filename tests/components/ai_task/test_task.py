@@ -127,3 +127,30 @@ async def test_run_data_task_updates_chat_log(
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.content == snapshot
+
+
+async def test_generate_data_attachments_not_supported(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test generating data with attachments when entity doesn't support them."""
+    # Remove attachment support from the entity
+    mock_ai_task_entity._attr_supported_features = AITaskEntityFeature.GENERATE_DATA
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="AI Task entity ai_task.test_task_entity does not support attachments",
+    ):
+        await async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+            attachments=[
+                {
+                    "media_content_id": "media-source://mock/test.mp4",
+                    "media_content_type": "video/mp4",
+                }
+            ],
+        )

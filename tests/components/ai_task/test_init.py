@@ -108,12 +108,12 @@ async def test_generate_data_service(
     assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
 
-    assert len(task.attachments) == len(
+    assert len(task.attachments or []) == len(
         msg_attachments := msg_extra.get("attachments", [])
     )
 
     for msg_attachment, attachment in zip(
-        msg_attachments, task.attachments, strict=False
+        msg_attachments, task.attachments or [], strict=False
     ):
         assert attachment.url == "http://example.com/media.mp4"
         assert attachment.mime_type == "video/mp4"

@@ -35,3 +35,6 @@ class AITaskEntityFeature(IntFlag):
 
     GENERATE_DATA = 1
     """Generate data based on instructions."""
+
+    SUPPORT_ATTACHMENTS = 2
+    """Support attachments with generate data."""
