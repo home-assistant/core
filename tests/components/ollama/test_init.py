@@ -93,9 +93,10 @@ async def test_migration_from_v1(
         return_value=True,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.version == 3
-    assert mock_config_entry.minor_version == 1
+    assert mock_config_entry.minor_version == 2
     # After migration, parent entry should only have URL
     assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
@@ -222,7 +223,7 @@ async def test_migration_from_v1_with_multiple_urls(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 3
-        assert entry.minor_version == 1
+        assert entry.minor_version == 2
         assert not entry.options
         assert len(entry.subentries) == 2
 
@@ -331,7 +332,7 @@ async def test_migration_from_v1_with_same_urls(
 
     entry = entries[0]
     assert entry.version == 3
-    assert entry.minor_version == 1
+    assert entry.minor_version == 2
     assert not entry.options
     # Two conversation subentries from the two original entries and 1 aitask subentry
     assert len(entry.subentries) == 3

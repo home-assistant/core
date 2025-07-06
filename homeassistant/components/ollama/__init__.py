@@ -120,17 +120,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
 
-        # Add AI Task subentry if this is the first entry for this URL
-        if use_existing:
-            hass.config_entries.async_add_subentry(
-                parent_entry,
-                ConfigSubentry(
-                    data=MappingProxyType({}),
-                    subentry_type="ai_task_data",
-                    title=DEFAULT_AI_TASK_NAME,
-                    unique_id=None,
-                ),
-            )
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
