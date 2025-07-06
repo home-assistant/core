@@ -76,8 +76,22 @@ def async_static_info_updated(
         info_key = (info.device_id, info.key)
         new_infos[info_key] = info
 
+        # Try to find existing entity - first with current device_id
+        old_info = current_infos.pop(info_key, None)
+
+        # If not found, search for entity with same key but different device_id
+        # This handles the case where entity moved between devices
+        if not old_info:
+            for (existing_device_id, existing_key), existing_info in list(
+                current_infos.items()
+            ):
+                if existing_key == info.key and existing_info.key == info.key:
+                    # Found entity with same key but different device_id
+                    old_info = current_infos.pop((existing_device_id, existing_key))
+                    break
+
         # Create new entity if it doesn't exist
-        if not (old_info := current_infos.pop(info_key, None)):
+        if not old_info:
             entity = entity_type(entry_data, platform.domain, info, state_type)
             add_entities.append(entity)
             continue
@@ -148,13 +162,6 @@ def async_static_info_updated(
         # Signal the existing entity to remove itself
         # The entity is registered with the old device_id, so we signal with that
         entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
-        # Make sure to remove the old info from current_infos
-        # since the entity is going to remove itself so it
-        # can be re-added with the new device_id, otherwise
-        # if it stays in current_infos, it will be deleted
-        # from all the registries and we will loose the
-        # entity_id.
-        del current_infos[info_key]
 
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, platform.domain, info, state_type))
