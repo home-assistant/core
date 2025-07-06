@@ -938,7 +938,7 @@ async def test_entity_switches_between_devices(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=0),
     ]
 
     device = await mock_esphome_device(
