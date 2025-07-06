@@ -88,7 +88,7 @@ async def test_services(
             {
                 CONF_DEVICE_ID: vehicle_device,
                 ATTR_ENABLE: True,
-                ATTR_TIME: time(6, 0, 0),  # 6:00 AM
+                ATTR_TIME: "06:00",  # 6:00 AM
             },
             blocking=True,
         )
@@ -106,10 +106,10 @@ async def test_services(
                 ATTR_ENABLE: True,
                 ATTR_PRECONDITIONING_ENABLED: True,
                 ATTR_PRECONDITIONING_WEEKDAYS: False,
-                ATTR_DEPARTURE_TIME: time(6, 0, 0),  # 6:00 AM
+                ATTR_DEPARTURE_TIME: "06:00",  # 6:00 AM
                 ATTR_OFF_PEAK_CHARGING_ENABLED: True,
                 ATTR_OFF_PEAK_CHARGING_WEEKDAYS: False,
-                ATTR_END_OFF_PEAK_TIME: time(5, 0, 0),  # 5:00 AM
+                ATTR_END_OFF_PEAK_TIME: "05:00",  # 5:00 AM
             },
             blocking=True,
         )
