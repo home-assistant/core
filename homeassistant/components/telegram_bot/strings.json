@@ -122,6 +122,7 @@
         "chat_not_found": "Chat not found"
       },
       "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "already_configured": "Chat already configured"
       }
     }
