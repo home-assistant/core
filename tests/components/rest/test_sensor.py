@@ -985,8 +985,6 @@ async def test_query_param_dict_value(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that dict values in query params are handled gracefully for backward compatibility."""
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.rest.data")
-
     # Mock response
     aioclient_mock.post(
         "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
@@ -997,37 +995,38 @@ async def test_query_param_dict_value(
     # This test checks that when template_complex processes a string that looks like
     # a dict/list, it converts it to an actual dict/list, which then needs to be
     # handled by our backward compatibility code
-    assert await async_setup_component(
-        hass,
-        "rest",
-        {
-            "rest": [
-                {
-                    "resource": "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
-                    "method": "POST",
-                    "params": {
-                        "page": "1",
-                        "perPage": "20",
-                        "orderBy": "SN",
-                        # When processed by template.render_complex, certain strings might
-                        # be converted to dicts/lists if they look like JSON
-                        "whereCondition": "{{ {'STATIONID': 'A6327A17797C1234'} }}",  # Template that evaluates to dict
-                    },
-                    "sensor": [
-                        {
-                            "name": "Solar MPPT1 Power",
-                            "value_template": "{{ value_json.Data.QueryResults[0].POWER }}",
-                            "device_class": "power",
-                            "unit_of_measurement": "W",
-                            "force_update": True,
-                            "state_class": "measurement",
-                        }
-                    ],
-                }
-            ]
-        },
-    )
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.rest.data"):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: [
+                    {
+                        "resource": "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
+                        "method": "POST",
+                        "params": {
+                            "page": "1",
+                            "perPage": "20",
+                            "orderBy": "SN",
+                            # When processed by template.render_complex, certain strings might
+                            # be converted to dicts/lists if they look like JSON
+                            "whereCondition": "{{ {'STATIONID': 'A6327A17797C1234'} }}",  # Template that evaluates to dict
+                        },
+                        "sensor": [
+                            {
+                                "name": "Solar MPPT1 Power",
+                                "value_template": "{{ value_json.Data.QueryResults[0].POWER }}",
+                                "device_class": "power",
+                                "unit_of_measurement": "W",
+                                "force_update": True,
+                                "state_class": "measurement",
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
     # The sensor should be created successfully with backward compatibility
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
@@ -1055,9 +1054,9 @@ async def test_query_param_json_string_preserved(
     # Config with JSON string (quoted) - should remain a string
     assert await async_setup_component(
         hass,
-        "rest",
+        DOMAIN,
         {
-            "rest": [
+            DOMAIN: [
                 {
                     "resource": "https://api.example.com/data",
                     "method": "GET",
