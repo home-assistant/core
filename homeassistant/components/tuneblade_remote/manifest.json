@@ -1,10 +1,9 @@
 {
   "domain": "tuneblade_remote",
   "name": "TuneBlade Remote",
-  "bluetooth": [],
   "codeowners": ["@spycle"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["media_player", "http"],
   "dhcp": [],
   "documentation": "https://www.home-assistant.io/integrations/tuneblade_remote",
   "integration_type": "hub",

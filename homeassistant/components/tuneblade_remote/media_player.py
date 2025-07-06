@@ -29,37 +29,22 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     added_ids = set()
-    entities = []
+    entities: list[MediaPlayerEntity] = []
 
-    # Add the MASTER hub media player first if present
-    if "MASTER" in coordinator.data:
-        entities.append(TuneBladeHubMediaPlayer(coordinator))
-        added_ids.add("MASTER")
+    for device_id, device_data in coordinator.data.items():
+        if device_id == "MASTER":
+            entities.append(TuneBladeHubMediaPlayer(coordinator))
+            added_ids.add("MASTER")
+        elif device_id not in added_ids:
+            # Create a media player entity for each device
+            entities.append(TuneBladeMediaPlayer(coordinator, device_id, device_data))
+            added_ids.add(device_id)
+            _LOGGER.debug(
+                "Added new media player: %s", device_data.get("name", device_id)
+            )
 
-    async def _update_entities():
-        new_entities = []
-
-        # Add per-device media players, skip 'MASTER' (already added)
-        for device_id, device_data in coordinator.data.items():
-            if device_id == "MASTER":
-                continue
-            if device_id not in added_ids:
-                entity = TuneBladeMediaPlayer(coordinator, device_id, device_data)
-                new_entities.append(entity)
-                added_ids.add(device_id)
-                _LOGGER.debug(
-                    "Added new media player: %s", device_data.get("name", device_id)
-                )
-
-        if new_entities:
-            async_add_entities(new_entities, True)
-
-    # Add initial entities
-    async_add_entities(entities)
-    await _update_entities()
-
-    # Register future additions
-    coordinator.async_add_listener(_update_entities)
+    if entities:
+        async_add_entities(entities, True)
 
 
 class TuneBladeHubMediaPlayer(
