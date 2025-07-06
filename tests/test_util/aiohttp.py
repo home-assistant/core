@@ -156,6 +156,9 @@ class AiohttpClientMocker:
 
         for response in self._mocks:
             if response.match_request(method, url, params):
+                # If auth is provided, try to encode it to trigger any encoding errors
+                if auth is not None:
+                    auth.encode()
                 self.mock_calls.append((method, url, data, headers))
                 if response.side_effect:
                     response = await response.side_effect(method, url, data)
