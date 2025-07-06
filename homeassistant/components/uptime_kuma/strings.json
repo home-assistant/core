@@ -68,7 +68,8 @@
           "tailscale_ping": "Tailscale Ping",
           "snmp": "SNMP",
           "smtp": "SMTP",
-          "rabbit_mq": "RabbitMQ"
+          "rabbit_mq": "RabbitMQ",
+          "manual": "Manual"
         }
       },
       "url": {
