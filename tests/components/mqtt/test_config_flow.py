@@ -4232,14 +4232,27 @@ async def test_subentry_reconfigure_availablity(
         )
     ],
 )
-@pytest.mark.parametrize(("flow_step"), ["export_yaml", "export_discovery"])
+@pytest.mark.parametrize(
+    ("flow_step", "field_suggestions"),
+    [
+        ("export_yaml", {"yaml": "identifiers:\n      - {}\n"}),
+        (
+            "export_discovery",
+            {
+                "discovery_topic": "homeassistant/device/{}/config",
+                "discovery_payload": '"identifiers": [\n      "{}"\n',
+            },
+        ),
+    ],
+)
 async def test_subentry_reconfigure_export_settings(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     flow_step: str,
+    field_suggestions: dict[str, str],
 ) -> None:
-    """Test the subentry ConfigFlow reconfigure and update device properties."""
+    """Test the subentry ConfigFlow reconfigure export feature."""
     await mqtt_mock_entry()
     config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     subentry_id: str
@@ -4284,6 +4297,13 @@ async def test_subentry_reconfigure_export_settings(
     assert result["description_placeholders"] == {
         "url": "https://www.home-assistant.io/integrations/mqtt/"
     }
+
+    # Assert the export is correct
+    for field in result["data_schema"].schema:
+        assert (
+            field_suggestions[field].format(subentry_id)
+            in field.description["suggested_value"]
+        )
 
     # Back to summary menu
     result = await hass.config_entries.subentries.async_configure(

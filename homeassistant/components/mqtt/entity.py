@@ -291,7 +291,6 @@ def async_setup_entity_entry_helper(
                     "entry_id": entry.entry_id,
                     "subentry_id": subentry_id,
                     "name": name,
-                    "migration_type": migration_type,
                 },
                 translation_placeholders={"name": name},
                 translation_key=migration_type,
