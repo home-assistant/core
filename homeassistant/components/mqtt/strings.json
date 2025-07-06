@@ -3,6 +3,28 @@
     "invalid_platform_config": {
       "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    },
+    "subentry_migration_discovery": {
+      "title": "MQTT Device \"{name}\" subentry migration to MQTT discovery",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::mqtt::issues::subentry_migration_discovery::title%]",
+            "description": "Exported MQTT Device \"{name}\" identified via MQTT discovery. Confirm that the MQTT device is migrated to the main MQTT configuration, the replaced subentry of the MQTT device is to be removed, and MQTT is to be reloaded. Make sure that the discovery is retained at the MQTT broker, or is resent after the reload is completed, so that the MQTT will be set up correctly."
+          }
+        }
+      }
+    },
+    "subentry_migration_yaml": {
+      "title": "MQTT Device \"{name}\" subentry migration to YAML",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::mqtt::issues::subentry_migration_yaml::title%]",
+            "description": "Exported MQTT Device \"{name}\" identified in YAML configuration. Confirm to migrate the MQTT device to main MQTT config entry, and to remove the replaced MQTT device subentry."
+          }
+        }
+      }
     }
   },
   "config": {
@@ -631,7 +653,7 @@
         },
         "export": {
           "title": "Export MQTT device config",
-          "description": "An export allows you set up the MQTT device configuration via YAML or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
+          "description": "An export allows you to migrate the MQTT device configuration to YAML based configuration or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
           "menu_options": {
             "export_discovery": "Export MQTT discovery information",
             "export_yaml": "Export to YAML configuration"
@@ -639,7 +661,7 @@
         },
         "export_yaml": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "The export includes the unique ID's used in the subentry configuration. You must change these ID's or remove the MQTT device subentry to avoid conflicts. Note that removing the MQTT device subentry will also remove the device from the device registry.",
+          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the MQTT device was tried to set up via YAML instead, and will offer a repair flow to clean up the redundant subentry.",
           "data": {
             "yaml": "Copy the YAML configuration below:"
           },
@@ -649,7 +671,7 @@
         },
         "export_discovery": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "The export includes the unique ID's used in the subentry configuration. You must change these ID's or remove the MQTT device subentry to avoid conflicts. Note that removing the MQTT device subentry will also remove the device from the device registry.\n\nTo allow [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the needed information from the fields below.",
+          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the MQTT device was tried set up via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry.",
           "data": {
             "discovery_topic": "Discovery topic",
             "discovery_payload": "Discovery payload:"
