@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
@@ -74,6 +74,11 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+}
+
+RVC_OPERATIONAL_STATE_MAP = {
+    # enum with known Operation state values which we can translate
+    **OPERATIONAL_STATE_MAP,
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
@@ -171,6 +176,10 @@ class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescriptio
     state_list_attribute: type[ClusterAttributeDescriptor] = (
         clusters.OperationalState.Attributes.OperationalStateList
     )
+    state_attribute: type[ClusterAttributeDescriptor] = (
+        clusters.OperationalState.Attributes.OperationalState
+    )
+    state_map: dict[int, str] = field(default_factory=lambda: OPERATIONAL_STATE_MAP)
 
 
 class MatterSensor(MatterEntity, SensorEntity):
@@ -185,7 +194,7 @@ class MatterSensor(MatterEntity, SensorEntity):
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value in (None, NullValue):
             value = None
-        elif value_convert := self.entity_description.measurement_to_ha:
+        elif value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -245,15 +254,15 @@ class MatterOperationalStateSensor(MatterSensor):
         for state in operational_state_list:
             # prefer translateable (known) state from mapping,
             # fallback to the raw state label as given by the device/manufacturer
-            states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
-                state.operationalStateID, slugify(state.operationalStateLabel)
+            states_map[state.operationalStateID] = (
+                self.entity_description.state_map.get(
+                    state.operationalStateID, slugify(state.operationalStateLabel)
+                )
             )
         self.states_map = states_map
         self._attr_options = list(states_map.values())
         self._attr_native_value = states_map.get(
-            self.get_matter_attribute_value(
-                clusters.OperationalState.Attributes.OperationalState
-            )
+            self.get_matter_attribute_value(self.entity_description.state_attribute)
         )
 
 
@@ -287,7 +296,7 @@ DISCOVERY_SCHEMAS = [
             key="TemperatureSensor",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            measurement_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / 100,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -299,7 +308,7 @@ DISCOVERY_SCHEMAS = [
             key="PressureSensor",
             native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
-            measurement_to_ha=lambda x: x / 10,
+            device_to_ha=lambda x: x / 10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -311,7 +320,7 @@ DISCOVERY_SCHEMAS = [
             key="FlowSensor",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             translation_key="flow",
-            measurement_to_ha=lambda x: x / 10,
+            device_to_ha=lambda x: x / 10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -323,7 +332,7 @@ DISCOVERY_SCHEMAS = [
             key="HumiditySensor",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.HUMIDITY,
-            measurement_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / 100,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -337,7 +346,7 @@ DISCOVERY_SCHEMAS = [
             key="LightSensor",
             native_unit_of_measurement=LIGHT_LUX,
             device_class=SensorDeviceClass.ILLUMINANCE,
-            measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
+            device_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -351,7 +360,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             # value has double precision
-            measurement_to_ha=lambda x: int(x / 2),
+            device_to_ha=lambda x: int(x / 2),
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -393,7 +402,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=[state for state in CHARGE_STATE_MAP.values() if state is not None],
-            measurement_to_ha=CHARGE_STATE_MAP.get,
+            device_to_ha=CHARGE_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
@@ -580,7 +589,7 @@ DISCOVERY_SCHEMAS = [
             state_class=None,
             # convert to set first to remove the duplicate unknown value
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
-            measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
+            device_to_ha=lambda x: AIR_QUALITY_MAP[x],
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
@@ -659,7 +668,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
+            device_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -676,7 +685,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            measurement_to_ha=lambda x: x / 1000,
+            device_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -693,7 +702,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 10,
+            device_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Watt,),
@@ -722,7 +731,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             suggested_display_precision=0,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 10,
+            device_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Voltage,),
@@ -814,7 +823,7 @@ DISCOVERY_SCHEMAS = [
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
             # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
-            measurement_to_ha=lambda x: x.energy,
+            device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -833,7 +842,7 @@ DISCOVERY_SCHEMAS = [
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
             # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
-            measurement_to_ha=lambda x: x.energy,
+            device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -901,7 +910,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
             options=list(CONTAMINATION_STATE_MAP.values()),
-            measurement_to_ha=CONTAMINATION_STATE_MAP.get,
+            device_to_ha=CONTAMINATION_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ContaminationState,),
@@ -913,7 +922,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="expiry_date",
             device_class=SensorDeviceClass.TIMESTAMP,
             # raw value is epoch seconds
-            measurement_to_ha=datetime.fromtimestamp,
+            device_to_ha=datetime.fromtimestamp,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ExpiryDate,),
@@ -984,7 +993,7 @@ DISCOVERY_SCHEMAS = [
             key="ThermostatLocalTemperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            measurement_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / 100,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -999,6 +1008,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.RvcOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.RvcOperationalState.Attributes.OperationalState,
+            state_map=RVC_OPERATIONAL_STATE_MAP,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -1016,6 +1027,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
             state_list_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+            state_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalState,
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
@@ -1032,7 +1044,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             translation_key="window_covering_target_position",
-            measurement_to_ha=lambda x: round((10000 - x) / 100),
+            device_to_ha=lambda x: round((10000 - x) / 100),
             native_unit_of_measurement=PERCENTAGE,
         ),
         entity_class=MatterSensor,
@@ -1048,7 +1060,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(EVSE_FAULT_STATE_MAP.values()),
-            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
+            device_to_ha=EVSE_FAULT_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.FaultState,),
@@ -1161,7 +1173,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(ESA_STATE_MAP.values()),
-            measurement_to_ha=ESA_STATE_MAP.get,
+            device_to_ha=ESA_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
@@ -1174,7 +1186,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(DEM_OPT_OUT_STATE_MAP.values()),
-            measurement_to_ha=DEM_OPT_OUT_STATE_MAP.get,
+            device_to_ha=DEM_OPT_OUT_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DeviceEnergyManagement.Attributes.OptOutState,),
@@ -1188,7 +1200,7 @@ DISCOVERY_SCHEMAS = [
             options=[
                 mode for mode in PUMP_CONTROL_MODE_MAP.values() if mode is not None
             ],
-            measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
+            device_to_ha=PUMP_CONTROL_MODE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(

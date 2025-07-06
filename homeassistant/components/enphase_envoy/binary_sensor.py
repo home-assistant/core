@@ -126,6 +126,7 @@ class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
     @property
@@ -158,6 +159,7 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=enpower.serial_number,
         )
 
     @property

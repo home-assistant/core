@@ -81,6 +81,9 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.set_audio = AsyncMock()
     host_mock.set_email = AsyncMock()
     host_mock.ONVIF_event_callback = AsyncMock()
+    host_mock.set_whiteled = AsyncMock()
+    host_mock.set_state_light = AsyncMock()
+    host_mock.renew = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.mac_address = TEST_MAC

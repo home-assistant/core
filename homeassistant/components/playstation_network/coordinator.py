@@ -7,13 +7,13 @@ import logging
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
+    PSNAWPClientError,
     PSNAWPServerError,
 )
-from psnawp_api.models.user import User
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -28,7 +28,6 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
     """Data update coordinator for PSN."""
 
     config_entry: PlaystationNetworkConfigEntry
-    user: User
 
     def __init__(
         self,
@@ -51,11 +50,16 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         """Set up the coordinator."""
 
         try:
-            self.user = await self.psn.get_user()
+            await self.psn.get_user()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
+            ) from error
+        except (PSNAWPServerError, PSNAWPClientError) as error:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
             ) from error
 
     async def _async_update_data(self) -> PlaystationNetworkData:
@@ -67,7 +71,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
             ) from error
-        except PSNAWPServerError as error:
+        except (PSNAWPServerError, PSNAWPClientError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
