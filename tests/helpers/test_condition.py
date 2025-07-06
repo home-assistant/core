@@ -1,14 +1,21 @@
 """Test the condition helper."""
 
 from datetime import timedelta
+import io
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant.components.device_automation import (
+    DOMAIN as DOMAIN_DEVICE_AUTOMATION,
+)
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_CONDITION,
@@ -27,10 +34,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml.loader import parse_yaml
 
-from tests.common import MockModule, mock_integration, mock_platform
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 def assert_element(trace_element, expected_element, path):
@@ -2322,3 +2331,280 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
             "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
         }
     )
+
+
+@pytest.mark.parametrize(
+    "sun_condition_descriptions",
+    [
+        """
+        sun:
+          fields:
+            after:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            after_offset:
+              selector:
+                time: null
+            before:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            before_offset:
+              selector:
+                time: null
+        """,
+        """
+        .sunrise_sunset_selector: &sunrise_sunset_selector
+          example: sunrise
+          selector:
+            select:
+              options:
+                - sunrise
+                - sunset
+        .offset_selector: &offset_selector
+          selector:
+            time: null
+        sun:
+          fields:
+            after: *sunrise_sunset_selector
+            after_offset: *offset_selector
+            before: *sunrise_sunset_selector
+            before_offset: *offset_selector
+        """,
+    ],
+)
+async def test_async_get_all_descriptions(
+    hass: HomeAssistant, sun_condition_descriptions: str
+) -> None:
+    """Test async_get_all_descriptions."""
+    device_automation_condition_descriptions = """
+        device: {}
+        """
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("device_automation/conditions.yaml"):
+            condition_descriptions = device_automation_condition_descriptions
+        elif fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.condition._load_conditions_files",
+            side_effect=condition._load_conditions_files,
+        ) as proxy_load_conditions_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    # Test we only load conditions.yaml for integrations with conditions,
+    # system_health has no conditions
+    assert proxy_load_conditions_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_SUN),
+        ]
+    )
+
+    # system_health does not have conditions and should not be in descriptions
+    assert descriptions == {
+        DOMAIN_SUN: {
+            "fields": {
+                "after": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "after_offset": {"selector": {"time": None}},
+                "before": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "before_offset": {"selector": {"time": None}},
+            }
+        }
+    }
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is descriptions
+
+    # Load the device_automation integration and check a new cache object is created
+    assert await async_setup_component(hass, DOMAIN_DEVICE_AUTOMATION, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        new_descriptions = await condition.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    assert new_descriptions == {
+        "device": {
+            "fields": {},
+        },
+        DOMAIN_SUN: {
+            "fields": {
+                "after": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "after_offset": {"selector": {"time": None}},
+                "before": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "before_offset": {"selector": {"time": None}},
+            }
+        },
+    }
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+
+@pytest.mark.parametrize(
+    ("yaml_error", "expected_message"),
+    [
+        (
+            FileNotFoundError("Blah"),
+            "Unable to find conditions.yaml for the sun integration",
+        ),
+        (
+            HomeAssistantError("Test error"),
+            "Unable to parse conditions.yaml for the sun integration: Test error",
+        ),
+    ],
+)
+async def test_async_get_all_descriptions_with_yaml_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_error: Exception,
+    expected_message: str,
+) -> None:
+    """Test async_get_all_descriptions."""
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml_dict(fname, secrets=None):
+        raise yaml_error
+
+    with (
+        patch(
+            "homeassistant.helpers.condition.load_yaml_dict",
+            side_effect=_load_yaml_dict,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: None}
+
+    assert expected_message in caplog.text
+
+
+async def test_async_get_all_descriptions_with_bad_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_get_all_descriptions."""
+    sun_service_descriptions = """
+        sun:
+          fields: not_a_dict
+    """
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: None}
+
+    assert (
+        "Unable to parse conditions.yaml for the sun integration: "
+        "expected a dictionary for dictionary value @ data['sun']['fields']"
+    ) in caplog.text
+
+
+async def test_invalid_condition_platform(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid condition platform."""
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(hass, "test.condition", MockPlatform())
+
+    await async_setup_component(hass, "test", {})
+
+    assert (
+        "Integration test does not provide condition support, skipping" in caplog.text
+    )
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+async def test_subscribe_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test condition.async_subscribe_platform_events."""
+    sun_condition_descriptions = """
+        sun: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    async def broken_subscriber(_):
+        """Simulate a broken subscriber."""
+        raise Exception("Boom!")  # noqa: TRY002
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    condition.async_subscribe_platform_events(hass, broken_subscriber)
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "sun", {})
+
+    assert condition_events == [{"sun"}]
+    assert "Error while notifying condition platform listener" in caplog.text
