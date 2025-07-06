@@ -114,6 +114,76 @@ async def test_platform(
     """Test setup of the PlayStation Network media_player platform."""
 
     mock_psnawpapi.user().get_presence.return_value = presence_payload
+    mock_psnawpapi.me.return_value.get_profile_legacy.return_value = {
+        "profile": {"presences": []}
+    }
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "presence_payload",
+    [
+        {
+            "profile": {
+                "presences": [
+                    {
+                        "onlineStatus": "standby",
+                        "platform": "PSVITA",
+                        "hasBroadcastData": False,
+                    }
+                ]
+            }
+        },
+        {
+            "profile": {
+                "presences": [
+                    {
+                        "onlineStatus": "online",
+                        "platform": "PSVITA",
+                        "npTitleId": "PCSB00074_00",
+                        "titleName": "Assassin's Creed® III Liberation",
+                        "hasBroadcastData": False,
+                    }
+                ]
+            }
+        },
+        {
+            "profile": {
+                "presences": [
+                    {
+                        "onlineStatus": "online",
+                        "platform": "PSVITA",
+                        "hasBroadcastData": False,
+                    }
+                ]
+            }
+        },
+    ],
+)
+@pytest.mark.usefixtures("mock_psnawpapi", "mock_token")
+async def test_media_player_psvita(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_psnawpapi: MagicMock,
+    presence_payload: dict[str, Any],
+) -> None:
+    """Test setup of the PlayStation Network media_player for PlayStation Vita."""
+
+    mock_psnawpapi.user().get_presence.return_value = {
+        "basicPresence": {
+            "availability": "unavailable",
+            "primaryPlatformInfo": {"onlineStatus": "offline", "platform": ""},
+        }
+    }
+    mock_psnawpapi.me.return_value.get_profile_legacy.return_value = presence_payload
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
