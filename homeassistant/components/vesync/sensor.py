@@ -28,16 +28,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_humidifier
-from .const import (
-    DEV_TYPE_TO_HA,
-    DOMAIN,
-    SKU_TO_BASE_DEVICE,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-    VS_MANAGER,
-)
+from .common import is_humidifier, is_outlet, rgetattr
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -60,43 +52,6 @@ def update_energy(device):
     device.update_energy()
 
 
-def sku_supported(device, supported):
-    """Get the base device of which a device is an instance."""
-    return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
-
-
-def ha_dev_type(device):
-    """Get the homeassistant device_type for a given device."""
-    return DEV_TYPE_TO_HA.get(device.device_type)
-
-
-FILTER_LIFE_SUPPORTED = [
-    "LV-PUR131S",
-    "Core200S",
-    "Core300S",
-    "Core400S",
-    "Core600S",
-    "EverestAir",
-    "Vital100S",
-    "Vital200S",
-]
-AIR_QUALITY_SUPPORTED = [
-    "LV-PUR131S",
-    "Core300S",
-    "Core400S",
-    "Core600S",
-    "Vital100S",
-    "Vital200S",
-]
-PM25_SUPPORTED = [
-    "Core300S",
-    "Core400S",
-    "Core600S",
-    "EverestAir",
-    "Vital100S",
-    "Vital200S",
-]
-
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
@@ -105,13 +60,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.state.filter_life,
-        exists_fn=lambda device: sku_supported(device, FILTER_LIFE_SUPPORTED),
+        exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
     ),
     VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
         value_fn=lambda device: device.state.air_quality,
-        exists_fn=lambda device: sku_supported(device, AIR_QUALITY_SUPPORTED),
+        exists_fn=lambda device: rgetattr(device, "state.air_quality") is not None,
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
@@ -119,7 +74,8 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.air_quality_value,
-        exists_fn=lambda device: sku_supported(device, PM25_SUPPORTED),
+        exists_fn=lambda device: rgetattr(device, "state.air_quality_value")
+        is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -129,7 +85,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.power,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="energy",
@@ -139,7 +95,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.state.energy_today,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="energy-weekly",
@@ -149,7 +105,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.state.weekly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="energy-monthly",
@@ -159,7 +115,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.state.monthly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="energy-yearly",
@@ -169,7 +125,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.state.yearly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="voltage",
@@ -179,7 +135,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.voltage,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
         key="humidity",

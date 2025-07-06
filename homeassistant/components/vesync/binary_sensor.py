@@ -31,20 +31,24 @@ class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes custom binary sensor entities."""
 
     is_on: Callable[[VeSyncBaseDevice], bool]
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
 
 
 SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
-        key="state.water_lacks",
+        key="water_lacks",
         translation_key="water_lacks",
         is_on=lambda device: device.state.water_lacks,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        exists_fn=lambda device: rgetattr(device, "state.water_lacks") is not None,
     ),
     VeSyncBinarySensorEntityDescription(
         key="state.water_tank_lifted",
         translation_key="water_tank_lifted",
         is_on=lambda device: device.state.water_tank_lifted,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        exists_fn=lambda device: rgetattr(device, "state.water_tank_lifted")
+        is not None,
     ),
 )
 
@@ -80,7 +84,7 @@ def _setup_entities(devices, async_add_entities, coordinator):
             VeSyncBinarySensor(dev, description, coordinator)
             for dev in devices
             for description in SENSOR_DESCRIPTIONS
-            if rgetattr(dev, description.key) is not None
+            if description.exists_fn(dev)
         ),
     )
 
