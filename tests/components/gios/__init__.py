@@ -43,7 +43,7 @@ async def init_integration(
     station = await async_load_json_array_fixture(hass, "station.json", DOMAIN)
     sensors = await async_load_json_object_fixture(hass, "sensors.json", DOMAIN)
     if incomplete_data:
-        indexes["Nazwa kategorii indeksu"] = "foo"
+        indexes["AqIndex"] = "foo"
         sensors["pm10"]["Lista danych pomiarowych"][0]["Wartość"] = None
         sensors["pm10"]["Lista danych pomiarowych"][1]["Wartość"] = None
     if invalid_indexes:
