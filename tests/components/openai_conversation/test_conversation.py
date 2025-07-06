@@ -483,6 +483,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAA",
             ),
             output_index=output_index,
             type="response.output_item.added",
@@ -493,6 +494,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAABBB",
             ),
             output_index=output_index,
             type="response.output_item.done",
@@ -588,6 +590,7 @@ async def test_function_call(
         "id": "rs_A",
         "summary": [],
         "type": "reasoning",
+        "encrypted_content": "AAABBB",
     }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
