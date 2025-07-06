@@ -33,7 +33,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData, build_device_unique_id
+from .entry_data import (
+    DeviceEntityHashType,
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    build_device_unique_id,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,17 +64,20 @@ def async_static_info_updated(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    new_infos: dict[int, EntityInfo] = {}
+    new_infos: dict[DeviceEntityHashType, EntityInfo] = {}
     add_entities: list[_EntityT] = []
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
+    # Track info by (info.device_id, info.key) to properly handle entities
+    # moving between devices and support sub-devices with overlapping keys
     for info in infos:
-        new_infos[info.key] = info
+        info_key = (info.device_id, info.key)
+        new_infos[info_key] = info
 
         # Create new entity if it doesn't exist
-        if not (old_info := current_infos.pop(info.key, None)):
+        if not (old_info := current_infos.pop(info_key, None)):
             entity = entity_type(entry_data, platform.domain, info, state_type)
             add_entities.append(entity)
             continue
@@ -341,7 +349,10 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, self._key, self._on_state_update
+                self._static_info.device_id,
+                self._state_type,
+                self._key,
+                self._on_state_update,
             )
         )
         self.async_on_remove(
