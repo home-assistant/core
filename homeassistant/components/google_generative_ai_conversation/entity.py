@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import codecs
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
+import mimetypes
+from pathlib import Path
 from typing import Any, cast
 
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
+    File,
+    FileState,
     FunctionDeclaration,
     GenerateContentConfig,
     GenerateContentResponse,
@@ -26,6 +32,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -42,6 +49,7 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
+    FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -49,6 +57,7 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    TIMEOUT_MILLIS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -494,3 +503,68 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ),
             ],
         )
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, client: Client, files: list[Path]
+) -> list[File]:
+    """Append files to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def upload_files() -> list[File]:
+        prompt_parts: list[File] = []
+        for filename in files:
+            if not filename.exists():
+                raise HomeAssistantError(f"`{filename}` does not exist")
+            mimetype = mimetypes.guess_type(filename)[0]
+            prompt_parts.append(
+                client.files.upload(
+                    file=filename,
+                    config={
+                        "mime_type": mimetype,
+                        "display_name": filename.name,
+                    },
+                )
+            )
+        return prompt_parts
+
+    async def wait_for_file_processing(uploaded_file: File) -> None:
+        """Wait for file processing to complete."""
+        first = True
+        while uploaded_file.state in (
+            FileState.STATE_UNSPECIFIED,
+            FileState.PROCESSING,
+        ):
+            if first:
+                first = False
+            else:
+                LOGGER.debug(
+                    "Waiting for file `%s` to be processed, current state: %s",
+                    uploaded_file.name,
+                    uploaded_file.state,
+                )
+                await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
+
+            uploaded_file = await client.aio.files.get(
+                name=uploaded_file.name,
+                config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+            )
+
+        if uploaded_file.state == FileState.FAILED:
+            raise HomeAssistantError(
+                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
+            )
+
+    prompt_parts = await hass.async_add_executor_job(upload_files)
+
+    tasks = [
+        asyncio.create_task(wait_for_file_processing(part))
+        for part in prompt_parts
+        if part.state != FileState.ACTIVE
+    ]
+    async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
+        await asyncio.gather(*tasks)
+
+    return prompt_parts
