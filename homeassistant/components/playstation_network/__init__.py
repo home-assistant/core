@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_NPSSO
+from .const import ASSETS_PATH, CONF_NPSSO
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 from .helpers import PlaystationNetwork
 
@@ -28,6 +31,14 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    files_path = Path(__file__).parent / "static"
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(ASSETS_PATH, str(files_path), cache_headers=True),
+        ]
+    )
+
     return True
 
 

@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ASSETS_PATH
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
 from .entity import PlaystationNetworkServiceEntity
 
@@ -40,7 +41,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         translation_key=PlaystationNetworkBinarySensor.PS_PLUS_STATUS,
         is_on_fn=lambda psn: psn.profile["isPlus"],
-        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/psplus.png",
+        entity_picture=f"{ASSETS_PATH}/psplus.png",
     ),
 )
 

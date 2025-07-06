@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from .const import ASSETS_PATH
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
 from .entity import PlaystationNetworkServiceEntity
 
@@ -55,7 +56,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
         entity_picture=(
-            lambda psn: f"https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/tier_{psn.trophy_summary.tier}.png"
+            lambda psn: f"{ASSETS_PATH}/tier_{psn.trophy_summary.tier}.png"
             if psn.trophy_summary
             else None
         ),
@@ -76,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/platinum.png",
+        entity_picture=f"{ASSETS_PATH}/platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -86,7 +87,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/gold.png",
+        entity_picture=f"{ASSETS_PATH}/gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -96,7 +97,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/silver.png",
+        entity_picture=f"{ASSETS_PATH}/silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -106,7 +107,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/bronze.png",
+        entity_picture=f"{ASSETS_PATH}/bronze.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
