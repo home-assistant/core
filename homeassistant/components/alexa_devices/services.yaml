@@ -1,10 +1,9 @@
 send_text_command:
   fields:
-    device_ids:
+    device_id:
       required: true
       selector:
         device:
-          multiple: true
           integration: alexa_devices
     text_command:
       required: true
@@ -14,11 +13,10 @@ send_text_command:
 
 send_sound:
   fields:
-    device_ids:
+    device_id:
       required: true
       selector:
         device:
-          multiple: true
           integration: alexa_devices
     sound_variant:
       required: true

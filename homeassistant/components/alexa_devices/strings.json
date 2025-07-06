@@ -4,7 +4,8 @@
     "data_description_country": "The country where your Amazon account is registered.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
-    "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported."
+    "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported.",
+    "device_id_description": "The ID of the device to send the command to."
   },
   "config": {
     "flow_title": "{username}",
@@ -88,9 +89,9 @@
       "name": "Send sound",
       "description": "Sends a sound to a device",
       "fields": {
-        "device_ids": {
-          "name": "Devices",
-          "description": "The IDs of the devices to send the command to."
+        "device_id": {
+          "name": "Device",
+          "description": "[%key:component::alexa_devices::common::device_id_description%]"
         },
         "sound": {
           "name": "Alexa Skill sound file",
@@ -110,9 +111,9 @@
           "name": "Alexa text command",
           "description": "The text command to send."
         },
-        "device_ids": {
-          "name": "Devices",
-          "description": "The IDs of the devices to send the command to."
+        "device_id": {
+          "name": "Device",
+          "description": "[%key:component::alexa_devices::common::device_id_description%]"
         }
       }
     }
@@ -598,7 +599,14 @@
     "cannot_retrieve_data": {
       "message": "Error retrieving data: {error}"
     },
-    "no_device_specified": { "message": "No device specified" },
-    "invalid_device_id": { "message": "Invalid device ID specified" }
+    "device_serial_number_missing": {
+      "message": "Device serial number missing: {device_id}"
+    },
+    "invalid_device_id": {
+      "message": "Invalid device ID specified: {device_id"
+    },
+    "invalid_sound_value": {
+      "message": "Invalid sound {sound} with variant {variant} specified"
+    }
   }
 }
