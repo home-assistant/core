@@ -8,7 +8,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "station": "Serial number of the charger, this value can be fount in the Wallbox App or in the Wallbox Portal.",
+          "station": "Serial number of the charger, this value can be found in the Wallbox App or in the Wallbox Portal.",
           "username": "Username for your Wallbox Account.",
           "password": "Password for your Wallbox Account."
         }

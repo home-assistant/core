@@ -20,8 +20,10 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+type WallboxConfigEntry = ConfigEntry[WallboxCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
     wallbox = Wallbox(
         entry.data[CONF_USERNAME],
@@ -35,8 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     wallbox_coordinator = WallboxCoordinator(hass, entry, wallbox)
     await wallbox_coordinator.async_config_entry_first_refresh()
-
-    # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = wallbox_coordinator
 
     entry.runtime_data = wallbox_coordinator
 
