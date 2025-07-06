@@ -181,6 +181,9 @@ class RuntimeEntryData:
         default_factory=list
     )
     device_id_to_name: dict[int, str] = field(default_factory=dict)
+    entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
+        default_factory=dict
+    )
 
     @property
     def name(self) -> str:
@@ -527,3 +530,26 @@ class RuntimeEntryData:
         """Notify listeners that the Assist satellite wake word has been set."""
         for callback_ in self.assist_satellite_set_wake_word_callbacks.copy():
             callback_(wake_word_id)
+
+    @callback
+    def async_register_entity_removal_callback(
+        self,
+        info_type: type[EntityInfo],
+        device_id: int,
+        key: int,
+        callback_: CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register to receive a callback when the entity should remove itself."""
+        callback_key = (info_type, device_id, key)
+        callbacks = self.entity_removal_callbacks.setdefault(callback_key, [])
+        callbacks.append(callback_)
+        return partial(callbacks.remove, callback_)
+
+    @callback
+    def async_signal_entity_removal(
+        self, info_type: type[EntityInfo], device_id: int, key: int
+    ) -> None:
+        """Signal that an entity should remove itself."""
+        callback_key = (info_type, device_id, key)
+        for callback_ in self.entity_removal_callbacks.get(callback_key, []).copy():
+            callback_()

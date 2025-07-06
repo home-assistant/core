@@ -139,19 +139,15 @@ def async_static_info_updated(
         # 1. The entity appears under the correct device in the UI
         # 2. The entity's state subscription is updated to use the new device_id
         _LOGGER.info(
-            "Entity %s moving from device_id %s to %s, removing and re-adding entity",
+            "Entity %s moving from device_id %s to %s, signaling entity removal",
             info.key,
             old_info.device_id,
             info.device_id,
         )
 
-        # First ensure we update the info tracking to prevent removal
-        # from being seen as a permanent deletion
-        current_infos[info_key] = info
-
-        # Schedule removal of the old entity (this will NOT remove it from registry
-        # since we've already updated the registry with the new unique_id/device)
-        platform.async_remove_entity(entity_id)
+        # Signal the existing entity to remove itself
+        # The entity is registered with the old device_id, so we signal with that
+        entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
 
         # Create new entity with the new device_id
         entity = entity_type(entry_data, platform.domain, info, state_type)
@@ -387,7 +383,28 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
                 self._static_info, self._on_static_info_update
             )
         )
+        # Register to be notified when this entity should remove itself
+        # This happens when the entity moves to a different device
+        self.async_on_remove(
+            entry_data.async_register_entity_removal_callback(
+                type(self._static_info),
+                self._static_info.device_id,
+                self._key,
+                self._on_removal_signal,
+            )
+        )
         self._update_state_from_entry_data()
+
+    @callback
+    def _on_removal_signal(self) -> None:
+        """Handle signal to remove this entity."""
+        _LOGGER.debug(
+            "Entity %s received removal signal due to device_id change",
+            self.entity_id,
+        )
+        # Schedule the entity to be removed
+        # This must be done as a task since we're in a callback
+        self.hass.async_create_task(self.async_remove())
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
