@@ -82,7 +82,7 @@ def async_static_info_updated(
         # If not found, search for entity with same key but different device_id
         # This handles the case where entity moved between devices
         if not old_info:
-            for existing_device_id, existing_key in list(current_infos.keys()):
+            for existing_device_id, existing_key in list(current_infos):
                 if existing_key == info.key:
                     # Found entity with same key but different device_id
                     old_info = current_infos.pop((existing_device_id, existing_key))
