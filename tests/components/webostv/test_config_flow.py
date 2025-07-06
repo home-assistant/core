@@ -63,6 +63,29 @@ async def test_form(hass: HomeAssistant, client) -> None:
     assert config_entry.unique_id == FAKE_UUID
 
 
+async def test_form_no_model_name(hass: HomeAssistant, client) -> None:
+    """Test successful user flow without model name."""
+    client.tv_info.system = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_USER},
+        data=MOCK_USER_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "LG webOS TV"
+    config_entry = result["result"]
+    assert config_entry.unique_id == FAKE_UUID
+
+
 @pytest.mark.parametrize(
     ("apps", "inputs"),
     [
