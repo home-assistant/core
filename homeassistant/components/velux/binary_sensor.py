@@ -29,15 +29,13 @@ async def async_setup_entry(
     module = hass.data[DOMAIN][config.entry_id]
 
     entities = [
-        VeluxRainSensor(node, hass, config.entry_id)
+        VeluxRainSensor(node, config.entry_id)
         for node in module.pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
     ]
 
-    for entity in entities:
-        await entity.coordinator.async_config_entry_first_refresh()
-
     async_add_entities(entities)
+    # Coordinator first refresh is handled in entity, not here
 
 
 class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
@@ -45,39 +43,42 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
     node: Window
 
-    def __init__(
-        self, node: OpeningDevice, hass: HomeAssistant, config_entry_id: str
-    ) -> None:
+    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
         super().__init__(node, config_entry_id)
-        self._hass = hass
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
         self._attr_name = f"{node.name} Rain Sensor"
         LOGGER.info("Creating velux rain sensor from %s", node.name)
         self._attr_device_class = BinarySensorDeviceClass.MOISTURE
         self.rain_detected = False
-        self.coordinator = DataUpdateCoordinator(
-            self._hass,
-            LOGGER,
-            name=self._attr_unique_id,
-            update_method=self.async_update_rain_sensor,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-        )
+        self.coordinator: DataUpdateCoordinator[None] | None = None  # <-- Fix type here
 
-    async def async_update_rain_sensor(self):
+    async def async_update_rain_sensor(self) -> None:
         """Get the updated status of the cover (limitations only)."""
         try:
             limitation = await self.node.get_limitation()
-            self.rain_detected = limitation.min_value == 93
-            LOGGER.debug(
-                f"Rain sensor updated, limitation max/min_value={limitation.max_value}/{limitation.min_value}"
-            )
         except PyVLXException:
             LOGGER.error("Error fetch limitation data for cover %s", self.name)
+            return
+
+        self.rain_detected = limitation.min_value == 93
+        LOGGER.debug(
+            "Rain sensor updated, limitation max/min_value=%s/%s",
+            limitation.max_value,
+            limitation.min_value,
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        self.coordinator = DataUpdateCoordinator(
+            self.hass,
+            LOGGER,
+            name=self._attr_unique_id or f"{self.node.name}_rain_sensor",
+            update_method=self.async_update_rain_sensor,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+        )
+        await self.coordinator.async_config_entry_first_refresh()
         self.async_on_remove(
             self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
@@ -92,7 +93,8 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
         Only used by the generic entity update service.
         """
-        await self.coordinator.async_request_refresh()
+        if self.coordinator is not None:
+            await self.coordinator.async_request_refresh()
 
     @property
     def is_on(self) -> bool:
