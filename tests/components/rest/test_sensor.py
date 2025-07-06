@@ -20,6 +20,14 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
+    CONF_FORCE_UPDATE,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PARAMS,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -1002,9 +1010,9 @@ async def test_query_param_dict_value(
             {
                 DOMAIN: [
                     {
-                        "resource": "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
-                        "method": "POST",
-                        "params": {
+                        CONF_RESOURCE: "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
+                        CONF_METHOD: "POST",
+                        CONF_PARAMS: {
                             "page": "1",
                             "perPage": "20",
                             "orderBy": "SN",
@@ -1014,11 +1022,11 @@ async def test_query_param_dict_value(
                         },
                         "sensor": [
                             {
-                                "name": "Solar MPPT1 Power",
-                                "value_template": "{{ value_json.Data.QueryResults[0].POWER }}",
-                                "device_class": "power",
-                                "unit_of_measurement": "W",
-                                "force_update": True,
+                                CONF_NAME: "Solar MPPT1 Power",
+                                CONF_VALUE_TEMPLATE: "{{ value_json.Data.QueryResults[0].POWER }}",
+                                CONF_DEVICE_CLASS: "power",
+                                CONF_UNIT_OF_MEASUREMENT: "W",
+                                CONF_FORCE_UPDATE: True,
                                 "state_class": "measurement",
                             }
                         ],
@@ -1058,16 +1066,16 @@ async def test_query_param_json_string_preserved(
         {
             DOMAIN: [
                 {
-                    "resource": "https://api.example.com/data",
-                    "method": "GET",
-                    "params": {
+                    CONF_RESOURCE: "https://api.example.com/data",
+                    CONF_METHOD: "GET",
+                    CONF_PARAMS: {
                         "filter": '{"type": "sensor", "id": 123}',  # JSON string
                         "normal": "value",
                     },
                     "sensor": [
                         {
-                            "name": "Test Sensor",
-                            "value_template": "{{ value_json.value }}",
+                            CONF_NAME: "Test Sensor",
+                            CONF_VALUE_TEMPLATE: "{{ value_json.value }}",
                         }
                     ],
                 }
