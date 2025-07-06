@@ -9,7 +9,7 @@
           "location": "[%key:common::config_flow::data::location%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "api_key": "App Password or API Key"
+          "api_key": "App password or API key"
         }
       },
 
@@ -49,7 +49,7 @@
       },
       "ads_blocked": {
         "name": "Ads blocked",
-        "unit_of_measurement": "ads"
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::ads_blocked_today::unit_of_measurement%]"
       },
       "ads_percentage_today": {
         "name": "Ads percentage blocked today"
@@ -68,7 +68,7 @@
       },
       "dns_queries": {
         "name": "DNS queries",
-        "unit_of_measurement": "queries"
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
       },
       "domains_being_blocked": {
         "name": "Domains blocked",

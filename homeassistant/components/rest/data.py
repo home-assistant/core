@@ -49,7 +49,7 @@ class RestData:
         # Convert auth tuple to aiohttp.BasicAuth if needed
         if isinstance(auth, tuple) and len(auth) == 2:
             self._auth: aiohttp.BasicAuth | aiohttp.DigestAuthMiddleware | None = (
-                aiohttp.BasicAuth(auth[0], auth[1])
+                aiohttp.BasicAuth(auth[0], auth[1], encoding="utf-8")
             )
         else:
             self._auth = auth
