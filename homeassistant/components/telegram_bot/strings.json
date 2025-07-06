@@ -130,6 +130,13 @@
         "html": "HTML",
         "plain_text": "Plain text"
       }
+    },
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest",
+        "bearer_token": "Bearer token"
+      }
     }
   },
   "services": {
