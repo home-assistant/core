@@ -502,7 +502,7 @@ async def async_prepare_files_for_prompt(
 
     def append_files_to_prompt():
         for filename in files:
-            if not Path(filename).exists():
+            if not filename.exists():
                 raise HomeAssistantError(f"`{filename}` does not exist")
             mimetype = mimetypes.guess_type(filename)[0]
             with open(filename, "rb") as to_upload_file:
