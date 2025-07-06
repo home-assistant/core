@@ -78,7 +78,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="weekly_portion",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda _: [str(p) for p in Parasha],
-        value_fn=lambda info: str(info.upcoming_shabbat.parasha),
+        value_fn=lambda info: info.upcoming_shabbat.parasha,
         next_update_fn=lambda zmanim: zmanim.havdalah,
     ),
     JewishCalendarSensorDescription(
@@ -98,13 +98,13 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         key="omer_count",
         translation_key="omer_count",
         entity_registry_enabled_default=False,
-        value_fn=lambda info: info.omer.total_days if info.omer else 0,
+        value_fn=lambda info: info.omer.total_days,
     ),
     JewishCalendarSensorDescription(
         key="daf_yomi",
         translation_key="daf_yomi",
         entity_registry_enabled_default=False,
-        value_fn=lambda info: str(info.daf_yomi),
+        value_fn=lambda info: info.daf_yomi,
     ),
 )
 

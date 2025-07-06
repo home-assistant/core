@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,16 +60,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_ENTITY_ID: source_entity_id},
         )
 
+    async def source_entity_removed() -> None:
+        # The source entity has been removed, we remove the config entry because
+        # switch_as_x does not allow replacing the wrapped entity.
+        await hass.config_entries.async_remove(entry.entry_id)
+
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=entry.entry_id,
-            get_helper_entity_id=lambda: entity_registry.async_get_entity_id(
-                entry.options[CONF_TARGET_DOMAIN], DOMAIN, entry.entry_id
-            ),
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_add_to_device(hass, entry, entity_id),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
+            source_entity_removed=source_entity_removed,
         )
     )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))

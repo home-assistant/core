@@ -132,9 +132,15 @@ def async_unload_entry() -> AsyncMock:
 
 
 @pytest.fixture
-def set_source_entity_id_or_uuid() -> AsyncMock:
-    """Fixture to mock async_unload_entry."""
+def set_source_entity_id_or_uuid() -> Mock:
+    """Fixture to mock set_source_entity_id_or_uuid."""
     return Mock()
+
+
+@pytest.fixture
+def source_entity_removed() -> AsyncMock:
+    """Fixture to mock source_entity_removed."""
+    return AsyncMock()
 
 
 @pytest.fixture
@@ -146,24 +152,19 @@ def mock_helper_integration(
     async_remove_entry: AsyncMock,
     async_unload_entry: AsyncMock,
     set_source_entity_id_or_uuid: Mock,
+    source_entity_removed: AsyncMock,
 ) -> None:
     """Mock the helper integration."""
-
-    def get_helper_entity_id() -> str | None:
-        """Get the helper entity ID."""
-        return entity_registry.async_get_entity_id(
-            "sensor", HELPER_DOMAIN, helper_config_entry.entry_id
-        )
 
     async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Mock setup entry."""
         async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=helper_config_entry.entry_id,
-            get_helper_entity_id=get_helper_entity_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=source_entity_entry.device_id,
             source_entity_id_or_uuid=helper_config_entry.options["source"],
+            source_entity_removed=source_entity_removed,
         )
         return True
 
@@ -206,6 +207,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     async_remove_entry: AsyncMock,
     async_unload_entry: AsyncMock,
     set_source_entity_id_or_uuid: Mock,
+    source_entity_removed: AsyncMock,
 ) -> None:
     """Test the helper config entry is removed when the source entity is removed."""
     # Add the helper config entry to the source device
@@ -238,20 +240,21 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    # Check that the helper config entry is unloaded and removed
-    async_unload_entry.assert_called_once()
-    async_remove_entry.assert_called_once()
+    # Check that the source_entity_removed callback was called
+    source_entity_removed.assert_called_once()
+    async_unload_entry.assert_not_called()
+    async_remove_entry.assert_not_called()
     set_source_entity_id_or_uuid.assert_not_called()
 
-    # Check that the helper config entry is removed from the device
+    # Check that the helper config entry is not removed from the device
     source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id not in source_device.config_entries
+    assert helper_config_entry.entry_id in source_device.config_entries
 
-    # Check that the helper config entry is removed
-    assert helper_config_entry.entry_id not in hass.config_entries.async_entry_ids()
+    # Check that the helper config entry is not removed
+    assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
 
     # Check we got the expected events
-    assert events == ["remove"]
+    assert events == []
 
 
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])

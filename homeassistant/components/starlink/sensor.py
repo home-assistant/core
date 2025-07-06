@@ -114,7 +114,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
-            now() - timedelta(seconds=data.status["uptime"])
+            now() - timedelta(seconds=data.status["uptime"], milliseconds=-500)
         ).replace(microsecond=0),
     ),
     StarlinkSensorEntityDescription(

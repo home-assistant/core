@@ -1,0 +1,7 @@
+{
+  "services": {
+    "generate_data": {
+      "service": "mdi:file-star-four-points-outline"
+    }
+  }
+}

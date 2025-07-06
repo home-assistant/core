@@ -99,6 +99,9 @@ async def test_setup_and_remove_config_entry(
     input_sensor_entity_id = "sensor.input"
     derivative_entity_id = "sensor.my_derivative"
 
+    hass.states.async_set(input_sensor_entity_id, "10.0", {})
+    await hass.async_block_till_done()
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -268,17 +271,17 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-    mock_unload_entry.assert_called_once()
+    mock_unload_entry.assert_not_called()
 
     # Check that the derivative config entry is removed from the device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert derivative_config_entry.entry_id not in sensor_device.config_entries
 
-    # Check that the derivative config entry is removed
-    assert derivative_config_entry.entry_id not in hass.config_entries.async_entry_ids()
+    # Check that the derivative config entry is not removed
+    assert derivative_config_entry.entry_id in hass.config_entries.async_entry_ids()
 
     # Check we got the expected events
-    assert events == ["remove"]
+    assert events == ["update"]
 
 
 async def test_async_handle_source_entity_changes_source_entity_removed_from_device(
