@@ -505,12 +505,15 @@ async def async_prepare_files_for_prompt(
             if not filename.exists():
                 raise HomeAssistantError(f"`{filename}` does not exist")
             mimetype = mimetypes.guess_type(filename)[0]
-            with open(filename, "rb") as to_upload_file:
-                prompt_parts.append(
-                    client.files.upload(
-                        file=to_upload_file, config={"mime_type": mimetype}
-                    )
+            prompt_parts.append(
+                client.files.upload(
+                    file=filename,
+                    config={
+                        "mime_type": mimetype,
+                        "display_name": filename.name,
+                    },
                 )
+            )
 
     async def wait_for_file_processing(uploaded_file: File) -> None:
         """Wait for file processing to complete."""
