@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PREFIX,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
@@ -18,7 +19,6 @@ from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_PREFIX,
     CONF_RATE,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> b
 
         entry.runtime_data.event(
             title="Home Assistant",
-            text=f"%%% \n **{name}** {message} \n %%%",
+            message=f"%%% \n **{name}** {message} \n %%%",
             tags=[
                 f"entity:{event.data.get('entity_id')}",
                 f"domain:{event.data.get('domain')}",

@@ -18,7 +18,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the Datadog agent. Please check your settings."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

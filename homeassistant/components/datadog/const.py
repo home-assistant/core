@@ -3,7 +3,6 @@
 DOMAIN = "datadog"
 
 CONF_PORT = "8125"
-CONF_PREFIX = "hass"
 CONF_RATE = "rate"
 
 DEFAULT_HOST = "localhost"
