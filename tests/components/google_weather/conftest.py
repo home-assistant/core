@@ -3,6 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from google_weather_api import (
+    CurrentConditionsResponse,
+    DailyForecastResponse,
+    HourlyForecastResponse,
+)
 import pytest
 
 from homeassistant.components.google_weather.const import DOMAIN
@@ -50,9 +55,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def mock_google_weather_api() -> Generator[AsyncMock]:
     """Mock Google Weather API."""
-    current_conditions = load_json_object_fixture("current_conditions.json", DOMAIN)
-    daily_forecast = load_json_object_fixture("daily_forecast.json", DOMAIN)
-    hourly_forecast = load_json_object_fixture("hourly_forecast.json", DOMAIN)
+    current_conditions = CurrentConditionsResponse.from_dict(
+        load_json_object_fixture("current_conditions.json", DOMAIN)
+    )
+    daily_forecast = DailyForecastResponse.from_dict(
+        load_json_object_fixture("daily_forecast.json", DOMAIN)
+    )
+    hourly_forecast = HourlyForecastResponse.from_dict(
+        load_json_object_fixture("hourly_forecast.json", DOMAIN)
+    )
 
     with (
         patch(

@@ -4,12 +4,14 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from google_weather_api import GoogleWeatherApiError
+from google_weather_api import GoogleWeatherApiError, WeatherCondition
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_weather.weather import _CONDITION_MAP
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SUNNY,
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
@@ -109,24 +111,24 @@ async def test_manual_update_entity(
 @pytest.mark.parametrize(
     ("api_condition", "is_daytime", "expected_ha_condition"),
     [
-        ("CLEAR", True, ATTR_CONDITION_SUNNY),
-        ("CLEAR", False, ATTR_CONDITION_CLEAR_NIGHT),
-        ("NEW_TYPE", True, "unknown"),
+        (WeatherCondition.Type.CLEAR, True, ATTR_CONDITION_SUNNY),
+        (WeatherCondition.Type.CLEAR, False, ATTR_CONDITION_CLEAR_NIGHT),
+        (WeatherCondition.Type.PARTLY_CLOUDY, True, ATTR_CONDITION_PARTLYCLOUDY),
+        (WeatherCondition.Type.PARTLY_CLOUDY, False, ATTR_CONDITION_PARTLYCLOUDY),
+        (WeatherCondition.Type.TYPE_UNSPECIFIED, True, "unknown"),
     ],
 )
 async def test_condition(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
-    api_condition: str,
+    api_condition: WeatherCondition.Type,
     is_daytime: bool,
     expected_ha_condition: str,
 ) -> None:
     """Test condition mapping."""
-    mock_google_weather_api.async_get_current_conditions.return_value[
-        "weatherCondition"
-    ]["type"] = api_condition
-    mock_google_weather_api.async_get_current_conditions.return_value["isDaytime"] = (
+    mock_google_weather_api.async_get_current_conditions.return_value.weather_condition.type = api_condition
+    mock_google_weather_api.async_get_current_conditions.return_value.is_daytime = (
         is_daytime
     )
 
@@ -134,6 +136,12 @@ async def test_condition(
 
     state = hass.states.get("weather.home")
     assert state.state == expected_ha_condition
+
+
+def test_all_conditions_mapped() -> None:
+    """Ensure all WeatherCondition.Type enum members are in the _CONDITION_MAP."""
+    for condition_type in WeatherCondition.Type:
+        assert condition_type in _CONDITION_MAP
 
 
 @pytest.mark.parametrize(("forecast_type"), ["daily", "hourly", "twice_daily"])

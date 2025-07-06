@@ -6,9 +6,15 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TypeVar
 
-from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
+from google_weather_api import (
+    CurrentConditionsResponse,
+    DailyForecastResponse,
+    GoogleWeatherApi,
+    GoogleWeatherApiError,
+    HourlyForecastResponse,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -19,6 +25,16 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar(
+    "T",
+    bound=(
+        CurrentConditionsResponse
+        | DailyForecastResponse
+        | HourlyForecastResponse
+        | None
+    ),
+)
 
 
 @dataclass
@@ -41,7 +57,7 @@ class GoogleWeatherRuntimeData:
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
 
 
-class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]]):
+class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
     """Base class for Google Weather coordinators."""
 
     config_entry: GoogleWeatherConfigEntry
@@ -53,7 +69,7 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]
         subentry: ConfigSubentry,
         data_type_name: str,
         update_interval: timedelta,
-        api_method: Callable[[float, float], Awaitable[dict[str, Any]]],
+        api_method: Callable[..., Awaitable[T]],
     ) -> None:
         """Initialize the data updater."""
         super().__init__(
@@ -67,7 +83,7 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]
         self._data_type_name = data_type_name
         self._api_method = api_method
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> T:
         """Fetch data from API and handle errors."""
         try:
             return await self._api_method(
@@ -84,7 +100,9 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]
             raise UpdateFailed(f"Error fetching {self._data_type_name}") from err
 
 
-class GoogleWeatherCurrentConditionsCoordinator(GoogleWeatherBaseCoordinator):
+class GoogleWeatherCurrentConditionsCoordinator(
+    GoogleWeatherBaseCoordinator[CurrentConditionsResponse]
+):
     """Handle fetching current weather conditions."""
 
     def __init__(
@@ -105,7 +123,9 @@ class GoogleWeatherCurrentConditionsCoordinator(GoogleWeatherBaseCoordinator):
         )
 
 
-class GoogleWeatherDailyForecastCoordinator(GoogleWeatherBaseCoordinator):
+class GoogleWeatherDailyForecastCoordinator(
+    GoogleWeatherBaseCoordinator[DailyForecastResponse]
+):
     """Handle fetching daily weather forecast."""
 
     def __init__(
@@ -126,7 +146,9 @@ class GoogleWeatherDailyForecastCoordinator(GoogleWeatherBaseCoordinator):
         )
 
 
-class GoogleWeatherHourlyForecastCoordinator(GoogleWeatherBaseCoordinator):
+class GoogleWeatherHourlyForecastCoordinator(
+    GoogleWeatherBaseCoordinator[HourlyForecastResponse]
+):
     """Handle fetching hourly weather forecast."""
 
     def __init__(
