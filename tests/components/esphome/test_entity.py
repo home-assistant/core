@@ -754,9 +754,9 @@ async def test_entity_assignment_to_sub_device(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=False, missing_state=False),
-        BinarySensorState(key=3, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=0),
+        BinarySensorState(key=2, state=False, missing_state=False, device_id=11111111),
+        BinarySensorState(key=3, state=True, missing_state=False, device_id=22222222),
     ]
 
     device = await mock_esphome_device(
