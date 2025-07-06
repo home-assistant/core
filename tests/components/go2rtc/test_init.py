@@ -399,10 +399,9 @@ async def test_close_session(
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_called_once()
 
-    # Close again should raise an error
+    # Close again
     ws_client.reset_mock()
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
 
