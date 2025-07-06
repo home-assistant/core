@@ -64,7 +64,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
         # Velux windows with rain sensors report an opening limitation of 93 when rain is detected.
         self.rain_detected = limitation.min_value == 93
-        LOGGER.info(
+        LOGGER.debug(
             "Rain sensor updated, limitation max/min_value=%s/%s",
             limitation.max_value,
             limitation.min_value,
