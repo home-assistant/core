@@ -557,3 +557,33 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
         **V21_TEST_USER_DATA,
         ollama.CONF_MODEL: "test_model:latest",
     }
+
+
+async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None:
+    """Test migration from version 3.1 where there is no existing subentry.
+
+    This exercises the code path where the model is not moved to a subentry
+    because the subentry does not exist, which is a scenario that can happen
+    if the user created the config entry without adding a subentry, or
+    if the user manually removed the subentry after the migration to v3.1.
+    """
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_MODEL: "test_model:latest",
+        },
+        version=3,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 2
+
+    assert next(iter(mock_config_entry.subentries.values()), None) is None

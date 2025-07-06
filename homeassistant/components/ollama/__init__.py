@@ -211,16 +211,28 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
         )
 
     if entry.version == 3 and entry.minor_version == 1:
-        # Add AI Task subentry with default options
-        hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType({}),
-                subentry_type="ai_task_data",
-                title=DEFAULT_AI_TASK_NAME,
-                unique_id=None,
+        # Add AI Task subentry with default options. We can only create a new
+        # subentry if we can find an existing model in the entry. The model
+        # was removed in the previous migration step, so we need to
+        # check the subentries for an existing model.
+        existing_model = next(
+            iter(
+                model
+                for subentry in entry.subentries.values()
+                if (model := subentry.data.get(CONF_MODEL)) is not None
             ),
+            None,
         )
+        if existing_model:
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType({CONF_MODEL: existing_model}),
+                    subentry_type="ai_task_data",
+                    title=DEFAULT_AI_TASK_NAME,
+                    unique_id=None,
+                ),
+            )
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug(

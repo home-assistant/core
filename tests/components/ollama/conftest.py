@@ -31,7 +31,7 @@ def mock_config_entry(
         domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
         version=3,
-        minor_version=1,
+        minor_version=2,
         subentries_data=[
             {
                 "data": {**TEST_OPTIONS, **mock_config_entry_options},

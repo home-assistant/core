@@ -470,6 +470,8 @@ async def test_creating_ai_task_subentry(
 ) -> None:
     """Test creating an AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
+    # Original conversation + original ai_task
+    assert len(mock_config_entry.subentries) == 2
 
     with patch(
         "ollama.AsyncClient.list",
