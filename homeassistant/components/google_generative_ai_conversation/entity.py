@@ -498,9 +498,8 @@ async def async_prepare_files_for_prompt(
 
     Caller needs to ensure that the files are allowed.
     """
-    prompt_parts: list[File] = []
-
-    def append_files_to_prompt():
+    def upload_files() -> list[File]
+        prompt_parts: list[File] = []
         for filename in files:
             if not filename.exists():
                 raise HomeAssistantError(f"`{filename}` does not exist")
@@ -514,6 +513,7 @@ async def async_prepare_files_for_prompt(
                     },
                 )
             )
+        return prompt_parts
 
     async def wait_for_file_processing(uploaded_file: File) -> None:
         """Wait for file processing to complete."""
@@ -542,7 +542,7 @@ async def async_prepare_files_for_prompt(
                 f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
             )
 
-    await hass.async_add_executor_job(append_files_to_prompt)
+    prompt_parts = await hass.async_add_executor_job(upload_files)
 
     tasks = [
         asyncio.create_task(wait_for_file_processing(part))
