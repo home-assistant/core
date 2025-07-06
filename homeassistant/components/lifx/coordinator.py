@@ -65,6 +65,8 @@ ZONES_PER_COLOR_UPDATE_REQUEST = 8
 
 RSSI_DBM_FW = AwesomeVersion("2.77")
 
+type LIFXConfigEntry = ConfigEntry[LIFXUpdateCoordinator]
+
 
 class FirmwareEffect(IntEnum):
     """Enumeration of LIFX firmware effects."""
@@ -87,12 +89,12 @@ class SkyType(IntEnum):
 class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
-    config_entry: ConfigEntry
+    config_entry: LIFXConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LIFXConfigEntry,
         connection: LIFXConnection,
     ) -> None:
         """Initialize DataUpdateCoordinator."""

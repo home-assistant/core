@@ -30,7 +30,7 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import DOMAIN as MASS_DOMAIN
+from homeassistant.components.music_assistant.const import DOMAIN
 from homeassistant.components.music_assistant.media_player import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
@@ -389,7 +389,7 @@ async def test_media_player_play_media_action(
 
     # test simple play_media call with URI as media_id and no media type
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -410,7 +410,7 @@ async def test_media_player_play_media_action(
     # test simple play_media call with URI and enqueue specified
     music_assistant_client.send_command.reset_mock()
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -432,7 +432,7 @@ async def test_media_player_play_media_action(
     # test basic play_media call with URL and radio mode specified
     music_assistant_client.send_command.reset_mock()
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -455,7 +455,7 @@ async def test_media_player_play_media_action(
     music_assistant_client.send_command.reset_mock()
     music_assistant_client.music.get_item = AsyncMock(return_value=MOCK_TRACK)
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -482,7 +482,7 @@ async def test_media_player_play_media_action(
     music_assistant_client.send_command.reset_mock()
     music_assistant_client.music.get_item_by_name = AsyncMock(return_value=MOCK_TRACK)
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -521,7 +521,7 @@ async def test_media_player_play_announcement_action(
     state = hass.states.get(entity_id)
     assert state
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -551,7 +551,7 @@ async def test_media_player_transfer_queue_action(
     state = hass.states.get(entity_id)
     assert state
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_TRANSFER_QUEUE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -572,7 +572,7 @@ async def test_media_player_transfer_queue_action(
     music_assistant_client.send_command.reset_mock()
     with pytest.raises(HomeAssistantError, match="Source player not available."):
         await hass.services.async_call(
-            MASS_DOMAIN,
+            DOMAIN,
             SERVICE_TRANSFER_QUEUE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -583,7 +583,7 @@ async def test_media_player_transfer_queue_action(
     # test again with no source player specified (which picks first playing playerqueue)
     music_assistant_client.send_command.reset_mock()
     await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_TRANSFER_QUEUE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -609,7 +609,7 @@ async def test_media_player_get_queue_action(
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     response = await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_QUEUE,
         {
             ATTR_ENTITY_ID: entity_id,

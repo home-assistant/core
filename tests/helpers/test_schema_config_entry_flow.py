@@ -591,6 +591,45 @@ async def test_suggested_values(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_description_placeholders(
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+) -> None:
+    """Test description_placeholders handling in SchemaFlowFormStep."""
+    manager.hass = hass
+
+    OPTIONS_SCHEMA = vol.Schema(
+        {vol.Optional("option1", default="a very reasonable default"): str}
+    )
+
+    async def _get_description_placeholders(
+        _: SchemaCommonFlowHandler,
+    ) -> dict[str, Any]:
+        return {"option1": "a dynamic string"}
+
+    OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "init": SchemaFlowFormStep(
+            OPTIONS_SCHEMA,
+            next_step="step_1",
+            description_placeholders=_get_description_placeholders,
+        ),
+    }
+
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
+        config_flow = {}
+        options_flow = OPTIONS_FLOW
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    config_entry = MockConfigEntry(data={}, domain="test")
+    config_entry.add_to_hass(hass)
+
+    # Start flow and check the description_placeholders is populated
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["description_placeholders"] == {"option1": "a dynamic string"}
+
+
 async def test_options_flow_state(hass: HomeAssistant) -> None:
     """Test flow_state handling in SchemaFlowFormStep."""
 

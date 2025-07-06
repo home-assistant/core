@@ -364,8 +364,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable-next=import-outside-toplevel
-    import hass_frontend
+    import hass_frontend  # noqa: PLC0415
 
     return hass_frontend.where()
 

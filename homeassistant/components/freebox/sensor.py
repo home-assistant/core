@@ -84,6 +84,7 @@ async def async_setup_entry(
                 name=f"Freebox {sensor_name}",
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
         )
         for sensor_name in router.sensors_temperature
