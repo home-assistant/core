@@ -1,12 +1,15 @@
 """Tests for GIOS."""
 
-import json
 from unittest.mock import patch
 
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 
 STATIONS = [
     {
@@ -36,9 +39,9 @@ async def init_integration(
         entry_id="86129426118ae32020417a53712d6eef",
     )
 
-    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
-    station = json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
-    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
+    indexes = await async_load_json_object_fixture(hass, "indexes.json", DOMAIN)
+    station = await async_load_json_array_fixture(hass, "station.json", DOMAIN)
+    sensors = await async_load_json_object_fixture(hass, "sensors.json", DOMAIN)
     if incomplete_data:
         indexes["Nazwa kategorii indeksu"] = "foo"
         sensors["pm10"]["Lista danych pomiarowych"][0]["Wartość"] = None
