@@ -1507,7 +1507,7 @@ async def test_entity_device_id_rename_in_yaml(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
     ]
 
     device = await mock_esphome_device(
