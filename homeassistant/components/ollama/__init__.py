@@ -28,6 +28,7 @@ from .const import (
     CONF_NUM_CTX,
     CONF_PROMPT,
     CONF_THINK,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -47,7 +48,7 @@ __all__ = [
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 
 type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
@@ -118,6 +119,18 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         parent_entry = api_keys_entries[entry.data[CONF_URL]]
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
+
+        # Add AI Task subentry if this is the first entry for this URL
+        if use_existing:
+            hass.config_entries.async_add_subentry(
+                parent_entry,
+                ConfigSubentry(
+                    data=MappingProxyType({}),
+                    subentry_type="ai_task_data",
+                    title=DEFAULT_AI_TASK_NAME,
+                    unique_id=None,
+                ),
+            )
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
@@ -207,6 +220,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
             version=3,
             minor_version=1,
         )
+
+    if entry.version == 3 and entry.minor_version == 1:
+        # Add AI Task subentry with default options
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType({}),
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
