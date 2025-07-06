@@ -150,8 +150,8 @@ def async_static_info_updated(
         # We must remove the old entity and re-add it to ensure:
         # 1. The entity appears under the correct device in the UI
         # 2. The entity's state subscription is updated to use the new device_id
-        _LOGGER.info(
-            "Entity %s moving from device_id %s to %s, signaling entity removal",
+        _LOGGER.debug(
+            "Entity %s moving from device_id %s to %s",
             info.key,
             old_info.device_id,
             info.device_id,
