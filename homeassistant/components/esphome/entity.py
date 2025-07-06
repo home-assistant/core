@@ -86,7 +86,7 @@ def async_static_info_updated(
         if old_info.device_id == info.device_id:
             continue
 
-        # Entity has switched devices, need to migrate unique_id
+        # Entity has switched devices, need to migrate unique_id and handle state subscriptions
         old_unique_id = build_device_unique_id(device_info.mac_address, old_info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
@@ -111,7 +111,7 @@ def async_static_info_updated(
         if old_unique_id != new_unique_id:
             updates["new_unique_id"] = new_unique_id
 
-        # Update device assignment
+        # Update device assignment in registry
         if info.device_id:
             # Entity now belongs to a sub device
             new_device = dev_reg.async_get_device(
@@ -126,9 +126,36 @@ def async_static_info_updated(
         if new_device:
             updates["device_id"] = new_device.id
 
-        # Apply all updates at once
+        # Apply all registry updates at once
         if updates:
             ent_reg.async_update_entity(entity_id, **updates)
+
+        # IMPORTANT: The entity's device assignment in Home Assistant is only read when the entity
+        # is first added. Updating the registry alone won't move the entity to the new device
+        # in the UI. Additionally, the entity's state subscription is tied to the old device_id,
+        # so it won't receive state updates for the new device_id.
+        #
+        # We must remove the old entity and re-add it to ensure:
+        # 1. The entity appears under the correct device in the UI
+        # 2. The entity's state subscription is updated to use the new device_id
+        _LOGGER.info(
+            "Entity %s moving from device_id %s to %s, removing and re-adding entity",
+            info.key,
+            old_info.device_id,
+            info.device_id,
+        )
+
+        # First ensure we update the info tracking to prevent removal
+        # from being seen as a permanent deletion
+        current_infos[info_key] = info
+
+        # Schedule removal of the old entity (this will NOT remove it from registry
+        # since we've already updated the registry with the new unique_id/device)
+        platform.async_remove_entity(entity_id)
+
+        # Create new entity with the new device_id
+        entity = entity_type(entry_data, platform.domain, info, state_type)
+        add_entities.append(entity)
 
     # Anything still in current_infos is now gone
     if current_infos:
