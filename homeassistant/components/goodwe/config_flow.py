@@ -47,18 +47,19 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-
-        try:
-            inverter = await connect(host=host, port=GOODWE_UDP_PORT, retries=10)
-        except InverterError:
             try:
-                inverter = await connect(host=host, port=GOODWE_TCP_PORT, retries=10)
+                inverter = await connect(host=host, port=GOODWE_UDP_PORT, retries=10)
             except InverterError:
-                errors[CONF_HOST] = "connection_error"
+                try:
+                    inverter = await connect(
+                        host=host, port=GOODWE_TCP_PORT, retries=10
+                    )
+                except InverterError:
+                    errors[CONF_HOST] = "connection_error"
+                else:
+                    return await self._handle_successful_connection(inverter, host)
             else:
                 return await self._handle_successful_connection(inverter, host)
-        else:
-            return await self._handle_successful_connection(inverter, host)
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
