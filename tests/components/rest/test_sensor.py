@@ -992,7 +992,7 @@ async def test_query_param_dict_value(
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that dict values in query params are handled gracefully for backward compatibility."""
+    """Test dict values in query params are handled for backward compatibility."""
     # Mock response
     aioclient_mock.post(
         "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
@@ -1010,20 +1010,28 @@ async def test_query_param_dict_value(
             {
                 DOMAIN: [
                     {
-                        CONF_RESOURCE: "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
+                        CONF_RESOURCE: (
+                            "https://www.envertecportal.com/ApiInverters/"
+                            "QueryTerminalReal"
+                        ),
                         CONF_METHOD: "POST",
                         CONF_PARAMS: {
                             "page": "1",
                             "perPage": "20",
                             "orderBy": "SN",
-                            # When processed by template.render_complex, certain strings might
-                            # be converted to dicts/lists if they look like JSON
-                            "whereCondition": "{{ {'STATIONID': 'A6327A17797C1234'} }}",  # Template that evaluates to dict
+                            # When processed by template.render_complex, certain
+                            # strings might be converted to dicts/lists if they
+                            # look like JSON
+                            "whereCondition": (
+                                "{{ {'STATIONID': 'A6327A17797C1234'} }}"
+                            ),  # Template that evaluates to dict
                         },
                         "sensor": [
                             {
                                 CONF_NAME: "Solar MPPT1 Power",
-                                CONF_VALUE_TEMPLATE: "{{ value_json.Data.QueryResults[0].POWER }}",
+                                CONF_VALUE_TEMPLATE: (
+                                    "{{ value_json.Data.QueryResults[0].POWER }}"
+                                ),
                                 CONF_DEVICE_CLASS: "power",
                                 CONF_UNIT_OF_MEASUREMENT: "W",
                                 CONF_FORCE_UPDATE: True,
