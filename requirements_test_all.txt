@@ -1244,7 +1244,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.28
+motionblinds==0.6.29
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
