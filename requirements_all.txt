@@ -2753,7 +2753,7 @@ sensoterra==2.0.1
 sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.11
+sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
 sharkiq==1.1.0
