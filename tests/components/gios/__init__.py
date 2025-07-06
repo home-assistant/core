@@ -9,8 +9,18 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_load_fixture
 
 STATIONS = [
-    {"id": 123, "stationName": "Test Name 1", "gegrLat": "99.99", "gegrLon": "88.88"},
-    {"id": 321, "stationName": "Test Name 2", "gegrLat": "77.77", "gegrLon": "66.66"},
+    {
+        "Identyfikator stacji": 123,
+        "Nazwa stacji": "Test Name 1",
+        "WGS84 φ N": "99.99",
+        "WGS84 λ E": "88.88",
+    },
+    {
+        "Identyfikator stacji": 321,
+        "Nazwa stacji": "Test Name 2",
+        "WGS84 φ N": "77.77",
+        "WGS84 λ E": "66.66",
+    },
 ]
 
 
@@ -30,9 +40,9 @@ async def init_integration(
     station = json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
     sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
     if incomplete_data:
-        indexes["stIndexLevel"]["indexLevelName"] = "foo"
-        sensors["pm10"]["values"][0]["value"] = None
-        sensors["pm10"]["values"][1]["value"] = None
+        indexes["Nazwa kategorii indeksu"] = "foo"
+        sensors["pm10"]["Lista danych pomiarowych"][0]["Wartość"] = None
+        sensors["pm10"]["Lista danych pomiarowych"][1]["Wartość"] = None
     if invalid_indexes:
         indexes = {}
 
