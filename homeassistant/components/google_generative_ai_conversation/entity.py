@@ -498,6 +498,7 @@ async def async_prepare_files_for_prompt(
 
     Caller needs to ensure that the files are allowed.
     """
+
     def upload_files() -> list[File]:
         prompt_parts: list[File] = []
         for filename in files:
