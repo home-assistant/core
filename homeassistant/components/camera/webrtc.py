@@ -270,7 +270,9 @@ async def ws_webrtc_offer(
     Async friendly.
     """
     offer = msg["offer"]
-    session_id = session_id if (session_id := msg.get("session_id")) else ulid()
+    session_id = msg.get("session_id")
+    if not session_id:
+        session_id = ulid()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )
