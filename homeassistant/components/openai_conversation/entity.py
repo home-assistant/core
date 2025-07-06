@@ -326,14 +326,6 @@ class OpenAIBaseLLMEntity(Entity):
                 break
 
 
-def encode_file(file_path: Path) -> tuple[str, str]:
-    """Return base64 version of file contents."""
-    mime_type, _ = guess_file_type(file_path)
-    if mime_type is None:
-        mime_type = "application/octet-stream"
-    return (mime_type, base64.b64encode(file_path.read_bytes()).decode("utf-8"))
-
-
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant, files: list[Path]
 ) -> ResponseInputMessageContentListParam:
