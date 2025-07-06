@@ -34,7 +34,7 @@ from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
 from .entry_data import (
-    DeviceEntityHashType,
+    DeviceEntityKey,
     ESPHomeConfigEntry,
     RuntimeEntryData,
     build_device_unique_id,
@@ -64,7 +64,7 @@ def async_static_info_updated(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    new_infos: dict[DeviceEntityHashType, EntityInfo] = {}
+    new_infos: dict[DeviceEntityKey, EntityInfo] = {}
     add_entities: list[_EntityT] = []
 
     ent_reg = er.async_get(hass)

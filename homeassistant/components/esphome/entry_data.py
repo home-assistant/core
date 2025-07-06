@@ -60,9 +60,9 @@ from .const import DOMAIN
 from .dashboard import async_get_dashboard
 
 type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
-type PlatformDeviceEntityHashType = tuple[type[EntityState], int, int]
-type PlatformDeviceInfoHashType = tuple[type[EntityInfo], int, int]
-type DeviceEntityHashType = tuple[int, int]
+type EntityStateKey = tuple[type[EntityState], int, int]  # (state_type, device_id, key)
+type EntityInfoKey = tuple[type[EntityInfo], int, int]  # (info_type, device_id, key)
+type DeviceEntityKey = tuple[int, int]  # (device_id, key)
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
@@ -139,8 +139,8 @@ class RuntimeEntryData:
     # When the disconnect callback is called, we mark all states
     # as stale so we will always dispatch a state update when the
     # device reconnects. This is the same format as state_subscriptions.
-    stale_state: set[PlatformDeviceEntityHashType] = field(default_factory=set)
-    info: dict[type[EntityInfo], dict[DeviceEntityHashType, EntityInfo]] = field(
+    stale_state: set[EntityStateKey] = field(default_factory=set)
+    info: dict[type[EntityInfo], dict[DeviceEntityKey, EntityInfo]] = field(
         default_factory=dict
     )
     services: dict[int, UserService] = field(default_factory=dict)
@@ -151,7 +151,7 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
     disconnect_callbacks: set[CALLBACK_TYPE] = field(default_factory=set)
-    state_subscriptions: dict[PlatformDeviceEntityHashType, CALLBACK_TYPE] = field(
+    state_subscriptions: dict[EntityStateKey, CALLBACK_TYPE] = field(
         default_factory=dict
     )
     device_update_subscriptions: set[CALLBACK_TYPE] = field(default_factory=set)
@@ -168,7 +168,7 @@ class RuntimeEntryData:
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
     entity_info_key_updated_callbacks: dict[
-        PlatformDeviceInfoHashType, list[Callable[[EntityInfo], None]]
+        EntityInfoKey, list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
     original_options: dict[str, Any] = field(default_factory=dict)
     media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
