@@ -393,7 +393,7 @@ async def test_countdown_time_sensor(
     # OperationalState Cluster / CountdownTime (1/96/2)
     state = hass.states.get("sensor.microwave_oven_estimated_end_time")
     assert state
-    # 1/96/2 = 30 seconds So an 30s should be added to the current time.
+    # 1/96/2 = 30 seconds, so 30 s should be added to the current time.
     assert state.state == "2025-01-01T14:00:30+00:00"
 
 

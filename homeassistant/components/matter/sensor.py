@@ -949,7 +949,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            # Add countdown to current date to get the estimated end time
+            # Add countdown to current datetime to get the estimated end time
             device_to_ha=(
                 lambda x: dt_util.utcnow() + timedelta(seconds=x) if x > 0 else None
             ),
