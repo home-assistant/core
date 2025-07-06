@@ -235,6 +235,43 @@ async def test_new_pipeline_cancels_pipeline(
                 preannounce_media_id="http://example.com/preannounce.mp3",
             ),
         ),
+        (
+            {
+                "message": "Hello",
+                "media_id": {
+                    "media_content_id": "media-source://given",
+                    "media_content_type": "provider",
+                },
+                "preannounce": False,
+            },
+            AssistSatelliteAnnouncement(
+                message="Hello",
+                media_id="https://www.home-assistant.io/resolved.mp3",
+                original_media_id="media-source://given",
+                tts_token=None,
+                media_id_source="media_id",
+            ),
+        ),
+        (
+            {
+                "media_id": {
+                    "media_content_id": "http://example.com/bla.mp3",
+                    "media_content_type": "audio",
+                },
+                "preannounce_media_id": {
+                    "media_content_id": "http://example.com/preannounce.mp3",
+                    "media_content_type": "audio",
+                },
+            },
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
+                media_id_source="url",
+                preannounce_media_id="http://example.com/preannounce.mp3",
+            ),
+        ),
     ],
 )
 async def test_announce(
@@ -610,6 +647,51 @@ async def test_vad_sensitivity_entity_not_found(
                 ),
             ),
         ),
+        (
+            {
+                "start_message": "Hello",
+                "start_media_id": {
+                    "media_content_id": "media-source://given",
+                    "media_content_type": "provider",
+                },
+                "preannounce": False,
+            },
+            (
+                "mock-conversation-id",
+                "Hello",
+                AssistSatelliteAnnouncement(
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    tts_token=None,
+                    original_media_id="media-source://given",
+                    media_id_source="media_id",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_media_id": {
+                    "media_content_id": "http://example.com/given.mp3",
+                    "media_content_type": "audio",
+                },
+                "preannounce_media_id": {
+                    "media_content_id": "http://example.com/preannounce.mp3",
+                    "media_content_type": "audio",
+                },
+            },
+            (
+                "mock-conversation-id",
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    tts_token=None,
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                    preannounce_media_id="http://example.com/preannounce.mp3",
+                ),
+            ),
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_chat_session_conversation_id")
@@ -711,12 +793,19 @@ async def test_start_conversation_default_preannounce(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "response_text", "expected_answer"),
+    ("service_data", "response_text", "expected_answer", "should_preannounce"),
     [
+        (
+            {},
+            "jazz",
+            AssistSatelliteAnswer(id=None, sentence="jazz"),
+            True,
+        ),
         (
             {"preannounce": False},
             "jazz",
             AssistSatelliteAnswer(id=None, sentence="jazz"),
+            False,
         ),
         (
             {
@@ -728,9 +817,14 @@ async def test_start_conversation_default_preannounce(
             },
             "Some Rock, please.",
             AssistSatelliteAnswer(id="rock", sentence="Some Rock, please."),
+            False,
         ),
         (
             {
+                "question_media_id": {
+                    "media_content_id": "media-source://tts/cloud?message=What+kind+of+music+would+you+like+to+listen+to%3F&language=en-US&gender=female",
+                    "media_content_type": "provider",
+                },
                 "answers": [
                     {
                         "id": "genre",
@@ -741,7 +835,7 @@ async def test_start_conversation_default_preannounce(
                         "sentences": ["artist {artist} [please]"],
                     },
                 ],
-                "preannounce": False,
+                "preannounce": True,
             },
             "artist Pink Floyd",
             AssistSatelliteAnswer(
@@ -749,6 +843,7 @@ async def test_start_conversation_default_preannounce(
                 sentence="artist Pink Floyd",
                 slots={"artist": "Pink Floyd"},
             ),
+            True,
         ),
     ],
 )
@@ -759,6 +854,7 @@ async def test_ask_question(
     service_data: dict,
     response_text: str,
     expected_answer: AssistSatelliteAnswer,
+    should_preannounce: bool,
 ) -> None:
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
@@ -782,6 +878,9 @@ async def test_ask_question(
     async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
+        assert (
+            start_announcement.preannounce_media_id is not None
+        ) is should_preannounce
         await original_start_conversation(start_announcement)
 
         audio_stream = object()
