@@ -18,6 +18,9 @@ from .entity import SmartThingsEntity
 
 LAMP_TO_HA = {
     "extraHigh": "extra_high",
+    "high": "high",
+    "low": "low",
+    "off": "off",
 }
 
 WASHER_SOIL_LEVEL_TO_HA = {
