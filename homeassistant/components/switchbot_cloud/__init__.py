@@ -177,6 +177,13 @@ async def make_device_data(
             else:
                 devices_data.switches.append((device, coordinator))
 
+    if isinstance(device, Device) and device.device_type in ["Garage Door Opener"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.buttons.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBot via API from a config entry."""

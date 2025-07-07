@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from switchbot_api import BotCommands
+from switchbot_api import BotCommands, CommonCommands
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -38,4 +38,17 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
 
     async def async_press(self, **kwargs: Any) -> None:
         """Bot press command."""
-        await self.send_api_command(BotCommands.PRESS)
+        model_name: str | None = (
+            self.device_info.get("model") if self.device_info else None
+        )
+        if model_name and model_name in ["Garage Door Opener"]:
+            response: dict | None = await self._api.get_status(self.unique_id)
+            if response is not None:
+                door_status: int | None = response.get("doorStatus")
+                if door_status is not None:
+                    if door_status == 1:
+                        await self.send_api_command(CommonCommands.ON)
+                    else:
+                        await self.send_api_command(CommonCommands.OFF)
+        else:
+            await self.send_api_command(BotCommands.PRESS)

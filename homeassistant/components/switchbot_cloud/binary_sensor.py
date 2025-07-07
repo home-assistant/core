@@ -25,7 +25,7 @@ class SwitchBotCloudBinarySensorEntityDescription(BinarySensorEntityDescription)
     """Describes a Switchbot Cloud binary sensor."""
 
     # Value or values to consider binary sensor to be "on"
-    on_value: bool | str = True
+    on_value: bool | str | int = True
 
 
 CALIBRATION_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -41,6 +41,10 @@ DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="doorState",
     device_class=BinarySensorDeviceClass.DOOR,
     on_value="opened",
+)
+
+DOOR_CLOSED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="doorStatus", device_class=BinarySensorDeviceClass.DOOR, on_value=0
 )
 
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
@@ -60,6 +64,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Garage Door Opener": (DOOR_CLOSED_DESCRIPTION,),
 }
 
 
