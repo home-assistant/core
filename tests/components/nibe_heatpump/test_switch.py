@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as SWITCH_PLATFORM,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -82,7 +82,7 @@ async def test_turn_on(
 
     # Write value
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        SWITCH_PLATFORM,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -124,7 +124,7 @@ async def test_turn_off(
 
     # Write value
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        SWITCH_PLATFORM,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
