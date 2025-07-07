@@ -319,7 +319,7 @@
     'supported_features': 0,
     'translation_key': 'pm_10',
     'unique_id': '5366960e8b18-SDS_P1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[sensor.5366960e8b18_pm10-state]
@@ -328,7 +328,7 @@
       'device_class': 'pm10',
       'friendly_name': '5366960e8b18 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.5366960e8b18_pm10',
@@ -375,7 +375,7 @@
     'supported_features': 0,
     'translation_key': 'pm_25',
     'unique_id': '5366960e8b18-SDS_P2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[sensor.5366960e8b18_pm2_5-state]
@@ -384,7 +384,7 @@
       'device_class': 'pm25',
       'friendly_name': '5366960e8b18 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.5366960e8b18_pm2_5',
