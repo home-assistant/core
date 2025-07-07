@@ -123,10 +123,6 @@ async def async_setup_entry(
         source_entity_id,
     )
 
-    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
-        unit_prefix = None
-
     if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
         max_sub_interval = cv.time_period(max_sub_interval_dict)
     else:
@@ -139,7 +135,7 @@ async def async_setup_entry(
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=unit_prefix,
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
         max_sub_interval=max_sub_interval,

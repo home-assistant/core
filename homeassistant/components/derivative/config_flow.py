@@ -112,10 +112,6 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
 
 
 async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    if handler.options.get("unit_prefix") == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
-        del handler.options["unit_prefix"]
-
     return vol.Schema(await _get_options_dict(handler))
 
 
@@ -143,6 +139,9 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+
+    VERSION = 1
+    MINOR_VERSION = 2
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
