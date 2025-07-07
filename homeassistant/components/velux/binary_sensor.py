@@ -53,7 +53,6 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
         self._attr_name = f"{node.name} Rain Sensor"
         self._attr_device_class = BinarySensorDeviceClass.MOISTURE
-        self.rain_detected = False
 
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
@@ -63,15 +62,6 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
             LOGGER.error("Error fetch limitation data for cover %s", self.name)
             return
 
-        # Velux windows with rain sensors report an opening limitation of 93 when rain is detected.
-        self.rain_detected = limitation.min_value == 93
-        LOGGER.debug(
-            "Rain sensor updated, limitation max/min_value=%s/%s",
-            limitation.max_value,
-            limitation.min_value,
-        )
+        # Velux win_dows with rain sensors report an opening limitation of 93 when rain is detected.
+        self._attr_is_on = limitation.min_value == 93
 
-    @property
-    def is_on(self) -> bool:
-        """Return if the rain sensor is triggered."""
-        return self.rain_detected
