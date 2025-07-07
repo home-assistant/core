@@ -11,7 +11,6 @@ from volvocarsapi.models import (
     VolvoCarsValue,
     VolvoCarsValueField,
     VolvoCarsValueStatusField,
-    VolvoCarsVehicle,
 )
 
 from homeassistant.components.sensor import (
@@ -48,7 +47,6 @@ class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
 
     source_fields: list[str] | None = None
     value_fn: Callable[[VolvoCarsValue], Any] | None = None
-    available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
 
 
 def _availability_status(field: VolvoCarsValue) -> str:
@@ -99,7 +97,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumption",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -107,7 +104,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionAutomatic",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -115,7 +111,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionSinceCharge",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -123,7 +118,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumption",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -131,7 +125,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumptionAutomatic",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -155,7 +148,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field=DATA_BATTERY_CAPACITY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # fuel & energy state endpoint
@@ -165,7 +157,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -177,7 +168,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "disconnected",
             "fault",
         ],
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -186,7 +176,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -195,7 +184,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
         value_fn=_charging_power_value,
     ),
     # energy state endpoint
@@ -203,7 +191,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="charging_power_status",
         api_field="chargerPowerStatus",
         value_fn=_to_capitalize,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -218,7 +205,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "idle",
             "scheduled",
         ],
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -230,7 +216,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "dc",
             "none",
         ],
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics & energy state endpoint
     VolvoSensorDescription(
@@ -240,7 +225,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -249,7 +233,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
     # diagnostics endpoint
     VolvoSensorDescription(
@@ -274,7 +257,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # fuel endpoint
     VolvoSensorDescription(
@@ -283,7 +265,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
     # odometer endpoint
     VolvoSensorDescription(
@@ -298,7 +279,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="target_battery_charge_level",
         api_field="targetBatteryChargeLevel",
         native_unit_of_measurement=PERCENTAGE,
-        available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # diagnostics endpoint
     VolvoSensorDescription(
@@ -348,9 +328,7 @@ async def async_setup_entry(
 
     for coordinator in coordinators:
         for description in _DESCRIPTIONS:
-            if description.key in added_keys or not description.available_fn(
-                coordinator.vehicle
-            ):
+            if description.key in added_keys:
                 continue
 
             if description.source_fields:

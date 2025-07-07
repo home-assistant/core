@@ -12,11 +12,15 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 from tests.common import async_load_fixture
 
 _MODEL_SPECIFIC_RESPONSES = {
-    "ex30_2024": ["vehicle"],
-    "ex30_2024_no_colour": ["vehicle"],
+    "ex30_2024": ["energy_capabilities", "energy_state", "statistics", "vehicle"],
     "s90_diesel_2018": ["diagnostics", "statistics", "vehicle"],
-    "xc40_electric_2024": ["vehicle", "energy_capabilities", "energy_state"],
-    "xc90_petrol_2019": ["commands", "vehicle"],
+    "xc40_electric_2024": [
+        "energy_capabilities",
+        "energy_state",
+        "statistics",
+        "vehicle",
+    ],
+    "xc90_petrol_2019": ["commands", "statistics", "vehicle"],
 }
 
 
