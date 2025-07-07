@@ -45,13 +45,13 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     node: Window
     _attr_should_poll = True  # the rain sensor / opening limitations needs polling unlike the rest of the Velux devices
     _attr_entity_registry_enabled_default = False
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
         super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
         self._attr_name = f"{node.name} Rain sensor"
-        self._attr_device_class = BinarySensorDeviceClass.MOISTURE
 
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
@@ -61,6 +61,5 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
             LOGGER.error("Error fetch limitation data for cover %s", self.name)
             return
 
-        # Velux win_dows with rain sensors report an opening limitation of 93 when rain is detected.
+        # Velux windows with rain sensors report an opening limitation of 93 when rain is detected.
         self._attr_is_on = limitation.min_value == 93
-
