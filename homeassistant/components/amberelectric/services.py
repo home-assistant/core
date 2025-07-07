@@ -26,7 +26,7 @@ from .helpers import format_cents_to_dollars, normalize_descriptor
 
 GET_FORECASTS_SCHEMA = vol.Schema(
     {
-        "config_entry_id": str,
+        "config_entry_id": ConfigEntrySelector({"integration": DOMAIN}),
         "channel_type": vol.In(["general", "controlled_load", "feed_in"]),
     }
 )
