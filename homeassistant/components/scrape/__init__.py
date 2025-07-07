@@ -194,20 +194,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         entity_reg = er.async_get(hass)
         entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
         for entity in entities:
-            _LOGGER.debug(
-                (
+            if entity.unique_id in old_to_new_sensor_id:
+                new_unique_id = old_to_new_sensor_id[old_unique_id]
+                _LOGGER.debug(
                     "Migrating entity %s with unique id %s to new unique id %s",
                     entity.entity_id,
                     entity.unique_id,
-                    old_to_new_sensor_id.get(entity.unique_id),
+                    new_unique_id,
                 )
-            )
-            if entity.unique_id in old_to_new_sensor_id:
                 entity_reg.async_update_entity(
                     entity.entity_id,
                     config_entry_id=entry.entry_id,
-                    config_subentry_id=old_to_new_sensor_id[entity.unique_id],
-                    new_unique_id=old_to_new_sensor_id[entity.unique_id],
+                    config_subentry_id=new_unique_id,
+                    new_unique_id=new_unique_id,
                 )
 
         # Use the new sub config entry id as the unique id for the sensor device
@@ -215,21 +214,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         devices = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
         for device in devices:
             for identifier in device.identifiers:
-                _LOGGER.debug(
-                    "Migrating device %s with identifiers %s to new unique id %s",
-                    device.id,
-                    device.identifiers,
-                    old_to_new_sensor_id.get(identifier[1]),
-                )
                 device_unique_id = identifier[1]
                 if device_unique_id in old_to_new_sensor_id:
+                    new_unique_id = old_to_new_sensor_id[device_unique_id]
+                    _LOGGER.debug(
+                        "Migrating device %s with identifiers %s to new unique id %s",
+                        device.id,
+                        device.identifiers,
+                        new_unique_id,
+                    )
                     device_reg.async_update_device(
                         device.id,
                         add_config_entry_id=entry.entry_id,
-                        add_config_subentry_id=old_to_new_sensor_id[device_unique_id],
-                        new_identifiers={
-                            (DOMAIN, old_to_new_sensor_id[device_unique_id])
-                        },
+                        add_config_subentry_id=new_unique_id,
+                        new_identifiers={(DOMAIN, new_unique_id)},
                     )
 
         # Remove the sensors as they are now subentries
