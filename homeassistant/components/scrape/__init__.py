@@ -108,7 +108,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
-    rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(entry.options))
+    config: dict[str, Any] = dict(entry.data)
+    config.update(config.pop("advanced", {}))
+    config.update(config.pop("auth", {}))
+
+    rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(config))
     rest = create_rest_data_from_config(hass, rest_config)
 
     coordinator = ScrapeCoordinator(
@@ -172,11 +176,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                     )
 
         # Remove the sensors as they are now subentries
-        new_config_entry_options = dict(entry.options)
-        new_config_entry_options.pop(SENSOR_DOMAIN)
+        new_config_entry_data = dict(entry.options)
+        new_config_entry_data.pop(SENSOR_DOMAIN)
 
         hass.config_entries.async_update_entry(
-            entry, version=2, options=new_config_entry_options
+            entry, version=2, data=new_config_entry_data, options={}
         )
 
     return True
