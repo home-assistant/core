@@ -13,7 +13,6 @@ from .const import (
     CHARGER_DATA_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
-    DOMAIN,
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
@@ -32,12 +31,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox lock entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
         WallboxLock(coordinator, description)
         for ent in coordinator.data
         if (description := LOCK_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxLock(WallboxEntity, LockEntity):
