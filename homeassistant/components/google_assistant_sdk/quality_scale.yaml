@@ -99,4 +99,4 @@ rules:
   inject-websession:
     status: exempt
     comment: The underlying library uses gRPC, not aiohttp/httpx, for communication.
-  strict-typing: todo
+  strict-typing: done
