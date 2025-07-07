@@ -10,6 +10,9 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
+from homeassistant.components.homeassistant_yellow.config_flow import (
+    HomeAssistantYellowConfigFlow,
+)
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -248,3 +251,71 @@ async def test_setup_entry_addon_info_fails(
 
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("start_version", "data", "migrated_data"),
+    [
+        (1, {}, {"firmware": "ezsp", "firmware_version": None}),
+        (2, {"firmware": "ezsp"}, {"firmware": "ezsp", "firmware_version": None}),
+        (
+            2,
+            {"firmware": "ezsp", "firmware_version": "123"},
+            {"firmware": "ezsp", "firmware_version": "123"},
+        ),
+        (3, {"firmware": "ezsp"}, {"firmware": "ezsp", "firmware_version": None}),
+        (
+            3,
+            {"firmware": "ezsp", "firmware_version": "123"},
+            {"firmware": "ezsp", "firmware_version": "123"},
+        ),
+    ],
+)
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    start_version: int,
+    data: dict,
+    migrated_data: dict,
+) -> None:
+    """Test migration of a config entry."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data=data,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=start_version,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.guess_firmware_info",
+            return_value=FirmwareInfo(  # Nothing is setup
+                device="/dev/ttyAMA1",
+                firmware_version="1234",
+                firmware_type=ApplicationType.EZSP,
+                source="unknown",
+                owners=[],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.data == migrated_data
+    assert config_entry.options == {}
+    assert config_entry.minor_version == HomeAssistantYellowConfigFlow.MINOR_VERSION
+    assert config_entry.version == HomeAssistantYellowConfigFlow.VERSION

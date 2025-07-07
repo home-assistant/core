@@ -63,6 +63,7 @@ class AiohttpClientMocker:
         cookies=None,
         side_effect=None,
         closing=None,
+        timeout=None,
     ):
         """Mock a request."""
         if not isinstance(url, RETYPE):
@@ -70,21 +71,21 @@ class AiohttpClientMocker:
         if params:
             url = url.with_query(params)
 
-        self._mocks.append(
-            AiohttpClientMockResponse(
-                method=method,
-                url=url,
-                status=status,
-                response=content,
-                json=json,
-                text=text,
-                cookies=cookies,
-                exc=exc,
-                headers=headers,
-                side_effect=side_effect,
-                closing=closing,
-            )
+        resp = AiohttpClientMockResponse(
+            method=method,
+            url=url,
+            status=status,
+            response=content,
+            json=json,
+            text=text,
+            cookies=cookies,
+            exc=exc,
+            headers=headers,
+            side_effect=side_effect,
+            closing=closing,
         )
+        self._mocks.append(resp)
+        return resp
 
     def get(self, *args, **kwargs):
         """Register a mock get request."""
@@ -109,6 +110,10 @@ class AiohttpClientMocker:
     def patch(self, *args, **kwargs):
         """Register a mock patch request."""
         self.request("patch", *args, **kwargs)
+
+    def head(self, *args, **kwargs):
+        """Register a mock head request."""
+        self.request("head", *args, **kwargs)
 
     @property
     def call_count(self):
@@ -151,6 +156,9 @@ class AiohttpClientMocker:
 
         for response in self._mocks:
             if response.match_request(method, url, params):
+                # If auth is provided, try to encode it to trigger any encoding errors
+                if auth is not None:
+                    auth.encode()
                 self.mock_calls.append((method, url, data, headers))
                 if response.side_effect:
                     response = await response.side_effect(method, url, data)

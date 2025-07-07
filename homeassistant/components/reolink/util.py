@@ -76,13 +76,18 @@ def get_store(hass: HomeAssistant, config_entry_id: str) -> Store[str]:
 
 
 def get_device_uid_and_ch(
-    device: dr.DeviceEntry, host: ReolinkHost
+    device: dr.DeviceEntry | tuple[str, str], host: ReolinkHost
 ) -> tuple[list[str], int | None, bool]:
     """Get the channel and the split device_uid from a reolink DeviceEntry."""
     device_uid = []
     is_chime = False
 
-    for dev_id in device.identifiers:
+    if isinstance(device, dr.DeviceEntry):
+        dev_ids = device.identifiers
+    else:
+        dev_ids = {device}
+
+    for dev_id in dev_ids:
         if dev_id[0] == DOMAIN:
             device_uid = dev_id[1].split("_")
             if device_uid[0] == host.unique_id:

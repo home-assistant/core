@@ -105,6 +105,24 @@
       },
       "light_level": {
         "name": "Light level"
+      },
+      "aqi_quality_level": {
+        "name": "Air quality level",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "empty": "[%key:common::state::empty%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       }
     },
     "cover": {
@@ -126,6 +144,22 @@
             "state": {
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      },
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "[%key:common::state::high%]",
+              "medium": "[%key:common::state::medium%]",
+              "low": "[%key:common::state::low%]",
+              "quiet": "Quiet",
+              "target_humidity": "Target humidity",
+              "sleep": "Sleep",
+              "auto": "[%key:common::state::auto%]",
+              "drying_filter": "Drying filter"
             }
           }
         }
@@ -179,7 +213,82 @@
             }
           }
         }
+      },
+      "air_purifier": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep"
+            }
+          }
+        }
       }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "sunset": "Sunset",
+              "vitality": "Vitality",
+              "flashing": "Flashing",
+              "strobe": "Strobe",
+              "fade": "Fade",
+              "smooth": "Smooth",
+              "forest": "Forest",
+              "ocean": "Ocean",
+              "autumn": "Autumn",
+              "cool": "Cool",
+              "flow": "Flow",
+              "relax": "Relax",
+              "modern": "Modern",
+              "rose": "Rose",
+              "colorful": "Colorful",
+              "flickering": "Flickering",
+              "breathing": "Breathing"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
+    },
+    "value_error": {
+      "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"
+    },
+    "advertising_state_error": {
+      "message": "{address} is not advertising state"
+    },
+    "device_not_found_error": {
+      "message": "Could not find Switchbot {sensor_type} with address {address}"
     }
   }
 }

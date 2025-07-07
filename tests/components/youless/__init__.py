@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import (
     MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
 )
 
 
@@ -18,16 +18,22 @@ async def init_component(hass: HomeAssistant) -> MockConfigEntry:
     with requests_mock.Mocker() as mock:
         mock.get(
             "http://1.1.1.1/d",
-            json=load_json_object_fixture("device.json", youless.DOMAIN),
+            json=await async_load_json_object_fixture(
+                hass, "device.json", youless.DOMAIN
+            ),
         )
         mock.get(
             "http://1.1.1.1/e",
-            json=load_json_array_fixture("enologic.json", youless.DOMAIN),
+            json=await async_load_json_array_fixture(
+                hass, "enologic.json", youless.DOMAIN
+            ),
             headers={"Content-Type": "application/json"},
         )
         mock.get(
             "http://1.1.1.1/f",
-            json=load_json_object_fixture("phase.json", youless.DOMAIN),
+            json=await async_load_json_object_fixture(
+                hass, "phase.json", youless.DOMAIN
+            ),
             headers={"Content-Type": "application/json"},
         )
 

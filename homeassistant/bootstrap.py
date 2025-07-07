@@ -75,8 +75,8 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
-    backup,
     category_registry,
+    condition,
     config_validation as cv,
     device_registry,
     entity,
@@ -89,6 +89,7 @@ from .helpers import (
     restore_state,
     template,
     translation,
+    trigger,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
@@ -171,8 +172,6 @@ FRONTEND_INTEGRATIONS = {
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
 # Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# The substages preceding it should also have no timeout, until we ensure that the recorder
-# is not accidentally promoted as a dependency of any of the integrations in them.
 # If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
@@ -396,7 +395,7 @@ async def async_setup_hass(
 
 def open_hass_ui(hass: core.HomeAssistant) -> None:
     """Open the UI."""
-    import webbrowser  # pylint: disable=import-outside-toplevel
+    import webbrowser  # noqa: PLC0415
 
     if hass.config.api is None or "frontend" not in hass.config.components:
         _LOGGER.warning("Cannot launch the UI because frontend not loaded")
@@ -454,6 +453,8 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
         create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
     )
 
 
@@ -563,8 +564,7 @@ async def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable-next=import-outside-toplevel
-            from colorlog import ColoredFormatter
+            from colorlog import ColoredFormatter  # noqa: PLC0415
 
             # basicConfig must be called after importing colorlog in order to
             # ensure that the handlers it sets up wraps the correct streams.
@@ -881,10 +881,6 @@ async def _async_set_up_integrations(
     if "recorder" in all_domains:
         recorder.async_initialize_recorder(hass)
 
-    # Initialize backup
-    if "backup" in all_domains:
-        backup.async_initialize_backup(hass)
-
     stages: list[tuple[str, set[str], int | None]] = [
         *(
             (name, domain_group, timeout)
@@ -929,7 +925,11 @@ async def _async_set_up_integrations(
             await _async_setup_multi_components(hass, stage_all_domains, config)
             continue
         try:
-            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+            async with hass.timeout.async_timeout(
+                timeout,
+                cool_down=COOLDOWN_TIME,
+                cancel_message=f"Bootstrap stage {name} timeout",
+            ):
                 await _async_setup_multi_components(hass, stage_all_domains, config)
         except TimeoutError:
             _LOGGER.warning(
@@ -941,7 +941,11 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+        async with hass.timeout.async_timeout(
+            WRAP_UP_TIMEOUT,
+            cool_down=COOLDOWN_TIME,
+            cancel_message="Bootstrap startup wrap up timeout",
+        ):
             await hass.async_block_till_done()
     except TimeoutError:
         _LOGGER.warning(
