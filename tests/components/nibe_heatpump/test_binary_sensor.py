@@ -1,4 +1,4 @@
-"""Test the Nibe Heat Pump config flow."""
+"""Test the Nibe Heat Pump binary sensor entities."""
 
 from typing import Any
 from unittest.mock import patch
