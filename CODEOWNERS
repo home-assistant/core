@@ -1632,6 +1632,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuneblade_remote/ @spycle
+/tests/components/tuneblade_remote/ @spycle
 /homeassistant/components/tuya/ @Tuya @zlinoliver
 /tests/components/tuya/ @Tuya @zlinoliver
 /homeassistant/components/twentemilieu/ @frenck

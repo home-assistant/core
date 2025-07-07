@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientSession
 from pytuneblade import TuneBladeApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -30,24 +30,37 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manual user setup step."""
+        errors = {}
+
         if user_input is not None:
-            name = user_input.get("name", "TuneBlade").split("@")[0].strip()
+            name = user_input["name"].strip()
             host = user_input["host"]
             port = user_input["port"]
 
-            unique_id = f"{name}_{host}_{port}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            session = async_get_clientsession(self.hass)
+            client = TuneBladeApiClient(host, port, session)
+            try:
+                devices = await client.async_get_data()
+            except Exception:
+                _LOGGER.exception("Failed to connect to TuneBlade")
+                errors["base"] = "cannot_connect"
+            else:
+                if not devices:
+                    errors["base"] = "cannot_connect"
 
-            self._discovery_info = {
-                "host": host,
-                "port": port,
-                "name": name,
-            }
-            return self.async_create_entry(
-                title=name,
-                data=self._discovery_info,
-            )
+            if not errors:
+                unique_id = f"{name}_{host}_{port}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        "host": host,
+                        "port": port,
+                        "name": name,
+                    },
+                )
 
         data_schema = vol.Schema(
             {
@@ -56,7 +69,9 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional("name", default="TuneBlade"): str,
             }
         )
-        return self.async_show_form(step_id="user", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -78,13 +93,13 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": name,
         }
 
-        # Probe the device by attempting to fetch data via TuneBladeApiClient
-        session = ClientSession()
+        session = async_get_clientsession(self.hass)
         client = TuneBladeApiClient(host, port, session)
         try:
             devices = await client.async_get_data()
-        finally:
-            await session.close()
+        except Exception:
+            _LOGGER.exception("Failed to connect to TuneBlade via zeroconf")
+            return self.async_abort(reason="cannot_connect")
 
         if not devices:
             return self.async_abort(reason="cannot_connect")

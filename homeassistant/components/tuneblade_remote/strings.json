@@ -16,7 +16,9 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single instance is allowed.",
+      "cannot_connect": "Unable to connect to TuneBlade device."
+    },
+    "error": {
       "cannot_connect": "Unable to connect to TuneBlade device."
     }
   }
