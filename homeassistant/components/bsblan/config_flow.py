@@ -74,9 +74,38 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             )
         else:
-            # For older firmware without MAC in zeroconf:
-            # Use discovery without unique ID pattern - will get MAC via API later
-            await self._async_handle_discovery_without_unique_id()
+            # MAC not available from zeroconf - check for existing host/port first
+            existing_entries = self._async_current_entries(include_ignore=False)
+            if any(
+                entry.data[CONF_HOST] == self.host
+                and entry.data[CONF_PORT] == self.port
+                for entry in existing_entries
+            ):
+                # If the host and port match an existing entry, abort
+                return self.async_abort(reason="already_configured")
+
+            # Try to get device info without authentication to minimize discovery popup
+            try:
+                config = BSBLANConfig(host=self.host, port=self.port)
+                session = async_get_clientsession(self.hass)
+                bsblan = BSBLAN(config, session)
+                device = await bsblan.device()
+                self.mac = device.MAC
+
+                # Got MAC without auth - set unique ID and check for existing device
+                await self.async_set_unique_id(format_mac(self.mac))
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: self.host,
+                        CONF_PORT: self.port,
+                    }
+                )
+                # Device accessible without auth - validate and create entry
+                return await self._validate_and_create(is_discovery=True)
+
+            except BSBLANError:
+                # Device requires authentication - proceed to discovery confirm
+                self.mac = None
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
