@@ -417,7 +417,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.4.6
 
 # homeassistant.components.webostv
-aiowebostv==0.7.3
+aiowebostv==0.7.4
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -890,7 +890,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.0.0
+gios==6.1.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -1637,7 +1637,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.0
+pyenphase==2.2.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
