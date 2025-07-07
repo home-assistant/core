@@ -227,7 +227,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_rest_setup(self.hass, user_input)
             title = user_input[CONF_RESOURCE]
             if not errors:
-                return self.async_create_entry(data=user_input, title=title)
+                return self.async_create_entry(data={}, options=user_input, title=title)
 
         return self.async_show_form(
             step_id="user", data_schema=RESOURCE_SETUP, errors=errors
