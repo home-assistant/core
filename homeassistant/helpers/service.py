@@ -221,7 +221,7 @@ class ServiceParams(TypedDict):
 
 @deprecated_class(
     "homeassistant.helpers.target.TargetSelectorData",
-    breaks_in_ha_version="2026.2",
+    breaks_in_ha_version="2026.8",
 )
 class ServiceTargetSelector(target_helpers.TargetSelectorData):
     """Class to hold a target selector for a service."""
@@ -233,7 +233,7 @@ class ServiceTargetSelector(target_helpers.TargetSelectorData):
 
 @deprecated_class(
     "homeassistant.helpers.target.SelectedEntities",
-    breaks_in_ha_version="2026.2",
+    breaks_in_ha_version="2026.8",
 )
 class SelectedEntities(target_helpers.SelectedEntities):
     """Class to hold the selected entities."""
@@ -445,7 +445,7 @@ async def async_extract_entity_ids(
 
 @deprecated_function(
     "homeassistant.helpers.target.async_extract_referenced_entity_ids",
-    breaks_in_ha_version="2026.2",
+    breaks_in_ha_version="2026.8",
 )
 @bind_hass
 def async_extract_referenced_entity_ids(
