@@ -26,7 +26,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.selector import (
+from homeassistant.helpers.target import (
     TargetSelectorData,
     async_extract_referenced_entity_ids,
 )

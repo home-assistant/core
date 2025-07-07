@@ -75,12 +75,12 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.selector import (
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.target import (
     TargetSelectorData,
     async_extract_referenced_entity_ids,
 )
-from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task

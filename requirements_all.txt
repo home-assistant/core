@@ -185,7 +185,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==3.2.2
+aioamazondevices==3.2.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -204,7 +204,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==1.0.1
+aioautomower==1.2.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -372,7 +372,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.7.0
+aiorussound==4.8.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -435,7 +435,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.4.6
 
 # homeassistant.components.webostv
-aiowebostv==0.7.3
+aiowebostv==0.7.4
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -989,7 +989,7 @@ gTTS==2.5.3
 gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.12
+gassist-text==0.0.14
 
 # homeassistant.components.google
 gcal-sync==7.1.0
@@ -1020,7 +1020,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.0.0
+gios==6.1.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1161,14 +1161,14 @@ hko==0.3.2
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.8.0
+hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
 holidays==0.75
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250702.0
+home-assistant-frontend==20250702.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.6.23
@@ -1319,7 +1319,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.5
+lcn-frontend==0.2.6
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1452,7 +1452,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.28
+motionblinds==0.6.29
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -1929,7 +1929,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.6.0
+pydrawise==2025.7.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -1962,7 +1962,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.0
+pyenphase==2.2.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2100,7 +2100,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.9
+pylamarzocco==2.0.10
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2360,7 +2360,7 @@ pysmhi==1.0.2
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.6
+pysmlight==0.2.7
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2502,7 +2502,7 @@ python-ripple-api==0.0.3
 python-roborock==2.18.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.39
+python-smarttub==0.0.44
 
 # homeassistant.components.snoo
 python-snoo==0.6.6
@@ -2753,7 +2753,7 @@ sensoterra==2.0.1
 sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.11
+sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
 sharkiq==1.1.0
@@ -3041,7 +3041,7 @@ vehicle==2.2.2
 velbus-aio==2025.5.0
 
 # homeassistant.components.venstar
-venstarcolortouch==0.19
+venstarcolortouch==0.21
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
@@ -3150,7 +3150,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.6.0
+yalexs-ble==3.0.0
 
 # homeassistant.components.august
 # homeassistant.components.yale

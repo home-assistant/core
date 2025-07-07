@@ -28,7 +28,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import (
+from homeassistant.helpers.target import (
     TargetSelectorData,
     async_extract_referenced_entity_ids,
 )
