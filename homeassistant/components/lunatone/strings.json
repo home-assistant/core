@@ -11,7 +11,6 @@
         }
       },
       "dali": {
-        "title": "DALI device scan",
         "data": {
           "device_scan_method": "Select a DALI device scan method"
         }
