@@ -135,8 +135,8 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
                     VacuumCommands.POW_LEVEL,
                     parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
                 )
-            else:
-                pass
+            # else:
+            #     pass
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
@@ -152,8 +152,8 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
             elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.STOP)
-            else:
-                pass
+            # else:
+            #     pass
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
@@ -168,8 +168,8 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
             elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.DOCK)
-            else:
-                pass
+            # else:
+            #     pass
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
@@ -211,14 +211,13 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
                 )
             elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.START)
-            else:
-                pass
+            # else:
+            #     pass
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-
         self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
