@@ -30,7 +30,9 @@ from tests.common import MockConfigEntry
 MOCK_API_TOKEN = "psk_0000000000000000"
 
 
-def create_amber_config_entry(site_id: str, entry_id: str, name: str) -> MockConfigEntry:
+def create_amber_config_entry(
+    site_id: str, entry_id: str, name: str
+) -> MockConfigEntry:
     """Create an Amber config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -65,19 +67,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 async def general_channel_config_entry():
     """Generate the default Amber config entry."""
-    return create_amber_config_entry(GENERAL_ONLY_SITE_ID, "home")
+    return create_amber_config_entry(GENERAL_ONLY_SITE_ID, GENERAL_ONLY_SITE_ID, "home")
 
 
 @pytest.fixture
 async def general_channel_and_controlled_load_config_entry():
     """Generate the default Amber config entry for site with controlled load."""
-    return create_amber_config_entry(GENERAL_AND_CONTROLLED_SITE_ID, "home")
+    return create_amber_config_entry(
+        GENERAL_AND_CONTROLLED_SITE_ID, GENERAL_AND_CONTROLLED_SITE_ID, "home"
+    )
 
 
 @pytest.fixture
 async def general_channel_and_feed_in_config_entry():
     """Generate the default Amber config entry for site with feed in."""
-    return create_amber_config_entry(GENERAL_AND_FEED_IN_SITE_ID, "home")
+    return create_amber_config_entry(
+        GENERAL_AND_FEED_IN_SITE_ID, GENERAL_AND_FEED_IN_SITE_ID, "home"
+    )
 
 
 @pytest.fixture

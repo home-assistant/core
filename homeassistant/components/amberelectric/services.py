@@ -1,7 +1,5 @@
 """Amber Electric Service class."""
 
-from typing import cast
-
 from amberelectric.models.channel import ChannelType
 import voluptuous as vol
 
@@ -13,6 +11,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util.json import JsonValueType
 
 from .const import (
