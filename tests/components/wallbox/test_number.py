@@ -11,17 +11,12 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import (
-    http_403_error,
-    http_404_error,
-    http_429_error,
-    setup_integration,
-    test_response_bidir,
-)
+from .conftest import http_403_error, http_404_error, http_429_error, setup_integration
 from .const import (
     MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
     MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
     MOCK_NUMBER_ENTITY_ID,
+    WALLBOX_STATUS_RESPONSE_BIDIR,
 )
 
 from tests.common import MockConfigEntry
@@ -53,7 +48,7 @@ async def test_wallbox_number_power_class_bidir(
 ) -> None:
     """Test wallbox sensor class."""
     with patch.object(
-        mock_wallbox, "getChargerStatus", return_value=test_response_bidir
+        mock_wallbox, "getChargerStatus", return_value=WALLBOX_STATUS_RESPONSE_BIDIR
     ):
         await setup_integration(hass, entry)
 
