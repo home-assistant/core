@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from switchbot_api import Device, LockCommands, Remote, SwitchBotAPI
+from switchbot_api import Device, LockCommands, LockV2Commands, Remote, SwitchBotAPI
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -61,9 +61,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         """Lock the lock."""
         entry_id: str | None = self.device_entry.id if self.device_entry else None
         if entry_id and (entry_id in self.entity_options):
-            # send night latch command
-            # wait switchbot_api update to 2.7.0
-            await self.send_api_command(LockCommands.LOCK)
+            await self.send_api_command(LockV2Commands.DEADBOLT)
         else:
             await self.send_api_command(LockCommands.LOCK)
         self._attr_is_locked = True
@@ -73,9 +71,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         """Unlock the lock."""
         entry_id: str | None = self.device_entry.id if self.device_entry else None
         if entry_id and (entry_id in self.entity_options):
-            # send night latch command
-            # wait switchbot_api update to 2.7.0
-            await self.send_api_command(LockCommands.UNLOCK)
+            await self.send_api_command(LockV2Commands.UNLOCK)
         else:
             await self.send_api_command(LockCommands.UNLOCK)
         self._attr_is_locked = False

@@ -54,7 +54,6 @@ class SwitchbotCloudOptionsFlowHandler(OptionsFlow):
                     multiple=True,
                     filter=[
                         DeviceFilterSelectorConfig(model="Smart Lock"),
-                        DeviceFilterSelectorConfig(model="Smart Lock Lite"),
                         DeviceFilterSelectorConfig(model="Smart Lock Pro"),
                         DeviceFilterSelectorConfig(model="Smart Lock Ultra"),
                     ],
