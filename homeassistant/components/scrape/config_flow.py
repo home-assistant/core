@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import logging
 from typing import Any
 
@@ -183,12 +184,15 @@ async def validate_rest_setup(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate rest setup."""
-    rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
+    config = deepcopy(user_input)
+    config.update(config.pop("advanced", {}))
+    config.update(config.pop("auth", {}))
+    rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
         rest = create_rest_data_from_config(hass, rest_config)
         await rest.async_update()
     except Exception:
-        _LOGGER.exception("Error when getting resource %s", user_input[CONF_RESOURCE])
+        _LOGGER.exception("Error when getting resource %s", config[CONF_RESOURCE])
         return {"base": "resource_error"}
     if rest.data is None:
         return {"base": "no_data"}
@@ -218,6 +222,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """User flow to create a sensor subentry."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             errors = await validate_rest_setup(self.hass, user_input)
             title = user_input[CONF_RESOURCE]
@@ -236,7 +241,7 @@ class ScrapeOptionFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage Scrape options."""
-
+        errors: dict[str, str] = {}
         if user_input is not None:
             errors = await validate_rest_setup(self.hass, user_input)
             if not errors:
@@ -248,6 +253,7 @@ class ScrapeOptionFlow(OptionsFlow):
                 RESOURCE_SETUP,
                 self.config_entry.options,
             ),
+            errors=errors,
         )
 
 

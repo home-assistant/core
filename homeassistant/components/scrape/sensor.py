@@ -46,9 +46,10 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_AVAILABILITY,
     CONF_DEVICE_CLASS,
     CONF_ICON,
+    CONF_NAME,
     CONF_PICTURE,
-    CONF_UNIQUE_ID,
     CONF_STATE_CLASS,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
 
@@ -70,7 +71,7 @@ async def async_setup_platform(
 
     entities: list[ScrapeSensor] = []
     for sensor_config in sensors_config:
-        trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
+        trigger_entity_config = {}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
                 continue
@@ -98,33 +99,33 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Scrape sensor entry."""
-    entities: list = []
-
     coordinator = entry.runtime_data
     for subentry in entry.subentries.values():
-        config = dict(subentry.data)
-        for sensor in config["sensor"]:
-            sensor_config: ConfigType = vol.Schema(
-                TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
-            )(sensor)
+        sensor = dict(subentry.data)
+        sensor[CONF_UNIQUE_ID] = subentry.subentry_id
+        sensor[CONF_NAME] = subentry.title
 
-            name: str = sensor_config[CONF_NAME]
-            value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        sensor_config: ConfigType = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+        )(sensor)
 
-            value_template: ValueTemplate | None = (
-                ValueTemplate(value_string, hass) if value_string is not None else None
-            )
+        value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
-            trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
-            for key in TRIGGER_ENTITY_OPTIONS:
-                if key not in sensor_config:
-                    continue
-                if key == CONF_AVAILABILITY:
-                    trigger_entity_config[key] = Template(sensor_config[key], hass)
-                    continue
-                trigger_entity_config[key] = sensor_config[key]
+        value_template: ValueTemplate | None = (
+            ValueTemplate(value_string, hass) if value_string is not None else None
+        )
 
-            entities.append(
+        trigger_entity_config: dict[str, str | Template | None] = {}
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in sensor_config:
+                continue
+            if key == CONF_AVAILABILITY:
+                trigger_entity_config[key] = Template(sensor_config[key], hass)
+                continue
+            trigger_entity_config[key] = sensor_config[key]
+
+        async_add_entities(
+            [
                 ScrapeSensor(
                     hass,
                     coordinator,
@@ -135,9 +136,9 @@ async def async_setup_entry(
                     value_template,
                     False,
                 )
-            )
-
-    async_add_entities(entities)
+            ],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):
