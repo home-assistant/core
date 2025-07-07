@@ -9,7 +9,7 @@ from homeassistant.components.nederlandse_spoorwegen.config_flow import (
     NSOptionsFlowHandler,
 )
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -540,3 +540,28 @@ async def test_config_flow_reauth_and_reconfigure(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated_entry is not None
     assert updated_entry.data[CONF_API_KEY] == "anotherkey456"
+
+
+@pytest.mark.asyncio
+async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
+    """Test setup entry sets entry state to SETUP_RETRY on connection error."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.__init__.NSAPI"
+    ) as mock_nsapi_cls:
+        mock_nsapi = mock_nsapi_cls.return_value
+        mock_nsapi.get_stations.side_effect = Exception("connection failed")
+
+        # Start the config flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "badkey"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"name": "Test", "from": "AMS", "to": "UTR"}
+        )
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+        # Assert the entry is in SETUP_RETRY state
+        assert entry.state == ConfigEntryState.SETUP_RETRY

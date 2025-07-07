@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 from typing import TypedDict
 
+from ns_api import NSAPI
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -18,37 +20,28 @@ PLATFORMS = [Platform.SENSOR]
 class NSRuntimeData(TypedDict, total=False):
     """TypedDict for runtime data used by the Nederlandse Spoorwegen integration."""
 
-    # Add actual runtime data fields as needed, e.g.:
-    # client: NSAPI
+    client: NSAPI
 
 
 class NSConfigEntry(ConfigEntry[NSRuntimeData]):
     """Config entry for the Nederlandse Spoorwegen integration."""
 
 
-# Type alias for this integration's config entry
-def _cast_entry(entry: ConfigEntry) -> ConfigEntry:
-    return entry
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    _LOGGER.debug("Setting up config entry: %s", entry.entry_id)
-    _LOGGER.debug(
-        "async_setup_entry called with data: %s, options: %s", entry.data, entry.options
-    )
-    # Register update listener for options reload
-    if "nederlandse_spoorwegen_update_listener" not in hass.data:
-        hass.data.setdefault("nederlandse_spoorwegen_update_listener", {})[
-            entry.entry_id
-        ] = entry.add_update_listener(async_reload_entry)
-    # Set runtime_data for this entry (replace with actual runtime data as needed)
-    entry.runtime_data = NSRuntimeData()
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    # Set runtime_data for this entry (store the NSAPI client)
+    api_key = entry.data.get(CONF_API_KEY)
+    client = NSAPI(api_key)
+    # Test connection before setting up platforms
     try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await hass.async_add_executor_job(client.get_stations)
     except Exception as err:
-        _LOGGER.error("Failed to set up entry: %s", err)
+        _LOGGER.error("Failed to connect to NS API: %s", err)
         raise ConfigEntryNotReady from err
+    entry.runtime_data = NSRuntimeData(client=client)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
