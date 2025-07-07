@@ -30,6 +30,11 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cz_dual_channel_metering": [
+        # https://github.com/home-assistant/core/issues/147149
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
