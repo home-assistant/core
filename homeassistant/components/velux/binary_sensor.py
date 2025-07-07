@@ -44,6 +44,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
     node: Window
     _attr_should_poll = True  # the rain sensor / opening limitations needs polling unlike the rest of the Velux devices
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
