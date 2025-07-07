@@ -23,7 +23,6 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
-    DOMAIN,
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
@@ -84,12 +83,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox number entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
         WallboxNumber(coordinator, entry, description)
         for ent in coordinator.data
         if (description := NUMBER_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxNumber(WallboxEntity, NumberEntity):
