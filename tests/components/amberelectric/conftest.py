@@ -39,7 +39,7 @@ def create_amber_config_entry(site_id: str, entry_id: str, name: str) -> MockCon
             CONF_SITE_NAME: name,
             CONF_SITE_ID: site_id,
         },
-        entry_id=site_id,
+        entry_id=entry_id,
     )
 
 
