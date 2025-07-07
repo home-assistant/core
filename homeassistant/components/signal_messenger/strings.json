@@ -13,11 +13,11 @@
         },
         "data_description": {
           "name": "The name for this Signal configuration",
-          "url": "The full URL to signal-cli-rest-api",
+          "url": "The full URL to signal-cli REST API",
           "number": "The phone number used to register the Signal account",
           "recipients": "Space-separated list of phone numbers, usernames or single group to send to"
         },
-        "description": "Setup signal-messenger through signal-cli Rest API."
+        "description": "Set up Signal Messenger through signal-cli REST API."
       }
     }
   }
