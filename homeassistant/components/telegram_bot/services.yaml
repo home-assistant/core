@@ -109,6 +109,7 @@ send_photo:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -261,6 +262,7 @@ send_animation:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -341,6 +343,7 @@ send_video:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -493,6 +496,7 @@ send_document:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -670,6 +674,7 @@ edit_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_web_page_preview:
       selector:
         boolean:

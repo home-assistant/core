@@ -70,7 +70,7 @@
           "motor_fault_short": "Motor shorted",
           "motor_ot_amps": "Motor overtorqued",
           "motor_disconnected": "Motor disconnected",
-          "empty": "Empty"
+          "empty": "[%key:common::state::empty%]"
         }
       },
       "last_seen": {
