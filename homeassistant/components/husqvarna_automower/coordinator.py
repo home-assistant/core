@@ -88,6 +88,30 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
+        self.hass.async_create_task(self._process_websocket_update(ws_data))
+
+    async def _process_websocket_update(self, ws_data: MowerDictionary) -> None:
+        """Handle incoming websocket update and update coordinator data."""
+        for mower_id in ws_data:
+            for task in ws_data[mower_id].calendar.tasks:
+                if task.work_area_id is not None:
+                    if task.work_area_id not in ws_data[mower_id].work_areas:
+                        _LOGGER.debug(
+                            "New work area %s detected, refreshing data",
+                            task.work_area_id,
+                        )
+                        # Important: async_refresh() is not used here because its update process
+                        # is asynchronous and may cause a race condition. Specifically, entities
+                        # may be created before the coordinator's data is updated, leading to
+                        # KeyErrors when accessing work area attributes.
+                        #
+                        # By explicitly polling, updating the coordinator, and then adding/removing
+                        # entities, we ensure consistent and complete data.
+                        poll_data = await self.api.get_status()
+                        self.async_set_updated_data(poll_data)
+                        self._async_add_remove_devices_and_entities(poll_data)
+                        return
+
         self.async_set_updated_data(ws_data)
         self._async_add_remove_devices_and_entities(ws_data)
 
