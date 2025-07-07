@@ -45,7 +45,7 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 from . import area_registry, config_validation as cv, device_registry, entity_registry
 from .event import EventStateChangedData, async_track_state_change_event
 from .integration_platform import async_process_integration_platforms
-from .selector import TargetSelectorData, async_extract_referenced_entity_ids
+from .target import TargetSelectorData, async_extract_referenced_entity_ids
 from .template import Template
 from .typing import ConfigType, TemplateVarsType
 
