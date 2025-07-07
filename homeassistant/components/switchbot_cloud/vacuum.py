@@ -1,6 +1,5 @@
 """Support for SwitchBot vacuum."""
 
-from enum import StrEnum
 from typing import Any
 
 from switchbot_api import (
@@ -8,6 +7,8 @@ from switchbot_api import (
     Remote,
     SwitchBotAPI,
     VacuumCleanerV2Commands,
+    VacuumCleanerV3Commands,
+    VacuumCleanMode,
     VacuumCommands,
 )
 
@@ -45,14 +46,6 @@ async def async_setup_entry(
     )
 
 
-class CleanMode(StrEnum):
-    """Clean mode for Vacuum."""
-
-    SWEEP = "sweep"
-    MOP = "mop"
-    SWEEP_MOP = "sweep_mop"
-
-
 VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, VacuumActivity] = {
     "StandBy": VacuumActivity.IDLE,
     "Clearing": VacuumActivity.CLEANING,
@@ -72,13 +65,6 @@ VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED: dict[str, str] = {
     VACUUM_FAN_SPEED_STRONG: "2",
     VACUUM_FAN_SPEED_MAX: "3",
 }
-
-Vacuum_Cleaner_V2_Commands_supported_devices: list[str] = [
-    "K20+ Pro",
-    "Robot Vacuum Cleaner K10+ Pro Combo",
-    "Robot Vacuum Cleaner S10",
-    "S20",
-]
 
 
 # https://github.com/OpenWonderLabs/SwitchBotAPI?tab=readme-ov-file#robot-vacuum-cleaner-s1-plus-1
@@ -127,7 +113,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
             self._attr_model_name is not None
             and fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED
         ):
-            if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
+            if self._attr_model_name in VacuumCleanerV2Commands.get_supported_devices():
                 await self.send_api_command(
                     VacuumCleanerV2Commands.CHANGE_PARAM,
                     parameters={
@@ -139,36 +125,69 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
                         "times": 1,
                     },
                 )
-            else:
+            elif (
+                self._attr_model_name in VacuumCleanerV3Commands.get_supported_devices()
+            ):
+                await self.send_api_command(
+                    VacuumCleanerV3Commands.CHANGE_PARAM,
+                    parameters={
+                        "fanLevel": int(
+                            VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed]
+                        )
+                        + 1,
+                        "waterLevel": 1,
+                        "times": 1,
+                    },
+                )
+            elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(
                     VacuumCommands.POW_LEVEL,
                     parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
                 )
+            else:
+                pass
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         if self._attr_model_name is not None:
-            if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
+            if self._attr_model_name in VacuumCleanerV2Commands.get_supported_devices():
                 await self.send_api_command(VacuumCleanerV2Commands.PAUSE)
-            else:
+
+            elif (
+                self._attr_model_name in VacuumCleanerV3Commands.get_supported_devices()
+            ):
+                await self.send_api_command(VacuumCleanerV3Commands.PAUSE)
+
+            elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.STOP)
+            else:
+                pass
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self._attr_model_name is not None:
-            if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
+            if self._attr_model_name in VacuumCleanerV2Commands.get_supported_devices():
                 await self.send_api_command(VacuumCleanerV2Commands.DOCK)
-            else:
+
+            elif (
+                self._attr_model_name in VacuumCleanerV3Commands.get_supported_devices()
+            ):
+                await self.send_api_command(VacuumCleanerV3Commands.DOCK)
+
+            elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.DOCK)
+            else:
+                pass
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
+
+        assert self.fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED
         if self._attr_model_name is not None:
-            if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
-                assert self.fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED
-                command_param: dict[str, Any] = {
-                    "action": CleanMode.SWEEP.value,
+            if self._attr_model_name in VacuumCleanerV2Commands.get_supported_devices():
+                command_param = {
+                    "action": VacuumCleanMode.SWEEP.value,
                     "param": {
                         "fanLevel": int(
                             VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[self.fan_speed]
@@ -177,17 +196,32 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
                         "times": 1,
                     },
                 }
-                model: str | None = (
-                    self.device_info.get("model") if self.device_info else None
-                )
-                if model and model in ["S20", "Robot Vacuum Cleaner S10"]:
-                    command_param["param"]["waterLevel"] = 1
                 await self.send_api_command(
                     VacuumCleanerV2Commands.START_CLEAN,
                     parameters=command_param,
                 )
-            else:
+            elif (
+                self._attr_model_name in VacuumCleanerV3Commands.get_supported_devices()
+            ):
+                command_param = {
+                    "action": VacuumCleanMode.SWEEP.value,
+                    "param": {
+                        "fanLevel": int(
+                            VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[self.fan_speed]
+                        )
+                        + 1,
+                        "waterLevel": 1,
+                        "times": 1,
+                    },
+                }
+                await self.send_api_command(
+                    VacuumCleanerV3Commands.START_CLEAN,
+                    parameters=command_param,
+                )
+            elif self._attr_model_name in VacuumCommands.get_supported_devices():
                 await self.send_api_command(VacuumCommands.START)
+            else:
+                pass
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
