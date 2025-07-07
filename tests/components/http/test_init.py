@@ -530,17 +530,14 @@ async def test_register_static_paths(
     """Test registering a static path with old api."""
     assert await async_setup_component(hass, "frontend", {})
     path = str(Path(__file__).parent)
-    hass.http.register_static_path("/something", path)
-    client = await hass_client()
-    resp = await client.get("/something/__init__.py")
-    assert resp.status == HTTPStatus.OK
 
-    assert (
+    match_error = (
         "Detected code that calls hass.http.register_static_path "
-        "which is deprecated because it does blocking I/O in the "
-        "event loop, instead call "
+        "which does blocking I/O in the event loop, instead call "
         "`await hass.http.async_register_static_paths"
-    ) in caplog.text
+    )
+    with pytest.raises(RuntimeError, match=match_error):
+        hass.http.register_static_path("/something", path)
 
 
 async def test_ssl_issue_if_no_urls_configured(

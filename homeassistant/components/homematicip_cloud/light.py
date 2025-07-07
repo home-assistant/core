@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
+from homematicip.base.enums import DeviceType, OpticalSignalBehaviour, RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
 from homematicip.device import (
     BrandDimmer,
-    BrandSwitchMeasuring,
     BrandSwitchNotificationLight,
     Dimmer,
     DinRailDimmer3,
     FullFlushDimmer,
     PluggableDimmer,
+    SwitchMeasuring,
     WiredDimmer3,
 )
 from packaging.version import Version
@@ -44,9 +44,12 @@ async def async_setup_entry(
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None) == DeviceType.BRAND_SWITCH_MEASURING
+        ):
             entities.append(HomematicipLightMeasuring(hap, device))
-        elif isinstance(device, BrandSwitchNotificationLight):
+        if isinstance(device, BrandSwitchNotificationLight):
             device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
 

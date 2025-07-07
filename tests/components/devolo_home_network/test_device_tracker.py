@@ -17,13 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NO_CONNECTED_STATIONS
+from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
 from .mock import MockDevice
 
 from tests.common import async_fire_time_changed
 
 STATION = CONNECTED_STATIONS[0]
-SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -35,9 +34,7 @@ async def test_device_tracker(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker states."""
-    state_key = (
-        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
-    )
+    state_key = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -77,14 +74,12 @@ async def test_restoring_clients(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities."""
-    state_key = (
-        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
-    )
+    state_key = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
     entry = configure_integration(hass)
     entity_registry.async_get_or_create(
         PLATFORM,
         DOMAIN,
-        f"{SERIAL}_{STATION.mac_address}",
+        f"{STATION.mac_address}",
         config_entry=entry,
     )
 

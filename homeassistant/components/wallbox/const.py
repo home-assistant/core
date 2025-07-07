@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 60
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
@@ -22,6 +22,8 @@ CHARGER_CURRENT_MODE_KEY = "current_mode"
 CHARGER_CURRENT_VERSION_KEY = "currentVersion"
 CHARGER_CURRENCY_KEY = "currency"
 CHARGER_DATA_KEY = "config_data"
+CHARGER_DATA_POST_L1_KEY = "data"
+CHARGER_DATA_POST_L2_KEY = "chargerData"
 CHARGER_DEPOT_PRICE_KEY = "depot_price"
 CHARGER_ENERGY_PRICE_KEY = "energy_price"
 CHARGER_FEATURES_KEY = "features"
@@ -32,7 +34,9 @@ CHARGER_POWER_BOOST_KEY = "POWER_BOOST"
 CHARGER_SOFTWARE_KEY = "software"
 CHARGER_MAX_AVAILABLE_POWER_KEY = "max_available_power"
 CHARGER_MAX_CHARGING_CURRENT_KEY = "max_charging_current"
+CHARGER_MAX_CHARGING_CURRENT_POST_KEY = "maxChargingCurrent"
 CHARGER_MAX_ICP_CURRENT_KEY = "icp_max_current"
+CHARGER_MAX_ICP_CURRENT_POST_KEY = "maxAvailableCurrent"
 CHARGER_PAUSE_RESUME_KEY = "paused"
 CHARGER_LOCKED_UNLOCKED_KEY = "locked"
 CHARGER_NAME_KEY = "name"
@@ -74,3 +78,4 @@ class EcoSmartMode(StrEnum):
     OFF = "off"
     ECO_MODE = "eco_mode"
     FULL_SOLAR = "full_solar"
+    DISABLED = "disabled"
