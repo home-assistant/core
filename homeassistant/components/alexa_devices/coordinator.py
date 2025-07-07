@@ -52,7 +52,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
-        except (CannotConnect,) as err:
+        except CannotConnect as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
