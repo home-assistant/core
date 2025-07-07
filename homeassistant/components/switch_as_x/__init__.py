@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
+            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_get_parent_device_id(hass, entity_id),

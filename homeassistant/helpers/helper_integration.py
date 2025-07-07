@@ -14,6 +14,7 @@ from .event import async_track_entity_registry_updated_event
 def async_handle_source_entity_changes(
     hass: HomeAssistant,
     *,
+    add_helper_config_entry_to_device: bool = True,
     helper_config_entry_id: str,
     set_source_entity_id_or_uuid: Callable[[str], None],
     source_device_id: str | None,
@@ -88,15 +89,17 @@ def async_handle_source_entity_changes(
                 helper_entity.entity_id, device_id=source_entity_entry.device_id
             )
 
-        if source_entity_entry.device_id is not None:
+        if add_helper_config_entry_to_device:
+            if source_entity_entry.device_id is not None:
+                device_registry.async_update_device(
+                    source_entity_entry.device_id,
+                    add_config_entry_id=helper_config_entry_id,
+                )
+
             device_registry.async_update_device(
-                source_entity_entry.device_id,
-                add_config_entry_id=helper_config_entry_id,
+                source_device_id, remove_config_entry_id=helper_config_entry_id
             )
 
-        device_registry.async_update_device(
-            source_device_id, remove_config_entry_id=helper_config_entry_id
-        )
         source_device_id = source_entity_entry.device_id
 
         # Reload the config entry so the helper entity is recreated with
