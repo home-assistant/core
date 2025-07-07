@@ -9,8 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import async_add_model
+
+from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -23,17 +26,17 @@ async def fixture_single_platform():
 
 
 @pytest.mark.parametrize(
-    ("model", "address", "entity_id", "value"),
+    ("model", "address", "value"),
     [
-        (Model.F1255, 49239, "binary_sensor.eb101_installed_49239", "OFF"),
-        (Model.F1255, 49239, "binary_sensor.eb101_installed_49239", "ON"),
+        (Model.F1255, 49239, "OFF"),
+        (Model.F1255, 49239, "ON"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     model: Model,
-    entity_id: str,
     address: int,
     value: Any,
     coils: dict[int, Any],
@@ -42,8 +45,5 @@ async def test_update(
     """Test setting of value."""
     coils[address] = value
 
-    await async_add_model(hass, model)
-
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state == snapshot
+    entry = await async_add_model(hass, model)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

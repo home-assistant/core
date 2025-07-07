@@ -15,8 +15,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import async_add_model
+
+from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -27,19 +30,19 @@ async def fixture_single_platform():
 
 
 @pytest.mark.parametrize(
-    ("model", "address", "entity_id", "value"),
+    ("model", "address", "value"),
     [
-        (Model.F1255, 48043, "switch.holiday_activated_48043", "INACTIVE"),
-        (Model.F1255, 48043, "switch.holiday_activated_48043", "ACTIVE"),
-        (Model.F1255, 48071, "switch.flm_1_accessory_48071", "OFF"),
-        (Model.F1255, 48071, "switch.flm_1_accessory_48071", "ON"),
+        (Model.F1255, 48043, "INACTIVE"),
+        (Model.F1255, 48043, "ACTIVE"),
+        (Model.F1255, 48071, "OFF"),
+        (Model.F1255, 48071, "ON"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     model: Model,
-    entity_id: str,
     address: int,
     value: Any,
     coils: dict[int, Any],
@@ -48,11 +51,8 @@ async def test_update(
     """Test setting of value."""
     coils[address] = value
 
-    await async_add_model(hass, model)
-
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state == snapshot
+    entry = await async_add_model(hass, model)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -76,9 +76,6 @@ async def test_turn_on(
     coils[address] = state
 
     await async_add_model(hass, model)
-
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id)
 
     # Write value
     await hass.services.async_call(
@@ -118,9 +115,6 @@ async def test_turn_off(
     coils[address] = state
 
     await async_add_model(hass, model)
-
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id)
 
     # Write value
     await hass.services.async_call(
