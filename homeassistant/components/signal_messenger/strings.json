@@ -1,0 +1,24 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "number": "Phone number",
+          "recipients": "Recipient(s)"
+        },
+        "data_description": {
+          "name": "The name for this Signal configuration",
+          "url": "The full URL to signal-cli-rest-api",
+          "number": "The phone number used to register the Signal account",
+          "recipients": "Space-separated list of phone numbers, usernames or single group to send to"
+        },
+        "description": "Setup signal-messenger through signal-cli Rest API."
+      }
+    }
+  }
+}

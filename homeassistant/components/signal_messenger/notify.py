@@ -18,11 +18,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_RECP_NR, CONF_SENDER_NR, CONF_SIGNAL_CLI_REST_API
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SENDER_NR = "number"
-CONF_RECP_NR = "recipients"
-CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
