@@ -162,6 +162,94 @@ async def test_setup_encoding(
     assert hass.states.get("sensor.mysensor").state == "tack själv"
 
 
+async def test_setup_auto_encoding_from_content_type(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with encoding auto-detected from Content-Type header."""
+    # Test with ISO-8859-1 charset in Content-Type header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode("iso-8859-1"),
+        headers={"Content-Type": "text/plain; charset=iso-8859-1"},
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                # encoding defaults to UTF-8, but should be ignored when charset present
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
+
+
+async def test_setup_encoding_fallback_no_charset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that configured encoding is used when no charset in Content-Type."""
+    # No charset in Content-Type header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode("iso-8859-1"),
+        headers={"Content-Type": "text/plain"},  # No charset!
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",  # This will be used as fallback
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
+
+
+async def test_setup_charset_overrides_encoding_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that charset in Content-Type overrides configured encoding."""
+    # Server sends UTF-8 with correct charset header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode(),
+        headers={"Content-Type": "text/plain; charset=utf-8"},
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",  # Config says ISO-8859-1, but charset=utf-8 should win
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    # This should work because charset=utf-8 overrides the iso-8859-1 config
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
+
+
 @pytest.mark.parametrize(
     ("ssl_cipher_list", "ssl_cipher_list_expected"),
     [
