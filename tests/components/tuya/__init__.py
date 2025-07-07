@@ -21,16 +21,23 @@ DEVICE_MOCKS = {
         Platform.SWITCH,
     ],
     "cwwsq_cleverio_pf100": [
+        # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,
         Platform.SENSOR,
     ],
     "cwysj_pixi_smart_drinking_fountain": [
+        # https://github.com/home-assistant/core/pull/146599
         Platform.SENSOR,
         Platform.SWITCH,
     ],
     "mcs_door_sensor": [
+        # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+    ],
+    "sfkzq_valve_controller": [
+        # https://github.com/home-assistant/core/issues/148116
+        Platform.SWITCH,
     ],
 }
 

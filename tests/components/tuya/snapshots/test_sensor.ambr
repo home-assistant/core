@@ -360,7 +360,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[mcs_door_sensor][sensor.door_sensor_battery-entry]
+# name: test_platform_setup_and_discovery[mcs_door_sensor][sensor.door_garage_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -375,7 +375,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.door_sensor_battery',
+    'entity_id': 'sensor.door_garage_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -397,16 +397,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[mcs_door_sensor][sensor.door_sensor_battery-state]
+# name: test_platform_setup_and_discovery[mcs_door_sensor][sensor.door_garage_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Door Sensor Battery',
+      'friendly_name': 'Door Garage  Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.door_sensor_battery',
+    'entity_id': 'sensor.door_garage_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
