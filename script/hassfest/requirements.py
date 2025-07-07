@@ -38,6 +38,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
+    "urllib3": "SemVer",
     "yarl": "SemVer",
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
@@ -80,6 +81,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
+    "alexa_devices": {"marisa-trie": {"setuptools"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
@@ -108,11 +110,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "devialet": {"async-upnp-client": {"async-timeout"}},
     "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
     "dlna_dms": {"async-upnp-client": {"async-timeout"}},
-    "edl21": {
-        # https://github.com/mtdcr/pysml/issues/21
-        # pysml > pyserial-asyncio
-        "pysml": {"pyserial-asyncio", "async-timeout"},
-    },
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
@@ -224,20 +221,10 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
     },
-    "mysensors": {
-        # https://github.com/theolind/pymysensors/issues/818
-        # pymysensors > pyserial-asyncio
-        "pymysensors": {"pyserial-asyncio"}
-    },
     "mystrom": {
         # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
-    },
-    "ness_alarm": {
-        # https://github.com/nickw444/nessclient/issues/73
-        # nessclient > pyserial-asyncio
-        "nessclient": {"pyserial-asyncio"}
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
@@ -259,27 +246,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
-    "osoenergy": {
-        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
-        # pyosoenergyapi > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
-    "ovo_energy": {
-        # https://github.com/timmo001/ovoenergy/issues/132
-        # ovoenergy > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
-    "pi_hole": {"hole": {"async-timeout"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
-    },
-    "rflink": {
-        # https://github.com/aequitas/python-rflink/issues/78
-        # rflink > pyserial-asyncio
-        "rflink": {"pyserial-asyncio", "async-timeout"}
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
@@ -329,10 +300,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "bluetooth": {
         # https://github.com/hbldh/bleak/pull/1718 (not yet released)
         "homeassistant": {"bleak"}
-    },
-    "eq3btsmart": {
-        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
-        "homeassistant": {"eq3btsmart"}
     },
     "python_script": {
         # Security audits are needed for each Python version

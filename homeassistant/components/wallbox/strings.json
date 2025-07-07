@@ -6,6 +6,11 @@
           "station": "Station Serial Number",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "station": "Serial number of the charger, this value can be found in the Wallbox App or in the Wallbox Portal.",
+          "username": "Username for your Wallbox Account.",
+          "password": "Password for your Wallbox Account."
         }
       },
       "reauth_confirm": {
@@ -112,6 +117,12 @@
   "exceptions": {
     "api_failed": {
       "message": "Error communicating with Wallbox API"
+    },
+    "too_many_requests": {
+      "message": "Error communicating with Wallbox API, too many requests"
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication"
     }
   }
 }

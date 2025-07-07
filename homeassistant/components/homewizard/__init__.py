@@ -23,9 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 
     api: HomeWizardEnergy
 
-    is_battery = entry.unique_id.startswith("HWE-BAT") if entry.unique_id else False
-
-    if (token := entry.data.get(CONF_TOKEN)) and is_battery:
+    if token := entry.data.get(CONF_TOKEN):
         api = HomeWizardEnergyV2(
             entry.data[CONF_IP_ADDRESS],
             token=token,
@@ -37,8 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
             clientsession=async_get_clientsession(hass),
         )
 
-        if is_battery:
-            await async_check_v2_support_and_create_issue(hass, entry)
+        await async_check_v2_support_and_create_issue(hass, entry)
 
     coordinator = HWEnergyDeviceUpdateCoordinator(hass, entry, api)
     try:
