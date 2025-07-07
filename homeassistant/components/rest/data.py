@@ -150,7 +150,14 @@ class RestData:
                 self._method, self._resource, **request_kwargs
             ) as response:
                 # Read the response
-                self.data = await response.text(encoding=self._encoding)
+                # Only use configured encoding if no charset in Content-Type header
+                # If charset is present in Content-Type, let aiohttp use it
+                if response.charset:
+                    # Let aiohttp use the charset from Content-Type header
+                    self.data = await response.text()
+                else:
+                    # Use configured encoding as fallback
+                    self.data = await response.text(encoding=self._encoding)
                 self.headers = response.headers
 
         except TimeoutError as ex:
