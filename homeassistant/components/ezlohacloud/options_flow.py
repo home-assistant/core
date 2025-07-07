@@ -16,7 +16,7 @@ from .api import (
     get_subscription_status,
     signup,
 )
-from .frp_helpers import fetch_and_update_frp_config, start_frpc
+from .frp_helpers import fetch_and_update_frp_config, start_frpc, stop_frpc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
-        # await stop_frpc(self.hass, self.hass.config_entries)
+        await stop_frpc(self.hass, self.hass.config_entries)
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):

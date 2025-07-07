@@ -118,16 +118,23 @@ async def create_stripe_session(user_id, price_id, back_ref_url):
         response.raise_for_status()
         data = response.json()
 
-        checkout_url = data.get("checkout_url")
-        if checkout_url:
-            _LOGGER.info("Stripe checkout session created.")
-            return {
-                "success": True,
-                "data": {"checkout_url": checkout_url},
-                "error": None,
-            }
-        _LOGGER.error("Stripe response missing checkout_url: %s", data)
-        return {"success": False, "data": None, "error": "Missing checkout URL"}
+        if data.get("status") is True:
+            checkout_url = data.get("data", {}).get("checkout_url")
+            if checkout_url:
+                _LOGGER.info("Stripe checkout session created.")
+                return {
+                    "success": True,
+                    "data": {"checkout_url": checkout_url},
+                    "error": None,
+                }
+            _LOGGER.error("Stripe response missing checkout_url: %s", data)
+            return {"success": False, "data": None, "error": "Missing checkout URL"}
+
+        return {
+            "success": False,
+            "data": None,
+            "error": data.get("error", "Unknown error"),
+        }
 
     except httpx.RequestError as e:
         _LOGGER.error("Stripe checkout api error: %s", e)
