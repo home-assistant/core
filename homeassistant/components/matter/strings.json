@@ -83,8 +83,8 @@
       "evse_plug": {
         "name": "Plug state"
       },
-      "evse_supply_charging_state": {
-        "name": "Supply charging state"
+      "evse_supply_state": {
+        "name": "Charger supply state"
       },
       "boost_state": {
         "name": "Boost state"
@@ -193,7 +193,7 @@
         "name": "Occupied to unoccupied delay"
       },
       "auto_relock_timer": {
-        "name": "Automatic relock timer"
+        "name": "Autorelock time"
       }
     },
     "light": {
@@ -317,6 +317,9 @@
           "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
         }
+      },
+      "estimated_end_time": {
+        "name": "Estimated end time"
       },
       "switch_current_position": {
         "name": "Current switch position"
