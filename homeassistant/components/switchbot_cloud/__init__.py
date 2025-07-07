@@ -98,7 +98,6 @@ async def make_switchbot_devices(
             for device in devices
         ]
     )
-
     return devices_data
 
 
@@ -155,12 +154,7 @@ async def make_device_data(
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Smart Lock",
-        "Smart Lock Lite",
-        "Smart Lock Pro",
-        "Smart Lock Ultra",
-    ]:
+    if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -178,6 +172,16 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
+        "Battery Circulator Fan",
+        "Circulator Fan",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
