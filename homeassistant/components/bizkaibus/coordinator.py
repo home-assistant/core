@@ -53,8 +53,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
             return []
 
         result = []
-        for i in range(3):
-            arrival = list(timetable.arrivals.values())[i]
+        for arrival in timetable.arrivals.values():
             departure = self.__departure_time(arrival)
             dataConnection = DataConnection(
                 departure=departure,
