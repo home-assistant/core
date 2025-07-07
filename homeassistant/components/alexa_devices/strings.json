@@ -603,10 +603,13 @@
       "message": "Device serial number missing: {device_id}"
     },
     "invalid_device_id": {
-      "message": "Invalid device ID specified: {device_id"
+      "message": "Invalid device ID specified: {device_id}"
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} with variant {variant} specified"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded: {entry}"
     }
   }
 }

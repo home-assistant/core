@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import (
@@ -14,8 +15,10 @@ from homeassistant.components.alexa_devices.services import (
     SERVICE_SOUND_NOTIFICATION,
     SERVICE_TEXT_COMMAND,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -96,3 +99,100 @@ async def test_send_text_service(
 
     assert mock_amazon_devices_client.call_alexa_text_command.call_count == 1
     assert mock_amazon_devices_client.call_alexa_text_command.call_args == snapshot
+
+
+@pytest.mark.parametrize(
+    ("sound", "device_id", "translation_key", "translation_placeholders"),
+    [
+        (
+            "chimes_bells",
+            "fake_device_id",
+            "invalid_device_id",
+            {"device_id": "fake_device_id"},
+        ),
+        (
+            "wrong_sound_name",
+            None,
+            "invalid_sound_value",
+            {
+                "sound": "wrong_sound_name",
+                "variant": "1",
+            },
+        ),
+    ],
+)
+async def test_invalid_parameters(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    sound: str,
+    device_id: str | None,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test invalid service parameters."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+    )
+    assert device_entry
+
+    device_id = device_id or device_entry.id
+
+    # Call Service
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SOUND_NOTIFICATION,
+            {
+                ATTR_SOUND: sound,
+                ATTR_SOUND_VARIANT: 1,
+                ATTR_DEVICE_ID: device_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+async def test_config_entry_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry not loaded."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+    )
+    assert device_entry
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Call Service
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SOUND_NOTIFICATION,
+            {
+                ATTR_SOUND: "chimes_bells",
+                ATTR_SOUND_VARIANT: 1,
+                ATTR_DEVICE_ID: device_entry.id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {"entry": mock_config_entry.title}

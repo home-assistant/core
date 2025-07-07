@@ -63,30 +63,17 @@ def async_get_entry_id_for_service_call(
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="config_entry_not_found",
-        translation_placeholders={"target": device_id},
+        translation_placeholders={"device_id": device_id},
     )
 
 
-async def _async_execute_action(
-    call: ServiceCall, attribute: str, translation_key: str
-) -> None:
+async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
     """Execute action on the device."""
     device, config_entry = async_get_entry_id_for_service_call(call)
-    value: str | None = call.data.get(attribute)
-
-    if not value:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-        )
+    assert device.serial_number
+    value: str = call.data[attribute]
 
     coordinator = config_entry.runtime_data
-    if device.serial_number is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_serial_number_missing",
-            translation_placeholders={"device_id": device.id},
-        )
 
     if attribute == ATTR_SOUND:
         variant: int = call.data[ATTR_SOUND_VARIANT]
@@ -109,12 +96,12 @@ async def _async_execute_action(
 
 async def async_send_sound_notification(call: ServiceCall) -> None:
     """Send a sound notification to a AmazonDevice."""
-    await _async_execute_action(call, ATTR_SOUND, "missing_sound_value")
+    await _async_execute_action(call, ATTR_SOUND)
 
 
 async def async_send_text_command(call: ServiceCall) -> None:
     """Send a custom command to a AmazonDevice."""
-    await _async_execute_action(call, ATTR_TEXT_COMMAND, "missing_text_command_value")
+    await _async_execute_action(call, ATTR_TEXT_COMMAND)
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
