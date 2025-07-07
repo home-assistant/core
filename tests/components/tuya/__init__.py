@@ -44,6 +44,11 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
     ],
+    "tdq_4_443": [
+        # https://github.com/home-assistant/core/issues/146845
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
 }
 
 
