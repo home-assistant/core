@@ -402,7 +402,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_automatic_relock_timer-entry]
+# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -420,7 +420,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -432,7 +432,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Automatic relock timer',
+    'original_name': 'Autorelock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -442,10 +442,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_automatic_relock_timer-state]
+# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Automatic relock timer',
+      'friendly_name': 'Mock Door Lock Autorelock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -453,14 +453,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_automatic_relock_timer-entry]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -478,7 +478,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,7 +490,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Automatic relock timer',
+    'original_name': 'Autorelock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -500,10 +500,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_automatic_relock_timer-state]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Automatic relock timer',
+      'friendly_name': 'Mock Door Lock Autorelock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -511,7 +511,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
