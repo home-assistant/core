@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.67.0
+PySwitchbot==0.68.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -2756,7 +2756,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.1.0
+sharkiq==1.1.1
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
