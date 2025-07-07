@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_update[Model.F1255-48043-switch.holiday_activated_48043-ACTIVE]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 Holiday - Activated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update[Model.F1255-48043-switch.holiday_activated_48043-INACTIVE]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 Holiday - Activated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-48071-switch.flm_1_accessory_48071-OFF]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 FLM 1 accessory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-48071-switch.flm_1_accessory_48071-ON]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 FLM 1 accessory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

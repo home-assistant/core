@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_update[Model.F1255-49239-binary_sensor.eb101_installed_49239-OFF]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 EB101 Installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-49239-binary_sensor.eb101_installed_49239-ON]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 EB101 Installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
