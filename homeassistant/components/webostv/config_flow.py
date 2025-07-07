@@ -98,7 +98,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
 
                 if not self._name:
-                    self._name = f"{DEFAULT_NAME} {client.tv_info.system['modelName']}"
+                    if model_name := client.tv_info.system.get("modelName"):
+                        self._name = f"{DEFAULT_NAME} {model_name}"
+                    else:
+                        self._name = DEFAULT_NAME
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(step_id="pairing", errors=errors)
