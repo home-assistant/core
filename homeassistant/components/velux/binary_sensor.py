@@ -51,7 +51,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         super().__init__(node, config_entry_id)
         LOGGER.info("Creating velux rain sensor from %s", node.name)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
-        self._attr_name = f"{node.name} Rain Sensor"
+        self._attr_name = f"{node.name} Rain sensor"
         self._attr_device_class = BinarySensorDeviceClass.MOISTURE
 
     async def async_update(self) -> None:
