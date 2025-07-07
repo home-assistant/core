@@ -46,7 +46,7 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> AmberConfigEnt
             translation_key="not_loaded",
             translation_placeholders={"target": entry.title},
         )
-    return cast(AmberConfigEntry, entry)
+    return entry
 
 
 def get_forecasts(channel_type: str, data: dict) -> list[JsonValueType]:
