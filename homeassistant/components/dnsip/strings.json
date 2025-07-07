@@ -30,7 +30,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "no_options": "The myip hostname requires the default resolvers and therefore cannot be configured."
     },
     "error": {
       "invalid_resolver": "Invalid IP address or port for resolver"

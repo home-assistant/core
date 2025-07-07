@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -40,12 +41,6 @@ APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required("host"): str,
-    }
-)
-
 STEP_PAIR_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("pin"): str,
@@ -66,7 +61,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial and reconfigure step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self.host = user_input[CONF_HOST]
@@ -75,15 +70,32 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
                 await self.async_set_unique_id(format_mac(self.mac))
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data={
+                            CONF_HOST: self.host,
+                            CONF_NAME: self.name,
+                            CONF_MAC: self.mac,
+                        },
+                    )
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
                 # Likely invalid IP address or device is network unreachable. Stay
                 # in the user step allowing the user to enter a different host.
                 errors["base"] = "cannot_connect"
+        else:
+            user_input = {}
+        default_host = user_input.get(CONF_HOST, vol.UNDEFINED)
+        if self.source == SOURCE_RECONFIGURE:
+            default_host = self._get_reconfigure_entry().data[CONF_HOST]
         return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST, default=default_host): str}
+            ),
             errors=errors,
         )
 
@@ -215,6 +227,12 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self.name},
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

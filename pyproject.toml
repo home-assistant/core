@@ -913,4 +913,5 @@ split-on-trailing-comma = false
 max-complexity = 25
 
 [tool.ruff.lint.pydocstyle]
+convention = "google"
 property-decorators = ["propcache.api.cached_property"]

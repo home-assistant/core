@@ -1314,7 +1314,7 @@ class PlatePowerStep(MieleEnum):
     plate_step_11 = 11
     plate_step_12 = 12
     plate_step_13 = 13
-    plate_step_14 = 4
+    plate_step_14 = 14
     plate_step_15 = 15
     plate_step_16 = 16
     plate_step_17 = 17
