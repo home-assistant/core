@@ -10,7 +10,7 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN
@@ -19,24 +19,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_add_to_device(
-    hass: HomeAssistant, entry: ConfigEntry, entity_id: str
-) -> str | None:
-    """Add our config entry to the tracked entity's device."""
+def async_get_parent_device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the parent device id."""
     registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-    device_id = None
 
-    if (
-        not (wrapped_switch := registry.async_get(entity_id))
-        or not (device_id := wrapped_switch.device_id)
-        or not (device_registry.async_get(device_id))
-    ):
-        return device_id
+    if not (wrapped_switch := registry.async_get(entity_id)):
+        return None
 
-    device_registry.async_update_device(device_id, add_config_entry_id=entry.entry_id)
-
-    return device_id
+    return wrapped_switch.device_id
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -70,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
-            source_device_id=async_add_to_device(hass, entry, entity_id),
+            source_device_id=async_get_parent_device_id(hass, entity_id),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
             source_entity_removed=source_entity_removed,
         )

@@ -222,7 +222,7 @@ async def test_device_registry_config_entry_1(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
 
     events = []
 
@@ -304,7 +304,7 @@ async def test_device_registry_config_entry_2(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
 
     events = []
 
@@ -386,7 +386,7 @@ async def test_device_registry_config_entry_3(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
     device_entry_2 = device_registry.async_get(device_entry_2.id)
     assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
 
