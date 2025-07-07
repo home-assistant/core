@@ -48,6 +48,17 @@ async def async_setup_entry(
     )
 
 
+def _parse_preset_source_id(media_id: str) -> tuple[int | None, int]:
+    source_id = None
+    if "," in media_id:
+        source_id_str, preset_id_str = media_id.split(",", maxsplit=1)
+        source_id = int(source_id_str.strip())
+        preset_id = int(preset_id_str.strip())
+    else:
+        preset_id = int(media_id)
+    return source_id, preset_id
+
+
 class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
@@ -226,7 +237,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     ) -> None:
         """Play media on the Russound zone."""
 
-        if media_type not in {RUSSOUND_MEDIA_TYPE_PRESET}:
+        if media_type != RUSSOUND_MEDIA_TYPE_PRESET:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_media_type",
@@ -234,28 +245,22 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                     "media_type": media_type,
                 },
             )
-        if media_type == RUSSOUND_MEDIA_TYPE_PRESET:
-            source_id = None
-            try:
-                if "," in media_id:
-                    source_id_str, preset_id_str = media_id.split(",", maxsplit=1)
-                    source_id = int(source_id_str.strip())
-                    preset_id = int(preset_id_str.strip())
-                else:
-                    preset_id = int(media_id)
-            except ValueError as ve:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="preset_non_integer",
-                    translation_placeholders={"preset_id": media_id},
-                ) from ve
-            if source_id:
-                await self._zone.select_source(source_id)
-                await asyncio.sleep(SELECT_SOURCE_DELAY)
-            if not self._source.presets or preset_id not in self._source.presets:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="missing_preset",
-                    translation_placeholders={"preset_id": media_id},
-                )
-            await self._zone.restore_preset(preset_id)
+
+        try:
+            source_id, preset_id = _parse_preset_source_id(media_id)
+        except ValueError as ve:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_non_integer",
+                translation_placeholders={"preset_id": media_id},
+            ) from ve
+        if source_id:
+            await self._zone.select_source(source_id)
+            await asyncio.sleep(SELECT_SOURCE_DELAY)
+        if not self._source.presets or preset_id not in self._source.presets:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_preset",
+                translation_placeholders={"preset_id": media_id},
+            )
+        await self._zone.restore_preset(preset_id)
