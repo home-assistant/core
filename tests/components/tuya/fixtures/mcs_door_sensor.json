@@ -7,10 +7,10 @@
   "online": true,
   "function": {},
   "status_range": {
-    "switch": { "type": "Boolean", "values": "{}" },
+    "switch": { "type": "Boolean", "value": {} },
     "battery": {
       "type": "Integer",
-      "values": "{\"unit\": \"\", \"min\": 0, \"max\": 500, \"scale\": 0, \"step\": 1}"
+      "value": { "unit": "", "min": 0, "max": 500, "scale": 0, "step": 1 }
     }
   },
   "status": {

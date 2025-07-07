@@ -1,4 +1,4 @@
-"""Test Tuya fan platform."""
+"""Test Tuya button platform."""
 
 from __future__ import annotations
 
@@ -19,9 +19,10 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.FAN in v]
+    "mock_device_code",
+    [k for k, v in DEVICE_MOCKS.items() if Platform.BUTTON in v],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
@@ -37,9 +38,10 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.FAN not in v]
+    "mock_device_code",
+    [k for k, v in DEVICE_MOCKS.items() if Platform.BUTTON not in v],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
 async def test_platform_setup_no_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,

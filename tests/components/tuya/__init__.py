@@ -7,9 +7,32 @@ from unittest.mock import patch
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DEVICE_MOCKS = {
+    "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cwwsq_cleverio_pf100": [
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ],
+    "cwysj_pixi_smart_drinking_fountain": [
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "mcs_door_sensor": [
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+}
 
 
 async def initialize_entry(
