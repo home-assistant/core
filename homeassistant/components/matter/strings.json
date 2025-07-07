@@ -83,8 +83,8 @@
       "evse_plug": {
         "name": "Plug state"
       },
-      "evse_supply_charging_state": {
-        "name": "Supply charging state"
+      "evse_supply_state": {
+        "name": "Charger supply state"
       },
       "boost_state": {
         "name": "Boost state"
@@ -323,6 +323,9 @@
       },
       "power_level": {
         "name": "Power level"
+      },
+      "estimated_end_time": {
+        "name": "Estimated end time"
       },
       "switch_current_position": {
         "name": "Current switch position"
