@@ -88,8 +88,6 @@ async def test_turn_on(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     # Verify written
     args = mock_connection.write_coil.call_args
     assert args
@@ -131,8 +129,6 @@ async def test_turn_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     # Verify written
     args = mock_connection.write_coil.call_args
