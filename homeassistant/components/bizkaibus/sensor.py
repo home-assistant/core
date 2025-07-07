@@ -40,9 +40,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bizkaibus public transport sensor."""
-    # name = config[CONF_NAME]
-    # stop = config[CONF_STOP_ID]
-    # route = config[CONF_ROUTE]
 
     coordinator = config_entry.runtime_data
 
@@ -53,7 +50,6 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
     """The class for handling the data."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_should_poll = True
     _attr_attribution = ATTRIBUTION
@@ -65,3 +61,5 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
             identifiers={(DOMAIN, coordinator.api.stop)},
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_unique_id = f"{coordinator.api.stop}_{'asd'}"
+        self._attr_name = coordinator.friendly_name

@@ -24,7 +24,7 @@ class DataConnection:
     """A connection data class."""
 
     departure: datetime | None
-    train_number: str
+    bus_id: str
 
 
 class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
@@ -33,6 +33,8 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
     def __init__(self, hass: HomeAssistant, api: BizkaibusData) -> None:
         """Initialize the data service."""
         self.api = api
+        self.friendly_name = api.stop
+
         super().__init__(
             hass,
             _LOGGER,
@@ -52,13 +54,16 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
         if timetable is None:
             return []
 
-        result = []
+        if timetable.name:
+            self.friendly_name = timetable.name
+
+        departures = []
         for arrival in timetable.arrivals.values():
             departure = self.__departure_time(arrival)
             dataConnection = DataConnection(
                 departure=departure,
-                train_number=arrival.line.route,
+                bus_id=arrival.line.route,
             )
-            result.append(dataConnection)
+            departures.append(dataConnection)
 
-        return result
+        return departures

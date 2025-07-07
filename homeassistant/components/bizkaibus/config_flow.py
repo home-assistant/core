@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -24,10 +25,21 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step of the config flow."""
         if user_input:
-            await self.async_set_unique_id(user_input[CONF_STOP_ID])
-            return self.async_create_entry(
-                title="Parada " + user_input[CONF_STOP_ID], data=user_input
-            )
+            api = BizkaibusData(user_input[CONF_STOP_ID])
+
+            isOnline = await api.TestConnection()
+            if isOnline:
+                timetable = await api.GetTimetable()
+
+                if timetable is not None:
+                    title = f"{user_input[CONF_STOP_ID]} {timetable.name if timetable.name is not None else timetable.id}"
+                else:
+                    title = f"{DOMAIN.capitalize()} {user_input[CONF_STOP_ID]}"
+
+                return self.async_create_entry(
+                    title=title,
+                    data=user_input,
+                )
 
         return self.async_show_form(step_id="user", data_schema=USER_DATA_SCHEMA)
 

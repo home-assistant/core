@@ -606,7 +606,7 @@ beautifulsoup4==4.13.3
 bimmer-connected[china]==0.17.2
 
 # homeassistant.components.bizkaibus
-bizkaibus==0.3.3
+bizkaibus==0.3.5
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
