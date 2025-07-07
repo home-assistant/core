@@ -1035,7 +1035,7 @@ go2rtc-client==0.2.1
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.6
+goodwe==0.4.8
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1597,7 +1597,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.76.2
+openai==1.93.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
