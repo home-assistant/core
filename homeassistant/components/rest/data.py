@@ -115,6 +115,16 @@ class RestData:
             for key, value in rendered_params.items():
                 if isinstance(value, bool):
                     rendered_params[key] = str(value).lower()
+                elif not isinstance(value, (str, int, float, type(None))):
+                    # For backward compatibility with httpx behavior, convert non-primitive
+                    # types to strings. This maintains compatibility after switching from
+                    # httpx to aiohttp. See https://github.com/home-assistant/core/issues/148153
+                    _LOGGER.debug(
+                        "REST query parameter '%s' has type %s, converting to string",
+                        key,
+                        type(value).__name__,
+                    )
+                    rendered_params[key] = str(value)
 
         _LOGGER.debug("Updating from %s", self._resource)
         # Create request kwargs
