@@ -7,7 +7,7 @@
           "address": "The Bluetooth address of the Victron device."
         },
         "data_description": {
-          "address": "This Bluetooth address is automatically discovered. You may view a device's Bluetooth address in the VictronConnect app under Settings > Product Info > Instant readout details > Encryption data > MAC Address."
+          "address": "This Bluetooth address is automatically discovered. You may view a device's Bluetooth address in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > MAC Address."
         }
       },
       "access_token": {
@@ -16,13 +16,13 @@
           "access_token": "The instant readout encryption key of the Victron device."
         },
         "data_description": {
-          "access_token": "The instant readout encryption key may be found in the VictronConnect app under Settings > Product Info > Instant readout details > Encryption data > Encryption Key."
+          "access_token": "The instant readout encryption key may be found in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > Encryption Key."
         }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_access_token": "Invalid Instant Readout Encryption Key",
+      "invalid_access_token": "Invalid instant readout encryption key",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
