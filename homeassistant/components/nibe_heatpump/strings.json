@@ -45,5 +45,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "url": "The specified URL is not well formed nor supported"
     }
+  },
+  "exceptions": {
+    "write_denied": {
+      "message": "Writing of coil {address} with value: {value} was denied"
+    },
+    "write_timeout": {
+      "message": "Timeout while writing coil {address}"
+    },
+    "write_failed": {
+      "message": "Writing of coil {address} with value: {value} failed with error: {error}"
+    }
   }
 }
