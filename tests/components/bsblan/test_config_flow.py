@@ -322,14 +322,23 @@ async def test_zeroconf_discovery_mac_from_properties_raw(
     assert len(mock_bsblan.device.mock_calls) == 1
 
 
-async def test_zeroconf_discovery_no_mac_in_announcement(
+async def test_zeroconf_discovery_no_mac_requires_auth(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     zeroconf_discovery_info_no_mac: Mock,
 ) -> None:
-    """Test Zeroconf discovery works when no MAC address is in the announcement."""
+    """Test Zeroconf discovery when no MAC in announcement and device requires auth."""
+    # Make the first API call (without auth) fail, second call (with auth) succeed
+    mock_bsblan.device.side_effect = [
+        BSBLANConnectionError,
+        mock_bsblan.device.return_value,
+    ]
+
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
     _assert_form_result(result, "discovery_confirm")
+
+    # Reset side_effect for the second call to succeed
+    mock_bsblan.device.side_effect = None
 
     result2 = await _configure_flow(
         hass,
@@ -352,6 +361,37 @@ async def test_zeroconf_discovery_no_mac_in_announcement(
         },
         "00:80:41:19:69:90",
     )
+
+    # Should be called 3 times: once without auth (fails), twice with auth (in _validate_and_create)
+    assert len(mock_bsblan.device.mock_calls) == 3
+
+
+async def test_zeroconf_discovery_no_mac_no_auth_required(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info_no_mac: Mock,
+) -> None:
+    """Test Zeroconf discovery when no MAC in announcement but device accessible without auth."""
+    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
+
+    # Should create entry directly without showing discovery_confirm form
+    _assert_create_entry_result(
+        result,
+        "00:80:41:19:69:90",  # MAC from fixture file
+        {
+            CONF_HOST: "10.0.2.60",
+            CONF_PORT: 80,
+            CONF_PASSKEY: None,
+            CONF_USERNAME: None,
+            CONF_PASSWORD: None,
+        },
+        "00:80:41:19:69:90",
+    )
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    # Should be called twice: once in zeroconf step, once in _validate_and_create
+    assert len(mock_bsblan.device.mock_calls) == 2
 
 
 async def test_zeroconf_discovery_connection_error(
@@ -590,3 +630,29 @@ async def test_connection_error_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
     # Should have been called twice: first failed, second succeeded
     assert len(mock_bsblan.device.mock_calls) == 2
+
+
+async def test_zeroconf_discovery_no_mac_duplicate_host_port(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    zeroconf_discovery_info_no_mac: Mock,
+) -> None:
+    """Test Zeroconf discovery aborts when no MAC and same host/port already configured."""
+    # Create an existing entry with same host/port but no unique_id
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.2.60",  # Same IP as discovery
+            CONF_PORT: 80,  # Same port as discovery
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id=None,  # Old entry without unique_id
+    )
+    entry.add_to_hass(hass)
+
+    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
+    _assert_abort_result(result, "already_configured")
+
+    # Should not call device API since we abort early
+    assert len(mock_bsblan.device.mock_calls) == 0
