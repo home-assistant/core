@@ -47,7 +47,7 @@ from .models import ElectricityTypeData, EnumTypeData, IntegerTypeData
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    raw_type: BaseTypeData | ElectricityTypeData = None
+    raw_type: type[BaseTypeData] = ElectricityTypeData
     subkey: str | None = None
 
 
@@ -1520,15 +1520,19 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if self.entity_description.subkey is None:
                 self._attr_extra_state_attributes = value
                 return value
-            values = self.entity_description.raw_type.from_json(value)
-            return getattr(values, self.entity_description.subkey)
+            if self.entity_description.raw_type is not None:
+                values = self.entity_description.raw_type.from_json(value)
+                return getattr(values, self.entity_description.subkey)
+            return None
 
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 self._attr_extra_state_attributes = value
                 return value
-            values = self.entity_description.raw_type.from_raw(value)
-            return getattr(values, self.entity_description.subkey)
+            if self.entity_description.raw_type is not None:
+                values = self.entity_description.raw_type.from_raw(value)
+                return getattr(values, self.entity_description.subkey)
+            return None
 
         # Valid string or enum value
         return value

@@ -141,6 +141,23 @@ class ElectricityTypeData:
         )
 
 
+@dataclass
+class RawTypeData(BaseTypeData):
+    """Raw Type Data."""
+
+    raw: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> Self:
+        """Load JSON string and return a RawTypeData object."""
+        return cls(data)
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self:
+        """Return a RawTypeData object."""
+        return cls(raw=data)
+
+
 class TuyaEntity(Entity):
     """Tuya base device."""
 
