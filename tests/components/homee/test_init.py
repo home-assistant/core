@@ -18,10 +18,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "side_eff",
+    ("side_eff", "expected_state"),
     [
-        HomeeConnectionFailedException("connection timed out"),
-        HomeeAuthFailedException("wrong username or password"),
+        (
+            HomeeConnectionFailedException("connection timed out"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            HomeeAuthFailedException("wrong username or password"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
     ],
 )
 async def test_connection_errors(
@@ -29,6 +35,7 @@ async def test_connection_errors(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     side_eff: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test if connection errors on startup are handled correctly."""
     mock_homee.get_access_token.side_effect = side_eff
@@ -36,7 +43,7 @@ async def test_connection_errors(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 async def test_connection_listener(
