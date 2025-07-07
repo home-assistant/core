@@ -31,7 +31,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             CONF_API_KEY: "apikey",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
