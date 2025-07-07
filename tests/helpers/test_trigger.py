@@ -842,14 +842,27 @@ async def test_async_track_target_selector_state_change_event(
         """Handle state change events."""
         calls.append(event)
 
-    async def set_state(entity_id, state):
-        """Set the state of an entity."""
-        hass.states.async_set(entity_id, state)
+    # List of entities to toggle state during the test. This list should be insert-only
+    # so that all entities are changed every time.
+    entities_to_set_state = []
+    # List of entities that should assert a state change when toggled. Contrary to
+    # entities_to_set_state, entities should be added and removed.
+    entities_to_assert_change = []
+    last_state = STATE_OFF
+
+    async def toggle_states():
+        """Toggle the state of all the entities in test."""
+        nonlocal last_state
+        last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
+        for entity_id in entities_to_set_state:
+            hass.states.async_set(entity_id, last_state)
         await hass.async_block_till_done()
 
-    def assert_entity_calls_and_reset(entity_id: str) -> None:
-        assert len(calls) == 1
-        assert calls[0].data["entity_id"] == entity_id
+    def assert_entity_calls_and_reset() -> None:
+        assert len(calls) == len(entities_to_assert_change)
+        for change_call in calls:
+            assert change_call.data["entity_id"] in entities_to_assert_change
+            assert change_call.data["new_state"].state == last_state
         calls.clear()
 
     config_entry = MockConfigEntry(domain="test")
@@ -889,9 +902,8 @@ async def test_async_track_target_selector_state_change_event(
 
     targeted_entity = "light.test_light"
 
-    for entity_id in (targeted_entity, device_entity, untargeted_entity):
-        hass.states.async_set(entity_id, STATE_OFF)
-    await hass.async_block_till_done()
+    entities_to_set_state.extend([targeted_entity, device_entity, untargeted_entity])
+    await toggle_states()
 
     label = lr.async_get(hass).async_create("Test Label").name
     area = ar.async_get(hass).async_create("Test Area").id
@@ -909,17 +921,9 @@ async def test_async_track_target_selector_state_change_event(
     )
 
     # Test directly targeted entity and device
-    await set_state(targeted_entity, STATE_ON)
-    await set_state(device_entity, STATE_ON)
-
-    assert len(calls) == 2
-    assert calls[0].data["entity_id"] == targeted_entity
-    assert calls[0].data["old_state"].state == STATE_OFF
-    assert calls[0].data["new_state"].state == STATE_ON
-    assert calls[1].data["entity_id"] == device_entity
-    assert calls[1].data["old_state"].state == STATE_OFF
-    assert calls[1].data["new_state"].state == STATE_ON
-    calls.clear()
+    entities_to_assert_change.extend([targeted_entity, device_entity])
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Add new entity to the targeted device -> should trigger on state change
     device_entity_2 = entity_reg.async_get_or_create(
@@ -930,89 +934,82 @@ async def test_async_track_target_selector_state_change_event(
     ).entity_id
     await hass.async_block_till_done()
 
-    await set_state(device_entity_2, STATE_ON)
-
-    assert_entity_calls_and_reset(device_entity_2)
+    entities_to_set_state.append(device_entity_2)
+    entities_to_assert_change.append(device_entity_2)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Test untargeted entity -> should not trigger
-    await set_state(untargeted_entity, STATE_ON)
-
-    assert len(calls) == 0
-    calls.clear()
+    entities_to_set_state.append(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Add label to untargeted entity -> should trigger now
     entity_reg.async_update_entity(untargeted_entity, labels={label})
     await hass.async_block_till_done()
-    await set_state(untargeted_entity, STATE_OFF)
-
-    assert_entity_calls_and_reset(untargeted_entity)
+    entities_to_assert_change.append(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Remove label from untargeted entity -> should not trigger anymore
     entity_reg.async_update_entity(untargeted_entity, labels={})
     await hass.async_block_till_done()
-    await set_state(untargeted_entity, STATE_ON)
-    await set_state(untargeted_entity, STATE_OFF)
-
-    assert len(calls) == 0
+    entities_to_assert_change.remove(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Add area to untargeted entity -> should trigger now
     entity_reg.async_update_entity(untargeted_entity, area_id=area)
     await hass.async_block_till_done()
-    await set_state(untargeted_entity, STATE_ON)
-
-    assert_entity_calls_and_reset(untargeted_entity)
+    entities_to_assert_change.append(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Remove area from untargeted entity -> should not trigger anymore
     entity_reg.async_update_entity(untargeted_entity, area_id=None)
     await hass.async_block_till_done()
-    await set_state(untargeted_entity, STATE_ON)
-    await set_state(untargeted_entity, STATE_OFF)
-
-    assert len(calls) == 0
+    entities_to_assert_change.remove(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Add area to untargeted device -> should trigger on state change
     device_reg.async_update_device(untargeted_device_entry.id, area_id=area)
     await hass.async_block_till_done()
-
-    await set_state(untargeted_device_entity, STATE_ON)
-
-    assert_entity_calls_and_reset(untargeted_device_entity)
+    entities_to_set_state.append(untargeted_device_entity)
+    entities_to_assert_change.append(untargeted_device_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Remove area from untargeted device -> should not trigger anymore
     device_reg.async_update_device(untargeted_device_entry.id, area_id=None)
     await hass.async_block_till_done()
-    await set_state(untargeted_device_entity, STATE_OFF)
-    await set_state(untargeted_device_entity, STATE_ON)
-
-    assert len(calls) == 0
+    entities_to_assert_change.remove(untargeted_device_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Set the untargeted area on the untargeted entity -> should not trigger
     untracked_area = ar.async_get(hass).async_create("Untargeted Area").id
     entity_reg.async_update_entity(untargeted_entity, area_id=untracked_area)
     await hass.async_block_till_done()
-
-    await set_state(untargeted_entity, STATE_ON)
-    assert len(calls) == 0
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Set targeted floor on the untargeted area -> should trigger now
     ar.async_get(hass).async_update(untracked_area, floor_id=floor)
     await hass.async_block_till_done()
-
-    await set_state(untargeted_entity, STATE_OFF)
-    assert_entity_calls_and_reset(untargeted_entity)
+    entities_to_assert_change.append(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # Remove untargeted area from targeted floor -> should not trigger anymore
     ar.async_get(hass).async_update(untracked_area, floor_id=None)
     await hass.async_block_till_done()
-
-    await set_state(untargeted_entity, STATE_ON)
-    await set_state(untargeted_entity, STATE_OFF)
-    assert len(calls) == 0
+    entities_to_assert_change.remove(untargeted_entity)
+    await toggle_states()
+    assert_entity_calls_and_reset()
 
     # After unsubscribing, changes should not trigger
     unsub()
 
-    for entity_id in (targeted_entity, device_entity, untargeted_entity):
-        await set_state(entity_id, STATE_OFF)
-        await set_state(entity_id, STATE_ON)
+    await toggle_states()
     assert len(calls) == 0
