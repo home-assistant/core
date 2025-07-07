@@ -108,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
-    config: dict[str, Any] = dict(entry.data)
+    config: dict[str, Any] = dict(entry.options)
     config.update(config.pop("advanced", {}))
     config.update(config.pop("auth", {}))
 
@@ -180,7 +180,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         new_config_entry_data.pop(SENSOR_DOMAIN)
 
         hass.config_entries.async_update_entry(
-            entry, version=2, data=new_config_entry_data, options={}
+            entry, version=2, options=new_config_entry_data
         )
 
     return True
