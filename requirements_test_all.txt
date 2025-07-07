@@ -82,7 +82,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.67.0
+PySwitchbot==0.68.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -418,7 +418,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.4.6
 
 # homeassistant.components.webostv
-aiowebostv==0.7.3
+aiowebostv==0.7.4
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -860,7 +860,7 @@ gTTS==2.5.3
 gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.12
+gassist-text==0.0.14
 
 # homeassistant.components.google
 gcal-sync==7.1.0
@@ -891,7 +891,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.0.0
+gios==6.1.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -1366,7 +1366,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.76.2
+openai==1.93.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1638,7 +1638,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.0
+pyenphase==2.2.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2279,7 +2279,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.1.0
+sharkiq==1.1.1
 
 # homeassistant.components.simplefin
 simplefin4py==0.0.18
