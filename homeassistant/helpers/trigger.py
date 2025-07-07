@@ -627,8 +627,8 @@ async def async_get_all_descriptions(
     return new_descriptions_cache
 
 
-class TargetSelectorStateChangeTracker:
-    """Helper class to manage state change tracking for target selectors."""
+class TargetStateChangeTracker:
+    """Helper class to manage state change tracking for targets."""
 
     def __init__(
         self,
@@ -681,6 +681,13 @@ class TargetSelectorStateChangeTracker:
                 self._state_change_unsub()
             self._track_entities_state_change()
 
+        # Subscribe to registry updates that can change the entities to track:
+        # - Entity registry: entity added/removed; entity labels changed; entity area changed.
+        # - Device registry: device labels changed; device area changed.
+        # - Area registry: area floor changed.
+        #
+        # We don't track other registries (like floor or label registries) because their
+        # changes don't affect which entities are tracked.
         self._registry_unsubs = [
             self._hass.bus.async_listen(
                 entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
@@ -723,5 +730,5 @@ def async_track_target_selector_state_change_event(
         )
         return lambda: None
 
-    tracker = TargetSelectorStateChangeTracker(hass, selector_data, job_type, action)
+    tracker = TargetStateChangeTracker(hass, selector_data, job_type, action)
     return tracker.unsub

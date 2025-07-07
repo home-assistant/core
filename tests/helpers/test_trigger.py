@@ -1010,6 +1010,5 @@ async def test_async_track_target_selector_state_change_event(
 
     # After unsubscribing, changes should not trigger
     unsub()
-
     await toggle_states()
     assert len(calls) == 0
