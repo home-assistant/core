@@ -6,6 +6,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'bluetooth',
+        '00000000-0000-0000-0000-000000000001',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
