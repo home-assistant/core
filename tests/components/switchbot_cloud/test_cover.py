@@ -299,7 +299,7 @@ async def test_tilt_open_cover(
     )
 
 
-async def test_tilt_close_cover(
+async def test_tilt_close_cover_1(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
     """test_tilt_close_cover."""
@@ -332,6 +332,42 @@ async def test_tilt_close_cover(
     assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", BlindTiltCommands.CLOSE_UP, "command", "default"
+    )
+
+
+async def test_tilt_close_cover_2(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """test_tilt_close_cover."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {"slidePosition": 45, "direction": "down"},
+        {"slidePosition": 55, "direction": "up"},
+    ]
+    cover_id = "cover.cover_1"
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
+    mock_send_command.assert_called_once_with(
+        "cover-id-1", BlindTiltCommands.CLOSE_DOWN, "command", "default"
     )
 
 
