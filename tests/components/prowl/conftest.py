@@ -17,7 +17,7 @@ API_BASE_URL = "https://api.prowlapp.com/publicapi/"
 TEST_NAME = "TestProwl"
 TEST_API_KEY = "f00f" * 10
 OTHER_API_KEY = "beef" * 10
-CONF_INPUT = {CONF_API_KEY: TEST_API_KEY, CONF_NAME: "TestProwl"}
+CONF_INPUT = {CONF_API_KEY: TEST_API_KEY, CONF_NAME: TEST_NAME}
 CONF_INPUT_NEW_KEY = {CONF_API_KEY: OTHER_API_KEY}
 INVALID_API_KEY_ERROR = {"base": "invalid_api_key"}
 TIMEOUT_ERROR = {"base": "api_timeout"}
@@ -46,6 +46,15 @@ async def configure_prowl_through_yaml(hass: HomeAssistant, mock_pyprowl_success
 @pytest.fixture
 def mock_pyprowl_success():
     """Mock a successful call to the PyProwl library."""
+    with patch("pyprowl.Prowl") as MockProwl:
+        mock_instance = MockProwl.return_value
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_pyprowl():
+    """Mock the PyProwl library."""
+
     with patch("pyprowl.Prowl") as MockProwl:
         mock_instance = MockProwl.return_value
         yield mock_instance
