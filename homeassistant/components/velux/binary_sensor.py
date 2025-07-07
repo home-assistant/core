@@ -49,7 +49,6 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
         super().__init__(node, config_entry_id)
-        LOGGER.info("Creating velux rain sensor from %s", node.name)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
         self._attr_name = f"{node.name} Rain sensor"
         self._attr_device_class = BinarySensorDeviceClass.MOISTURE
