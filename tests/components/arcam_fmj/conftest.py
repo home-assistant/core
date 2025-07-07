@@ -11,6 +11,7 @@ from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockEntityPlatform
@@ -80,6 +81,7 @@ def player_fixture(hass: HomeAssistant, state: State) -> ArcamFmj:
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.platform = MockEntityPlatform(hass)
+    player._platform_state = EntityPlatformState.ADDED
     player.async_write_ha_state = Mock()
     return player
 
