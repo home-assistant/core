@@ -34,7 +34,7 @@ async def test_fetching_subscription_with_api_error(
     caplog: pytest.LogCaptureFixture,
     mocked_cloud: Cloud,
 ) -> None:
-    """Test that we handle timeout error."""
+    """Test that we handle API errors."""
     mocked_cloud.payments.subscription_info.side_effect = payments_api.PaymentsApiError(
         "There was an error with the API"
     )
