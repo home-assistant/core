@@ -98,7 +98,7 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
 class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
     """Class to manage fetching NextDNS analytics status data from API."""
 
-    _update_interval = timedelta(minutes=5)
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
 
     async def _async_update_data_internal(self) -> AnalyticsStatus:
         """Update data via library."""
