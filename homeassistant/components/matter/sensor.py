@@ -1054,22 +1054,6 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=MatterListSensorEntityDescription(
-            key="MicrowaveOvenControlSelectedWattIndex",
-            device_class=SensorDeviceClass.ENUM,
-            translation_key="power_level",
-            list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
-        ),
-        entity_class=MatterListSensor,
-        required_attributes=(
-            clusters.MicrowaveOvenControl.Attributes.SelectedWattIndex,
-            clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
-        ),
-        # don't discover this entry if the supported state list is empty
-        secondary_value_is_not=[],
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="MicrowaveOvenControlCookTime",
             translation_key="cook_time",
