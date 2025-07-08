@@ -217,9 +217,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         devices = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
         for device in devices:
             for identifier in device.identifiers:
-                device_unique_id = identifier[1]
-                if device_unique_id in old_to_new_sensor_id:
-                    new_unique_id = old_to_new_sensor_id[device_unique_id]
+                old_device_unique_id = identifier[1]
+                if old_device_unique_id in old_to_new_sensor_id:
+                    new_unique_id = old_to_new_sensor_id[old_device_unique_id]
                     _LOGGER.debug(
                         "Migrating device %s with identifiers %s to new unique id %s",
                         device.id,
