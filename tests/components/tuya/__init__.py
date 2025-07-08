@@ -40,6 +40,11 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "rqbj_gas_sensor": [
+        # https://github.com/orgs/home-assistant/discussions/100
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     "sfkzq_valve_controller": [
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
