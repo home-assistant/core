@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form_user(hass: HomeAssistant) -> None:
+async def test_form_user_success(hass: HomeAssistant) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -22,18 +22,6 @@ async def test_form_user(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-
-    def request_get_mock(*args, **kwargs):
-        """Mock the requests.get method."""
-
-        class MockResponse:
-            def __init__(self, status_code) -> None:
-                self.status_code = status_code
-
-            def json(self):
-                return {"status": "ok"}
-
-        return MockResponse(200)
 
     with (
         patch(
