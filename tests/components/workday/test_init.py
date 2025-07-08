@@ -61,8 +61,4 @@ async def test_workday_subdiv_aliases() -> None:
         years=2025,
     )
     subdiv_aliases = country.get_subdivision_aliases()
-    assert subdiv_aliases["GES"] == [  # codespell:ignore
-        "Alsace",
-        "Champagne-Ardenne",
-        "Lorraine",
-    ]
+    assert subdiv_aliases["6AE"] == ["Alsace"]
