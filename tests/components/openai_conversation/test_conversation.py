@@ -35,6 +35,7 @@ from openai.types.responses import (
     ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses.response import IncompleteDetails
+from openai.types.responses.response_function_web_search import ActionSearch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -95,10 +96,12 @@ def mock_create_stream() -> Generator[AsyncMock]:
         )
         yield ResponseCreatedEvent(
             response=response,
+            sequence_number=0,
             type="response.created",
         )
         yield ResponseInProgressEvent(
             response=response,
+            sequence_number=0,
             type="response.in_progress",
         )
         response.status = "completed"
@@ -123,16 +126,19 @@ def mock_create_stream() -> Generator[AsyncMock]:
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
+                sequence_number=0,
                 type="response.incomplete",
             )
         elif response.status == "failed":
             yield ResponseFailedEvent(
                 response=response,
+                sequence_number=0,
                 type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
                 response=response,
+                sequence_number=0,
                 type="response.completed",
             )
 
@@ -153,20 +159,18 @@ async def test_entity(
     mock_init_component,
 ) -> None:
     """Test entity properties."""
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert state.attributes["supported_features"] == 0
 
-    hass.config_entries.async_update_entry(
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            CONF_LLM_HASS_API: "assist",
-        },
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: "assist"},
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert (
         state.attributes["supported_features"]
@@ -261,7 +265,7 @@ async def test_incomplete_response(
         "Please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -285,7 +289,7 @@ async def test_incomplete_response(
         "please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -303,7 +307,7 @@ async def test_incomplete_response(
             "OpenAI response failed: Rate limit exceeded",
         ),
         (
-            ResponseErrorEvent(type="error", message="Some error"),
+            ResponseErrorEvent(type="error", message="Some error", sequence_number=0),
             "OpenAI response error: Some error",
         ),
     ],
@@ -324,7 +328,7 @@ async def test_failed_response(
         "next natural number please",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -361,6 +365,7 @@ def create_message_item(
                 status="in_progress",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseContentPartAddedEvent(
@@ -368,6 +373,7 @@ def create_message_item(
             item_id=id,
             output_index=output_index,
             part=content,
+            sequence_number=0,
             type="response.content_part.added",
         ),
     ]
@@ -379,6 +385,7 @@ def create_message_item(
             delta=delta,
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.output_text.delta",
         )
         for delta in text
@@ -391,6 +398,7 @@ def create_message_item(
                 item_id=id,
                 output_index=output_index,
                 text="".join(text),
+                sequence_number=0,
                 type="response.output_text.done",
             ),
             ResponseContentPartDoneEvent(
@@ -398,6 +406,7 @@ def create_message_item(
                 item_id=id,
                 output_index=output_index,
                 part=content,
+                sequence_number=0,
                 type="response.content_part.done",
             ),
             ResponseOutputItemDoneEvent(
@@ -409,6 +418,7 @@ def create_message_item(
                     type="message",
                 ),
                 output_index=output_index,
+                sequence_number=0,
                 type="response.output_item.done",
             ),
         ]
@@ -435,6 +445,7 @@ def create_function_tool_call_item(
                 status="in_progress",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         )
     ]
@@ -444,6 +455,7 @@ def create_function_tool_call_item(
             delta=delta,
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.function_call_arguments.delta",
         )
         for delta in arguments
@@ -454,6 +466,7 @@ def create_function_tool_call_item(
             arguments="".join(arguments),
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.function_call_arguments.done",
         )
     )
@@ -469,6 +482,7 @@ def create_function_tool_call_item(
                 status="completed",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         )
     )
@@ -487,6 +501,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 status=None,
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseOutputItemDoneEvent(
@@ -497,6 +512,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 status=None,
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         ),
     ]
@@ -507,31 +523,42 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
     return [
         ResponseOutputItemAddedEvent(
             item=ResponseFunctionWebSearch(
-                id=id, status="in_progress", type="web_search_call"
+                id=id,
+                status="in_progress",
+                action=ActionSearch(query="query", type="search"),
+                type="web_search_call",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseWebSearchCallInProgressEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.in_progress",
         ),
         ResponseWebSearchCallSearchingEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.searching",
         ),
         ResponseWebSearchCallCompletedEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.completed",
         ),
         ResponseOutputItemDoneEvent(
             item=ResponseFunctionWebSearch(
-                id=id, status="completed", type="web_search_call"
+                id=id,
+                status="completed",
+                action=ActionSearch(query="query", type="search"),
+                type="web_search_call",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         ),
     ]
@@ -583,14 +610,57 @@ async def test_function_call(
         "Please call the test function",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.call_args.kwargs["input"][2] == {
         "id": "rs_A",
         "summary": [],
         "type": "reasoning",
+        "encrypted_content": None,
     }
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    # Don't test the prompt, as it's not deterministic
+    assert mock_chat_log.content[1:] == snapshot
+
+
+async def test_function_call_without_reasoning(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test function call from the assistant."""
+    mock_create_stream.return_value = [
+        # Initial conversation
+        (
+            *create_function_tool_call_item(
+                id="fc_1",
+                arguments=['{"para', 'm1":"call1"}'],
+                call_id="call_call_1",
+                name="test_tool",
+                output_index=1,
+            ),
+        ),
+        # Response after tool responses
+        create_message_item(id="msg_A", text="Cool", output_index=0),
+    ]
+    mock_chat_log.mock_tool_results(
+        {
+            "call_call_1": "value1",
+        }
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
@@ -644,7 +714,7 @@ async def test_function_call_invalid(
             "Please call the test function",
             "mock-conversation-id",
             Context(),
-            agent_id="conversation.openai",
+            agent_id="conversation.openai_conversation",
         )
 
 
@@ -678,7 +748,7 @@ async def test_assist_api_tools_conversion(
     ]
 
     await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.openai"
+        hass, "hello", None, Context(), agent_id="conversation.openai_conversation"
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
@@ -693,10 +763,12 @@ async def test_web_search(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test web_search_tool."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -722,7 +794,7 @@ async def test_web_search(
         "What's on the latest news?",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [

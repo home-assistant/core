@@ -17,11 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
-from .const import (
-    ENTRYDATA_ENCRYPTED_WEBSOCKET,
-    ENTRYDATA_LEGACY,
-    MOCK_ENTRY_WS_WITH_MAC,
-)
+from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, ENTRYDATA_LEGACY, ENTRYDATA_WEBSOCKET
 
 from tests.common import MockConfigEntry
 
@@ -111,7 +107,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     """Test turn on."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRY_WS_WITH_MAC,
+        data=ENTRYDATA_WEBSOCKET,
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)

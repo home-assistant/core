@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 import logging
 
 from letpot.deviceclient import LetPotDeviceClient
@@ -42,6 +43,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
             _LOGGER,
             config_entry=config_entry,
             name=f"LetPot {device.serial_number}",
+            update_interval=timedelta(minutes=10),
         )
         self._info = info
         self.device = device

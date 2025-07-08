@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -818,7 +819,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.UPDATE]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

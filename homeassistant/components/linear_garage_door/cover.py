@@ -8,12 +8,10 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LinearUpdateCoordinator
+from .coordinator import LinearConfigEntry
 from .entity import LinearEntity
 
 SUPPORTED_SUBDEVICES = ["GDO"]
@@ -23,11 +21,11 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LinearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Linear Garage Door cover."""
-    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         LinearCoverEntity(coordinator, device_id, device_data.name, sub_device_id)

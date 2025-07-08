@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from switchbot import SwitchbotModel
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,

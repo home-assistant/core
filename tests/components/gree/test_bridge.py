@@ -6,11 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
-from homeassistant.components.gree.const import (
-    COORDINATORS,
-    DOMAIN as GREE,
-    UPDATE_INTERVAL,
-)
+from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -42,13 +38,13 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [mock_device_1, mock_device_2]
     device.side_effect = [mock_device_1, mock_device_2]
 
-    await async_setup_gree(hass)
+    entry = await async_setup_gree(hass)
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 1
     assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
-    device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
+    device_infos = [x.device.device_info for x in entry.runtime_data.coordinators]
     assert device_infos[0].ip == "1.1.1.1"
     assert device_infos[1].ip == "2.2.2.2"
 
@@ -70,7 +66,7 @@ async def test_discovery_after_setup(
     assert discovery.return_value.scan_count == 2
     assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
-    device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
+    device_infos = [x.device.device_info for x in entry.runtime_data.coordinators]
     assert device_infos[0].ip == "1.1.1.2"
     assert device_infos[1].ip == "2.2.2.1"
 

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.lawn_mower import (
-    DOMAIN as LAWN_MOWER_DOMAIN,
+    DOMAIN,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
@@ -104,7 +104,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{LAWN_MOWER_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 

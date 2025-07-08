@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.vacuum import (

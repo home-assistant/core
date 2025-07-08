@@ -26,6 +26,8 @@ from .const import DEVICE_TYPE_TAGS, DISABLED_TEMP_ENTITIES, DOMAIN, MieleApplia
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -195,13 +197,13 @@ class MieleClimate(MieleEntity, ClimateEntity):
                 self._attr_name = None
 
         if description.zone == 2:
+            t_key = "zone_2"
             if self.device.device_type in (
                 MieleAppliance.FRIDGE_FREEZER,
                 MieleAppliance.WINE_CABINET_FREEZER,
             ):
                 t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-            else:
-                t_key = "zone_2"
+
         elif description.zone == 3:
             t_key = "zone_3"
 
@@ -232,11 +234,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         try:
             await self.api.set_target_temperature(
-                self._device_id, temperature, self.entity_description.zone
+                self._device_id,
+                cast(float, kwargs.get(ATTR_TEMPERATURE)),
+                self.entity_description.zone,
             )
         except aiohttp.ClientError as err:
             raise HomeAssistantError(

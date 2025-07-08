@@ -83,14 +83,14 @@ from . import setup_samsungtv_entry
 from .const import (
     ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_LEGACY,
-    MOCK_ENTRY_WS_WITH_MAC,
+    ENTRYDATA_WEBSOCKET,
     SAMPLE_DEVICE_INFO_WIFI,
 )
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
 )
 
 ENTITY_ID = f"{MP_DOMAIN}.mock_title"
@@ -409,7 +409,7 @@ async def test_update_ws_connection_failure(
         patch.object(
             remote_websocket,
             "start_listening",
-            side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
+            side_effect=ConnectionFailure({"event": "ms.voiceApp.hide"}),
         ),
         patch.object(remote_websocket, "is_alive", return_value=False),
     ):
@@ -419,8 +419,39 @@ async def test_update_ws_connection_failure(
 
     assert (
         "Unexpected ConnectionFailure trying to get remote for fake_host, please "
-        'report this issue: ConnectionFailure(\'{"event": "ms.voiceApp.hide"}\')'
+        "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})"
         in caplog.text
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_update_ws_connection_failure_channel_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    remote_websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing update tv connection failure exception."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with (
+        patch.object(
+            remote_websocket,
+            "start_listening",
+            side_effect=ConnectionFailure({"event": "ms.channel.timeOut"}),
+        ),
+        patch.object(remote_websocket, "is_alive", return_value=False),
+    ):
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "Channel timeout occurred trying to get remote for fake_host: "
+        "ConnectionFailure({'event': 'ms.channel.timeOut'})" in caplog.text
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -708,8 +739,8 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remote_websocket: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    remote_websocket.app_list_data = load_json_object_fixture(
-        "ws_installed_app_event.json", DOMAIN
+    remote_websocket.app_list_data = await async_load_json_object_fixture(
+        hass, "ws_installed_app_event.json", DOMAIN
     )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -749,8 +780,8 @@ async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remote_websocket: Mock, rest_api: Mock
 ) -> None:
     """Test for turn_off."""
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE43LS003.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
     )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -996,7 +1027,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     """Test turn on."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRY_WS_WITH_MAC,
+        data=ENTRYDATA_WEBSOCKET,
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1173,8 +1204,8 @@ async def test_play_media_app(hass: HomeAssistant, remote_websocket: Mock) -> No
 @pytest.mark.usefixtures("rest_api")
 async def test_select_source_app(hass: HomeAssistant, remote_websocket: Mock) -> None:
     """Test for select_source."""
-    remote_websocket.app_list_data = load_json_object_fixture(
-        "ws_installed_app_event.json", DOMAIN
+    remote_websocket.app_list_data = await async_load_json_object_fixture(
+        hass, "ws_installed_app_event.json", DOMAIN
     )
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remote_websocket.send_commands.reset_mock()

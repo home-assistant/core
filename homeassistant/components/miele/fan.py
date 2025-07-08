@@ -27,6 +27,8 @@ from .const import DOMAIN, POWER_OFF, POWER_ON, VENTILATION_STEP, MieleAppliance
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 SPEED_RANGE = (1, 4)

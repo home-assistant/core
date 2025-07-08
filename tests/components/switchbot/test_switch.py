@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,

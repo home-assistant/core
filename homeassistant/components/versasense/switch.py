@@ -84,7 +84,7 @@ class VActuator(SwitchEntity):
         return self._is_on
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the actuator is available."""
         return self._available
 

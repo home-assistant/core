@@ -6,7 +6,7 @@ import logging
 
 from dns.resolver import LifetimeTimeout
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 
 from homeassistant.core import HomeAssistant
 
