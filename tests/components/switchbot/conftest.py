@@ -140,6 +140,7 @@ async def switchbot_device(
     mock_switchbot_lock: AsyncMock,
     mock_switchbot_air_purifier: AsyncMock,
     mock_switchbot_ceiling_light: AsyncMock,
+    mock_switchbot_circulator_fan: AsyncMock,
     mock_switchbot_color_bulb: AsyncMock,
 ) -> None:
     """Fixture to create a mock Switchbot device."""
@@ -226,6 +227,35 @@ async def mock_switchbot_roller_shade() -> AsyncGenerator[dict[str, AsyncMock]]:
             "close": mock_close,
             "stop": mock_stop,
             "set_position": mock_set_position,
+        }
+
+
+@pytest.fixture
+async def mock_switchbot_circulator_fan() -> AsyncGenerator[dict[str, AsyncMock]]:
+    """Fixture to create a mock Switchbot device."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.set_preset_mode"
+        ) as mock_set_preset_mode,
+        patch(
+            "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.set_percentage"
+        ) as mock_set_percentage,
+        patch(
+            "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.set_oscillation"
+        ) as mock_set_oscillation,
+        patch(
+            "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.turn_on"
+        ) as mock_turn_on,
+        patch(
+            "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.turn_off"
+        ) as mock_turn_off,
+    ):
+        yield {
+            "set_preset_mode": mock_set_preset_mode,
+            "set_percentage": mock_set_percentage,
+            "set_oscillation": mock_set_oscillation,
+            "turn_on": mock_turn_on,
+            "turn_off": mock_turn_off,
         }
 
 
