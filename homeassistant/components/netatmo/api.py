@@ -26,7 +26,7 @@ def get_api_scopes(auth_implementation: str) -> Iterable[str]:
     return sorted(pyatmo.const.ALL_SCOPES)
 
 
-class AsyncConfigEntryNetatmoAuth(pyatmo.AbstractAsyncAuth):  # type: ignore[misc]
+class AsyncConfigEntryNetatmoAuth(pyatmo.AbstractAsyncAuth):
     """Provide Netatmo authentication tied to an OAuth2 based config entry."""
 
     def __init__(
