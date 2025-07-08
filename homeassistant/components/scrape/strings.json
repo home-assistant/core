@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "resource_error": "Could not update rest data. Verify your configuration"
+      "resource_error": "Could not update rest data. Verify your configuration",
+      "no_data": "Rest data is empty. Verify your configuration"
     },
     "step": {
       "user": {
@@ -89,6 +90,10 @@
     }
   },
   "options": {
+    "error": {
+      "resource_error": "[%key:component::scrape::config::error::resource_error%]",
+      "no_data": "[%key:component::scrape::config::error::no_data%]"
+    },
     "step": {
       "init": {
         "data": {
