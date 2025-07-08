@@ -1,6 +1,20 @@
+"""config_flow.py
+
+Config flow for Greencell EVSE integration in Home Assistant.
+
+This module implements:
+- EVSEConfigFlow: an asyncio-based MQTT discovery flow that:
+  * Subscribes to the GREENCELL_DISC_TOPIC to listen for device response messages.
+  * Publishes a BROADCAST discovery request to GREENCELL_BROADCAST_TOPIC.
+  * Waits up to DISCOVERY_TIMEOUT seconds for a response, then aborts or continues.
+  * Extracts the device serial number from the discovery payload.
+  * Determines the device model name (Habu Den or Other) from the serial prefix.
+  * Registers a unique ID and creates the config entry with the serial_number.
+"""
+
 import asyncio
-import logging
 import json
+import logging
 from typing import Any
 
 from homeassistant import config_entries
@@ -8,13 +22,13 @@ from homeassistant.components import mqtt
 from homeassistant.core import callback
 
 from .const import (
+    DISCOVERY_TIMEOUT,
     DOMAIN,
     GREENCELL_BROADCAST_TOPIC,
     GREENCELL_DISC_TOPIC,
     GREENCELL_HABU_DEN,
-    GREENCELL_OTHER_DEVICE,
     GREENCELL_HABU_DEN_SERIAL_PREFIX,
-    DISCOVERY_TIMEOUT,
+    GREENCELL_OTHER_DEVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,8 +48,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get device name based on serial number."""
         if serial_number.startswith(GREENCELL_HABU_DEN_SERIAL_PREFIX):
             return GREENCELL_HABU_DEN
-        else:
-            return GREENCELL_OTHER_DEVICE
+        return GREENCELL_OTHER_DEVICE
 
     async def _publish_disc_request(self):
         """Publish a discovery request to the MQTT topic."""
@@ -57,7 +70,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await asyncio.wait_for(
                 self.discovery_event.wait(), timeout=DISCOVERY_TIMEOUT
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Device discovery timed out")
             return self.async_abort(reason="discovery_timeout")
         finally:
@@ -74,7 +87,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured()
 
-        _LOGGER.info(f"Device {serial_number} successfully added via config flow")
+        _LOGGER.info("Device %s successfully added via config flow", serial_number)
 
         dev_name = self.get_device_name(serial_number)
         return self.async_create_entry(
@@ -92,4 +105,4 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.discovery_data = payload
             self.discovery_event.set()
         except json.JSONDecodeError:
-            _LOGGER.error(f"Failed to decode MQTT message payload: {msg.payload}")
+            _LOGGER.error("Failed to decode MQTT message payload: %s", msg.payload)

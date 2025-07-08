@@ -1,4 +1,17 @@
-from typing import Callable
+"""helper.py
+
+Helper class for managing Home Assistant access levels for Greencell EVSE devices.
+
+Classes:
+- GreencellAccess: tracks the current access level (DISABLED, READ_ONLY, EXECUTE, OFFLINE),
+  notifies registered listeners on changes, and provides utility methods:
+    * update(new_access_level: str) – parse and set a new access level from its string name.
+    * register_listener(listener: Callable) – add callbacks to invoke when access changes.
+    * can_execute() -> bool – returns True if the level allows executing commands.
+    * is_disabled() -> bool – returns True if access is DISABLED or OFFLINE.
+"""
+
+from collections.abc import Callable
 import logging
 
 from .const import GreencellHaAccessLevelEnum as AccessLevel
@@ -15,18 +28,9 @@ class GreencellAccess:
 
     def update(self, new_access_level: str) -> None:
         """Update the access level and notify listeners."""
-        if new_access_level == "DISABLED":
-            self._access_level = AccessLevel.DISABLED
-        elif new_access_level == "READ":
-            self._access_level = AccessLevel.READ_ONLY
-        elif new_access_level == "EXECUTE":
-            self._access_level = AccessLevel.EXECUTE
-        elif new_access_level == "OFFLINE":
-            self._access_level = AccessLevel.OFFLINE
-        else:
-            _LOGGER.error(f"Invalid access level: {new_access_level}")
-            return
-
+        self._access_level = AccessLevel.__members__.get(
+            new_access_level, AccessLevel.DISABLED
+        )
         self._notify_listeners()
 
     def register_listener(self, listener: Callable[[], None]) -> None:

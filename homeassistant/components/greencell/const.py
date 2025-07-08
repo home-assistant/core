@@ -1,23 +1,46 @@
+"""const.py
+
+Core constants and enumerations for the Greencell EVSE Home Assistant integration.
+
+Contents:
+- EvseTypeStringEnum: base enum class generating string values from member names.
+- EvseStateEnum: valid EVSE states (IDLE, CONNECTED, WAITING_FOR_CAR, CHARGING, FINISHED, ERROR_CAR, ERROR_EVSE, UNKNOWN).
+- GreencellHaAccessLevelEnum: Home Assistant access levels (DISABLED, READ_ONLY, EXECUTE, OFFLINE).
+- DOMAIN and MANUFACTURER identifiers for the integration.
+- Default current limits: DEFAULT_MIN_CURRENT, DEFAULT_MAX_CURRENT_OTHER, DEFAULT_MAX_CURRENT_HABU_DEN.
+- MQTT topics for broadcast and discovery.
+- Device name templates: GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE.
+- Serial number prefix for Habu Den devices.
+- Discovery and retry timing constants: DISCOVERY_TIMEOUT, SET_CURRENT_RETRY_TIME.
+"""
+
+from enum import Enum, auto
 from typing import Final
-from enum import Enum
 
 
-class EvseStateEnum(Enum):
-    IDLE = (1,)
-    CONNECTED = (2,)
-    WAITING_FOR_CAR = (3,)
-    CHARGING = (4,)
-    FINISHED = (5,)
-    ERROR_CAR = (6,)
-    ERROR_EVSE = (7,)
-    UNKNOWN = 8
+class EvseTypeStringEnum(Enum):
+    """Declaration of EVSE types as string enums."""
+
+    def _generate_next_value_(name, start, count, last_values):
+        return name
 
 
-class GreencellHaAccessLevelEnum(Enum):
-    DISABLED = (0,)
-    READ_ONLY = (1,)
-    EXECUTE = (2,)
-    OFFLINE = 3
+class EvseStateEnum(EvseTypeStringEnum):
+    IDLE = auto()
+    CONNECTED = auto()
+    WAITING_FOR_CAR = auto()
+    CHARGING = auto()
+    FINISHED = auto()
+    ERROR_CAR = auto()
+    ERROR_EVSE = auto()
+    UNKNOWN = auto()
+
+
+class GreencellHaAccessLevelEnum(EvseTypeStringEnum):
+    DISABLED = auto()
+    READ_ONLY = auto()
+    EXECUTE = auto()
+    OFFLINE = auto()
 
 
 # Greencell constants
@@ -48,3 +71,4 @@ GREENCELL_HABU_DEN_SERIAL_PREFIX = "EVGC02"
 # Other constants
 
 DISCOVERY_TIMEOUT = 30.0
+SET_CURRENT_RETRY_TIME = 15

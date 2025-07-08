@@ -1,22 +1,44 @@
-import json
-import logging
+"""sensors.py
+
+Home Assistant integration module for Greencell EVSE sensor entities over MQTT.
+
+Provides:
+- Data storage classes:
+  * Habu3PhaseSensorData: tracks three-phase values (l1, l2, l3).
+  * HabuSingleSensorData: stores single-value metrics (power, status).
+- Sensor base classes:
+  * HabuSensor: abstract base for all sensors with common device identification and availability logic.
+  * Habu3PhaseSensor: abstract for per-phase sensors (current, voltage).
+  * HabuSingleSensor: abstract for single-value sensors (power, status).
+- Concrete sensor implementations:
+  * HabuCurrentSensor: converts mA→A with three decimals.
+  * HabuVoltageSensor: formats voltage with two decimals.
+  * HabuPowerSensor: formats power with one decimal.
+  * HabuStatusSensor: reports raw status strings.
+- setup_sensors(): subscribes to MQTT topics for current, voltage, power, status, and device_state;
+  updates sensor state objects and schedules Home Assistant state updates.
+- async_setup_platform / async_setup_entry: legacy YAML and config-entry setup hooks.
+"""
+
 from abc import ABC, abstractmethod
+import json
+from json import JSONDecodeError
+import logging
 
 from homeassistant.components.mqtt import async_subscribe
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.config_entries import ConfigEntry
 
 from .const import (
-    MANUFACTURER,
     GREENCELL_HABU_DEN,
-    GREENCELL_OTHER_DEVICE,
     GREENCELL_HABU_DEN_SERIAL_PREFIX,
+    GREENCELL_OTHER_DEVICE,
+    MANUFACTURER,
+    GreencellHaAccessLevelEnum as AccessLevel,
 )
-
-from .const import GreencellHaAccessLevelEnum as AccessLevel
 from .helper import GreencellAccess
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,8 +89,7 @@ class HabuSensor(SensorEntity, ABC):
         serial_number: str,
         access: GreencellAccess,
     ) -> None:
-        """
-        :param sensor_name: Name of the sensor displayed in Home Assistant
+        """:param sensor_name: Name of the sensor displayed in Home Assistant
         :param unit: Unit of measurement (e.g. "A" or "V")
         :param sensor_type: Sensor type (e.g. "current", "voltage" or another for single sensors)
         :param serial_number: Serial number of the device
@@ -87,8 +108,7 @@ class HabuSensor(SensorEntity, ABC):
         """Return the device name based on its type."""
         if self._device_is_habu_den():
             return GREENCELL_HABU_DEN
-        else:
-            return GREENCELL_OTHER_DEVICE
+        return GREENCELL_OTHER_DEVICE
 
     @property
     def unique_id(self) -> str:
@@ -105,11 +125,9 @@ class HabuSensor(SensorEntity, ABC):
         """Convert the raw value to a format suitable for display.
         Must be implemented in derived classes.
         """
-        pass
 
     def update(self) -> None:
         """Update method - updates are handled externally (e.g. via MQTT callbacks)."""
-        pass
 
     @property
     def device_info(self) -> dict:
@@ -131,7 +149,6 @@ class HabuSensor(SensorEntity, ABC):
         """Return the icon for the sensor.
         Must be implemented in derived classes.
         """
-        pass
 
     @property
     def available(self) -> bool:
@@ -161,8 +178,7 @@ class Habu3PhaseSensor(HabuSensor, ABC):
         serial_number: str,
         access: GreencellAccess,
     ) -> None:
-        """
-        :param sensor_data: Object storing 3-phase data
+        """:param sensor_data: Object storing 3-phase data
         :param phase: Phase identifier ('l1', 'l2', 'l3')
         :param sensor_name: Name of the sensor displayed in Home Assistant
         :param unit: Unit of measurement
@@ -210,9 +226,10 @@ class HabuCurrentSensor(Habu3PhaseSensor):
     def convert_value(self, value) -> str:
         """Convert the raw current value in mA to a string in A with 3 decimal places."""
         try:
-            return str(round(float(value) / 1000, 3))
-        except Exception as ex:
-            _LOGGER.error(f"Cannot convert current: {ex}")
+            numeric = float(value)
+            return f"{numeric / 1000:.3f}"
+        except (ValueError, TypeError) as ex:
+            _LOGGER.error("Cannot convert current: %s", ex)
             return str(value)
 
     @property
@@ -244,9 +261,10 @@ class HabuVoltageSensor(Habu3PhaseSensor):
     def convert_value(self, value) -> str:
         """Convert the raw voltage value to a string in V with 2 decimal places."""
         try:
-            return str(round(float(value), 2))
-        except Exception as ex:
-            _LOGGER.error(f"Cannot convert voltage: {ex}")
+            numeric = float(value)
+            return f"{numeric:.2f}"
+        except (ValueError, TypeError) as ex:
+            _LOGGER.error("Cannot convert voltage: %s", ex)
             return str(value)
 
     @property
@@ -284,7 +302,6 @@ class HabuSingleSensor(HabuSensor):
     @abstractmethod
     def convert_value(self, raw_value) -> str:
         """Concrete class should convert the raw value."""
-        pass
 
     @property
     def unique_id(self) -> str:
@@ -315,9 +332,10 @@ class HabuPowerSensor(HabuSingleSensor):
         if raw_value.data is None:
             return "0.0"
         try:
-            return str(round(float(raw_value.data), 1))
-        except Exception as ex:
-            _LOGGER.error(f"Cannot convert power: {ex}")
+            numeric = float(raw_value.data)
+            return f"{numeric:.1f}"
+        except (ValueError, TypeError, AttributeError) as ex:
+            _LOGGER.error("Cannot convert power: %s", ex)
             return "0.0"
 
     @property
@@ -348,8 +366,8 @@ class HabuStatusSensor(HabuSingleSensor):
         """Convert the raw status value to a string."""
         try:
             return str(raw_value.data)
-        except Exception as ex:
-            _LOGGER.error(f"Cannot convert status: {ex}")
+        except (AttributeError, TypeError) as ex:
+            _LOGGER.error("Cannot convert status: %s", ex)
             return "UNKNOWN"
 
     @property
@@ -441,55 +459,108 @@ async def setup_sensors(
         """Handle the current message."""
         try:
             data = json.loads(msg.payload)
+        except JSONDecodeError as ex:
+            _LOGGER.error("Invalid JSON payload for current data: %s", ex)
+            return
+
+        try:
             current_data_obj.update_data(data)
-            for sensor in current_sensors:
+        except (KeyError, TypeError, ValueError) as ex:
+            _LOGGER.error("Error updating current data object: %s", ex)
+            return
+
+        for sensor in current_sensors:
+            try:
                 sensor.async_schedule_update_ha_state(True)
-        except Exception as ex:
-            _LOGGER.error(f"Error processing current data: {ex}")
+            except AttributeError as ex:
+                _LOGGER.error("Error scheduling update for sensor: %s", ex)
 
     @callback
     def voltage_message_received(msg) -> None:
         """Handle the voltage message."""
         try:
             data = json.loads(msg.payload)
+        except JSONDecodeError as ex:
+            _LOGGER.error("Invalid JSON payload for voltage data: %s", ex)
+            return
+
+        try:
             voltage_data_obj.update_data(data)
-            for sensor in voltage_sensors:
+        except (KeyError, TypeError, ValueError) as ex:
+            _LOGGER.error("Error updating voltage data object: %s", ex)
+            return
+
+        for sensor in voltage_sensors:
+            try:
                 sensor.async_schedule_update_ha_state(True)
-        except Exception as ex:
-            _LOGGER.error(f"Error processing voltage data: {ex}")
+            except AttributeError as ex:
+                _LOGGER.error("Error scheduling update for sensor: %s", ex)
 
     @callback
     def power_message_received(msg) -> None:
         """Handle the power message."""
         try:
             data = json.loads(msg.payload)
-            power_data_obj.update_data(data.get("momentary"))
+        except JSONDecodeError as ex:
+            _LOGGER.error("Invalid JSON payload for power data: %s", ex)
+            return
+
+        momentary = data.get("momentary")
+        try:
+            power_data_obj.update_data(momentary)
+        except (KeyError, TypeError, ValueError) as ex:
+            _LOGGER.error("Error updating power data object: %s", ex)
+            return
+
+        try:
             power_sensor.async_schedule_update_ha_state(True)
-        except Exception as ex:
-            _LOGGER.error(f"Error processing power data: {ex}")
+        except AttributeError as ex:
+            _LOGGER.error("Error scheduling update for power sensor: %s", ex)
 
     @callback
     def status_message_received(msg) -> None:
         """Handle the status message. If the device is offline, disable the entity."""
+
         try:
             data = json.loads(msg.payload)
-            state = data.get("state")
-            if "OFFLINE" in state:
-                access.update("OFFLINE")
-            state_data_obj.update_data(data.get("state"))
+        except JSONDecodeError as ex:
+            _LOGGER.error("Invalid JSON payload for status data: %s", ex)
+            return
+
+        state = data.get("state")
+        if not isinstance(state, str):
+            _LOGGER.error("State value is not a string: %s", state)
+            return
+
+        if "OFFLINE" in state:
+            access.update("OFFLINE")
+
+        try:
+            state_data_obj.update_data(state)
+        except (KeyError, TypeError, ValueError) as ex:
+            _LOGGER.error("Error updating state data object: %s", ex)
+            return
+
+        try:
             state_sensor.async_schedule_update_ha_state(True)
-        except Exception as ex:
-            _LOGGER.error(f"Error processing status data: {ex}")
+        except AttributeError as ex:
+            _LOGGER.error("Error scheduling update for state sensor: %s", ex)
 
     @callback
     def device_state_message_received(msg) -> None:
         """Handle the device state message. If device was offline, enable the entity."""
         try:
             data = json.loads(msg.payload)
-            if "level" in data:
-                access.update(data["level"])
-        except json.JSONDecodeError as e:
-            _LOGGER.error("Error processing device state data: {ex}")
+        except JSONDecodeError as ex:
+            _LOGGER.error("Invalid JSON payload for device state data: %s", ex)
+            return
+
+        level = data.get("level")
+        if level is not None:
+            try:
+                access.update(level)
+            except (TypeError, ValueError, KeyError) as ex:
+                _LOGGER.error("Error updating access level: %s", ex)
 
     await async_subscribe(hass, mqtt_topic_current, current_message_received)
     await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)

@@ -1,23 +1,39 @@
-import logging
-import json
-from typing import Callable
+"""button.py
 
-from homeassistant.components.mqtt import async_subscribe
+Home Assistant integration module providing start/stop charging buttons for Greencell EVSE devices.
+
+This module includes:
+- EvseStateData: internal state tracker for EVSE (UNKNOWN, CONNECTED, WAITING_FOR_CAR, CHARGING, FINISHED, ERROR).
+- EVSEChargingButton base class: common logic for MQTT command publishing and HA entity updates.
+- StartChargingButton and StopChargingButton: concrete button entities that send "START" and "STOP" commands.
+- async_setup_platform and async_setup_entry: set up button entities from YAML configuration or config entries.
+- MQTT subscriptions to device_state (access level) and status (EVSE state) topics to update availability and state.
+
+Usage:
+- Automatically creates and registers ButtonEntity instances for controlling EVSE charging.
+- Buttons become available based on both EVSE state and user access level.
+- Integrates with the Greencell MQTT topics to send commands and listen for state changes.
+"""
+
+from collections.abc import Callable
+import json
+import logging
+
 from homeassistant.components.button import ButtonEntity
+from homeassistant.components.mqtt import async_subscribe
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.config_entries import ConfigEntry
 
 from .const import (
+    GREENCELL_HABU_DEN,
+    GREENCELL_HABU_DEN_SERIAL_PREFIX,
+    GREENCELL_OTHER_DEVICE,
+    MANUFACTURER,
     EvseStateEnum,
     GreencellHaAccessLevelEnum as AccessLevel,
-    MANUFACTURER,
-    GREENCELL_HABU_DEN,
-    GREENCELL_OTHER_DEVICE,
-    GREENCELL_HABU_DEN_SERIAL_PREFIX,
 )
-
 from .helper import GreencellAccess
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,39 +48,24 @@ class EvseStateData:
 
     def update(self, new_state: str) -> None:
         """Update the EVSE state based on the received message."""
-        if "IDLE" == new_state:
-            self._state = EvseStateEnum.IDLE
-        elif "CONNECTED" == new_state:
-            self._state = EvseStateEnum.CONNECTED
-        elif "WAITING_FOR_CAR" == new_state:
-            self._state = EvseStateEnum.WAITING_FOR_CAR
-        elif "CHARGING" == new_state:
-            self._state = EvseStateEnum.CHARGING
-        elif "FINISHED" == new_state:
-            self._state = EvseStateEnum.FINISHED
-        elif "ERROR_CAR" == new_state:
-            self._state = EvseStateEnum.ERROR_CAR
-        elif "ERROR_EVSE" == new_state:
-            self._state = EvseStateEnum.ERROR_EVSE
-        else:
-            self._state = EvseStateEnum.UNKNOWN
+        # If new_state matches one of the enum names, use it; otherwise fall back to UNKNOWN
+        self._state = EvseStateEnum.__members__.get(new_state, EvseStateEnum.UNKNOWN)
 
         self._notify_listeners()
-        _LOGGER.debug(f"EVSE state updated to {self._state}")
-
-    def is_charging(self) -> bool:
-        """Check if the EVSE is currently charging and can be stopped."""
-        return EvseStateEnum.CHARGING == self._state
+        _LOGGER.debug("EVSE state updated to %s", new_state)
 
     def can_be_stopped(self) -> bool:
-        """Check if the EVSE is in a state where charging can be stopped."""
-        return EvseStateEnum.WAITING_FOR_CAR == self._state
+        """Check if the EVSE is in a state where charging can be stopped (when charging process is allowed by user)."""
+        return (
+            self._state == EvseStateEnum.WAITING_FOR_CAR
+            or self._state == EvseStateEnum.CHARGING
+        )
 
     def can_be_started(self) -> bool:
         """Check if the EVSE is in a state where charging can be started."""
         return (
-            EvseStateEnum.FINISHED == self._state
-            or EvseStateEnum.CONNECTED == self._state
+            self._state == EvseStateEnum.FINISHED
+            or self._state == EvseStateEnum.CONNECTED
         )
 
     def set_charging(self, value: bool) -> None:
@@ -110,8 +111,7 @@ class EVSEChargingButton(ButtonEntity):
         """Return the device name based on its type."""
         if self._device_is_habu_den():
             return GREENCELL_HABU_DEN
-        else:
-            return GREENCELL_OTHER_DEVICE
+        return GREENCELL_OTHER_DEVICE
 
     @property
     def unique_id(self) -> str:
@@ -151,7 +151,6 @@ class EVSEChargingButton(ButtonEntity):
 
     def _update_evse_state(self) -> None:
         """To be implemented in subclasses if needed."""
-        pass
 
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to Home Assistant."""
@@ -205,9 +204,7 @@ class StopChargingButton(EVSEChargingButton):
     @property
     def available(self) -> bool:
         """Return True if the button is available (when device can charge / is charging)."""
-        return (
-            self._evse_state.is_charging() or self._evse_state.can_be_stopped()
-        ) and self._access.can_execute()
+        return (self._evse_state.can_be_stopped()) and self._access.can_execute()
 
     def _update_evse_state(self) -> None:
         """Update the EVSE state to indicate that charging has stopped."""
@@ -279,9 +276,9 @@ async def _setup_evse_buttons(
                 else:
                     evse_state_object.update(state)
         except json.JSONDecodeError as e:
-            _LOGGER.error(f"Error decoding JSON message: {e}")
+            _LOGGER.error("Error decoding JSON message: %s", e)
         except Exception as e:
-            _LOGGER.error(f"Unexpected error: {e}")
+            _LOGGER.error("Unexpected error: %s", e)
 
     @callback
     def device_state_msg_received(msg) -> None:
@@ -291,9 +288,9 @@ async def _setup_evse_buttons(
             if "level" in data:
                 access.update(data["level"])
         except json.JSONDecodeError as e:
-            _LOGGER.error(f"Failed to decode HA access message: {e}")
+            _LOGGER.error("Failed to decode HA access message: %s", e)
         except Exception as e:
-            _LOGGER.error(f"Unexpected error: {e}")
+            _LOGGER.error("Unexpected error: %s", e)
 
     await async_subscribe(hass, mqtt_ha_access_topic, device_state_msg_received)
     await async_subscribe(hass, mqtt_topic_status, state_msg_received)
