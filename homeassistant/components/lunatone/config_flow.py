@@ -45,14 +45,15 @@ DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
 )
 RECONFIGURE_SCHEMA = DATA_SCHEMA
+CONF_SCAN_METHOD = "device_scan_method"
 DALI_SCAN_SCHEMA = vol.Schema(
     {
         vol.Required(
-            "device_scan_method", default=DEFAULT_DALI_DEVICE_SCAN_METHOD
+            CONF_SCAN_METHOD, default=DEFAULT_DALI_DEVICE_SCAN_METHOD
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=DALI_DEVICE_SCAN_METHODS,
-                translation_key="device_scan_method",
+                translation_key=CONF_SCAN_METHOD,
                 mode=selector.SelectSelectorMode.LIST,
             ),
         ),
@@ -146,7 +147,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         step_id = "dali"
         errors: dict[str, str] = {}
         if user_input is not None:
-            method = user_input["device_scan_method"]
+            method = user_input[CONF_SCAN_METHOD]
             if method == DALIDeviceScanMethod.DO_NOTHING:  # Skip device scan
                 return self._create_entry()
             if not self.dali_device_scan_task:
