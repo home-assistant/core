@@ -106,7 +106,7 @@ class NetatmoDeviceEntity(NetatmoBaseEntity):
     @property
     def device_description(self) -> tuple[str, str]:
         """Return the model of this device."""
-        return cast(tuple[str, str], DEVICE_DESCRIPTION_MAP[self.device_type])
+        return DEVICE_DESCRIPTION_MAP[self.device_type]
 
     @property
     def home(self) -> Home:
