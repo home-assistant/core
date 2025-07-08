@@ -77,13 +77,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             self.api.register_data_callback(self.handle_websocket_updates)
             self.ws_connected = True
         try:
-            self.data = await self.api.get_status()
+            data = await self.api.get_status()
         except ApiError as err:
             raise UpdateFailed(err) from err
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-        self._async_add_remove_devices_and_entities(self.data)
-        return self.data
+        self._async_add_remove_devices_and_entities(data)
+        return data
 
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
@@ -255,6 +255,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         if current_areas == self._areas_last_update:
             return
 
+        self.data = data
         self._areas_last_update = self._update_work_areas(current_areas)
 
     def _update_work_areas(
