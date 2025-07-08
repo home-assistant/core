@@ -1095,6 +1095,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     ]
                     | {add_config_subentry_id}
                 }
+                config_entries_subentries[add_config_entry_id].discard(None)
 
         if (
             remove_config_entry_id is not UNDEFINED

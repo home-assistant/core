@@ -2969,11 +2969,16 @@ async def test_update_remove_config_subentries(
 
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_1.entry_id,
-        config_subentry_id="mock-subentry-id-1-1",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+    )
+    assert entry.config_entries_subentries == {config_entry_1.entry_id: {None}}
+    entry = device_registry.async_update_device(
+        entry.id,
+        add_config_entry_id=config_entry_1.entry_id,
+        add_config_subentry_id="mock-subentry-id-1-1",
     )
     entry_id = entry.id
     assert entry.config_entries == {config_entry_1.entry_id}
@@ -3113,7 +3118,7 @@ async def test_update_remove_config_subentries(
 
     await hass.async_block_till_done()
 
-    assert len(update_events) == 8
+    assert len(update_events) == 9
     assert update_events[0].data == {
         "action": "create",
         "device_id": entry_id,
@@ -3122,12 +3127,19 @@ async def test_update_remove_config_subentries(
         "action": "update",
         "device_id": entry_id,
         "changes": {
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
+        },
+    }
+    assert update_events[2].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
             "config_entries_subentries": {
                 config_entry_1.entry_id: {"mock-subentry-id-1-1"}
             },
         },
     }
-    assert update_events[2].data == {
+    assert update_events[3].data == {
         "action": "update",
         "device_id": entry_id,
         "changes": {
@@ -3140,7 +3152,7 @@ async def test_update_remove_config_subentries(
             },
         },
     }
-    assert update_events[3].data == {
+    assert update_events[4].data == {
         "action": "update",
         "device_id": entry_id,
         "changes": {
@@ -3154,7 +3166,7 @@ async def test_update_remove_config_subentries(
             },
         },
     }
-    assert update_events[4].data == {
+    assert update_events[5].data == {
         "action": "update",
         "device_id": entry_id,
         "changes": {
@@ -3168,7 +3180,7 @@ async def test_update_remove_config_subentries(
             },
         },
     }
-    assert update_events[5].data == {
+    assert update_events[6].data == {
         "action": "update",
         "device_id": entry_id,
         "changes": {
@@ -3187,7 +3199,7 @@ async def test_update_remove_config_subentries(
             "primary_config_entry": config_entry_1.entry_id,
         },
     }
-    assert update_events[6].data == {
+    assert update_events[7].data == {
         "action": "update",
         "device_id": entry_id,
         "changes": {
@@ -3198,7 +3210,7 @@ async def test_update_remove_config_subentries(
             },
         },
     }
-    assert update_events[7].data == {
+    assert update_events[8].data == {
         "action": "remove",
         "device_id": entry_id,
     }
