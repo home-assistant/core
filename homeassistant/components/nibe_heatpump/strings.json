@@ -47,9 +47,6 @@
     }
   },
   "exceptions": {
-    "write_denied": {
-      "message": "Writing of coil {address} with value `{value}` was denied"
-    },
     "write_timeout": {
       "message": "Timeout while writing coil {address}"
     },
