@@ -51,6 +51,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -69,6 +70,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 3
 
     manufacturer: str | None = None
+    upnp_udn: str | None = None
     url: str | None = None
 
     @staticmethod
@@ -250,6 +252,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 CONF_MAC: get_device_macs(info, wlan_settings),
                 CONF_MANUFACTURER: self.manufacturer,
+                CONF_UPNP_UDN: self.upnp_udn,
             }
         )
 
@@ -284,11 +287,12 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             # url_normalize only returns None if passed None, and we don't do that
             assert url is not None
 
-        unique_id = discovery_info.upnp.get(
-            ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
-        )
+        upnp_udn = discovery_info.upnp.get(ATTR_UPNP_UDN)
+        unique_id = discovery_info.upnp.get(ATTR_UPNP_SERIAL, upnp_udn)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(
+            updates={CONF_UPNP_UDN: upnp_udn, CONF_URL: url}
+        )
 
         def _is_supported_device() -> bool:
             """See if we are looking at a possibly supported device.
@@ -319,6 +323,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         self.manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
+        self.upnp_udn = upnp_udn
         self.url = url
         return await self._async_show_user_form()
 

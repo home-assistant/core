@@ -18,9 +18,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -36,7 +33,6 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
-    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
@@ -95,7 +91,6 @@ _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "template": None,
     "time": None,
     "trigger": None,
-    "zone": None,
 }
 
 INPUT_ENTITY_ID = re.compile(
@@ -917,101 +912,6 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
         return time(hass, before, after, weekday)
 
     return time_if
-
-
-def zone(
-    hass: HomeAssistant,
-    zone_ent: str | State | None,
-    entity: str | State | None,
-) -> bool:
-    """Test if zone-condition matches.
-
-    Async friendly.
-    """
-    from homeassistant.components import zone as zone_cmp  # noqa: PLC0415
-
-    if zone_ent is None:
-        raise ConditionErrorMessage("zone", "no zone specified")
-
-    if isinstance(zone_ent, str):
-        zone_ent_id = zone_ent
-
-        if (zone_ent := hass.states.get(zone_ent)) is None:
-            raise ConditionErrorMessage("zone", f"unknown zone {zone_ent_id}")
-
-    if entity is None:
-        raise ConditionErrorMessage("zone", "no entity specified")
-
-    if isinstance(entity, str):
-        entity_id = entity
-
-        if (entity := hass.states.get(entity)) is None:
-            raise ConditionErrorMessage("zone", f"unknown entity {entity_id}")
-    else:
-        entity_id = entity.entity_id
-
-    if entity.state in (
-        STATE_UNAVAILABLE,
-        STATE_UNKNOWN,
-    ):
-        return False
-
-    latitude = entity.attributes.get(ATTR_LATITUDE)
-    longitude = entity.attributes.get(ATTR_LONGITUDE)
-
-    if latitude is None:
-        raise ConditionErrorMessage(
-            "zone", f"entity {entity_id} has no 'latitude' attribute"
-        )
-
-    if longitude is None:
-        raise ConditionErrorMessage(
-            "zone", f"entity {entity_id} has no 'longitude' attribute"
-        )
-
-    return zone_cmp.in_zone(
-        zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
-    )
-
-
-def zone_from_config(config: ConfigType) -> ConditionCheckerType:
-    """Wrap action method with zone based condition."""
-    entity_ids = config.get(CONF_ENTITY_ID, [])
-    zone_entity_ids = config.get(CONF_ZONE, [])
-
-    @trace_condition_function
-    def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Test if condition."""
-        errors = []
-
-        all_ok = True
-        for entity_id in entity_ids:
-            entity_ok = False
-            for zone_entity_id in zone_entity_ids:
-                try:
-                    if zone(hass, zone_entity_id, entity_id):
-                        entity_ok = True
-                except ConditionErrorMessage as ex:
-                    errors.append(
-                        ConditionErrorMessage(
-                            "zone",
-                            (
-                                f"error matching {entity_id} with {zone_entity_id}:"
-                                f" {ex.message}"
-                            ),
-                        )
-                    )
-
-            if not entity_ok:
-                all_ok = False
-
-        # Raise the errors only if no definitive result was found
-        if errors and not all_ok:
-            raise ConditionErrorContainer("zone", errors=errors)
-
-        return all_ok
-
-    return if_in_zone
 
 
 async def async_trigger_from_config(

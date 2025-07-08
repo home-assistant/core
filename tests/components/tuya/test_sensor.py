@@ -13,16 +13,16 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import initialize_entry
+from . import DEVICE_MOCKS, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["cs_arete_two_12l_dehumidifier_air_purifier", "mcs_door_sensor"],
+    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.SENSOR in v]
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
@@ -35,3 +35,22 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.SENSOR not in v]
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+async def test_platform_setup_no_discovery(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test platform setup and discovery."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )

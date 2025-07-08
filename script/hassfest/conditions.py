@@ -54,6 +54,7 @@ CONDITIONS_SCHEMA = vol.Schema(
 NON_MIGRATED_INTEGRATIONS = {
     "device_automation",
     "sun",
+    "zone",
 }
 
 

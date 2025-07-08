@@ -15,12 +15,10 @@ from tests.common import MockConfigEntry
 
 TEST_CONNECTION = {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_create_server")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_create_server: AsyncMock
-) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form and handle errors and successful connection."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -55,21 +53,19 @@ async def test_form(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # test success
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEST_CONNECTION
-    )
-    await hass.async_block_till_done()
+    with patch("snapcast.control.create_server"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Snapcast"
     assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
-    assert len(mock_create_server.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_create_server: AsyncMock
-) -> None:
+async def test_abort(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test config flow abort if device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,

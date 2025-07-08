@@ -6,7 +6,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from aioamazondevices.api import AmazonEchoApi
-from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect, WrongCountry
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    WrongCountry,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -57,6 +62,8 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
+            except CannotRetrieveData:
+                errors["base"] = "cannot_retrieve_data"
             except WrongCountry:
                 errors["base"] = "wrong_country"
             else:
@@ -106,6 +113,8 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
+            except CannotRetrieveData:
+                errors["base"] = "cannot_retrieve_data"
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,

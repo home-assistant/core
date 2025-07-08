@@ -52,8 +52,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
-        except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(f"Error occurred while updating {self.name}") from err
+        except CannotConnect as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except CannotRetrieveData as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
