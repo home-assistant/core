@@ -175,7 +175,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                         sensor_advanced_key
                     )
 
-            await asyncio.sleep(0.1)  # Ensure different subentry IDs
             new_sub_entry = ConfigSubentry(
                 data=MappingProxyType(sensor_config),
                 subentry_type="entity",
