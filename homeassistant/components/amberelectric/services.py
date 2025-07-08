@@ -17,16 +17,21 @@ from homeassistant.util.json import JsonValueType
 from .const import (
     ATTR_CHANNEL_TYPE,
     ATTR_CONFIG_ENTRY_ID,
+    CONTROLLED_LOAD_CHANNEL,
     DOMAIN,
-    GET_FORECASTS_SERVICE,
+    FEED_IN_CHANNEL,
+    GENERAL_CHANNEL,
+    SERVICE_GET_FORECASTS,
 )
 from .coordinator import AmberConfigEntry
 from .helpers import format_cents_to_dollars, normalize_descriptor
 
 GET_FORECASTS_SCHEMA = vol.Schema(
     {
-        "config_entry_id": ConfigEntrySelector({"integration": DOMAIN}),
-        "channel_type": vol.In(["general", "controlled_load", "feed_in"]),
+        ATTR_CONFIG_ENTRY_ID: ConfigEntrySelector({"integration": DOMAIN}),
+        ATTR_CHANNEL_TYPE: vol.In(
+            [GENERAL_CHANNEL, CONTROLLED_LOAD_CHANNEL, FEED_IN_CHANNEL]
+        ),
     }
 )
 
@@ -109,7 +114,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        GET_FORECASTS_SERVICE,
+        SERVICE_GET_FORECASTS,
         handle_get_forecasts,
         GET_FORECASTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

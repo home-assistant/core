@@ -28,8 +28,8 @@
       "description": "Retrieves price forecasts from Amber Electric for your property.",
       "fields": {
         "config_entry_id": {
-          "name": "Integration",
-          "description": "Which instance should we fetch forecasts from?"
+          "description": "Entity config to get forecasts for.",
+          "name": "Entity"
         },
         "channel_type": {
           "name": "Channel type",
@@ -40,7 +40,7 @@
   },
   "exceptions": {
     "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
+      "message": "Config entry \"{target}\" not found in registry."
     },
     "not_loaded": {
       "message": "{target} is not loaded."
