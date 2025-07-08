@@ -12,7 +12,6 @@ from snapcast.control.stream import Snapstream
 from homeassistant.components.snapcast.const import DOMAIN
 from homeassistant.components.snapcast.coordinator import Snapserver
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +51,7 @@ def mock_create_server(
 
 
 @pytest.fixture
-async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+async def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
 
     # Create a mock config entry
