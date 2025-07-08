@@ -173,7 +173,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==3.2.3
+aioamazondevices==3.2.8
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -1748,7 +1748,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.10
+pylamarzocco==2.0.11
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1954,7 +1954,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.0
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.5
+pysmartthings==3.2.7
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
