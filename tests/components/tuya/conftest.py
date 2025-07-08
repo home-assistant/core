@@ -18,6 +18,7 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_dumps
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -142,11 +143,11 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
     device.product_name = details["product_name"]
     device.online = details["online"]
     device.function = {
-        key: MagicMock(type=value["type"], values=value["values"])
+        key: MagicMock(type=value["type"], values=json_dumps(value["value"]))
         for key, value in details["function"].items()
     }
     device.status_range = {
-        key: MagicMock(type=value["type"], values=value["values"])
+        key: MagicMock(type=value["type"], values=json_dumps(value["value"]))
         for key, value in details["status_range"].items()
     }
     device.status = details["status"]

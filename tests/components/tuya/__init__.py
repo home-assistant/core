@@ -7,9 +7,49 @@ from unittest.mock import patch
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DEVICE_MOCKS = {
+    "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cwwsq_cleverio_pf100": [
+        # https://github.com/home-assistant/core/issues/144745
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ],
+    "cwysj_pixi_smart_drinking_fountain": [
+        # https://github.com/home-assistant/core/pull/146599
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cz_dual_channel_metering": [
+        # https://github.com/home-assistant/core/issues/147149
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "mcs_door_sensor": [
+        # https://github.com/home-assistant/core/issues/108301
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "sfkzq_valve_controller": [
+        # https://github.com/home-assistant/core/issues/148116
+        Platform.SWITCH,
+    ],
+    "tdq_4_443": [
+        # https://github.com/home-assistant/core/issues/146845
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+}
 
 
 async def initialize_entry(
