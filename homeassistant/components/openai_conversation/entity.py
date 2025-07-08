@@ -125,7 +125,7 @@ async def _transform_stream(
         LOGGER.debug("Received event: %s", event)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
-            if isinstance(event.item, ResponseOutputMessage):
+            if event.item.type == "message":
                 yield {"role": event.item.role}
             elif isinstance(event.item, ResponseFunctionToolCall):
                 # OpenAI has tool calls as individual events
