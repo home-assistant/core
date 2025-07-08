@@ -40,6 +40,9 @@
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
       "temperature_level": {
         "default": "mdi:thermometer"
       }
@@ -71,9 +74,6 @@
       },
       "operational_state": {
         "default": "mdi:play-pause"
-      },
-      "power_level": {
-        "default": "mdi:power-settings"
       },
       "tank_volume": {
         "default": "mdi:water-boiler"

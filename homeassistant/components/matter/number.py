@@ -66,6 +66,22 @@ class MatterRangeNumberEntityDescription(
     command: Callable[[int], ClusterCommand]
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterMaxNumberEntityDescription(
+    NumberEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Number Input entities with static min and attribute max values."""
+
+    ha_to_device: Callable[[Any], Any]
+
+    # attribute descriptors to get the max value
+    max_attribute: type[ClusterAttributeDescriptor]
+
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    command: Callable[[int], ClusterCommand]
+
+
 class MatterNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -122,6 +138,32 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
                 self.get_matter_attribute_value(self.entity_description.max_attribute),
             )
             / 100
+        )
+
+
+class MatterRangeMaxNumber(MatterEntity, NumberEntity):
+    """Representation of a Matter Attribute as a Number entity with max value."""
+
+    entity_description: MatterMaxNumberEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        send_value = self.entity_description.ha_to_device(value)
+        # custom command defined to set the new value
+        await self.send_device_command(
+            self.entity_description.command(send_value),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.device_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
+        self._attr_native_max_value = cast(
+            int,
+            self.get_matter_attribute_value(self.entity_description.max_attribute),
         )
 
 
@@ -300,6 +342,28 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIROccupiedToUnoccupiedDelay,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterMaxNumberEntityDescription(
+            key="MicrowaveOvenControlCookTime",
+            translation_key="cook_time",
+            command=lambda value: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                cookTime=int(value)
+            ),
+            native_min_value=1,  # 1 second minimum cook time
+            native_step=1,  # 1 second
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_to_ha=lambda x: None if x is None else x,
+            ha_to_device=lambda x: x,
+            max_attribute=clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeMaxNumber,
+        required_attributes=(
+            clusters.MicrowaveOvenControl.Attributes.CookTime,
+            clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
         ),
     ),
     MatterDiscoverySchema(

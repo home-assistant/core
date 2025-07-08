@@ -180,6 +180,9 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "cook_time": {
+        "name": "Cook time"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -320,9 +323,6 @@
           "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
         }
-      },
-      "cook_time": {
-        "name": "Cook time"
       },
       "estimated_end_time": {
         "name": "Estimated end time"
