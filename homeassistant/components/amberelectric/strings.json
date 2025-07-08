@@ -28,8 +28,8 @@
       "description": "Retrieves price forecasts from Amber Electric for your property.",
       "fields": {
         "config_entry_id": {
-          "name": "Entity",
-          "description": "Which entity should we fetch forecasts from?"
+          "name": "Integration",
+          "description": "Which instance should we fetch forecasts from?"
         },
         "channel_type": {
           "name": "Channel type",
