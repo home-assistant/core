@@ -1045,16 +1045,17 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, str]:
         """Validate the passed selection."""
-        schema = self.DATA_SCHEMA.schema.copy()
+        schema = {
+            key: value
+            for key, value in self.DATA_SCHEMA.schema.items()
+            if key != "entity_id"
+        }
 
-        if "accept" in self.config:
-            # If accept is set, the entity_id field will not be present
-            schema.pop("entity_id", None)
-        else:
+        if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
             schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
-        media: dict[str, str] = self.DATA_SCHEMA(data)
+        media: dict[str, str] = vol.Schema(schema)(data)
         return media
 
 
@@ -1066,6 +1067,7 @@ class NumberSelectorConfig(BaseSelectorConfig, total=False):
     step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
+    translation_key: str
 
 
 class NumberSelectorMode(StrEnum):
@@ -1106,6 +1108,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
+                vol.Optional("translation_key"): str,
             }
         ),
         validate_slider,
