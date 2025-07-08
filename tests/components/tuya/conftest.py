@@ -141,7 +141,7 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
     device.category = details["category"]
     device.product_id = details["product_id"]
     device.product_name = details["product_name"]
-    device.online = details["online"]
+    device.online = True  # details["online"]
     device.function = {
         key: MagicMock(type=value["type"], values=json_dumps(value["value"]))
         for key, value in details["function"].items()

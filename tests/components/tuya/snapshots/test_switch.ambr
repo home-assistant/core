@@ -528,7 +528,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_2-entry]
@@ -577,7 +577,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_3-entry]
@@ -626,7 +626,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_4-entry]
@@ -675,7 +675,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][switch.wifi_smart_gas_boiler_thermostat_child_lock-entry]
