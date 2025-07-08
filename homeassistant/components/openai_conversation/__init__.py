@@ -6,7 +6,6 @@ import base64
 from datetime import datetime, timedelta
 from functools import partial
 from io import BytesIO
-from mimetypes import guess_file_type
 from pathlib import Path
 
 from aiohttp import web
@@ -15,8 +14,6 @@ from openai.types.images_response import ImagesResponse
 from openai.types.responses import (
     EasyInputMessageParam,
     Response,
-    ResponseInputFileParam,
-    ResponseInputImageParam,
     ResponseInputMessageContentListParam,
     ResponseInputParam,
     ResponseInputTextParam,
@@ -71,6 +68,7 @@ from .const import (
     RECOMMENDED_TOP_P,
     ImageData,
 )
+from .entity import async_prepare_files_for_prompt
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
@@ -79,15 +77,6 @@ PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
-
-
-def encode_file(file_path: str) -> tuple[str, str]:
-    """Return base64 version of file contents."""
-    mime_type, _ = guess_file_type(file_path)
-    if mime_type is None:
-        mime_type = "application/octet-stream"
-    with open(file_path, "rb") as image_file:
-        return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
 def _cleanup_images(image_storage: dict[str, ImageData], num_to_remove: int) -> None:
@@ -288,41 +277,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ResponseInputTextParam(type="input_text", text=call.data[CONF_PROMPT])
         ]
 
-        def append_files_to_content() -> None:
-            for filename in call.data[CONF_FILENAMES]:
+        if filenames := call.data.get(CONF_FILENAMES):
+            for filename in filenames:
                 if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
                         f"Cannot read `{filename}`, no access to path; "
                         "`allowlist_external_dirs` may need to be adjusted in "
                         "`configuration.yaml`"
                     )
-                if not Path(filename).exists():
-                    raise HomeAssistantError(f"`{filename}` does not exist")
-                mime_type, base64_file = encode_file(filename)
-                if "image/" in mime_type:
-                    content.append(
-                        ResponseInputImageParam(
-                            type="input_image",
-                            image_url=f"data:{mime_type};base64,{base64_file}",
-                            detail="auto",
-                        )
-                    )
-                elif "application/pdf" in mime_type:
-                    content.append(
-                        ResponseInputFileParam(
-                            type="input_file",
-                            filename=filename,
-                            file_data=f"data:{mime_type};base64,{base64_file}",
-                        )
-                    )
-                else:
-                    raise HomeAssistantError(
-                        "Only images and PDF are supported by the OpenAI API,"
-                        f"`{filename}` is not an image file or PDF"
-                    )
 
-        if CONF_FILENAMES in call.data:
-            await hass.async_add_executor_job(append_files_to_content)
+            content.extend(
+                await async_prepare_files_for_prompt(
+                    hass, [Path(filename) for filename in filenames]
+                )
+            )
 
         messages: ResponseInputParam = [
             EasyInputMessageParam(type="message", role="user", content=content)

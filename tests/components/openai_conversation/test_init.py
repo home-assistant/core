@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 import httpx
 from openai import (
@@ -17,7 +17,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.openai_conversation import CONF_CHAT_MODEL, CONF_FILENAMES
+from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
@@ -605,7 +605,7 @@ async def test_generate_content_service(
         patch(
             "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
         ) as mock_b64encode,
-        patch("builtins.open", mock_open(read_data="ABC")) as mock_file,
+        patch("pathlib.Path.read_bytes", Mock(return_value=b"ABC")) as mock_file,
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
@@ -645,15 +645,13 @@ async def test_generate_content_service(
         assert len(mock_create.mock_calls) == 1
         assert mock_create.mock_calls[0][2] == expected_args
         assert mock_b64encode.call_count == number_of_files
-        for idx, file in enumerate(service_data[CONF_FILENAMES]):
-            assert mock_file.call_args_list[idx][0][0] == file
+        assert mock_file.call_count == number_of_files
 
 
 @pytest.mark.parametrize(
     (
         "service_data",
         "error",
-        "number_of_files",
         "exists_side_effect",
         "is_allowed_side_effect",
     ),
@@ -661,7 +659,6 @@ async def test_generate_content_service(
         (
             {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
             "`/a/b/c.jpg` does not exist",
-            0,
             [False],
             [True],
         ),
@@ -671,14 +668,12 @@ async def test_generate_content_service(
                 "filenames": ["/a/b/c.jpg", "d/e/f.png"],
             },
             "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
-            1,
             [True, True],
             [True, False],
         ),
         (
             {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
             "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
-            1,
             [True],
             [True],
         ),
@@ -690,7 +685,6 @@ async def test_generate_content_service_invalid(
     mock_init_component,
     service_data,
     error,
-    number_of_files,
     exists_side_effect,
     is_allowed_side_effect,
 ) -> None:
@@ -702,9 +696,7 @@ async def test_generate_content_service_invalid(
             "openai.resources.responses.AsyncResponses.create",
             new_callable=AsyncMock,
         ) as mock_create,
-        patch(
-            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
-        ) as mock_b64encode,
+        patch("base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]),
         patch("builtins.open", mock_open(read_data="ABC")),
         patch("pathlib.Path.exists", side_effect=exists_side_effect),
         patch.object(
@@ -720,7 +712,6 @@ async def test_generate_content_service_invalid(
                 return_response=True,
             )
         assert len(mock_create.mock_calls) == 0
-        assert mock_b64encode.call_count == number_of_files
 
 
 @pytest.mark.usefixtures("mock_init_component")
