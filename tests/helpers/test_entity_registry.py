@@ -1719,7 +1719,7 @@ async def test_remove_config_subentry_from_device_removes_entities(
     )
     assert device_entry.config_entries == {config_entry_1.entry_id}
     assert device_entry.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+        config_entry_1.entry_id: {"mock-subentry-id-1", "mock-subentry-id-2"},
     }
 
     # Create one entity entry for each config entry or subentry
@@ -1749,7 +1749,6 @@ async def test_remove_config_subentry_from_device_removes_entities(
         config_subentry_id=None,
         device_id=device_entry.id,
     )
-
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
     assert entity_registry.async_is_registered(entry_3.entity_id)
@@ -1841,7 +1840,7 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     )
     assert device_entry.config_entries == {config_entry_1.entry_id}
     assert device_entry.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+        config_entry_1.entry_id: {"mock-subentry-id-1", "mock-subentry-id-2"},
     }
 
     # Create an entity without config entry or subentry

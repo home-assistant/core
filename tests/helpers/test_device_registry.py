@@ -269,7 +269,7 @@ async def test_multiple_config_subentries(
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id}
     assert entry.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+        config_entry_1.entry_id: {"mock-subentry-id-1-1"}
     }
 
     entry = device_registry.async_get_or_create(
@@ -283,7 +283,7 @@ async def test_multiple_config_subentries(
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id}
     assert entry.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"}
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"}
     }
 
     entry = device_registry.async_get_or_create(
@@ -297,7 +297,7 @@ async def test_multiple_config_subentries(
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
@@ -1850,7 +1850,7 @@ async def test_removing_config_subentries(
     assert entry.id == entry4.id
     assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry4.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
@@ -1887,7 +1887,7 @@ async def test_removing_config_subentries(
 
     await hass.async_block_till_done()
 
-    assert len(update_events) == 8
+    assert len(update_events) == 7
     assert update_events[0].data == {
         "action": "create",
         "device_id": entry.id,
@@ -1904,7 +1904,7 @@ async def test_removing_config_subentries(
         "device_id": entry.id,
         "changes": {
             "config_entries_subentries": {
-                config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+                config_entry_1.entry_id: {"mock-subentry-id-1-1"}
             },
         },
     }
@@ -1915,7 +1915,6 @@ async def test_removing_config_subentries(
             "config_entries": {config_entry_1.entry_id},
             "config_entries_subentries": {
                 config_entry_1.entry_id: {
-                    None,
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
                 }
@@ -1929,7 +1928,6 @@ async def test_removing_config_subentries(
         "changes": {
             "config_entries_subentries": {
                 config_entry_1.entry_id: {
-                    None,
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
                 },
@@ -1940,21 +1938,6 @@ async def test_removing_config_subentries(
         },
     }
     assert update_events[5].data == {
-        "action": "update",
-        "device_id": entry.id,
-        "changes": {
-            "config_entries_subentries": {
-                config_entry_1.entry_id: {
-                    "mock-subentry-id-1-1",
-                    "mock-subentry-id-1-2",
-                },
-                config_entry_2.entry_id: {
-                    "mock-subentry-id-2-1",
-                },
-            },
-        },
-    }
-    assert update_events[6].data == {
         "action": "update",
         "device_id": entry.id,
         "changes": {
@@ -1970,7 +1953,7 @@ async def test_removing_config_subentries(
             "primary_config_entry": config_entry_1.entry_id,
         },
     }
-    assert update_events[7].data == {
+    assert update_events[6].data == {
         "action": "remove",
         "device_id": entry.id,
     }
@@ -2052,7 +2035,7 @@ async def test_deleted_device_removing_config_subentries(
     assert entry.id == entry4.id
     assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry4.config_entries_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
@@ -2080,7 +2063,7 @@ async def test_deleted_device_removing_config_subentries(
         "device_id": entry.id,
         "changes": {
             "config_entries_subentries": {
-                config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+                config_entry_1.entry_id: {"mock-subentry-id-1-1"}
             },
         },
     }
@@ -2091,7 +2074,6 @@ async def test_deleted_device_removing_config_subentries(
             "config_entries": {config_entry_1.entry_id},
             "config_entries_subentries": {
                 config_entry_1.entry_id: {
-                    None,
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
                 }
