@@ -8,7 +8,7 @@ from .notify import get_service
 
 
 def _get_service_name(entry: ConfigEntry):
-    return ("notify", f"signal_{entry.data[CONF_NAME]}")
+    return ("notify", f"signal_{entry.data[CONF_NAME].lower().replace(' ', '_')}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
