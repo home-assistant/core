@@ -151,6 +151,33 @@ BLUETOOTH_SERVICES = {
         connectable=True,
         tx_power=-127,
     ),
+    SwitchbotModel.HUB3: BluetoothServiceInfoBleak(
+        name="Hub3",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x83\x03\x994\x80",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xb9@"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Hub3",
+            manufacturer_data={
+                2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x83\x03\x994\x80",
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xb9@"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Hub3"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
     SwitchbotModel.LOCK: BluetoothServiceInfoBleak(
         name="WoLock",
         manufacturer_data={2409: b"\xf1\t\x9fE\x1a]\xda\x83\x00 "},
@@ -166,6 +193,177 @@ BLUETOOTH_SERVICES = {
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
         ),
         device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoLock"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.LOCK_LITE: BluetoothServiceInfoBleak(
+        name="Lock Lite",
+        manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Lock Lite",
+            manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Lite"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.LOCK_ULTRA: BluetoothServiceInfoBleak(
+        name="Lock Ultra",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Lock Ultra",
+            manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.AIR_PURIFIER_TABLE: BluetoothServiceInfoBleak(
+        name="Air Purifier Table PM25",
+        manufacturer_data={
+            2409: b"\xf0\x9e\x9e\x96j\xd6\xa1\x81\x88\xe4\x00\x01\x95\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"7\x00\x00\x95-\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Air Purifier Table PM25",
+            manufacturer_data={
+                2409: b"\xf0\x9e\x9e\x96j\xd6\xa1\x81\x88\xe4\x00\x01\x95\x00\x00",
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"7\x00\x00\x95-\x00"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier Table PM25"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.AIR_PURIFIER: BluetoothServiceInfoBleak(
+        name="Air Purifier PM25",
+        manufacturer_data={
+            2409: b'\xcc\x8d\xa2\xa7\x92>\t"\x80\x000\x00\x0f\x00\x00',
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"*\x00\x00\x15\x04\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Air Purifier PM25",
+            manufacturer_data={
+                2409: b'\xcc\x8d\xa2\xa7\x92>\t"\x80\x000\x00\x0f\x00\x00',
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"*\x00\x00\x15\x04\x00"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier PM25"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.EVAPORATIVE_HUMIDIFIER: BluetoothServiceInfoBleak(
+        name="Evaporative Humidifier",
+        manufacturer_data={
+            2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Evaporative Humidifier",
+            manufacturer_data={
+                2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Evaporative Humidifier"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.COLOR_BULB: BluetoothServiceInfoBleak(
+        name="Bulb",
+        manufacturer_data={
+            2409: b"@L\xca\xa7_\x12\x02\x81\x12\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"u\x00d",
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Bulb",
+            manufacturer_data={
+                2409: b"@L\xca\xa7_\x12\x02\x81\x12\x00\x00",
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"u\x00d",
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Bulb"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.CEILING_LIGHT: BluetoothServiceInfoBleak(
+        name="Ceiling Light",
+        manufacturer_data={
+            2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3\xa4",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"q\x00",
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Ceiling Light",
+            manufacturer_data={
+                2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3$",
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"q\x00",
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Ceiling Light"),
         time=0,
         connectable=True,
         tx_power=-127,
@@ -302,6 +500,60 @@ BLUETOOTH_SERVICES = {
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
         ),
         device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoStrip"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.STRIP_LIGHT_3: BluetoothServiceInfoBleak(
+        name="Strip Light 3",
+        manufacturer_data={
+            2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb1"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Strip Light 3",
+            manufacturer_data={
+                2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb1"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Strip Light 3"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    ),
+    SwitchbotModel.FLOOR_LAMP: BluetoothServiceInfoBleak(
+        name="Floor Lamp",
+        manufacturer_data={
+            2409: b'\xa0\x85\xe3e,\x06P\xaa"\xd4\x00\x00\x00\x00\x00\x00\r\x93\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb0"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Floor Lamp",
+            manufacturer_data={
+                2409: b'\xa0\x85\xe3e,\x06P\xaa"\xd4\x00\x00\x00\x00\x00\x00\r\x93\x00',
+            },
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb0"
+            },
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Floor Lamp"),
         time=0,
         connectable=True,
         tx_power=-127,
