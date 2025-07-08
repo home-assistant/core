@@ -1888,7 +1888,7 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
         "5678",
         device_id=device_entry.id,
     )
-    # Create an entity for same config entry but no subentry not in device
+    # Create an entity for same config entry but subentry not in device
     entry_2 = entity_registry.async_get_or_create(
         "light",
         "some_helper",
