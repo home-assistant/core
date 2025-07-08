@@ -780,10 +780,10 @@
       "battery_level": {
         "name": "Battery",
         "state": {
-          "high": "Full",
+          "high": "[%key:common::state::full%]",
           "mid": "[%key:common::state::medium%]",
           "low": "[%key:common::state::low%]",
-          "warning": "Empty"
+          "warning": "[%key:common::state::empty%]"
         }
       },
       "relative_to_start": {

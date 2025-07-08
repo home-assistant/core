@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import switch_as_x
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.lock import LockState
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -24,8 +25,9 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 
 from . import PLATFORMS_TO_TEST
@@ -37,6 +39,44 @@ EXPOSE_SETTINGS = {
     "cloud.google_assistant": False,
     "conversation": True,
 }
+
+
+@pytest.fixture
+def switch_entity_registry_entry(
+    entity_registry: er.EntityRegistry,
+) -> er.RegistryEntry:
+    """Fixture to create a switch entity entry."""
+    return entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+
+
+@pytest.fixture
+def switch_as_x_config_entry(
+    hass: HomeAssistant,
+    switch_entity_registry_entry: er.RegistryEntry,
+    target_domain: str,
+    use_entity_registry_id: bool,
+) -> MockConfigEntry:
+    """Fixture to create a switch_as_x config entry."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_registry_entry.id
+            if use_entity_registry_id
+            else switch_entity_registry_entry.entity_id,
+            CONF_INVERT: False,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    return config_entry
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -67,6 +107,7 @@ async def test_config_entry_unregistered_uuid(
     assert len(hass.states.async_all()) == 0
 
 
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.parametrize(
     ("target_domain", "state_on", "state_off"),
     [
@@ -81,33 +122,17 @@ async def test_config_entry_unregistered_uuid(
 async def test_entity_registry_events(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    switch_entity_registry_entry: er.RegistryEntry,
+    switch_as_x_config_entry: MockConfigEntry,
     target_domain: str,
     state_on: str,
     state_off: str,
 ) -> None:
     """Test entity registry events are tracked."""
-    registry_entry = entity_registry.async_get_or_create(
-        "switch", "test", "unique", original_name="ABC"
-    )
-    switch_entity_id = registry_entry.entity_id
+    switch_entity_id = switch_entity_registry_entry.entity_id
     hass.states.async_set(switch_entity_id, STATE_ON)
 
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            CONF_ENTITY_ID: registry_entry.id,
-            CONF_INVERT: False,
-            CONF_TARGET_DOMAIN: target_domain,
-        },
-        title="ABC",
-        version=SwitchAsXConfigFlowHandler.VERSION,
-        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
-    )
-
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{target_domain}.abc").state == state_on
@@ -199,15 +224,38 @@ async def test_device_registry_config_entry_1(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
-    # Remove the wrapped switch's config entry from the device
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
+    # Remove the wrapped switch's config entry from the device, this removes the
+    # wrapped switch
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
+    ) as mock_setup_entry:
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
+
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+
+    # Check that the switch_as_x config entry is removed
+    assert (
+        switch_as_x_config_entry.entry_id not in hass.config_entries.async_entry_ids()
+    )
+
+    # Check we got the expected events
+    assert events == ["remove"]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -258,12 +306,120 @@ async def test_device_registry_config_entry_2(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
     # Remove the wrapped switch from the device
-    entity_registry.async_update_entity(switch_entity_entry.entity_id, device_id=None)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
+    ) as mock_setup_entry:
+        entity_registry.async_update_entity(
+            switch_entity_entry.entity_id, device_id=None
+        )
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
+
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+
+    # Check that the switch_as_x config entry is not removed
+    assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_device_registry_config_entry_3(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    target_domain: str,
+) -> None:
+    """Test we add our config entry to the tracked switch's device."""
+    switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=switch_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=switch_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+    )
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique",
+        config_entry=switch_config_entry,
+        device_id=device_entry.id,
+        original_name="ABC",
+    )
+
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
+    )
+
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    assert entity_entry.device_id == switch_entity_entry.device_id
+
+    device_entry = device_registry.async_get(device_entry.id)
+    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    device_entry_2 = device_registry.async_get(device_entry_2.id)
+    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
+
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
+    # Move the wrapped switch to another device
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
+    ) as mock_setup_entry:
+        entity_registry.async_update_entity(
+            switch_entity_entry.entity_id, device_id=device_entry_2.id
+        )
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
+
+    # Check that the switch_as_x config entry is moved to the other device
+    device_entry = device_registry.async_get(device_entry.id)
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    device_entry_2 = device_registry.async_get(device_entry_2.id)
+    assert switch_as_x_config_entry.entry_id in device_entry_2.config_entries
+
+    # Check that the switch_as_x config entry is not removed
+    assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

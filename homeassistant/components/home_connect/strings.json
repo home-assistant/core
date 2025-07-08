@@ -1,4 +1,7 @@
 {
+  "application_credentials": {
+    "description": "Login to Home Connect requires a client ID and secret. To acquire them, please follow the following steps.\n\n1. Visit the [Home Connect Developer Program website]({developer_dashboard_url}) and sign up for a development account.\n1. Enter the email of your login for the original Home Connect app under **Default Home Connect User Account for Testing** in the signup process.\n1. Go to the [Applications]({applications_url}) page and select [Register Application]({register_application_url}) and set the fields to the following values:\n   * **Application ID**: Home Assistant (or any other name that makes sense)\n   * **OAuth Flow**: Authorization Code Grant Flow\n   * **Redirect URI**: `{redirect_url}`\n\nIn the newly created application's details, you will find the **Client ID** and the **Client Secret**."
+  },
   "common": {
     "confirmed": "Confirmed",
     "present": "Present"
@@ -6,14 +9,20 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Home Connect integration needs to re-authenticate your account"
       },
       "oauth_discovery": {
-        "description": "Home Assistant has found a Home Connect device on your network. Press **Submit** to continue setting up Home Connect."
+        "description": "Home Assistant has found a Home Connect device on your network. Be aware that the setup of Home Connect is more complicated than many other integrations. Press **Submit** to continue setting up Home Connect."
       }
     },
     "abort": {

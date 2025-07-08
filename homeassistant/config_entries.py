@@ -1646,6 +1646,7 @@ class ConfigEntriesFlowManager(
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
+                breaks_in_ha_version="2026.3",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.LOG,
@@ -3419,6 +3420,11 @@ class ConfigSubentryFlow(
     def _entry_id(self) -> str:
         """Return config entry id."""
         return self.handler[0]
+
+    @property
+    def _subentry_type(self) -> str:
+        """Return type of subentry we are editing/creating."""
+        return self.handler[1]
 
     @callback
     def _get_entry(self) -> ConfigEntry:

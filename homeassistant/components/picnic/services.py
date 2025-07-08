@@ -7,7 +7,7 @@ from typing import cast
 from python_picnic_api2 import PicnicAPI
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -26,7 +26,8 @@ class PicnicServiceException(Exception):
     """Exception for Picnic services."""
 
 
-async def async_register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
 
     async def async_add_product_service(call: ServiceCall):
