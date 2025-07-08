@@ -3,7 +3,7 @@
 from typing import Literal
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -52,13 +52,6 @@ class AnthropicConversationEntity(
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.entry.async_on_unload(
-            self.entry.add_update_listener(self._async_entry_update_listener)
-        )
-
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
@@ -89,10 +82,3 @@ class AnthropicConversationEntity(
             conversation_id=chat_log.conversation_id,
             continue_conversation=chat_log.continue_conversation,
         )
-
-    async def _async_entry_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
-    ) -> None:
-        """Handle options update."""
-        # Reload as we update device info + entity name + supported features
-        await hass.config_entries.async_reload(entry.entry_id)
