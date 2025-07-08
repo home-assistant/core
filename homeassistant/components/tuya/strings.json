@@ -485,6 +485,13 @@
           "level_9": "Level 9",
           "level_10": "High"
         }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "smart": "Smart",
+          "interim": "Interim"
+        }
       }
     },
     "sensor": {
@@ -697,6 +704,15 @@
       },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "work_state_e": {
+        "name": "Work state",
+        "state": {
+          "work": "Working",
+          "standby": "[%key:common::state::standby%]",
+          "charging": "[%key:common::state::charging%]",
+          "charge_done": "Charge done"
+        }
       }
     },
     "switch": {

@@ -55,6 +55,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Odor Eliminator-Pro
+    # Undocumented, see https://github.com/orgs/home-assistant/discussions/79
+    "cwjwq": (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="work_mode",
+        ),
+    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
