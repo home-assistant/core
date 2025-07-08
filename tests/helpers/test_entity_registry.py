@@ -1684,20 +1684,20 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id)
+    # Entities which are not tied to the removed config entry should not be removed
     assert entity_registry.async_is_registered(entry_1.entity_id)
-    # Entities with a config entry not in the device are removed
-    assert not entity_registry.async_is_registered(entry_2.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Remove the second config entry from the device
+    # Remove the second config entry from the device (this removes the device)
     device_registry.async_update_device(
         device_entry.id, remove_config_entry_id=config_entry_2.entry_id
     )
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
-    # The device is removed, both entities are now removed
-    assert not entity_registry.async_is_registered(entry_1.entity_id)
-    assert not entity_registry.async_is_registered(entry_2.entity_id)
+    # Entities which are not tied to a config entry in the device should not be removed
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
 
 
 async def test_remove_config_subentry_from_device_removes_entities(
@@ -1921,12 +1921,12 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id)
+    # Entities with a config subentry not in the device are not removed
     assert entity_registry.async_is_registered(entry_1.entity_id)
-    # Entities with a config subentry not in the device are removed
-    assert not entity_registry.async_is_registered(entry_2.entity_id)
-    assert not entity_registry.async_is_registered(entry_3.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
+    assert entity_registry.async_is_registered(entry_3.entity_id)
 
-    # Remove the second config subentry from the device
+    # Remove the second config subentry from the device, this removes the device
     device_registry.async_update_device(
         device_entry.id,
         remove_config_entry_id=config_entry_1.entry_id,
@@ -1935,10 +1935,10 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
-    # All entities are now removed
-    assert not entity_registry.async_is_registered(entry_1.entity_id)
-    assert not entity_registry.async_is_registered(entry_2.entity_id)
-    assert not entity_registry.async_is_registered(entry_3.entity_id)
+    # Entities with a config subentry not in the device are not removed
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
+    assert entity_registry.async_is_registered(entry_3.entity_id)
 
 
 async def test_update_device_race(
