@@ -43,6 +43,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfConductivity,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
@@ -211,8 +212,8 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     ),
     YoLinkSensorEntityDescription(
         key="temperature",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR]),
         value=lambda value: value.get("temperature") if value is not None else None,
@@ -337,6 +338,14 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: device.device_model_name in POWER_SUPPORT_MODELS,
         value=lambda value: value / 100 if value is not None else None,
+    ),
+    YoLinkSensorEntityDescription(
+        key="conductivity",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        exists_fn=lambda device: (device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR]),
+        value=lambda value: value.get("conductivity") if value is not None else None,
+        should_update_entity=lambda value: value is not None,
     ),
 )
 
