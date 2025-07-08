@@ -27,12 +27,12 @@ async def async_setup_entry(
     info = config_entry.runtime_data.info
     devices = config_entry.runtime_data.devices
 
-    interface_version = AwesomeVersion(info.data.version.split("/")[0][1:])
+    interface_version = AwesomeVersion(info.version.split("/")[0][1:])
 
     # Add devices
     async_add_entities(
         [
-            LunatoneLight(device, info.data.device.serial, interface_version)
+            LunatoneLight(device, info.serial_number, interface_version)
             for device in devices.devices
         ],
         update_before_add=True,
@@ -55,18 +55,18 @@ class LunatoneLight(LightEntity):
         """Initialize a LunatoneLight."""
         self._interface_version = interface_version
         self._device = device
-        self._attr_unique_id = f"{unique_id_prefix}-device{self._device.data.id}"
+        self._attr_unique_id = f"{unique_id_prefix}-device{self._device.id}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._device.data.features.switchable.status
+        return self._device.is_on
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)}, name=self._device.data.name
+            identifiers={(DOMAIN, self.unique_id)}, name=self._device.name
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -9,7 +9,7 @@ from typing import Any, Final
 
 import aiohttp
 from lunatone_dali_api_client import Auth, DALIScan, Info
-from lunatone_dali_api_client.models import ScanState, StartScanData
+from lunatone_dali_api_client.models import StartScanData
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -106,8 +106,8 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "cannot_connect"
             else:
-                self.name = info.data.name
-                self.serial_number = info.data.device.serial
+                self.name = info.name
+                self.serial_number = info.serial_number
                 await self.async_set_unique_id(str(self.serial_number))
                 if self.source == SOURCE_USER:
                     self._abort_if_unique_id_configured()
@@ -186,7 +186,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         scan = DALIScan(auth)
         await scan.async_update()
 
-        if scan.data.status in {ScanState.ADDRESSING, ScanState.IN_PROGRESS}:
+        if scan.is_busy:
             await self._async_is_dali_device_scan_done(scan)
 
         if method == DALIDeviceScanMethod.SYSTEM_EXTENSION:
@@ -202,7 +202,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> None:
         for _ in range(120):
             await scan.async_update()
-            if scan.data.status == ScanState.DONE:
+            if not scan.is_busy:
                 return
             await asyncio.sleep(5)
         raise RuntimeError("DALI device scan ran for a long time and never finished")
