@@ -68,11 +68,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-@pytest.mark.parametrize(
-    "initial_unit_prefix",
-    [{"unit_prefix": "k"}],
-)
-async def test_options(hass: HomeAssistant, platform, initial_unit_prefix) -> None:
+async def test_options(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -83,7 +79,7 @@ async def test_options(hass: HomeAssistant, platform, initial_unit_prefix) -> No
             "round": 1.0,
             "source": "sensor.input",
             "time_window": {"seconds": 0.0},
-            **initial_unit_prefix,
+            "unit_prefix": "k",
             "unit_time": "min",
             "max_sub_interval": {"seconds": 30},
         },
