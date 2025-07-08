@@ -25,6 +25,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._discovery_info: dict[str, Any] = {}
+        self._title_placeholders: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,7 +105,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not devices:
             return self.async_abort(reason="cannot_connect")
 
-        self.context["title_placeholders"] = {"name": name}
+        self._title_placeholders = {"name": name}
 
         return await self.async_step_confirm()
 
@@ -114,18 +115,14 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm addition after discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.context.get("title_placeholders", {}).get(
-                    "name", "TuneBlade"
-                ),
+                title=self._title_placeholders.get("name", "TuneBlade"),
                 data=self._discovery_info,
             )
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": self.context.get("title_placeholders", {}).get(
-                    "name", "TuneBlade"
-                ),
+                "name": self._title_placeholders.get("name", "TuneBlade"),
                 "ip": self._discovery_info["host"],
             },
             data_schema=vol.Schema({}),
