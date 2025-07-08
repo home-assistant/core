@@ -41,6 +41,32 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+async def test_multiple_config_entries_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_second_config_entry: MockConfigEntry,
+) -> None:
+    """Test multiple config entries error."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Setup the second entry (mock_config_entry is first entry)
+    mock_second_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_second_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MEALPLAN,
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "multiple_config_entries"
+
+
 async def test_service_mealplan(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,

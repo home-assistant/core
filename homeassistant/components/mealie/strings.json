@@ -141,6 +141,9 @@
     },
     "setup_failed": {
       "message": "Could not connect to the Mealie instance."
+    },
+    "multiple_config_entries": {
+      "message": "Multiple config entries found. Please specify the Mealie instance to use."
     }
   },
   "services": {

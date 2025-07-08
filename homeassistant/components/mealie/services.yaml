@@ -1,7 +1,7 @@
 get_mealplan:
   fields:
     config_entry_id:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: mealie
@@ -15,7 +15,7 @@ get_mealplan:
 get_recipe:
   fields:
     config_entry_id:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: mealie
@@ -27,7 +27,7 @@ get_recipe:
 import_recipe:
   fields:
     config_entry_id:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: mealie
@@ -42,7 +42,7 @@ import_recipe:
 set_random_mealplan:
   fields:
     config_entry_id:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: mealie
@@ -62,7 +62,7 @@ set_random_mealplan:
 set_mealplan:
   fields:
     config_entry_id:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: mealie

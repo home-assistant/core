@@ -41,7 +41,7 @@ from .coordinator import MealieConfigEntry
 SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
         vol.Optional(ATTR_START_DATE): cv.date,
         vol.Optional(ATTR_END_DATE): cv.date,
     }
@@ -50,7 +50,7 @@ SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
 SERVICE_GET_RECIPE = "get_recipe"
 SERVICE_GET_RECIPE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_RECIPE_ID): str,
     }
 )
@@ -58,7 +58,7 @@ SERVICE_GET_RECIPE_SCHEMA = vol.Schema(
 SERVICE_IMPORT_RECIPE = "import_recipe"
 SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_URL): str,
         vol.Optional(ATTR_INCLUDE_TAGS): bool,
     }
@@ -67,7 +67,7 @@ SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
 SERVICE_SET_RANDOM_MEALPLAN = "set_random_mealplan"
 SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_DATE): cv.date,
         vol.Required(ATTR_ENTRY_TYPE): vol.In([x.lower() for x in MealplanEntryType]),
     }
@@ -77,7 +77,7 @@ SERVICE_SET_MEALPLAN = "set_mealplan"
 SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
             vol.Required(ATTR_DATE): cv.date,
             vol.Required(ATTR_ENTRY_TYPE): vol.In(
                 [x.lower() for x in MealplanEntryType]
@@ -87,7 +87,7 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
     ),
     vol.Schema(
         {
-            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
             vol.Required(ATTR_DATE): cv.date,
             vol.Required(ATTR_ENTRY_TYPE): vol.In(
                 [x.lower() for x in MealplanEntryType]
@@ -101,14 +101,30 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
 
 def _async_get_entry(call: ServiceCall) -> MealieConfigEntry:
     """Get the Mealie config entry."""
-    config_entry_id: str = call.data[ATTR_CONFIG_ENTRY_ID]
-    if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
+    config_entry_id: str | None = call.data.get(ATTR_CONFIG_ENTRY_ID)
+
+    if config_entry_id:
+        if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="integration_not_found",
+                translation_placeholders={"target": DOMAIN},
+            )
+    else:
+        config_entries: list[MealieConfigEntry] = (
+            call.hass.config_entries.async_entries(DOMAIN)
         )
-    if entry.state is not ConfigEntryState.LOADED:
+
+        if len(config_entries) == 1:
+            entry = config_entries[0]
+
+        if len(config_entries) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multiple_config_entries",
+            )
+
+    if entry and entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",

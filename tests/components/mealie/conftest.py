@@ -89,3 +89,15 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
+
+
+@pytest.fixture
+def mock_second_config_entry() -> MockConfigEntry:
+    """Mock a config entry, used for checking multiples."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Mealie 2",
+        data={CONF_HOST: "demo2.mealie.io", CONF_API_TOKEN: "token"},
+        entry_id="01J0BC4QM2YBRP6H5G933CETT2",
+        unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba2",
+    )
