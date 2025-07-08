@@ -825,21 +825,25 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            if self.config_entry and (device_info := entity.device_info):
-                try:
-                    device = dev_reg.async_get(self.hass).async_get_or_create(
-                        config_entry_id=self.config_entry.entry_id,
-                        config_subentry_id=config_subentry_id,
-                        **device_info,
-                    )
-                except dev_reg.DeviceInfoError as exc:
-                    self.logger.error(
-                        "%s: Not adding entity with invalid device info: %s",
-                        self.platform_name,
-                        str(exc),
-                    )
-                    entity.add_to_platform_abort()
-                    return
+            device: dev_reg.DeviceEntry | None
+            if self.config_entry:
+                if device_info := entity.device_info:
+                    try:
+                        device = dev_reg.async_get(self.hass).async_get_or_create(
+                            config_entry_id=self.config_entry.entry_id,
+                            config_subentry_id=config_subentry_id,
+                            **device_info,
+                        )
+                    except dev_reg.DeviceInfoError as exc:
+                        self.logger.error(
+                            "%s: Not adding entity with invalid device info: %s",
+                            self.platform_name,
+                            str(exc),
+                        )
+                        entity.add_to_platform_abort()
+                        return
+                else:
+                    device = entity.device_entry
             else:
                 device = None
 
