@@ -1,4 +1,22 @@
 # serializer version: 1
+# name: test_set_value_same
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1155 Room sensor setpoint S1',
+      'max': 30.0,
+      'min': 5.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '°C',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.room_sensor_setpoint_s1_47398',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.0',
+  })
+# ---
 # name: test_update[Model.F1155-47011-number.heat_offset_s1_47011--10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
