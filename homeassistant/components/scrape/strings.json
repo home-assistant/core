@@ -9,25 +9,43 @@
     "step": {
       "user": {
         "data": {
-          "resource": "Resource",
-          "authentication": "Select authentication method",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "headers": "Headers",
           "method": "Method",
           "payload": "Payload",
-          "timeout": "Timeout",
-          "encoding": "Character encoding"
+          "resource": "Resource"
         },
         "data_description": {
-          "resource": "The URL to the website that contains the value.",
-          "authentication": "Type of the HTTP authentication. Either basic or digest.",
-          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed.",
-          "headers": "Headers to use for the web request.",
-          "timeout": "Timeout for connection to website.",
-          "encoding": "Character encoding to use. Defaults to UTF-8.",
-          "payload": "Payload to use when method is POST."
+          "payload": "Payload to use when method is POST.",
+          "resource": "The URL to the website that contains the value."
+        },
+        "sections": {
+          "auth": {
+            "name": "Authentication settings",
+            "description": "Provide authentication details to access the resource.",
+            "data": {
+              "authentication": "Select authentication method",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "data_description": {
+              "authentication": "Type of the HTTP authentication. Either basic or digest."
+            }
+          },
+          "advanced": {
+            "name": "Advanced settings",
+            "description": "Provide additional advanced settings for the resource.",
+            "data": {
+              "encoding": "Character encoding",
+              "headers": "Headers",
+              "timeout": "Timeout",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "encoding": "Character encoding to use. Defaults to UTF-8.",
+              "headers": "Headers to use for the web request.",
+              "timeout": "Timeout for connection to website.",
+              "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed."
+            }
+          }
         }
       }
     }
@@ -37,24 +55,34 @@
       "step": {
         "user": {
           "data": {
-            "attribute": "Attribute",
             "index": "Index",
-            "select": "Select",
-            "value_template": "Value template",
-            "availability": "Availability template",
-            "device_class": "Device class",
-            "state_class": "State class",
-            "unit_of_measurement": "Unit of measurement"
+            "select": "Select"
           },
           "data_description": {
-            "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details.",
-            "attribute": "Get value of an attribute on the selected tag.",
             "index": "Defines which of the elements returned by the CSS selector to use.",
-            "value_template": "Defines a template to get the state of the sensor.",
-            "availability": "Defines a template to get the availability of the sensor.",
-            "device_class": "The type/class of the sensor to set the icon in the frontend.",
-            "state_class": "The state_class of the sensor.",
-            "unit_of_measurement": "Choose unit of measurement or create your own."
+            "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Advanced settings",
+              "description": "Provide additional advanced settings for the sensor.",
+              "data": {
+                "attribute": "Attribute",
+                "availability": "Availability template",
+                "device_class": "Device class",
+                "state_class": "State class",
+                "unit_of_measurement": "Unit of measurement",
+                "value_template": "Value template"
+              },
+              "data_description": {
+                "attribute": "Get value of an attribute on the selected tag.",
+                "availability": "Defines a template to get the availability of the sensor.",
+                "device_class": "The type/class of the sensor to set the icon in the frontend.",
+                "state_class": "The state_class of the sensor.",
+                "unit_of_measurement": "Choose unit of measurement or create your own.",
+                "value_template": "Defines a template to get the state of the sensor."
+              }
+            }
           }
         }
       }
@@ -64,25 +92,43 @@
     "step": {
       "init": {
         "data": {
-          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
           "method": "[%key:component::scrape::config::step::user::data::method%]",
           "payload": "[%key:component::scrape::config::step::user::data::payload%]",
-          "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "headers": "[%key:component::scrape::config::step::user::data::headers%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "timeout": "[%key:component::scrape::config::step::user::data::timeout%]",
-          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]"
+          "resource": "[%key:component::scrape::config::step::user::data::resource%]"
         },
         "data_description": {
-          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
-          "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
-          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
-          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
-          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
-          "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]",
-          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]"
+          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]",
+          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]"
+        },
+        "sections": {
+          "auth": {
+            "name": "[%key:component::scrape::config::step::user::sections::auth::name%]",
+            "description": "[%key:component::scrape::config::step::user::sections::auth::description%]",
+            "data": {
+              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data::authentication%]",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "data_description": {
+              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data_description::authentication%]"
+            }
+          },
+          "advanced": {
+            "name": "[%key:component::scrape::config::step::user::sections::advanced::name%]",
+            "description": "[%key:component::scrape::config::step::user::sections::advanced::description%]",
+            "data": {
+              "encoding": "[%key:component::scrape::config::step::user::sections::advanced::data::encoding%]",
+              "headers": "[%key:component::scrape::config::step::user::sections::advanced::data::headers%]",
+              "timeout": "[%key:component::scrape::config::step::user::sections::advanced::data::timeout%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "encoding": "[%key:component::scrape::config::step::user::sections::advanced::data_description::encoding%]",
+              "headers": "[%key:component::scrape::config::step::user::sections::advanced::data_description::headers%]",
+              "timeout": "[%key:component::scrape::config::step::user::sections::advanced::data_description::timeout%]",
+              "verify_ssl": "[%key:component::scrape::config::step::user::sections::advanced::data_description::verify_ssl%]"
+            }
+          }
         }
       }
     }

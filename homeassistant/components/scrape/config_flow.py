@@ -107,7 +107,8 @@ RESOURCE_SETUP = vol.Schema(
                         )
                     ),
                 }
-            )
+            ),
+            data_entry_flow.SectionConfig(collapsed=True),
         ),
         vol.Required("advanced"): data_entry_flow.section(
             vol.Schema(
@@ -123,7 +124,8 @@ RESOURCE_SETUP = vol.Schema(
                         CONF_ENCODING, default=DEFAULT_ENCODING
                     ): TextSelector(),
                 }
-            )
+            ),
+            data_entry_flow.SectionConfig(collapsed=True),
         ),
     }
 )
@@ -174,7 +176,8 @@ SENSOR_SETUP = vol.Schema(
                         )
                     ),
                 }
-            )
+            ),
+            data_entry_flow.SectionConfig(collapsed=True),
         ),
     }
 )
