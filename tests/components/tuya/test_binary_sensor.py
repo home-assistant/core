@@ -1,4 +1,4 @@
-"""Test Tuya fan platform."""
+"""Test Tuya binary sensor platform."""
 
 from __future__ import annotations
 
@@ -19,9 +19,11 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.FAN in v]
+    "mock_device_code",
+    [k for k, v in DEVICE_MOCKS.items() if Platform.BINARY_SENSOR in v],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
@@ -37,9 +39,10 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code", [k for k, v in DEVICE_MOCKS.items() if Platform.FAN not in v]
+    "mock_device_code",
+    [k for k, v in DEVICE_MOCKS.items() if Platform.BINARY_SENSOR not in v],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_platform_setup_no_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
