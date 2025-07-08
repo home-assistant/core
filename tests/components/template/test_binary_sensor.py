@@ -119,7 +119,7 @@ async def setup_base_binary_sensor(
         await async_setup_trigger_format(hass, count, config, extra_template_options)
 
 
-async def do_setup_binary_sensor(
+async def async_setup_binary_sensor(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
@@ -156,7 +156,7 @@ async def setup_binary_sensor(
     extra_config: dict[str, Any],
 ) -> None:
     """Do setup of binary sensor integration."""
-    await do_setup_binary_sensor(hass, count, style, state_template, extra_config)
+    await async_setup_binary_sensor(hass, count, style, state_template, extra_config)
 
 
 @pytest.fixture
@@ -1119,7 +1119,7 @@ async def test_restore_state(
     fake_state = State(TEST_ENTITY_ID, restored_state, {})
     mock_restore_cache(hass, (fake_state,))
 
-    await do_setup_binary_sensor(hass, count, style, state_template, extra_config)
+    await async_setup_binary_sensor(hass, count, style, state_template, extra_config)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == initial_state
@@ -1350,7 +1350,7 @@ async def test_trigger_entity_restore_state(
         "auto_off_time": None,
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    await do_setup_binary_sensor(
+    await async_setup_binary_sensor(
         hass,
         1,
         ConfigurationStyle.TRIGGER,
@@ -1403,7 +1403,7 @@ async def test_trigger_entity_restore_state_auto_off(
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    await do_setup_binary_sensor(
+    await async_setup_binary_sensor(
         hass,
         1,
         ConfigurationStyle.TRIGGER,
@@ -1438,7 +1438,7 @@ async def test_trigger_entity_restore_state_auto_off_expired(
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    await do_setup_binary_sensor(
+    await async_setup_binary_sensor(
         hass,
         1,
         ConfigurationStyle.TRIGGER,
@@ -1469,7 +1469,7 @@ async def test_saving_auto_off(
             "isoformat": "2022-02-02T02:02:02+00:00",
         },
     }
-    await do_setup_binary_sensor(
+    await async_setup_binary_sensor(
         hass,
         1,
         ConfigurationStyle.TRIGGER,
