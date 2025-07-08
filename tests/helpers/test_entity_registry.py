@@ -1930,12 +1930,13 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     device_registry.async_update_device(
         device_entry.id,
         remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id=subentries_in_device[0],
+        remove_config_subentry_id=subentries_in_device[1],
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get(device_entry.id)
-    assert entity_registry.async_is_registered(entry_1.entity_id)
+    assert not device_registry.async_get(device_entry.id)
+    # All entities are now removed
+    assert not entity_registry.async_is_registered(entry_1.entity_id)
     assert not entity_registry.async_is_registered(entry_2.entity_id)
     assert not entity_registry.async_is_registered(entry_3.entity_id)
 
