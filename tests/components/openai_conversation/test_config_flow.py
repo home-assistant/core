@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.openai_conversation.config_flow import RECOMMENDED_OPTIONS
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -286,29 +287,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "",
             },
         ),
-        (  # options with no model-specific settings
-            {},
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 1.0,
-                    CONF_CHAT_MODEL: "gpt-4.5-preview",
-                    CONF_TOP_P: RECOMMENDED_TOP_P,
-                    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "gpt-4.5-preview",
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-            },
-        ),
         (  # options for reasoning models
             {},
             (
@@ -324,6 +302,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_REASONING_EFFORT: "high",
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
@@ -334,6 +313,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: 10000,
                 CONF_REASONING_EFFORT: "high",
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # options for web search without user location
@@ -356,6 +336,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: False,
                 },
             ),
             {
@@ -368,6 +349,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: False,
             },
         ),
         # Test that current options are showed as suggested values
@@ -386,6 +368,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -402,6 +385,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
@@ -414,6 +398,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # Case 2: reasoning model
@@ -437,7 +422,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
                 },
-                {CONF_REASONING_EFFORT: "high"},
+                {CONF_REASONING_EFFORT: "high", CONF_CODE_INTERPRETER: False},
             ),
             {
                 CONF_RECOMMENDED: False,
@@ -447,6 +432,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "high",
+                CONF_CODE_INTERPRETER: False,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -458,6 +444,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_CODE_INTERPRETER: True,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -489,6 +476,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "high",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -517,6 +505,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -531,6 +520,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_REASONING_EFFORT: "low",
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
@@ -541,6 +531,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # Case 4: reasoning to web search
@@ -553,6 +544,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -569,6 +561,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: False,
                 },
             ),
             {
@@ -581,6 +574,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: False,
             },
         ),
     ],
@@ -731,4 +725,5 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_CODE_INTERPRETER: False,
     }

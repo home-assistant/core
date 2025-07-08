@@ -8,6 +8,12 @@ from openai import AuthenticationError, RateLimitError
 from openai.types import ResponseFormatText
 from openai.types.responses import (
     Response,
+    ResponseCodeInterpreterCallCodeDeltaEvent,
+    ResponseCodeInterpreterCallCodeDoneEvent,
+    ResponseCodeInterpreterCallCompletedEvent,
+    ResponseCodeInterpreterCallInProgressEvent,
+    ResponseCodeInterpreterCallInterpretingEvent,
+    ResponseCodeInterpreterToolCall,
     ResponseCompletedEvent,
     ResponseContentPartAddedEvent,
     ResponseContentPartDoneEvent,
@@ -42,6 +48,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.openai_conversation.const import (
+    CONF_CODE_INTERPRETER,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -101,9 +108,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         )
         yield ResponseInProgressEvent(
             response=response,
-            sequence_number=0,
+            sequence_number=1,
             type="response.in_progress",
         )
+        sequence_number = 2
         response.status = "completed"
 
         for value in events:
@@ -118,6 +126,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 response.error = value
                 break
 
+            value.sequence_number = sequence_number
+            sequence_number += 1
             yield value
 
             if isinstance(value, ResponseErrorEvent):
@@ -126,19 +136,19 @@ def mock_create_stream() -> Generator[AsyncMock]:
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.incomplete",
             )
         elif response.status == "failed":
             yield ResponseFailedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.completed",
             )
 
@@ -564,6 +574,89 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
     ]
 
 
+def create_code_interpreter_item(
+    id: str, code: str | list[str], output_index: int
+) -> list[ResponseStreamEvent]:
+    """Create a message item."""
+    if isinstance(code, str):
+        code = [code]
+
+    container_id = "cntr_A"
+    events = [
+        ResponseOutputItemAddedEvent(
+            item=ResponseCodeInterpreterToolCall(
+                id=id,
+                code="",
+                container_id=container_id,
+                outputs=None,
+                type="code_interpreter_call",
+                status="in_progress",
+            ),
+            output_index=output_index,
+            sequence_number=0,
+            type="response.output_item.added",
+        ),
+        ResponseCodeInterpreterCallInProgressEvent(
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call.in_progress",
+        ),
+    ]
+
+    events.extend(
+        ResponseCodeInterpreterCallCodeDeltaEvent(
+            delta=delta,
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call_code.delta",
+        )
+        for delta in code
+    )
+
+    code = "".join(code)
+
+    events.extend(
+        [
+            ResponseCodeInterpreterCallCodeDoneEvent(
+                item_id=id,
+                output_index=output_index,
+                code=code,
+                sequence_number=0,
+                type="response.code_interpreter_call_code.done",
+            ),
+            ResponseCodeInterpreterCallInterpretingEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.interpreting",
+            ),
+            ResponseCodeInterpreterCallCompletedEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.completed",
+            ),
+            ResponseOutputItemDoneEvent(
+                item=ResponseCodeInterpreterToolCall(
+                    id=id,
+                    code=code,
+                    container_id=container_id,
+                    outputs=None,
+                    status="completed",
+                    type="code_interpreter_call",
+                ),
+                output_index=output_index,
+                sequence_number=0,
+                type="response.output_item.done",
+            ),
+        ]
+    )
+
+    return events
+
+
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -809,6 +902,52 @@ async def test_web_search(
                 "timezone": "America/Los_Angeles",
             },
         }
+    ]
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+
+async def test_code_interpreter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test code_interpreter tool."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_CODE_INTERPRETER: True,
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    message = "I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758."
+    mock_create_stream.return_value = [
+        (
+            *create_code_interpreter_item(
+                id="ci_A",
+                code=["import", " math", "\n", "math", ".sqrt", "(", "555", "55", ")"],
+                output_index=0,
+            ),
+            *create_message_item(id="msg_A", text=message, output_index=1),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please use the python tool to calculate square root of 55555",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[0][2]["tools"] == [
+        {"type": "code_interpreter", "container": {"type": "auto"}}
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech

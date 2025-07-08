@@ -48,12 +48,14 @@
         "model": {
           "title": "Model-specific options",
           "data": {
+            "code_interpreter": "Enable code interpreter tool",
             "reasoning_effort": "Reasoning effort",
             "web_search": "Enable web search",
             "search_context_size": "Search context size",
             "user_location": "Include home location"
           },
           "data_description": {
+            "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
             "web_search": "Allow the model to search the web for the latest information before generating a response",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
