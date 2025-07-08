@@ -454,10 +454,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                         CONF_USE_WALLCLOCK_AS_TIMESTAMPS
                         not in user_input[SECTION_ADVANCED]
                     ):
-                        user_input[SECTION_ADVANCED][
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-                        ] = self.config_entry.options[SECTION_ADVANCED].get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                        data[SECTION_ADVANCED][CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
+                            self.config_entry.options[SECTION_ADVANCED].get(
+                                CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                            )
                         )
                     self.user_input = data
                     # temporary preview for user to check the image
