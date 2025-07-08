@@ -1,0 +1,21 @@
+state: # Trigger which fires when light state changes to a specific value
+  fields:
+    target:
+      required: true
+      selector:
+        target:
+          entity:
+            domain: light
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+    state:
+      required: true
+      selector:
+        state: # I do not know how to say "The union of every states (mode) of the target"
