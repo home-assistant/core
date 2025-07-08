@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 import contextlib
+from copy import deepcopy
 import errno
 from http import HTTPStatus
 import os.path
@@ -24,6 +25,7 @@ from homeassistant.components.generic.const import (
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
     DOMAIN,
+    SECTION_ADVANCED,
 )
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -49,16 +51,13 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 TESTDATA = {
     CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
     CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
-    CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
     CONF_USERNAME: "fred_flintstone",
     CONF_PASSWORD: "bambam",
-    CONF_FRAMERATE: 5,
-    CONF_VERIFY_SSL: False,
-}
-
-TESTDATA_OPTIONS = {
-    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-    **TESTDATA,
+    SECTION_ADVANCED: {
+        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+        CONF_FRAMERATE: 5,
+        CONF_VERIFY_SSL: False,
+    },
 }
 
 TESTDATA_YAML = {
@@ -114,12 +113,14 @@ async def test_form(
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
-        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5.0,
-        CONF_VERIFY_SSL: False,
+        SECTION_ADVANCED: {
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_FRAMERATE: 5.0,
+            CONF_VERIFY_SSL: False,
+        },
     }
 
     # Check that the preview image is disabled after.
@@ -152,12 +153,14 @@ async def test_form_only_stillimage(
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
-        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5.0,
-        CONF_VERIFY_SSL: False,
+        SECTION_ADVANCED: {
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_FRAMERATE: 5.0,
+            CONF_VERIFY_SSL: False,
+        },
     }
 
     assert respx.calls.call_count == 1
@@ -385,8 +388,8 @@ async def test_form_rtsp_mode(
     mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user enters a stream url."""
-    data = TESTDATA.copy()
-    data[CONF_RTSP_TRANSPORT] = "tcp"
+    data = deepcopy(TESTDATA)
+    data[SECTION_ADVANCED][CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
     result1 = await hass.config_entries.flow.async_configure(user_flow["flow_id"], data)
     assert result1["type"] is FlowResultType.FORM
@@ -399,14 +402,16 @@ async def test_form_rtsp_mode(
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
-        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://127.0.0.1/testurl/2",
-        CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5.0,
-        CONF_VERIFY_SSL: False,
+        SECTION_ADVANCED: {
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_FRAMERATE: 5.0,
+            CONF_VERIFY_SSL: False,
+            CONF_RTSP_TRANSPORT: "tcp",
+        },
     }
 
 
@@ -433,13 +438,15 @@ async def test_form_only_stream(
 
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
-        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_CONTENT_TYPE: "image/jpeg",
-        CONF_FRAMERATE: 5.0,
-        CONF_VERIFY_SSL: False,
+        SECTION_ADVANCED: {
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_FRAMERATE: 5.0,
+            CONF_VERIFY_SSL: False,
+        },
     }
 
     with patch(
@@ -457,9 +464,11 @@ async def test_form_still_and_stream_not_provided(
     result2 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
         {
-            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-            CONF_FRAMERATE: 5,
-            CONF_VERIFY_SSL: False,
+            SECTION_ADVANCED: {
+                CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+                CONF_FRAMERATE: 5,
+                CONF_VERIFY_SSL: False,
+            },
         },
     )
     assert result2["type"] is FlowResultType.FORM
@@ -879,8 +888,17 @@ async def test_migrate_existing_ids(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that existing ids are migrated for issue #70568."""
+    test_data = {
+        CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
+        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
+        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+        CONF_USERNAME: "fred_flintstone",
+        CONF_PASSWORD: "bambam",
+        CONF_FRAMERATE: 5,
+        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
+        CONF_VERIFY_SSL: False,
+    }
 
-    test_data = TESTDATA_OPTIONS.copy()
     test_data[CONF_CONTENT_TYPE] = "image/png"
     old_unique_id = "54321"
     entity_id = "camera.sample_camera"
@@ -926,9 +944,12 @@ async def test_options_use_wallclock_as_timestamps(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+
+    data = deepcopy(TESTDATA)
+    data[SECTION_ADVANCED][CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+        user_input=data,
     )
     assert result2["type"] is FlowResultType.FORM
 
@@ -958,7 +979,7 @@ async def test_options_use_wallclock_as_timestamps(
     assert result3["step_id"] == "init"
     result4 = await hass.config_entries.options.async_configure(
         result3["flow_id"],
-        user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+        user_input=data,
     )
     assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "user_confirm"
