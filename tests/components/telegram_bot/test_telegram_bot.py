@@ -50,6 +50,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_VERIFY_SSL,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADVANCED_SETTINGS,
     SERVICE_ANSWER_CALLBACK_QUERY,
@@ -183,6 +184,7 @@ async def test_send_message(
         (
             {
                 ATTR_MESSAGE: "test_message",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
                 ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
             },
             InlineKeyboardMarkup(
@@ -199,6 +201,7 @@ async def test_send_message(
         (
             {
                 ATTR_MESSAGE: "test_message",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
                 ATTR_KEYBOARD_INLINE: [
                     [["command1", "/cmd1"]],
                     [["mock_link", "https://mock_link"]],
@@ -250,7 +253,7 @@ async def test_send_message_with_inline_keyboard(
         mock_send_message.assert_called_once_with(
             12345678,
             "test_message",
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=None,
             disable_web_page_preview=None,
             disable_notification=False,
             reply_to_message_id=None,
