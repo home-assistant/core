@@ -57,6 +57,7 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_MANUFACTURER,
@@ -147,9 +148,12 @@ class Router:
     @property
     def device_connections(self) -> set[tuple[str, str]]:
         """Get router connections for device registry."""
-        return {
+        connections = {
             (dr.CONNECTION_NETWORK_MAC, x) for x in self.config_entry.data[CONF_MAC]
         }
+        if udn := self.config_entry.data.get(CONF_UPNP_UDN):
+            connections.add((dr.CONNECTION_UPNP, udn))
+        return connections
 
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
