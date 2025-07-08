@@ -596,9 +596,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                         "code": self._color_temp.dpcode,
                         "value": round(
                             self._color_temp.remap_value_from(
-                                kwargs[ATTR_COLOR_TEMP_KELVIN],
-                                self.min_mireds,
-                                self.max_mireds,
+                                color_util.color_temperature_kelvin_to_mired(
+                                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                                ),
+                                MIN_MIREDS,
+                                MAX_MIREDS,
                                 reverse=True,
                             )
                         ),
