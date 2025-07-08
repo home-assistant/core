@@ -175,18 +175,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                         sensor_advanced_key
                     )
 
-            _LOGGER.debug(
-                "Migrating sensor %s with unique id %s to sub config entry data %s",
-                title,
-                old_unique_id,
-                sensor_config,
-            )
             await asyncio.sleep(0.1)  # Ensure different subentry IDs
             new_sub_entry = ConfigSubentry(
                 data=MappingProxyType(sensor_config),
                 subentry_type="entity",
                 title=title,
                 unique_id=None,
+            )
+            _LOGGER.debug(
+                "Migrating sensor %s with unique id %s to sub config entry id %s, data %s",
+                title,
+                old_unique_id,
+                new_sub_entry.subentry_id,
+                sensor_config,
             )
             old_to_new_sensor_id[old_unique_id] = new_sub_entry.subentry_id
             hass.config_entries.async_add_subentry(entry, new_sub_entry)
