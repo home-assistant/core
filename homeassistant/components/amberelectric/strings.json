@@ -28,8 +28,8 @@
       "description": "Retrieves price forecasts from Amber Electric for for a site.",
       "fields": {
         "config_entry_id": {
-          "description": "Entity config to get forecasts for.",
-          "name": "Entity"
+          "description": "The config entry of the site to get forecasts for.",
+          "name": "Config entry"
         },
         "channel_type": {
           "name": "Channel type",
