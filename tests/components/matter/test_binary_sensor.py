@@ -184,8 +184,8 @@ async def test_evse_sensor(
     assert state
     assert state.state == "off"
 
-    # Test SupplyStateEnum value with binary_sensor.evse_supply_charging
-    entity_id = "binary_sensor.evse_supply_charging_state"
+    # Test SupplyStateEnum value with binary_sensor.evse_charger_supply_state
+    entity_id = "binary_sensor.evse_charger_supply_state"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
