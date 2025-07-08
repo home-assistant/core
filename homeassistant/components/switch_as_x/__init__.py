@@ -11,7 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,
+    async_remove_helper_config_entry_from_source_device,
+)
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 
@@ -87,8 +90,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
             options.setdefault(CONF_INVERT, False)
+        if config_entry.version < 3:
+            # Remove the switch_as_x config entry from the source device
+            async_remove_helper_config_entry_from_source_device(
+                hass,
+                helper_config_entry_id=config_entry.entry_id,
+                source_device_id=async_get_parent_device_id(
+                    hass, options[CONF_ENTITY_ID]
+                ),
+            )
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(
