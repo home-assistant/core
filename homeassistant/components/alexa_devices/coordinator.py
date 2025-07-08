@@ -55,13 +55,13 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         except CannotConnect as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
+                translation_key="cannot_connect_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except CannotRetrieveData as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="cannot_retrieve_data",
+                translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except CannotAuthenticate as err:
