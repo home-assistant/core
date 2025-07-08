@@ -40,7 +40,7 @@
   },
   "exceptions": {
     "integration_not_found": {
-      "message": "\"{target}\" not found in registry."
+      "message": "Config entry \"{target}\" not found in registry."
     },
     "not_loaded": {
       "message": "{target} is not loaded."

@@ -42,7 +42,7 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> AmberConfigEnt
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
+            translation_placeholders={"target": config_entry_id},
         )
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
