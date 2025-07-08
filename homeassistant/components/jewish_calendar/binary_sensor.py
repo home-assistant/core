@@ -20,6 +20,8 @@ from homeassistant.util import dt as dt_util
 
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
@@ -39,7 +41,6 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
     JewishCalendarBinarySensorEntityDescription(
         key="issur_melacha_in_effect",
         translation_key="issur_melacha_in_effect",
-        icon="mdi:power-plug-off",
         is_on=lambda state, now: bool(state.issur_melacha_in_effect(now)),
     ),
     JewishCalendarBinarySensorEntityDescription(
@@ -81,17 +82,8 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        zmanim = self._get_zmanim()
+        zmanim = self.make_zmanim(dt.date.today())
         return self.entity_description.is_on(zmanim, dt_util.now())
-
-    def _get_zmanim(self) -> Zmanim:
-        """Return the Zmanim object for now()."""
-        return Zmanim(
-            date=dt.date.today(),
-            location=self._location,
-            candle_lighting_offset=self._candle_lighting_offset,
-            havdalah_offset=self._havdalah_offset,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -115,7 +107,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
-        zmanim = self._get_zmanim()
+        zmanim = self.make_zmanim(dt.date.today())
         update = zmanim.netz_hachama.local + dt.timedelta(days=1)
         candle_lighting = zmanim.candle_lighting
         if candle_lighting is not None and now < candle_lighting < update:

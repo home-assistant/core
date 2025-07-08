@@ -130,6 +130,9 @@
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
+    "reactive_energy": {
+      "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
+    },
     "reactive_power": {
       "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
     },

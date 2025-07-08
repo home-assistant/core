@@ -37,7 +37,7 @@
           ]),
           'targetTemperature': list([
             dict({
-              'max': -14,
+              'max': 28,
               'min': -28,
               'zone': 1,
             }),
@@ -70,7 +70,7 @@
           ]),
           'targetTemperature': list([
             dict({
-              'max': -14,
+              'max': 28,
               'min': -28,
               'zone': 1,
             }),
@@ -103,7 +103,7 @@
           ]),
           'targetTemperature': list([
             dict({
-              'max': -14,
+              'max': 28,
               'min': -28,
               'zone': 1,
             }),
@@ -136,7 +136,7 @@
           ]),
           'targetTemperature': list([
             dict({
-              'max': -14,
+              'max': 28,
               'min': -28,
               'zone': 1,
             }),
@@ -710,7 +710,7 @@
           ]),
           'targetTemperature': list([
             dict({
-              'max': -14,
+              'max': 28,
               'min': -28,
               'zone': 1,
             }),
