@@ -28,7 +28,7 @@ async def async_setup_entry(
     config_entry: VegeHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Vegetronix switches from a config entry."""
+    """Set up VegeHub switches from a config entry."""
     switches: list[VegeHubSwitch] = []
     coordinator = config_entry.runtime_data
 

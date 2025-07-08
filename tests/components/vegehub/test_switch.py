@@ -1,4 +1,4 @@
-"""Unit tests for the VegeHub integration's sensor.py."""
+"""Unit tests for the VegeHub integration's switch.py."""
 
 from unittest.mock import patch
 
