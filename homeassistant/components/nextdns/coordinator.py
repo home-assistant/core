@@ -45,7 +45,7 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
     """Class to manage fetching NextDNS data API."""
 
     config_entry: NextDnsConfigEntry
-    _update_interval: timedelta | None = None
+    _update_interval: timedelta
 
     def __init__(
         self,
