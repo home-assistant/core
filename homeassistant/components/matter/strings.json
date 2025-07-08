@@ -402,6 +402,9 @@
           "other": "Other fault"
         }
       },
+      "evse_soc": {
+        "name": "State of charge"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
