@@ -126,6 +126,8 @@ async def switchbot_device(
     mock_switchbot_light_strip: AsyncMock,
     mock_switchbot_fan: AsyncMock,
     mock_switchbot_vacuum: AsyncMock,
+    mock_switchbot_1pm: AsyncMock,
+    mock_switchbot_lock: AsyncMock,
 ) -> None:
     """Fixture to create a mock Switchbot device."""
 
@@ -211,6 +213,32 @@ async def mock_switchbot_roller_shade() -> AsyncGenerator[dict[str, AsyncMock]]:
             "close": mock_close,
             "stop": mock_stop,
             "set_position": mock_set_position,
+        }
+
+
+@pytest.fixture
+async def mock_switchbot_1pm() -> AsyncGenerator[dict[str, AsyncMock]]:
+    """Fixture to create a mock Switchbot device."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRelaySwitch.update"
+        ) as mock_update,
+    ):
+        yield {
+            "update": mock_update,
+        }
+
+
+@pytest.fixture
+async def mock_switchbot_lock() -> AsyncGenerator[dict[str, AsyncMock]]:
+    """Fixture to create a mock Switchbot device."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotLock.update"
+        ) as mock_update,
+    ):
+        yield {
+            "update": mock_update,
         }
 
 
