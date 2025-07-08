@@ -1,4 +1,10 @@
 {
+  "common": {
+    "unavailable": "Unavailable",
+    "abort": "Abort",
+    "vehicle": "Vehicle",
+    "descr_pin": "4-digit code to enable or disable the setting"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -485,6 +491,10 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
+      "credit_balance": {
+        "name": "Teslemetry credits",
+        "unit_of_measurement": "credits"
+      },
       "drive_state_active_route_destination": {
         "name": "Destination"
       },
@@ -568,7 +578,7 @@
         "name": "Version"
       },
       "vin": {
-        "name": "Vehicle",
+        "name": "[%key:component::teslemetry::common::vehicle%]",
         "state": {
           "disconnected": "[%key:common::state::disconnected%]"
         }
@@ -753,40 +763,40 @@
       "di_state_f": {
         "name": "Front drive inverter",
         "state": {
-          "unavailable": "Unavailable",
+          "unavailable": "[%key:component::teslemetry::common::unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "Abort",
+          "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_r": {
         "name": "Rear drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry::entity::sensor::di_state_f::state::unavailable%]",
+          "unavailable": "[%key:component::teslemetry::common::unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry::entity::sensor::di_state_f::state::abort%]",
+          "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rel": {
         "name": "Rear left drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry::entity::sensor::di_state_f::state::unavailable%]",
+          "unavailable": "[%key:component::teslemetry::common::unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry::entity::sensor::di_state_f::state::abort%]",
+          "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rer": {
         "name": "Rear right drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry::entity::sensor::di_state_f::state::unavailable%]",
+          "unavailable": "[%key:component::teslemetry::common::unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry::entity::sensor::di_state_f::state::abort%]",
+          "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
@@ -1011,6 +1021,12 @@
       "charge_rate_mile_per_hour": {
         "name": "Charge rate"
       },
+      "hvac_left_temperature_request": {
+        "name": "Left temperature request"
+      },
+      "hvac_right_temperature_request": {
+        "name": "Right temperature request"
+      },
       "hvac_power_state": {
         "name": "HVAC power state",
         "state": {
@@ -1112,7 +1128,7 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to share to.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "gps": {
           "description": "Location to navigate to.",
@@ -1130,7 +1146,7 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to schedule.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
           "description": "Enable or disable scheduled charging.",
@@ -1152,7 +1168,7 @@
         },
         "device_id": {
           "description": "Vehicle to schedule.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
           "description": "Enable or disable scheduled departure.",
@@ -1186,15 +1202,15 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
           "description": "Enable or disable speed limit.",
           "name": "[%key:common::action::enable%]"
         },
         "pin": {
-          "description": "4 digit PIN.",
-          "name": "PIN"
+          "description": "[%key:component::teslemetry::common::descr_pin%]",
+          "name": "[%key:common::config_flow::data::pin%]"
         }
       },
       "name": "Set speed limit"
@@ -1218,15 +1234,15 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
           "description": "Enable or disable valet mode.",
           "name": "[%key:common::action::enable%]"
         },
         "pin": {
-          "description": "4 digit PIN.",
-          "name": "PIN"
+          "description": "[%key:component::teslemetry::common::descr_pin%]",
+          "name": "[%key:common::config_flow::data::pin%]"
         }
       },
       "name": "Set valet mode"

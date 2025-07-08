@@ -39,6 +39,8 @@ async def async_get_config_entry_diagnostics(
         "firmware version": api.sw_version,
         "HTTPS": api.use_https,
         "HTTP(S) port": api.port,
+        "Baichuan port": api.baichuan.port,
+        "Baichuan only": api.baichuan_only,
         "WiFi connection": api.wifi_connection,
         "WiFi signal": api.wifi_signal,
         "RTMP enabled": api.rtmp_enabled,

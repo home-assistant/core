@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
 
@@ -70,6 +74,7 @@ async def test_gauge_icon() -> None:
 
 
 @pytest.mark.freeze_time("2022-09-18 23:00:44+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_litter_robot_sensor(
     hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
 ) -> None:
@@ -94,6 +99,9 @@ async def test_litter_robot_sensor(
     sensor = hass.states.get("sensor.test_pet_weight")
     assert sensor.state == "12.0"
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+    sensor = hass.states.get("sensor.test_total_cycles")
+    assert sensor.state == "158"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_feeder_robot_sensor(

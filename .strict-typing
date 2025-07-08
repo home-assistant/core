@@ -65,7 +65,9 @@ homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
+homeassistant.components.alexa_devices.*
 homeassistant.components.alpha_vantage.*
+homeassistant.components.altruist.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*
@@ -270,6 +272,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
+homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -378,6 +381,7 @@ homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
@@ -385,6 +389,7 @@ homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
@@ -434,7 +439,6 @@ homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
-homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
@@ -500,6 +504,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
+homeassistant.components.telegram_bot.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*

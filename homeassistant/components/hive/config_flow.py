@@ -16,7 +16,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -24,6 +23,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
+from . import HiveConfigEntry
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 
@@ -37,7 +37,6 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
         self.tokens: dict[str, str] = {}
-        self.entry: ConfigEntry | None = None
         self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
@@ -54,7 +53,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             # Get user from existing entry and abort if already setup
-            self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
             if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
@@ -145,12 +144,12 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         # Setup the config entry
         self.data["tokens"] = self.tokens
         if self.source == SOURCE_REAUTH:
-            assert self.entry
-            self.hass.config_entries.async_update_entry(
-                self.entry, title=self.data["username"], data=self.data
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                title=self.data["username"],
+                data=self.data,
+                reason="reauth_successful",
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
     async def async_step_reauth(
@@ -166,7 +165,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HiveConfigEntry,
     ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
@@ -175,7 +174,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 class HiveOptionsFlowHandler(OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: HiveConfigEntry
+
+    def __init__(self, config_entry: HiveConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
@@ -190,7 +191,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self.hive = self.hass.data["hive"][self.config_entry.entry_id]
+        self.hive = self.config_entry.runtime_data
         errors: dict[str, str] = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)

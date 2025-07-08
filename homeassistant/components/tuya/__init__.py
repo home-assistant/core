@@ -94,7 +94,7 @@ class SharingMQCompat(SharingMQ):
         """Start the MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         mqttc = mqtt.Client(client_id=mq_config.client_id)
         mqttc.username_pw_set(mq_config.username, mq_config.password)

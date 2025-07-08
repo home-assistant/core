@@ -11,6 +11,7 @@ from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
+    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
     DOMAIN,
 )
@@ -345,3 +346,24 @@ async def test_async_ufp_instance_for_config_entry_ids(
     result = async_ufp_instance_for_config_entry_ids(hass, entry_ids)
 
     assert result == expected_result
+
+
+async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
+    """Test remove CONF_ALLOW_EA from options while migrating a 1 config entry to 2."""
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
+        ),
+        patch("homeassistant.components.unifiprotect.async_start_discovery"),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={"test": "1", "test2": "2", CONF_ALLOW_EA: "True"},
+            version=1,
+            unique_id="123456",
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.version == 2
+        assert entry.options.get(CONF_ALLOW_EA) is None
+        assert entry.unique_id == "123456"
