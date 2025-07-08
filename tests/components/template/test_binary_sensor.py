@@ -1497,6 +1497,73 @@ async def test_saving_auto_off(
     assert extra_data == fake_extra_data
 
 
+async def test_trigger_entity_restore_invalid_auto_off_time_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test restoring trigger template binary sensor."""
+
+    freezer.move_to("2022-02-02 12:02:00+00:00")
+    fake_state = State(TEST_ENTITY_ID, STATE_ON, {})
+    fake_extra_data = {
+        "auto_off_time": {
+            "_type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2022, 2, 2, 12, 2, 0, tzinfo=UTC).isoformat(),
+        },
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == fake_extra_data
+
+    await async_setup_binary_sensor(
+        hass,
+        1,
+        ConfigurationStyle.TRIGGER,
+        _BEER_TRIGGER_VALUE_TEMPLATE,
+        {"device_class": "motion", "auto_off": '{{ ({ "seconds": 1 + 1 }) }}'},
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_trigger_entity_restore_invalid_auto_off_time_key(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test restoring trigger template binary sensor."""
+
+    freezer.move_to("2022-02-02 12:02:00+00:00")
+    fake_state = State(TEST_ENTITY_ID, STATE_ON, {})
+    fake_extra_data = {
+        "auto_off_timex": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2022, 2, 2, 12, 2, 0, tzinfo=UTC).isoformat(),
+        },
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert "auto_off_timex" in extra_data
+    assert extra_data == fake_extra_data
+
+    await async_setup_binary_sensor(
+        hass,
+        1,
+        ConfigurationStyle.TRIGGER,
+        _BEER_TRIGGER_VALUE_TEMPLATE,
+        {"device_class": "motion", "auto_off": '{{ ({ "seconds": 1 + 1 }) }}'},
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
