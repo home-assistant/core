@@ -1,5 +1,6 @@
 """Test config flow for the TuneBlade Remote integration."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -18,16 +19,24 @@ async def test_user_flow_success(hass: HomeAssistant, mock_tuneblade_api) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": "user"},
-        data={
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Submit the form
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "host": "127.0.0.1",
             "port": 54412,
             "name": "TestDevice",
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "TestDevice"
-    assert result["data"] == {
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "TestDevice"
+    assert result2["data"] == {
         "host": "127.0.0.1",
         "port": 54412,
         "name": "TestDevice",
@@ -45,15 +54,22 @@ async def test_user_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": "user"},
-        data={
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "host": "127.0.0.1",
             "port": 54412,
             "name": "TestDevice",
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.asyncio
@@ -62,15 +78,15 @@ async def test_zeroconf_flow_success(hass: HomeAssistant, mock_tuneblade_api) ->
 
     mock_tuneblade_api.async_get_data = AsyncMock(return_value=[{"id": "abc"}])
 
-    discovery_info = {
-        "host": "127.0.0.1",
-        "port": 54412,
-        "name": "TestDevice@local",
-        "type": "_http._tcp.local.",
-        "properties": {},
-    }
+    # Simulate ZeroconfServiceInfo object
+    discovery_info = SimpleNamespace(
+        host="127.0.0.1",
+        port=54412,
+        name="TestDevice@local",
+        type="_http._tcp.local.",
+        properties={},
+    )
 
-    # Start zeroconf flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": "zeroconf"},
@@ -80,7 +96,6 @@ async def test_zeroconf_flow_success(hass: HomeAssistant, mock_tuneblade_api) ->
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    # Confirm
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )

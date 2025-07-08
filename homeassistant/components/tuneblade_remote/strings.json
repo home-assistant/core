@@ -8,6 +8,11 @@
           "host": "Host",
           "port": "Port",
           "name": "Name"
+        },
+        "data_description": {
+          "host": "IP address of the TuneBlade device",
+          "port": "The port number that TuneBlade exposes its API on",
+          "name": "Friendly name for this TuneBlade instance"
         }
       },
       "confirm": {
