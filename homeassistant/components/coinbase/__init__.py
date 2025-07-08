@@ -13,7 +13,7 @@ from coinbase.wallet.error import AuthenticationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import Throttle
 
 from .const import (
@@ -37,6 +37,7 @@ from .const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
     CONF_EXCHANGE_RATES,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +53,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> 
 
     instance = await hass.async_add_executor_job(create_and_update_instance, entry)
 
+    if "organizations" not in entry.data[CONF_API_KEY]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "v2_api_deprecated",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="v2_api_deprecated",
+            translation_placeholders={
+                "config_entry_title": entry.title,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, "v2_api_deprecated")
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     entry.runtime_data = instance
@@ -63,6 +80,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> bool:
     """Unload a config entry."""
+
+    if "organizations" in entry.data[CONF_API_KEY]:
+        ir.async_delete_issue(hass, DOMAIN, "v2_api_deprecated")
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

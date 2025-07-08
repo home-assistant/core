@@ -38,5 +38,11 @@
       "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
       "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase."
     }
+  },
+  "issues": {
+    "v2_api_deprecated": {
+      "title": "Coinbase API v2 is deprecated",
+      "description": "Your Coinbase integration '{config_entry_title}' is using the deprecated API v2. To continue using Coinbase with Home Assistant, you need to upgrade to API v3. Please follow these steps: 1) Visit your [Coinbase Developer settings](https://www.coinbase.com/settings/api), 2) Create a new API key with the 'Organizations' permission, 3) Replace your current API credentials in the integration configuration with the new v3 API key and secret, 4) Restart Home Assistant. The new API provides better security and more features."
+    }
   }
 }
