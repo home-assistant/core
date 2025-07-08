@@ -1,105 +1,136 @@
 """Droplet API."""
 
+from dataclasses import dataclass
 import json
+import logging
+import socket
+
+import aiohttp
 
 
 class DropletDiscovery:
     """Store Droplet discovery information."""
 
     device_id: str | None
-    name: str
-    data_topic: str | None
-    health_topic: str | None
+    host: str
+    port: int | None
 
-    sw_version: str | None
-    manufacturer: str | None
-    serial_number: str | None
-    model: str | None
-
-    def __init__(self, topic: str, payload: dict) -> None:
+    def __init__(self, host: str, port: int | None, service_name: str) -> None:
         """Initialize Droplet discovery."""
-        self.data_topic = payload.get("state_topic")
-        self.health_topic = payload.get("availability_topic")
-
-        # Device metadata
-        dev_info: dict | None
-        if dev_info := payload.get("dev"):
-            self.device_id = dev_info.get("ids")
-            self.sw_version = dev_info.get("sw")
-            self.manufacturer = dev_info.get("mf")
-            self.serial_number = dev_info.get("sn")
-            self.model = dev_info.get("mdl")
+        self.host = host
+        self.port = port
+        try:
+            self.device_id = service_name.split(".")[0]
+        except IndexError:
+            self.device_id = None
 
     def is_valid(self) -> bool:
-        """Check if discovery packet contained all required data."""
-        if (
-            not self.device_id
-            or not self.data_topic
-            or not self.health_topic
-            or self.device_id not in self.data_topic
-            or self.device_id not in self.health_topic
-        ):
+        """Check discovery validity."""
+        if self.device_id is None or self.port is None or self.port < 1:
             return False
         return True
 
 
+@dataclass
 class Droplet:
     """Droplet device."""
 
-    def __init__(self) -> None:
-        """Initialize Droplet object."""
-        self.flow_rate: float = 0
-        self.available: bool = True
-        self.signal_quality: str = "Unknown"
-        self.server_status: str = "Unknown"
+    host: str
+    session: aiohttp.client.ClientSession
+    port: int = 80
+    logger: logging.Logger | None = None
 
-    def parse_message(
-        self, topic: str, payload: str | bytes | bytearray, qos: int, retain: bool
-    ) -> bool:
-        """Parse Droplet MQTT message."""
-        try:
-            msg_type = topic.split("/")[1]
-        except IndexError:
+    _flow_rate: float = 0
+    _signal_quality: str = "Unknown"
+    _server_status: str = "Unknown"
+    _available: bool = False
+
+    _client: aiohttp.ClientWebSocketResponse | None = None
+    _connected: bool = False
+
+    @property
+    def connected(self) -> bool:
+        """Return true if we are connected to Droplet."""
+        return self._client is not None and not self._client.closed
+
+    async def connect(self) -> bool:
+        """Connect to Droplet."""
+        if self._connected:
+            return True
+
+        if not self.session:
             return False
 
-        match msg_type:
-            case "state":
-                try:
-                    msg = json.loads(payload)
-                except json.JSONDecodeError:
-                    return False
-                return self._parse_state_message(msg)
-            case "health":
-                self.available = str(payload) == "online"
+        url = f"ws://{self.host}:{self.port}/ws"
+        try:
+            self._client = await self.session.ws_connect(url=url, heartbeat=30)
+        except (
+            aiohttp.WSServerHandshakeError,
+            aiohttp.ClientConnectionError,
+            socket.gaierror,
+        ) as ex:
+            self._log(logging.DEBUG, "Failed to open connection: %s", str(ex))
+            return False
 
         return True
 
-    def _parse_state_message(self, msg: dict) -> bool:
+    async def disconnect(self) -> None:
+        """Disconnect from WebSocket."""
+        if self._client:
+            await self._client.close()
+            self._connected = False
+
+    async def listen(self, callback) -> None:
+        """Listen for messages over the websocket."""
+        while self._client and not self._client.closed:
+            message = await self._client.receive()
+            match message.type:
+                case aiohttp.WSMsgType.ERROR:
+                    self._log(logging.ERROR, "Received error message")
+                    return
+                case aiohttp.WSMsgType.TEXT:
+                    try:
+                        if self._parse_message(message.json()):
+                            self._available = True
+                            callback(None)
+                    except json.JSONDecodeError:
+                        self._available = message.data == "online"
+                case aiohttp.WSMsgType.CLOSE | aiohttp.WSMsgType.CLOSED:
+                    self._log(logging.ERROR, "Connection closed!")
+                    return
+
+    def _parse_message(self, msg: dict) -> bool:
         """Parse state message and return true if anything changed."""
         changed = False
-        if flow_rate := msg.get("flow_rate"):
-            self.flow_rate = flow_rate
+        if flow_rate := msg.get("flow"):
+            self._flow_rate = flow_rate
             changed = True
-        if network := msg.get("server_connectivity"):
-            self.server_status = network
+        if network := msg.get("server"):
+            self._server_status = network
             changed = True
-        if signal := msg.get("signal_quality"):
-            self.signal_quality = signal
+        if signal := msg.get("signal"):
+            self._signal_quality = signal
             changed = True
         return changed
 
-    def get_flow_rate(self) -> float:
-        """Retrieve Droplet's last flow rate."""
-        return self.flow_rate
+    def _log(self, level, msg, *args) -> None:
+        """Log a message, if a logger is available."""
+        if not self.logger:
+            return
+        self.logger.log(level, msg, *args)
 
-    def get_signal_quality(self) -> str:
-        """Retrieve Droplet's signal quality."""
-        return self.signal_quality
+    def get_flow_rate(self):
+        """Get Droplet's flow rate."""
+        return self._flow_rate
 
-    def get_server_status(self) -> str:
-        """Retrieve Droplet's connectivity to Hydrific servers."""
-        return self.server_status
+    def get_signal_quality(self):
+        """Get Droplet's signal quality."""
+        return self._signal_quality
 
-    def get_availability(self) -> bool:
-        """Return true if device is available, false otherwise."""
-        return self.available
+    def get_server_status(self):
+        """Get Droplet's server status."""
+        return self._server_status
+
+    def get_availability(self):
+        """Return true if Droplet device is available."""
+        return self._available

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONF_HOST, CONF_PORT, DOMAIN, RECONNECT_DELAY
 from .dropletmqtt import Droplet
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,13 +25,48 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     """Droplet device object."""
 
     config_entry: DropletConfigEntry
+    unsub: Callable | None
 
     def __init__(self, hass: HomeAssistant, entry: DropletConfigEntry) -> None:
         """Initialize the device."""
         super().__init__(
             hass, _LOGGER, config_entry=entry, name=f"{DOMAIN}-{entry.unique_id}"
         )
-        self.droplet = Droplet()
+        self.droplet = Droplet(
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            session=async_get_clientsession(self.hass),
+            logger=_LOGGER,
+        )
+
+    async def setup(self) -> bool:
+        """Set up droplet client."""
+        if not await self.droplet.connect():
+            return False
+
+        async def listen() -> None:
+            """Listen for state changes via WebSocket."""
+            while True:
+                connected = await self.droplet.connect()
+                if connected:
+                    # This will only return if there was a broken connection
+                    await self.droplet.listen(callback=self.async_set_updated_data)
+
+                await asyncio.sleep(RECONNECT_DELAY)
+
+        async def disconnect(_: Event) -> None:
+            """Close WebSocket connection."""
+            self.unsub = None
+            await self.droplet.disconnect()
+
+        # Clean disconnect WebSocket on Home Assistant shutdown
+        self.unsub = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, disconnect
+        )
+        self.config_entry.async_create_background_task(
+            self.hass, listen(), "droplet-listen"
+        )
+        return True
 
     def get_flow_rate(self) -> float:
         """Retrieve Droplet's latest flow rate."""

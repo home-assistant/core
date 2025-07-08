@@ -2,23 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
-    CONF_DATA_TOPIC,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
-    CONF_HEALTH_TOPIC,
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_SERIAL,
-    CONF_SW,
+    CONF_HOST,
+    CONF_PORT,
     DEVICE_NAME,
     DOMAIN,
 )
@@ -38,34 +32,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.error(discovery_info)
-        return await self.async_step_confirm()
-
-    async def async_step_mqtt(
-        self, discovery_info: MqttServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by MQTT discovery."""
-
-        try:
-            payload = json.loads(discovery_info.payload)
-        except json.JSONDecodeError:
-            return self.async_abort(reason="invalid_discovery_info")
-
-        self._droplet_discovery = DropletDiscovery(discovery_info.topic, payload)
-
-        if (
-            self._droplet_discovery is None
-            or not self._droplet_discovery.is_valid()
-            or self._droplet_discovery.device_id is None
-        ):
+        self._droplet_discovery = DropletDiscovery(
+            discovery_info.host,
+            discovery_info.port,
+            discovery_info.name,
+        )
+        if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
         await self.async_set_unique_id(f"{self._droplet_discovery.device_id}")
-        self._abort_if_unique_id_configured()
-
-        self.context.update(
-            {"title_placeholders": {"name": self._droplet_discovery.device_id}}
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         return await self.async_step_confirm()
 
@@ -79,14 +55,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_discovery_info")
         if user_input is not None:
             device_data = {
-                CONF_DATA_TOPIC: self._droplet_discovery.data_topic,
-                CONF_HEALTH_TOPIC: self._droplet_discovery.health_topic,
+                CONF_HOST: self._droplet_discovery.host,
+                CONF_PORT: self._droplet_discovery.port,
                 CONF_DEVICE_ID: self._droplet_discovery.device_id,
                 CONF_DEVICE_NAME: DEVICE_NAME,
-                CONF_MANUFACTURER: self._droplet_discovery.manufacturer,
-                CONF_MODEL: self._droplet_discovery.model,
-                CONF_SW: self._droplet_discovery.sw_version,
-                CONF_SERIAL: self._droplet_discovery.serial_number,
             }
 
             return self.async_create_entry(
@@ -105,4 +77,5 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        # We should allow this now!!
         return self.async_abort(reason="not_supported")

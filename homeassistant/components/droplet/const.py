@@ -1,8 +1,8 @@
 """Constants for the droplet integration."""
 
 # Keys for values used in the config_entry data dictionary
-CONF_DATA_TOPIC = "droplet_data_topic"
-CONF_HEALTH_TOPIC = "droplet_health_topic"
+CONF_HOST = "droplet_host"
+CONF_PORT = "droplet_port"
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_NAME = "device_name"
 CONF_MANUFACTURER = "device_manufacturer"
@@ -10,7 +10,7 @@ CONF_MODEL = "device_model"
 CONF_SW = "device_sw"
 CONF_SERIAL = "device_sn"
 
-DISCOVERY_TOPIC = "droplet/discovery/#"
+RECONNECT_DELAY = 5
 
 DOMAIN = "droplet"
 DEVICE_NAME = "Droplet"
