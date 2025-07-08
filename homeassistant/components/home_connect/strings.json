@@ -40,6 +40,18 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "options": {
+    "step": {
+      "entry_options": {
+        "data": {
+          "enable_all_commands": "Enable all the possible commands"
+        },
+        "data_description": {
+          "enable_all_commands": "Enabling this will show all the possible buttons related to commands. Requires reloading the integration or use the homeassistant.update_entity service over any entity from the integration."
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"

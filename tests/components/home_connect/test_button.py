@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfCommands,
@@ -16,7 +16,7 @@ from aiohomeconnect.model.event import ArrayOfEvents, EventType
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import CONF_ENABLE_ALL_COMMANDS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -316,4 +316,40 @@ async def test_stop_program_button_exception(
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
+        )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize(
+    "config_entry_with_options", [{CONF_ENABLE_ALL_COMMANDS: True}], indirect=True
+)
+async def test_all_commands_enabled_option(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry_with_options: MockConfigEntry,
+    platforms: list[str],
+    appliance: HomeAppliance,
+) -> None:
+    """Test if all commands enabled option works as expected."""
+    assert config_entry_with_options.state is ConfigEntryState.NOT_LOADED
+    config_entry_with_options.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
+    ):
+        client_mock.return_value = client
+        assert await hass.config_entries.async_setup(config_entry_with_options.entry_id)
+        await hass.async_block_till_done()
+    assert config_entry_with_options.state is ConfigEntryState.LOADED
+
+    assert client.get_available_commands.call_count == 0
+
+    for command_key in CommandKey.__members__.values():
+        if command_key == CommandKey.BSH_COMMON_ACKNOWLEDGE_EVENT:
+            continue  # Not implemented
+        assert entity_registry.async_get_entity_id(
+            Platform.BUTTON,
+            DOMAIN,
+            f"{appliance.ha_id}-{command_key.value}",
         )

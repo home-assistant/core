@@ -10,6 +10,8 @@ from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
+CONF_ENABLE_ALL_COMMANDS = "enable_all_commands"
+
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (

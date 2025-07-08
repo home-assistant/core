@@ -41,7 +41,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_DEFAULT_RETRY_AFTER, APPLIANCES_WITH_PROGRAMS, DOMAIN
+from .const import (
+    API_DEFAULT_RETRY_AFTER,
+    APPLIANCES_WITH_PROGRAMS,
+    CONF_ENABLE_ALL_COMMANDS,
+    DOMAIN,
+)
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -509,17 +514,20 @@ class HomeConnectCoordinator(
                             unit=option.unit,
                         )
 
-        try:
-            commands = {
-                command.key
-                for command in (
-                    await self.client.get_available_commands(appliance.ha_id)
-                ).commands
-            }
-        except TooManyRequestsError:
-            raise
-        except HomeConnectError:
-            commands = set()
+        if self.config_entry.options.get(CONF_ENABLE_ALL_COMMANDS, False):
+            commands = set(CommandKey.__members__.values())
+        else:
+            try:
+                commands = {
+                    command.key
+                    for command in (
+                        await self.client.get_available_commands(appliance.ha_id)
+                    ).commands
+                }
+            except TooManyRequestsError:
+                raise
+            except HomeConnectError:
+                commands = set()
 
         appliance_data = HomeConnectApplianceData(
             commands=commands,

@@ -7,11 +7,13 @@ from typing import Any
 import jwt
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_ENABLE_ALL_COMMANDS, DOMAIN
+from .coordinator import HomeConnectConfigEntry
 
 
 class OAuth2FlowHandler(
@@ -78,3 +80,43 @@ class OAuth2FlowHandler(
                 },
             )
         return await super().async_step_dhcp(discovery_info)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: HomeConnectConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return HomeConnectOptionsFlow()
+
+
+class HomeConnectOptionsFlow(OptionsFlow):
+    """Handle Home Connect options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        return await self.async_step_entry_options()
+
+    async def async_step_entry_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options step."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # Show the options form
+        return self.async_show_form(
+            step_id="entry_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENABLE_ALL_COMMANDS,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_ALL_COMMANDS, False
+                        ),
+                    ): bool,
+                }
+            ),
+        )
