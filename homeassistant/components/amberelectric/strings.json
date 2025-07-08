@@ -25,7 +25,7 @@
   "services": {
     "get_forecasts": {
       "name": "Get price forecasts",
-      "description": "Retrieves price forecasts from Amber Electric for your property.",
+      "description": "Retrieves price forecasts from Amber Electric for for a site.",
       "fields": {
         "config_entry_id": {
           "description": "Entity config to get forecasts for.",
