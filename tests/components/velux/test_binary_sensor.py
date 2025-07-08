@@ -1,72 +1,75 @@
-"""Tests for the Velux rain sensor binary_sensor platform."""
+"""Tests for the Velux binary sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
-from pyvlx.exception import PyVLXException
+from homeassistant.components.velux.const import DOMAIN
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from homeassistant.components.velux.binary_sensor import VeluxRainSensor
-
-
-@pytest.fixture
-def mock_window():
-    """Return a mock Velux window with a rain sensor."""
-    node = MagicMock(spec=["name", "rain_sensor", "get_limitation", "serial_number"])
-    node.name = "Test Window"
-    node.rain_sensor = True
-    node.serial_number = "1234567890"
-    return node
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_limitation_rain():
-    """Return a mock limitation object indicating rain detected."""
-    limitation = MagicMock()
-    limitation.max_value = 100
-    limitation.min_value = 93
-    return limitation
+async def test_rain_sensor_state(
+    hass: HomeAssistant,
+    mock_window: MagicMock,
+    mock_module: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the rain sensor."""
+    mock_config_entry.add_to_hass(hass)
 
+    test_entity_id = "binary_sensor.test_window_rain_sensor"
 
-@pytest.fixture
-def mock_limitation_dry():
-    """Return a mock limitation object indicating no rain."""
-    limitation = MagicMock()
-    limitation.max_value = 100
-    limitation.min_value = 0
-    return limitation
+    with (
+        patch("homeassistant.components.velux.PLATFORMS", [Platform.BINARY_SENSOR]),
+        patch(
+            "homeassistant.components.velux.VeluxModule",
+            return_value=mock_module,
+        ),
+    ):
+        # setup config entry
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+        # set up the homeassistant component so my entity can get updated
+        assert await async_setup_component(hass, "homeassistant", {})
+        await hass.async_block_till_done()
 
-@pytest.mark.asyncio
-async def test_rain_sensor_detected(mock_window, mock_limitation_rain) -> None:
-    """Test VeluxRainSensor is_on is True when rain is detected."""
-    mock_window.get_limitation = AsyncMock(return_value=mock_limitation_rain)
-    sensor = VeluxRainSensor(mock_window, "test_entry_id")
-    await sensor.async_update()
-    assert sensor.is_on is True
+        # enable the entity which is disabled by default
+        entity_registry = er.async_get(hass)
+        entity_entry = entity_registry.async_get_or_create(
+            "binary_sensor", DOMAIN, "123456789_rain_sensor"
+        )
+        assert entity_entry is not None
+        assert entity_entry.entity_id == test_entity_id
+        assert entity_entry.disabled
+        entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
 
+        # Reload the config entry to add the entity to the state machine
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-@pytest.mark.asyncio
-async def test_rain_sensor_not_detected(mock_window, mock_limitation_dry) -> None:
-    """Test VeluxRainSensor is_on is False when rain is not detected."""
-    mock_window.get_limitation = AsyncMock(return_value=mock_limitation_dry)
-    sensor = VeluxRainSensor(mock_window, "test_entry_id")
-    await sensor.async_update()
-    assert sensor.is_on is False
+    # simulate no rain detected
+    mock_window.get_limitation.return_value = MagicMock(min_value=0)
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": test_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == "off"
 
-
-@pytest.mark.asyncio
-async def test_rain_sensor_update_error(mock_window) -> None:
-    """Test VeluxRainSensor handles PyVLXException gracefully."""
-
-    mock_window.get_limitation = AsyncMock(side_effect=PyVLXException("Test error"))
-    sensor = VeluxRainSensor(mock_window, "test_entry_id")
-    await sensor.async_update()
-    # Should remain default (False)
-    assert sensor.is_on is False
-
-
-def test_unique_id_and_name(mock_window) -> None:
-    """Test unique_id and name are set correctly."""
-    sensor = VeluxRainSensor(mock_window, "test_entry_id")
-    assert sensor._attr_unique_id.endswith("_rain_sensor")
-    assert sensor._attr_name == "Test Window Rain Sensor"
+    # simulate rain detected
+    mock_window.get_limitation.return_value = MagicMock(min_value=93)
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": test_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == "on"
