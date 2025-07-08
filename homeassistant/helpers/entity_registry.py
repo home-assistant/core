@@ -1112,6 +1112,8 @@ class EntityRegistry(BaseRegistry):
                     in removed_device.config_entries_subentries[config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
+                else:
+                    self.async_update_entity(entity.entity_id, device_id=None)
             return
 
         if event.data["action"] != "update":

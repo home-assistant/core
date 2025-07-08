@@ -1698,6 +1698,9 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     # Entities which are not tied to a config entry in the device should not be removed
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
+    # Check the device link is set to None
+    assert entity_registry.async_get(entry_1.entity_id).device_id is None
+    assert entity_registry.async_get(entry_2.entity_id).device_id is None
 
 
 async def test_remove_config_subentry_from_device_removes_entities(
@@ -1939,6 +1942,10 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
     assert entity_registry.async_is_registered(entry_3.entity_id)
+    # Check the device link is set to None
+    assert entity_registry.async_get(entry_1.entity_id).device_id is None
+    assert entity_registry.async_get(entry_2.entity_id).device_id is None
+    assert entity_registry.async_get(entry_3.entity_id).device_id is None
 
 
 async def test_update_device_race(
