@@ -130,6 +130,13 @@
         "html": "HTML",
         "plain_text": "Plain text"
       }
+    },
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest",
+        "bearer_token": "Bearer token"
+      }
     }
   },
   "services": {
@@ -213,15 +220,15 @@
         },
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
-          "description": "Username for a URL which require HTTP authentication."
+          "description": "Username for a URL which requires HTTP `basic` or `digest` authentication."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
-          "description": "Password (or bearer token) for a URL which require HTTP authentication."
+          "description": "Password (or bearer token) for a URL which require authentication."
         },
         "authentication": {
           "name": "Authentication method",
-          "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`."
+          "description": "Define which authentication method to use. Set to `basic` for HTTP basic authentication, `digest` for HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication."
         },
         "target": {
           "name": "Target",
