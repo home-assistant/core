@@ -15,6 +15,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -470,19 +471,13 @@ async def test_async_track_target_selector_state_change_event_empty_selector(
         """Handle state change events."""
         calls.append(event)
 
-    unsub = target.async_track_target_selector_state_change_event(
-        hass, {}, state_change_callback
+    with pytest.raises(HomeAssistantError) as excinfo:
+        target.async_track_target_selector_state_change_event(
+            hass, {}, state_change_callback
+        )
+    assert str(excinfo.value) == (
+        "Target selector {} does not have any selectors defined"
     )
-
-    assert "Target selector {} does not have any selectors defined" in caplog.text
-
-    # Test that no state changes are tracked
-    hass.states.async_set("light.test", "on")
-    await hass.async_block_till_done()
-
-    assert len(calls) == 0
-
-    unsub()
 
 
 async def test_async_track_target_selector_state_change_event(

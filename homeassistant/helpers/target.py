@@ -24,6 +24,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     area_registry as ar,
@@ -344,11 +345,8 @@ def async_track_target_selector_state_change_event(
     """Track state changes for entities referenced directly or indirectly in a target selector."""
     selector_data = TargetSelectorData(target_selector_config)
     if not selector_data.has_any_selector:
-        _LOGGER.warning(
-            "Target selector %s does not have any selectors defined",
-            target_selector_config,
+        raise HomeAssistantError(
+            f"Target selector {target_selector_config} does not have any selectors defined"
         )
-        return lambda: None
-
     tracker = TargetStateChangeTracker(hass, selector_data, job_type, action)
     return tracker.unsub
