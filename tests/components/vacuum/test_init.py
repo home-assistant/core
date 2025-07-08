@@ -562,16 +562,10 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
     # Test we only log once
     assert (
         "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it to"
-        " the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
         not in caplog.text
     )
     assert (
         "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it to"
-        " the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
         not in caplog.text
     )
 
@@ -612,4 +606,35 @@ async def test_vacuum_log_deprecated_battery_supported_feature(
         " the battery level and icon to a sensor. This will stop working in Home Assistant 2026.8"
         ", please report it to the author of the 'test' custom integration"
         in caplog.text
+    )
+
+
+async def test_vacuum_not_log_deprecated_battery_properties_during_init(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test not logging deprecation until after added to hass."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        def __init__(self, **kwargs: Any) -> None:
+            """Initialize a mock vacuum entity."""
+            super().__init__(**kwargs)
+            self._attr_battery_level = 50
+
+        @property
+        def activity(self) -> str:
+            """Return the state of the entity."""
+            return VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    assert entity.battery_level == 50
+
+    assert (
+        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
+        not in caplog.text
     )
