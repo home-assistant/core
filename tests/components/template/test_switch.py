@@ -8,7 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.template.switch import rewrite_legacy_to_modern_conf
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -18,12 +17,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import (
     MockConfigEntry,
@@ -396,37 +394,15 @@ async def test_flow_preview(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the config flow preview."""
-    client = await hass_ws_client(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        template.DOMAIN, context={"source": SOURCE_USER}
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        switch.DOMAIN,
+        {"name": "My template", state_key: "{{ 'on' }}"},
     )
-    assert result["type"] is FlowResultType.MENU
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"next_step_id": SWITCH_DOMAIN},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == SWITCH_DOMAIN
-    assert result["errors"] is None
-    assert result["preview"] == "template"
-
-    await client.send_json_auto_id(
-        {
-            "type": "template/start_preview",
-            "flow_id": result["flow_id"],
-            "flow_type": "config_flow",
-            "user_input": {"name": "My template", state_key: "{{ 'on' }}"},
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] is None
-
-    msg = await client.receive_json()
-    assert msg["event"]["state"] == "on"
+    assert state["state"] == STATE_ON
 
 
 @pytest.mark.parametrize(
