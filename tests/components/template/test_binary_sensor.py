@@ -12,7 +12,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import binary_sensor, template
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_START,
@@ -22,7 +21,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -30,6 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
+    async_get_flow_preview_state,
     async_setup_legacy_platforms,
     async_setup_modern_state_format,
     async_setup_modern_trigger_format,
@@ -1607,34 +1606,10 @@ async def test_flow_preview(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the config flow preview."""
-    client = await hass_ws_client(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        template.DOMAIN, context={"source": SOURCE_USER}
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        binary_sensor.DOMAIN,
+        {"name": "My template", "state": "{{ 'on' }}"},
     )
-    assert result["type"] is FlowResultType.MENU
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"next_step_id": binary_sensor.DOMAIN},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == binary_sensor.DOMAIN
-    assert result["errors"] is None
-    assert result["preview"] == "template"
-
-    await client.send_json_auto_id(
-        {
-            "type": "template/start_preview",
-            "flow_id": result["flow_id"],
-            "flow_type": "config_flow",
-            "user_input": {"name": "My template", "state": "{{ 'on' }}"},
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] is None
-
-    msg = await client.receive_json()
-    assert msg["event"]["state"] == "on"
+    assert state["state"] == "on"
