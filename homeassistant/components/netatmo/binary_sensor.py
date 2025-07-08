@@ -78,6 +78,8 @@ async def async_setup_entry(
 class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
 
+    entity_description: NetatmoBinarySensorEntityDescription
+
     def __init__(
         self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
     ) -> None:
