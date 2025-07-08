@@ -2,9 +2,6 @@
 
 import pytest
 
-# TODO(abmantis): is this import needed?
-# To prevent circular import when running just this file
-import homeassistant.components  # noqa: F401
 from homeassistant.components.group import Group
 from homeassistant.const import (
     ATTR_AREA_ID,

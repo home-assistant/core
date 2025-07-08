@@ -315,18 +315,13 @@ class TargetStateChangeTracker:
         # changes don't affect which entities are tracked.
         self._registry_unsubs = [
             self._hass.bus.async_listen(
-                er.EVENT_ENTITY_REGISTRY_UPDATED,
-                resubscribe_state_change_event,
-                # TODO(abmantis): filter for entities that match the target selector?
-                # event_filter=self._filter_entity_registry_changes,
+                er.EVENT_ENTITY_REGISTRY_UPDATED, resubscribe_state_change_event
             ),
             self._hass.bus.async_listen(
-                dr.EVENT_DEVICE_REGISTRY_UPDATED,
-                resubscribe_state_change_event,
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, resubscribe_state_change_event
             ),
             self._hass.bus.async_listen(
-                ar.EVENT_AREA_REGISTRY_UPDATED,
-                resubscribe_state_change_event,
+                ar.EVENT_AREA_REGISTRY_UPDATED, resubscribe_state_change_event
             ),
         ]
 
