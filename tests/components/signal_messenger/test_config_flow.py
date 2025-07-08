@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import requests
+from requests_mock import Mocker
 
 from homeassistant import config_entries
 from homeassistant.components.signal_messenger.const import (
@@ -55,7 +56,10 @@ async def test_form_user_success(hass: HomeAssistant) -> None:
     assert hass.services.has_service("notify", "signal_my_signal")
 
 
-async def test_form_user_can_not_connect(hass: HomeAssistant) -> None:
+async def test_form_user_can_not_connect(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -64,22 +68,17 @@ async def test_form_user_can_not_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "requests.get",
-        ) as mock_request_get,
-    ):
-        mock_request_get.exc = requests.exceptions.ConnectionError
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_NAME: "My Signal",
-                CONF_SIGNAL_CLI_REST_API: "http://127.0.0.1:8123/",
-                CONF_SENDER_NR: "+1234567890",
-                CONF_RECP_NR: "+0987654321 +1122334455",
-            },
-        )
-        await hass.async_block_till_done()
+    requests_mock.get("http://127.0.0.1:8123/v1/about", exc=requests.ConnectionError)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "My Signal",
+            CONF_SIGNAL_CLI_REST_API: "http://127.0.0.1:8123",
+            CONF_SENDER_NR: "+1234567890",
+            CONF_RECP_NR: "+0987654321 +1122334455",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "cannot_connect"}
