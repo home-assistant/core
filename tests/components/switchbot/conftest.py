@@ -138,6 +138,9 @@ async def switchbot_device(
     mock_switchbot_vacuum: AsyncMock,
     mock_switchbot_1pm: AsyncMock,
     mock_switchbot_lock: AsyncMock,
+    mock_switchbot_air_purifier: AsyncMock,
+    mock_switchbot_ceiling_light: AsyncMock,
+    mock_switchbot_color_bulb: AsyncMock,
 ) -> None:
     """Fixture to create a mock Switchbot device."""
 
@@ -306,6 +309,33 @@ async def mock_switchbot_vacuum() -> AsyncGenerator[AsyncMock]:
     """Fixture to create a mock Switchbot device."""
     with patch(
         "homeassistant.components.switchbot.vacuum.switchbot.SwitchbotVacuum.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_air_purifier() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.vacuum.switchbot.SwitchbotAirPurifier.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_ceiling_light() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.vacuum.switchbot.SwitchbotCeilingLight.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_color_bulb() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.vacuum.switchbot.SwitchbotBulb.update"
     ):
         yield
 
