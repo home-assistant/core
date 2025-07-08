@@ -120,7 +120,7 @@ def async_remove_helper_config_entry_from_source_device(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
-    source_device_id: str | None,
+    source_device_id: str,
 ) -> None:
     """Remove helper config entry from source device.
 
@@ -130,20 +130,20 @@ def async_remove_helper_config_entry_from_source_device(
     device_registry = dr.async_get(hass)
 
     if (
-        not source_device_id
-        or not (source_device := device_registry.async_get(source_device_id))
+        not (source_device := device_registry.async_get(source_device_id))
         or helper_config_entry_id not in source_device.config_entries
     ):
         return
 
     entity_registry = er.async_get(hass)
-    helper_entities = er.async_entries_for_config_entry(
+    helper_entity_entries = er.async_entries_for_config_entry(
         entity_registry, helper_config_entry_id
     )
 
-    # Disconnect helper entities from the device
+    # Disconnect helper entities from the device to prevent them from
+    # being removed when the config entry link to the device is removed.
     modified_helpers: list[er.RegistryEntry] = []
-    for helper in helper_entities:
+    for helper in helper_entity_entries:
         if helper.device_id != source_device_id:
             continue
         modified_helpers.append(helper)
@@ -152,7 +152,7 @@ def async_remove_helper_config_entry_from_source_device(
     device_registry.async_update_device(
         source_device_id, remove_config_entry_id=helper_config_entry_id
     )
-    # Connect the helper entity from the device
+    # Connect the helper entity to the device
     for helper in modified_helpers:
         entity_registry.async_update_entity(
             helper.entity_id, device_id=source_device_id
