@@ -89,6 +89,15 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_image(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateImageEntity:
+    """Create a preview sensor."""
+    validated_config = IMAGE_CONFIG_SCHEMA(config | {CONF_NAME: name})
+    return StateImageEntity(hass, validated_config, None)
+
+
 class StateImageEntity(TemplateEntity, ImageEntity):
     """Representation of a template image."""
 
