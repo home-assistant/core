@@ -549,15 +549,10 @@ async def test_invalid_attribute_template(
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
-
-    if style == ConfigurationStyle.TRIGGER:
-        assert (
-            "Template variable error: 'None' has no attribute 'attributes' when rendering"
-            in caplog.text
-        )
-    else:
-        assert "test_attribute" in caplog_setup_text
-        assert "TemplateError" in caplog_setup_text
+    text = (
+        "Template variable error: 'None' has no attribute 'attributes' when rendering"
+    )
+    assert text in caplog_setup_text or text in caplog.text
 
 
 @pytest.fixture
