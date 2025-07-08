@@ -191,7 +191,7 @@ async def test_service_entry_availability(
 
     with pytest.raises(
         ServiceValidationError,
-        match='Config entry "amberelectric" not found in registry',
+        match='"amberelectric" not found in registry',
     ):
         await hass.services.async_call(
             DOMAIN,
