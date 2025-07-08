@@ -97,7 +97,6 @@ async def test_service_mealplan(
         DOMAIN,
         SERVICE_GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             ATTR_START_DATE: "2023-10-22",
             ATTR_END_DATE: "2023-10-25",
         },
