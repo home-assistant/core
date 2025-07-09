@@ -376,7 +376,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
 
     # Should now show the discovery_confirm form to the user
-    _assert_form_result(result, "discovery_confirm")
+    _assert_form_result(result, "discovery_no_auth_confirm")
 
     # User confirms the discovery
     result2 = await _configure_flow(hass, result["flow_id"], {})
@@ -395,8 +395,8 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     )
 
     assert len(mock_setup_entry.mock_calls) == 1
-    # Should be called twice: once in zeroconf step, once in _validate_and_create
-    assert len(mock_bsblan.device.mock_calls) == 2
+    # Should be called once in zeroconf step, as _validate_and_create is skipped
+    assert len(mock_bsblan.device.mock_calls) == 1
 
 
 async def test_zeroconf_discovery_connection_error(
