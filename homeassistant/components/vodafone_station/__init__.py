@@ -37,7 +37,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) ->
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator = entry.runtime_data
         await coordinator.api.logout()
-        await coordinator.api.close()
 
     return unload_ok
 

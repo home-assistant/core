@@ -112,6 +112,7 @@ class HomematicipHAP:
         self.config_entry = config_entry
 
         self._ws_close_requested = False
+        self._ws_connection_closed = asyncio.Event()
         self._retry_task: asyncio.Task | None = None
         self._tries = 0
         self._accesspoint_connected = True
@@ -127,6 +128,7 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME),
             )
+
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
         except Exception as err:  # noqa: BLE001
@@ -209,39 +211,13 @@ class HomematicipHAP:
         for device in self.home.devices:
             device.fire_update_event()
 
-    async def async_connect(self) -> None:
-        """Start WebSocket connection."""
-        tries = 0
-        while True:
-            retry_delay = 2 ** min(tries, 8)
+    async def async_connect(self, home: AsyncHome) -> None:
+        """Connect to HomematicIP Cloud Websocket."""
+        await home.enable_events()
 
-            try:
-                await self.home.get_current_state_async()
-                hmip_events = self.home.enable_events()
-                tries = 0
-                await hmip_events
-            except HmipConnectionError:
-                _LOGGER.error(
-                    (
-                        "Error connecting to HomematicIP with HAP %s. "
-                        "Retrying in %d seconds"
-                    ),
-                    self.config_entry.unique_id,
-                    retry_delay,
-                )
-
-            if self._ws_close_requested:
-                break
-            self._ws_close_requested = False
-            tries += 1
-
-            try:
-                self._retry_task = self.hass.async_create_task(
-                    asyncio.sleep(retry_delay)
-                )
-                await self._retry_task
-            except asyncio.CancelledError:
-                break
+        home.set_on_connected_handler(self.ws_connected_handler)
+        home.set_on_disconnected_handler(self.ws_disconnected_handler)
+        home.set_on_reconnect_handler(self.ws_reconnected_handler)
 
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
@@ -267,6 +243,26 @@ class HomematicipHAP:
             "Reset connection to access point id %s", self.config_entry.unique_id
         )
 
+    async def ws_connected_handler(self) -> None:
+        """Handle websocket connected."""
+        _LOGGER.info("Websocket connection to HomematicIP Cloud established")
+        if self._ws_connection_closed.is_set():
+            await self.get_state()
+            self._ws_connection_closed.clear()
+
+    async def ws_disconnected_handler(self) -> None:
+        """Handle websocket disconnection."""
+        _LOGGER.warning("Websocket connection to HomematicIP Cloud closed")
+        self._ws_connection_closed.set()
+
+    async def ws_reconnected_handler(self, reason: str) -> None:
+        """Handle websocket reconnection."""
+        _LOGGER.info(
+            "Websocket connection to HomematicIP Cloud re-established due to reason: %s",
+            reason,
+        )
+        self._ws_connection_closed.set()
+
     async def get_hap(
         self,
         hass: HomeAssistant,
@@ -290,6 +286,7 @@ class HomematicipHAP:
             raise HmipcConnectionError from err
         home.on_update(self.async_update)
         home.on_create(self.async_create_entity)
-        hass.loop.create_task(self.async_connect())
+
+        await self.async_connect(home)
 
         return home

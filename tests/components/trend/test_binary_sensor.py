@@ -48,6 +48,7 @@ async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -
 )
 async def test_basic_trend_setup_from_yaml(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     states: list[str],
     inverted: bool,
     expected_state: str,
@@ -71,6 +72,43 @@ async def test_basic_trend_setup_from_yaml(
 
     assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert sensor_state.state == expected_state
+
+    # Verify that entity without unique_id in YAML is not in the registry
+    entity_entry = entity_registry.async_get("binary_sensor.test_trend_sensor")
+    assert entity_entry is None
+
+
+async def test_trend_setup_from_yaml_with_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test trend setup from YAML with unique_id."""
+    await _setup_legacy_component(
+        hass,
+        {
+            "friendly_name": "Test state with ID",
+            "entity_id": "sensor.cpu_temp",
+            "unique_id": "my_unique_trend_sensor",
+            "max_samples": 2.0,
+            "min_gradient": 0.0,
+            "sample_duration": 0.0,
+        },
+    )
+
+    # Set some states to ensure the sensor works
+    hass.states.async_set("sensor.cpu_temp", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.cpu_temp", "2")
+    await hass.async_block_till_done()
+
+    # Check that the sensor exists and has the correct state
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == STATE_ON
+
+    # Check that the entity is registered with the correct unique_id
+    entity_entry = entity_registry.async_get("binary_sensor.test_trend_sensor")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "my_unique_trend_sensor"
 
 
 @pytest.mark.parametrize(
@@ -437,3 +475,50 @@ async def test_unavailable_source(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.test_trend_sensor").state == "on"
+
+
+async def test_invalid_state_handling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_component: ComponentSetup,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling of invalid states in trend sensor."""
+    await setup_component(
+        {
+            "sample_duration": 10000,
+            "min_gradient": 1,
+            "max_samples": 25,
+            "min_samples": 5,
+        },
+    )
+
+    for val in (10, 20, 30, 40, 50, 60):
+        freezer.tick(timedelta(seconds=2))
+        hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_trend_sensor").state == STATE_ON
+
+    # Set an invalid state
+    hass.states.async_set("sensor.test_state", "invalid")
+    await hass.async_block_till_done()
+
+    # The trend sensor should handle the invalid state gracefully
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == STATE_ON
+
+    # Check if a warning is logged
+    assert (
+        "Error processing sensor state change for entity_id=sensor.test_state, "
+        "attribute=None, state=invalid: could not convert string to float: 'invalid'"
+    ) in caplog.text
+
+    # Set a valid state again
+    hass.states.async_set("sensor.test_state", 50)
+    await hass.async_block_till_done()
+
+    # The trend sensor should return to a valid state
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == "on"

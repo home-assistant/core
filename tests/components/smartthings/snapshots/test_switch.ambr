@@ -47,7 +47,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_ice_maker-entry]
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ice maker',
+    'original_name': 'Cubed ice',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -82,13 +82,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_ice_maker-state]
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Ice maker',
+      'friendly_name': 'Refrigerator Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -239,7 +239,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_ice_maker-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -252,7 +252,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -264,7 +264,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ice maker',
+    'original_name': 'Cubed ice',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -274,13 +274,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_ice_maker-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Ice maker',
+      'friendly_name': 'Refrigerator Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -383,6 +383,102 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.frigo_cubed_ice',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cubed ice',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_icemaker_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Cubed ice',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_cubed_ice',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.frigo_ice_bites',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ice Bites',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker_2',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_icemaker-02_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Ice Bites',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_ice_bites',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_power_cool-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -473,6 +569,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_power_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frigo_sabbath_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath_mode',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_samsungce.sabbathMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Sabbath mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_sabbath_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

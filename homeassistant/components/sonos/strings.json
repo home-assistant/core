@@ -53,6 +53,14 @@
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "battery": "Battery",
+          "charging_base": "Charging base",
+          "usb": "USB"
+        }
       }
     },
     "switch": {
@@ -194,6 +202,15 @@
     },
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} not found."
+    },
+    "speaker_not_found": {
+      "message": "{entity_id} is not a known Sonos speaker."
+    },
+    "timeout_join": {
+      "message": "Timeout while waiting for Sonos player to join the group {group_description}"
     }
   }
 }

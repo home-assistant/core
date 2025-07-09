@@ -6,7 +6,7 @@ from io import StringIO
 import os
 from typing import TextIO
 
-from annotatedyaml import YAMLException, YamlTypeError
+import annotatedyaml
 from annotatedyaml.loader import (
     HAS_C_LOADER,
     JSON_TYPE,
@@ -35,6 +35,10 @@ __all__ = [
 ]
 
 
+class YamlTypeError(HomeAssistantError):
+    """Raised by load_yaml_dict if top level data is not a dict."""
+
+
 def load_yaml(
     fname: str | os.PathLike[str], secrets: Secrets | None = None
 ) -> JSON_TYPE | None:
@@ -45,7 +49,7 @@ def load_yaml(
     """
     try:
         return load_annotated_yaml(fname, secrets)
-    except YAMLException as exc:
+    except annotatedyaml.YAMLException as exc:
         raise HomeAssistantError(str(exc)) from exc
 
 
@@ -59,9 +63,9 @@ def load_yaml_dict(
     """
     try:
         return load_annotated_yaml_dict(fname, secrets)
-    except YamlTypeError:
-        raise
-    except YAMLException as exc:
+    except annotatedyaml.YamlTypeError as exc:
+        raise YamlTypeError(str(exc)) from exc
+    except annotatedyaml.YAMLException as exc:
         raise HomeAssistantError(str(exc)) from exc
 
 
@@ -71,7 +75,7 @@ def parse_yaml(
     """Parse YAML with the fastest available loader."""
     try:
         return parse_annotated_yaml(content, secrets)
-    except YAMLException as exc:
+    except annotatedyaml.YAMLException as exc:
         raise HomeAssistantError(str(exc)) from exc
 
 
@@ -79,5 +83,5 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
     try:
         return annotated_secret_yaml(loader, node)
-    except YAMLException as exc:
+    except annotatedyaml.YAMLException as exc:
         raise HomeAssistantError(str(exc)) from exc
