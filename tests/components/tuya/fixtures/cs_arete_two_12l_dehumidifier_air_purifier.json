@@ -50,6 +50,6 @@
     "humidity_indoor": 47,
     "countdown_set": "cancel",
     "countdown_left": 0,
-    "fault": 128
+    "fault": 0
   }
 }
