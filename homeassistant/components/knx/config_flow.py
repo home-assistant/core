@@ -157,6 +157,25 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
     def finish_flow(self) -> ConfigFlowResult:
         """Create or update the ConfigEntry."""
         if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            _tunnel_endpoint_str = self.initial_data.get(
+                CONF_KNX_TUNNEL_ENDPOINT_IA, "Tunneling"
+            )
+            if self.new_title and not entry.title.startswith(
+                # Overwrite standard titles, but not user defined ones
+                (
+                    f"KNX {self.initial_data[CONF_KNX_CONNECTION_TYPE]}",
+                    CONF_KNX_AUTOMATIC.capitalize(),
+                    "Tunneling @ ",
+                    f"{_tunnel_endpoint_str} @",
+                    "Tunneling UDP @ ",
+                    "Tunneling TCP @ ",
+                    "Secure Tunneling",
+                    "Routing as ",
+                    "Secure Routing as ",
+                )
+            ):
+                self.new_title = None
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
                 data_updates=self.new_entry_data,
