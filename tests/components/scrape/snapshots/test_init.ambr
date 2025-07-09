@@ -16,6 +16,8 @@
         'verify_ssl': True,
       }),
       'auth': dict({
+        'password': 'pass',
+        'username': 'user',
       }),
       'method': 'GET',
       'resource': 'http://www.home-assistant.io',
@@ -27,6 +29,7 @@
       dict({
         'data': dict({
           'advanced': dict({
+            'value_template': '{{ value }}',
           }),
           'index': 0,
           'select': '.release-date',
