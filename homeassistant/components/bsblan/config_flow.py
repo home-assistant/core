@@ -30,6 +30,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
+        self._auth_required = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -99,40 +100,36 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # No auth needed, go to a simple confirmation step
-                return await self.async_step_discovery_no_auth_confirm()
+                # No auth needed, so we can proceed to a confirmation step without fields
+                self._auth_required = False
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
         return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_no_auth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle confirmation for a discovered device that needs no authentication."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="discovery_no_auth_confirm",
-                description_placeholders={"host": str(self.host)},
-            )
-        return self._async_create_entry()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle getting credentials for discovered device."""
         if user_input is None:
+            data_schema = vol.Schema(
+                {
+                    vol.Optional(CONF_PASSKEY): str,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            )
+            if not self._auth_required:
+                data_schema = vol.Schema({})
+
             return self.async_show_form(
                 step_id="discovery_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(CONF_PASSKEY): str,
-                        vol.Optional(CONF_USERNAME): str,
-                        vol.Optional(CONF_PASSWORD): str,
-                    }
-                ),
+                data_schema=data_schema,
                 description_placeholders={"host": str(self.host)},
             )
+
+        if not self._auth_required:
+            return self._async_create_entry()
 
         self.passkey = user_input.get(CONF_PASSKEY)
         self.username = user_input.get(CONF_USERNAME)

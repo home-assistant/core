@@ -376,7 +376,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
 
     # Should now show the discovery_confirm form to the user
-    _assert_form_result(result, "discovery_no_auth_confirm")
+    _assert_form_result(result, "discovery_confirm")
 
     # User confirms the discovery
     result2 = await _configure_flow(hass, result["flow_id"], {})
