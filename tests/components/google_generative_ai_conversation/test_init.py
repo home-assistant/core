@@ -487,7 +487,7 @@ async def test_migration_from_v1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 4
@@ -719,7 +719,7 @@ async def test_migration_from_v1_disabled(
     entry = entries[0]
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 4
@@ -858,7 +858,7 @@ async def test_migration_from_v1_with_multiple_keys(
 
     for entry in entries:
         assert entry.version == 2
-        assert entry.minor_version == 3
+        assert entry.minor_version == 4
         assert not entry.options
         assert entry.title == DEFAULT_TITLE
         assert len(entry.subentries) == 3
@@ -961,7 +961,7 @@ async def test_migration_from_v1_with_same_keys(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 4
@@ -1182,7 +1182,7 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
     assert len(entry.subentries) == 4
@@ -1319,7 +1319,7 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
 
     # Check version and subversion were updated
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
 
     # Check we now have conversation, tts and ai_task_data subentries
     assert len(entry.subentries) == 3
@@ -1348,3 +1348,194 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
     assert tts_subentry is not None
     assert tts_subentry.title == DEFAULT_TTS_NAME
     assert tts_subentry.data == RECOMMENDED_TTS_OPTIONS
+
+
+@pytest.mark.parametrize(
+    (
+        "config_entry_disabled_by",
+        "device_disabled_by",
+        "entity_disabled_by",
+        "setup_result",
+        "minor_version_after_migration",
+        "config_entry_disabled_by_after_migration",
+        "device_disabled_by_after_migration",
+        "entity_disabled_by_after_migration",
+    ),
+    [
+        # Config entry not disabled, update device and entity disabled by config entry
+        (
+            None,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+            True,
+            4,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+            True,
+            4,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+            True,
+            4,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+        ),
+        (
+            None,
+            None,
+            None,
+            True,
+            4,
+            None,
+            None,
+            None,
+        ),
+        # Config entry disabled, migration does not run
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            None,
+            None,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            None,
+            None,
+        ),
+    ],
+)
+async def test_migrate_entry_from_v2_3(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_disabled_by: ConfigEntryDisabler | None,
+    device_disabled_by: DeviceEntryDisabler | None,
+    entity_disabled_by: RegistryEntryDisabler | None,
+    setup_result: bool,
+    minor_version_after_migration: int,
+    config_entry_disabled_by_after_migration: ConfigEntryDisabler | None,
+    device_disabled_by_after_migration: ConfigEntryDisabler | None,
+    entity_disabled_by_after_migration: RegistryEntryDisabler | None,
+) -> None:
+    """Test migration from version 2.3."""
+    # Create a v2.3 config entry with conversation and TTS subentries
+    conversation_subentry_id = "blabla"
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        disabled_by=config_entry_disabled_by,
+        version=2,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                "subentry_id": conversation_subentry_id,
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "unique_id": None,
+            },
+            {
+                "data": RECOMMENDED_TTS_OPTIONS,
+                "subentry_type": "tts",
+                "title": DEFAULT_TTS_NAME,
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    conversation_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id=conversation_subentry_id,
+        disabled_by=device_disabled_by,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Google",
+        model="Generative AI",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    conversation_entity = entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        config_subentry_id=conversation_subentry_id,
+        disabled_by=entity_disabled_by,
+        device_id=conversation_device.id,
+        suggested_object_id="google_generative_ai_conversation",
+    )
+
+    # Verify initial state
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 3
+    assert len(mock_config_entry.subentries) == 2
+    assert mock_config_entry.disabled_by == config_entry_disabled_by
+    assert conversation_device.disabled_by == device_disabled_by
+    assert conversation_entity.disabled_by == entity_disabled_by
+
+    # Run setup to trigger migration
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is setup_result
+        await hass.async_block_till_done()
+
+    # Verify migration completed
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Check version and subversion were updated
+    assert entry.version == 2
+    assert entry.minor_version == minor_version_after_migration
+
+    # Check the disabled_by flag on config entry, device and entity are as expected
+    conversation_device = device_registry.async_get(conversation_device.id)
+    conversation_entity = entity_registry.async_get(conversation_entity.entity_id)
+    assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
+    assert conversation_device.disabled_by == device_disabled_by_after_migration
+    assert conversation_entity.disabled_by == entity_disabled_by_after_migration
