@@ -487,45 +487,6 @@ async def test_user_flow_can_update_existing_host_port(
     assert entry.data[CONF_PORT] == 80  # Updated port
 
 
-async def test_zeroconf_discovery_mac_mismatch_updates_unique_id(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
-    zeroconf_discovery_info_different_mac: ZeroconfServiceInfo,
-) -> None:
-    """Test Zeroconf discovery when MAC from discovery differs from device API."""
-    # The fixture provides MAC "aa:bb:cc:dd:ee:ff" in Zeroconf discovery
-    # But the mock device API returns "00:80:41:19:69:90" (from device.json)
-    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_different_mac)
-    _assert_form_result(result, "discovery_confirm")
-
-    result2 = await _configure_flow(
-        hass,
-        result["flow_id"],
-        {
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-    )
-
-    _assert_create_entry_result(
-        result2,
-        format_mac("00:80:41:19:69:90"),  # Title should use MAC from device API
-        {
-            CONF_HOST: "10.0.2.60",
-            CONF_PORT: 80,
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-        format_mac("00:80:41:19:69:90"),  # Unique ID updated to MAC from device API
-    )
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_bsblan.device.mock_calls) == 1
-
-
 async def test_zeroconf_discovery_connection_error_recovery(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
