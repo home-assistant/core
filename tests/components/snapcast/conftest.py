@@ -10,7 +10,6 @@ from snapcast.control.server import CONTROL_PORT
 from snapcast.control.stream import Snapstream
 
 from homeassistant.components.snapcast.const import DOMAIN
-from homeassistant.components.snapcast.coordinator import Snapserver
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -23,6 +22,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.snapcast.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_server(mock_create_server: AsyncMock) -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.snapcast.config_flow.snapcast.control.create_server",
+        return_value=mock_create_server,
+    ) as mock_server:
+        yield mock_server
 
 
 @pytest.fixture
@@ -62,15 +71,6 @@ async def mock_config_entry() -> MockConfigEntry:
             CONF_PORT: CONTROL_PORT,
         },
     )
-
-
-@pytest.fixture
-def mock_server_connection() -> Generator[Snapserver]:
-    """Create a mock server connection."""
-
-    # Patch the start method of the Snapserver class to avoid network connections
-    with patch.object(Snapserver, "start", new_callable=AsyncMock) as mock_start:
-        yield mock_start
 
 
 @pytest.fixture
