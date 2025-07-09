@@ -23,12 +23,12 @@ from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
 
-type PlaystationNetworkConfigEntry = ConfigEntry[PlayStationNetworkCoordinators]
+type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkRuntimeData]
 
 
 @dataclass
-class PlayStationNetworkCoordinators:
-    """Dataclass holding PSN coordinators."""
+class PlaystationNetworkRuntimeData:
+    """Dataclass holding PSN runtime data."""
 
     coordinator: PlaystationNetworkCoordinator
     trophy_titles: PlaystationNetworkTrophyTitlesCoordinator

@@ -9,7 +9,7 @@ from .const import CONF_NPSSO
 from .coordinator import (
     PlaystationNetworkConfigEntry,
     PlaystationNetworkCoordinator,
-    PlayStationNetworkCoordinators,
+    PlaystationNetworkRuntimeData,
     PlaystationNetworkTrophyTitlesCoordinator,
 )
 from .helpers import PlaystationNetwork
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
     trophy_titles = PlaystationNetworkTrophyTitlesCoordinator(hass, psn, entry)
 
-    entry.runtime_data = PlayStationNetworkCoordinators(coordinator, trophy_titles)
+    entry.runtime_data = PlaystationNetworkRuntimeData(coordinator, trophy_titles)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
