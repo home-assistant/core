@@ -40,6 +40,7 @@ class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEnti
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
+    last_reset_fn: Callable[[], datetime | None] = lambda: None
     value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
@@ -185,6 +186,7 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
         key="visits_today",
         translation_key="visits_today",
         state_class=SensorStateClass.TOTAL,
+        last_reset_fn=dt_util.start_of_local_day,
         value_fn=lambda pet: pet.get_visits_since(dt_util.start_of_local_day()),
     ),
 ]
@@ -236,6 +238,4 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if self.entity_description.key == "visits_today":
-            return dt_util.start_of_local_day()
-        return super().last_reset
+        return self.entity_description.last_reset_fn() or super().last_reset
