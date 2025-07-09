@@ -290,6 +290,7 @@ async def test_rest_command_get_response_plaintext(
     assert len(aioclient_mock.mock_calls) == 1
     assert response["content"] == "success"
     assert response["status"] == 200
+    assert response["headers"] == {"content-type": "text/plain"}
 
 
 async def test_rest_command_get_response_json(
@@ -314,6 +315,7 @@ async def test_rest_command_get_response_json(
     assert response["content"]["status"] == "success"
     assert response["content"]["number"] == 42
     assert response["status"] == 200
+    assert response["headers"] == {"content-type": "application/json"}
 
 
 async def test_rest_command_get_response_malformed_json(
