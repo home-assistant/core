@@ -205,12 +205,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
-        elif self.mac != retrieved_mac:
-            # MAC from zeroconf doesn't match retrieved MAC - update it
-            self.mac = retrieved_mac
-            await self.async_set_unique_id(
-                format_mac(self.mac), raise_on_progress=raise_on_progress
-            )
 
         # Always allow updating host/port for both user and discovery flows
         # This ensures connectivity is maintained when devices change IP addresses
