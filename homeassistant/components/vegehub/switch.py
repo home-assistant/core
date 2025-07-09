@@ -73,14 +73,10 @@ class VegeHubSwitch(VegeHubEntity, SwitchEntity):
             return False
         return self.coordinator.data.get(self.data_key, 0) > 0
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.hass.add_job(
-            self.coordinator.vegehub.set_actuator, 1, self.index, self.duration
-        )
+        await self.coordinator.vegehub.set_actuator(1, self.index, self.duration)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.hass.add_job(
-            self.coordinator.vegehub.set_actuator, 0, self.index, self.duration
-        )
+        await self.coordinator.vegehub.set_actuator(0, self.index, self.duration)
