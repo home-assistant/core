@@ -66,7 +66,7 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
     UNSUPPORTED_MODELS,
-    WEB_SEARCH_MODELS,
+    UNSUPPORTED_WEB_SEARCH_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -320,7 +320,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if model.startswith(tuple(WEB_SEARCH_MODELS)):
+        if not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
             step_schema.update(
                 {
                     vol.Optional(
