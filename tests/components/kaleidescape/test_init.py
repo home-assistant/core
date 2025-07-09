@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -29,7 +28,6 @@ async def test_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_device.disconnect.call_count == 1
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
 
 async def test_config_entry_not_ready(

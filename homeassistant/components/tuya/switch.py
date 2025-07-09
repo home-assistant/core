@@ -37,6 +37,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            translation_key="reverse",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            translation_key="reverse",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # EasyBaby
     # Undocumented, might have a wider use
     "cn": (
@@ -80,7 +94,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Pet Water Feeder
+    # Pet Fountain
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
         SwitchEntityDescription(
@@ -131,6 +145,116 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+            icon="mdi:power",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Side A Power",
+            icon="mdi:alpha-a",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Side B Power",
+            icon="mdi:alpha-b",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT,
+            name="Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_1,
+            name="Side A Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_2,
+            name="Side B Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="anion",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.HUMIDIFIER,
+            translation_key="humidification",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OXYGEN,
+            translation_key="oxygen_bar",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            translation_key="natural_wind",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Irrigator
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    "ggq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="switch_1",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="switch_2",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="switch_3",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            translation_key="switch_4",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            translation_key="switch_5",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            translation_key="switch_6",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            translation_key="switch_7",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            translation_key="switch_8",
+        ),
+    ),
     # Wake Up Light II
     # Not documented
     "hxd": (
@@ -163,19 +287,23 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
-    # Two-way temperature and humidity switch
-    # "MOES Temperature and Humidity Smart Switch Module MS-103"
-    # Documentation not found
-    "wkcz": (
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="switch_1",
-            device_class=SwitchDeviceClass.OUTLET,
+            key=DPCode.SWITCH_SOUND,
+            translation_key="voice",
+            entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="switch_2",
-            device_class=SwitchDeviceClass.OUTLET,
+            key=DPCode.SLEEP,
+            translation_key="sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.STERILIZATION,
+            translation_key="sterilization",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Switch
@@ -408,6 +536,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # SIREN: Siren (switch) with Temperature and Humidity Sensor with External Probe
+    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
+    "qxj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
@@ -427,18 +564,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
-        ),
-    ),
-    # Irrigator
-    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
-    "ggq": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="switch_1",
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="switch_2",
         ),
     ),
     # Siren Alarm
@@ -528,13 +653,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
-    # Hejhome whitelabel Fingerbot
-    "znjxs": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-        ),
-    ),
     # IoT Switch?
     # Note: Undocumented
     "tdq": (
@@ -582,6 +700,21 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Two-way temperature and humidity switch
+    # "MOES Temperature and Humidity Smart Switch Module MS-103"
+    # Documentation not found
+    "wkcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="switch_1",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="switch_2",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
     # Thermostatic Radiator Valve
     # Not documented
     "wkf": (
@@ -606,15 +739,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # SIREN: Siren (switch) with Temperature and humidity sensor
     # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
     "wsdcg": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-    ),
-    # SIREN: Siren (switch) with Temperature and Humidity Sensor with External Probe
-    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
-    "qxj": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
@@ -655,71 +779,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
+    # Hejhome whitelabel Fingerbot
+    "znjxs": (
         SwitchEntityDescription(
-            key=DPCode.ANION,
-            translation_key="anion",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.HUMIDIFIER,
-            translation_key="humidification",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.OXYGEN,
-            translation_key="oxygen_bar",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.FAN_COOL,
-            translation_key="natural_wind",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.FAN_BEEP,
-            translation_key="sound",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.CHILD_LOCK,
-            translation_key="child_lock",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Curtain
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
-    "cl": (
-        SwitchEntityDescription(
-            key=DPCode.CONTROL_BACK,
-            translation_key="reverse",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.OPPOSITE,
-            translation_key="reverse",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_SOUND,
-            translation_key="voice",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SLEEP,
-            translation_key="sleep",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.STERILIZATION,
-            translation_key="sterilization",
-            entity_category=EntityCategory.CONFIG,
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
     # Pool HeatPump

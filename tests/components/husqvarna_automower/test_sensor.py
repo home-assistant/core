@@ -53,7 +53,7 @@ async def test_cutting_blade_usage_time_sensor(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.test_mower_1_cutting_blade_usage_time")
     assert state is not None
-    assert state.state == "0.034"
+    assert float(state.state) == pytest.approx(0.03416666)
 
 
 @pytest.mark.freeze_time(

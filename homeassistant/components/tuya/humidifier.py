@@ -190,6 +190,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             ]
         )
 
-    def set_mode(self, mode):
+    def set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         self._send_command([{"code": DPCode.MODE, "value": mode}])

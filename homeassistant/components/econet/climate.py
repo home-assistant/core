@@ -53,7 +53,6 @@ SUPPORT_FLAGS_THERMOSTAT = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     | ClimateEntityFeature.FAN_MODE
-    | ClimateEntityFeature.AUX_HEAT
 )
 
 

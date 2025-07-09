@@ -31,7 +31,7 @@ from .const import (
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.parametrize(
@@ -65,8 +65,8 @@ async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Samsung TV integration is setup."""
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE48JU6400.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE48JU6400.json", DOMAIN
     )
     entry = await setup_samsungtv_entry(
         hass, {**ENTRYDATA_WEBSOCKET, CONF_MODEL: "UE48JU6400"}

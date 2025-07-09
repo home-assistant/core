@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
-from unittest.mock import AsyncMock, Mock
+from copy import deepcopy
+from unittest.mock import AsyncMock
 
 from uiprotect.data import Camera, CloudAccount, ModelType, Version
 
@@ -19,110 +19,6 @@ from tests.components.repairs import (
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
-
-async def test_ea_warning_ignore(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test EA warning is created if using prerelease version of Protect."""
-
-    ufp.api.bootstrap.nvr.release_channel = "beta"
-    ufp.api.bootstrap.nvr.version = Version("1.21.0-beta.2")
-    version = ufp.api.bootstrap.nvr.version
-    assert version.is_prerelease
-    await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_channel_warning":
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, "ea_channel_warning")
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#software-support",
-        "version": str(version),
-    }
-    assert data["step_id"] == "start"
-
-    data = await process_repair_fix_flow(client, flow_id)
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#software-support",
-        "version": str(version),
-    }
-    assert data["step_id"] == "confirm"
-
-    data = await process_repair_fix_flow(client, flow_id)
-
-    assert data["type"] == "create_entry"
-
-
-async def test_ea_warning_fix(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test EA warning is created if using prerelease version of Protect."""
-
-    ufp.api.bootstrap.nvr.release_channel = "beta"
-    ufp.api.bootstrap.nvr.version = Version("1.21.0-beta.2")
-    version = ufp.api.bootstrap.nvr.version
-    assert version.is_prerelease
-    await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_channel_warning":
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, "ea_channel_warning")
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#software-support",
-        "version": str(version),
-    }
-    assert data["step_id"] == "start"
-
-    new_nvr = copy(ufp.api.bootstrap.nvr)
-    new_nvr.release_channel = "release"
-    new_nvr.version = Version("2.2.6")
-    mock_msg = Mock()
-    mock_msg.changed_data = {"version": "2.2.6", "releaseChannel": "release"}
-    mock_msg.new_obj = new_nvr
-
-    ufp.api.bootstrap.nvr = new_nvr
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
-    data = await process_repair_fix_flow(client, flow_id)
-
-    assert data["type"] == "create_entry"
 
 
 async def test_cloud_user_fix(

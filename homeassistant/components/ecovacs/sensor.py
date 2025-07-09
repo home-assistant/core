@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
 from deebot_client.device import Device
@@ -46,16 +46,14 @@ from .entity import (
     EcovacsDescriptionEntity,
     EcovacsEntity,
     EcovacsLegacyEntity,
-    EventT,
 )
 from .util import get_name_key, get_options, get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsSensorEntityDescription(
+class EcovacsSensorEntityDescription[EventT: Event](
     EcovacsCapabilityEntityDescription,
     SensorEntityDescription,
-    Generic[EventT],
 ):
     """Ecovacs sensor entity description."""
 
@@ -98,9 +96,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         key="total_stats_area",
         translation_key="total_stats_area",
         device_class=SensorDeviceClass.AREA,
-        native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
