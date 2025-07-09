@@ -19,8 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import (
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkCoordinator,
     PlaystationNetworkTrophyTitlesCoordinator,
+    PlaystationNetworkUserDataCoordinator,
 )
 from .const import DOMAIN, SUPPORTED_PLATFORMS
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Media Player Entity Setup."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data.user_data
     trophy_titles = config_entry.runtime_data.trophy_titles
     devices_added: set[PlatformType] = set()
     device_reg = dr.async_get(hass)
@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 
 class PsnMediaPlayerEntity(
-    CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerEntity
+    CoordinatorEntity[PlaystationNetworkUserDataCoordinator], MediaPlayerEntity
 ):
     """Media player entity representing currently playing game."""
 
@@ -95,7 +95,7 @@ class PsnMediaPlayerEntity(
 
     def __init__(
         self,
-        coordinator: PlaystationNetworkCoordinator,
+        coordinator: PlaystationNetworkUserDataCoordinator,
         platform: PlatformType,
         trophy_titles: PlaystationNetworkTrophyTitlesCoordinator,
     ) -> None:

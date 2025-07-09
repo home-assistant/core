@@ -8,9 +8,9 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_NPSSO
 from .coordinator import (
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkCoordinator,
     PlaystationNetworkRuntimeData,
     PlaystationNetworkTrophyTitlesCoordinator,
+    PlaystationNetworkUserDataCoordinator,
 )
 from .helpers import PlaystationNetwork
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     psn = PlaystationNetwork(hass, entry.data[CONF_NPSSO])
 
-    coordinator = PlaystationNetworkCoordinator(hass, psn, entry)
+    coordinator = PlaystationNetworkUserDataCoordinator(hass, psn, entry)
     await coordinator.async_config_entry_first_refresh()
 
     trophy_titles = PlaystationNetworkTrophyTitlesCoordinator(hass, psn, entry)

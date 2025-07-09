@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.user_data
 
     return {
         "data": async_redact_data(

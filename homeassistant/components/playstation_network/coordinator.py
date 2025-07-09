@@ -30,7 +30,7 @@ type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkRuntimeData]
 class PlaystationNetworkRuntimeData:
     """Dataclass holding PSN runtime data."""
 
-    coordinator: PlaystationNetworkCoordinator
+    user_data: PlaystationNetworkUserDataCoordinator
     trophy_titles: PlaystationNetworkTrophyTitlesCoordinator
 
 
@@ -58,7 +58,7 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.psn = psn
 
 
-class PlaystationNetworkCoordinator(
+class PlaystationNetworkUserDataCoordinator(
     PlayStationNetworkBaseCoordinator[PlaystationNetworkData]
 ):
     """Data update coordinator for PSN."""
