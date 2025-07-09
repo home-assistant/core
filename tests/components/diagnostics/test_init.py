@@ -115,7 +115,7 @@ async def test_download_diagnostics(
             breaks_in_ha_version="2023.10.0",
             severity=ir.IssueSeverity.WARNING,
             is_fixable=False,
-            is_persistent=False,
+            is_persistent=True,
             translation_key="test_issue",
         )
 
@@ -205,11 +205,19 @@ async def test_download_diagnostics(
         "data": {"config_entry": "info"},
         "issues": [
             {
+                "breaks_in_ha_version": "2023.10.0",
                 "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
                 "dismissed_version": None,
                 "domain": "fake_integration",
-                "is_persistent": False,
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
                 "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
             },
         ],
     }
@@ -301,11 +309,19 @@ async def test_download_diagnostics(
         "data": {"device": "info"},
         "issues": [
             {
+                "breaks_in_ha_version": "2023.10.0",
                 "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
                 "dismissed_version": None,
                 "domain": "fake_integration",
-                "is_persistent": False,
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
                 "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
             },
         ],
         "setup_times": {},
