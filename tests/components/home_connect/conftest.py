@@ -94,6 +94,23 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="config_entry_with_options")
+def mock_config_entry_with_options(
+    token_entry: dict[str, Any], request: pytest.FixtureRequest
+) -> MockConfigEntry:
+    """Fixture for a config entry with options."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": FAKE_AUTH_IMPL,
+            "token": token_entry,
+        },
+        minor_version=3,
+        unique_id="1234567890",
+        options=request.param,
+    )
+
+
 @pytest.fixture(name="config_entry_v1_1")
 def mock_config_entry_v1_1(token_entry: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a config entry."""

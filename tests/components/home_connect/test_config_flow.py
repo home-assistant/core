@@ -9,7 +9,10 @@ from aiohomeconnect.model import HomeAppliance
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import (
+    CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -509,3 +512,76 @@ async def test_dhcp_flow_complete_device_information(
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(dhcp_discovery.macaddress))
     }
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("config_entry_with_options", "target_options"),
+    [
+        (
+            {},
+            {
+                CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT: [
+                    "SIEMENS-HCS02DWH1-6BE58C26DCC1"
+                ]
+            },
+        ),
+        (
+            {CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT: []},
+            {
+                CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT: [
+                    "SIEMENS-HCS02DWH1-6BE58C26DCC1"
+                ]
+            },
+        ),
+        (
+            {
+                CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT: [
+                    "SIEMENS-HCS02DWH1-6BE58C26DCC1"
+                ]
+            },
+            {CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT: []},
+        ),
+    ],
+    indirect=["config_entry_with_options"],
+)
+@pytest.mark.parametrize("appliance", "dishwasher", indirect=True)
+async def test_options_flow(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_options: MockConfigEntry,
+    platforms: list[str],
+    target_options: dict[str, bool],
+) -> None:
+    """Test the options flow."""
+    assert config_entry_with_options.state is ConfigEntryState.NOT_LOADED
+    config_entry_with_options.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
+    ):
+        client_mock.return_value = client
+        assert await hass.config_entries.async_setup(config_entry_with_options.entry_id)
+        await hass.async_block_till_done()
+    assert config_entry_with_options.state is ConfigEntryState.LOADED
+
+    assert config_entry_with_options.options != target_options
+
+    result = await hass.config_entries.options.async_init(
+        config_entry_with_options.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entry_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=target_options
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Get the updated config entry and compare options
+    entry = hass.config_entries.async_get_entry(config_entry_with_options.entry_id)
+    assert entry is not None
+    assert entry.options == target_options

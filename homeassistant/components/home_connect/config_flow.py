@@ -2,16 +2,22 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 import jwt
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT, DOMAIN
+from .coordinator import HomeConnectConfigEntry
 
 
 class OAuth2FlowHandler(
@@ -78,3 +84,48 @@ class OAuth2FlowHandler(
                 },
             )
         return await super().async_step_dhcp(discovery_info)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: HomeConnectConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return HomeConnectOptionsFlow()
+
+
+class HomeConnectOptionsFlow(OptionsFlow):
+    """Handle Home Connect options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        return await self.async_step_entry_options()
+
+    async def async_step_entry_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options step."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        config_entry = cast(HomeConnectConfigEntry, self.config_entry)
+        return self.async_show_form(
+            step_id="entry_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT,
+                        default=config_entry.options.get(
+                            CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT, vol.UNDEFINED
+                        ),
+                    ): cv.multi_select(
+                        {
+                            ha_id: appliance.info.name
+                            for ha_id, appliance in config_entry.runtime_data.data.items()
+                        }
+                    ),
+                }
+            ),
+        )

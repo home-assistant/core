@@ -40,6 +40,18 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "options": {
+    "step": {
+      "entry_options": {
+        "data": {
+          "disable_updates_on_connect_paired_event": "Disable appliance updates on connect or paired events event"
+        },
+        "data_description": {
+          "disable_updates_on_connect_paired_event": "Disable the updates that are done when the API sends a connect or paired event, this can help to avoid rate limiting issues with the Home Connect API. If you disable this option for an appliance, updates through events will still be received, and if you need an update of the appliance data, you can use the homeassistant.update_entity action to request it. This options is automatically activated if the appliance sends too many connect or paired events in a short time to avoid exceeding the API rate limit."
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"
@@ -130,7 +142,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
-            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please create an issue in the [Home Assistant core repository]({home_assistant_core_new_issue_url})."
+            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance and go to the Home Connect integration page and click onto the configuration entry configuration to re-enable the updates. If the issue persists it is recommended to leave the updates disabled and update on demand by using the `homeassistant.update_entity` action on the appliance entities if needed."
           }
         }
       }

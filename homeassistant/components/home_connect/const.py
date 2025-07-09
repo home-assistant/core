@@ -10,6 +10,8 @@ from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
+CONF_DISABLE_UPDATES_ON_CONNECT_PAIRED_EVENT = "disable_updates_on_connect_paired_event"
+
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
