@@ -1127,7 +1127,7 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.105.0
+hass-nabucasa==0.106.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -2994,7 +2994,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.14.1
+uiprotect==7.14.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

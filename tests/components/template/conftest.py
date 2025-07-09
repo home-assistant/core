@@ -23,6 +23,88 @@ class ConfigurationStyle(Enum):
     TRIGGER = "Trigger"
 
 
+def make_test_trigger(*entities: str) -> dict:
+    """Make a test state trigger."""
+    return {
+        "trigger": [
+            {
+                "trigger": "state",
+                "entity_id": list(entities),
+            },
+            {"platform": "event", "event_type": "test_event"},
+        ],
+        "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+        "action": [
+            {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+        ],
+    }
+
+
+async def async_setup_legacy_platforms(
+    hass: HomeAssistant,
+    domain: str,
+    slug: str,
+    count: int,
+    config: ConfigType,
+) -> None:
+    """Do setup of any legacy platform that supports a keyed dictionary of template entities."""
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            {domain: {"platform": "template", slug: config}},
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_setup_modern_state_format(
+    hass: HomeAssistant,
+    domain: str,
+    count: int,
+    config: ConfigType,
+    extra_config: ConfigType | None = None,
+) -> None:
+    """Do setup of template integration via modern format."""
+    extra = extra_config or {}
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            {"template": {domain: config, **extra}},
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_setup_modern_trigger_format(
+    hass: HomeAssistant,
+    domain: str,
+    trigger: dict,
+    count: int,
+    config: ConfigType,
+    extra_config: ConfigType | None = None,
+) -> None:
+    """Do setup of template integration via trigger format."""
+    extra = extra_config or {}
+    config = {"template": {domain: config, **trigger, **extra}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
