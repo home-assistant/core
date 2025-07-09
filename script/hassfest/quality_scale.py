@@ -1667,7 +1667,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "matter",
     "maxcube",
     "mazda",
-    "mealie",
     "meater",
     "medcom_ble",
     "media_extractor",
