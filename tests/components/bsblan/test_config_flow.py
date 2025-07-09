@@ -375,9 +375,14 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     """Test Zeroconf discovery when no MAC in announcement but device accessible without auth."""
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
 
-    # Should create entry directly without showing discovery_confirm form
+    # Should now show the discovery_confirm form to the user
+    _assert_form_result(result, "discovery_confirm")
+
+    # User confirms the discovery
+    result2 = await _configure_flow(hass, result["flow_id"], {})
+
     _assert_create_entry_result(
-        result,
+        result2,
         "00:80:41:19:69:90",  # MAC from fixture file
         {
             CONF_HOST: "10.0.2.60",
