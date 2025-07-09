@@ -1,12 +1,12 @@
 """Test config flow for the TuneBlade Remote integration."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 from homeassistant.components.tuneblade_remote.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -112,6 +112,21 @@ async def test_user_flow_duplicate_unique_id_aborts(
     """Test flow aborts if unique_id already configured."""
     mock_tuneblade_api.async_get_data = AsyncMock(return_value=[{"id": "abc"}])
 
+    existing_entry = ConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="TestDevice",
+        data={
+            "host": "127.0.0.1",
+            "port": 54412,
+            "name": "TestDevice",
+        },
+        source="user",
+        unique_id="TestDevice_127.0.0.1_54412",
+        entry_id="12345",
+    )
+    hass.config_entries._entries.append(existing_entry)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": "user"},
@@ -119,12 +134,6 @@ async def test_user_flow_duplicate_unique_id_aborts(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    # Simulate existing entry
-    entry = MagicMock()
-    entry.unique_id = "TestDevice_127.0.0.1_54412"
-    entry.state = ConfigEntryState.LOADED
-    hass.config_entries._entries.append(entry)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -136,3 +145,4 @@ async def test_user_flow_duplicate_unique_id_aborts(
     )
 
     assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
