@@ -82,26 +82,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         reaction: ReactionType = call.data[ATTR_REACTION]
 
-        if activity:
-            try:
-                await coordinator.bring.notify(
-                    list_uuid,
-                    BringNotificationType.LIST_ACTIVITY_STREAM_REACTION,
-                    receiver=state.attributes[ATTR_RECEIVER],
-                    activity=state.attributes[ATTR_ACTIVITY],
-                    activity_type=ActivityType(activity.upper()),
-                    reaction=reaction,
-                )
-            except (BringRequestException, BringAuthException) as e:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="reaction_request_failed",
-                ) from e
-        else:
+        if not activity:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="activity_not_found",
             )
+        try:
+            await coordinator.bring.notify(
+                list_uuid,
+                BringNotificationType.LIST_ACTIVITY_STREAM_REACTION,
+                receiver=state.attributes[ATTR_RECEIVER],
+                activity=state.attributes[ATTR_ACTIVITY],
+                activity_type=ActivityType(activity.upper()),
+                reaction=reaction,
+            )
+        except (BringRequestException, BringAuthException) as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reaction_request_failed",
+            ) from e
 
     hass.services.async_register(
         DOMAIN,
