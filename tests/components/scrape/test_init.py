@@ -249,12 +249,15 @@ async def test_migrate_from_version_1_to_2(
             "encoding": "UTF-8",
             "method": "GET",
             "resource": "http://www.home-assistant.io",
+            "username": "user",
+            "password": "pass",
             "sensor": [
                 {
                     "index": 0,
                     "name": "Current version",
                     "select": ".release-date",
                     "unique_id": "a0bde946-5c96-11f0-b55f-0242ac110002",
+                    "value_template": "{{ value }}",
                 }
             ],
             "timeout": 10.0,
@@ -304,7 +307,7 @@ async def test_migrate_from_version_1_to_2(
     assert config_entry.subentries == {
         "01JZQ1G63X2DX66GZ9ZTFY9PEH": MockConfigSubentry(
             data={
-                "advanced": {},
+                "advanced": {"value_template": "{{ value }}"},
                 "index": 0,
                 "select": ".release-date",
             },
@@ -322,3 +325,6 @@ async def test_migrate_from_version_1_to_2(
     }
     assert entity.config_entry_id == config_entry.entry_id
     assert entity.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "January 17, 2022"
