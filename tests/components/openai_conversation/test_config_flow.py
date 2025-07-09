@@ -286,29 +286,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "",
             },
         ),
-        (  # options with no model-specific settings
-            {},
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 1.0,
-                    CONF_CHAT_MODEL: "gpt-4.5-preview",
-                    CONF_TOP_P: RECOMMENDED_TOP_P,
-                    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "gpt-4.5-preview",
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-            },
-        ),
         (  # options for reasoning models
             {},
             (

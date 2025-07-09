@@ -52,6 +52,11 @@
         "h": "Hours",
         "d": "Days"
       }
+    },
+    "round": {
+      "unit_of_measurement": {
+        "decimals": "decimals"
+      }
     }
   }
 }

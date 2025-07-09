@@ -793,12 +793,19 @@ async def test_start_conversation_default_preannounce(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "response_text", "expected_answer"),
+    ("service_data", "response_text", "expected_answer", "should_preannounce"),
     [
+        (
+            {},
+            "jazz",
+            AssistSatelliteAnswer(id=None, sentence="jazz"),
+            True,
+        ),
         (
             {"preannounce": False},
             "jazz",
             AssistSatelliteAnswer(id=None, sentence="jazz"),
+            False,
         ),
         (
             {
@@ -810,6 +817,7 @@ async def test_start_conversation_default_preannounce(
             },
             "Some Rock, please.",
             AssistSatelliteAnswer(id="rock", sentence="Some Rock, please."),
+            False,
         ),
         (
             {
@@ -827,7 +835,7 @@ async def test_start_conversation_default_preannounce(
                         "sentences": ["artist {artist} [please]"],
                     },
                 ],
-                "preannounce": False,
+                "preannounce": True,
             },
             "artist Pink Floyd",
             AssistSatelliteAnswer(
@@ -835,6 +843,7 @@ async def test_start_conversation_default_preannounce(
                 sentence="artist Pink Floyd",
                 slots={"artist": "Pink Floyd"},
             ),
+            True,
         ),
     ],
 )
@@ -845,6 +854,7 @@ async def test_ask_question(
     service_data: dict,
     response_text: str,
     expected_answer: AssistSatelliteAnswer,
+    should_preannounce: bool,
 ) -> None:
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
@@ -868,6 +878,9 @@ async def test_ask_question(
     async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
+        assert (
+            start_announcement.preannounce_media_id is not None
+        ) is should_preannounce
         await original_start_conversation(start_announcement)
 
         audio_stream = object()

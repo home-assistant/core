@@ -1118,7 +1118,7 @@
         "name": "Comfort temperature"
       },
       "valve_state_auto_shutdown": {
-        "name": "Valve state auto shutdown"
+        "name": "Valve state auto-shutdown"
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
@@ -1219,7 +1219,7 @@
         "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Increased non-neutral output"
       },
       "leading_or_trailing_edge": {
         "name": "Dimming mode"
@@ -1996,7 +1996,7 @@
         "name": "Schedule mode"
       },
       "auto_clean": {
-        "name": "Auto clean"
+        "name": "Autoclean"
       },
       "test_mode": {
         "name": "Test mode"
@@ -2005,7 +2005,7 @@
         "name": "External temperature sensor"
       },
       "auto_relock": {
-        "name": "Auto relock"
+        "name": "Autorelock"
       }
     }
   }

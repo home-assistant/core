@@ -94,6 +94,7 @@ CONFIG_SCHEMA = vol.Schema(
                 max=28,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="days",
+                translation_key=CONF_METER_OFFSET,
             ),
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(

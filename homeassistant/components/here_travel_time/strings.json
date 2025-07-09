@@ -61,8 +61,7 @@
       "init": {
         "data": {
           "traffic_mode": "Traffic mode",
-          "route_mode": "Route mode",
-          "unit_system": "Unit system"
+          "route_mode": "Route mode"
         }
       },
       "time_menu": {

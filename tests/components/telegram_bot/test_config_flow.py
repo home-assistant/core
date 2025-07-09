@@ -63,7 +63,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] is None
+    assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
 
 
 async def test_reconfigure_flow_broadcast(

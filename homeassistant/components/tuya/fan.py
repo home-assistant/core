@@ -25,11 +25,11 @@ from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_SUPPORT_TYPE = {
+    "cs",  # Dehumidifier
     "fs",  # Fan
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
-    "cs",  # Dehumidifier
 }
 
 

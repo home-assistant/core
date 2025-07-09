@@ -9,13 +9,11 @@ from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-from .models import MyStromData
+from .models import MyStromConfigEntry, MyStromData
 
 PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
@@ -41,7 +39,7 @@ def _get_mystrom_switch(host: str) -> MyStromSwitch:
     return MyStromSwitch(host)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
     try:
@@ -73,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unsupported myStrom device type: %s", device_type)
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = MyStromData(
+    entry.runtime_data = MyStromData(
         device=device,
         info=info,
     )
@@ -82,15 +80,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> bool:
     """Unload a config entry."""
-    device_type = hass.data[DOMAIN][entry.entry_id].info["type"]
+    device_type = entry.runtime_data.info["type"]
     platforms = []
     if device_type in [101, 106, 107, 120]:
         platforms.extend(PLATFORMS_PLUGS)
     elif device_type in [102, 105]:
         platforms.extend(PLATFORMS_BULB)
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, platforms)

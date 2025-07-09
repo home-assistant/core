@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_TTS_NAME,
 )
@@ -29,6 +30,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "api_key": "bla",
         },
         version=2,
+        minor_version=3,
         subentries_data=[
             {
                 "data": {},
@@ -42,6 +44,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "subentry_type": "tts",
                 "title": DEFAULT_TTS_NAME,
                 "subentry_id": "ulid-tts",
+                "unique_id": None,
+            },
+            {
+                "data": {},
+                "subentry_type": "ai_task_data",
+                "title": DEFAULT_AI_TASK_NAME,
+                "subentry_id": "ulid-ai-task",
                 "unique_id": None,
             },
         ],
@@ -103,19 +112,26 @@ async def setup_ha(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_send_message_stream() -> Generator[AsyncMock]:
+def mock_chat_create() -> Generator[AsyncMock]:
     """Mock stream response."""
 
     async def mock_generator(stream):
         for value in stream:
             yield value
 
-    with patch(
-        "google.genai.chats.AsyncChat.send_message_stream",
-        AsyncMock(),
-    ) as mock_send_message_stream:
-        mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
-            mock_send_message_stream.return_value.pop(0)
-        )
+    mock_send_message_stream = AsyncMock()
+    mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
+        mock_send_message_stream.return_value.pop(0)
+    )
 
-        yield mock_send_message_stream
+    with patch(
+        "google.genai.chats.AsyncChats.create",
+        return_value=AsyncMock(send_message_stream=mock_send_message_stream),
+    ) as mock_create:
+        yield mock_create
+
+
+@pytest.fixture
+def mock_send_message_stream(mock_chat_create) -> Generator[AsyncMock]:
+    """Mock stream response."""
+    return mock_chat_create.return_value.send_message_stream

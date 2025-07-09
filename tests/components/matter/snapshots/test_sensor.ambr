@@ -3443,6 +3443,55 @@
     'state': '1.3',
   })
 # ---
+# name: test_sensors[microwave_oven][sensor.microwave_oven_estimated_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_oven_estimated_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Estimated end time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_end_time',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateCountdownTime-96-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[microwave_oven][sensor.microwave_oven_estimated_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Microwave Oven Estimated end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_oven_estimated_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T14:00:30+00:00',
+  })
+# ---
 # name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4971,6 +5020,59 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
+  })
+# ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.evse_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'State of charge',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'evse_soc',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseStateOfCharge-153-48',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'evse State of charge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_user_max_charge_current-entry]

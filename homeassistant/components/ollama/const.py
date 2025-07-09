@@ -159,3 +159,10 @@ MODEL_NAMES = [  # https://ollama.com/library
     "zephyr",
 ]
 DEFAULT_MODEL = "llama3.2:latest"
+
+DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
+DEFAULT_AI_TASK_NAME = "Ollama AI Task"
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_MAX_HISTORY: DEFAULT_MAX_HISTORY,
+}

@@ -9,12 +9,25 @@ from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 
-from . import TEST_OPTIONS, TEST_USER_DATA
+from . import TEST_OPTIONS
 
 from tests.common import MockConfigEntry
+
+V1_TEST_USER_DATA = {
+    ollama.CONF_URL: "http://localhost:11434",
+    ollama.CONF_MODEL: "test_model:latest",
+}
+
+V1_TEST_OPTIONS = {
+    ollama.CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    ollama.CONF_MAX_HISTORY: 2,
+}
+
+V21_TEST_USER_DATA = V1_TEST_USER_DATA
+V21_TEST_OPTIONS = V1_TEST_OPTIONS
 
 
 @pytest.mark.parametrize(
@@ -41,17 +54,17 @@ async def test_init_error(
         assert error in caplog.text
 
 
-async def test_migration_from_v1_to_v2(
+async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2."""
+    """Test migration from version 1."""
     # Create a v1 config entry with conversation options and an entity
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=TEST_USER_DATA,
-        options=TEST_OPTIONS,
+        data=V1_TEST_USER_DATA,
+        options=V1_TEST_OPTIONS,
         version=1,
         title="llama-3.2-8b",
     )
@@ -80,19 +93,41 @@ async def test_migration_from_v1_to_v2(
         return_value=True,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert mock_config_entry.version == 2
+    assert mock_config_entry.version == 3
     assert mock_config_entry.minor_version == 2
-    assert mock_config_entry.data == TEST_USER_DATA
+    # After migration, parent entry should only have URL
+    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
 
-    assert len(mock_config_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 2
 
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        iter(
+            entry
+            for entry in mock_config_entry.subentries.values()
+            if entry.subentry_type == "conversation"
+        )
+    )
     assert subentry.unique_id is None
     assert subentry.title == "llama-3.2-8b"
     assert subentry.subentry_type == "conversation"
-    assert subentry.data == TEST_OPTIONS
+    # Subentry should now include the model from the original options
+    expected_subentry_data = TEST_OPTIONS.copy()
+    assert subentry.data == expected_subentry_data
+
+    # Find the AI Task subentry
+    ai_task_subentry = next(
+        iter(
+            entry
+            for entry in mock_config_entry.subentries.values()
+            if entry.subentry_type == "ai_task_data"
+        )
+    )
+    assert ai_task_subentry.unique_id is None
+    assert ai_task_subentry.title == "Ollama AI Task"
+    assert ai_task_subentry.subentry_type == "ai_task_data"
 
     migrated_entity = entity_registry.async_get(entity.entity_id)
     assert migrated_entity is not None
@@ -117,17 +152,17 @@ async def test_migration_from_v1_to_v2(
     }
 
 
-async def test_migration_from_v1_to_v2_with_multiple_urls(
+async def test_migration_from_v1_with_multiple_urls(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with different URLs."""
+    """Test migration from version 1 with different URLs."""
     # Create two v1 config entries with different URLs
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "http://localhost:11434", "model": "llama3.2:latest"},
-        options=TEST_OPTIONS,
+        options=V1_TEST_OPTIONS,
         version=1,
         title="Ollama 1",
     )
@@ -135,7 +170,7 @@ async def test_migration_from_v1_to_v2_with_multiple_urls(
     mock_config_entry_2 = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "http://localhost:11435", "model": "llama3.2:latest"},
-        options=TEST_OPTIONS,
+        options=V1_TEST_OPTIONS,
         version=1,
         title="Ollama 2",
     )
@@ -187,14 +222,35 @@ async def test_migration_from_v1_to_v2_with_multiple_urls(
     assert len(entries) == 2
 
     for idx, entry in enumerate(entries):
-        assert entry.version == 2
+        assert entry.version == 3
         assert entry.minor_version == 2
         assert not entry.options
-        assert len(entry.subentries) == 1
-        subentry = list(entry.subentries.values())[0]
+        assert len(entry.subentries) == 2
+
+        subentry = next(
+            iter(
+                subentry
+                for subentry in entry.subentries.values()
+                if subentry.subentry_type == "conversation"
+            )
+        )
         assert subentry.subentry_type == "conversation"
-        assert subentry.data == TEST_OPTIONS
+        # Subentry should include the model along with the original options
+        expected_subentry_data = TEST_OPTIONS.copy()
+        expected_subentry_data["model"] = "llama3.2:latest"
+        assert subentry.data == expected_subentry_data
         assert subentry.title == f"Ollama {idx + 1}"
+
+        # Find the AI Task subentry
+        ai_task_subentry = next(
+            iter(
+                subentry
+                for subentry in entry.subentries.values()
+                if subentry.subentry_type == "ai_task_data"
+            )
+        )
+        assert ai_task_subentry.subentry_type == "ai_task_data"
+        assert ai_task_subentry.title == "Ollama AI Task"
 
         dev = device_registry.async_get_device(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
@@ -204,17 +260,17 @@ async def test_migration_from_v1_to_v2_with_multiple_urls(
         assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
 
 
-async def test_migration_from_v1_to_v2_with_same_urls(
+async def test_migration_from_v1_with_same_urls(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with same URLs consolidates entries."""
+    """Test migration from version 1 with same URLs consolidates entries."""
     # Create two v1 config entries with the same URL
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "http://localhost:11434", "model": "llama3.2:latest"},
-        options=TEST_OPTIONS,
+        options=V1_TEST_OPTIONS,
         version=1,
         title="Ollama",
     )
@@ -222,7 +278,7 @@ async def test_migration_from_v1_to_v2_with_same_urls(
     mock_config_entry_2 = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "http://localhost:11434", "model": "llama3.2:latest"},  # Same URL
-        options=TEST_OPTIONS,
+        options=V1_TEST_OPTIONS,
         version=1,
         title="Ollama 2",
     )
@@ -275,10 +331,11 @@ async def test_migration_from_v1_to_v2_with_same_urls(
     assert len(entries) == 1
 
     entry = entries[0]
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.minor_version == 2
     assert not entry.options
-    assert len(entry.subentries) == 2  # Two subentries from the two original entries
+    # Two conversation subentries from the two original entries and 1 aitask subentry
+    assert len(entry.subentries) == 3
 
     # Check both subentries exist with correct data
     subentries = list(entry.subentries.values())
@@ -286,9 +343,16 @@ async def test_migration_from_v1_to_v2_with_same_urls(
     assert "Ollama" in titles
     assert "Ollama 2" in titles
 
-    for subentry in subentries:
+    conversation_subentries = [
+        subentry for subentry in subentries if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 2
+    for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
-        assert subentry.data == TEST_OPTIONS
+        # Subentry should include the model along with the original options
+        expected_subentry_data = TEST_OPTIONS.copy()
+        expected_subentry_data["model"] = "llama3.2:latest"
+        assert subentry.data == expected_subentry_data
 
         # Check devices were migrated correctly
         dev = device_registry.async_get_device(
@@ -301,12 +365,12 @@ async def test_migration_from_v1_to_v2_with_same_urls(
         }
 
 
-async def test_migration_from_v2_1_to_v2_2(
+async def test_migration_from_v2_1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1 to version 2.2.
+    """Test migration from version 2.1.
 
     This tests we clean up the broken migration in Home Assistant Core
     2025.7.0b0-2025.7.0b1:
@@ -315,20 +379,20 @@ async def test_migration_from_v2_1_to_v2_2(
     # Create a v2.1 config entry with 2 subentries, devices and entities
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=TEST_USER_DATA,
+        data=V21_TEST_USER_DATA,
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
         subentries_data=[
             ConfigSubentryData(
-                data=TEST_OPTIONS,
+                data=V21_TEST_OPTIONS,
                 subentry_id="mock_id_1",
                 subentry_type="conversation",
                 title="Ollama",
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=TEST_OPTIONS,
+                data=V21_TEST_OPTIONS,
                 subentry_id="mock_id_2",
                 subentry_type="conversation",
                 title="Ollama 2",
@@ -392,11 +456,11 @@ async def test_migration_from_v2_1_to_v2_2(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.minor_version == 2
     assert not entry.options
     assert entry.title == "Ollama"
-    assert len(entry.subentries) == 2
+    assert len(entry.subentries) == 3
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -405,6 +469,7 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(conversation_subentries) == 2
     for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
+        # Since TEST_USER_DATA no longer has a model, subentry data should be TEST_OPTIONS
         assert subentry.data == TEST_OPTIONS
         assert "Ollama" in subentry.title
 
@@ -450,3 +515,75 @@ async def test_migration_from_v2_1_to_v2_2(
     assert device.config_entries_subentries == {
         mock_config_entry.entry_id: {subentry.subentry_id}
     }
+
+
+async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
+    """Test migration from version 2.2."""
+    subentry_data = ConfigSubentryData(
+        data=V21_TEST_USER_DATA,
+        subentry_type="conversation",
+        title="Test Conversation",
+        unique_id=None,
+    )
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+            ollama.CONF_MODEL: "test_model:latest",  # Model still in main data
+        },
+        version=2,
+        minor_version=2,
+        subentries_data=[subentry_data],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Check migration to v3.1
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 2
+
+    # Check that model was moved from main data to subentry
+    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert len(mock_config_entry.subentries) == 2
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    assert subentry.data == {
+        **V21_TEST_USER_DATA,
+        ollama.CONF_MODEL: "test_model:latest",
+    }
+
+
+async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None:
+    """Test migration from version 3.1 where there is no existing subentry.
+
+    This exercises the code path where the model is not moved to a subentry
+    because the subentry does not exist, which is a scenario that can happen
+    if the user created the config entry without adding a subentry, or
+    if the user manually removed the subentry after the migration to v3.1.
+    """
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_MODEL: "test_model:latest",
+        },
+        version=3,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 2
+
+    assert next(iter(mock_config_entry.subentries.values()), None) is None

@@ -14,7 +14,6 @@ from .const import (
     CHARGER_PAUSE_RESUME_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
-    DOMAIN,
     ChargerStatus,
 )
 from .coordinator import WallboxCoordinator
@@ -34,10 +33,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
         [WallboxSwitch(coordinator, SWITCH_TYPES[CHARGER_PAUSE_RESUME_KEY])]
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSwitch(WallboxEntity, SwitchEntity):

@@ -108,6 +108,7 @@ async def test_form_province_no_alias(hass: HomeAssistant) -> None:
         "name": "Workday Sensor",
         "country": "US",
         "excludes": ["sat", "sun", "holiday"],
+        "language": "en_US",
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],

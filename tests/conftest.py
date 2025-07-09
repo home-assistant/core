@@ -1724,7 +1724,7 @@ async def async_test_recorder(
             wait_recorder: bool = True,
             wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
-            """Setup and return recorder instance."""  # noqa: D401
+            """Setup and return recorder instance."""
             await _async_init_recorder_component(
                 hass,
                 config,

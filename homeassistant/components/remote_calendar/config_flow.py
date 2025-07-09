@@ -4,13 +4,14 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, TimeoutException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.httpx_client import get_async_client
 
+from .client import get_calendar
 from .const import CONF_CALENDAR_NAME, DOMAIN
 from .ics import InvalidIcsException, parse_calendar
 
@@ -49,7 +50,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
         client = get_async_client(self.hass)
         try:
-            res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            res = await get_calendar(client, user_input[CONF_URL])
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
                 return self.async_show_form(
@@ -58,9 +59,14 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             res.raise_for_status()
+        except TimeoutException as err:
+            errors["base"] = "timeout_connect"
+            _LOGGER.debug(
+                "A timeout error occurred: %s", str(err) or type(err).__name__
+            )
         except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
-            _LOGGER.debug("An error occurred: %s", err)
+            _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
             try:
                 await parse_calendar(self.hass, res.text)

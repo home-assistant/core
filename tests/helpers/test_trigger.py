@@ -738,3 +738,45 @@ async def test_invalid_trigger_platform(
     await async_setup_component(hass, "test", {})
 
     assert "Integration test does not provide trigger support, skipping" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_subscribe_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger.async_subscribe_platform_events."""
+    sun_trigger_descriptions = """
+        sun: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/triggers.yaml"):
+            trigger_descriptions = sun_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    async def broken_subscriber(_):
+        """Simulate a broken subscriber."""
+        raise Exception("Boom!")  # noqa: TRY002
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    trigger.async_subscribe_platform_events(hass, broken_subscriber)
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "sun", {})
+
+    assert trigger_events == [{"sun"}]
+    assert "Error while notifying trigger platform listener" in caplog.text

@@ -2,43 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from typing import Any
 
-from habiticalib import (
-    ContentData,
-    HabiticaClass,
-    TaskData,
-    TaskType,
-    UserData,
-    deserialize_task,
-    ha,
-)
+from habiticalib import ContentData, HabiticaClass, TaskData, UserData, ha
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .const import ASSETS_URL
+from .coordinator import HabiticaConfigEntry
 from .entity import HabiticaBase
 from .util import (
     get_attribute_points,
@@ -84,7 +67,6 @@ class HabiticaSensorEntity(StrEnum):
 
     DISPLAY_NAME = "display_name"
     HEALTH = "health"
-    HEALTH_MAX = "health_max"
     MANA = "mana"
     MANA_MAX = "mana_max"
     EXPERIENCE = "experience"
@@ -135,12 +117,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.hp,
         entity_picture=ha.HP,
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.HEALTH_MAX,
-        translation_key=HabiticaSensorEntity.HEALTH_MAX,
-        entity_registry_enabled_default=False,
-        value_fn=lambda user, _: 50,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MANA,
@@ -286,57 +262,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
 )
 
 
-TASKS_MAP_ID = "id"
-TASKS_MAP = {
-    "repeat": "repeat",
-    "challenge": "challenge",
-    "group": "group",
-    "frequency": "frequency",
-    "every_x": "everyX",
-    "streak": "streak",
-    "up": "up",
-    "down": "down",
-    "counter_up": "counterUp",
-    "counter_down": "counterDown",
-    "next_due": "nextDue",
-    "yester_daily": "yesterDaily",
-    "completed": "completed",
-    "collapse_checklist": "collapseChecklist",
-    "type": "Type",
-    "notes": "notes",
-    "tags": "tags",
-    "value": "value",
-    "priority": "priority",
-    "start_date": "startDate",
-    "days_of_month": "daysOfMonth",
-    "weeks_of_month": "weeksOfMonth",
-    "created_at": "createdAt",
-    "text": "text",
-    "is_due": "isDue",
-}
-
-
-TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.HABITS,
-        translation_key=HabiticaSensorEntity.HABITS,
-        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.HABIT],
-    ),
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.REWARDS,
-        translation_key=HabiticaSensorEntity.REWARDS,
-        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.REWARD],
-    ),
-)
-
-
-def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Get list of related automations and scripts."""
-    used_in = automations_with_entity(hass, entity_id)
-    used_in += scripts_with_entity(hass, entity_id)
-    return used_in
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
@@ -345,59 +270,10 @@ async def async_setup_entry(
     """Set up the habitica sensors."""
 
     coordinator = config_entry.runtime_data
-    ent_reg = er.async_get(hass)
-    entities: list[SensorEntity] = []
-    description: SensorEntityDescription
 
-    def add_deprecated_entity(
-        description: SensorEntityDescription,
-        entity_cls: Callable[
-            [HabiticaDataUpdateCoordinator, SensorEntityDescription], SensorEntity
-        ],
-    ) -> None:
-        """Add deprecated entities."""
-        if entity_id := ent_reg.async_get_entity_id(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{config_entry.unique_id}_{description.key}",
-        ):
-            entity_entry = ent_reg.async_get(entity_id)
-            if entity_entry and entity_entry.disabled:
-                ent_reg.async_remove(entity_id)
-                async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{description.key}",
-                )
-            elif entity_entry:
-                entities.append(entity_cls(coordinator, description))
-                if entity_used_in(hass, entity_id):
-                    async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"deprecated_entity_{description.key}",
-                        breaks_in_ha_version="2025.8.0",
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="deprecated_entity",
-                        translation_placeholders={
-                            "name": str(
-                                entity_entry.name or entity_entry.original_name
-                            ),
-                            "entity": entity_id,
-                        },
-                    )
-
-    for description in SENSOR_DESCRIPTIONS:
-        if description.key is HabiticaSensorEntity.HEALTH_MAX:
-            add_deprecated_entity(description, HabiticaSensor)
-        else:
-            entities.append(HabiticaSensor(coordinator, description))
-
-    for description in TASK_SENSOR_DESCRIPTION:
-        add_deprecated_entity(description, HabiticaTaskSensor)
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -441,31 +317,3 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
             )
 
         return None
-
-
-class HabiticaTaskSensor(HabiticaBase, SensorEntity):
-    """A Habitica task sensor."""
-
-    entity_description: HabiticaTaskSensorEntityDescription
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the device."""
-
-        return len(self.entity_description.value_fn(self.coordinator.data.tasks))
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes of all user tasks."""
-        attrs = {}
-
-        # Map tasks to TASKS_MAP
-        for task_data in self.entity_description.value_fn(self.coordinator.data.tasks):
-            received_task = deserialize_task(asdict(task_data))
-            task_id = received_task[TASKS_MAP_ID]
-            task = {}
-            for map_key, map_value in TASKS_MAP.items():
-                if value := received_task.get(map_value):
-                    task[map_key] = value
-            attrs[str(task_id)] = task
-        return attrs
