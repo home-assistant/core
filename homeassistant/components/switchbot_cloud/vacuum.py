@@ -100,10 +100,11 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
-        await self.send_api_command(
-            VacuumCommands.POW_LEVEL,
-            parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
-        )
+        if fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED:
+            await self.send_api_command(
+                VacuumCommands.POW_LEVEL,
+                parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
+            )
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
