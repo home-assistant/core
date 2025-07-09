@@ -354,19 +354,13 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 def get_fault_labels(device: CustomerDevice) -> list[str] | None:
     """Return fault labels for the device."""
-    if DPCode.FAULT not in device.status_range:
-        return None
-    if DPType(device.status_range[DPCode.FAULT].type) != DPType.BITMAP:
-        return None
-
-    fault_values = json_loads(device.status_range[DPCode.FAULT].values)
-    if not isinstance(fault_values, dict):
-        return None
-
-    fault_labels = fault_values.get("label")
-    if not isinstance(fault_labels, list):
-        return None
-    if not all(isinstance(fault_label, str) for fault_label in fault_labels):
+    if (
+        (status_range := device.status_range.get(DPCode.FAULT)) is None
+        or status_range.type != DPType.BITMAP
+        or not isinstance(fault_values := json_loads(status_range.values), dict)
+        or not isinstance(fault_labels := fault_values.get("label"), list)
+        or not all(isinstance(fault_label, str) for fault_label in fault_labels)
+    ):
         return None
 
     return [str(fault_label) for fault_label in fault_labels]
@@ -473,11 +467,9 @@ class TuyaFaultSensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fault sensor is active."""
-        if DPCode.FAULT not in self.device.status:
-            return False
-
-        fault_index = self.entity_description.fault_index
-        if fault_index is None:
+        if (fault_index := self.entity_description.fault_index) is None or (
+            fault_status := self.device.status.get(DPCode.FAULT)
+        ) is None:
             return False
 
         # Tuya documentation on bitmaps:
@@ -488,4 +480,4 @@ class TuyaFaultSensorEntity(TuyaEntity, BinarySensorEntity):
         # * The first kind of fault occurs: decimal - > 1; binary - > 0001;
         # * The first and second faults occur at the same time: decimal - > 3; binary - > 0011;
         # * All faults occur simultaneously: decimal - > 15; binary - > 1111;
-        return (self.device.status[DPCode.FAULT] & (1 << fault_index)) != 0
+        return (fault_status & (1 << fault_index)) != 0
