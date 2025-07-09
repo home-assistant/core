@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost_defrost',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqtankfull_tankfull',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgqtankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqwet_wet',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgqwet',
     'unit_of_measurement': None,
   })
 # ---

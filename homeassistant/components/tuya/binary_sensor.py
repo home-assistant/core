@@ -422,7 +422,6 @@ async def async_setup_entry(
                                     device,
                                     hass_data.manager,
                                     description,
-                                    bitmap_key,
                                     mask,
                                 )
                             )
@@ -446,7 +445,6 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        sub_key: str | None = None,
         bit_mask: int | None = None,
     ) -> None:
         """Init Tuya binary sensor."""
@@ -454,8 +452,6 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._bit_mask = bit_mask
-        if sub_key is not None:
-            self._attr_unique_id += f"_{sub_key}"
 
     @property
     def is_on(self) -> bool:
