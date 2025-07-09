@@ -1,4 +1,4 @@
-"""Test event entity reaction action of the Bring! integration."""
+"""Test actions of Bring! integration."""
 
 from unittest.mock import AsyncMock
 
