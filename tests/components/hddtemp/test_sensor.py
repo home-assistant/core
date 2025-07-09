@@ -9,13 +9,19 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp"}}
+VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp", "host": "foobar.local"}}
 
-VALID_CONFIG_NAME = {"sensor": {"platform": "hddtemp", "name": "FooBar"}}
+VALID_CONFIG_NAME = {
+    "sensor": {"platform": "hddtemp", "host": "foobar.local", "name": "FooBar"}
+}
 
-VALID_CONFIG_ONE_DISK = {"sensor": {"platform": "hddtemp", "disks": ["/dev/sdd1"]}}
+VALID_CONFIG_ONE_DISK = {
+    "sensor": {"platform": "hddtemp", "host": "foobar.local", "disks": ["/dev/sdd1"]}
+}
 
-VALID_CONFIG_WRONG_DISK = {"sensor": {"platform": "hddtemp", "disks": ["/dev/sdx1"]}}
+VALID_CONFIG_WRONG_DISK = {
+    "sensor": {"platform": "hddtemp", "host": "foobar.local", "disks": ["/dev/sdx1"]}
+}
 
 VALID_CONFIG_MULTIPLE_DISKS = {
     "sensor": {
