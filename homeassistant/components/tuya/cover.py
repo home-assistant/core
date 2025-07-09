@@ -38,6 +38,31 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
+    # Garage Door Opener
+    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
+    "ckmkzq": (
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="door",
+            current_state=DPCode.DOORCONTACT_STATE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="door_2",
+            current_state=DPCode.DOORCONTACT_STATE_2,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="door_3",
+            current_state=DPCode.DOORCONTACT_STATE_3,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+    ),
     # Curtain
     # Note: Multiple curtains isn't documented
     # https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
@@ -82,31 +107,6 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
-        ),
-    ),
-    # Garage Door Opener
-    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
-    "ckmkzq": (
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="door",
-            current_state=DPCode.DOORCONTACT_STATE,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
-        ),
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="door_2",
-            current_state=DPCode.DOORCONTACT_STATE_2,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
-        ),
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="door_3",
-            current_state=DPCode.DOORCONTACT_STATE_3,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
         ),
     ),
     # Curtain Switch
