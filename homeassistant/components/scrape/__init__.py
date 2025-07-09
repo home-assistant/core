@@ -191,8 +191,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             old_to_new_sensor_id[old_unique_id] = new_sub_entry.subentry_id
             hass.config_entries.async_add_subentry(entry, new_sub_entry)
 
-        _LOGGER.debug("Old to new %s", old_to_new_sensor_id)
-
         # Use the new sub config entry id as the unique id for the sensor entity
         entity_reg = er.async_get(hass)
         entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
