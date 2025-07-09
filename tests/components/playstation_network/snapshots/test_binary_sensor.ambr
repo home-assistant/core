@@ -37,7 +37,6 @@
 # name: test_sensors[binary_sensor.testuser_subscribed_to_playstation_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/psplus.png',
       'friendly_name': 'testuser Subscribed to PlayStation Plus',
     }),
     'context': <ANY>,
