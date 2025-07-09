@@ -14,8 +14,11 @@ class DropletDiscovery:
     device_id: str | None
     host: str
     port: int | None
+    properties: dict
 
-    def __init__(self, host: str, port: int | None, service_name: str) -> None:
+    def __init__(
+        self, host: str, port: int | None, service_name: str, properties: dict
+    ) -> None:
         """Initialize Droplet discovery."""
         self.host = host
         self.port = port
@@ -23,6 +26,8 @@ class DropletDiscovery:
             self.device_id = service_name.split(".")[0]
         except IndexError:
             self.device_id = None
+
+        self.properties = properties
 
     def is_valid(self) -> bool:
         """Check discovery validity."""

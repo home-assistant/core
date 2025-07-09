@@ -12,7 +12,6 @@
   },
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
-  "forwardPorts": [1883],
   "runArgs": [
     "-e",
     "GIT_EDITOR=code --wait",

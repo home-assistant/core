@@ -4,11 +4,11 @@
 CONF_HOST = "droplet_host"
 CONF_PORT = "droplet_port"
 CONF_DEVICE_ID = "device_id"
-CONF_DEVICE_NAME = "device_name"
-CONF_MANUFACTURER = "device_manufacturer"
-CONF_MODEL = "device_model"
-CONF_SW = "device_sw"
-CONF_SERIAL = "device_sn"
+CONF_DEVICE_NAME = "name"
+CONF_MANUFACTURER = "manufacturer"
+CONF_MODEL = "model"
+CONF_SW = "sw"
+CONF_SERIAL = "sn"
 
 RECONNECT_DELAY = 5
 

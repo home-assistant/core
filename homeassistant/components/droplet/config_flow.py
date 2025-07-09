@@ -12,7 +12,11 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_HOST,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_PORT,
+    CONF_SERIAL,
+    CONF_SW,
     DEVICE_NAME,
     DOMAIN,
 )
@@ -36,6 +40,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.host,
             discovery_info.port,
             discovery_info.name,
+            discovery_info.properties,
         )
         if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
@@ -59,6 +64,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._droplet_discovery.port,
                 CONF_DEVICE_ID: self._droplet_discovery.device_id,
                 CONF_DEVICE_NAME: DEVICE_NAME,
+                CONF_MODEL: self._droplet_discovery.properties.get(CONF_MODEL),
+                CONF_MANUFACTURER: self._droplet_discovery.properties.get(
+                    CONF_MANUFACTURER
+                ),
+                CONF_SERIAL: self._droplet_discovery.properties.get(CONF_SERIAL),
+                CONF_SW: self._droplet_discovery.properties.get(CONF_SW),
             }
 
             return self.async_create_entry(

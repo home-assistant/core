@@ -19,6 +19,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    CONF_DEVICE_NAME,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SERIAL,
+    CONF_SW,
     DOMAIN,
     KEY_CURRENT_FLOW_RATE,
     KEY_SERVER_CONNECTIVITY,
@@ -106,15 +111,15 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         unique_id = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{entity_description.key}_{unique_id}"
 
-        # entry_data = coordinator.config_entry.data
+        entry_data = coordinator.config_entry.data
         if unique_id is not None:
             self._attr_device_info = DeviceInfo(
-                #                manufacturer=entry_data[CONF_MANUFACTURER],
-                #                model=entry_data[CONF_MODEL],
-                #                name=entry_data[CONF_DEVICE_NAME],
+                manufacturer=entry_data[CONF_MANUFACTURER],
+                model=entry_data[CONF_MODEL],
+                name=entry_data[CONF_DEVICE_NAME],
                 identifiers={(DOMAIN, unique_id)},
-                #                sw_version=entry_data[CONF_SW],
-                #                serial_number=entry_data[CONF_SERIAL],
+                sw_version=entry_data[CONF_SW],
+                serial_number=entry_data[CONF_SERIAL],
             )
 
     @property

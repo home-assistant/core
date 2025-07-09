@@ -25,7 +25,7 @@ async def async_setup_entry(
     droplet_coordinator = DropletDataCoordinator(hass, config_entry)
 
     # Add more exceptions perhaps
-    if not droplet_coordinator.setup():
+    if not await droplet_coordinator.setup():
         raise ConfigEntryNotReady("Device is offline")
 
     config_entry.runtime_data = droplet_coordinator
