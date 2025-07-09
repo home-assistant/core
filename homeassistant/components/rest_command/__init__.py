@@ -208,7 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     return {
                         "content": _content,
                         "status": response.status,
-                        "headers": {k.lower(): v for k, v in response.headers.items()},
+                        "headers": dict(response.headers),
                     }
 
             except TimeoutError as err:
