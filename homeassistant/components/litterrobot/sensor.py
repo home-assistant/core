@@ -185,12 +185,7 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
         key="visits_today",
         translation_key="visits_today",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda pet: sum(
-                weight.timestamp >= dt_util.start_of_local_day()
-                for weight in pet.weight_history
-            )
-        ),
+        value_fn=lambda pet: pet.get_visits_since(dt_util.start_of_local_day()),
     ),
 ]
 
