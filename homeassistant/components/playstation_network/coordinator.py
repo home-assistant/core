@@ -38,13 +38,13 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator for PSN."""
 
     config_entry: PlaystationNetworkConfigEntry
+    _update_inverval: timedelta
 
     def __init__(
         self,
         hass: HomeAssistant,
         psn: PlaystationNetwork,
         config_entry: PlaystationNetworkConfigEntry,
-        update_interval: timedelta,
     ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
@@ -52,7 +52,7 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name=DOMAIN,
             logger=_LOGGER,
             config_entry=config_entry,
-            update_interval=update_interval,
+            update_interval=self._update_interval,
         )
 
         self.psn = psn
@@ -63,14 +63,7 @@ class PlaystationNetworkCoordinator(
 ):
     """Data update coordinator for PSN."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        psn: PlaystationNetwork,
-        config_entry: PlaystationNetworkConfigEntry,
-    ) -> None:
-        """Initialize the Coordinator."""
-        super().__init__(hass, psn, config_entry, update_interval=timedelta(seconds=30))
+    _update_interval = timedelta(seconds=30)
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -109,14 +102,7 @@ class PlaystationNetworkTrophyTitlesCoordinator(
 ):
     """Trophy titles data update coordinator for PSN."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        psn: PlaystationNetwork,
-        config_entry: PlaystationNetworkConfigEntry,
-    ) -> None:
-        """Initialize the Coordinator."""
-        super().__init__(hass, psn, config_entry, update_interval=timedelta(minutes=60))
+    _update_interval = timedelta(minutes=60)
 
     async def _async_update_data(self) -> list[TrophyTitle]:
         """Update trophy titles data."""

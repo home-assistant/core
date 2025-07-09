@@ -57,6 +57,7 @@ class PlaystationNetwork:
         self.user: User
         self.legacy_profile: dict[str, Any] | None = None
         self.trophy_titles: list[TrophyTitle] = []
+        self._title_icon_urls: dict[str, str] = {}
 
     def _setup(self) -> None:
         """Setup PSN."""
@@ -146,20 +147,7 @@ class PlaystationNetwork:
                 elif platform is PlatformType.PS_VITA and game_title_info.get(
                     "npTitleId"
                 ):
-                    media_image_url = next(
-                        (
-                            title.title_icon_url
-                            for title in self.trophy_titles
-                            if title.title_name
-                            and game_title_info["titleName"]
-                            == title.title_name.removesuffix("Trophies")
-                            .removesuffix("Trophy Set")
-                            .strip()
-                            and next(iter(title.title_platform)) == PlatformType.PS_VITA
-                        ),
-                        None,
-                    )
-
+                    media_image_url = self.get_psvita_title_icon_url(game_title_info)
                 else:
                     media_image_url = None
 
@@ -172,3 +160,24 @@ class PlaystationNetwork:
                     status=game_title_info["onlineStatus"],
                 )
         return data
+
+    def get_psvita_title_icon_url(self, game_title_info: dict[str, Any]) -> str | None:
+        """Look up title_icon_url from trophy titles data."""
+
+        if url := self._title_icon_urls.get(game_title_info["npTitleId"]):
+            return url
+
+        url = next(
+            title.title_icon_url
+            for title in self.trophy_titles
+            if game_title_info["titleName"] == normalize_title(title.title_name or "")
+            and next(iter(title.title_platform)) == PlatformType.PS_VITA
+        )
+        if url is not None:
+            self._title_icon_urls[game_title_info["npTitleId"]] = url
+        return url
+
+
+def normalize_title(name: str) -> str:
+    """Normalize trophy title."""
+    return name.removesuffix("Trophies").removesuffix("Trophy Set").strip()

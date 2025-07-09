@@ -10,7 +10,7 @@ from psnawp_api.models.trophies import PlatformType
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
+from .coordinator import PlaystationNetworkConfigEntry
 
 TO_REDACT = {
     "account_id",
@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: PlaystationNetworkCoordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.coordinator
 
     return {
         "data": async_redact_data(
