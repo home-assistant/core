@@ -16,6 +16,7 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from .const import DOMAIN, ENTRY_TITLE
 
 _LOGGER = getLogger(__name__)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
@@ -52,6 +53,7 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
+
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
