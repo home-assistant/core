@@ -1,6 +1,5 @@
 """Switch configuration for VegeHub integration."""
 
-from itertools import count
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -29,21 +28,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VegeHub switches from a config entry."""
-    switches: list[VegeHubSwitch] = []
     coordinator = config_entry.runtime_data
 
-    # This index corresponds to the actuator number in the VegeHub.
-    index = count(0)
-
-    # Add each switch
-    for _i in range(coordinator.vegehub.num_actuators):
-        switch = VegeHubSwitch(
-            index=next(index),
-            duration=int(config_entry.options.get("user_act_duration", 0) or 600),
+    switches = [
+        VegeHubSwitch(
+            index=i,
+            duration=600,  # Default duration of 10 minutes
             coordinator=coordinator,
             description=SWITCH_TYPES["switch"],
         )
-        switches.append(switch)
+        for i in range(coordinator.vegehub.num_actuators)
+    ]
 
     async_add_entities(switches)
 
