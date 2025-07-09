@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -53,6 +55,7 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_should_poll = True
     _attr_attribution = ATTRIBUTION
+    idx = 0
 
     def __init__(self, coordinator: BizkaibusUpdateCoordinator) -> None:
         """Initialize the sensor."""
@@ -63,3 +66,14 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         )
         self._attr_unique_id = f"{coordinator.api.stop}_{'asd'}"
         self._attr_name = coordinator.friendly_name
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        departure = self.coordinator.data[self.idx].departure
+        if departure is not None:
+            now = datetime.now(UTC)
+            time = departure - now
+            self.native_value = int(time.total_seconds() // 60)
+        else:
+            self.native_value = None
+        self.async_write_ha_state()

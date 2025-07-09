@@ -44,7 +44,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
 
     def __departure_time(self, arrival: BizkaibusArrival) -> datetime | None:
         """Get departure time."""
-        start_datetime = dt_util.parse_datetime(arrival.closestArrival.GetAbsolute())
+        start_datetime = dt_util.parse_datetime(arrival.closestArrival.GetUTC())
         return start_datetime.astimezone() if start_datetime else None
 
     async def _async_update_data(self) -> list[DataConnection]:
