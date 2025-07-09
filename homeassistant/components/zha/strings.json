@@ -1219,7 +1219,7 @@
         "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Increased non-neutral output"
       },
       "leading_or_trailing_edge": {
         "name": "Dimming mode"
