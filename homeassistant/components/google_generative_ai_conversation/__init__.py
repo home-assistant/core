@@ -30,7 +30,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -233,25 +232,45 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     unique_id=None,
                 ),
             )
-        conversation_entity = entity_registry.async_get_entity_id(
+        conversation_entity_id = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
             entry.entry_id,
         )
-        if conversation_entity is not None:
-            entity_registry.async_update_entity(
-                conversation_entity,
-                config_entry_id=parent_entry.entry_id,
-                config_subentry_id=subentry.subentry_id,
-                new_unique_id=subentry.subentry_id,
-            )
-
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, entry.entry_id)}
         )
+
+        if conversation_entity_id is not None:
+            conversation_entity_entry = entity_registry.entities[conversation_entity_id]
+            entity_disabled_by = conversation_entity_entry.disabled_by
+            if entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY:
+                # Device and entity registries don't update the disabled_by flag
+                # when moving a device or entity from one config entry to another,
+                # so we need to do it manually.
+                entity_disabled_by = (
+                    er.RegistryEntryDisabler.DEVICE
+                    if device
+                    else er.RegistryEntryDisabler.USER
+                )
+            entity_registry.async_update_entity(
+                conversation_entity_id,
+                config_entry_id=parent_entry.entry_id,
+                config_subentry_id=subentry.subentry_id,
+                disabled_by=entity_disabled_by,
+                new_unique_id=subentry.subentry_id,
+            )
+
         if device is not None:
+            # Device and entity registries don't update the disabled_by flag when
+            # moving a device or entity from one config entry to another, so we
+            # need to do it manually.
+            device_disabled_by = device.disabled_by
+            if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
+                device_disabled_by = dr.DeviceEntryDisabler.USER
             device_registry.async_update_device(
                 device.id,
+                disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
                 add_config_subentry_id=subentry.subentry_id,
                 add_config_entry_id=parent_entry.entry_id,
@@ -266,10 +285,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     device.id,
                     remove_config_entry_id=entry.entry_id,
                     remove_config_subentry_id=None,
-                )
-            if device.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
-                device_registry.async_update_device(
-                    device.id, disabled_by=DeviceEntryDisabler.USER
                 )
 
         if not use_existing:
