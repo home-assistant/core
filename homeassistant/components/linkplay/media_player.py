@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
@@ -315,7 +315,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             return []
 
         shared_data = self.hass.data[DOMAIN][SHARED_DATA]
-        leader_id = None
+        leader_id: str | None = None
         followers = []
 
         # find leader and followers
@@ -325,6 +325,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             elif uuid in {f.device.uuid for f in multiroom.followers}:
                 followers.append(ent_id)
 
+        if TYPE_CHECKING:
+            assert leader_id is not None
         return [leader_id, *followers]
 
     @property
