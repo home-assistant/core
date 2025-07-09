@@ -43,6 +43,7 @@ def mock_conversation_input(hass: HomeAssistant) -> conversation.ConversationInp
         conversation_id=None,
         agent_id="mock-agent-id",
         device_id=None,
+        satellite_id=None,
         language="en",
     )
 

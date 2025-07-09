@@ -100,6 +100,7 @@ async def async_attach_trigger(
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
             "device_id": user_input.device_id,
+            "satellite_id": user_input.satellite_id,
             "user_input": user_input.as_dict(),
         }
 

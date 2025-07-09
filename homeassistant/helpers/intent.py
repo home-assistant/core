@@ -114,6 +114,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
@@ -138,6 +139,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        satellite_id=satellite_id,
         conversation_agent_id=conversation_agent_id,
     )
 
@@ -1287,6 +1289,7 @@ class Intent:
         "intent_type",
         "language",
         "platform",
+        "satellite_id",
         "slots",
         "text_input",
     ]
@@ -1303,6 +1306,7 @@ class Intent:
         category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        satellite_id: str | None = None,
         conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
@@ -1316,6 +1320,7 @@ class Intent:
         self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.satellite_id = satellite_id
         self.conversation_agent_id = conversation_agent_id
 
     @callback

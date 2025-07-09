@@ -281,6 +281,7 @@ async def test_async_handle_sentence_triggers(
             conversation_id=None,
             agent_id=conversation.HOME_ASSISTANT_AGENT,
             device_id=device_id,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )
@@ -318,6 +319,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
             agent_id=conversation.HOME_ASSISTANT_AGENT,
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )
@@ -335,6 +337,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
             context=Context(),
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )

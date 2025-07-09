@@ -2534,6 +2534,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             context=Context(),
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
             agent_id=None,
         )
@@ -2884,6 +2885,7 @@ async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -2923,6 +2925,7 @@ async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -2958,6 +2961,7 @@ async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3000,6 +3004,7 @@ async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3026,6 +3031,7 @@ async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3166,6 +3172,7 @@ async def test_handle_intents_with_response_errors(
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3203,6 +3210,7 @@ async def test_handle_intents_filters_results(
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )

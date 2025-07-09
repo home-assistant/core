@@ -44,6 +44,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline.4
@@ -136,6 +137,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_debug.4
@@ -240,6 +242,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.4
@@ -354,6 +357,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.6
@@ -575,6 +579,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_failed.2
@@ -599,6 +604,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_timeout.2
@@ -635,6 +641,7 @@
     'intent_input': 'never mind',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_pipeline_empty_tts_output.2
@@ -785,6 +792,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg0].2
@@ -833,6 +841,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg1].2
