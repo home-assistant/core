@@ -146,6 +146,16 @@ class CameraWebRTCProvider(ABC):
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
     @abstractmethod
+    async def async_handle_async_webrtc_re_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer on renegotiations and return the answer via the provided callback."""
+
+    @abstractmethod
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -251,7 +261,6 @@ def require_webrtc_support(
         vol.Required("type"): "camera/webrtc/offer",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("offer"): str,
-        vol.Optional("session_id"): str,
     }
 )
 @websocket_api.async_response
@@ -270,9 +279,7 @@ async def ws_webrtc_offer(
     Async friendly.
     """
     offer = msg["offer"]
-    session_id = msg.get("session_id")
-    if not session_id:
-        session_id = ulid()
+    session_id = ulid()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )
@@ -293,6 +300,58 @@ async def ws_webrtc_offer(
 
     try:
         await camera.async_handle_async_webrtc_offer(offer, session_id, send_message)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error handling WebRTC offer: %s", ex)
+        send_message(
+            WebRTCError(
+                "webrtc_offer_failed",
+                str(ex),
+            )
+        )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/webrtc/re_offer",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("offer"): str,
+        vol.Required("session_id"): str,
+    }
+)
+@websocket_api.async_response
+@require_webrtc_support("webrtc_offer_failed")
+async def ws_webrtc_re_offer(
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
+) -> None:
+    """Handle the signal path for renegotiation of the WebRTC stream.
+
+    This signal path is used to route the offer created by the client to the
+    camera device through the integration for renegotiations.
+    The ws endpoint returns a subscription id, where ice candidates and the
+    final answer will be returned.
+    The actual streaming is handled entirely between the client and camera device.
+
+    Async friendly.
+    """
+    offer = msg["offer"]
+    session_id = msg["session_id"]
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+    @callback
+    def send_message(message: WebRTCMessage) -> None:
+        """Push a value to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                message.as_dict(),
+            )
+        )
+
+    send_message(WebRTCSession(session_id))
+
+    try:
+        await camera.async_handle_async_webrtc_re_offer(offer, session_id, send_message)
     except HomeAssistantError as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         send_message(
@@ -353,6 +412,7 @@ def async_register_ws(hass: HomeAssistant) -> None:
     """Register camera webrtc ws endpoints."""
 
     websocket_api.async_register_command(hass, ws_webrtc_offer)
+    websocket_api.async_register_command(hass, ws_webrtc_re_offer)
     websocket_api.async_register_command(hass, ws_get_client_config)
     websocket_api.async_register_command(hass, ws_candidate)
 
