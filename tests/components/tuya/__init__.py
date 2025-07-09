@@ -19,6 +19,7 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
+        Platform.BINARY_SENSOR,
     ],
     "cwwsq_cleverio_pf100": [
         # https://github.com/home-assistant/core/issues/144745
@@ -40,6 +41,7 @@ DEVICE_MOCKS = {
         Platform.FAN,
         Platform.SELECT,
         Platform.SWITCH,
+        Platform.BINARY_SENSOR,
     ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
@@ -64,6 +66,7 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
         Platform.SWITCH,
+        Platform.BINARY_SENSOR,
     ],
 }
 
