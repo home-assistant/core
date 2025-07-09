@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -193,3 +197,128 @@ async def test_resource_template(
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.template_sensor")
     assert state.state == "Second"
+
+
+async def test_migrate_from_future(
+    hass: HomeAssistant,
+    get_resource_config: dict[str, Any],
+    get_sensor_config: tuple[dict[str, Any], ...],
+    get_data: MockRestData,
+) -> None:
+    """Test migration from future version fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        options=get_resource_config,
+        entry_id="01JZN04ZJ9BQXXGXDS05WS7D6P",
+        subentries_data=get_sensor_config,
+        version=3,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migrate_from_version_1_to_2(
+    hass: HomeAssistant,
+    get_data: MockRestData,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test migration to config subentries."""
+
+    @dataclass(frozen=True, kw_only=True)
+    class MockConfigSubentry(ConfigSubentry):
+        """Container for a configuration subentry."""
+
+        subentry_id: str = "01JZQ1G63X2DX66GZ9ZTFY9PEH"
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        options={
+            "encoding": "UTF-8",
+            "method": "GET",
+            "resource": "http://www.home-assistant.io",
+            "sensor": [
+                {
+                    "index": 0,
+                    "name": "Current version",
+                    "select": ".release-date",
+                    "unique_id": "a0bde946-5c96-11f0-b55f-0242ac110002",
+                }
+            ],
+            "timeout": 10.0,
+            "verify_ssl": True,
+        },
+        entry_id="01JZN04ZJ9BQXXGXDS05WS7D6P",
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, "a0bde946-5c96-11f0-b55f-0242ac110002")},
+        manufacturer="Scrape",
+        name="Current version",
+    )
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "a0bde946-5c96-11f0-b55f-0242ac110002",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="Current version",
+        has_entity_name=True,
+        suggested_object_id="current_version",
+    )
+    with (
+        patch(
+            "homeassistant.components.rest.RestData",
+            return_value=get_data,
+        ),
+        patch("homeassistant.components.scrape.ConfigSubentry", MockConfigSubentry),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) == snapshot(
+        name="config_entry"
+    )
+    device = device_registry.async_get(device.id)
+    assert device == snapshot(name="device_registry")
+    entity = entity_registry.async_get("sensor.current_version")
+    assert entity == snapshot(name="entity_registry")
+
+    assert config_entry.subentries == {
+        "01JZQ1G63X2DX66GZ9ZTFY9PEH": MockConfigSubentry(
+            data={
+                "advanced": {},
+                "index": 0,
+                "select": ".release-date",
+            },
+            subentry_id="01JZQ1G63X2DX66GZ9ZTFY9PEH",
+            subentry_type="entity",
+            title="Current version",
+            unique_id=None,
+        ),
+    }
+    assert device.config_entries == {"01JZN04ZJ9BQXXGXDS05WS7D6P"}
+    assert device.config_entries_subentries == {
+        "01JZN04ZJ9BQXXGXDS05WS7D6P": {
+            "01JZQ1G63X2DX66GZ9ZTFY9PEH",
+        },
+    }
+    assert entity.config_entry_id == config_entry.entry_id
+    assert entity.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
