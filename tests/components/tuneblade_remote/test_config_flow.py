@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.tuneblade_remote.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -121,11 +121,10 @@ async def test_user_flow_duplicate_unique_id_aborts(
             "port": 54412,
             "name": "TestDevice",
         },
-        source="user",
+        source=SOURCE_USER,
         unique_id="TestDevice_127.0.0.1_54412",
         entry_id="12345",
         options={},
-        system_options={},
         discovery_info=None,
         disabled_by=None,
         reason=None,
@@ -133,7 +132,7 @@ async def test_user_flow_duplicate_unique_id_aborts(
         entry_type=None,
         sub_entries=[],
         minor_version=1,
-        state=None,
+        state=ConfigEntryState.LOADED,
     )
     hass.config_entries._entries.append(existing_entry)
 
