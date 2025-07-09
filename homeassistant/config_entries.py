@@ -2780,7 +2780,7 @@ def _async_abort_entries_match(
     if not other_entries:
         return
     if match_dict is None:
-        raise data_entry_flow.AbortFlow("already_configured") # Match any entry
+        raise data_entry_flow.AbortFlow("already_configured")  # Match any entry
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
