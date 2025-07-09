@@ -1,0 +1,292 @@
+# serializer version: 1
+# name: test_bulb_diagnostics
+  dict({
+    'data': dict({
+      'brightness': 3,
+      'features': dict({
+        'buttons': False,
+        'chain': False,
+        'color': True,
+        'extended_multizone': False,
+        'hev': False,
+        'infrared': False,
+        'matrix': False,
+        'max_kelvin': 9000,
+        'min_kelvin': 2500,
+        'multizone': False,
+        'relays': False,
+      }),
+      'firmware': '3.00',
+      'hue': 1,
+      'kelvin': 4,
+      'power': 0,
+      'product_id': 1,
+      'saturation': 2,
+      'vendor': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'title': 'My Bulb',
+    }),
+  })
+# ---
+# name: test_clean_bulb_diagnostics
+  dict({
+    'data': dict({
+      'brightness': 3,
+      'features': dict({
+        'buttons': False,
+        'chain': False,
+        'color': True,
+        'extended_multizone': False,
+        'hev': True,
+        'infrared': False,
+        'matrix': False,
+        'max_kelvin': 9000,
+        'min_kelvin': 1500,
+        'multizone': False,
+        'relays': False,
+      }),
+      'firmware': '3.00',
+      'hev': dict({
+        'hev_config': dict({
+          'duration': 7200,
+          'indication': False,
+        }),
+        'hev_cycle': dict({
+          'duration': 7200,
+          'last_power': False,
+          'remaining': 30,
+        }),
+        'last_result': 0,
+      }),
+      'hue': 1,
+      'kelvin': 4,
+      'power': 0,
+      'product_id': 90,
+      'saturation': 2,
+      'vendor': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'title': 'My Bulb',
+    }),
+  })
+# ---
+# name: test_infrared_bulb_diagnostics
+  dict({
+    'data': dict({
+      'brightness': 3,
+      'features': dict({
+        'buttons': False,
+        'chain': False,
+        'color': True,
+        'extended_multizone': False,
+        'hev': False,
+        'infrared': True,
+        'matrix': False,
+        'max_kelvin': 9000,
+        'min_kelvin': 1500,
+        'multizone': False,
+        'relays': False,
+      }),
+      'firmware': '3.00',
+      'hue': 1,
+      'infrared': dict({
+        'brightness': 65535,
+      }),
+      'kelvin': 4,
+      'power': 0,
+      'product_id': 29,
+      'saturation': 2,
+      'vendor': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'title': 'My Bulb',
+    }),
+  })
+# ---
+# name: test_legacy_multizone_bulb_diagnostics
+  dict({
+    'data': dict({
+      'brightness': 3,
+      'features': dict({
+        'buttons': False,
+        'chain': False,
+        'color': True,
+        'extended_multizone': False,
+        'hev': False,
+        'infrared': False,
+        'matrix': False,
+        'max_kelvin': 9000,
+        'min_kelvin': 2500,
+        'multizone': True,
+        'relays': False,
+      }),
+      'firmware': '3.00',
+      'hue': 1,
+      'kelvin': 4,
+      'power': 0,
+      'product_id': 31,
+      'saturation': 2,
+      'vendor': None,
+      'zones': dict({
+        'count': 8,
+        'state': dict({
+          '0': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '1': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '2': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '3': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '4': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '5': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '6': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '7': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'title': 'My Bulb',
+    }),
+  })
+# ---
+# name: test_multizone_bulb_diagnostics
+  dict({
+    'data': dict({
+      'brightness': 3,
+      'features': dict({
+        'buttons': False,
+        'chain': False,
+        'color': True,
+        'extended_multizone': True,
+        'hev': False,
+        'infrared': False,
+        'matrix': False,
+        'max_kelvin': 9000,
+        'min_ext_mz_firmware': 1532997580,
+        'min_ext_mz_firmware_components': list([
+          2,
+          77,
+        ]),
+        'min_kelvin': 1500,
+        'multizone': True,
+        'relays': False,
+      }),
+      'firmware': '3.00',
+      'hue': 1,
+      'kelvin': 4,
+      'power': 0,
+      'product_id': 38,
+      'saturation': 2,
+      'vendor': None,
+      'zones': dict({
+        'count': 8,
+        'state': dict({
+          '0': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '1': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '2': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '3': dict({
+            'brightness': 65535,
+            'hue': 54612,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '4': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '5': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '6': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+          '7': dict({
+            'brightness': 65535,
+            'hue': 46420,
+            'kelvin': 3500,
+            'saturation': 65535,
+          }),
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'title': 'My Bulb',
+    }),
+  })
+# ---
