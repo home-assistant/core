@@ -52,7 +52,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 unique_id = f"{name}_{host}_{port}"
                 await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                await self.async_abort_if_unique_id_configured()  # type: ignore[attr-defined]
 
                 return self.async_create_entry(
                     title=name,
@@ -86,7 +86,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         unique_id = f"{name}_{host}_{port}"
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        await self.async_abort_if_unique_id_configured()  # type: ignore[attr-defined]
 
         self._discovery_info = {
             "host": host,
