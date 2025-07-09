@@ -71,6 +71,11 @@ VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED: dict[str, str] = {
 class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     """Representation of a SwitchBot vacuum."""
 
+    # "K10+"
+    # "K10+ Pro"
+    # "Robot Vacuum Cleaner S1"
+    # "Robot Vacuum Cleaner S1 Plus"
+
     _attr_supported_features: VacuumEntityFeature = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.FAN_SPEED
@@ -127,6 +132,9 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
     """Representation of a SwitchBot vacuum."""
 
+    # "K20+ Pro"
+    # "Robot Vacuum Cleaner K10+ Pro Combo"
+
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
@@ -175,6 +183,9 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
 
 class SwitchBotCloudVacuumV3(SwitchBotCloudVacuum):
     """Representation of a SwitchBot vacuum."""
+
+    # "Robot Vacuum Cleaner S10",
+    # "S20"
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
