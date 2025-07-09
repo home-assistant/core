@@ -75,21 +75,20 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         else:
             # MAC not available from zeroconf - check for existing host/port first
-            existing_entries = self._async_current_entries(include_ignore=False)
-            if any(
-                entry.data[CONF_HOST] == self.host
-                and entry.data[CONF_PORT] == self.port
-                for entry in existing_entries
-            ):
-                # If the host and port match an existing entry, abort
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {CONF_HOST: self.host, CONF_PORT: self.port}
+            )
 
             # Try to get device info without authentication to minimize discovery popup
+            config = BSBLANConfig(host=self.host, port=self.port)
+            session = async_get_clientsession(self.hass)
+            bsblan = BSBLAN(config, session)
             try:
-                config = BSBLANConfig(host=self.host, port=self.port)
-                session = async_get_clientsession(self.hass)
-                bsblan = BSBLAN(config, session)
                 device = await bsblan.device()
+            except BSBLANError:
+                # Device requires authentication - proceed to discovery confirm
+                self.mac = None
+            else:
                 self.mac = device.MAC
 
                 # Got MAC without auth - set unique ID and check for existing device
@@ -100,12 +99,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # Device accessible without auth - validate and create entry
-                return await self._validate_and_create(is_discovery=True)
-
-            except BSBLANError:
-                # Device requires authentication - proceed to discovery confirm
-                self.mac = None
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
