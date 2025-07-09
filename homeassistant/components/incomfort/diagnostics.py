@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 
-from . import InComfortConfigEntry
+from .coordinator import InComfortConfigEntry
 
 REDACT_CONFIG = {CONF_PASSWORD}
 

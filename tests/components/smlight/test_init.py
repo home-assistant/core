@@ -85,6 +85,7 @@ async def test_async_setup_no_internet(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we still load integration when no internet is available."""
+    side_effect = mock_smlight_client.get_firmware_version.side_effect
     mock_smlight_client.get_firmware_version.side_effect = SmlightConnectionError
 
     await setup_integration(hass, mock_config_entry_host)
@@ -101,7 +102,7 @@ async def test_async_setup_no_internet(
     assert entity is not None
     assert entity.state == STATE_UNKNOWN
 
-    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.side_effect = side_effect
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
@@ -164,6 +165,7 @@ async def test_device_legacy_firmware(
     """Test device setup for old firmware version that dont support required API."""
     LEGACY_VERSION = "v0.9.9"
     mock_smlight_client.get_sensors.side_effect = SmlightError
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         legacy_api=2, sw_version=LEGACY_VERSION, MAC="AA:BB:CC:DD:EE:FF"
     )

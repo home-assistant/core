@@ -20,7 +20,7 @@ from homeassistant.components.light import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import TuyaConfigEntry
@@ -135,6 +135,22 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            translation_key="light_2",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+    ),
     # Ceiling Fan Light
     # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
     "fsd": (
@@ -174,6 +190,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            translation_key="light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
     ),
     # Humidifier Light
@@ -316,15 +343,16 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
-    # Wake Up Light II
+    # Outdoor Flood Light
     # Not documented
-    "hxd": (
+    "tyd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
-            translation_key="light",
-            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
-            brightness_max=DPCode.BRIGHTNESS_MAX_1,
-            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+            color_data=DPCode.COLOUR_DATA,
         ),
     ),
     # Solar Light
@@ -366,22 +394,6 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=DPCode.TEMP_CONTROLLER,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
-        TuyaLightEntityDescription(
-            key=DPCode.LIGHT,
-            name=None,
-            color_mode=DPCode.WORK_MODE,
-            brightness=DPCode.BRIGHT_VALUE,
-            color_temp=DPCode.TEMP_VALUE,
-        ),
-        TuyaLightEntityDescription(
-            key=DPCode.SWITCH_LED,
-            translation_key="light_2",
-            brightness=DPCode.BRIGHT_VALUE_1,
-        ),
-    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -391,6 +403,10 @@ LIGHTS["cz"] = LIGHTS["kg"]
 # Power Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 LIGHTS["pc"] = LIGHTS["kg"]
+
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+LIGHTS["dghsxj"] = LIGHTS["sp"]
 
 # Dimmer (duplicate of `tgq`)
 # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
@@ -421,7 +437,9 @@ class ColorData:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya light dynamically through tuya discovery."""
     hass_data = entry.runtime_data

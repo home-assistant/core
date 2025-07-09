@@ -14,18 +14,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfTemperature
+from homeassistant.const import UnitOfLength, UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ImgwPibConfigEntry
 from .const import DOMAIN
-from .coordinator import ImgwPibDataUpdateCoordinator
+from .coordinator import ImgwPibConfigEntry, ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
 
-PARALLEL_UPDATES = 1
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,6 +36,15 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
+    ImgwPibSensorEntityDescription(
+        key="water_flow",
+        translation_key="water_flow",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value=lambda data: data.water_flow.value,
+    ),
     ImgwPibSensorEntityDescription(
         key="water_level",
         translation_key="water_level",
@@ -60,7 +69,7 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ImgwPibConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a IMGW-PIB sensor entity from a config_entry."""
     coordinator = entry.runtime_data.coordinator

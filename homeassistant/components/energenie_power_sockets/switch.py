@@ -10,7 +10,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnergenieConfigEntry
 from .const import DOMAIN
@@ -19,7 +19,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnergenieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add EGPS sockets for passed config_entry in HA."""
     powerstrip = config_entry.runtime_data

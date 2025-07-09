@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import abc
 import asyncio
+from collections import defaultdict
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
 import io
+from itertools import chain
 import json
 from pathlib import Path, PurePath
 import shutil
+import sys
 import tarfile
 import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
@@ -27,9 +30,11 @@ from homeassistant.backup_restore import (
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
@@ -41,7 +46,12 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
-from .config import BackupConfig, delete_backups_exceeding_configured_count
+from .config import (
+    BackupConfig,
+    CreateBackupParametersDict,
+    check_unavailable_agents,
+    delete_backups_exceeding_configured_count,
+)
 from .const import (
     BUF_SIZE,
     DATA_MANAGER,
@@ -50,7 +60,16 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import AgentBackup, BackupError, BackupManagerError, BaseBackup, Folder
+from .models import (
+    AddonInfo,
+    AgentBackup,
+    BackupError,
+    BackupManagerError,
+    BackupNotFound,
+    BackupReaderWriterError,
+    BaseBackup,
+    Folder,
+)
 from .store import BackupStore
 from .util import (
     AsyncIteratorReader,
@@ -83,15 +102,27 @@ class ManagerBackup(BaseBackup):
     """Backup class."""
 
     agents: dict[str, AgentBackupStatus]
+    failed_addons: list[AddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[Folder]
     with_automatic_settings: bool | None
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class AddonErrorData:
+    """Addon error class."""
+
+    addon: AddonInfo
+    errors: list[tuple[str, str]]
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class WrittenBackup:
     """Written backup class."""
 
+    addon_errors: dict[str, AddonErrorData]
     backup: AgentBackup
+    folder_errors: dict[Folder, list[tuple[str, str]]]
     open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]
     release_stream: Callable[[], Coroutine[Any, Any, None]]
 
@@ -101,6 +132,7 @@ class BackupManagerState(StrEnum):
 
     IDLE = "idle"
     CREATE_BACKUP = "create_backup"
+    BLOCKED = "blocked"
     RECEIVE_BACKUP = "receive_backup"
     RESTORE_BACKUP = "restore_backup"
 
@@ -209,6 +241,20 @@ class RestoreBackupEvent(ManagerStateEvent):
     state: RestoreBackupState
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BackupPlatformEvent:
+    """Backup platform class."""
+
+    domain: str
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BlockedEvent(ManagerStateEvent):
+    """Backup manager blocked, Home Assistant is starting."""
+
+    manager_state: BackupManagerState = BackupManagerState.BLOCKED
+
+
 class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
@@ -273,11 +319,9 @@ class BackupReaderWriter(abc.ABC):
     ) -> None:
         """Get restore events after core restart."""
 
-
-class BackupReaderWriterError(BackupError):
-    """Backup reader/writer error."""
-
-    error_code = "backup_reader_writer_error"
+    @abc.abstractmethod
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config."""
 
 
 class IncorrectPasswordError(BackupReaderWriterError):
@@ -292,6 +336,12 @@ class DecryptOnDowloadNotSupported(BackupManagerError):
 
     error_code = "decrypt_on_download_not_supported"
     _message = "On-the-fly decryption is not supported for this backup."
+
+
+class BackupManagerExceptionGroup(BackupManagerError, ExceptionGroup):
+    """Raised when multiple exceptions occur."""
+
+    error_code = "multiple_errors"
 
 
 class BackupManager:
@@ -319,9 +369,12 @@ class BackupManager:
         self.remove_next_delete_event: Callable[[], None] | None = None
 
         # Latest backup event and backup event subscribers
-        self.last_event: ManagerStateEvent = IdleEvent()
-        self.last_non_idle_event: ManagerStateEvent | None = None
+        self.last_event: ManagerStateEvent = BlockedEvent()
+        self.last_action_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_platform_event_subscriptions: list[
+            Callable[[BackupPlatformEvent], None]
+        ] = []
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -330,9 +383,19 @@ class BackupManager:
             self.config.load(stored["config"])
             self.known_backups.load(stored["backups"])
 
+        await self._reader_writer.async_validate_config(config=self.config)
+
         await self._reader_writer.async_resume_restore_progress_after_restart(
             on_progress=self.async_on_backup_event
         )
+
+        async def set_manager_idle_after_start(hass: HomeAssistant) -> None:
+            """Set manager to idle after start."""
+            self.async_on_backup_event(IdleEvent())
+
+        if self.state == BackupManagerState.BLOCKED:
+            # If we're not finishing a restore job, set the manager to idle after start
+            start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
 
@@ -402,6 +465,13 @@ class BackupManager:
             }
         )
 
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
+
     async def _add_platform(
         self,
         hass: HomeAssistant,
@@ -415,6 +485,9 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
+        event = BackupPlatformEvent(domain=integration_domain)
+        for subscription in self._backup_platform_event_subscriptions:
+            subscription(event)
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
@@ -558,17 +631,28 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(list_backups_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupAgentError):
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                continue
+            if isinstance(result, Exception):
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
             for agent_backup in result:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
+                        failed_addons = known_backup.failed_addons
                         failed_agent_ids = known_backup.failed_agent_ids
+                        failed_folders = known_backup.failed_folders
                     else:
+                        failed_addons = []
                         failed_agent_ids = []
+                        failed_folders = []
                     with_automatic_settings = self.is_our_automatic_backup(
                         agent_backup, await instance_id.async_get(self.hass)
                     )
@@ -579,14 +663,16 @@ class BackupManager:
                         date=agent_backup.date,
                         database_included=agent_backup.database_included,
                         extra_metadata=agent_backup.extra_metadata,
+                        failed_addons=failed_addons,
                         failed_agent_ids=failed_agent_ids,
+                        failed_folders=failed_folders,
                         folders=agent_backup.folders,
                         homeassistant_included=agent_backup.homeassistant_included,
                         homeassistant_version=agent_backup.homeassistant_version,
                         name=agent_backup.name,
                         with_automatic_settings=with_automatic_settings,
                     )
-                backups[backup_id].agents[agent_ids[idx]] = AgentBackupStatus(
+                backups[backup_id].agents[agent_id] = AgentBackupStatus(
                     protected=agent_backup.protected,
                     size=agent_backup.size,
                 )
@@ -609,18 +695,38 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(get_backup_results):
+            agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                continue
+            if isinstance(result, Exception):
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             if not result:
+                frame.report_usage(
+                    "returns None from BackupAgent.async_get_backup",
+                    breaks_in_ha_version="2025.10",
+                    integration_domain=agent_id.partition(".")[0],
+                )
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
+                    failed_addons = known_backup.failed_addons
                     failed_agent_ids = known_backup.failed_agent_ids
+                    failed_folders = known_backup.failed_folders
                 else:
+                    failed_addons = []
                     failed_agent_ids = []
+                    failed_folders = []
                 with_automatic_settings = self.is_our_automatic_backup(
                     result, await instance_id.async_get(self.hass)
                 )
@@ -631,14 +737,16 @@ class BackupManager:
                     date=result.date,
                     database_included=result.database_included,
                     extra_metadata=result.extra_metadata,
+                    failed_addons=failed_addons,
                     failed_agent_ids=failed_agent_ids,
+                    failed_folders=failed_folders,
                     folders=result.folders,
                     homeassistant_included=result.homeassistant_included,
                     homeassistant_version=result.homeassistant_version,
                     name=result.name,
                     with_automatic_settings=with_automatic_settings,
                 )
-            backup.agents[agent_ids[idx]] = AgentBackupStatus(
+            backup.agents[agent_id] = AgentBackupStatus(
                 protected=result.protected,
                 size=result.size,
             )
@@ -661,21 +769,33 @@ class BackupManager:
             return None
         return with_automatic_settings
 
-    async def async_delete_backup(self, backup_id: str) -> dict[str, Exception]:
+    async def async_delete_backup(
+        self, backup_id: str, *, agent_ids: list[str] | None = None
+    ) -> dict[str, Exception]:
         """Delete a backup."""
         agent_errors: dict[str, Exception] = {}
-        agent_ids = list(self.backup_agents)
+        if agent_ids is None:
+            agent_ids = list(self.backup_agents)
 
         delete_backup_results = await asyncio.gather(
             *(
-                agent.async_delete_backup(backup_id)
-                for agent in self.backup_agents.values()
+                self.backup_agents[agent_id].async_delete_backup(backup_id)
+                for agent_id in agent_ids
             ),
             return_exceptions=True,
         )
         for idx, result in enumerate(delete_backup_results):
+            agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                continue
+            if isinstance(result, Exception):
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
@@ -708,40 +828,76 @@ class BackupManager:
         # Run the include filter first to ensure we only consider backups that
         # should be included in the deletion process.
         backups = include_filter(backups)
+        backups_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(dict)
+        for backup_id, backup in backups.items():
+            for agent_id in backup.agents:
+                backups_by_agent[agent_id][backup_id] = backup
 
-        LOGGER.debug("Total automatic backups: %s", backups)
+        LOGGER.debug("Backups returned by include filter: %s", backups)
+        LOGGER.debug(
+            "Backups returned by include filter by agent: %s",
+            {agent_id: list(backups) for agent_id, backups in backups_by_agent.items()},
+        )
 
         backups_to_delete = delete_filter(backups)
+
+        LOGGER.debug("Backups returned by delete filter: %s", backups_to_delete)
 
         if not backups_to_delete:
             return
 
         # always delete oldest backup first
-        backups_to_delete = dict(
-            sorted(
-                backups_to_delete.items(),
-                key=lambda backup_item: backup_item[1].date,
-            )
+        backups_to_delete_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(
+            dict
+        )
+        for backup_id, backup in sorted(
+            backups_to_delete.items(),
+            key=lambda backup_item: backup_item[1].date,
+        ):
+            for agent_id in backup.agents:
+                backups_to_delete_by_agent[agent_id][backup_id] = backup
+        LOGGER.debug(
+            "Backups returned by delete filter by agent: %s",
+            {
+                agent_id: list(backups)
+                for agent_id, backups in backups_to_delete_by_agent.items()
+            },
+        )
+        for agent_id, to_delete_from_agent in backups_to_delete_by_agent.items():
+            if len(to_delete_from_agent) >= len(backups_by_agent[agent_id]):
+                # Never delete the last backup.
+                last_backup = to_delete_from_agent.popitem()
+                LOGGER.debug(
+                    "Keeping the last backup %s for agent %s", last_backup, agent_id
+                )
+
+        LOGGER.debug(
+            "Backups to delete by agent: %s",
+            {
+                agent_id: list(backups)
+                for agent_id, backups in backups_to_delete_by_agent.items()
+            },
         )
 
-        if len(backups_to_delete) >= len(backups):
-            # Never delete the last backup.
-            last_backup = backups_to_delete.popitem()
-            LOGGER.debug("Keeping the last backup: %s", last_backup)
+        backup_ids_to_delete: dict[str, set[str]] = defaultdict(set)
+        for agent_id, to_delete in backups_to_delete_by_agent.items():
+            for backup_id in to_delete:
+                backup_ids_to_delete[backup_id].add(agent_id)
 
-        LOGGER.debug("Backups to delete: %s", backups_to_delete)
-
-        if not backups_to_delete:
+        if not backup_ids_to_delete:
             return
 
-        backup_ids = list(backups_to_delete)
+        backup_ids = list(backup_ids_to_delete)
         delete_results = await asyncio.gather(
-            *(self.async_delete_backup(backup_id) for backup_id in backups_to_delete)
+            *(
+                self.async_delete_backup(backup_id, agent_ids=list(agent_ids))
+                for backup_id, agent_ids in backup_ids_to_delete.items()
+            )
         )
         agent_errors = {
             backup_id: error
             for backup_id, error in zip(backup_ids, delete_results, strict=True)
-            if error
+            if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
             LOGGER.error(
@@ -826,7 +982,7 @@ class BackupManager:
             password=None,
         )
         await written_backup.release_stream()
-        self.known_backups.add(written_backup.backup, agent_errors)
+        self.known_backups.add(written_backup.backup, agent_errors, {}, {}, [])
         return written_backup.backup.backup_id
 
     async def async_create_backup(
@@ -950,12 +1106,23 @@ class BackupManager:
         with_automatic_settings: bool,
     ) -> NewBackup:
         """Initiate generating a backup."""
-        if not agent_ids:
-            raise BackupManagerError("At least one agent must be selected")
-        if invalid_agents := [
+        unavailable_agents = [
             agent_id for agent_id in agent_ids if agent_id not in self.backup_agents
-        ]:
-            raise BackupManagerError(f"Invalid agents selected: {invalid_agents}")
+        ]
+        if not (
+            available_agents := [
+                agent_id for agent_id in agent_ids if agent_id in self.backup_agents
+            ]
+        ):
+            raise BackupManagerError(
+                f"At least one available backup agent must be selected, got {agent_ids}"
+            )
+        if unavailable_agents:
+            LOGGER.warning(
+                "Backup agents %s are not available, will backupp to %s",
+                unavailable_agents,
+                available_agents,
+            )
         if include_all_addons and include_addons:
             raise BackupManagerError(
                 "Cannot include all addons and specify specific addons"
@@ -972,7 +1139,7 @@ class BackupManager:
                 new_backup,
                 self._backup_task,
             ) = await self._reader_writer.async_create_backup(
-                agent_ids=agent_ids,
+                agent_ids=available_agents,
                 backup_name=backup_name,
                 extra_metadata=extra_metadata
                 | {
@@ -991,7 +1158,9 @@ class BackupManager:
             raise BackupManagerError(str(err)) from err
 
         backup_finish_task = self._backup_finish_task = self.hass.async_create_task(
-            self._async_finish_backup(agent_ids, with_automatic_settings, password),
+            self._async_finish_backup(
+                available_agents, unavailable_agents, with_automatic_settings, password
+            ),
             name="backup_manager_finish_backup",
         )
         if not raise_task_error:
@@ -1008,7 +1177,11 @@ class BackupManager:
         return new_backup
 
     async def _async_finish_backup(
-        self, agent_ids: list[str], with_automatic_settings: bool, password: str | None
+        self,
+        available_agents: list[str],
+        unavailable_agents: list[str],
+        with_automatic_settings: bool,
+        password: str | None,
     ) -> None:
         """Finish a backup."""
         if TYPE_CHECKING:
@@ -1027,7 +1200,7 @@ class BackupManager:
             LOGGER.debug(
                 "Generated new backup with backup_id %s, uploading to agents %s",
                 written_backup.backup.backup_id,
-                agent_ids,
+                available_agents,
             )
             self.async_on_backup_event(
                 CreateBackupEvent(
@@ -1040,13 +1213,19 @@ class BackupManager:
             try:
                 agent_errors = await self._async_upload_backup(
                     backup=written_backup.backup,
-                    agent_ids=agent_ids,
+                    agent_ids=available_agents,
                     open_stream=written_backup.open_stream,
                     password=password,
                 )
             finally:
                 await written_backup.release_stream()
-            self.known_backups.add(written_backup.backup, agent_errors)
+            self.known_backups.add(
+                written_backup.backup,
+                agent_errors,
+                written_backup.addon_errors,
+                written_backup.folder_errors,
+                unavailable_agents,
+            )
             if not agent_errors:
                 if with_automatic_settings:
                     # create backup was successful, update last_completed_automatic_backup
@@ -1055,7 +1234,9 @@ class BackupManager:
                 backup_success = True
 
             if with_automatic_settings:
-                self._update_issue_after_agent_upload(agent_errors)
+                self._update_issue_after_agent_upload(
+                    written_backup, agent_errors, unavailable_agents
+                )
             # delete old backups more numerous than copies
             # try this regardless of agent errors above
             await delete_backups_exceeding_configured_count(self)
@@ -1154,7 +1335,20 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1183,8 +1377,8 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
-        if not isinstance(event, IdleEvent):
-            self.last_non_idle_event = event
+        if not isinstance(event, (BlockedEvent, IdleEvent)):
+            self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
@@ -1201,8 +1395,23 @@ class BackupManager:
         self._backup_event_subscriptions.append(on_event)
         return remove_subscription
 
-    def _update_issue_backup_failed(self) -> None:
-        """Update issue registry when a backup fails."""
+    @callback
+    def async_subscribe_platform_events(
+        self,
+        on_event: Callable[[BackupPlatformEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe to backup platform events."""
+
+        def remove_subscription() -> None:
+            self._backup_platform_event_subscriptions.remove(on_event)
+
+        self._backup_platform_event_subscriptions.append(on_event)
+        return remove_subscription
+
+    def _create_automatic_backup_failed_issue(
+        self, translation_key: str, translation_placeholders: dict[str, str] | None
+    ) -> None:
+        """Create an issue in the issue registry for automatic backup failures."""
         ir.async_create_issue(
             self.hass,
             DOMAIN,
@@ -1211,31 +1420,73 @@ class BackupManager:
             is_persistent=True,
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
-            translation_key="automatic_backup_failed_create",
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+
+    def _update_issue_backup_failed(self) -> None:
+        """Update issue registry when a backup fails."""
+        self._create_automatic_backup_failed_issue(
+            "automatic_backup_failed_create", None
         )
 
     def _update_issue_after_agent_upload(
-        self, agent_errors: dict[str, Exception]
+        self,
+        written_backup: WrittenBackup,
+        agent_errors: dict[str, Exception],
+        unavailable_agents: list[str],
     ) -> None:
         """Update issue registry after a backup is uploaded to agents."""
-        if not agent_errors:
+
+        addon_errors = written_backup.addon_errors
+        failed_agents = unavailable_agents + [
+            self.backup_agents[agent_id].name for agent_id in agent_errors
+        ]
+        folder_errors = written_backup.folder_errors
+
+        if not failed_agents and not addon_errors and not folder_errors:
+            # No issues to report, clear previous error
             ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
             return
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "automatic_backup_failed",
-            is_fixable=False,
-            is_persistent=True,
-            learn_more_url="homeassistant://config/backup",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={
-                "failed_agents": ", ".join(
-                    self.backup_agents[agent_id].name for agent_id in agent_errors
-                )
-            },
-        )
+        if failed_agents and not (addon_errors or folder_errors):
+            # No issues with add-ons or folders, but issues with agents
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_upload_agents",
+                {"failed_agents": ", ".join(failed_agents)},
+            )
+        elif addon_errors and not (failed_agents or folder_errors):
+            # No issues with agents or folders, but issues with add-ons
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_addons",
+                {
+                    "failed_addons": ", ".join(
+                        val.addon.name or val.addon.slug
+                        for val in addon_errors.values()
+                    )
+                },
+            )
+        elif folder_errors and not (failed_agents or addon_errors):
+            # No issues with agents or add-ons, but issues with folders
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_folders",
+                {"failed_folders": ", ".join(folder for folder in folder_errors)},
+            )
+        else:
+            # Issues with agents, add-ons, and/or folders
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_agents_addons_folders",
+                {
+                    "failed_agents": ", ".join(failed_agents) or "-",
+                    "failed_addons": (
+                        ", ".join(
+                            val.addon.name or val.addon.slug
+                            for val in addon_errors.values()
+                        )
+                        or "-"
+                    ),
+                    "failed_folders": ", ".join(f for f in folder_errors) or "-",
+                },
+            )
 
     async def async_can_decrypt_on_download(
         self,
@@ -1249,7 +1500,20 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1288,7 +1552,12 @@ class KnownBackups:
         self._backups = {
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
+                failed_addons=[
+                    AddonInfo(name=a["name"], slug=a["slug"], version=a["version"])
+                    for a in backup["failed_addons"]
+                ],
                 failed_agent_ids=backup["failed_agent_ids"],
+                failed_folders=[Folder(f) for f in backup["failed_folders"]],
             )
             for backup in stored_backups
         }
@@ -1301,11 +1570,16 @@ class KnownBackups:
         self,
         backup: AgentBackup,
         agent_errors: dict[str, Exception],
+        failed_addons: dict[str, AddonErrorData],
+        failed_folders: dict[Folder, list[tuple[str, str]]],
+        unavailable_agents: list[str],
     ) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
             backup_id=backup.backup_id,
-            failed_agent_ids=list(agent_errors),
+            failed_addons=[val.addon for val in failed_addons.values()],
+            failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
+            failed_folders=list(failed_folders),
         )
         self._manager.store.save()
 
@@ -1326,21 +1600,38 @@ class KnownBackup:
     """Persistent backup data."""
 
     backup_id: str
+    failed_addons: list[AddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[Folder]
 
     def to_dict(self) -> StoredKnownBackup:
         """Convert known backup to a dict."""
         return {
             "backup_id": self.backup_id,
+            "failed_addons": [
+                {"name": a.name, "slug": a.slug, "version": a.version}
+                for a in self.failed_addons
+            ],
             "failed_agent_ids": self.failed_agent_ids,
+            "failed_folders": [f.value for f in self.failed_folders],
         }
+
+
+class StoredAddonInfo(TypedDict):
+    """Stored add-on info."""
+
+    name: str | None
+    slug: str
+    version: str | None
 
 
 class StoredKnownBackup(TypedDict):
     """Stored persistent backup data."""
 
     backup_id: str
+    failed_addons: list[StoredAddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[str]
 
 
 class CoreBackupReaderWriter(BackupReaderWriter):
@@ -1411,7 +1702,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         manager = self._hass.data[DATA_MANAGER]
 
         agent_config = manager.config.data.agents.get(self._local_agent_id)
-        if agent_config and not agent_config.protected:
+        if (
+            self._local_agent_id in agent_ids
+            and agent_config
+            and not agent_config.protected
+        ):
             password = None
 
         backup = AgentBackup(
@@ -1500,14 +1795,32 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     raise BackupReaderWriterError(str(err)) from err
 
             return WrittenBackup(
-                backup=backup, open_stream=open_backup, release_stream=remove_backup
+                addon_errors={},
+                backup=backup,
+                folder_errors={},
+                open_stream=open_backup,
+                release_stream=remove_backup,
             )
         finally:
             # Inform integrations the backup is done
+            # If there's an unhandled exception, we keep it so we can rethrow it in case
+            # the post backup actions also fail.
+            unhandled_exc = sys.exception()
             try:
-                await manager.async_post_backup_actions()
-            except BackupManagerError as err:
-                raise BackupReaderWriterError(str(err)) from err
+                try:
+                    await manager.async_post_backup_actions()
+                except BackupManagerError as err:
+                    raise BackupReaderWriterError(str(err)) from err
+            except Exception as err:
+                if not unhandled_exc:
+                    raise
+                # If there's an unhandled exception, we wrap both that and the exception
+                # from the post backup actions in an ExceptionGroup so the caller is
+                # aware of both exceptions.
+                raise BackupManagerExceptionGroup(
+                    f"Multiple errors when creating backup: {unhandled_exc}, {err}",
+                    [unhandled_exc, err],
+                ) from None
 
     def _mkdir_and_generate_backup_contents(
         self,
@@ -1519,7 +1832,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         """Generate backup contents and return the size."""
         if not tar_file_path:
             tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
-        make_backup_dir(tar_file_path.parent)
+        try:
+            make_backup_dir(tar_file_path.parent)
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Failed to create dir {tar_file_path.parent}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
 
         excludes = EXCLUDE_FROM_BACKUP
         if not database_included:
@@ -1529,7 +1848,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             """Filter to filter excludes."""
 
             for exclude in excludes:
-                if not path.match(exclude):
+                # The home assistant core configuration directory is added as "data"
+                # in the tar file, so we need to prefix that path to the filters.
+                if not path.full_match(f"data/{exclude}"):
                     continue
                 LOGGER.debug("Ignoring %s because of %s", path, exclude)
                 return True
@@ -1557,7 +1878,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
-        return (tar_file_path, tar_file_path.stat().st_size)
+        try:
+            stat_result = tar_file_path.stat()
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Error getting size of {tar_file_path}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
+        return (tar_file_path, stat_result.st_size)
 
     async def async_receive_backup(
         self,
@@ -1610,7 +1938,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             await async_add_executor_job(temp_file.unlink, True)
 
         return WrittenBackup(
-            backup=backup, open_stream=open_backup, release_stream=remove_backup
+            addon_errors={},
+            backup=backup,
+            folder_errors={},
+            open_stream=open_backup,
+            release_stream=remove_backup,
         )
 
     async def async_restore_backup(
@@ -1738,6 +2070,44 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         )
         on_progress(IdleEvent())
+
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config.
+
+        Update automatic backup settings to not include addons or folders and remove
+        hassio agents in case a backup created by supervisor was restored.
+        """
+        create_backup = config.data.create_backup
+        if (
+            not create_backup.include_addons
+            and not create_backup.include_all_addons
+            and not create_backup.include_folders
+            and not any(a_id.startswith("hassio.") for a_id in create_backup.agent_ids)
+        ):
+            LOGGER.debug("Backup settings don't need to be adjusted")
+            return
+
+        LOGGER.info(
+            "Adjusting backup settings to not include addons, folders or supervisor locations"
+        )
+        automatic_agents = [
+            agent_id
+            for agent_id in create_backup.agent_ids
+            if not agent_id.startswith("hassio.")
+        ]
+        if (
+            self._local_agent_id not in automatic_agents
+            and "hassio.local" in create_backup.agent_ids
+        ):
+            automatic_agents = [self._local_agent_id, *automatic_agents]
+        config.update(
+            create_backup=CreateBackupParametersDict(
+                agent_ids=automatic_agents,
+                include_addons=None,
+                include_all_addons=False,
+                include_folders=None,
+            )
+        )
 
 
 def _generate_backup_id(date: str, name: str) -> str:

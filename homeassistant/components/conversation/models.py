@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from homeassistant.core import Context
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, llm
+
+from .const import DOMAIN
 
 
 @dataclass(frozen=True)
@@ -16,6 +18,7 @@ class AgentInfo:
 
     id: str
     name: str
+    supports_streaming: bool
 
 
 @dataclass(slots=True)
@@ -37,7 +40,7 @@ class ConversationInput:
     language: str
     """Language of the request."""
 
-    agent_id: str | None = None
+    agent_id: str
     """Agent to use for processing."""
 
     extra_system_prompt: str | None = None
@@ -55,6 +58,16 @@ class ConversationInput:
             "extra_system_prompt": self.extra_system_prompt,
         }
 
+    def as_llm_context(self, conversing_domain: str) -> llm.LLMContext:
+        """Return input as an LLM context."""
+        return llm.LLMContext(
+            platform=conversing_domain,
+            context=self.context,
+            language=self.language,
+            assistant=DOMAIN,
+            device_id=self.device_id,
+        )
+
 
 @dataclass(slots=True)
 class ConversationResult:
@@ -62,12 +75,14 @@ class ConversationResult:
 
     response: intent.IntentResponse
     conversation_id: str | None = None
+    continue_conversation: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         """Return result as a dict."""
         return {
             "response": self.response.as_dict(),
             "conversation_id": self.conversation_id,
+            "continue_conversation": self.continue_conversation,
         }
 
 

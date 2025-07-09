@@ -190,7 +190,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         except OpendataTransportError:
             return "bad_config"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error")
             return "unknown"
         return None

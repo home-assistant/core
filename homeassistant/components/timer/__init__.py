@@ -374,6 +374,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_cancel(self) -> None:
         """Cancel a timer."""
+        if self._state == STATUS_IDLE:
+            return
+
         if self._listener:
             self._listener()
             self._listener = None
@@ -389,13 +392,15 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_finish(self) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE or self._end is None:
+        if self._state == STATUS_IDLE:
             return
 
         if self._listener:
             self._listener()
             self._listener = None
         end = self._end
+        if end is None:
+            end = dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None

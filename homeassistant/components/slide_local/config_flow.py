@@ -20,8 +20,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
+from .coordinator import SlideConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

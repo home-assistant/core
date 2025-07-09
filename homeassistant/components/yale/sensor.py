@@ -25,7 +25,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry
 from .const import (
@@ -82,7 +82,7 @@ SENSOR_TYPE_KEYPAD_BATTERY = YaleSensorEntityDescription[KeypadDetail](
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: YaleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Yale sensors."""
     data = config_entry.runtime_data

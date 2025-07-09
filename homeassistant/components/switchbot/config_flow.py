@@ -272,7 +272,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_discover_devices(self) -> None:
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for connectable in (True, False):
             for discovery_info in async_discovered_service_info(self.hass, connectable):
                 address = discovery_info.address
@@ -367,7 +367,13 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
-        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+        if CONF_SENSOR_TYPE in self.config_entry.data and self.config_entry.data[
+            CONF_SENSOR_TYPE
+        ] in (
+            SupportedModels.LOCK,
+            SupportedModels.LOCK_PRO,
+            SupportedModels.LOCK_ULTRA,
+        ):
             options.update(
                 {
                     vol.Optional(

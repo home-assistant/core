@@ -14,7 +14,7 @@ from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -29,7 +29,7 @@ LOCK_JAMMED_ERR = 531
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: YaleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yale locks."""
     data = config_entry.runtime_data

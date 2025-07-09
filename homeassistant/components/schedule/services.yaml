@@ -1,1 +1,5 @@
 reload:
+get_schedule:
+  target:
+    entity:
+      domain: schedule

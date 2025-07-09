@@ -33,14 +33,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -67,7 +65,6 @@ from .const import (
     DEFAULT_BACKUP_PATH,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
@@ -75,7 +72,7 @@ from .const import (
     DOMAIN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,7 +131,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SynologyDSMOptionsFlowHandler()
@@ -447,6 +444,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
+    config_entry: SynologyDSMConfigEntry
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -454,16 +453,10 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
+        syno_data = self.config_entry.runtime_data
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
                 vol.Required(
                     CONF_SNAPSHOT_QUALITY,
                     default=self.config_entry.options.get(

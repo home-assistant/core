@@ -27,7 +27,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BMWConfigEntry
@@ -190,7 +190,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
     coordinator = config_entry.runtime_data

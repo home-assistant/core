@@ -9,3 +9,7 @@ class MediaPlayerException(HomeAssistantError):
 
 class BrowseError(MediaPlayerException):
     """Error while browsing."""
+
+
+class SearchError(MediaPlayerException):
+    """Error while searching."""

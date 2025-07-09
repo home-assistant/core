@@ -18,7 +18,7 @@ import requests
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
@@ -66,7 +66,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
     async_add_entities(

@@ -27,7 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,26 +43,6 @@ class RingData:
 
 
 type RingConfigEntry = ConfigEntry[RingData]
-
-
-async def _call_api[*_Ts, _R](
-    hass: HomeAssistant,
-    target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
-    *args: *_Ts,
-    msg_suffix: str = "",
-) -> _R:
-    try:
-        return await target(*args)
-    except AuthenticationError as err:
-        # Raising ConfigEntryAuthFailed will cancel future updates
-        # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-        raise ConfigEntryAuthFailed from err
-    except RingTimeout as err:
-        raise UpdateFailed(
-            f"Timeout communicating with API{msg_suffix}: {err}"
-        ) from err
-    except RingError as err:
-        raise UpdateFailed(f"Error communicating with API{msg_suffix}: {err}") from err
 
 
 class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
@@ -87,12 +67,37 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         self.ring_api: Ring = ring_api
         self.first_call: bool = True
 
+    async def _call_api[*_Ts, _R](
+        self,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
+        *args: *_Ts,
+    ) -> _R:
+        try:
+            return await target(*args)
+        except AuthenticationError as err:
+            # Raising ConfigEntryAuthFailed will cancel future updates
+            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication",
+            ) from err
+        except RingTimeout as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
+            ) from err
+        except RingError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
+
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
         update_method: str = (
             "async_update_data" if self.first_call else "async_update_devices"
         )
-        await _call_api(self.hass, getattr(self.ring_api, update_method))
+        await self._call_api(getattr(self.ring_api, update_method))
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
@@ -104,18 +109,14 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                     async with TaskGroup() as tg:
                         if device.has_capability("history"):
                             tg.create_task(
-                                _call_api(
-                                    self.hass,
+                                self._call_api(
                                     lambda device: device.async_history(limit=10),
                                     device,
-                                    msg_suffix=f" for device {device.name}",  # device_id is the mac
                                 )
                             )
                         tg.create_task(
-                            _call_api(
-                                self.hass,
+                            self._call_api(
                                 device.async_update_health_data,
-                                msg_suffix=f" for device {device.name}",
                             )
                         )
                 except ExceptionGroup as eg:

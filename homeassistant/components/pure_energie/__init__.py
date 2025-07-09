@@ -2,22 +2,19 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import PureEnergieDataUpdateCoordinator
+from .coordinator import PureEnergieConfigEntry, PureEnergieDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type PureEnergieConfigEntry = ConfigEntry[PureEnergieDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
     """Set up Pure Energie from a config entry."""
 
-    coordinator = PureEnergieDataUpdateCoordinator(hass)
+    coordinator = PureEnergieDataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:

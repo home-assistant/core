@@ -1,5 +1,8 @@
 """The data update coordinator for the A. O. Smith integration."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
 
 from py_aosmith import (
@@ -9,6 +12,7 @@ from py_aosmith import (
 )
 from py_aosmith.models import Device as AOSmithDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,13 +21,37 @@ from .const import DOMAIN, ENERGY_USAGE_INTERVAL, FAST_INTERVAL, REGULAR_INTERVA
 
 _LOGGER = logging.getLogger(__name__)
 
+type AOSmithConfigEntry = ConfigEntry[AOSmithData]
+
+
+@dataclass
+class AOSmithData:
+    """Data for the A. O. Smith integration."""
+
+    client: AOSmithAPIClient
+    status_coordinator: AOSmithStatusCoordinator
+    energy_coordinator: AOSmithEnergyCoordinator
+
 
 class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
     """Coordinator for device status, updating with a frequent interval."""
 
-    def __init__(self, hass: HomeAssistant, client: AOSmithAPIClient) -> None:
+    config_entry: AOSmithConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AOSmithConfigEntry,
+        client: AOSmithAPIClient,
+    ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=REGULAR_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=REGULAR_INTERVAL,
+        )
         self.client = client
 
     async def _async_update_data(self) -> dict[str, AOSmithDevice]:
@@ -51,15 +79,22 @@ class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
 class AOSmithEnergyCoordinator(DataUpdateCoordinator[dict[str, float]]):
     """Coordinator for energy usage data, updating with a slower interval."""
 
+    config_entry: AOSmithConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AOSmithConfigEntry,
         client: AOSmithAPIClient,
         junction_ids: list[str],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=ENERGY_USAGE_INTERVAL
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=ENERGY_USAGE_INTERVAL,
         )
         self.client = client
         self.junction_ids = junction_ids

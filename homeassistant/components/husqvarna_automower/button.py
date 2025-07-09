@@ -10,7 +10,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -54,7 +54,7 @@ MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button platform."""
     coordinator = entry.runtime_data
@@ -90,7 +90,9 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return the available attribute of the entity."""
-        return self.entity_description.available_fn(self.mower_attributes)
+        return super().available and self.entity_description.available_fn(
+            self.mower_attributes
+        )
 
     @handle_sending_exception()
     async def async_press(self) -> None:

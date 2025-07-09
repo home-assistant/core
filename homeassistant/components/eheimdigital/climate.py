@@ -4,7 +4,7 @@ from typing import Any
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
-from eheimdigital.types import EheimDigitalClientError, HeaterMode, HeaterUnit
+from eheimdigital.types import HeaterMode, HeaterUnit
 
 from homeassistant.components.climate import (
     PRESET_NONE,
@@ -20,13 +20,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EheimDigitalConfigEntry
 from .const import HEATER_BIO_MODE, HEATER_PRESET_TO_HEATER_MODE, HEATER_SMART_MODE
-from .coordinator import EheimDigitalUpdateCoordinator
-from .entity import EheimDigitalEntity
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .entity import EheimDigitalEntity, exception_handler
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -35,18 +33,16 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the callbacks for the coordinator so climate entities can be added as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: str | dict[str, EheimDigitalDevice],
+        device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the climate entities for one or multiple devices."""
         entities: list[EheimDigitalHeaterClimate] = []
-        if isinstance(device_address, str):
-            device_address = {device_address: coordinator.hub.devices[device_address]}
         for device in device_address.values():
             if isinstance(device, EheimDigitalHeater):
                 entities.append(EheimDigitalHeaterClimate(coordinator, device))
@@ -86,34 +82,28 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
         self._attr_unique_id = self._device_address
         self._async_update_attrs()
 
+    @exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        try:
-            if preset_mode in HEATER_PRESET_TO_HEATER_MODE:
-                await self._device.set_operation_mode(
-                    HEATER_PRESET_TO_HEATER_MODE[preset_mode]
-                )
-        except EheimDigitalClientError as err:
-            raise HomeAssistantError from err
+        if preset_mode in HEATER_PRESET_TO_HEATER_MODE:
+            await self._device.set_operation_mode(
+                HEATER_PRESET_TO_HEATER_MODE[preset_mode]
+            )
 
+    @exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new temperature."""
-        try:
-            if ATTR_TEMPERATURE in kwargs:
-                await self._device.set_target_temperature(kwargs[ATTR_TEMPERATURE])
-        except EheimDigitalClientError as err:
-            raise HomeAssistantError from err
+        if ATTR_TEMPERATURE in kwargs:
+            await self._device.set_target_temperature(kwargs[ATTR_TEMPERATURE])
 
+    @exception_handler
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the heating mode."""
-        try:
-            match hvac_mode:
-                case HVACMode.OFF:
-                    await self._device.set_active(active=False)
-                case HVACMode.AUTO:
-                    await self._device.set_active(active=True)
-        except EheimDigitalClientError as err:
-            raise HomeAssistantError from err
+        match hvac_mode:
+            case HVACMode.OFF:
+                await self._device.set_active(active=False)
+            case HVACMode.AUTO:
+                await self._device.set_active(active=True)
 
     def _async_update_attrs(self) -> None:
         if self._device.temperature_unit == HeaterUnit.CELSIUS:

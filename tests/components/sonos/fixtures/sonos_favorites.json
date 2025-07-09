@@ -27,6 +27,7 @@
     "title": "1984",
     "parent_id": "FV:2",
     "item_id": "FV:2/8",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.2%2fmusic%2fiTunes%2520Music%2fAerosmith%2f1984&v=742",
     "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"A:ALBUMARTIST/Aerosmith/1984\" parentID=\"A:ALBUMARTIST/Aerosmith\" restricted=\"true\"><dc:title>1984</dc:title><upnp:class>object.container.album.musicAlbum</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>",
     "resources": [
       {
@@ -34,5 +35,23 @@
         "protocol_info": "a:b:c:d"
       }
     ]
+  },
+  {
+    "title": "American Tall Tales",
+    "parent_id": "FV:2",
+    "item_id": "FV:2/66",
+    "restricted": false,
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"101340c8reftitleC9F27_com\" parentID=\"101340c8reftitleC9F27_com\" restricted=\"true\"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+        "protocol_info": "x-rincon-cpcontainer:*:*:*"
+      }
+    ],
+    "desc": null,
+    "album_art_uri": "https://m.media-amazon.com/images/I/810lqLo5m0L._SL600_.jpg",
+    "type": "instantPlay",
+    "description": "Audible",
+    "favorite_nr": "0"
   }
 ]

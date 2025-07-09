@@ -15,6 +15,7 @@ from homeassistant.helpers.trigger import async_initialize_triggers
 from .accessories import TYPES, HomeAccessory
 from .aidmanager import get_system_unique_id
 from .const import (
+    CHAR_CONFIGURED_NAME,
     CHAR_NAME,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CHAR_SERVICE_LABEL_INDEX,
@@ -66,7 +67,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             trigger_name = cleanup_name_for_homekit(" ".join(trigger_name_parts))
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
-                [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_SERVICE_LABEL_INDEX],
                 unique_id=unique_id,
             )
             self.triggers.append(
@@ -77,6 +78,9 @@ class DeviceTriggerAccessory(HomeAccessory):
                 )
             )
             serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
+            serv_stateless_switch.configure_char(
+                CHAR_CONFIGURED_NAME, value=trigger_name
+            )
             serv_stateless_switch.configure_char(
                 CHAR_SERVICE_LABEL_INDEX, value=idx + 1
             )

@@ -7,7 +7,7 @@ import voluptuous as vol
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
@@ -216,12 +216,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         hass.data[DOMAIN][GATEWAYS_KEY].pop(config_entry.entry_id)
 
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         # No gateways left, stop Xiaomi socket
         unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
         unsub_stop()

@@ -5,20 +5,31 @@ import logging
 
 from aionanoleaf import InvalidToken, Nanoleaf, Unavailable
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
+type NanoleafConfigEntry = ConfigEntry[NanoleafCoordinator]
+
 
 class NanoleafCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Nanoleaf data."""
 
-    def __init__(self, hass: HomeAssistant, nanoleaf: Nanoleaf) -> None:
+    config_entry: NanoleafConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: NanoleafConfigEntry, nanoleaf: Nanoleaf
+    ) -> None:
         """Initialize the Nanoleaf data coordinator."""
         super().__init__(
-            hass, _LOGGER, name="Nanoleaf", update_interval=timedelta(minutes=1)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Nanoleaf",
+            update_interval=timedelta(minutes=1),
         )
         self.nanoleaf = nanoleaf
 

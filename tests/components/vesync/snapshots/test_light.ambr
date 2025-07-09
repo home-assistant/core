@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -42,6 +43,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -80,6 +82,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -118,6 +121,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -156,6 +160,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -197,6 +202,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -217,6 +223,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'dimmable-bulb',
@@ -246,6 +253,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -287,6 +295,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -307,6 +316,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'dimmable-switch',
@@ -338,6 +348,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -376,6 +387,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -414,6 +426,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -452,6 +465,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -490,6 +504,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -535,6 +550,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -555,6 +571,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'tunable-bulb',
@@ -595,6 +612,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),

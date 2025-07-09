@@ -73,7 +73,7 @@
       "fields": {
         "rgb_color": {
           "name": "RGB color",
-          "description": "Color for the light in RGB-format."
+          "description": "Color for the light in RGB format."
         },
         "brightness": {
           "name": "Brightness",
@@ -161,11 +161,11 @@
     },
     "set_music_mode": {
       "name": "Set music mode",
-      "description": "Enables or disables music_mode.",
+      "description": "Enables or disables music mode.",
       "fields": {
         "music_mode": {
           "name": "Music mode",
-          "description": "Use true or false to enable / disable music_mode."
+          "description": "Whether to enable or disable music mode."
         }
       }
     }
@@ -173,11 +173,11 @@
   "selector": {
     "mode": {
       "options": {
-        "color_flow": "Color Flow",
+        "normal": "[%key:common::state::normal%]",
+        "color_flow": "Color flow",
         "hsv": "HSV",
         "last": "Last",
         "moonlight": "Moonlight",
-        "normal": "Normal",
         "rgb": "RGB"
       }
     },

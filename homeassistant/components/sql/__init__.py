@@ -28,6 +28,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,7 +56,9 @@ QUERY_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.template,
         vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DB_URL): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,

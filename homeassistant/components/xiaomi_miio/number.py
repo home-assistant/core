@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
+from typing import Any
 
-from miio import Device
+from miio import Device as MiioDevice
 
 from homeassistant.components.number import (
     DOMAIN as PLATFORM_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_MODEL,
@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -61,8 +61,6 @@ from .const import (
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_VOLUME,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
@@ -99,6 +97,7 @@ from .const import (
     MODELS_PURIFIER_MIOT,
 )
 from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
@@ -288,15 +287,16 @@ FAVORITE_LEVEL_VALUES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     if model in MODEL_TO_FEATURES_MAP:
         features = MODEL_TO_FEATURES_MAP[model]
@@ -343,7 +343,7 @@ async def async_setup_entry(
                     device,
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    coordinator,
                     description,
                 )
             )
@@ -351,17 +351,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
+class XiaomiNumberEntity(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], NumberEntity
+):
     """Representation of a generic Xiaomi attribute selector."""
 
     entity_description: XiaomiMiioNumberDescription
 
     def __init__(
         self,
-        device: Device,
-        entry: ConfigEntry,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
         unique_id: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Any],
         description: XiaomiMiioNumberDescription,
     ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
@@ -403,7 +405,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the target motor speed of the miio device failed.",
-            self._device.set_speed,
+            self._device.set_speed,  # type: ignore[attr-defined]
             motor_speed,
         )
 
@@ -411,7 +413,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the favorite level."""
         return await self._try_command(
             "Setting the favorite level of the miio device failed.",
-            self._device.set_favorite_level,
+            self._device.set_favorite_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -419,7 +421,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the fan level."""
         return await self._try_command(
             "Setting the fan level of the miio device failed.",
-            self._device.set_fan_level,
+            self._device.set_fan_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -427,21 +429,23 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the volume."""
         return await self._try_command(
             "Setting the volume of the miio device failed.",
-            self._device.set_volume,
+            self._device.set_volume,  # type: ignore[attr-defined]
             volume,
         )
 
     async def async_set_oscillation_angle(self, angle: int) -> bool:
         """Set the volume."""
         return await self._try_command(
-            "Setting angle of the miio device failed.", self._device.set_angle, angle
+            "Setting angle of the miio device failed.",
+            self._device.set_angle,  # type: ignore[attr-defined]
+            angle,
         )
 
     async def async_set_delay_off_countdown(self, delay_off_countdown: int) -> bool:
         """Set the delay off countdown."""
         return await self._try_command(
             "Setting delay off miio device failed.",
-            self._device.delay_off,
+            self._device.delay_off,  # type: ignore[attr-defined]
             delay_off_countdown,
         )
 
@@ -449,7 +453,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
-            self._device.set_led_brightness_level,
+            self._device.set_led_brightness_level,  # type: ignore[attr-defined]
             level,
         )
 
@@ -457,7 +461,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
-            self._device.set_led_brightness,
+            self._device.set_led_brightness,  # type: ignore[attr-defined]
             level,
         )
 
@@ -465,6 +469,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the favorite rpm of the miio device failed.",
-            self._device.set_favorite_rpm,
+            self._device.set_favorite_rpm,  # type: ignore[attr-defined]
             rpm,
         )

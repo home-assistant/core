@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
+type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
+
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
@@ -20,11 +22,22 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     api: HomeWizardEnergy
     api_disabled: bool = False
 
-    config_entry: ConfigEntry
+    config_entry: HomeWizardConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: HomeWizardEnergy) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: HomeWizardConfigEntry,
+        api: HomeWizardEnergy,
+    ) -> None:
         """Initialize update coordinator."""
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
         self.api = api
 
     async def _async_update_data(self) -> DeviceResponseEntry:

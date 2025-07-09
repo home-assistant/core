@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/prosegur",
   "iot_class": "cloud_polling",
   "loggers": ["pyprosegur"],
-  "requirements": ["pyprosegur==0.0.9"]
+  "requirements": ["pyprosegur==0.0.14"]
 }

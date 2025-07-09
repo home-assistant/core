@@ -12,6 +12,7 @@ from buienradar.constants import (
     CONDITION,
     CONTENT,
     DATA,
+    FEELTEMPERATURE,
     FORECAST,
     HUMIDITY,
     MESSAGE,
@@ -22,6 +23,7 @@ from buienradar.constants import (
     TEMPERATURE,
     VISIBILITY,
     WINDAZIMUTH,
+    WINDGUST,
     WINDSPEED,
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
@@ -201,6 +203,14 @@ class BrData:
             return None
 
     @property
+    def feeltemperature(self):
+        """Return the feeltemperature, or None."""
+        try:
+            return float(self.data.get(FEELTEMPERATURE))
+        except (ValueError, TypeError):
+            return None
+
+    @property
     def pressure(self):
         """Return the pressure, or None."""
         try:
@@ -221,6 +231,14 @@ class BrData:
         """Return the visibility, or None."""
         try:
             return int(self.data.get(VISIBILITY))
+        except (ValueError, TypeError):
+            return None
+
+    @property
+    def wind_gust(self):
+        """Return the windgust, or None."""
+        try:
+            return float(self.data.get(WINDGUST))
         except (ValueError, TypeError):
             return None
 

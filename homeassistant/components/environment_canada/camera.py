@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.typing import VolDictType
@@ -26,7 +26,7 @@ SET_RADAR_TYPE_SCHEMA: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ECConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = config_entry.runtime_data.radar_coordinator

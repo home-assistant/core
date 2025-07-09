@@ -7,7 +7,7 @@ from deebot_client.commands.json import Charge, CleanV2
 from deebot_client.events import StateEvent
 from deebot_client.models import CleanAction, State
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController

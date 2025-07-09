@@ -16,7 +16,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry, YaleData
 from .entity import YaleDescriptionEntity
@@ -59,7 +59,7 @@ TYPES_DOORBELL: tuple[YaleEventEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: YaleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the yale event platform."""
     data = config_entry.runtime_data

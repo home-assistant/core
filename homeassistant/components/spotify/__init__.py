@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import aiohttp
 from spotifyaio import Device, SpotifyClient, SpotifyConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -63,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     spotify.refresh_token_function = _refresh_token
 
-    coordinator = SpotifyCoordinator(hass, spotify)
+    coordinator = SpotifyCoordinator(hass, entry, spotify)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -92,6 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
     """Unload Spotify config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

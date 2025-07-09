@@ -19,8 +19,8 @@
     "field_flash_name": "Flash",
     "field_hs_color_description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100.",
     "field_hs_color_name": "Hue/Sat color",
-    "field_kelvin_description": "Color temperature in Kelvin.",
-    "field_kelvin_name": "Color temperature",
+    "field_color_temp_kelvin_description": "Color temperature in Kelvin.",
+    "field_color_temp_kelvin_name": "Color temperature",
     "field_profile_description": "Name of a light profile to use.",
     "field_profile_name": "Profile",
     "field_rgb_color_description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue.",
@@ -93,7 +93,10 @@
           "name": "Color temperature (Kelvin)"
         },
         "effect": {
-          "name": "Effect"
+          "name": "Effect",
+          "state": {
+            "off": "[%key:common::state::off%]"
+          }
         },
         "effect_list": {
           "name": "Available effects"
@@ -280,12 +283,18 @@
         "yellow": "Yellow",
         "yellowgreen": "Yellow green"
       }
+    },
+    "flash": {
+      "options": {
+        "short": "Short",
+        "long": "Long"
+      }
     }
   },
   "services": {
     "turn_on": {
       "name": "[%key:common::action::turn_on%]",
-      "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
+      "description": "Turns on one or more lights and adjusts their properties, even when they are turned on already.",
       "fields": {
         "transition": {
           "name": "[%key:component::light::common::field_transition_name%]",
@@ -319,9 +328,9 @@
           "name": "[%key:component::light::common::field_color_temp_name%]",
           "description": "[%key:component::light::common::field_color_temp_description%]"
         },
-        "kelvin": {
-          "name": "[%key:component::light::common::field_kelvin_name%]",
-          "description": "[%key:component::light::common::field_kelvin_description%]"
+        "color_temp_kelvin": {
+          "name": "[%key:component::light::common::field_color_temp_kelvin_name%]",
+          "description": "[%key:component::light::common::field_color_temp_kelvin_description%]"
         },
         "brightness": {
           "name": "[%key:component::light::common::field_brightness_name%]",
@@ -364,7 +373,7 @@
     },
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
-      "description": "Turn off one or more lights.",
+      "description": "Turns off one or more lights.",
       "fields": {
         "transition": {
           "name": "[%key:component::light::common::field_transition_name%]",
@@ -383,7 +392,7 @@
     },
     "toggle": {
       "name": "[%key:common::action::toggle%]",
-      "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
+      "description": "Toggles one or more lights, from on to off, or off to on, based on their current state.",
       "fields": {
         "transition": {
           "name": "[%key:component::light::common::field_transition_name%]",
@@ -417,9 +426,9 @@
           "name": "[%key:component::light::common::field_color_temp_name%]",
           "description": "[%key:component::light::common::field_color_temp_description%]"
         },
-        "kelvin": {
-          "name": "[%key:component::light::common::field_kelvin_name%]",
-          "description": "[%key:component::light::common::field_kelvin_description%]"
+        "color_temp_kelvin": {
+          "name": "[%key:component::light::common::field_color_temp_kelvin_name%]",
+          "description": "[%key:component::light::common::field_color_temp_kelvin_description%]"
         },
         "brightness": {
           "name": "[%key:component::light::common::field_brightness_name%]",

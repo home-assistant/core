@@ -13,7 +13,7 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
@@ -40,7 +40,7 @@ SIREN_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink siren entities."""
     reolink_data: ReolinkData = config_entry.runtime_data

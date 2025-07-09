@@ -31,6 +31,7 @@ WEBOSTV_EXCEPTIONS = (
     WebOsTvCommandError,
     aiohttp.ClientConnectorError,
     aiohttp.ServerDisconnectedError,
+    aiohttp.WSMessageTypeError,
     asyncio.CancelledError,
     asyncio.TimeoutError,
 )

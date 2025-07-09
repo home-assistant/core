@@ -179,6 +179,15 @@ _BLOCKING_CALLS: tuple[BlockingCall, ...] = (
         skip_for_tests=True,
     ),
     BlockingCall(
+        original_func=SSLContext.set_default_verify_paths,
+        object=SSLContext,
+        function="set_default_verify_paths",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
         original_func=Path.open,
         object=Path,
         function="open",

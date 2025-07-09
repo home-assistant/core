@@ -2,7 +2,6 @@
 
 from pyemoncms import EmoncmsClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -10,11 +9,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, EMONCMS_UUID_DOC_URL, LOGGER
-from .coordinator import EmoncmsCoordinator
+from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type EmonCMSConfigEntry = ConfigEntry[EmoncmsCoordinator]
 
 
 def _migrate_unique_id(
@@ -68,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
         session=async_get_clientsession(hass),
     )
     await _check_unique_id_migration(hass, entry, emoncms_client)
-    coordinator = EmoncmsCoordinator(hass, emoncms_client)
+    coordinator = EmoncmsCoordinator(hass, entry, emoncms_client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -77,11 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
     return True
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: EmonCMSConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

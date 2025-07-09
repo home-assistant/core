@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -92,7 +92,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.water_used_today(),
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DROPSensorEntityDescription(
         key=AVERAGE_WATER_USED,
@@ -242,7 +242,7 @@ DEVICE_SENSORS: dict[str, list[str]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DROPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DROP sensors from config entry."""
     _LOGGER.debug(

@@ -2,7 +2,9 @@
 
 from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
+from websockets.exceptions import ConnectionClosed
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -24,11 +26,24 @@ class HomeeEntity(Entity):
             f"{entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
         )
         self._entry = entry
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, f"{entry.runtime_data.settings.uid}-{attribute.node_id}")
-            }
-        )
+        node = entry.runtime_data.get_node_by_id(attribute.node_id)
+        # Homee hub itself has node-id -1
+        assert node is not None
+        if node.id == -1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, entry.runtime_data.settings.uid)},
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{entry.runtime_data.settings.uid}-{attribute.node_id}")
+                },
+                name=node.name,
+                model=get_name_for_enum(NodeProfile, node.profile),
+                via_device=(DOMAIN, entry.runtime_data.settings.uid),
+            )
+        if attribute.name:
+            self._attr_name = attribute.name
 
         self._host_connected = entry.runtime_data.connected
 
@@ -48,6 +63,17 @@ class HomeeEntity(Entity):
         """Return the availability of the underlying node."""
         return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
 
+    async def async_set_homee_value(self, value: float) -> None:
+        """Set an attribute value on the homee node."""
+        homee = self._entry.runtime_data
+        try:
+            await homee.set_value(self._attribute.node_id, self._attribute.id, value)
+        except ConnectionClosed as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_closed",
+            ) from exception
+
     async def async_update(self) -> None:
         """Update entity from homee."""
         homee = self._entry.runtime_data
@@ -56,7 +82,7 @@ class HomeeEntity(Entity):
     def _on_node_updated(self, attribute: HomeeAttribute) -> None:
         self.schedule_update_ha_state()
 
-    def _on_connection_changed(self, connected: bool) -> None:
+    async def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()
 
@@ -127,21 +153,22 @@ class HomeeNodeEntity(Entity):
 
         return None
 
-    def has_attribute(self, attribute_type: AttributeType) -> bool:
-        """Check if an attribute of the given type exists."""
-        if self._node.attribute_map is None:
-            return False
-
-        return attribute_type in self._node.attribute_map
-
-    async def async_set_value(self, attribute: HomeeAttribute, value: float) -> None:
+    async def async_set_homee_value(
+        self, attribute: HomeeAttribute, value: float
+    ) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
-        await homee.set_value(attribute.node_id, attribute.id, value)
+        try:
+            await homee.set_value(attribute.node_id, attribute.id, value)
+        except ConnectionClosed as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_closed",
+            ) from exception
 
     def _on_node_updated(self, node: HomeeNode) -> None:
         self.schedule_update_ha_state()
 
-    def _on_connection_changed(self, connected: bool) -> None:
+    async def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiotedee import TedeeLock
-from aiotedee.lock import TedeeLockState
+from aiotedee.lock import TedeeDoorState, TedeeLockState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
@@ -29,6 +29,8 @@ class TedeeBinarySensorEntityDescription(
     """Describes Tedee binary sensor entity."""
 
     is_on_fn: Callable[[TedeeLock], bool | None]
+    supported_fn: Callable[[TedeeLock], bool] = lambda _: True
+    available_fn: Callable[[TedeeLock], bool] = lambda _: True
 
 
 ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
@@ -41,7 +43,7 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
     TedeeBinarySensorEntityDescription(
         key="semi_locked",
         translation_key="semi_locked",
-        is_on_fn=lambda lock: lock.state == TedeeLockState.HALF_OPEN,
+        is_on_fn=lambda lock: lock.state is TedeeLockState.HALF_OPEN,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TedeeBinarySensorEntityDescription(
@@ -53,10 +55,21 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
     TedeeBinarySensorEntityDescription(
         key="uncalibrated",
         translation_key="uncalibrated",
-        is_on_fn=lambda lock: lock.state == TedeeLockState.UNCALIBRATED,
+        is_on_fn=(
+            lambda lock: lock.state is TedeeLockState.UNCALIBRATED
+            or lock.state is TedeeLockState.UNKNOWN
+        ),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+    ),
+    TedeeBinarySensorEntityDescription(
+        key="door_state",
+        is_on_fn=lambda lock: lock.door_state is TedeeDoorState.OPENED,
+        device_class=BinarySensorDeviceClass.DOOR,
+        supported_fn=lambda lock: lock.door_state is not TedeeDoorState.NOT_PAIRED,
+        available_fn=lambda lock: lock.door_state
+        not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED],
     ),
 )
 
@@ -64,7 +77,7 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TedeeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tedee sensor entity."""
     coordinator = entry.runtime_data
@@ -74,6 +87,7 @@ async def async_setup_entry(
             TedeeBinarySensorEntity(lock, coordinator, entity_description)
             for entity_description in ENTITIES
             for lock in locks
+            if entity_description.supported_fn(lock)
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
@@ -89,3 +103,8 @@ class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._lock)
+
+    @property
+    def available(self) -> bool:
+        """Return true if the binary sensor is available."""
+        return self.entity_description.available_fn(self._lock) and super().available

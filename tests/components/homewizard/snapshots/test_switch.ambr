@@ -19,6 +19,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -39,6 +40,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -49,6 +51,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -101,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -121,6 +125,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -131,6 +136,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -184,6 +190,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -204,6 +211,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
@@ -214,6 +222,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -266,6 +275,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -286,6 +296,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -296,6 +307,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -348,6 +360,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -368,6 +381,7 @@
     'original_name': 'Switch lock',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
     'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
@@ -378,6 +392,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -431,6 +446,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -451,6 +467,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
@@ -461,6 +478,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -513,6 +531,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -533,6 +552,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -543,6 +563,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -595,6 +616,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -615,6 +637,7 @@
     'original_name': 'Switch lock',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
     'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
@@ -625,6 +648,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -677,6 +701,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -697,6 +722,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -707,6 +733,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -759,6 +786,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -779,6 +807,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -789,6 +818,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -841,6 +871,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -861,6 +892,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -871,6 +903,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(

@@ -17,12 +17,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 
@@ -37,7 +36,7 @@ from .const import (
     INFRARED_BRIGHTNESS,
     LIFX_CEILING_PRODUCT_IDS,
 )
-from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -78,13 +77,12 @@ HSBK_KELVIN = 3
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LIFXConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    domain_data = hass.data[DOMAIN]
-    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
-    manager: LIFXManager = domain_data[DATA_LIFX_MANAGER]
+    coordinator = entry.runtime_data
+    manager = hass.data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -123,7 +121,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         self,
         coordinator: LIFXUpdateCoordinator,
         manager: LIFXManager,
-        entry: ConfigEntry,
+        entry: LIFXConfigEntry,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)

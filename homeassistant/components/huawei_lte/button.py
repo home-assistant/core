@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Huawei LTE buttons."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]

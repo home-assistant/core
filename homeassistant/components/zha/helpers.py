@@ -11,6 +11,7 @@ import enum
 import functools
 import itertools
 import logging
+import queue
 import re
 import time
 from types import MappingProxyType
@@ -111,9 +112,10 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -417,13 +419,26 @@ class ZHADeviceProxy(EventBase):
     @callback
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
+        if ATTR_UNIQUE_ID in zha_event.data:
+            unique_id = zha_event.data[ATTR_UNIQUE_ID]
+
+            # Client cluster handler unique IDs in the ZHA lib were disambiguated by
+            # adding a suffix of `_CLIENT`. Unfortunately, this breaks existing
+            # automations that match the `unique_id` key. This can be removed in a
+            # future release with proper notice of a breaking change.
+            unique_id = unique_id.removesuffix("_CLIENT")
+        else:
+            unique_id = zha_event.unique_id
+
         self.gateway_proxy.hass.bus.async_fire(
             ZHA_EVENT,
             {
                 ATTR_DEVICE_IEEE: str(zha_event.device_ieee),
-                ATTR_UNIQUE_ID: zha_event.unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
+                # The order of these keys is intentional, `zha_event.data` can contain
+                # a `unique_id` key, which we explicitly replace
+                ATTR_UNIQUE_ID: unique_id,
             },
         )
 
@@ -505,7 +520,15 @@ class ZHAGatewayProxy(EventBase):
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
         }
         self.debug_enabled: bool = False
-        self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
+
+        log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
+        log_simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
+        self._log_queue_handler = HomeAssistantQueueHandler(log_simple_queue)
+        self._log_queue_handler.listener = logging.handlers.QueueListener(
+            log_simple_queue, log_relay_handler
+        )
+        self._log_queue_handler_count: int = 0
+
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
         self._reload_task: asyncio.Task | None = None
@@ -736,10 +759,16 @@ class ZHAGatewayProxy(EventBase):
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
 
         if filterer:
-            self._log_relay_handler.addFilter(filterer)
+            self._log_queue_handler.addFilter(filterer)
+
+        # Only start a new log queue handler if the old one is no longer running
+        self._log_queue_handler_count += 1
+
+        if self._log_queue_handler.listener and self._log_queue_handler_count == 1:
+            self._log_queue_handler.listener.start()
 
         for logger_name in DEBUG_RELAY_LOGGERS:
-            logging.getLogger(logger_name).addHandler(self._log_relay_handler)
+            logging.getLogger(logger_name).addHandler(self._log_queue_handler)
 
         self.debug_enabled = True
 
@@ -749,9 +778,17 @@ class ZHAGatewayProxy(EventBase):
         async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
         for logger_name in DEBUG_RELAY_LOGGERS:
-            logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+            logging.getLogger(logger_name).removeHandler(self._log_queue_handler)
+
+        # Only stop the log queue handler if nothing else is using it
+        self._log_queue_handler_count -= 1
+
+        if self._log_queue_handler.listener and self._log_queue_handler_count == 0:
+            self._log_queue_handler.listener.stop()
+
         if filterer:
-            self._log_relay_handler.removeFilter(filterer)
+            self._log_queue_handler.removeFilter(filterer)
+
         self.debug_enabled = False
 
     async def shutdown(self) -> None:
@@ -978,7 +1015,7 @@ class LogRelayHandler(logging.Handler):
         entry = LogEntry(
             record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
         )
-        async_dispatcher_send(
+        dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
             {ATTR_TYPE: ZHA_GW_MSG_LOG_OUTPUT, ZHA_GW_MSG_LOG_ENTRY: entry.to_dict()},

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,6 +18,7 @@ from homeassistant.components.enphase_envoy.select import (
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -158,6 +160,46 @@ async def test_select_relay_modes(
 
 
 @pytest.mark.parametrize(
+    ("mock_envoy", "relay", "target", "action"),
+    [("envoy_metered_batt_relay", "NC1", "generator_action", "powered")],
+    indirect=["mock_envoy"],
+)
+async def test_update_dry_contact_actions_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    target: str,
+    relay: str,
+    action: str,
+) -> None:
+    """Test select platform update dry contact action with error return."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SELECT}."
+
+    assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
+    assert (name := dry_contact.load_name.lower().replace(" ", "_"))
+
+    test_entity = f"{entity_base}{name}_{target}"
+
+    mock_envoy.update_dry_contact.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_select_option for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_OPTION: action,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("mock_envoy", "use_serial"),
     [
         ("envoy_metered_batt_relay", "enpower_654321"),
@@ -195,6 +237,44 @@ async def test_select_storage_modes(
         blocking=True,
     )
     mock_envoy.set_storage_mode.assert_called_once_with(REVERSE_STORAGE_MODE_MAP[mode])
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.parametrize(("mode"), ["backup"])
+async def test_set_storage_modes_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: str,
+    mode: str,
+) -> None:
+    """Test select platform set storage mode with error return."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"{Platform.SELECT}.{use_serial}_storage_mode"
+
+    mock_envoy.set_storage_mode.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_select_option for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_OPTION: mode,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

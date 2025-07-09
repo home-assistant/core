@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_add_delta_content_stream[deltas0]
+  list([
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas1]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas2]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test 2',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas3]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas4]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas5]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test 2',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas6]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+        dict({
+          'id': 'mock-tool-call-id-2',
+          'tool_args': dict({
+            'param1': 'Test Param 2',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id-2',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 2',
+    }),
+  ])
+# ---
+# name: test_template_error
+  dict({
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'unknown',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I had a problem with my template',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_unknown_llm_api
+  dict({
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'unknown',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Error preparing LLM API',
+        }),
+      }),
+    }),
+  })
+# ---

@@ -1,0 +1,63 @@
+{
+  "items": [
+    {
+      "deviceId": "6d95a8b7-4ee3-429a-a13a-00ec9354170c",
+      "name": "GE In-Wall Smart Dimmer",
+      "label": "Bedroom Fan",
+      "manufacturerName": "SmartThingsEdge",
+      "presentationId": "generic-fan-3-speed",
+      "deviceManufacturerCode": "0063-4944-3131",
+      "locationId": "f1313f27-6732-481d-a2a9-c7bbf900f867",
+      "ownerId": "e5216062-ac82-79b8-20db-ea65fa3d3fdd",
+      "roomId": "5f77f7cf-ece8-485e-a409-98f7b128a41a",
+      "components": [
+        {
+          "id": "main",
+          "label": "Bedroom Fan",
+          "capabilities": [
+            {
+              "id": "fanSpeed",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Fan",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2018-01-12T22:12:15Z",
+      "parentDeviceId": "4ceb9b86-2f0d-4e98-ba4e-3fbe705f7805",
+      "profile": {
+        "id": "9bd81754-fc81-3ed1-86c2-d1094d6cbf6d"
+      },
+      "zwave": {
+        "networkId": "02",
+        "driverId": "e7947a05-947d-4bb5-92c4-2aafaff6d69c",
+        "executingLocally": true,
+        "hubId": "4ceb9b86-2f0d-4e98-ba4e-3fbe705f7805",
+        "networkSecurityLevel": "ZWAVE_LEGACY_NON_SECURE",
+        "provisioningState": "PROVISIONED",
+        "manufacturerId": 99,
+        "productType": 18756,
+        "productId": 12593
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

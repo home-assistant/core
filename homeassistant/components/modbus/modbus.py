@@ -172,7 +172,7 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        slave = 0
+        slave = 1
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
 
@@ -195,7 +195,7 @@ async def async_modbus_setup(
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        slave = 0
+        slave = 1
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
         if ATTR_SLAVE in service.data:
@@ -384,6 +384,11 @@ class ModbusHub:
             {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
         )
         entry = self._pb_request[use_call]
+
+        if use_call in {"write_registers", "write_coils"}:
+            if not isinstance(value, list):
+                value = [value]
+
         kwargs[entry.value_attr_name] = value
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)

@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -35,7 +36,10 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -86,6 +90,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
             vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
             vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
     _validate_min_max,
@@ -118,6 +123,7 @@ async def async_setup_platform(
                 min_samples=sensor_config[CONF_MIN_SAMPLES],
                 max_samples=sensor_config[CONF_MAX_SAMPLES],
                 device_class=sensor_config.get(CONF_DEVICE_CLASS),
+                unique_id=sensor_config.get(CONF_UNIQUE_ID),
                 sensor_entity_id=generate_entity_id(
                     ENTITY_ID_FORMAT, sensor_name, hass=hass
                 ),
@@ -130,7 +136,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up trend sensor from config entry."""
 
@@ -236,7 +242,14 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
                 self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
-                _LOGGER.error(ex)
+                _LOGGER.error(
+                    "Error processing sensor state change for "
+                    "entity_id=%s, attribute=%s, state=%s: %s",
+                    self._entity_id,
+                    self._attribute,
+                    new_state.state,
+                    ex,
+                )
 
         self.async_on_remove(
             async_track_state_change_event(

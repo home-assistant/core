@@ -10,7 +10,7 @@ from tarfile import TarError
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
@@ -103,9 +103,7 @@ async def test_upload(
     assert resp.status == 201
     assert open_mock.call_count == 1
     assert move_mock.call_count == 1
-    assert (
-        move_mock.mock_calls[0].args[1].name == "Test_-_1970-01-01_00.00_00000000.tar"
-    )
+    assert move_mock.mock_calls[0].args[1].name == "Test_1970-01-01_00.00_00000000.tar"
 
 
 @pytest.mark.usefixtures("read_backup")

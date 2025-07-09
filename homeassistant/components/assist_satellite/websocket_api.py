@@ -19,6 +19,7 @@ from .const import (
     DOMAIN,
     AssistSatelliteEntityFeature,
 )
+from .entity import AssistSatelliteConfiguration
 
 CONNECTION_TEST_TIMEOUT = 30
 
@@ -91,7 +92,16 @@ def websocket_get_configuration(
         )
         return
 
-    config_dict = asdict(satellite.async_get_configuration())
+    try:
+        config_dict = asdict(satellite.async_get_configuration())
+    except NotImplementedError:
+        # Stub configuration
+        config_dict = asdict(
+            AssistSatelliteConfiguration(
+                available_wake_words=[], active_wake_words=[], max_active_wake_words=1
+            )
+        )
+
     config_dict["pipeline_entity_id"] = satellite.pipeline_entity_id
     config_dict["vad_entity_id"] = satellite.vad_sensitivity_entity_id
 
@@ -188,7 +198,8 @@ async def websocket_test_connection(
 
     hass.async_create_background_task(
         satellite.async_internal_announce(
-            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}"
+            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}",
+            preannounce=False,
         ),
         f"assist_satellite_connection_test_{msg['entity_id']}",
     )

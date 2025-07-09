@@ -7,13 +7,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehicleEntity
+from .entity import TeslemetryVehiclePollingEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
@@ -50,8 +51,8 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
         key="homelink",
         func=lambda self: handle_vehicle_command(
             self.api.trigger_homelink(
-                lat=self.coordinator.data["drive_state_latitude"],
-                lon=self.coordinator.data["drive_state_longitude"],
+                lat=self.hass.config.latitude,
+                lon=self.hass.config.longitude,
             )
         ),
     ),
@@ -61,7 +62,7 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
@@ -73,9 +74,10 @@ async def async_setup_entry(
     )
 
 
-class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
+class TeslemetryButtonEntity(TeslemetryVehiclePollingEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
+    api: Vehicle
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(

@@ -13,10 +13,13 @@ from amberelectric.models.forecast_interval import ForecastInterval
 from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.rest import ApiException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
@@ -70,13 +73,20 @@ def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
 class AmberUpdateCoordinator(DataUpdateCoordinator):
     """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
 
+    config_entry: AmberConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, api: amberelectric.AmberApi, site_id: str
+        self,
+        hass: HomeAssistant,
+        config_entry: AmberConfigEntry,
+        api: amberelectric.AmberApi,
+        site_id: str,
     ) -> None:
         """Initialise the data service."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="amberelectric",
             update_interval=timedelta(minutes=1),
         )

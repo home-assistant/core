@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TadoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
@@ -57,7 +57,7 @@ async def async_setup_entry(
 def add_tracked_entities(
     hass: HomeAssistant,
     coordinator: TadoMobileDeviceUpdateCoordinator,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""

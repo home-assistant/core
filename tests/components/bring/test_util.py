@@ -41,7 +41,6 @@ def test_sum_attributes(attribute: str, expected: int) -> None:
     """Test function sum_attributes."""
     items = BringItemsResponse.from_json(load_fixture("items.json", DOMAIN))
     lst = BringListResponse.from_json(load_fixture("lists.json", DOMAIN))
-
     result = sum_attributes(
         BringData(lst.lists[0], items),
         attribute,

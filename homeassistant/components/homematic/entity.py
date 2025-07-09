@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
@@ -50,7 +51,7 @@ class HMDevice(Entity):
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
-        self._data: dict[str, str] = {}
+        self._data: dict[str, Any] = {}
         self._connected = False
         self._available = False
         self._channel_map: dict[str, str] = {}
@@ -62,7 +63,7 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
 
@@ -77,7 +78,7 @@ class HMDevice(Entity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         return self._available
 
@@ -99,10 +100,10 @@ class HMDevice(Entity):
 
         return attr
 
-    def update(self):
+    def update(self) -> None:
         """Connect to HomeMatic init values."""
         if self._connected:
-            return True
+            return
 
         # Initialize
         self._homematic = self.hass.data[DATA_HOMEMATIC]

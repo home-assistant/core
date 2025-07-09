@@ -71,7 +71,15 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -94,7 +102,15 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'unknown_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -106,9 +122,9 @@
           'with_automatic_settings': None,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -140,9 +156,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -174,9 +190,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -208,9 +224,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -242,9 +258,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',

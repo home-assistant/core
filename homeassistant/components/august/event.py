@@ -16,7 +16,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
@@ -59,7 +59,7 @@ TYPES_DOORBELL: tuple[AugustEventEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AugustConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the august event platform."""
     data = config_entry.runtime_data

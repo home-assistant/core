@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
@@ -67,7 +67,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
     ring_data = entry.runtime_data

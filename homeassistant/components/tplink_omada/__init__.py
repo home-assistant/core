@@ -11,7 +11,7 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, site_client)
+    controller = OmadaSiteController(hass, entry, site_client)
     await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
@@ -80,12 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         # This is the last loaded instance of Omada, deregister any services
         hass.services.async_remove(DOMAIN, "reconnect_client")
 

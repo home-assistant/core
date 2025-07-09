@@ -15,6 +15,7 @@ from . import (
     DATASET_CH16,
     TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
+    TEST_COPROCESSOR_VERSION,
 )
 
 from tests.common import MockConfigEntry
@@ -71,12 +72,23 @@ def get_extended_address_fixture() -> Generator[AsyncMock]:
         yield get_extended_address
 
 
+@pytest.fixture(name="get_coprocessor_version")
+def get_coprocessor_version_fixture() -> Generator[AsyncMock]:
+    """Mock get_coprocessor_version."""
+    with patch(
+        "python_otbr_api.OTBR.get_coprocessor_version",
+        return_value=TEST_COPROCESSOR_VERSION,
+    ) as get_coprocessor_version:
+        yield get_coprocessor_version
+
+
 @pytest.fixture(name="otbr_config_entry_multipan")
 async def otbr_config_entry_multipan_fixture(
     hass: HomeAssistant,
     get_active_dataset_tlvs: AsyncMock,
     get_border_agent_id: AsyncMock,
     get_extended_address: AsyncMock,
+    get_coprocessor_version: AsyncMock,
 ) -> str:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
@@ -97,6 +109,7 @@ async def otbr_config_entry_thread_fixture(
     get_active_dataset_tlvs: AsyncMock,
     get_border_agent_id: AsyncMock,
     get_extended_address: AsyncMock,
+    get_coprocessor_version: AsyncMock,
 ) -> None:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(

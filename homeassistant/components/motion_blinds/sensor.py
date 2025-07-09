@@ -15,7 +15,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 from .entity import MotionCoordinatorEntity
@@ -26,7 +26,7 @@ ATTR_BATTERY_VOLTAGE = "battery_voltage"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Motionblinds."""
     entities: list[SensorEntity] = []

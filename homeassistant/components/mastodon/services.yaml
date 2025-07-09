@@ -24,6 +24,10 @@ post:
     media:
       selector:
         text:
+    media_description:
+      required: false
+      selector:
+        text:
     media_warning:
       required: true
       selector:

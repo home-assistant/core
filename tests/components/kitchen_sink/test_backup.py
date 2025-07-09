@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -106,7 +106,10 @@ async def test_agents_list_backups(
             "backup_id": "abc123",
             "database_included": False,
             "date": "1970-01-01T00:00:00Z",
+            "extra_metadata": {},
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": ["media", "share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
@@ -187,7 +190,10 @@ async def test_agents_upload(
         "backup_id": "test-backup",
         "database_included": True,
         "date": "1970-01-01T00:00:00.000Z",
+        "extra_metadata": {"instance_id": ANY, "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": ["media", "share"],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0",

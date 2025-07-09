@@ -25,6 +25,7 @@ async def test_relay_switch(
     """Test turn on and turn off."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="relay-switch-id-1",
             deviceName="relay-switch-1",
             deviceType="Relay Switch 1",
@@ -34,10 +35,7 @@ async def test_relay_switch(
 
     mock_get_status.return_value = {"switchStatus": 0}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "switch.relay_switch_1"
@@ -62,6 +60,7 @@ async def test_switchmode_bot(
     """Test turn on and turn off."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="bot-id-1",
             deviceName="bot-1",
             deviceType="Bot",
@@ -71,10 +70,7 @@ async def test_switchmode_bot(
 
     mock_get_status.return_value = {"deviceMode": "switchMode", "power": "off"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "switch.bot_1"
@@ -99,6 +95,7 @@ async def test_pressmode_bot_no_switch_entity(
     """Test a pressMode bot isn't added as a switch."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="bot-id-1",
             deviceName="bot-1",
             deviceType="Bot",
@@ -108,9 +105,6 @@ async def test_pressmode_bot_no_switch_entity(
 
     mock_get_status.return_value = {"deviceMode": "pressMode"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)

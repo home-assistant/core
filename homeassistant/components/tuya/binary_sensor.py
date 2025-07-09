@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode
@@ -46,6 +46,40 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO2_STATE,
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # CO Detector
+    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    "cobj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATE,
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="1",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATUS,
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FEED_STATE,
+            translation_key="feeding",
+            on_value="feeding",
+        ),
+    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
@@ -111,40 +145,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.CO2_STATE,
-            device_class=BinarySensorDeviceClass.SAFETY,
-            on_value="alarm",
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
-    # CO Detector
-    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
-    "cobj": (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.CO_STATE,
-            device_class=BinarySensorDeviceClass.SAFETY,
-            on_value="1",
-        ),
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.CO_STATUS,
-            device_class=BinarySensorDeviceClass.SAFETY,
-            on_value="alarm",
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
-    # Smart Pet Feeder
-    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
-    "cwwsq": (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.FEED_STATE,
-            translation_key="feeding",
-            on_value="feeding",
-        ),
-    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
@@ -171,6 +171,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.CH4_SENSOR_STATE,
             device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Luminance Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
+    "ldcg": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.TEMPER_ALARM,
+            device_class=BinarySensorDeviceClass.TAMPER,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -205,16 +215,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value={"AQAB"},
         ),
     ),
-    # Luminance Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
-    "ldcg": (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": (
@@ -235,6 +235,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Temperature and Humidity Sensor with External Probe
+    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
+    "qxj": (TAMPER_BINARY_SENSOR,),
     # Gas Detector
     # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
     "rqbj": (
@@ -256,7 +259,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.WATERSENSOR_STATE,
             device_class=BinarySensorDeviceClass.MOISTURE,
-            on_value="alarm",
+            on_value={"1", "alarm"},
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -341,7 +344,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya binary sensor dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

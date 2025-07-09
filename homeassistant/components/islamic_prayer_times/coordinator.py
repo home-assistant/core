@@ -29,21 +29,26 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type IslamicPrayerTimesConfigEntry = ConfigEntry[IslamicPrayerDataUpdateCoordinator]
+
 
 class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Islamic Prayer Client Object."""
 
-    config_entry: ConfigEntry
+    config_entry: IslamicPrayerTimesConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+    ) -> None:
         """Initialize the Islamic Prayer client."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
         )
-        self.latitude = self.config_entry.data[CONF_LATITUDE]
-        self.longitude = self.config_entry.data[CONF_LONGITUDE]
+        self.latitude = config_entry.data[CONF_LATITUDE]
+        self.longitude = config_entry.data[CONF_LONGITUDE]
         self.event_unsub: CALLBACK_TYPE | None = None
 
     @property

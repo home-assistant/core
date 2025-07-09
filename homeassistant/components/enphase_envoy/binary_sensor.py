@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
@@ -75,7 +75,7 @@ ENPOWER_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up envoy binary sensor platform."""
     coordinator = config_entry.runtime_data
@@ -126,6 +126,7 @@ class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
     @property
@@ -158,6 +159,7 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=enpower.serial_number,
         )
 
     @property

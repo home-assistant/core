@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific
+from tesla_fleet_api.tessie import EnergySite
 from tessie_api import set_charge_limit, set_charging_amps, set_speed_limit
 
 from homeassistant.components.number import (
@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TessieConfigEntry
@@ -90,7 +90,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
 class TessieNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Tessie Number entity."""
 
-    func: Callable[[EnergySpecific, float], Awaitable[Any]]
+    func: Callable[[EnergySite, float], Awaitable[Any]]
     requires: str
 
 
@@ -111,7 +111,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieNumberBatteryEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data
