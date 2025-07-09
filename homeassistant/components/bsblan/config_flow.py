@@ -99,10 +99,23 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
+                # No auth needed, go to a simple confirmation step
+                return await self.async_step_discovery_no_auth_confirm()
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
         return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_no_auth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle confirmation for a discovered device that needs no authentication."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="discovery_no_auth_confirm",
+                description_placeholders={"host": str(self.host)},
+            )
+        return self._async_create_entry()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
