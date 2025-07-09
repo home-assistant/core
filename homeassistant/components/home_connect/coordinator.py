@@ -41,7 +41,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_DEFAULT_RETRY_AFTER, APPLIANCES_WITH_PROGRAMS, DOMAIN
+from .const import (
+    API_DEFAULT_RETRY_AFTER,
+    APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_PAUSE,
+    DOMAIN,
+)
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +71,7 @@ class HomeConnectApplianceData:
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
+        self.commands.clear()
         self.commands.update(other.commands)
         self.events.update(other.events)
         self.info.connected = other.info.connected
@@ -201,6 +207,28 @@ class HomeConnectCoordinator(
                                         raw_key=status_key.value,
                                         value=event.value,
                                     )
+                                if (
+                                    status_key == StatusKey.BSH_COMMON_OPERATION_STATE
+                                    and event.value == BSH_OPERATION_STATE_PAUSE
+                                    and CommandKey.BSH_COMMON_RESUME_PROGRAM
+                                    not in (
+                                        commands := self.data[
+                                            event_message_ha_id
+                                        ].commands
+                                    )
+                                ):
+                                    # All the appliances that can be paused
+                                    # should have the resume command available.
+                                    commands.add(CommandKey.BSH_COMMON_RESUME_PROGRAM)
+                                    for (
+                                        listener,
+                                        context,
+                                    ) in self._special_listeners.values():
+                                        if (
+                                            EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
+                                            not in context
+                                        ):
+                                            listener()
                             self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
