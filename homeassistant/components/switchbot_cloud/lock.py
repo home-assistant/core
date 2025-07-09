@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from switchbot_api import LockCommands
+from switchbot_api import Device, LockCommands, LockV2Commands, Remote, SwitchBotAPI
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudData, SwitchBotCoordinator
 from .const import DOMAIN
 from .entity import SwitchBotCloudEntity
 
@@ -32,6 +32,16 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     _attr_name = None
 
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device | Remote,
+        coordinator: SwitchBotCoordinator,
+    ) -> None:
+        """Init devices."""
+        super().__init__(api, device, coordinator)
+        self.__set_features()
+
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
@@ -48,3 +58,15 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         await self.send_api_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
         self.async_write_ha_state()
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Latch lock the lock."""
+        await self.send_api_command(LockV2Commands.DEADBOLT)
+        self._attr_is_locked = True
+        self.async_write_ha_state()
+
+    def __set_features(self) -> None:
+        if self.device_info:
+            model: str | None = self.device_info.get("model")
+            if model in LockV2Commands.get_supported_devices():
+                self._attr_supported_features = LockEntityFeature.OPEN
