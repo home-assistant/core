@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 async def _async_update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
     """Deal with entry update."""
-    hass.data[DOMAIN][config.entry_id].api.close()
+    await hass.data[DOMAIN][config.entry_id].api.close()
     await hass.config_entries.async_reload(config.entry_id)
 
 
