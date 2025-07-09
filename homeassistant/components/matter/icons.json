@@ -118,6 +118,11 @@
         "default": "mdi:pump"
       }
     },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
+      }
+    },
     "switch": {
       "child_lock": {
         "default": "mdi:lock",
