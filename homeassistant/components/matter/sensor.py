@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
@@ -44,7 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -944,6 +944,21 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalStateCountdownTime",
+            translation_key="estimated_end_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            # Add countdown to current datetime to get the estimated end time
+            device_to_ha=(
+                lambda x: dt_util.utcnow() + timedelta(seconds=x) if x > 0 else None
+            ),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.OperationalState.Attributes.CountdownTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
         entity_description=MatterListSensorEntityDescription(
             key="OperationalStateCurrentPhase",
             translation_key="current_phase",
@@ -1124,6 +1139,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseStateOfCharge",
+            translation_key="evse_soc",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.StateOfCharge,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

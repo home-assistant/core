@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from functools import partial
-import mimetypes
 from pathlib import Path
 from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
-from google.genai.types import File, FileState
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -42,13 +39,13 @@ from .const import (
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
-    FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
+from .entity import async_prepare_files_for_prompt
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
@@ -92,58 +89,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client = config_entry.runtime_data
 
-        def append_files_to_prompt():
-            image_filenames = call.data[CONF_IMAGE_FILENAME]
-            filenames = call.data[CONF_FILENAMES]
-            for filename in set(image_filenames + filenames):
+        files = call.data[CONF_IMAGE_FILENAME] + call.data[CONF_FILENAMES]
+
+        if files:
+            for filename in files:
                 if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
                         f"Cannot read `{filename}`, no access to path; "
                         "`allowlist_external_dirs` may need to be adjusted in "
                         "`configuration.yaml`"
                     )
-                if not Path(filename).exists():
-                    raise HomeAssistantError(f"`{filename}` does not exist")
-                mimetype = mimetypes.guess_type(filename)[0]
-                with open(filename, "rb") as file:
-                    uploaded_file = client.files.upload(
-                        file=file, config={"mime_type": mimetype}
-                    )
-                    prompt_parts.append(uploaded_file)
 
-        async def wait_for_file_processing(uploaded_file: File) -> None:
-            """Wait for file processing to complete."""
-            while True:
-                uploaded_file = await client.aio.files.get(
-                    name=uploaded_file.name,
-                    config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+            prompt_parts.extend(
+                await async_prepare_files_for_prompt(
+                    hass, client, [Path(filename) for filename in files]
                 )
-                if uploaded_file.state not in (
-                    FileState.STATE_UNSPECIFIED,
-                    FileState.PROCESSING,
-                ):
-                    break
-                LOGGER.debug(
-                    "Waiting for file `%s` to be processed, current state: %s",
-                    uploaded_file.name,
-                    uploaded_file.state,
-                )
-                await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
-
-            if uploaded_file.state == FileState.FAILED:
-                raise HomeAssistantError(
-                    f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
-                )
-
-        await hass.async_add_executor_job(append_files_to_prompt)
-
-        tasks = [
-            asyncio.create_task(wait_for_file_processing(part))
-            for part in prompt_parts
-            if isinstance(part, File) and part.state != FileState.ACTIVE
-        ]
-        async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
-            await asyncio.gather(*tasks)
+            )
 
         try:
             response = await client.aio.models.generate_content(
