@@ -37,6 +37,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
+from .const import BATTERY_VOLTAGE_PRECISION, WIND_SPEED_PRECISION
 from .entity import EcowittEntity
 
 _METRIC: Final = (
@@ -106,6 +107,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=BATTERY_VOLTAGE_PRECISION,
     ),
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
         key="CO2_PPM",
@@ -191,12 +193,14 @@ ECOWITT_SENSORS_MAPPING: Final = {
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=WIND_SPEED_PRECISION,
     ),
     EcoWittSensorTypes.SPEED_MPH: SensorEntityDescription(
         key="SPEED_MPH",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=WIND_SPEED_PRECISION,
     ),
     EcoWittSensorTypes.PRESSURE_HPA: SensorEntityDescription(
         key="PRESSURE_HPA",
