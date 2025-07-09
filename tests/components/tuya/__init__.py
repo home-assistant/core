@@ -35,8 +35,19 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "kj_bladeless_tower_fan": [
+        # https://github.com/orgs/home-assistant/discussions/61
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "rqbj_gas_sensor": [
+        # https://github.com/orgs/home-assistant/discussions/100
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
