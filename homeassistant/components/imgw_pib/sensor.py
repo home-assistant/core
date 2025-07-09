@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfTemperature
+from homeassistant.const import UnitOfLength, UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -36,6 +36,15 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
+    ImgwPibSensorEntityDescription(
+        key="water_flow",
+        translation_key="water_flow",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value=lambda data: data.water_flow.value,
+    ),
     ImgwPibSensorEntityDescription(
         key="water_level",
         translation_key="water_level",

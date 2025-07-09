@@ -21,6 +21,9 @@
   },
   "entity": {
     "sensor": {
+      "water_flow": {
+        "name": "Water flow"
+      },
       "water_level": {
         "name": "Water level"
       },
