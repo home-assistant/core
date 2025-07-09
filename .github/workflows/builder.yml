@@ -94,7 +94,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v10
+        uses: dawidd6/action-download-artifact@v11
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -105,10 +105,10 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v10
+        uses: dawidd6/action-download-artifact@v11
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/intents-package
+          repo: OHF-Voice/intents-package
           branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
@@ -324,7 +324,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.8.2
+        uses: sigstore/cosign-installer@v3.9.1
         with:
           cosign-release: "v2.2.3"
 

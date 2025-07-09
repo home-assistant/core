@@ -26,14 +26,16 @@ from .const import (
     LOGGER,
 )
 
+type LivisiConfigEntry = ConfigEntry[LivisiDataUpdateCoordinator]
+
 
 class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching LIVISI data API."""
 
-    config_entry: ConfigEntry
+    config_entry: LivisiConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, aiolivisi: AioLivisi
+        self, hass: HomeAssistant, config_entry: LivisiConfigEntry, aiolivisi: AioLivisi
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(

@@ -22,15 +22,6 @@ from .entity import IntegerTypeData, TuyaEntity
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
-        NumberEntityDescription(
-            key=DPCode.ALARM_TIME,
-            translation_key="time",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
@@ -64,6 +55,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            translation_key="alarm_duration",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
@@ -74,6 +76,24 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.VOICE_TIMES,
             translation_key="voice_times",
+        ),
+    ),
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            translation_key="time",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        NumberEntityDescription(
+            key=DPCode.TEMP,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
     # Human Presence Sensor
@@ -100,6 +120,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.TARGET_DIS_CLOSEST,
             translation_key="target_dis_closest",
             device_class=NumberDeviceClass.DISTANCE,
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET_F,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
     # Coffee maker
@@ -174,6 +208,26 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Fingerbot
+    "szjqr": (
+        NumberEntityDescription(
+            key=DPCode.ARM_DOWN_PERCENT,
+            translation_key="move_down",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ARM_UP_PERCENT,
+            translation_key="move_up",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLICK_SUSTAIN_TIME,
+            translation_key="down_delay",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (
@@ -241,66 +295,12 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Fingerbot
-    "szjqr": (
-        NumberEntityDescription(
-            key=DPCode.ARM_DOWN_PERCENT,
-            translation_key="move_down",
-            native_unit_of_measurement=PERCENTAGE,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        NumberEntityDescription(
-            key=DPCode.ARM_UP_PERCENT,
-            translation_key="move_up",
-            native_unit_of_measurement=PERCENTAGE,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        NumberEntityDescription(
-            key=DPCode.CLICK_SUSTAIN_TIME,
-            translation_key="down_delay",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
-        NumberEntityDescription(
-            key=DPCode.TEMP,
-            translation_key="temperature",
-            device_class=NumberDeviceClass.TEMPERATURE,
-        ),
-    ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
-        NumberEntityDescription(
-            key=DPCode.TEMP_SET,
-            translation_key="temperature",
-            device_class=NumberDeviceClass.TEMPERATURE,
-        ),
-        NumberEntityDescription(
-            key=DPCode.TEMP_SET_F,
-            translation_key="temperature",
-            device_class=NumberDeviceClass.TEMPERATURE,
-        ),
-    ),
     # Pool HeatPump
     "znrb": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
-        ),
-    ),
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
-        NumberEntityDescription(
-            key=DPCode.ALARM_TIME,
-            translation_key="alarm_duration",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
