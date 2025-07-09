@@ -116,8 +116,8 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
             return
         self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
-        working_status = str(self.coordinator.data.get("workingStatus"))
-        self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(working_status)
+        switchbot_state = str(self.coordinator.data.get("workingStatus"))
+        self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
         if self._attr_fan_speed is None:
             self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
 
