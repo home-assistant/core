@@ -375,19 +375,20 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 }
 
 
-def _get_bitmap_mask(
-    device: CustomerDevice, dpcode: str, bitmap_key: str
+def _get_bitmap_bit_mask(
+    device: CustomerDevice, dpcode: str, bitmap_key: str | None
 ) -> int | None:
-    """Get the bitmap mask for a given description."""
+    """Get the bit mask for a given bitmap description."""
     if (
-        (status_range := device.status_range.get(dpcode)) is None
+        bitmap_key is None
+        or (status_range := device.status_range.get(dpcode)) is None
         or status_range.type != DPType.BITMAP
-        or not isinstance(fault_values := json_loads(status_range.values), dict)
-        or not isinstance(fault_labels := fault_values.get("label"), list)
-        or bitmap_key not in fault_labels
+        or not isinstance(bitmap_values := json_loads(status_range.values), dict)
+        or not isinstance(bitmap_labels := bitmap_values.get("label"), list)
+        or bitmap_key not in bitmap_labels
     ):
         return None
-    return fault_labels.index(bitmap_key)
+    return bitmap_labels.index(bitmap_key)
 
 
 async def async_setup_entry(
@@ -408,15 +409,14 @@ async def async_setup_entry(
                 for description in descriptions:
                     dpcode = description.dpcode or description.key
                     if dpcode in device.status:
-                        if (bitmap_key := description.bitmap_key) is None:
-                            entities.append(
-                                TuyaBinarySensorEntity(
-                                    device, hass_data.manager, description
-                                )
-                            )
-                        elif (
-                            mask := _get_bitmap_mask(device, dpcode, bitmap_key)
-                        ) is not None:
+                        mask = _get_bitmap_bit_mask(
+                            device, dpcode, description.bitmap_key
+                        )
+
+                        if (
+                            description.bitmap_key is None  # Regular binary sensor
+                            or mask is not None  # Bitmap sensor with valid mask
+                        ):
                             entities.append(
                                 TuyaBinarySensorEntity(
                                     device,
