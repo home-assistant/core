@@ -204,3 +204,32 @@ async def test_trophy_title_coordinator_update_data_failed(
 
     runtime_data: PlaystationNetworkRuntimeData = config_entry.runtime_data
     assert runtime_data.trophy_titles.last_update_success is False
+
+
+async def test_trophy_title_coordinator_doesnt_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trophy title coordinator does not update if no PS Vita is registered."""
+
+    mock_psnawpapi.me.return_value.get_account_devices.return_value = [
+        {"deviceType": "PS5"},
+        {"deviceType": "PS3"},
+    ]
+    mock_psnawpapi.me.return_value.get_profile_legacy.return_value = {
+        "profile": {"presences": []}
+    }
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
+
+    freezer.tick(timedelta(minutes=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
