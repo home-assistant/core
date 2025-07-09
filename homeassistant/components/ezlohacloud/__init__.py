@@ -35,6 +35,10 @@ ARCH_MAP = {
 }
 
 
+class FrpcInstallError(Exception):
+    """Raised when FRPC installation fails."""
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up frpc client from a config entry."""
     config = entry.data
@@ -42,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Skip setup if auth_token is not yet available
     token = config.get("auth_token")
     if not token:
-        _LOGGER.warning("auth_token missing; skipping FRPC setup until login")
+        _LOGGER.warning("Auth_token missing; skipping FRPC setup until login")
         return True  # Still allow integration to register and show up
 
     try:
@@ -91,17 +95,17 @@ def _sync_install_frpc(version: str, machine: str, binary_path: Path) -> str:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
         except requests.RequestException as err:
-            raise Exception(f"Download failed: {err}") from err  # noqa: TRY002
+            raise FrpcInstallError(f"Download failed: {err}") from err  # noqa: TRY002
 
         # Extract binary
         try:
             with tarfile.open(tar_path, "r:gz") as tar:
                 members = [m for m in tar.getmembers() if m.name.endswith("/frpc")]
                 if not members:
-                    raise Exception("No frpc binary found in release package")
+                    raise FrpcInstallError("No frpc binary found in release package")
                 tar.extract(members[0], path=temp_dir)
         except tarfile.TarError as err:
-            raise Exception(f"Extraction failed: {err}") from err
+            raise FrpcInstallError(f"Extraction failed: {err}") from err
 
         # Install binary
         extracted_bin = Path(temp_dir) / members[0].name
@@ -128,19 +132,18 @@ async def check_binary_current(binary_path: Path, version: str) -> bool:
 
         # Wait for process to complete with timeout
         try:
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=5)
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=5)
         except TimeoutError:
             proc.kill()
             await proc.communicate()
             return False
 
-        # Check version in output
-        output = stdout.decode().strip()
-        return version in output
-
-    except Exception as err:
+    except (OSError, asyncio.SubprocessError) as err:
         _LOGGER.debug("Version check error: %s", err)
         return False
+    else:
+        output = stdout.decode().strip()
+        return version in output
 
 
 async def get_system_architecture(hass: HomeAssistant) -> str:
@@ -166,18 +169,12 @@ async def setup_frpc_configuration(
         return False
 
     config_path = Path(__file__).parent / "config" / "frpc.toml"
+    _LOGGER.debug("FRPC configuration generated at %s", config_path)
 
     try:
-        _LOGGER.debug("FRPC configuration generated at %s", config_path)
-
-        try:
-            await fetch_and_update_frp_config(hass=hass, uuid=uuid, token=token)
-
-            await start_frpc(hass=hass, config_entry=entry)
-        except Exception as err:
-            _LOGGER.error("Failed to fetch the server details: %s", err)
-            raise err
-    except Exception as err:
+        await fetch_and_update_frp_config(hass=hass, uuid=uuid, token=token)
+        await start_frpc(hass=hass, config_entry=entry)
+    except (OSError, ValueError, RuntimeError) as err:
         _LOGGER.error("Configuration failed: %s", err)
         return False
 
@@ -213,12 +210,14 @@ async def generate_config_file(
 
     try:
         # Fetch configuration from API
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
                 f"{EZLO_API_URI}/api/user/{token}/server-config", timeout=10
-            ) as response:
-                response.raise_for_status()
-                api_config = await response.json()
+            ) as response,
+        ):
+            response.raise_for_status()
+            api_config = await response.json()
 
         # Extract server configuration from nested structure
         server_config = api_config["serverConfig"]
@@ -258,11 +257,15 @@ async def generate_config_file(
         _LOGGER.error("Configuration generation failed: %s", err)
         raise
 
-    with open(default_config, "rb") as f:
-        config_data = tomli.load(f)
+    def _sync_read():
+        with open(default_config, "rb") as f:
+            return tomli.load(f)
+
+    config_data = await hass.async_add_executor_job(_sync_read)
 
     logging.info("config file path: %s", default_config)
     logging.warning("config data: %s", config_data)
+
     # Update configuration values
     config_data["serverAddr"] = config["serverAddr"]
     config_data["serverPort"] = config["serverPort"]
@@ -282,7 +285,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except subprocess.TimeoutExpired:
         _LOGGER.warning("FRPC client did not terminate gracefully, forcing exit")
         process.kill()
-    except Exception as err:
+    except (OSError, RuntimeError) as err:
         _LOGGER.error("Error stopping FRPC client: %s", err)
+    except Exception:
+        _LOGGER.exception("Unexpected error during FRPC shutdown")
+        raise  # re-raise to preserve traceback
 
     return True

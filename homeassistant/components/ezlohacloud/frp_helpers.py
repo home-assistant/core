@@ -22,12 +22,12 @@ def get_frp_config_path() -> str:
 
     # Ensure the config directory exists
     if not config_dir.exists():
-        _LOGGER.info("config folder missing! creating it now.")
+        _LOGGER.info("Config folder missing! creating it now")
         config_dir.mkdir(parents=True, exist_ok=True)
 
     # Ensure the config file exists
     if not config_path.exists():
-        _LOGGER.info("frpc.toml file missing! creating it now.")
+        _LOGGER.info("Frpc.toml file missing! creating it now")
         config_path.touch()
 
     return config_path
@@ -38,9 +38,7 @@ def get_frp_binary_path() -> str:
     integration_dir = Path(__file__).parent
     bin_dir = integration_dir / "bin"
     bin_dir.mkdir(exist_ok=True)
-    binary_path = bin_dir / "frpc"
-
-    return binary_path
+    return bin_dir / "frpc"
 
 
 async def fetch_and_update_frp_config(
@@ -89,11 +87,10 @@ async def fetch_and_update_frp_config(
             doc.add("proxies", proxies)
 
             # Write to file
-            with open(config_path, "w") as f:
+            with open(config_path, "w", encoding="utf-8") as f:
                 f.write(dumps(doc))
 
         await hass.async_add_executor_job(_create_toml)
-        return True
 
     except KeyError as err:
         _LOGGER.error("Missing expected key in API response: %s", err)
@@ -104,6 +101,8 @@ async def fetch_and_update_frp_config(
     except Exception as err:
         _LOGGER.error("Configuration generation failed: %s", err)
         raise
+    else:
+        return True
 
 
 async def start_frpc(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -138,7 +137,7 @@ async def stop_frpc(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Stop FRPC client process."""
 
     def _sync_stop(process: subprocess.Popen) -> None:
-        """Synchronously terminate the process."""
+        """Terminate the process synchronously."""
         try:
             if process.poll() is None:  # Process is still running
                 process.terminate()

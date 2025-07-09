@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class EzloOptionsFlowHandler(config_entries.OptionsFlow):
     """Handles the options flow for Ezlo HA Cloud integration."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry  # Add this line
 
@@ -99,6 +99,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_force_logout(self, user_input=None):
+        """Force logout the user and return to the main options step."""
         new_data = self._config_entry.data.copy()
         new_data.update(
             {
@@ -113,7 +114,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        """Handles login authentication form with HA instance UUID or empty ID if missing."""
+        """Handle login authentication form with HA instance UUID or empty ID if missing."""
         errors = {}
         if user_input is not None:
             username = user_input["username"]
@@ -124,7 +125,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 system_uuid = ""
                 _LOGGER.warning("Home Assistant system_uuid missing!")
             auth_response = await authenticate(username, password, system_uuid)
-            _LOGGER.info(f"response: s {auth_response}")
+            _LOGGER.info("Response: %s", auth_response)
 
             if auth_response["success"]:
                 token = auth_response["data"]["token"]
@@ -316,7 +317,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             status_response = await get_subscription_status(user_uuid)
 
             if status_response.get("success") and status_response.get("is_active"):
-                _LOGGER.info("Subscription activated. Completing login.")
+                _LOGGER.info("Subscription activated. Completing login")
                 await self._handle_successful_login(
                     token,
                     {
@@ -328,9 +329,10 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return
 
-        _LOGGER.warning("Polling timeout: User did not complete Stripe payment.")
+        _LOGGER.warning("Polling timeout: User did not complete Stripe payment")
 
     async def async_step_view_status(self, user_input=None):
+        """Display the subscription status form."""
         user_data = self._config_entry.data.get("user", {})
         user_uuid = user_data.get("uuid")
 
@@ -358,8 +360,8 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_stripe_finish(self, user_input=None):
-        """Called after Stripe redirects back to HA with flow_id."""
-        _LOGGER.info("Stripe checkout finished, resuming flow.")
+        """Handle return from Stripe redirect with flow_id."""
+        _LOGGER.info("Stripe checkout finished, resuming flow")
 
         # You can also update config here if needed:
         new_data = self._config_entry.data.copy()

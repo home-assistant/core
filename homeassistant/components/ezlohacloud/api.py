@@ -1,6 +1,7 @@
 """Ezlo HA Cloud integration API for Home Assistant."""
 
 import base64
+import binascii
 import json
 import logging
 
@@ -15,6 +16,10 @@ STRIPE_API_URL = f"{EZLO_API_URI}/api/stripe"
 API_URL = f"{EZLO_API_URI}/api"
 
 
+def _raise_missing_uuid():
+    raise ValueError("UUID missing in token payload")
+
+
 async def authenticate(username, password, uuid):
     """Authenticate against Ezlo API (async)."""
     payload = {
@@ -23,13 +28,13 @@ async def authenticate(username, password, uuid):
         "oem_id": "1",
         "ha_instance_id": uuid,
     }
-    # TODO: Move httpx.AsyncClient creation off event loop to avoid blocking warning
+
     client = httpx.AsyncClient(timeout=10)
     try:
         response = await client.post(f"{AUTH_API_URL}/login", json=payload)
         response.raise_for_status()
         data = response.json()
-        _LOGGER.info("login response: %s", data)
+        _LOGGER.info("Login response: %s", data)
 
         token = data.get("token")
         if token:
@@ -41,7 +46,7 @@ async def authenticate(username, password, uuid):
             username = payload.get("username", username)
 
             if not user_uuid:
-                raise ValueError("UUID missing in token payload")
+                _raise_missing_uuid()
 
             return {
                 "success": True,
@@ -57,11 +62,10 @@ async def authenticate(username, password, uuid):
                 },
                 "error": None,
             }
-
         _LOGGER.warning("Login failed: %s", data)
         return {"success": False, "data": None, "error": "Invalid credentials"}
 
-    except Exception as e:
+    except (httpx.RequestError, httpx.HTTPStatusError, ValueError, binascii.Error) as e:
         _LOGGER.error("Auth request failed: %s", e)
         return {"success": False, "data": None, "error": "API connection failed"}
     finally:
@@ -69,8 +73,8 @@ async def authenticate(username, password, uuid):
 
 
 async def signup(username, email, password, ha_instance_id):
-    """Sends signup request to Go Auth API and returns the response."""
-    _LOGGER.info("Sending signup request to Auth API...")
+    """Send signup request to Go Auth API and return the response."""
+    _LOGGER.info("Sending signup request to Auth API")
     payload = {
         "username": username,
         "password": password,
@@ -105,7 +109,7 @@ async def signup(username, email, password, ha_instance_id):
 
 async def create_stripe_session(user_id, price_id, back_ref_url):
     """Create a Stripe Checkout session."""
-    _LOGGER.info(f"Creating Stripe checkout session for user: {user_id}")
+    _LOGGER.info("Creating Stripe checkout session for user: %s", user_id)
     payload = {
         "user_id": user_id,
         "plan_price_id": price_id,
@@ -121,7 +125,7 @@ async def create_stripe_session(user_id, price_id, back_ref_url):
         if data.get("status") is True:
             checkout_url = data.get("data", {}).get("checkout_url")
             if checkout_url:
-                _LOGGER.info("Stripe checkout session created.")
+                _LOGGER.info("Stripe checkout session created")
                 return {
                     "success": True,
                     "data": {"checkout_url": checkout_url},
@@ -171,6 +175,7 @@ async def get_subscription_status(user_uuid):
 
 
 def decode_jwt_payload(token: str) -> dict:
+    """Decode a JWT token and return its payload as a dictionary."""
     parts = token.split(".")
     if len(parts) != 3:
         raise ValueError("Invalid JWT format")
