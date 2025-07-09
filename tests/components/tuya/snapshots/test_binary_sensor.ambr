@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-entry]
+# name: test_platform_setup_and_discovery[mcs_door_sensor][binary_sensor.door_garage_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,8 +11,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_defrost',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.door_garage_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,33 +22,33 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Defrost',
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'defrost',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_defrost',
+    'translation_key': None,
+    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-state]
+# name: test_platform_setup_and_discovery[mcs_door_sensor][binary_sensor.door_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Defrost',
+      'device_class': 'door',
+      'friendly_name': 'Door Garage  Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_defrost',
+    'entity_id': 'binary_sensor.door_garage_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e1-entry]
+# name: test_platform_setup_and_discovery[rqbj_gas_sensor][binary_sensor.gas_sensor_gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,8 +60,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_e1',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gas_sensor_gas',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,320 +71,26 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
-    'original_name': 'E1',
+    'original_name': 'Gas',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'E1',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_E1',
+    'translation_key': None,
+    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e1-state]
+# name: test_platform_setup_and_discovery[rqbj_gas_sensor][binary_sensor.gas_sensor_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier E1',
+      'device_class': 'gas',
+      'friendly_name': 'Gas sensor Gas',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_e1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_e2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'E2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'E2',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_E2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_e2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier E2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_e2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_l2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'L2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'L2',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_L2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier L2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_l2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_l3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'L3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'L3',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_L3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier L3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_l3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_l4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'L4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'L4',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_L4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_l4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier L4',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_l4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_tank_full',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Tank full',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'tankfull',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_tankfull',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Tank full',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_tank_full',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_wet',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Wet',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wet',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqfault_wet',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Wet',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_wet',
+    'entity_id': 'binary_sensor.gas_sensor_gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
