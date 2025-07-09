@@ -232,6 +232,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                         add_config_subentry_id=new_unique_id,
                         new_identifiers={(DOMAIN, new_unique_id)},
                     )
+                    if (
+                        sub_entries := device.config_entries_subentries.get(
+                            entry.entry_id
+                        )
+                    ) and None in sub_entries:
+                        # Remove None from the subentries if exist
+                        device_reg.async_update_device(
+                            device.id,
+                            remove_config_entry_id=entry.entry_id,
+                            remove_config_subentry_id=None,
+                        )
 
         # Remove the sensors as they are now subentries
         new_config_entry_data = dict(entry.options)
