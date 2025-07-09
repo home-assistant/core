@@ -85,18 +85,6 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED.keys()
     )
 
-    def __init__(
-        self,
-        api: SwitchBotAPI,
-        device: Device | Remote,
-        coordinator: SwitchBotCoordinator,
-    ) -> None:
-        """Init SwitchBotCloudVacuum."""
-        super().__init__(api, device, coordinator)
-        self._attr_model_name: str | None = (
-            self.device_info.get("model") if self.device_info else None
-        )
-
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
