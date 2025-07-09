@@ -27,6 +27,7 @@ from .const import (
     ATTR_AQI,
     ATTR_C6H6,
     ATTR_CO,
+    ATTR_NO,
     ATTR_NO2,
     ATTR_O3,
     ATTR_PM10,
@@ -89,6 +90,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="no2_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NO,
+        value=lambda sensors: sensors.no.value if sensors.no else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,

@@ -24,6 +24,14 @@
     "Id wskaźnika": 8
   },
   {
+    "Identyfikator stanowiska": 664,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenek azotu",
+    "Wskaźnik - wzór": "NO",
+    "Wskaźnik - kod": "NO",
+    "Id wskaźnika": 16
+  },
+  {
     "Identyfikator stanowiska": 665,
     "Identyfikator stacji": 117,
     "Wskaźnik": "dwutlenek azotu",
