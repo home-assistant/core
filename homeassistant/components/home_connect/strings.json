@@ -44,10 +44,10 @@
     "step": {
       "entry_options": {
         "data": {
-          "disable_updates_on_connect_paired_event": "Disable appliance updates on connect or paired events event"
+          "disable_updates_on_connect_paired_event": "Disable appliance updates on connect or paired events"
         },
         "data_description": {
-          "disable_updates_on_connect_paired_event": "Disable the updates that are done when the API sends a connect or paired event, this can help to avoid rate limiting issues with the Home Connect API. If you disable this option for an appliance, updates through events will still be received, and if you need an update of the appliance data, you can use the homeassistant.update_entity action to request it. This options is automatically activated if the appliance sends too many connect or paired events in a short time to avoid exceeding the API rate limit."
+          "disable_updates_on_connect_paired_event": "Disable the updates that are done when the API sends a connect or paired event, this can help to avoid rate limiting issues with the Home Connect API. If you disable this option for an appliance, updates through events will still be received, and if you need an update of the appliance data, you can use the homeassistant.update_entity action to request it. This option is automatically activated if the appliance sends too many connect or paired events in a short time to avoid exceeding the API rate limit."
         }
       }
     }
