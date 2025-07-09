@@ -299,6 +299,15 @@ async def test_download_diagnostics(
             "requirements": [],
         },
         "data": {"device": "info"},
+        "issues": [
+            {
+                "created": "2025-07-09T14:00:00+00:00",
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "is_persistent": False,
+                "issue_id": "test_issue",
+            },
+        ],
         "setup_times": {},
     }
 

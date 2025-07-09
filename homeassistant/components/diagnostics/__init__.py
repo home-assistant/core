@@ -279,17 +279,18 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
 
+        issue_registry = ir.async_get(hass)
+        issues = issue_registry.issues
+        data_issues = []
+        for issue_id, issue_reg in issues.items():
+            if issue_id[0] == config_entry.domain:
+                data_issues.append(issue_reg.to_json())
+
         if not device_diagnostics:
             # Config entry diagnostics
             if info.config_entry_diagnostics is None:
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info.config_entry_diagnostics(hass, config_entry)
-            issue_registry = ir.async_get(hass)
-            issues = issue_registry.issues
-            data_issues = []
-            for issue_id, issue_reg in issues.items():
-                if issue_id[0] == config_entry.domain:
-                    data_issues.append(issue_reg.to_json())
             filename = f"{DiagnosticsType.CONFIG_ENTRY}-{filename}"
             return await _async_get_json_file_response(
                 hass, data, data_issues, filename, config_entry.domain, d_id
@@ -310,5 +311,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         data = await info.device_diagnostics(hass, config_entry, device)
         return await _async_get_json_file_response(
-            hass, data, None, filename, config_entry.domain, d_id, sub_id
+            hass, data, data_issues, filename, config_entry.domain, d_id, sub_id
         )
