@@ -169,7 +169,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             data=DEFAULT_ENTRY_DATA | self.new_entry_data,
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_connection_type()
 
