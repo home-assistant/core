@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to EnergyID (step 1 of 3)",
-        "description": "Enter your EnergyID webhook provisioning key and secret. Find these in your EnergyID portal under Device Provisioning or Webhook settings. More info: [EnergyID Docs]({docs_url})",
+        "description": "Enter your EnergyID webhook provisioning key and secret. Find these in your EnergyID portal under Device Provisioning or Webhook settings. More info: https://help.energyid.eu/nl/integraties/home-assistant/",
         "data": {
           "provisioning_key": "Provisioning key",
           "provisioning_secret": "Provisioning secret"
