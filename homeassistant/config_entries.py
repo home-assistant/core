@@ -3765,3 +3765,49 @@ def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None
     ):
         if "flow_id" in progress_flow:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+
+def async_move_devices_and_entities_to_subentry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    sub_config: MappingProxyType,
+    sub_type: str,
+    sub_title: str,
+    sub_unique_id: str | None,
+    entities: list[er.RegistryEntry],
+) -> None:
+    """Move devices and entities to configuration subentries.
+
+    This is a migration helper for creating configuration subentries
+    for devices and entities that were previously associated with a config entry.
+    """
+
+    new_sub_entry = ConfigSubentry(
+        data=sub_config,
+        subentry_type=sub_type,
+        title=sub_title,
+        unique_id=sub_unique_id,
+    )
+    hass.config_entries.async_add_subentry(config_entry, new_sub_entry)
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+    for entity in entities:
+        entity_reg.async_update_entity(
+            entity.entity_id,
+            config_entry_id=config_entry.entry_id,
+            config_subentry_id=new_sub_entry.subentry_id,
+        )
+        if (device_id := entity.device_id) and (
+            device := device_reg.async_get(device_id)
+        ):
+            device_reg.async_update_device(
+                device.id,
+                add_config_entry_id=config_entry.entry_id,
+                add_config_subentry_id=new_sub_entry.subentry_id,
+            )
+            device_reg.async_update_device(
+                device.id,
+                remove_config_entry_id=config_entry.entry_id,
+                remove_config_subentry_id=None,
+            )
