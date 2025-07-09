@@ -124,6 +124,16 @@ async def test_user_flow_duplicate_unique_id_aborts(
         source="user",
         unique_id="TestDevice_127.0.0.1_54412",
         entry_id="12345",
+        options={},
+        system_options={},
+        discovery_info=None,
+        disabled_by=None,
+        reason=None,
+        context=None,
+        entry_type=None,
+        sub_entries=[],
+        minor_version=1,
+        state=None,
     )
     hass.config_entries._entries.append(existing_entry)
 
