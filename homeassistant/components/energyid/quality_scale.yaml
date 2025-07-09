@@ -78,7 +78,7 @@ rules:
     comment: |
       Creates a single device entry for the EnergyID connection itself via the diagnostic sensor.
   diagnostics:
-    status: done
+    status: todo
   discovery:
     status: exempt
     comment: |
