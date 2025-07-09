@@ -1,6 +1,7 @@
 """TuneBlade Remote media player entity."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -15,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import TuneBladeDataUpdateCoordinator
+from .types import TuneBladeRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +27,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TuneBlade Remote from a config entry."""
-    coordinator: TuneBladeDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    runtime_data: TuneBladeRuntimeData = config_entry.runtime_data
+    coordinator = runtime_data["coordinator"]
+
     added_ids = set()
     entities: list[MediaPlayerEntity] = []
 
@@ -154,7 +156,7 @@ class TuneBladeMediaPlayer(
         self,
         coordinator: TuneBladeDataUpdateCoordinator,
         device_id: str,
-        device_data: dict,
+        device_data: dict[str, Any],
     ) -> None:
         """Initialize the media player entity."""
         super().__init__(coordinator)

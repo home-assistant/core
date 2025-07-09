@@ -1,6 +1,5 @@
 """Integration to integrate TuneBlade Remote devices with Home Assistant."""
 
-from datetime import timedelta
 import logging
 
 from pytuneblade import TuneBladeApiClient
@@ -8,14 +7,13 @@ from pytuneblade import TuneBladeApiClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 from .coordinator import TuneBladeDataUpdateCoordinator
+from .types import TuneBladeRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -34,17 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = TuneBladeDataUpdateCoordinator(hass, client)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        _LOGGER.error("Error connecting to TuneBlade hub: %s", err)
-        raise ConfigEntryNotReady from err
+    await coordinator.async_init()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
-
-    entry.runtime_data = {}
+    entry.runtime_data = TuneBladeRuntimeData(coordinator=coordinator)
 
     return True
 
