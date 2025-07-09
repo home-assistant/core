@@ -262,7 +262,7 @@ async def test_constant_polling(
 
     test_values[TEST_MOWER_ID].battery.battery_percent = 77
 
-    freezer.tick(SCAN_INTERVAL - timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL - timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -278,7 +278,7 @@ async def test_constant_polling(
 
     test_values[TEST_MOWER_ID].work_areas[123456].progress = 50
     mock_automower_client.get_status.return_value = test_values
-    freezer.tick(timedelta(seconds=4))
+    freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_automower_client.get_status.assert_awaited()
