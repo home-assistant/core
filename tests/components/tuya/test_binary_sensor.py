@@ -19,14 +19,6 @@ from . import DEVICE_MOCKS, initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def device_listener(hass: HomeAssistant, mock_manager: ManagerCompat) -> DeviceListener:
-    """Create a DeviceListener for testing."""
-    listener = DeviceListener(hass, mock_manager)
-    mock_manager.add_device_listener(listener)
-    return listener
-
-
 @pytest.mark.parametrize(
     "mock_device_code",
     [k for k, v in DEVICE_MOCKS.items() if Platform.BINARY_SENSOR in v],
