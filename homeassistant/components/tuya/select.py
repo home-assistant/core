@@ -61,7 +61,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.WORK_MODE,
             entity_category=EntityCategory.CONFIG,
-            translation_key="work_mode",
+            translation_key="odor_elimination_mode",
         ),
     ),
     # Multi-functional Sensor

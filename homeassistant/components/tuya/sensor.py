@@ -225,7 +225,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "cwjwq": (
         TuyaSensorEntityDescription(
             key=DPCode.WORK_STATE_E,
-            translation_key="work_state_e",
+            translation_key="odor_elimination_status",
         ),
         *BATTERY_SENSORS,
     ),

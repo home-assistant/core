@@ -486,8 +486,8 @@
           "level_10": "High"
         }
       },
-      "work_mode": {
-        "name": "Work mode",
+      "odor_elimination_mode": {
+        "name": "Odor elimination mode",
         "state": {
           "smart": "Smart",
           "interim": "Interim"
@@ -705,8 +705,8 @@
       "water_time": {
         "name": "Water usage duration"
       },
-      "work_state_e": {
-        "name": "Work state",
+      "odor_elimination_status": {
+        "name": "Status",
         "state": {
           "work": "Working",
           "standby": "[%key:common::state::standby%]",
