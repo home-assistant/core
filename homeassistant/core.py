@@ -2556,7 +2556,7 @@ class ServiceRegistry:
 
     def template_exclude_keys(self, domain: str, service: str) -> template.ExcludeKeys:
         """Return data keys excluded from template rendering."""
-        return self._services[domain.lower()][service.lower()].template_exclude_keys
+        return self._services[domain][service].template_exclude_keys
 
     def register(
         self,
