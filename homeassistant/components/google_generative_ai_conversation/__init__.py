@@ -203,7 +203,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, ConfigEntry] = {}
+    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -217,9 +217,14 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         )
         if entry.data[CONF_API_KEY] not in api_keys_entries:
             use_existing = True
-            api_keys_entries[entry.data[CONF_API_KEY]] = entry
+            all_disabled = all(
+                e.disabled_by is not None
+                for e in entries
+                if e.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
+            )
+            api_keys_entries[entry.data[CONF_API_KEY]] = (entry, all_disabled)
 
-        parent_entry = api_keys_entries[entry.data[CONF_API_KEY]]
+        parent_entry, all_disabled = api_keys_entries[entry.data[CONF_API_KEY]]
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
         if use_existing:
@@ -244,7 +249,10 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         if conversation_entity_id is not None:
             conversation_entity_entry = entity_registry.entities[conversation_entity_id]
             entity_disabled_by = conversation_entity_entry.disabled_by
-            if entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY:
+            if (
+                entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+                and not all_disabled
+            ):
                 # Device and entity registries don't update the disabled_by flag
                 # when moving a device or entity from one config entry to another,
                 # so we need to do it manually.
@@ -266,7 +274,10 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # moving a device or entity from one config entry to another, so we
             # need to do it manually.
             device_disabled_by = device.disabled_by
-            if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
+            if (
+                device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+                and not all_disabled
+            ):
                 device_disabled_by = dr.DeviceEntryDisabler.USER
             device_registry.async_update_device(
                 device.id,
@@ -290,12 +301,13 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
+            _add_ai_task_subentry(hass, entry)
             hass.config_entries.async_update_entry(
                 entry,
                 title=DEFAULT_TITLE,
                 options={},
                 version=2,
-                minor_version=2,
+                minor_version=3,
             )
 
 
@@ -339,15 +351,7 @@ async def async_migrate_entry(
 
     if entry.version == 2 and entry.minor_version == 2:
         # Add AI Task subentry with default options
-        hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
-                subentry_type="ai_task_data",
-                title=DEFAULT_AI_TASK_NAME,
-                unique_id=None,
-            ),
-        )
+        _add_ai_task_subentry(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.debug(
@@ -355,3 +359,18 @@ async def async_migrate_entry(
     )
 
     return True
+
+
+def _add_ai_task_subentry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> None:
+    """Add AI Task subentry to the config entry."""
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+            subentry_type="ai_task_data",
+            title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )

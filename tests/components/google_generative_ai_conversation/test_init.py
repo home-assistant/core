@@ -1,5 +1,6 @@
 """Tests for the Google Generative AI Conversation integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from google.genai.types import File, FileState
@@ -563,12 +564,83 @@ async def test_migration_from_v1(
     }
 
 
-async def test_migration_from_v1_first_disabled(
+@pytest.mark.parametrize(
+    (
+        "config_entry_disabled_by",
+        "merged_config_entry_disabled_by",
+        "conversation_subentry_data",
+        "main_config_entry",
+    ),
+    [
+        (
+            [ConfigEntryDisabler.USER, None],
+            None,
+            [
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
+                    "device": 1,
+                },
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device": 0,
+                },
+            ],
+            1,
+        ),
+        (
+            [None, ConfigEntryDisabler.USER],
+            None,
+            [
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device": 0,
+                },
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
+                    "device": 1,
+                },
+            ],
+            0,
+        ),
+        (
+            [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
+            ConfigEntryDisabler.USER,
+            [
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
+                    "device": 0,
+                },
+                {
+                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
+                    "device": 1,
+                },
+            ],
+            0,
+        ),
+    ],
+)
+async def test_migration_from_v1_disabled(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    config_entry_disabled_by: list[ConfigEntryDisabler | None],
+    merged_config_entry_disabled_by: ConfigEntryDisabler | None,
+    conversation_subentry_data: list[dict[str, Any]],
+    main_config_entry: int,
 ) -> None:
-    """Test migration where the first config entry is disabled."""
+    """Test migration where the config entries are disabled."""
     # Create a v1 config entry with conversation options and an entity
     options = {
         "recommended": True,
@@ -582,7 +654,7 @@ async def test_migration_from_v1_first_disabled(
         options=options,
         version=1,
         title="Google Generative AI",
-        disabled_by=ConfigEntryDisabler.USER,
+        disabled_by=config_entry_disabled_by[0],
     )
     mock_config_entry.add_to_hass(hass)
     mock_config_entry_2 = MockConfigEntry(
@@ -591,8 +663,10 @@ async def test_migration_from_v1_first_disabled(
         options=options,
         version=1,
         title="Google Generative AI 2",
+        disabled_by=config_entry_disabled_by[1],
     )
     mock_config_entry_2.add_to_hass(hass)
+    mock_config_entries = [mock_config_entry, mock_config_entry_2]
 
     device_1 = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -630,6 +704,8 @@ async def test_migration_from_v1_first_disabled(
         suggested_object_id="google_generative_ai_conversation_2",
     )
 
+    devices = [device_1, device_2]
+
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
@@ -641,7 +717,7 @@ async def test_migration_from_v1_first_disabled(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
-    assert entry.disabled_by is None
+    assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
     assert entry.minor_version == 3
     assert not entry.options
@@ -674,55 +750,35 @@ async def test_migration_from_v1_first_disabled(
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
 
-    subentry = conversation_subentries[0]
-
-    entity = entity_registry.async_get(
-        "conversation.google_generative_ai_conversation_2"
-    )
-    assert entity.unique_id == subentry.subentry_id
-    assert entity.config_subentry_id == subentry.subentry_id
-    assert entity.config_entry_id == entry.entry_id
-    assert entity.disabled_by is None
-
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
-    )
-    assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
-        )
-    )
-    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
-    assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry_2.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry_2.entry_id: {subentry.subentry_id}
-    }
-    assert device.disabled_by is None
-
-    subentry = conversation_subentries[1]
-
-    entity = entity_registry.async_get("conversation.google_generative_ai_conversation")
-    assert entity.unique_id == subentry.subentry_id
-    assert entity.config_subentry_id == subentry.subentry_id
-    assert entity.config_entry_id == entry.entry_id
-    assert entity.disabled_by is RegistryEntryDisabler.DEVICE
-
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
-        )
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
-    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
-    assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry_2.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry_2.entry_id: {subentry.subentry_id}
-    }
-    assert device.disabled_by is DeviceEntryDisabler.USER
+
+    for idx, subentry in enumerate(conversation_subentries):
+        subentry_data = conversation_subentry_data[idx]
+        entity = entity_registry.async_get(subentry_data["conversation_entity_id"])
+        assert entity.unique_id == subentry.subentry_id
+        assert entity.config_subentry_id == subentry.subentry_id
+        assert entity.config_entry_id == entry.entry_id
+        assert entity.disabled_by is subentry_data["entity_disabled_by"]
+
+        assert (
+            device := device_registry.async_get_device(
+                identifiers={(DOMAIN, subentry.subentry_id)}
+            )
+        )
+        assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+        assert device.id == devices[subentry_data["device"]].id
+        assert device.config_entries == {
+            mock_config_entries[main_config_entry].entry_id
+        }
+        assert device.config_entries_subentries == {
+            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
+        }
+        assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
 async def test_migration_from_v1_with_multiple_keys(
