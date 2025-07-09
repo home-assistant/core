@@ -1,11 +1,7 @@
-"""HomeKit Heater-Cooler accessory (single tile: temp / speed / swing)."""
+"""Class to hold all heater cooler accessories."""
 
-from __future__ import annotations
-
-import asyncio
-import contextlib
 import logging
-from typing import Any, Final
+from typing import Any
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
@@ -40,7 +36,10 @@ from homeassistant.const import (
 from homeassistant.core import State, callback
 from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 from homeassistant.util.enum import try_parse_enum
-from homeassistant.util.percentage import ordered_list_item_to_percentage
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -67,7 +66,7 @@ HC_INACTIVE, HC_IDLE, HC_HEATING, HC_COOLING = range(4)
 # HomeKit TargetHeaterCoolerState valid values: Auto=0, Heat=1, Cool=2
 HC_TARGET_AUTO, HC_TARGET_HEAT, HC_TARGET_COOL = range(3)
 
-HC_HASS_TO_HOMEKIT_TARGET: Final = {
+HC_HASS_TO_HOMEKIT_TARGET = {
     HVACMode.OFF: HC_TARGET_AUTO,  # Default to Auto when off
     HVACMode.HEAT: HC_TARGET_HEAT,
     HVACMode.COOL: HC_TARGET_COOL,
@@ -76,12 +75,12 @@ HC_HASS_TO_HOMEKIT_TARGET: Final = {
 }
 
 # Base reverse mapping (will be dynamically adjusted per entity)
-HC_HOMEKIT_TO_HASS_TARGET_BASE: Final = {
+HC_HOMEKIT_TO_HASS_TARGET_BASE = {
     HC_TARGET_HEAT: HVACMode.HEAT,
     HC_TARGET_COOL: HVACMode.COOL,
 }
 
-HC_HASS_TO_HOMEKIT_ACTION: Final = {
+HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.OFF: HC_INACTIVE,
     HVACAction.IDLE: HC_IDLE,
     HVACAction.HEATING: HC_HEATING,
@@ -96,6 +95,14 @@ ORDERED_FAN_SPEEDS = ["auto", FAN_LOW, FAN_MIDDLE, FAN_MEDIUM, FAN_HIGH]
 SWING_ON_SET = {"on", "both", "horizontal", "vertical"}
 
 
+def _get_current_temperature(state: State, unit: str) -> float | None:
+    """Return current temperature converted to HomeKit unit."""
+    current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+    if current_temp is None:
+        return None
+    return temperature_to_homekit(current_temp, unit)
+
+
 def _temp(state: State, key: str, unit: str) -> float | None:
     """Return a temperature attribute converted to HomeKit unit."""
     if (val := state.attributes.get(key)) is None:
@@ -105,20 +112,20 @@ def _temp(state: State, key: str, unit: str) -> float | None:
 
 @TYPES.register("HeaterCooler")
 class HeaterCooler(HomeAccessory):
-    """Expose a HA climate entity as a native HeaterCooler service."""
+    """Generate a HeaterCooler accessory for a climate entity."""
 
     def __init__(self, *args: Any) -> None:
-        """Build the Heater-Cooler accessory and register HomeKit callbacks."""
+        """Initialize a HeaterCooler accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = self.hass.config.units.temperature_unit
 
         state = self.hass.states.get(self.entity_id)
         assert state
-        attrs = state.attributes
-        feats = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        attributes = state.attributes
+        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Determine what modes this entity supports
-        hvac_modes = attrs.get(ATTR_HVAC_MODES, [])
+        hvac_modes = attributes.get(ATTR_HVAC_MODES, [])
         current_mode = try_parse_enum(HVACMode, state.state)
 
         # Check if entity supports auto or heat_cool modes
@@ -140,7 +147,7 @@ class HeaterCooler(HomeAccessory):
         else:
             self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
 
-        raw_step = attrs.get("temperature_step", 1)
+        raw_step = attributes.get("temperature_step", 1)
         try:
             self._step: float = float(raw_step)
         except (TypeError, ValueError):
@@ -155,33 +162,29 @@ class HeaterCooler(HomeAccessory):
             CHAR_COOLING_THRESHOLD_TEMPERATURE,
             CHAR_HEATING_THRESHOLD_TEMPERATURE,
         ]
-        if feats & ClimateEntityFeature.FAN_MODE:
+        if features & ClimateEntityFeature.FAN_MODE:
             chars.append(CHAR_ROTATION_SPEED)
-        if feats & ClimateEntityFeature.SWING_MODE:
+        if features & ClimateEntityFeature.SWING_MODE:
             chars.append(CHAR_SWING_MODE)
 
         serv = self.add_preload_service(SERV_HEATER_COOLER, chars)
         self.set_primary_service(serv)
 
         # basic chars
-        self.char_active = serv.configure_char(
-            CHAR_ACTIVE, value=0, setter_callback=self._set_active
-        )
+        self.char_active = serv.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = serv.configure_char(
             CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE
         )
         self.char_target_state = serv.configure_char(
-            CHAR_TARGET_HEATER_COOLER_STATE,
-            value=HC_TARGET_AUTO,
-            setter_callback=self._set_target_state,
+            CHAR_TARGET_HEATER_COOLER_STATE, value=HC_TARGET_AUTO
         )
         self.char_current_temp = serv.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=21.0
         )
 
         # set-point chars
-        min_temp_c = attrs.get(ATTR_MIN_TEMP, 7.0)
-        max_temp_c = attrs.get(ATTR_MAX_TEMP, 35.0)
+        min_temp_c = attributes.get(ATTR_MIN_TEMP, 7.0)
+        max_temp_c = attributes.get(ATTR_MAX_TEMP, 35.0)
         min_temp_hk = temperature_to_homekit(min_temp_c, self._unit)
         max_temp_hk = temperature_to_homekit(max_temp_c, self._unit)
 
@@ -198,20 +201,18 @@ class HeaterCooler(HomeAccessory):
         self.char_cool = serv.configure_char(
             CHAR_COOLING_THRESHOLD_TEMPERATURE,
             value=24.0,
-            setter_callback=self._set_cooling_threshold,
             properties=temp_properties,
         )
         self.char_heat = serv.configure_char(
             CHAR_HEATING_THRESHOLD_TEMPERATURE,
             value=24.0,
-            setter_callback=self._set_heating_threshold,
             properties=temp_properties,
         )
 
         # fan / swing
         self.ordered_fan_speeds: list[str] = []
-        if feats & ClimateEntityFeature.FAN_MODE and (
-            modes := attrs.get(ATTR_FAN_MODES)
+        if features & ClimateEntityFeature.FAN_MODE and (
+            modes := attributes.get(ATTR_FAN_MODES)
         ):
             fm = {m.lower(): m for m in modes}
             self.ordered_fan_speeds = [s for s in ORDERED_FAN_SPEEDS if s in fm]
@@ -219,31 +220,16 @@ class HeaterCooler(HomeAccessory):
                 CHAR_ROTATION_SPEED,
                 value=100,
                 properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
-                setter_callback=self._set_fan_speed,
             )
             self.fan_modes = fm
 
-        if feats & ClimateEntityFeature.SWING_MODE and (
-            sw := attrs.get(ATTR_SWING_MODES)
+        if features & ClimateEntityFeature.SWING_MODE and (
+            sw := attributes.get(ATTR_SWING_MODES)
         ):
             self.swing_on_mode = next(
                 (m for m in sw if m.lower() in SWING_ON_SET), sw[0]
             )
-            self.char_swing = serv.configure_char(
-                CHAR_SWING_MODE, value=0, setter_callback=self._set_swing_mode
-            )
-
-        # Single debouncing mechanism
-        self._pending_state: dict[str, Any] = {
-            "active": None,
-            "target_mode": None,
-            "cooling_temp": None,
-            "heating_temp": None,
-            "rotation_speed": None,
-            "swing_mode": None,
-        }
-        self._debounce_timer: asyncio.Task | None = None
-        self._debounce_delay = 0.6
+            self.char_swing = serv.configure_char(CHAR_SWING_MODE, value=0)
 
         # Smart mode change tracking
         self._last_known_mode: HVACMode = current_mode or HVACMode.COOL
@@ -251,94 +237,153 @@ class HeaterCooler(HomeAccessory):
         # initialise
         self.async_update_state(state)
 
-    def _schedule_debounced_execution(self) -> None:
-        """Schedule execution of all pending state changes after debounce delay."""
-        # Cancel any existing timer
-        if self._debounce_timer and not self._debounce_timer.done():
-            self._debounce_timer.cancel()
+        # Set service-level setter callback to handle all characteristic changes at once
+        serv.setter_callback = self._set_chars
 
-        async def execute_pending_state() -> None:
-            """Execute all pending state changes after debounce delay."""
+    def get_temperature_range(self, state: State) -> tuple[float, float]:
+        """Return min and max temperature range."""
+        min_temp_c = state.attributes.get(ATTR_MIN_TEMP, 7.0)
+        max_temp_c = state.attributes.get(ATTR_MAX_TEMP, 35.0)
+        min_temp_hk = temperature_to_homekit(min_temp_c, self._unit)
+        max_temp_hk = temperature_to_homekit(max_temp_c, self._unit)
+
+        # Handle reversed temperature range and apply HomeKit constraints
+        min_temp_hk = max(min_temp_hk, 0)
+        max_temp_hk = max(max_temp_hk, min_temp_hk)
+
+        return min_temp_hk, max_temp_hk
+
+    def _temperature_to_homekit(self, temp: float) -> float:
+        """Convert temperature to HomeKit units."""
+        return temperature_to_homekit(temp, self._unit)
+
+    def _temperature_to_states(self, temp: float) -> float:
+        """Convert temperature to Home Assistant units."""
+        return temperature_to_states(temp, self._unit)
+
+    def _set_fan_speed(self, speed: int) -> None:
+        """Set the fan speed."""
+        if not self.ordered_fan_speeds:
+            return
+
+        if 0 < speed <= 100:
+            # Convert percentage to fan mode
+            fan_mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed)
+            fan_mode = self.fan_modes.get(fan_mode, fan_mode)
+
             try:
-                await asyncio.sleep(self._debounce_delay)
+                self.async_call_service(
+                    "climate",
+                    "set_fan_mode",
+                    {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: fan_mode},
+                )
+            except (ServiceNotFound, ServiceValidationError) as e:
+                _LOGGER.error("Failed to set fan mode: %s", e)
 
-                # Collect all the service calls we need to make
-                service_calls: list[
-                    tuple[str, dict[str, Any]]
-                ] = []  # Handle active/mode changes first (they might affect temperature handling)
-                self._handle_active_mode_changes(service_calls)
+    def _set_swing_mode(self, swing_on: int) -> None:
+        """Set the swing mode."""
+        if not hasattr(self, "swing_on_mode"):
+            return
 
-                # Handle temperature changes
-                self._handle_temperature_changes(service_calls)
+        state = self.hass.states.get(self.entity_id)
+        if not state:
+            return
 
-                # Handle fan speed and swing mode changes
-                self._handle_fan_swing_changes(service_calls)
+        swing_modes = state.attributes.get(ATTR_SWING_MODES, [])
+        current_swing = state.attributes.get(ATTR_SWING_MODE)
 
-                # Execute all service calls
-                for service_name, service_data in service_calls:
-                    try:
-                        await self.hass.services.async_call(
-                            "climate",
-                            service_name,
-                            {ATTR_ENTITY_ID: self.entity_id, **service_data},
-                        )
-                    except (ServiceNotFound, ServiceValidationError) as e:
-                        _LOGGER.error("Failed to execute %s: %s", service_name, e)
+        if swing_on:
+            # Turn swing on - use the detected swing-on mode
+            target_mode = self.swing_on_mode
+        else:
+            # Turn swing off - find an "off" mode
+            off_modes = {"off", "false", "0"}
+            target_mode = next(
+                (m for m in swing_modes if m.lower() in off_modes),
+                swing_modes[0] if swing_modes else "off",
+            )
 
-                # Clear pending state
-                self._pending_state = {
-                    "active": None,
-                    "target_mode": None,
-                    "cooling_temp": None,
-                    "heating_temp": None,
-                    "rotation_speed": None,
-                    "swing_mode": None,
-                }
-            except asyncio.CancelledError:
-                # Task was cancelled, ignore
-                pass
-            except Exception:
-                _LOGGER.exception("Error in debounced execution")
+        if target_mode != current_swing:
+            try:
+                self.async_call_service(
+                    "climate",
+                    "set_swing_mode",
+                    {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: target_mode},
+                )
+            except (ServiceNotFound, ServiceValidationError) as e:
+                _LOGGER.error("Failed to set swing mode: %s", e)
 
-        # Schedule the execution
-        self._debounce_timer = asyncio.create_task(execute_pending_state())
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
+        """Handle writes to multiple HeaterCooler characteristics at once."""
+        _LOGGER.debug("HeaterCooler _set_chars: %s", char_values)
+        # Collect all the service calls we need to make
+        service_calls: list[tuple[str, dict[str, Any]]] = []
+
+        # Handle active/mode changes first (they might affect temperature handling)
+        self._handle_active_mode_changes(char_values, service_calls)
+
+        # Handle temperature changes
+        self._handle_temperature_changes(char_values, service_calls)
+
+        # Handle fan speed and swing mode changes
+        self._handle_fan_swing_changes(char_values, service_calls)
+
+        # Execute all service calls
+        for service_name, service_data in service_calls:
+            try:
+                self.async_call_service(
+                    "climate",
+                    service_name,
+                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
+                )
+            except (ServiceNotFound, ServiceValidationError) as e:
+                _LOGGER.error("Failed to execute %s: %s", service_name, e)
 
     def _handle_active_mode_changes(
-        self, service_calls: list[tuple[str, dict[str, Any]]]
+        self,
+        char_values: dict[str, Any],
+        service_calls: list[tuple[str, dict[str, Any]]],
     ) -> None:
         """Handle active and mode changes."""
-        active = self._pending_state["active"]
-        target_mode = self._pending_state["target_mode"]
+        active = char_values.get(CHAR_ACTIVE)
+        target_mode = char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+
+        # Check if we're already active to avoid redundant commands
+        current_state = self.hass.states.get(self.entity_id)
+        currently_active = current_state and current_state.state not in (
+            HVACMode.OFF,
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        )
 
         if active is not None or target_mode is not None:
             # Smart mode/active handling
             if active == 0:
+                # Always turn off when explicitly requested
                 service_calls.append(("turn_off", {}))
             elif target_mode is not None:
-                service_calls.append(("set_hvac_mode", {ATTR_HVAC_MODE: target_mode}))
-                if isinstance(target_mode, HVACMode):
-                    self._last_known_mode = target_mode
-            elif active == 1:
+                # Mode change requested
+                hass_mode = self._hk_to_ha_target.get(target_mode)
+                if hass_mode:
+                    service_calls.append(("set_hvac_mode", {ATTR_HVAC_MODE: hass_mode}))
+                    if isinstance(hass_mode, HVACMode):
+                        self._last_known_mode = hass_mode
+            elif active == 1 and not currently_active:
+                # Only turn on if not already active
                 service_calls.append(
                     ("set_hvac_mode", {ATTR_HVAC_MODE: self._last_known_mode})
                 )
 
     def _handle_temperature_changes(
-        self, service_calls: list[tuple[str, dict[str, Any]]]
+        self,
+        char_values: dict[str, Any],
+        service_calls: list[tuple[str, dict[str, Any]]],
     ) -> None:
         """Handle temperature changes."""
-        cooling_temp = self._pending_state["cooling_temp"]
-        heating_temp = self._pending_state["heating_temp"]
+        cooling_temp = char_values.get(CHAR_COOLING_THRESHOLD_TEMPERATURE)
+        heating_temp = char_values.get(CHAR_HEATING_THRESHOLD_TEMPERATURE)
 
         if cooling_temp is not None or heating_temp is not None:
-            # Ensure types are correct
-            cooling_temp_val = (
-                cooling_temp if isinstance(cooling_temp, (int, float)) else None
-            )
-            heating_temp_val = (
-                heating_temp if isinstance(heating_temp, (int, float)) else None
-            )
-
             current_state = self.hass.states.get(self.entity_id)
             supports_dual_temp = current_state and (
                 ATTR_TARGET_TEMP_HIGH in current_state.attributes
@@ -347,11 +392,11 @@ class HeaterCooler(HomeAccessory):
 
             if supports_dual_temp:
                 self._handle_dual_temp_changes(
-                    service_calls, cooling_temp_val, heating_temp_val
+                    service_calls, cooling_temp, heating_temp
                 )
             else:
                 self._handle_single_temp_changes(
-                    service_calls, cooling_temp_val, heating_temp_val
+                    service_calls, cooling_temp, heating_temp
                 )
 
     def _handle_dual_temp_changes(
@@ -419,69 +464,18 @@ class HeaterCooler(HomeAccessory):
             service_calls.append(("set_temperature", {ATTR_TEMPERATURE: ha_temp}))
 
     def _handle_fan_swing_changes(
-        self, service_calls: list[tuple[str, dict[str, Any]]]
+        self,
+        char_values: dict[str, Any],
+        service_calls: list[tuple[str, dict[str, Any]]],
     ) -> None:
         """Handle fan speed and swing mode changes."""
-        # Handle fan speed changes
-        fan_speed = self._pending_state["rotation_speed"]
-        if (
-            fan_speed is not None
-            and self.ordered_fan_speeds
-            and isinstance(fan_speed, (int, float))
-        ):
-            fan_index = min(
-                len(self.ordered_fan_speeds) - 1,
-                int(fan_speed * len(self.ordered_fan_speeds) / 100),
-            )
-            fan_mode = self.ordered_fan_speeds[fan_index]
-            ha_fan_mode = self.fan_modes.get(fan_mode, fan_mode)
-            service_calls.append(("set_fan_mode", {ATTR_FAN_MODE: ha_fan_mode}))
+        # Handle fan speed
+        if CHAR_ROTATION_SPEED in char_values:
+            self._set_fan_speed(char_values[CHAR_ROTATION_SPEED])
 
-        # Handle swing mode changes
-        swing_mode = self._pending_state["swing_mode"]
-        if swing_mode is not None and hasattr(self, "swing_on_mode"):
-            swing_value = self.swing_on_mode if swing_mode else "off"
-            service_calls.append(("set_swing_mode", {ATTR_SWING_MODE: swing_value}))
-
-    def _set_target_state(self, value: int) -> None:
-        """Handle writes to TargetHeaterCoolerState from HomeKit."""
-        _LOGGER.debug("%s: Set target state to %d", self.entity_id, value)
-        if value not in self._hk_to_ha_target:
-            return
-
-        target_mode = self._hk_to_ha_target[value]
-        self._pending_state["target_mode"] = target_mode
-        self._schedule_debounced_execution()
-
-    def _set_active(self, value: int) -> None:
-        """Handle writes to Active from HomeKit."""
-        _LOGGER.debug("%s: Set active to %d", self.entity_id, value)
-        self._pending_state["active"] = value
-        self._schedule_debounced_execution()
-
-    def _set_cooling_threshold(self, value: float) -> None:
-        """Handle writes to CoolingThresholdTemperature from HomeKit."""
-        _LOGGER.debug("%s: Set cooling threshold to %.1f°C", self.entity_id, value)
-        self._pending_state["cooling_temp"] = value
-        self._schedule_debounced_execution()
-
-    def _set_heating_threshold(self, value: float) -> None:
-        """Handle writes to HeatingThresholdTemperature from HomeKit."""
-        _LOGGER.debug("%s: Set heating threshold to %.1f°C", self.entity_id, value)
-        self._pending_state["heating_temp"] = value
-        self._schedule_debounced_execution()
-
-    def _set_fan_speed(self, value: int) -> None:
-        """Handle writes to RotationSpeed from HomeKit."""
-        _LOGGER.debug("%s: Set fan speed to %d", self.entity_id, value)
-        self._pending_state["rotation_speed"] = value
-        self._schedule_debounced_execution()
-
-    def _set_swing_mode(self, value: int) -> None:
-        """Handle writes to SwingMode from HomeKit."""
-        _LOGGER.debug("%s: Set swing mode to %d", self.entity_id, value)
-        self._pending_state["swing_mode"] = value
-        self._schedule_debounced_execution()
+        # Handle swing mode
+        if CHAR_SWING_MODE in char_values:
+            self._set_swing_mode(char_values[CHAR_SWING_MODE])
 
     def _hk_target_mode(self, state: State) -> int | None:
         """Map HA hvac_mode → HomeKit target heater-cooler state."""
@@ -498,9 +492,9 @@ class HeaterCooler(HomeAccessory):
 
     @callback
     def async_update_state(self, new_state: State) -> None:
-        """Mirror each Home Assistant state update to HomeKit."""
-        attrs = new_state.attributes
-        feats = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        """Update state without rechecking the device features."""
+        attributes = new_state.attributes
+        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         current_mode = try_parse_enum(HVACMode, new_state.state)
         if current_mode and current_mode != HVACMode.OFF:
@@ -509,7 +503,7 @@ class HeaterCooler(HomeAccessory):
         if (tgt := self._hk_target_mode(new_state)) is not None:
             self.char_target_state.set_value(tgt)
 
-        action = attrs.get(ATTR_HVAC_ACTION) or self._derive_action(new_state)
+        action = attributes.get(ATTR_HVAC_ACTION) or self._derive_action(new_state)
         hk_current_state = HC_HASS_TO_HOMEKIT_ACTION.get(action, HC_INACTIVE)
         self.char_current_state.set_value(hk_current_state)
 
@@ -518,28 +512,21 @@ class HeaterCooler(HomeAccessory):
         )
         self.char_active.set_value(active_value)
 
-        if (cur := _temp(new_state, ATTR_CURRENT_TEMPERATURE, self._unit)) is not None:
+        if (cur := _get_current_temperature(new_state, self._unit)) is not None:
             self.char_current_temp.set_value(cur)
 
         self._update_temperature_thresholds(new_state)
 
-        if feats & ClimateEntityFeature.FAN_MODE and self.ordered_fan_speeds:
-            fm = attrs.get(ATTR_FAN_MODE)
-            if fm and (fm_l := fm.lower()) in self.ordered_fan_speeds:
-                self.char_speed.set_value(
-                    ordered_list_item_to_percentage(self.ordered_fan_speeds, fm_l)
-                )
-
-        if feats & ClimateEntityFeature.SWING_MODE and hasattr(self, "char_swing"):
-            sw = attrs.get(ATTR_SWING_MODE)
-            self.char_swing.set_value(1 if sw and sw.lower() in SWING_ON_SET else 0)
+        # Update fan and swing state if supported
+        if features & (ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE):
+            self._async_update_fan_state(new_state)
 
     def _update_temperature_thresholds(self, state: State) -> None:
         """Update HomeKit temperature thresholds based on HA state."""
-        attrs = state.attributes
+        attributes = state.attributes
 
         supports_dual_temp = (
-            ATTR_TARGET_TEMP_HIGH in attrs or ATTR_TARGET_TEMP_LOW in attrs
+            ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes
         )
 
         if supports_dual_temp:
@@ -553,6 +540,29 @@ class HeaterCooler(HomeAccessory):
         elif (target_temp := _temp(state, ATTR_TEMPERATURE, self._unit)) is not None:
             self.char_cool.set_value(target_temp)
             self.char_heat.set_value(target_temp)
+
+    def _async_update_fan_state(self, new_state: State) -> None:
+        """Update the fan speed characteristic from state."""
+        attributes = new_state.attributes
+
+        # Update fan speed
+        if self.ordered_fan_speeds and hasattr(self, "char_speed"):
+            current_fan_mode = attributes.get(ATTR_FAN_MODE)
+            if current_fan_mode and current_fan_mode in self.fan_modes.values():
+                # Find the key that maps to this fan mode
+                for ordered_mode in self.ordered_fan_speeds:
+                    if self.fan_modes.get(ordered_mode) == current_fan_mode:
+                        percentage = ordered_list_item_to_percentage(
+                            self.ordered_fan_speeds, ordered_mode
+                        )
+                        self.char_speed.set_value(percentage)
+                        break
+
+        # Update swing mode
+        if hasattr(self, "char_swing"):
+            current_swing = attributes.get(ATTR_SWING_MODE, "").lower()
+            swing_on = current_swing in SWING_ON_SET
+            self.char_swing.set_value(1 if swing_on else 0)
 
     def _derive_action(self, state: State) -> HVACAction:
         """Infer heating / cooling when integration omits hvac_action."""
@@ -578,9 +588,3 @@ class HeaterCooler(HomeAccessory):
             if cur < tgt - delta:
                 return HVACAction.HEATING
         return HVACAction.IDLE
-
-    async def async_wait_for_debounced_execution(self) -> None:
-        """Wait for any pending debounced execution to complete. Used for testing."""
-        if self._debounce_timer and not self._debounce_timer.done():
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._debounce_timer
