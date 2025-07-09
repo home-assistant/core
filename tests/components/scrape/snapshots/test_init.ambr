@@ -1,0 +1,112 @@
+# serializer version: 1
+# name: test_migrate_from_version_1_to_2[config_entry]
+  ConfigEntrySnapshot({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'scrape',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+      'advanced': dict({
+        'encoding': 'UTF-8',
+        'timeout': 10.0,
+        'verify_ssl': True,
+      }),
+      'auth': dict({
+      }),
+      'method': 'GET',
+      'resource': 'http://www.home-assistant.io',
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'advanced': dict({
+          }),
+          'index': 0,
+          'select': '.release-date',
+        }),
+        'subentry_id': '01JZQ1G63X2DX66GZ9ZTFY9PEH',
+        'subentry_type': 'entity',
+        'title': 'Current version',
+        'unique_id': None,
+      }),
+    ]),
+    'title': 'Mock Title',
+    'unique_id': None,
+    'version': 2,
+  })
+# ---
+# name: test_migrate_from_version_1_to_2[device_registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'scrape',
+        '01JZQ1G63X2DX66GZ9ZTFY9PEH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Scrape',
+    'model': None,
+    'model_id': None,
+    'name': 'Current version',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_migrate_from_version_1_to_2[entity_registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.current_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current version',
+    'platform': 'scrape',
+    'previous_unique_id': 'a0bde946-5c96-11f0-b55f-0242ac110002',
+    'suggested_object_id': 'current_version',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01JZQ1G63X2DX66GZ9ZTFY9PEH',
+    'unit_of_measurement': None,
+  })
+# ---
