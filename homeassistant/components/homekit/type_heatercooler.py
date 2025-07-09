@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import Any, Final
 
@@ -242,7 +243,7 @@ class HeaterCooler(HomeAccessory):
             "swing_mode": None,
         }
         self._debounce_timer: asyncio.Task | None = None
-        self._debounce_delay = 0.2
+        self._debounce_delay = 0.6
 
         # Smart mode change tracking
         self._last_known_mode: HVACMode = current_mode or HVACMode.COOL
@@ -258,37 +259,46 @@ class HeaterCooler(HomeAccessory):
 
         async def execute_pending_state() -> None:
             """Execute all pending state changes after debounce delay."""
-            await asyncio.sleep(self._debounce_delay)
+            try:
+                await asyncio.sleep(self._debounce_delay)
 
-            # Collect all the service calls we need to make
-            service_calls: list[
-                tuple[str, dict[str, Any]]
-            ] = []  # Handle active/mode changes first (they might affect temperature handling)
-            self._handle_active_mode_changes(service_calls)
+                # Collect all the service calls we need to make
+                service_calls: list[
+                    tuple[str, dict[str, Any]]
+                ] = []  # Handle active/mode changes first (they might affect temperature handling)
+                self._handle_active_mode_changes(service_calls)
 
-            # Handle temperature changes
-            self._handle_temperature_changes(service_calls)
+                # Handle temperature changes
+                self._handle_temperature_changes(service_calls)
 
-            # Execute all service calls
-            for service_name, service_data in service_calls:
-                try:
-                    await self.hass.services.async_call(
-                        "climate",
-                        service_name,
-                        {ATTR_ENTITY_ID: self.entity_id, **service_data},
-                    )
-                except (ServiceNotFound, ServiceValidationError) as e:
-                    _LOGGER.error("Failed to execute %s: %s", service_name, e)
+                # Handle fan speed and swing mode changes
+                self._handle_fan_swing_changes(service_calls)
 
-            # Clear pending state
-            self._pending_state = {
-                "active": None,
-                "target_mode": None,
-                "cooling_temp": None,
-                "heating_temp": None,
-                "rotation_speed": None,
-                "swing_mode": None,
-            }
+                # Execute all service calls
+                for service_name, service_data in service_calls:
+                    try:
+                        await self.hass.services.async_call(
+                            "climate",
+                            service_name,
+                            {ATTR_ENTITY_ID: self.entity_id, **service_data},
+                        )
+                    except (ServiceNotFound, ServiceValidationError) as e:
+                        _LOGGER.error("Failed to execute %s: %s", service_name, e)
+
+                # Clear pending state
+                self._pending_state = {
+                    "active": None,
+                    "target_mode": None,
+                    "cooling_temp": None,
+                    "heating_temp": None,
+                    "rotation_speed": None,
+                    "swing_mode": None,
+                }
+            except asyncio.CancelledError:
+                # Task was cancelled, ignore
+                pass
+            except Exception:
+                _LOGGER.exception("Error in debounced execution")
 
         # Schedule the execution
         self._debounce_timer = asyncio.create_task(execute_pending_state())
@@ -322,9 +332,13 @@ class HeaterCooler(HomeAccessory):
 
         if cooling_temp is not None or heating_temp is not None:
             # Ensure types are correct
-            cooling_temp_val = cooling_temp if isinstance(cooling_temp, (int, float)) else None
-            heating_temp_val = heating_temp if isinstance(heating_temp, (int, float)) else None
-            
+            cooling_temp_val = (
+                cooling_temp if isinstance(cooling_temp, (int, float)) else None
+            )
+            heating_temp_val = (
+                heating_temp if isinstance(heating_temp, (int, float)) else None
+            )
+
             current_state = self.hass.states.get(self.entity_id)
             supports_dual_temp = current_state and (
                 ATTR_TARGET_TEMP_HIGH in current_state.attributes
@@ -393,13 +407,16 @@ class HeaterCooler(HomeAccessory):
                 selected_temp = cooling_temp
             elif heating_temp is not None:
                 selected_temp = heating_temp
+        # For other modes or when no mode-specific logic applies,
+        # accept any temperature that was set (HomeKit behavior)
+        elif cooling_temp is not None:
+            selected_temp = cooling_temp
+        elif heating_temp is not None:
+            selected_temp = heating_temp
 
         if selected_temp is not None:
             ha_temp = temperature_to_states(selected_temp, self._unit)
             service_calls.append(("set_temperature", {ATTR_TEMPERATURE: ha_temp}))
-
-        # Handle fan speed and swing mode changes
-        self._handle_fan_swing_changes(service_calls)
 
     def _handle_fan_swing_changes(
         self, service_calls: list[tuple[str, dict[str, Any]]]
@@ -407,7 +424,11 @@ class HeaterCooler(HomeAccessory):
         """Handle fan speed and swing mode changes."""
         # Handle fan speed changes
         fan_speed = self._pending_state["rotation_speed"]
-        if fan_speed is not None and self.ordered_fan_speeds and isinstance(fan_speed, (int, float)):
+        if (
+            fan_speed is not None
+            and self.ordered_fan_speeds
+            and isinstance(fan_speed, (int, float))
+        ):
             fan_index = min(
                 len(self.ordered_fan_speeds) - 1,
                 int(fan_speed * len(self.ordered_fan_speeds) / 100),
@@ -557,3 +578,9 @@ class HeaterCooler(HomeAccessory):
             if cur < tgt - delta:
                 return HVACAction.HEATING
         return HVACAction.IDLE
+
+    async def async_wait_for_debounced_execution(self) -> None:
+        """Wait for any pending debounced execution to complete. Used for testing."""
+        if self._debounce_timer and not self._debounce_timer.done():
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._debounce_timer
