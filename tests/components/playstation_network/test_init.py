@@ -157,9 +157,6 @@ async def test_trophy_title_coordinator_auth_failed(
     freezer.tick(timedelta(minutes=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    freezer.tick()
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -197,9 +194,6 @@ async def test_trophy_title_coordinator_update_data_failed(
     freezer.tick(timedelta(minutes=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    freezer.tick()
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     runtime_data: PlaystationNetworkRuntimeData = config_entry.runtime_data
