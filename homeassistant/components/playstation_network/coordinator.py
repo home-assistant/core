@@ -111,7 +111,7 @@ class PlaystationNetworkTrophyTitlesCoordinator(
 ):
     """Trophy titles data update coordinator for PSN."""
 
-    _update_interval = timedelta(minutes=60)
+    _update_interval = timedelta(days=1)
 
     async def update_data(self) -> list[TrophyTitle]:
         """Update trophy titles data."""
