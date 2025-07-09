@@ -281,10 +281,11 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         issue_registry = ir.async_get(hass)
         issues = issue_registry.issues
-        data_issues = []
-        for issue_id, issue_reg in issues.items():
-            if issue_id[0] == config_entry.domain:
-                data_issues.append(issue_reg.to_json())
+        data_issues = [
+            issue_reg.to_json()
+            for issue_id, issue_reg in issues.items()
+            if issue_id[0] == config_entry.domain
+        ]
 
         if not device_diagnostics:
             # Config entry diagnostics
