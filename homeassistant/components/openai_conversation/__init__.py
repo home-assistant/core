@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import base64
-from mimetypes import guess_file_type
 from pathlib import Path
 
 import openai
@@ -11,8 +9,6 @@ from openai.types.images_response import ImagesResponse
 from openai.types.responses import (
     EasyInputMessageParam,
     Response,
-    ResponseInputFileParam,
-    ResponseInputImageParam,
     ResponseInputMessageContentListParam,
     ResponseInputParam,
     ResponseInputTextParam,
@@ -58,6 +54,7 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
 )
+from .entity import async_prepare_files_for_prompt
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
@@ -66,15 +63,6 @@ PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
-
-
-def encode_file(file_path: str) -> tuple[str, str]:
-    """Return base64 version of file contents."""
-    mime_type, _ = guess_file_type(file_path)
-    if mime_type is None:
-        mime_type = "application/octet-stream"
-    with open(file_path, "rb") as image_file:
-        return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -146,41 +134,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ResponseInputTextParam(type="input_text", text=call.data[CONF_PROMPT])
         ]
 
-        def append_files_to_content() -> None:
-            for filename in call.data[CONF_FILENAMES]:
+        if filenames := call.data.get(CONF_FILENAMES):
+            for filename in filenames:
                 if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
                         f"Cannot read `{filename}`, no access to path; "
                         "`allowlist_external_dirs` may need to be adjusted in "
                         "`configuration.yaml`"
                     )
-                if not Path(filename).exists():
-                    raise HomeAssistantError(f"`{filename}` does not exist")
-                mime_type, base64_file = encode_file(filename)
-                if "image/" in mime_type:
-                    content.append(
-                        ResponseInputImageParam(
-                            type="input_image",
-                            image_url=f"data:{mime_type};base64,{base64_file}",
-                            detail="auto",
-                        )
-                    )
-                elif "application/pdf" in mime_type:
-                    content.append(
-                        ResponseInputFileParam(
-                            type="input_file",
-                            filename=filename,
-                            file_data=f"data:{mime_type};base64,{base64_file}",
-                        )
-                    )
-                else:
-                    raise HomeAssistantError(
-                        "Only images and PDF are supported by the OpenAI API,"
-                        f"`{filename}` is not an image file or PDF"
-                    )
 
-        if CONF_FILENAMES in call.data:
-            await hass.async_add_executor_job(append_files_to_content)
+            content.extend(
+                await async_prepare_files_for_prompt(
+                    hass, [Path(filename) for filename in filenames]
+                )
+            )
 
         messages: ResponseInputParam = [
             EasyInputMessageParam(type="message", role="user", content=content)
@@ -284,12 +251,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_update_options(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
@@ -361,4 +335,34 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 title=DEFAULT_NAME,
                 options={},
                 version=2,
+                minor_version=2,
             )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
+    """Migrate entry."""
+    LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 2 and entry.minor_version == 1:
+        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                remove_config_entry_id=entry.entry_id,
+                remove_config_subentry_id=None,
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True

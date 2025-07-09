@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 import httpx
 from openai import (
@@ -16,8 +16,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.openai_conversation import CONF_CHAT_MODEL, CONF_FILENAMES
+from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -393,7 +394,7 @@ async def test_generate_content_service(
         patch(
             "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
         ) as mock_b64encode,
-        patch("builtins.open", mock_open(read_data="ABC")) as mock_file,
+        patch("pathlib.Path.read_bytes", Mock(return_value=b"ABC")) as mock_file,
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
@@ -433,15 +434,13 @@ async def test_generate_content_service(
         assert len(mock_create.mock_calls) == 1
         assert mock_create.mock_calls[0][2] == expected_args
         assert mock_b64encode.call_count == number_of_files
-        for idx, file in enumerate(service_data[CONF_FILENAMES]):
-            assert mock_file.call_args_list[idx][0][0] == file
+        assert mock_file.call_count == number_of_files
 
 
 @pytest.mark.parametrize(
     (
         "service_data",
         "error",
-        "number_of_files",
         "exists_side_effect",
         "is_allowed_side_effect",
     ),
@@ -449,7 +448,6 @@ async def test_generate_content_service(
         (
             {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
             "`/a/b/c.jpg` does not exist",
-            0,
             [False],
             [True],
         ),
@@ -459,14 +457,12 @@ async def test_generate_content_service(
                 "filenames": ["/a/b/c.jpg", "d/e/f.png"],
             },
             "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
-            1,
             [True, True],
             [True, False],
         ),
         (
             {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
             "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
-            1,
             [True],
             [True],
         ),
@@ -478,7 +474,6 @@ async def test_generate_content_service_invalid(
     mock_init_component,
     service_data,
     error,
-    number_of_files,
     exists_side_effect,
     is_allowed_side_effect,
 ) -> None:
@@ -490,9 +485,7 @@ async def test_generate_content_service_invalid(
             "openai.resources.responses.AsyncResponses.create",
             new_callable=AsyncMock,
         ) as mock_create,
-        patch(
-            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
-        ) as mock_b64encode,
+        patch("base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]),
         patch("builtins.open", mock_open(read_data="ABC")),
         patch("pathlib.Path.exists", side_effect=exists_side_effect),
         patch.object(
@@ -508,7 +501,6 @@ async def test_generate_content_service_invalid(
                 return_response=True,
             )
         assert len(mock_create.mock_calls) == 0
-        assert mock_b64encode.call_count == number_of_files
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -578,7 +570,7 @@ async def test_migration_from_v1_to_v2(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         device_id=device.id,
-        suggested_object_id="google_generative_ai_conversation",
+        suggested_object_id="chatgpt",
     )
 
     # Run migration
@@ -590,6 +582,7 @@ async def test_migration_from_v1_to_v2(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 2
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -702,6 +695,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
+        assert entry.minor_version == 2
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -796,6 +790,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
@@ -818,6 +813,163 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         assert dev.config_entries_subentries == {
             mock_config_entry.entry_id: {subentry.subentry_id}
         }
+
+
+async def test_migration_from_v2_1_to_v2_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from version 2.1 to version 2.2.
+
+    This tests we clean up the broken migration in Home Assistant Core
+    2025.7.0b0-2025.7.0b1:
+    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
+    """
+    # Create a v2.1 config entry with 2 subentries, devices and entities
+    options = {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "gpt-4o-mini",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        entry_id="mock_entry_id",
+        version=2,
+        minor_version=1,
+        subentries_data=[
+            ConfigSubentryData(
+                data=options,
+                subentry_id="mock_id_1",
+                subentry_type="conversation",
+                title="ChatGPT",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=options,
+                subentry_id="mock_id_2",
+                subentry_type="conversation",
+                title="ChatGPT 2",
+                unique_id=None,
+            ),
+        ],
+        title="ChatGPT",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id="mock_id_1",
+        identifiers={(DOMAIN, "mock_id_1")},
+        name="ChatGPT",
+        manufacturer="OpenAI",
+        model="ChatGPT",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    device_1 = device_registry.async_update_device(
+        device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
+    )
+    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        "mock_id_1",
+        config_entry=mock_config_entry,
+        config_subentry_id="mock_id_1",
+        device_id=device_1.id,
+        suggested_object_id="chatgpt",
+    )
+
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id="mock_id_2",
+        identifiers={(DOMAIN, "mock_id_2")},
+        name="ChatGPT 2",
+        manufacturer="OpenAI",
+        model="ChatGPT",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        "mock_id_2",
+        config_entry=mock_config_entry,
+        config_subentry_id="mock_id_2",
+        device_id=device_2.id,
+        suggested_object_id="chatgpt_2",
+    )
+
+    # Run migration
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 2
+    assert not entry.options
+    assert entry.title == "ChatGPT"
+    assert len(entry.subentries) == 2
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 2
+    for subentry in conversation_subentries:
+        assert subentry.subentry_type == "conversation"
+        assert subentry.data == options
+        assert "ChatGPT" in subentry.title
+
+    subentry = conversation_subentries[0]
+
+    entity = entity_registry.async_get("conversation.chatgpt")
+    assert entity.unique_id == subentry.subentry_id
+    assert entity.config_subentry_id == subentry.subentry_id
+    assert entity.config_entry_id == entry.entry_id
+
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, subentry.subentry_id)}
+        )
+    )
+    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+    assert device.id == device_1.id
+    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
+
+    subentry = conversation_subentries[1]
+
+    entity = entity_registry.async_get("conversation.chatgpt_2")
+    assert entity.unique_id == subentry.subentry_id
+    assert entity.config_subentry_id == subentry.subentry_id
+    assert entity.config_entry_id == entry.entry_id
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, subentry.subentry_id)}
+        )
+    )
+    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+    assert device.id == device_2.id
+    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entries_subentries == {
+        mock_config_entry.entry_id: {subentry.subentry_id}
+    }
 
 
 @pytest.mark.parametrize("mock_subentry_data", [{}, {CONF_CHAT_MODEL: "gpt-1o"}])

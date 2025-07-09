@@ -1,7 +1,6 @@
 """Support for Met Éireann weather service."""
 
 from collections.abc import Mapping
-import logging
 from typing import Any, cast
 
 from homeassistant.components.weather import (
@@ -29,10 +28,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import MetEireannWeatherData
 
 
 def format_condition(condition: str | None) -> str | None:
