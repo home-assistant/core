@@ -40,6 +40,14 @@
     "Id wskaźnika": 6
   },
   {
+    "Identyfikator stanowiska": 666,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenki azotu",
+    "Wskaźnik - wzór": "NOx",
+    "Wskaźnik - kod": "NOx",
+    "Id wskaźnika": 7
+  },
+  {
     "Identyfikator stanowiska": 667,
     "Identyfikator stacji": 117,
     "Wskaźnik": "ozon",

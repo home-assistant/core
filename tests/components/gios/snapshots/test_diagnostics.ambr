@@ -54,7 +54,12 @@
         'name': 'nitrogen dioxide',
         'value': 7.13411,
       }),
-      'nox': None,
+      'nox': dict({
+        'id': 666,
+        'index': None,
+        'name': 'nitrogen oxides',
+        'value': 5.5,
+      }),
       'o3': dict({
         'id': 667,
         'index': 'good',
