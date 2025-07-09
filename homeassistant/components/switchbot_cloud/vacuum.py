@@ -114,8 +114,10 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
+
         self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
+
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
         self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
         if self._attr_fan_speed is None:
