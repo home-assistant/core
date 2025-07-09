@@ -39,6 +39,14 @@ NEW_INPUT = {
 }
 
 
+ADDON_DISCOVERY_INFO = {
+    "addon": "pyLoad-ng",
+    CONF_URL: "http://539df76c-pyload-ng:8000/",
+    CONF_USERNAME: "pyload",
+    CONF_PASSWORD: "pyload",
+}
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
