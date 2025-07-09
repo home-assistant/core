@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
     "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
         Platform.SELECT,

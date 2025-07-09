@@ -15,9 +15,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import json_loads
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 
 
@@ -30,6 +31,9 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     # Value or values to consider binary sensor to be "on"
     on_value: bool | float | int | str | set[bool | float | int | str] = True
+
+    # For DPType.BITMAP, the bitmap_key is used to extract the bit mask
+    bitmap_key: str | None = None
 
 
 # Commonly used sensors
@@ -70,6 +74,34 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs": (
+        TuyaBinarySensorEntityDescription(
+            key="tankfull",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="tankfull",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key="defrost",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="defrost",
+            translation_key="defrost",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key="wet",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="wet",
+            translation_key="wet",
+        ),
     ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
@@ -343,6 +375,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 }
 
 
+def _get_bitmap_mask(
+    device: CustomerDevice, dpcode: str, bitmap_key: str
+) -> int | None:
+    """Get the bitmap mask for a given description."""
+    if (
+        (status_range := device.status_range.get(dpcode)) is None
+        or status_range.type != DPType.BITMAP
+        or not isinstance(fault_values := json_loads(status_range.values), dict)
+        or not isinstance(fault_labels := fault_values.get("label"), list)
+        or bitmap_key not in fault_labels
+    ):
+        return None
+    return fault_labels.index(bitmap_key)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -361,11 +408,24 @@ async def async_setup_entry(
                 for description in descriptions:
                     dpcode = description.dpcode or description.key
                     if dpcode in device.status:
-                        entities.append(
-                            TuyaBinarySensorEntity(
-                                device, hass_data.manager, description
+                        if (bitmap_key := description.bitmap_key) is None:
+                            entities.append(
+                                TuyaBinarySensorEntity(
+                                    device, hass_data.manager, description
+                                )
                             )
-                        )
+                        elif (
+                            mask := _get_bitmap_mask(device, dpcode, bitmap_key)
+                        ) is not None:
+                            entities.append(
+                                TuyaBinarySensorEntity(
+                                    device,
+                                    hass_data.manager,
+                                    description,
+                                    bitmap_key,
+                                    mask,
+                                )
+                            )
 
         async_add_entities(entities)
 
@@ -386,11 +446,16 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
+        sub_key: str | None = None,
+        bit_mask: int | None = None,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._bit_mask = bit_mask
+        if sub_key is not None:
+            self._attr_unique_id += f"_{sub_key}"
 
     @property
     def is_on(self) -> bool:
@@ -398,6 +463,10 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if self._bit_mask is not None:
+            # For bitmap sensors, check the specific bit mask
+            return (self.device.status[dpcode] & (1 << self._bit_mask)) != 0
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
