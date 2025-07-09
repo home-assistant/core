@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     integration_platform,
+    issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
@@ -187,6 +188,7 @@ def async_format_manifest(manifest: Manifest) -> Manifest:
 async def _async_get_json_file_response(
     hass: HomeAssistant,
     data: Mapping[str, Any],
+    data_issues: list[dict[str, Any]] | None,
     filename: str,
     domain: str,
     d_id: str,
@@ -213,6 +215,8 @@ async def _async_get_json_file_response(
         "setup_times": async_get_domain_setup_times(hass, domain),
         "data": data,
     }
+    if data_issues is not None:
+        payload["issues"] = data_issues
     try:
         json_data = json.dumps(payload, indent=2, cls=ExtendedJSONEncoder)
     except TypeError:
@@ -280,9 +284,15 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             if info.config_entry_diagnostics is None:
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info.config_entry_diagnostics(hass, config_entry)
+            issue_registry = ir.async_get(hass)
+            issues = issue_registry.issues
+            data_issues = []
+            for issue_id, issue_reg in issues.items():
+                if issue_id[0] == config_entry.domain:
+                    data_issues.append(issue_reg.to_json())
             filename = f"{DiagnosticsType.CONFIG_ENTRY}-{filename}"
             return await _async_get_json_file_response(
-                hass, data, filename, config_entry.domain, d_id
+                hass, data, data_issues, filename, config_entry.domain, d_id
             )
 
         # Device diagnostics
@@ -300,5 +310,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         data = await info.device_diagnostics(hass, config_entry, device)
         return await _async_get_json_file_response(
-            hass, data, filename, config_entry.domain, d_id, sub_id
+            hass, data, None, filename, config_entry.domain, d_id, sub_id
         )
