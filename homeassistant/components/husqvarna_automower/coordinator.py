@@ -102,7 +102,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     _LOGGER.debug(
                         "New work area %s detected, refreshing data", work_area_id
                     )
-                    await self.async_schedule_refresh()
+                    await self.async_request_refresh()
                     return
 
         self.async_set_updated_data(ws_data)
