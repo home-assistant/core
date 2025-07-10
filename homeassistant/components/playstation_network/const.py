@@ -7,7 +7,7 @@ from psnawp_api.models.trophies import PlatformType
 DOMAIN = "playstation_network"
 CONF_NPSSO: Final = "npsso"
 CONF_SHOW_ENTITY_PICTURES: Final = "show_entity_pictures"
-
+CONF_ASSETS_PATH: Final = "assets_path"
 SUPPORTED_PLATFORMS = {
     PlatformType.PS5,
     PlatformType.PS4,
@@ -17,4 +17,4 @@ SUPPORTED_PLATFORMS = {
 
 NPSSO_LINK: Final = "https://ca.account.sony.com/api/v1/ssocookie"
 PSN_LINK: Final = "https://playstation.com"
-ASSETS_PATH: Final = f"/api/{DOMAIN}/static"
+ASSETS_PATH: Final = f"/local/{DOMAIN}"

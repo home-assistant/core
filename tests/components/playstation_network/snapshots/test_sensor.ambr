@@ -490,7 +490,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_bronze_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/bronze.png',
+      'entity_picture': '/local/playstation_network/bronze.png',
       'friendly_name': 'testuser Bronze trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -540,7 +540,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_gold_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/gold.png',
+      'entity_picture': '/local/playstation_network/gold.png',
       'friendly_name': 'testuser Gold trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -799,7 +799,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_platinum_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/platinum.png',
+      'entity_picture': '/local/playstation_network/platinum.png',
       'friendly_name': 'testuser Platinum trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -849,7 +849,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_silver_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/silver.png',
+      'entity_picture': '/local/playstation_network/silver.png',
       'friendly_name': 'testuser Silver trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -899,7 +899,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_trophy_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/playstation_network/static/tier_10.png',
+      'entity_picture': '/local/playstation_network/tier_10.png',
       'friendly_name': 'testuser Trophy level',
     }),
     'context': <ANY>,

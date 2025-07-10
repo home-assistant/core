@@ -53,6 +53,9 @@ class PlaystationNetworkOptionsFlowHandler(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 OPTIONS_SCHEMA, self.config_entry.options
             ),
+            description_placeholders={
+                "trophy_pack": "https://www.home-assistant.io/assets/integrations/playstation_network/trophies.zip"
+            },
         )
 
 

@@ -56,7 +56,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
         entity_picture=(
-            lambda psn: f"{ASSETS_PATH}/tier_{psn.trophy_summary.tier}.png"
+            lambda psn: f"tier_{psn.trophy_summary.tier}.png"
             if psn.trophy_summary
             else None
         ),
@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{ASSETS_PATH}/platinum.png",
+        entity_picture="platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -87,7 +87,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{ASSETS_PATH}/gold.png",
+        entity_picture="gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -97,7 +97,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{ASSETS_PATH}/silver.png",
+        entity_picture="silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -107,7 +107,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{ASSETS_PATH}/bronze.png",
+        entity_picture="bronze.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
@@ -179,11 +179,12 @@ class PlaystationNetworkSensorEntity(
             self.coordinator.config_entry.options.get(CONF_SHOW_ENTITY_PICTURES)
             and (entity_picture := self.entity_description.entity_picture) is not None
         ):
-            return (
+            pic = (
                 entity_picture(self.coordinator.data)
                 if callable(entity_picture)
                 else entity_picture
             )
+            return f"{ASSETS_PATH}/{pic}" if pic else None
         return super().entity_picture
 
     @property

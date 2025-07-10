@@ -47,6 +47,7 @@
   "options": {
     "step": {
       "init": {
+        "description": "Make sure to download and extract the [**trophy images pack**]({trophy_pack}) to `/config/www/playstation_network` before enabling entity pictures.",
         "data": {
           "show_entity_pictures": "Show entity pictures"
         },
