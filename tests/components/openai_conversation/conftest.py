@@ -5,7 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.openai_conversation.const import DEFAULT_CONVERSATION_NAME
+from homeassistant.components.openai_conversation.const import (
+    CONF_CHAT_MODEL,
+    DEFAULT_CONVERSATION_NAME,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -55,6 +58,19 @@ def mock_config_entry_with_assist(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_reasoning_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "o4-mini"},
     )
     return mock_config_entry
 
