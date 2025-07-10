@@ -10,8 +10,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .mocks import mock_sensor_transitions
-
 from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 
 
@@ -76,46 +74,88 @@ async def test_fridge_freezer_sensor_states(
 
 @pytest.mark.parametrize("load_device_file", ["oven_scenario/001_off.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-@pytest.mark.parametrize(
-    ("device_name", "json_sequence", "expected_sensor_states"),
-    [
-        (
-            "oven",
-            [
-                "oven_scenario/002_on.json",
-                "oven_scenario/003_set_temperature.json",
-                "oven_scenario/004_use_probe.json",
-                "oven_scenario/001_off.json",
-            ],
-            {
-                "": ["off", "on", "pause", "in_use", "off"],
-                "temperature": ["unknown", "unknown", "21.5", "21.83", "unknown"],
-                "target_temperature": ["unknown", "unknown", "80.0", "25.0", "unknown"],
-                "core_temperature": [None, None, None, "22.0", "unknown"],
-                "core_target_temperature": [None, None, "30.0", "unknown", "unknown"],
-            },
-        ),
-    ],
-)
 async def test_oven_temperatures_scenario(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
     setup_platform: None,
     mock_config_entry: MockConfigEntry,
-    device_name: str,
-    json_sequence: list[str],
-    expected_sensor_states: dict[str, list[str]],
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
-    await mock_sensor_transitions(
-        hass,
-        mock_miele_client,
-        mock_config_entry,
-        device_name,
-        json_sequence,
-        expected_sensor_states,
+    check_sensor_state(hass, "sensor.oven", "off", 0)
+    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 0)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 0)
+    check_sensor_state(hass, "sensor.oven_core_temperature", None, 0)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 0)
+
+    mock_miele_client.get_devices.return_value = load_json_object_fixture(
+        "oven_scenario/002_on.json", DOMAIN
     )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    check_sensor_state(hass, "sensor.oven", "on", 1)
+    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 1)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 1)
+    check_sensor_state(hass, "sensor.oven_core_temperature", None, 1)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 1)
+
+    mock_miele_client.get_devices.return_value = load_json_object_fixture(
+        "oven_scenario/003_set_temperature.json", DOMAIN
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    check_sensor_state(hass, "sensor.oven", "pause", 2)
+    check_sensor_state(hass, "sensor.oven_temperature", "21.5", 2)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 2)
+    check_sensor_state(hass, "sensor.oven_core_temperature", None, 2)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", "30.0", 2)
+
+    mock_miele_client.get_devices.return_value = load_json_object_fixture(
+        "oven_scenario/004_use_probe.json", DOMAIN
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    check_sensor_state(hass, "sensor.oven", "in_use", 3)
+    check_sensor_state(hass, "sensor.oven_temperature", "21.83", 3)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "25.0", 3)
+    check_sensor_state(hass, "sensor.oven_core_temperature", "22.0", 2)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", "unknown", 3)
+
+    mock_miele_client.get_devices.return_value = load_json_object_fixture(
+        "oven_scenario/001_off.json", DOMAIN
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    check_sensor_state(hass, "sensor.oven", "off", 3)
+    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 3)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 3)
+    check_sensor_state(hass, "sensor.oven_core_temperature", "unknown", 2)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", "unknown", 3)
+
+
+def check_sensor_state(
+    hass: HomeAssistant,
+    sensor_entity: str,
+    expected: str,
+    step: int,
+):
+    """Check the state of sensor matches the expected state."""
+
+    state = hass.states.get(sensor_entity)
+
+    if expected is None:
+        assert state is None, (
+            f"[{sensor_entity}] Step {step + 1}: got {state.state}, expected nothing"
+        )
+    else:
+        assert state is not None, f"Missing entity: {sensor_entity}"
+        assert state.state == expected, (
+            f"[{sensor_entity}] Step {step + 1}: got {state.state}, expected {expected}"
+        )
 
 
 @pytest.mark.parametrize("load_device_file", ["oven_scenario/004_use_probe.json"])
