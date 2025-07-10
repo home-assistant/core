@@ -149,12 +149,14 @@ def deprecate_hass_binding[**_P, _T](
             from homeassistant.core import HomeAssistant  # noqa: PLC0415
 
             if isinstance(args[0], HomeAssistant):
-                _print_deprecation_warning(
-                    func,
-                    "without hass",
+                _print_deprecation_warning_internal(
+                    "hass",
+                    func.__module__,
+                    f"{func.__name__} without hass argument",
                     "argument",
-                    "called with hass as the first argument",
+                    f"passed to {func.__name__}",
                     breaks_in_ha_version,
+                    log_when_no_integration_is_found=True,
                 )
                 args = args[1:]  # type: ignore[assignment]
             return func(*args, **kwargs)
