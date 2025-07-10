@@ -495,6 +495,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-12:34:56:00:86:99]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/weather',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:00:86:99',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Door/Window Sensors',
+    'model_id': None,
+    'name': 'Window Hall',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[netatmo-12:34:56:00:f1:62]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
