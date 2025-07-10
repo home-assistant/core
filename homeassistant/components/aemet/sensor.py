@@ -42,7 +42,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import (
     DEGREE,
@@ -402,10 +401,7 @@ class AemetSensor(AemetEntity, SensorEntity):
         self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self):
         """Return the state of the device."""
-        value = self.get_aemet_value(self.entity_description.keys or [])
-        result = self.entity_description.value_fn(value)
-        if isinstance(result, datetime):
-            return result.isoformat()
-        return result
+        value = self.get_aemet_value(self.entity_description.keys)
+        return self.entity_description.value_fn(value)
