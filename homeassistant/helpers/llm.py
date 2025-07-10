@@ -779,13 +779,19 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if isinstance(schema, selector.ObjectSelector):
         result = {"type": "object"}
         if fields := schema.config.get("fields"):
-            result["properties"] = {
-                field: convert(
+            properties = {}
+            required = []
+            for field, field_schema in fields.items():
+                properties[field] = convert(
                     selector.selector(field_schema["selector"]),
                     custom_serializer=selector_serializer,
                 )
-                for field, field_schema in fields.items()
-            }
+                if field_schema.get("required"):
+                    required.append(field)
+            result["properties"] = properties
+
+            if required:
+                result["required"] = required
         else:
             result["additionalProperties"] = True
         if schema.config.get("multiple"):
