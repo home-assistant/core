@@ -128,7 +128,6 @@ async def test_user_flow_duplicate_unique_id_aborts(
         options={},
         state=ConfigEntryState.LOADED,
         disabled_by=None,
-        reason=None,
         discovery_keys=[],
         sub_entries=[],
     )
