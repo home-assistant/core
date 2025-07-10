@@ -1,7 +1,7 @@
 """Tests for the BSBLan device config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANConnectionError
 import pytest
@@ -34,17 +34,17 @@ def zeroconf_discovery_info() -> ZeroconfServiceInfo:
 
 
 @pytest.fixture
-def zeroconf_discovery_info_no_mac() -> Mock:
+def zeroconf_discovery_info_no_mac() -> ZeroconfServiceInfo:
     """Return zeroconf discovery info for a BSBLAN device without MAC address."""
-    discovery_info = Mock()
-    discovery_info.ip_address = ip_address("10.0.2.60")
-    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
-    discovery_info.name = "BSB-LAN web service._http._tcp.local."
-    discovery_info.type = "_http._tcp.local."
-    discovery_info.properties = {}  # No MAC in properties
-    discovery_info.port = 80
-    discovery_info.hostname = "BSB-LAN.local."
-    return discovery_info
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.2.60"),
+        ip_addresses=[ip_address("10.0.2.60")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={},  # No MAC in properties
+        port=80,
+        hostname="BSB-LAN.local.",
+    )
 
 
 @pytest.fixture
@@ -270,7 +270,7 @@ async def test_abort_if_existing_entry_for_zeroconf(
 async def test_zeroconf_discovery_no_mac_requires_auth(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    zeroconf_discovery_info_no_mac: Mock,
+    zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
     """Test Zeroconf discovery when no MAC in announcement and device requires auth."""
     # Make the first API call (without auth) fail, second call (with auth) succeed
@@ -315,7 +315,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
-    zeroconf_discovery_info_no_mac: Mock,
+    zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
     """Test Zeroconf discovery when no MAC in announcement but device accessible without auth."""
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
@@ -546,7 +546,7 @@ async def test_connection_error_recovery(
 async def test_zeroconf_discovery_no_mac_duplicate_host_port(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    zeroconf_discovery_info_no_mac: Mock,
+    zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
     """Test Zeroconf discovery aborts when no MAC and same host/port already configured."""
     # Create an existing entry with same host/port but no unique_id
