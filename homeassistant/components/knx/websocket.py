@@ -36,7 +36,7 @@ from .storage.entity_store_validation import (
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 URL_BASE: Final = "/knx_static"
 

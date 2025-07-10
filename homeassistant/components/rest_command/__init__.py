@@ -205,7 +205,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                                 "decoding_type": "text",
                             },
                         ) from err
-                    return {"content": _content, "status": response.status}
+                    return {
+                        "content": _content,
+                        "status": response.status,
+                        "headers": dict(response.headers),
+                    }
 
             except TimeoutError as err:
                 raise HomeAssistantError(
