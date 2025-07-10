@@ -756,7 +756,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
@@ -794,7 +794,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED off intensity',
-      'max': 10,
+      'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
@@ -813,7 +813,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
@@ -851,7 +851,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED on intensity',
-      'max': 10,
+      'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
