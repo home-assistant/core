@@ -11,7 +11,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
@@ -209,8 +213,8 @@ async def test_temperature_sensor_registry_lookup(
     assert hass.states.get(entity_id).state == "22.0"
 
     # reload device when turned off, reporting the invalid value
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven.json", DOMAIN
+    mock_miele_client.get_devices.return_value = await async_load_json_object_fixture(
+        hass, "oven.json", DOMAIN
     )
 
     # unload config entry and reload to make sure that the entity is still provided
