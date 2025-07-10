@@ -53,6 +53,7 @@
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
       "invalid_auth": "Invalid API key.",
+      "missing_fields": "Please fill in all required fields.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -121,11 +122,11 @@
       }
     },
     "error": {
-      "cannot_connect": "Could not connect to NS API. Check your API key.",
+      "cannot_connect": "[%key:component::nederlandse_spoorwegen::config::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_routes": "No routes configured yet.",
-      "missing_fields": "Please fill in all required fields.",
+      "missing_fields": "[%key:component::nederlandse_spoorwegen::config::error::missing_fields%]",
       "same_station": "Departure and arrival stations must be different.",
       "invalid_route_index": "Invalid route selected."
     }
@@ -139,14 +140,6 @@
           "disconnected": "Disconnected",
           "no_routes": "No routes configured",
           "unknown": "Unknown"
-        }
-      },
-      "departure": {
-        "name": "Next departure",
-        "state": {
-          "on_time": "On time",
-          "delayed": "Delayed",
-          "cancelled": "Cancelled"
         }
       }
     }
