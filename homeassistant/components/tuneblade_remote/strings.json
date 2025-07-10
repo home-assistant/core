@@ -21,7 +21,8 @@
       }
     },
     "abort": {
-      "cannot_connect": "Unable to connect to TuneBlade device."
+      "cannot_connect": "Unable to connect to TuneBlade device.",
+      "already_configured": "TuneBlade is already configured."
     },
     "error": {
       "cannot_connect": "Unable to connect to TuneBlade device."
