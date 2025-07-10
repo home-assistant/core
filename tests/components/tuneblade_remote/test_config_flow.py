@@ -129,7 +129,6 @@ async def test_user_flow_duplicate_unique_id_aborts(
         state=ConfigEntryState.LOADED,
         disabled_by=None,
         discovery_keys=[],
-        sub_entries=[],
     )
     hass.config_entries._entries.append(existing_entry)
 
