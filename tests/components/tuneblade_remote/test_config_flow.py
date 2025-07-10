@@ -6,9 +6,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.tuneblade_remote.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
@@ -18,7 +20,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_tuneblade_api) -> Non
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -51,7 +53,7 @@ async def test_user_flow_cannot_connect(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -112,29 +114,21 @@ async def test_user_flow_duplicate_unique_id_aborts(
     """Test flow aborts if unique_id already configured."""
     mock_tuneblade_api.async_get_data = AsyncMock(return_value=[{"id": "abc"}])
 
-    existing_entry = ConfigEntry(
-        version=1,
-        minor_version=1,
+    mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="TestDevice",
+        unique_id="TestDevice_127.0.0.1_54412",
         data={
             "host": "127.0.0.1",
             "port": 54412,
             "name": "TestDevice",
         },
-        source=SOURCE_USER,
-        unique_id="TestDevice_127.0.0.1_54412",
-        entry_id="12345",
-        options={},
-        state=ConfigEntryState.LOADED,
-        disabled_by=None,
-        discovery_keys=[],
+        title="TestDevice",
     )
-    hass.config_entries._entries.append(existing_entry)
+    mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] == FlowResultType.FORM
