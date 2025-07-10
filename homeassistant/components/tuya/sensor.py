@@ -35,7 +35,8 @@ from .const import (
     DPType,
     UnitOfMeasurement,
 )
-from .entity import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import ElectricityTypeData, EnumTypeData, IntegerTypeData
 
 
 @dataclass(frozen=True)
