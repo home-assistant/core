@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from victron_ble_ha_parser import VictronBluetoothDeviceData
@@ -21,17 +20,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 
 
-type VictronBLEConfigEntry = ConfigEntry[VictronBLEData]
-
-
-@dataclass
-class VictronBLEData:
-    """Class to hold data for the Victron BLE device."""
-
-    coordinator: PassiveBluetoothProcessorCoordinator | None = None
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Victron BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -44,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -
         mode=BluetoothScanningMode.ACTIVE,
         update_method=data.update,
     )
-    entry.runtime_data = VictronBLEData(coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     entry.async_on_unload(coordinator.async_start())
@@ -52,12 +41,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = False
 
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        entry, Platform.SENSOR
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
     )
 
     if unload_ok:
