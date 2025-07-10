@@ -62,9 +62,10 @@ class LunatoneLight(LightEntity):
         self._attr_unique_id = f"{unique_id_prefix}-device{self._device.id}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._device.is_on
+        is_on: bool = self._device.is_on
+        return is_on
 
     @property
     def device_info(self) -> DeviceInfo:
