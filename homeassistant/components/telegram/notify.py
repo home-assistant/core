@@ -24,6 +24,7 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -31,6 +32,7 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_KEYBOARD = "keyboard"
 ATTR_INLINE_KEYBOARD = "inline_keyboard"
 ATTR_PHOTO = "photo"
@@ -39,9 +41,13 @@ ATTR_VOICE = "voice"
 ATTR_DOCUMENT = "document"
 
 CONF_CHAT_ID = "chat_id"
+CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_CHAT_ID): vol.Coerce(int)}
+    {
+        vol.Required(CONF_CHAT_ID): vol.Coerce(int),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+    }
 )
 
 
@@ -54,20 +60,27 @@ def get_service(
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
-    return TelegramNotificationService(hass, chat_id)
+    config_entry_id = config.get(CONF_CONFIG_ENTRY_ID)
+    return TelegramNotificationService(hass, chat_id, config_entry_id)
 
 
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 
-    def __init__(self, hass, chat_id):
+    def __init__(self, hass, chat_id, config_entry_id):
         """Initialize the service."""
         self._chat_id = chat_id
+        self._config_entry_id = config_entry_id
         self.hass = hass
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
+        service_data = {
+            ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id),
+            ATTR_CONFIG_ENTRY_ID: kwargs.get(
+                ATTR_CONFIG_ENTRY_ID, self._config_entry_id
+            ),
+        }
         if ATTR_TITLE in kwargs:
             service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
         if message:
