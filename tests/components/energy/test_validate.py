@@ -7,16 +7,14 @@ import pytest
 from homeassistant.components.energy import async_get_manager, validate
 from homeassistant.components.energy.data import EnergyManager
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
-ENERGY_UNITS_STRING = ", ".join(DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY])
-ENERGY_PRICE_UNITS_STRING = ", ".join(
-    f"EUR/{unit}" for unit in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]
-)
+ENERGY_UNITS_STRING = ", ".join(tuple(UnitOfEnergy))
+
+ENERGY_PRICE_UNITS_STRING = ", ".join(f"EUR/{unit}" for unit in tuple(UnitOfEnergy))
 
 
 @pytest.fixture
