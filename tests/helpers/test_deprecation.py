@@ -642,6 +642,14 @@ def test_enum_with_deprecated_members_integration_not_found(
 
 
 @pytest.mark.parametrize(
+    "positional_arguments",
+    [
+        [],
+        ["first_arg"],
+        ["first_arg", "second_arg"],
+    ],
+)
+@pytest.mark.parametrize(
     ("breaks_in_ha_version", "extra_msg"),
     [
         (None, ""),
@@ -651,6 +659,7 @@ def test_enum_with_deprecated_members_integration_not_found(
 def test_deprecated_hass_binding(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    positional_arguments: list[str],
     breaks_in_ha_version: str | None,
     extra_msg: str,
 ) -> None:
@@ -659,10 +668,10 @@ def test_deprecated_hass_binding(
     calls = []
 
     @deprecated_hass_binding(breaks_in_ha_version=breaks_in_ha_version)
-    def mock_deprecated_function():
-        calls.append("called")
+    def mock_deprecated_function(*args: str) -> None:
+        calls.append(args)
 
-    mock_deprecated_function()
+    mock_deprecated_function(*positional_arguments)
     assert (
         "The deprecated argument hass was passed to mock_deprecated_function."
         f"{extra_msg}"
@@ -670,10 +679,14 @@ def test_deprecated_hass_binding(
     ) not in caplog.text
     assert len(calls) == 1
 
-    mock_deprecated_function(hass)
+    mock_deprecated_function(hass, *positional_arguments)
     assert (
         "The deprecated argument hass was passed to mock_deprecated_function."
         f"{extra_msg}"
         " Use mock_deprecated_function without hass argument instead"
     ) in caplog.text
     assert len(calls) == 2
+
+    # Ensure that the two calls are the same, as the second call should have been
+    # modified to remove the hass argument.
+    assert calls[0] == calls[1]
