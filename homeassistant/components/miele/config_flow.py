@@ -26,13 +26,13 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    @property
-    def extra_authorize_data(self) -> dict:
-        """Extra data that needs to be appended to the authorize url."""
-        # "vg" is mandatory but the value doesn't seem to matter
-        return {
-            "vg": "sv-SE",
-        }
+    # @property
+    # def extra_authorize_data(self) -> dict:
+    #     """Extra data that needs to be appended to the authorize url."""
+    #     # "vg" is mandatory but the value doesn't seem to matter
+    #     return {
+    #         "vg": "sv-SE",
+    #     }
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
