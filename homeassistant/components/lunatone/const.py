@@ -1,3 +1,7 @@
 """Constants for the Lunatone integration."""
 
-DOMAIN = "lunatone"
+from __future__ import annotations
+
+from typing import Final
+
+DOMAIN: Final = "lunatone"

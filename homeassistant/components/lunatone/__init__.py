@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Final
 
 from lunatone_dali_api_client import Auth, Devices, Info
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 

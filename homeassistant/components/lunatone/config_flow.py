@@ -41,12 +41,12 @@ DALI_DEVICE_SCAN_METHODS: Final[list[str]] = [
     option.value for option in DALIDeviceScanMethod
 ]
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
 )
-RECONFIGURE_SCHEMA = DATA_SCHEMA
-CONF_SCAN_METHOD = "device_scan_method"
-DALI_SCAN_SCHEMA = vol.Schema(
+RECONFIGURE_SCHEMA: Final[vol.Schema] = DATA_SCHEMA
+CONF_SCAN_METHOD: Final = "device_scan_method"
+DALI_SCAN_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
         vol.Required(
             CONF_SCAN_METHOD, default=DEFAULT_DALI_DEVICE_SCAN_METHOD
