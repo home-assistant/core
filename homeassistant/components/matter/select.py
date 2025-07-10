@@ -451,7 +451,9 @@ DISCOVERY_SCHEMAS = [
             command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
                 wattSettingIndex=selected_index
             ),
-            # List of int
+            # List of int but select entity require list of strings
+            # list_values = cast(list[int], self.get_matter_attribute_value(clusters.MicrowaveOvenControl.Attributes.SupportedWatts,)),
+            # options = [str(i) for i in list_values],
             list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
         ),
         entity_class=MatterListSelectEntity,
