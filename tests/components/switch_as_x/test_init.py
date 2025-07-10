@@ -25,12 +25,12 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 
-from . import PLATFORMS_TO_TEST
+from . import CAPABILITY_MAP, PLATFORMS_TO_TEST, SUPPORTED_FEATURE_MAP
 
 from tests.common import MockConfigEntry
 
@@ -77,6 +77,22 @@ def switch_as_x_config_entry(
     config_entry.add_to_hass(hass)
 
     return config_entry
+
+
+def track_entity_registry_actions(
+    hass: HomeAssistant, entity_id: str
+) -> list[er.EventEntityRegistryUpdatedData]:
+    """Track entity registry actions for an entity."""
+    events = []
+
+    @callback
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data)
+
+    async_track_entity_registry_updated_event(hass, entity_id, add_event)
+
+    return events
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -222,7 +238,7 @@ async def test_device_registry_config_entry_1(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
 
     events = []
 
@@ -304,7 +320,7 @@ async def test_device_registry_config_entry_2(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
 
     events = []
 
@@ -386,7 +402,7 @@ async def test_device_registry_config_entry_3(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id in device_entry.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
     device_entry_2 = device_registry.async_get(device_entry_2.id)
     assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
 
@@ -413,7 +429,7 @@ async def test_device_registry_config_entry_3(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
     device_entry_2 = device_registry.async_get(device_entry_2.id)
-    assert switch_as_x_config_entry.entry_id in device_entry_2.config_entries
+    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -1083,11 +1099,31 @@ async def test_restore_expose_settings(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_migrate(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test migration."""
-    # Setup the config entry
+    # Switch config entry, device and entity
+    switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=switch_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique",
+        config_entry=switch_config_entry,
+        device_id=device_entry.id,
+        original_name="ABC",
+        suggested_object_id="test",
+    )
+    assert switch_entity_entry.entity_id == "switch.test"
+
+    # Switch_as_x config entry, device and entity
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -1100,8 +1136,36 @@ async def test_migrate(
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
+    device_registry.async_update_device(
+        device_entry.id, add_config_entry_id=config_entry.entry_id
+    )
+    switch_as_x_entity_entry = entity_registry.async_get_or_create(
+        target_domain,
+        "switch_as_x",
+        config_entry.entry_id,
+        capabilities=CAPABILITY_MAP[target_domain],
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        original_name="ABC",
+        suggested_object_id="abc",
+        supported_features=SUPPORTED_FEATURE_MAP[target_domain],
+    )
+    entity_registry.async_update_entity_options(
+        switch_as_x_entity_entry.entity_id,
+        DOMAIN,
+        {"entity_id": "switch.test", "invert": False},
+    )
+
+    events = track_entity_registry_actions(hass, switch_as_x_entity_entry.entity_id)
+
+    # Setup the switch_as_x config entry
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert set(entity_registry.entities) == {
+        switch_entity_entry.entity_id,
+        switch_as_x_entity_entry.entity_id,
+    }
 
     # Check migration was successful and added invert option
     assert config_entry.state is ConfigEntryState.LOADED
@@ -1116,6 +1180,20 @@ async def test_migrate(
     # Check the state and entity registry entry are present
     assert hass.states.get(f"{target_domain}.abc") is not None
     assert entity_registry.async_get(f"{target_domain}.abc") is not None
+
+    # Entity removed from device to prevent deletion, then added back to device
+    assert events == [
+        {
+            "action": "update",
+            "changes": {"device_id": device_entry.id},
+            "entity_id": switch_as_x_entity_entry.entity_id,
+        },
+        {
+            "action": "update",
+            "changes": {"device_id": None},
+            "entity_id": switch_as_x_entity_entry.entity_id,
+        },
+    ]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
