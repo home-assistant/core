@@ -40,6 +40,15 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "dlq_earu_electric_eawcpt": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "dlq_metering_3pn_wifi": [
+        # https://github.com/home-assistant/core/issues/143499
+        Platform.SENSOR,
+    ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
