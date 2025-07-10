@@ -326,7 +326,7 @@ async def test_rest_command_get_response_malformed_json(
 
     aioclient_mock.get(
         TEST_URL,
-        content='{"status": "failure", 42',
+        content=b'{"status": "failure", 42',
         headers={"content-type": "application/json"},
     )
 
@@ -379,3 +379,27 @@ async def test_rest_command_get_response_none(
     )
 
     assert not response
+
+
+async def test_rest_command_response_iter_chunked(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Ensure response is consumed when return_response is False."""
+    await setup_component()
+
+    png = base64.decodebytes(
+        b"iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQ"
+        b"UAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAAPSURBVBhXY/h/ku////8AECAE1JZPvDAAAAAASUVORK5CYII="
+    )
+    aioclient_mock.get(TEST_URL, content=png)
+
+    with patch("aiohttp.StreamReader.iter_chunked", autospec=True) as mock_iter_chunked:
+        response = await hass.services.async_call(DOMAIN, "get_test", {}, blocking=True)
+
+        # Ensure the response is not returned
+        assert response is None
+
+        # Verify iter_chunked was called with a chunk size
+        assert mock_iter_chunked.called
