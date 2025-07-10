@@ -168,10 +168,14 @@ class PlaystationNetwork:
             return url
 
         url = next(
-            title.title_icon_url
-            for title in self.trophy_titles
-            if game_title_info["titleName"] == normalize_title(title.title_name or "")
-            and next(iter(title.title_platform)) == PlatformType.PS_VITA
+            (
+                title.title_icon_url
+                for title in self.trophy_titles
+                if game_title_info["titleName"]
+                == normalize_title(title.title_name or "")
+                and next(iter(title.title_platform)) == PlatformType.PS_VITA
+            ),
+            None,
         )
         if url is not None:
             self._title_icon_urls[game_title_info["npTitleId"]] = url
