@@ -45,3 +45,23 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "telegram_reloaded")
+
+    # invoke the notify service
+    with patch("homeassistant.core.ServiceRegistry.call") as mock_call:
+        await hass.services.async_call(
+            notify.DOMAIN,
+            "telegram_reloaded",
+            {"message": "test message"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_call.assert_called_once_with(
+        "telegram_bot",
+        "send_message",
+        service_data={
+            "target": 2,
+            "config_entry_id": "ABCDE",
+            "message": "test message",
+        },
+    )
