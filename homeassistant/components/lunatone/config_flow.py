@@ -200,7 +200,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_is_dali_device_scan_done(scan)
 
     async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> None:
-        for _ in range(120):
+        for _ in range(360):
             await scan.async_update()
             if not scan.is_busy:
                 return
