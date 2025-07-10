@@ -39,6 +39,7 @@ from openai.types.responses import (
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
 from openai.types.responses.web_search_tool_param import UserLocation
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
@@ -47,6 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -77,6 +79,47 @@ if TYPE_CHECKING:
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+
+def _adjust_schema(schema: dict[str, Any]) -> None:
+    """Adjust the schema to be compatible with OpenAI API."""
+    if schema["type"] == "object":
+        if "properties" not in schema:
+            return
+
+        if "required" not in schema:
+            schema["required"] = []
+
+        # Ensure all properties are required
+        for prop, prop_info in schema["properties"].items():
+            _adjust_schema(prop_info)
+            if prop not in schema["required"]:
+                prop_info["type"] = [prop_info["type"], "null"]
+                schema["required"].append(prop)
+
+    elif schema["type"] == "array":
+        if "items" not in schema:
+            return
+
+        _adjust_schema(schema["items"])
+
+
+def _format_structured_output(
+    schema: vol.Schema, llm_api: llm.APIInstance | None
+) -> dict[str, Any]:
+    """Format the schema to be compatible with OpenAI API."""
+    result: dict[str, Any] = convert(
+        schema,
+        custom_serializer=(
+            llm_api.custom_serializer if llm_api else llm.selector_serializer
+        ),
+    )
+
+    _adjust_schema(result)
+
+    result["strict"] = True
+    result["additionalProperties"] = False
+    return result
 
 
 def _format_tool(
@@ -243,6 +286,8 @@ class OpenAIBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -273,39 +318,47 @@ class OpenAIBaseLLMEntity(Entity):
                 tools = []
             tools.append(web_search)
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_args = {
+            "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            "input": [],
+            "max_output_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            "user": chat_log.conversation_id,
+            "store": False,
+            "stream": True,
+        }
+        if tools:
+            model_args["tools"] = tools
+
+        if model_args["model"].startswith("o"):
+            model_args["reasoning"] = {
+                "effort": options.get(
+                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                )
+            }
+        else:
+            model_args["store"] = False
+
         messages = [
             m
             for content in chat_log.content
             for m in _convert_content_to_param(content)
         ]
+        if structure and structure_name:
+            model_args["text"] = {
+                "format": {
+                    "type": "json_schema",
+                    "name": slugify(structure_name),
+                    "schema": _format_structured_output(structure, chat_log.llm_api),
+                },
+            }
 
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            model_args = {
-                "model": model,
-                "input": messages,
-                "max_output_tokens": options.get(
-                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                ),
-                "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                "user": chat_log.conversation_id,
-                "store": False,
-                "stream": True,
-            }
-            if tools:
-                model_args["tools"] = tools
-
-            if model.startswith("o"):
-                model_args["reasoning"] = {
-                    "effort": options.get(
-                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                    )
-                }
-                model_args["include"] = ["reasoning.encrypted_content"]
+            model_args["input"] = messages
 
             try:
                 result = await client.responses.create(**model_args)
