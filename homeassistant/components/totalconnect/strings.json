@@ -70,7 +70,7 @@
     },
     "bypass_all": {
       "name": "Bypass all zones",
-      "description": "Bypasses all faulted zones."
+      "description": "Bypasses all zones currently in the FAULT state."
     }
   },
   "entity": {
