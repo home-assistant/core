@@ -835,6 +835,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             except InvalidAuthError:
                 self.config_entry.async_start_reauth(self.hass)
                 return
+            except RpcCallError as err:
+                # Ignore 404 (No handler for) error
+                if err.code != 404:
+                    LOGGER.debug(
+                        "Error during shutdown for device %s: %s",
+                        self.name,
+                        err.message,
+                    )
+                return
             except DeviceConnectionError as err:
                 # If the device is restarting or has gone offline before
                 # the ping/pong timeout happens, the shutdown command

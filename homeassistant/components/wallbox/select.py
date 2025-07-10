@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox select entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     if coordinator.data[CHARGER_ECO_SMART_KEY] != EcoSmartMode.DISABLED:
         async_add_entities(
             WallboxSelect(coordinator, description)
@@ -72,6 +72,10 @@ async def async_setup_entry(
                 and description.supported_fn(coordinator)
             )
         )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSelect(WallboxEntity, SelectEntity):

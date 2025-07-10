@@ -913,12 +913,41 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.BATTERY,
                 CommandClass.ENERGY_PRODUCTION,
                 CommandClass.SENSOR_ALARM,
                 CommandClass.SENSOR_MULTILEVEL,
             },
             type={ValueType.NUMBER},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"level", "maximumCapacity"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"temperature"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="list",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"chargingStatus", "rechargeOrReplace"},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
@@ -1305,21 +1334,49 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_generic and (
-            not value.node.device_class
-            or not any(
-                value.node.device_class.generic.label == val
-                for val in schema.device_class_generic
+            (
+                (endpoint := value.endpoint) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
             )
         ):
             continue
 
         # check device_class_specific
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_specific and (
-            not value.node.device_class
-            or not any(
-                value.node.device_class.specific.label == val
-                for val in schema.device_class_specific
+            (
+                (endpoint := value.endpoint) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
             )
         ):
             continue
