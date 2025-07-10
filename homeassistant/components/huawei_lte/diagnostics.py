@@ -10,12 +10,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-TO_REDACT = {
-    # Entry fields
+ENTRY_FIELDS_DATA_TO_REDACT = {
     "mac",
     "username",
     "password",
-    # device_information
+}
+DEVICE_INFORMATION_DATA_TO_REDACT = {
     "SerialNumber",
     "Imei",
     "Imsi",
@@ -30,7 +30,8 @@ TO_REDACT = {
     "Mccmnc",
     "WifiMacAddrWl0",
     "WifiMacAddrWl1",
-    # device_signal
+}
+DEVICE_SIGNAL_DATA_TO_REDACT = {
     "pci",
     "cell_id",
     "rac",
@@ -39,20 +40,35 @@ TO_REDACT = {
     "nei_cellid",
     "plmn",
     "bsic",
-    # monitoring_status
+}
+MONITORING_STATUS_DATA_TO_REDACT = {
     "PrimaryDns",
     "SecondaryDns",
     "PrimaryIPv6Dns",
     "SecondaryIPv6Dns",
-    # net_current_plmn
+}
+NET_CURRENT_PLMN_DATA_TO_REDACT = {
     "net_current_plmn",
-    # lan_host_info
+}
+LAN_HOST_INFO_DATA_TO_REDACT = {
     "lan_host_info",
-    # wlan_wifi_guest_network_switch
+}
+WLAN_WIFI_GUEST_NETWORK_SWITCH_DATA_TO_REDACT = {
     "Ssid",
     "WifiSsid",
-    # wlan.multi_basic_settings
+}
+WLAN_MULTI_BASIC_SETTINGS_DATA_TO_REDACT = {
     "WifiMac",
+}
+TO_REDACT = {
+    *ENTRY_FIELDS_DATA_TO_REDACT,
+    *DEVICE_INFORMATION_DATA_TO_REDACT,
+    *DEVICE_SIGNAL_DATA_TO_REDACT,
+    *MONITORING_STATUS_DATA_TO_REDACT,
+    *NET_CURRENT_PLMN_DATA_TO_REDACT,
+    *LAN_HOST_INFO_DATA_TO_REDACT,
+    *WLAN_WIFI_GUEST_NETWORK_SWITCH_DATA_TO_REDACT,
+    *WLAN_MULTI_BASIC_SETTINGS_DATA_TO_REDACT,
 }
 
 
