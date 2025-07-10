@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import LunatoneDALIIoTConfigEntry
 from .const import DOMAIN
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
