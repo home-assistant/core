@@ -19,6 +19,7 @@ DEVICE_MOCKS = {
         Platform.LIGHT,
     ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
         Platform.SELECT,
