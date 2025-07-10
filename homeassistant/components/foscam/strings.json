@@ -28,38 +28,37 @@
   "entity": {
     "switch": {
       "flip_switch": {
-        "name": "Flip Switch"
+        "name": "Flip Camera Orientation"
       },
       "mirror_switch": {
-        "name": "Mirror Switch"
+        "name": "Mirror Camera View"
       },
       "ir_switch": {
-        "name": "IR Switch"
+        "name": "Infrared Mode On/Off"
       },
       "sleep_switch": {
-        "name": "Sleep Switch"
+        "name": "Enable Sleep Mode"
       },
       "white_light_switch": {
-        "name": "White Light Switch"
+        "name": "Turn On White Light"
       },
       "siren_alarm_switch": {
-        "name": "Siren Alarm Switch"
+        "name": "Siren Alarm"
       },
       "turn_off_volume_switch": {
-        "name": "Mute Volume Switch"
+        "name": "Volume Muted"
       },
-      "turn_of_light_switch": {
-        "name": "Turn Off Light Switch"
+      "turn_off_light_switch": {
+        "name": "Light Off"
       },
       "hdr_switch": {
-        "name": "HDR Switch"
+        "name": "Enable HDR"
       },
       "wdr_switch": {
-        "name": "WDR Switch"
+        "name": "Enable WDR...."
       }
     }
   },
-
   "services": {
     "ptz": {
       "name": "PTZ",

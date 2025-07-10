@@ -80,7 +80,7 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
     ),
     FoscamSwitchEntityDescription(
         key="is_turnofflight",
-        translation_key="turn_of_light_switch",
+        translation_key="turn_off_light_switch",
         icon="mdi:lightbulb-fluorescent-tube",
         turn_off_fn=lambda session: session.setLedEnableState(1),
         turn_on_fn=lambda session: session.setLedEnableState(0),
@@ -121,10 +121,10 @@ async def async_setup_entry(
         if description.key == "is_asleep":
             if not coordinator.data.is_asleep["supported"]:
                 continue
-        elif description.key == "is_OpenHdr":
+        elif description.key == "is_openhdr":
             if ((1 << 8) & int(reserve3)) != 0:
                 continue
-        elif description.key == "is_OpenWdr":
+        elif description.key == "is_openwdr":
             if ((1 << 8) & int(reserve3)) == 0:
                 continue
 
@@ -135,6 +135,7 @@ async def async_setup_entry(
 class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     """A generic switch class for Foscam entities."""
 
+    _attr_has_entity_name = True
     entity_description: FoscamSwitchEntityDescription
 
     def __init__(
@@ -145,6 +146,7 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         """Initialize the generic switch."""
         entry_id = coordinator.config_entry.entry_id
         super().__init__(coordinator, entry_id)
+
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
@@ -153,15 +155,11 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         else:
             self._state = getattr(self.coordinator.data, self.entity_description.key)
 
-        key = (
-            description.translation_key or description.key
-        )  # fallback to key if translation_key is None
-        self._attr_name = key.replace("_", " ").title()
-
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return bool(int(self._state or 0))
+        # print(self._state)
+        return self._state
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
