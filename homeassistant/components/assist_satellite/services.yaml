@@ -71,7 +71,7 @@ ask_question:
           filter:
             domain: assist_satellite
             supported_features:
-              - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+              - 2 # assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     question:
       required: false
       example: "What kind of music would you like to play?"

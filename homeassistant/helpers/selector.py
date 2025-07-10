@@ -151,7 +151,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
         # Features supported by the entity
         vol.Optional("supported_features"): [
-            vol.All(cv.ensure_list, [str], _validate_supported_features)
+            vol.Any(int, vol.All(cv.ensure_list, [str], _validate_supported_features))
         ],
     }
 )
