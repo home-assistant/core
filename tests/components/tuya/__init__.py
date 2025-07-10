@@ -83,6 +83,14 @@ DEVICE_MOCKS = {
         Platform.CLIMATE,
         Platform.SWITCH,
     ],
+    "wsdcg_temperature_humidity": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+    ],
+    "zndb_smart_meter": [
+        # https://github.com/home-assistant/core/issues/138372
+        Platform.SENSOR,
+    ],
 }
 
 
