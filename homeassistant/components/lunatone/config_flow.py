@@ -132,14 +132,6 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=bool(self.source == SOURCE_RECONFIGURE),
         )
 
-    def _create_entry(self) -> ConfigFlowResult:
-        """Return a config entry for the flow."""
-        assert self.url is not None
-        return self.async_create_entry(
-            title=self._title,
-            data={CONF_URL: self.url},
-        )
-
     async def async_step_dali(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -149,7 +141,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             method = user_input[CONF_SCAN_METHOD]
             if method == DALIDeviceScanMethod.DO_NOTHING:  # Skip device scan
-                return self._create_entry()
+                return await self.async_step_finish({})
             if not self.dali_device_scan_task:
                 self.dali_device_scan_task = self.hass.async_create_task(
                     self._async_start_dali_device_scan(method)
@@ -176,8 +168,17 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle finishing the config flow."""
         if user_input is not None:
-            return self._create_entry()
+            return self.async_create_entry(
+                title=self._title,
+                data={CONF_URL: self.url},
+            )
         return self.async_show_form()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        return await self.async_step_user(user_input)
 
     async def _async_start_dali_device_scan(self, method: DALIDeviceScanMethod) -> None:
         auth = Auth(
@@ -207,9 +208,3 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 return
             await asyncio.sleep(5)
         raise RuntimeError("DALI device scan ran for a long time and never finished")
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_user(user_input)
