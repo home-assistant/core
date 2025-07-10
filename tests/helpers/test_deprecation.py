@@ -17,6 +17,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     deprecated_class,
     deprecated_function,
+    deprecated_hass_binding,
     deprecated_substitute,
     dir_with_deprecated_constants,
     get_deprecated,
@@ -638,3 +639,41 @@ def test_enum_with_deprecated_members_integration_not_found(
         TestEnum.DOGS  # noqa: B018
 
     assert len(caplog.record_tuples) == 0
+
+
+@pytest.mark.parametrize(
+    ("breaks_in_ha_version", "extra_msg"),
+    [
+        (None, ""),
+        ("2099.1", " It will be removed in HA Core 2099.1."),
+    ],
+)
+def test_deprecated_hass_binding(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    breaks_in_ha_version: str | None,
+    extra_msg: str,
+) -> None:
+    """Test deprecated_hass_binding decorator."""
+
+    calls = []
+
+    @deprecated_hass_binding(breaks_in_ha_version=breaks_in_ha_version)
+    def mock_deprecated_function():
+        calls.append("called")
+
+    mock_deprecated_function()
+    assert (
+        "The deprecated argument hass was passed to mock_deprecated_function."
+        f"{extra_msg}"
+        " Use mock_deprecated_function without hass argument instead"
+    ) not in caplog.text
+    assert len(calls) == 1
+
+    mock_deprecated_function(hass)
+    assert (
+        "The deprecated argument hass was passed to mock_deprecated_function."
+        f"{extra_msg}"
+        " Use mock_deprecated_function without hass argument instead"
+    ) in caplog.text
+    assert len(calls) == 2
