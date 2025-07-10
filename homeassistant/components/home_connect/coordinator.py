@@ -662,15 +662,12 @@ class HomeConnectCoordinator(
                 is_persistent=True,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="home_connect_too_many_connected_paired_events",
-                data={
-                    "entry_id": self.config_entry.entry_id,
-                    "appliance_ha_id": appliance_ha_id,
-                },
                 translation_placeholders={
                     "appliance_name": self.data[appliance_ha_id].info.name,
                     "times": str(MAX_EXECUTIONS),
                     "time_window": str(MAX_EXECUTIONS_TIME_WINDOW // 60),
                     "home_connect_resource_url": "https://www.home-connect.com/global/help-support/error-codes#/Togglebox=15362315-13320636-1/",
+                    "config_entry_url": f"/config/integrations/integration/{DOMAIN}#config_entry={self.config_entry.entry_id}",
                 },
             )
             return True
