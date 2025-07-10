@@ -8,11 +8,11 @@ from typing import Any
 from victron_ble_ha_parser import VictronBluetoothDeviceData
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 
 from .const import DOMAIN, VICTRON_IDENTIFIER
@@ -26,7 +26,7 @@ STEP_ACCESS_TOKEN_DATA_SCHEMA = vol.Schema(
 )
 
 
-class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Victron Bluetooth Low Energy."""
 
     VERSION = 1
@@ -39,7 +39,7 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("async_step_bluetooth: %s", discovery_info.address)
         await self.async_set_unique_id(discovery_info.address)
@@ -59,13 +59,11 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_access_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle advertisement key input."""
         # should only be called if there are discovered devices
         assert self._discovered_device is not None
-        assert self._discovered_devices_info is not None
         discovery_info = self._discovered_devices_info[self._discovered_device]
-        assert discovery_info is not None
         title = discovery_info.name
 
         if user_input is not None:
@@ -88,7 +86,7 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle select a device to set up."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]

@@ -20,15 +20,16 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      There is nothing to test, the integration just passively receives BLE advertisements.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
