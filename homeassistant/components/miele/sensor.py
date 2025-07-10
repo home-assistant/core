@@ -597,16 +597,12 @@ async def async_setup_entry(
 
     def _get_entity_class(definition: MieleSensorDefinition) -> type[MieleSensor]:
         """Get the entity class for the sensor."""
-        match definition.description.key:
-            case "state_status":
-                return MieleStatusSensor
-            case "state_program_id":
-                return MieleProgramIdSensor
-            case "state_program_phase":
-                return MielePhaseSensor
-            case "state_plate_step":
-                return MielePlateSensor
-        return MieleSensor
+        {
+            "state_status": MieleStatusSensor,
+            "state_program_id": MieleProgramIdSensor,
+            "state_program_phase": MielePhaseSensor,
+            "state_plate_step": MielePlateSensor,
+        }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
         """Check if the entity is already registered."""
