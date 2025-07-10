@@ -88,16 +88,16 @@
         "name": "Phase 3 current"
       },
       "non_resettable_counter_1": {
-        "name": "Non Resettable counter 1"
+        "name": "Non-resettable counter 1"
       },
       "non_resettable_counter_2": {
-        "name": "Non Resettable counter 2"
+        "name": "Non-resettable counter 2"
       },
       "non_resettable_counter_3": {
-        "name": "Non Resettable counter 3"
+        "name": "Non-resettable counter 3"
       },
       "non_resettable_counter_4": {
-        "name": "Non Resettable counter 4"
+        "name": "Non-resettable counter 4"
       },
       "resettable_counter_1": {
         "name": "Resettable counter 1"

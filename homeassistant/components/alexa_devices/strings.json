@@ -43,6 +43,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_retrieve_data": "Unable to retrieve data from Amazon. Please try again later.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "wrong_country": "Wrong country selected. Please select the country where your Amazon account is registered.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -84,10 +85,10 @@
     }
   },
   "exceptions": {
-    "cannot_connect": {
+    "cannot_connect_with_error": {
       "message": "Error connecting: {error}"
     },
-    "cannot_retrieve_data": {
+    "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
     }
   }

@@ -1,8 +1,13 @@
 """Base entity for OpenAI."""
 
+from __future__ import annotations
+
+import base64
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal, cast
+from mimetypes import guess_file_type
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -17,6 +22,9 @@ from openai.types.responses import (
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
     ResponseIncompleteEvent,
+    ResponseInputFileParam,
+    ResponseInputImageParam,
+    ResponseInputMessageContentListParam,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
@@ -35,11 +43,11 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 
-from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -62,6 +70,10 @@ from .const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
+
+if TYPE_CHECKING:
+    from . import OpenAIConfigEntry
+
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -281,6 +293,7 @@ class OpenAIBaseLLMEntity(Entity):
                 "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                 "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                 "user": chat_log.conversation_id,
+                "store": False,
                 "stream": True,
             }
             if tools:
@@ -292,8 +305,7 @@ class OpenAIBaseLLMEntity(Entity):
                         CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                     )
                 }
-            else:
-                model_args["store"] = False
+                model_args["include"] = ["reasoning.encrypted_content"]
 
             try:
                 result = await client.responses.create(**model_args)
@@ -312,3 +324,50 @@ class OpenAIBaseLLMEntity(Entity):
 
             if not chat_log.unresponded_tool_results:
                 break
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, files: list[Path]
+) -> ResponseInputMessageContentListParam:
+    """Append files to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def append_files_to_content() -> ResponseInputMessageContentListParam:
+        content: ResponseInputMessageContentListParam = []
+
+        for file_path in files:
+            if not file_path.exists():
+                raise HomeAssistantError(f"`{file_path}` does not exist")
+
+            mime_type, _ = guess_file_type(file_path)
+
+            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+                raise HomeAssistantError(
+                    "Only images and PDF are supported by the OpenAI API,"
+                    f"`{file_path}` is not an image file or PDF"
+                )
+
+            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+
+            if mime_type.startswith("image/"):
+                content.append(
+                    ResponseInputImageParam(
+                        type="input_image",
+                        image_url=f"data:{mime_type};base64,{base64_file}",
+                        detail="auto",
+                    )
+                )
+            elif mime_type.startswith("application/pdf"):
+                content.append(
+                    ResponseInputFileParam(
+                        type="input_file",
+                        filename=str(file_path),
+                        file_data=f"data:{mime_type};base64,{base64_file}",
+                    )
+                )
+
+        return content
+
+    return await hass.async_add_executor_job(append_files_to_content)

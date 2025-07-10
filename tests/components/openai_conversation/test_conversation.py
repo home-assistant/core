@@ -499,6 +499,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAA",
             ),
             output_index=output_index,
             sequence_number=0,
@@ -510,6 +511,7 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAABBB",
             ),
             output_index=output_index,
             sequence_number=0,
@@ -566,7 +568,7 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
 
 async def test_function_call(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_reasoning_model: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
@@ -617,7 +619,7 @@ async def test_function_call(
         "id": "rs_A",
         "summary": [],
         "type": "reasoning",
-        "encrypted_content": None,
+        "encrypted_content": "AAABBB",
     }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
