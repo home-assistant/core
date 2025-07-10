@@ -87,7 +87,6 @@ async def test_generate_content_service_with_image(
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("builtins.open", mock_open(read_data="this is an image")),
         patch("mimetypes.guess_type", return_value=["image/jpeg"]),
     ):
         response = await hass.services.async_call(
