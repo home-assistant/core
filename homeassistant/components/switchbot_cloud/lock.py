@@ -21,10 +21,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    entry_options: list = config.options.get("SetNightLatchMode", [])
     async_add_entities(
-        SwitchBotCloudLock(data.api, device, coordinator)
+        SwitchBotCloudLock(data.api, device, coordinator, entry_options)
         for device, coordinator in data.devices.locks
     )
+
+    config.async_on_unload(config.add_update_listener(_async_update_listener))
+
+
+async def _async_update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
+    """Deal with entry update."""
+    await hass.data[DOMAIN][config.entry_id].api.close()
+    await hass.config_entries.async_reload(config.entry_id)
 
 
 class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
@@ -37,14 +46,16 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         api: SwitchBotAPI,
         device: Device | Remote,
         coordinator: SwitchBotCoordinator,
+        entry_options: list,
     ) -> None:
         """Init devices."""
         super().__init__(api, device, coordinator)
         self.__model = device.device_type
-        self.__set_features()
+        self.__entry_options = entry_options
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
+        self.__set_features()
         if coord_data := self.coordinator.data:
             self._attr_is_locked = coord_data["lockState"] == "locked"
 
@@ -61,11 +72,16 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:
-        """Latch lock the lock."""
+        """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
     def __set_features(self) -> None:
-        if self.__model in LockV2Commands.get_supported_devices():
+        """Set features ConfigFlow options."""
+        if (
+            self.device_entry
+            and self.device_entry.id in self.__entry_options
+            and self.__model in LockV2Commands.get_supported_devices()
+        ):
             self._attr_supported_features = LockEntityFeature.OPEN

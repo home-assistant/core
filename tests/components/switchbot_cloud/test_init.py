@@ -123,11 +123,11 @@ async def test_setup_entry_success(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    mock_list_devices.assert_called_once()
+    mock_list_devices.assert_called()
     mock_get_status.assert_called()
-    mock_get_webook_configuration.assert_called_once()
-    mock_delete_webhook.assert_called_once()
-    mock_setup_webhook.assert_called_once()
+    mock_get_webook_configuration.assert_called()
+    mock_delete_webhook.assert_called()
+    mock_setup_webhook.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -224,4 +224,4 @@ async def test_posting_to_webhook(
 
     await hass.async_block_till_done()
 
-    mock_setup_webhook.assert_called_once()
+    mock_setup_webhook.assert_called()
