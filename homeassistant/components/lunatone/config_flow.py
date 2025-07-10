@@ -137,31 +137,41 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow that does DALI related stuff."""
         step_id = "dali"
-        errors: dict[str, str] = {}
+
+        if self.dali_device_scan_task:
+            next_step_id = None
+            if self.dali_device_scan_task.cancelled():
+                _LOGGER.debug("DALI device scan timeout")
+                next_step_id = "failed"
+            elif self.dali_device_scan_task.done():
+                next_step_id = "finish"
+            if next_step_id:
+                self.dali_device_scan_task = None
+                return self.async_show_progress_done(next_step_id=next_step_id)
+
         if user_input is not None:
             method = user_input[CONF_SCAN_METHOD]
             if method == DALIDeviceScanMethod.DO_NOTHING:  # Skip device scan
                 return await self.async_step_finish({})
-            if not self.dali_device_scan_task:
-                self.dali_device_scan_task = self.hass.async_create_task(
-                    self._async_start_dali_device_scan(method)
-                )
-            if not self.dali_device_scan_task.done():
-                return self.async_show_progress(
-                    step_id=step_id,
-                    progress_action="device_scan",
-                    progress_task=self.dali_device_scan_task,
-                )
-
-        if self.dali_device_scan_task:
-            self.dali_device_scan_task = None
-            return self.async_show_progress_done(next_step_id="finish")
+            self.dali_device_scan_task = self.hass.async_create_task(
+                self._async_start_dali_device_scan(method)
+            )
+            return self.async_show_progress(
+                step_id=step_id,
+                progress_action="device_scan",
+                progress_task=self.dali_device_scan_task,
+            )
         return self.async_show_form(
             step_id=step_id,
             data_schema=DALI_SCAN_SCHEMA,
-            errors=errors,
             last_step=False,
         )
+
+    async def async_step_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle failed config flow."""
+        return self.async_abort(reason="dali_device_scan_timeout")
 
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
@@ -187,7 +197,8 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         scan = DALIScan(auth)
         await scan.async_cancel()
-        await self._async_is_dali_device_scan_done(scan)
+        if not await self._async_is_dali_device_scan_done(scan):
+            raise asyncio.CancelledError
 
         if method == DALIDeviceScanMethod.SYSTEM_EXTENSION:
             start_scan_data = StartScanData()
@@ -197,12 +208,13 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
             start_scan_data = StartScanData(noAddressing=True)
 
         await scan.async_start(start_scan_data)
-        await self._async_is_dali_device_scan_done(scan)
+        if not await self._async_is_dali_device_scan_done(scan):
+            raise asyncio.CancelledError
 
-    async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> None:
+    async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> bool:
         for _ in range(360):
             await scan.async_update()
             if not scan.is_busy:
-                return
+                return True
             await asyncio.sleep(5)
-        raise RuntimeError("DALI device scan ran for a long time and never finished")
+        return False
