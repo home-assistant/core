@@ -75,12 +75,11 @@ class TelegramNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        service_data = {
-            ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id),
-            ATTR_CONFIG_ENTRY_ID: kwargs.get(
-                ATTR_CONFIG_ENTRY_ID, self._config_entry_id
-            ),
-        }
+        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
+
+        if self._config_entry_id:
+            service_data.update({ATTR_CONFIG_ENTRY_ID: self._config_entry_id})
+
         if ATTR_TITLE in kwargs:
             service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
         if message:
