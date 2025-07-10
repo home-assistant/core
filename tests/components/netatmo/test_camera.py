@@ -439,7 +439,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 9
 
         calls = fake_post_hits
 
