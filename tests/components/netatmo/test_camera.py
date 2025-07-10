@@ -528,7 +528,7 @@ async def test_setup_component_no_devices(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 9
 
 
 async def test_camera_image_raises_exception(
