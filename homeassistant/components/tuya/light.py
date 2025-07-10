@@ -25,7 +25,8 @@ from homeassistant.util import color as color_util
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 from .util import remap_value
 
 
