@@ -1,6 +1,7 @@
 """Configure py.test."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,6 +9,7 @@ from total_connect_client import ArmingState, TotalConnectClient
 from total_connect_client.device import TotalConnectDevice
 from total_connect_client.location import TotalConnectLocation
 from total_connect_client.partition import TotalConnectPartition
+from total_connect_client.zone import TotalConnectZone, ZoneStatus
 
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
@@ -17,10 +19,73 @@ from homeassistant.components.totalconnect.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .common import LOCATION_ID
-from .const import PASSWORD, USERCODES, USERNAME
+from .const import LOCATION_ID, PASSWORD, USERCODES, USERNAME
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
+
+
+def create_mock_zone(
+    identifier: int,
+    partition: str,
+    description: str,
+    status: ZoneStatus,
+    zone_type_id: int,
+    can_be_bypassed: bool,
+    battery_level: int,
+    signal_strength: int,
+    sensor_serial_number: str | None,
+    loop_number: int | None,
+    response_type: str | None,
+    alarm_report_state: str | None,
+    supervision_type: str | None,
+    chime_state: str | None,
+    device_type: str | None,
+) -> AsyncMock:
+    """Create a mock TotalConnectZone."""
+    zone = AsyncMock(spec=TotalConnectZone, autospec=True)
+    zone.zoneid = identifier
+    zone.partition = partition
+    zone.description = description
+    zone.status = status
+    zone.zone_type_id = zone_type_id
+    zone.can_be_bypassed = can_be_bypassed
+    zone.battery_level = battery_level
+    zone.signal_strength = signal_strength
+    zone.sensor_serial_number = sensor_serial_number
+    zone.loop_number = loop_number
+    zone.response_type = response_type
+    zone.alarm_report_state = alarm_report_state
+    zone.supervision_type = supervision_type
+    zone.chime_state = chime_state
+    zone.device_type = device_type
+    return zone
+
+
+def create_mock_zone_from_dict(
+    zone_data: dict[str, Any],
+) -> AsyncMock:
+    """Create a mock TotalConnectZone from a dictionary."""
+    return create_mock_zone(
+        zone_data["ZoneID"],
+        zone_data["PartitionId"],
+        zone_data["ZoneDescription"],
+        ZoneStatus(zone_data["ZoneStatus"]),
+        zone_data["ZoneTypeId"],
+        zone_data["CanBeBypassed"],
+        zone_data.get("Batterylevel"),
+        zone_data.get("Signalstrength"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("SensorSerialNumber"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("LoopNumber"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("ResponseType"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("AlarmReportState"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("ZoneSupervisionType"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("ChimeState"),
+        (zone_data["zoneAdditionalInfo"] or {}).get("DeviceType"),
+    )
 
 
 @pytest.fixture
@@ -70,6 +135,14 @@ def mock_location(
     location.devices = {
         7654321: TotalConnectDevice(load_json_object_fixture("device_1.json", DOMAIN))
     }
+    location.zones = {
+        z["ZoneID"]: create_mock_zone_from_dict(z)
+        for z in load_json_array_fixture("zones.json", DOMAIN)
+    }
+    location.is_low_battery.return_value = False
+    location.is_cover_tampered.return_value = False
+    location.is_ac_loss.return_value = False
+    location.arming_state = ArmingState.DISARMED
     return location
 
 
