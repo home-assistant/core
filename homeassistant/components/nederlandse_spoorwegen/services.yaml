@@ -1,0 +1,29 @@
+add_route:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+    from:
+      required: true
+      selector:
+        text:
+    to:
+      required: true
+      selector:
+        text:
+    via:
+      required: false
+      selector:
+        text:
+    time:
+      required: false
+      selector:
+        time:
+
+remove_route:
+  fields:
+    name:
+      required: true
+      selector:
+        text:

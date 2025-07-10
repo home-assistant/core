@@ -126,17 +126,65 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_routes": "No routes configured yet.",
       "missing_fields": "Please fill in all required fields.",
+      "same_station": "Departure and arrival stations must be different.",
       "invalid_route_index": "Invalid route selected."
     }
   },
   "entity": {
     "sensor": {
+      "service": {
+        "name": "Service",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "no_routes": "No routes configured",
+          "unknown": "Unknown"
+        }
+      },
       "departure": {
         "name": "Next departure",
         "state": {
           "on_time": "On time",
           "delayed": "Delayed",
           "cancelled": "Cancelled"
+        }
+      }
+    }
+  },
+  "services": {
+    "add_route": {
+      "name": "Add route",
+      "description": "Add a train route to monitor",
+      "fields": {
+        "name": {
+          "name": "Route name",
+          "description": "A name for this route"
+        },
+        "from": {
+          "name": "From station",
+          "description": "Departure station code (e.g., AMS)"
+        },
+        "to": {
+          "name": "To station",
+          "description": "Arrival station code (e.g., UTR)"
+        },
+        "via": {
+          "name": "Via station",
+          "description": "Optional via station code (e.g., RTD)"
+        },
+        "time": {
+          "name": "Departure time",
+          "description": "Optional departure time in HH:MM:SS format (24h)"
+        }
+      }
+    },
+    "remove_route": {
+      "name": "Remove route",
+      "description": "Remove a train route from monitoring",
+      "fields": {
+        "name": {
+          "name": "Route name",
+          "description": "The name of the route to remove"
         }
       }
     }
