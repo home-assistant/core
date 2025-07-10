@@ -21,10 +21,10 @@ from .entity import LinkPlayBaseEntity, exception_wrap
 _LOGGER = logging.getLogger(__name__)
 
 AUDIO_OUTPUT_HW_MODE_MAP: dict[AudioOutputHwMode, str] = {
-    AudioOutputHwMode.OPTICAL: "Optical",
-    AudioOutputHwMode.LINE_OUT: "Line Out",
-    AudioOutputHwMode.COAXIAL: "Coaxial",
-    AudioOutputHwMode.HEADPHONES: "Headphones",
+    AudioOutputHwMode.OPTICAL: "optical",
+    AudioOutputHwMode.LINE_OUT: "line_out",
+    AudioOutputHwMode.COAXIAL: "coaxial",
+    AudioOutputHwMode.HEADPHONES: "headphones",
 }
 
 AUDIO_OUTPUT_HW_MODE_MAP_INV: dict[str, AudioOutputHwMode] = {
@@ -36,8 +36,9 @@ AUDIO_OUTPUT_HW_MODE_MAP_INV: dict[str, AudioOutputHwMode] = {
 class LinkPlaySelectEntityDescription(SelectEntityDescription):
     """Class describing LinkPlay select entities."""
 
-    remote_fn: Callable[[LinkPlayPlayer, Any], Coroutine[Any, Any, None]]
+    set_option_fn: Callable[[LinkPlayPlayer, Any], Coroutine[Any, Any, None]]
     current_option_fn: Callable[[LinkPlayPlayer], Awaitable[Any]]
+    current_option: Callable[[Any], Any]
 
 
 SELECT_TYPES_WIIM: tuple[LinkPlaySelectEntityDescription, ...] = (
@@ -45,9 +46,12 @@ SELECT_TYPES_WIIM: tuple[LinkPlaySelectEntityDescription, ...] = (
         key="audio_output_hardware_mode",
         translation_key="audio_output_hardware_mode",
         current_option_fn=lambda linkplay_bridge: linkplay_bridge.player.get_audio_output_hw_mode(),
-        remote_fn=lambda linkplay_bridge,
-        option: linkplay_bridge.player.set_audio_output_hw_mode(
-            AUDIO_OUTPUT_HW_MODE_MAP_INV[option]
+        current_option=lambda modes: AUDIO_OUTPUT_HW_MODE_MAP[modes.hardware],
+        set_option_fn=(
+            lambda linkplay_bridge,
+            option: linkplay_bridge.player.set_audio_output_hw_mode(
+                AUDIO_OUTPUT_HW_MODE_MAP_INV[option]
+            )
         ),
         options=list(AUDIO_OUTPUT_HW_MODE_MAP_INV),
     ),
@@ -87,8 +91,8 @@ class LinkPlaySelect(LinkPlayBaseEntity, SelectEntity):
     async def async_update(self) -> None:
         """Get the current value from the device."""
         try:
-            response = await self.entity_description.current_option_fn(self._bridge)
-            self._attr_current_option = AUDIO_OUTPUT_HW_MODE_MAP[response.hardware]
+            modes = await self.entity_description.current_option_fn(self._bridge)
+            self._attr_current_option = self.entity_description.current_option(modes)
         except ValueError as ex:
             _LOGGER.debug(
                 "Cannot retrieve hardware mode value from device with error:, %s", ex
@@ -98,5 +102,4 @@ class LinkPlaySelect(LinkPlayBaseEntity, SelectEntity):
     @exception_wrap
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
-        await self.entity_description.remote_fn(self._bridge, option)
-        self._attr_current_option = option
+        await self.entity_description.set_option_fn(self._bridge, option)

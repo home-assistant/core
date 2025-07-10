@@ -43,7 +43,13 @@
     },
     "select": {
       "audio_output_hardware_mode": {
-        "name": "Audio output hardware mode"
+        "name": "Audio output hardware mode",
+        "state": {
+          "optical": "Optical",
+          "line_out": "Line Out",
+          "coaxial": "Coaxial",
+          "headphones": "Headphones"
+        }
       }
     }
   },
