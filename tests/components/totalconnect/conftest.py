@@ -9,7 +9,7 @@ from total_connect_client import ArmingState, TotalConnectClient
 from total_connect_client.device import TotalConnectDevice
 from total_connect_client.location import TotalConnectLocation
 from total_connect_client.partition import TotalConnectPartition
-from total_connect_client.zone import TotalConnectZone, ZoneStatus
+from total_connect_client.zone import TotalConnectZone, ZoneStatus, ZoneType
 
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
@@ -62,6 +62,29 @@ def create_mock_zone(
     zone.supervision_type = supervision_type
     zone.chime_state = chime_state
     zone.device_type = device_type
+    zone.is_type_security.return_value = zone_type_id in (
+        ZoneType.SECURITY,
+        ZoneType.ENTRY_EXIT1,
+        ZoneType.ENTRY_EXIT2,
+        ZoneType.PERIMETER,
+        ZoneType.INTERIOR_FOLLOWER,
+        ZoneType.TROUBLE_ALARM,
+        ZoneType.SILENT_24HR,
+        ZoneType.AUDIBLE_24HR,
+        ZoneType.INTERIOR_DELAY,
+        ZoneType.LYRIC_LOCAL_ALARM,
+        ZoneType.PROA7_GARAGE_MONITOR,
+    )
+    zone.is_type_button.return_value = (
+        zone.is_type_security.return_value and not can_be_bypassed
+    ) or zone_type_id in (
+        ZoneType.PROA7_MEDICAL,
+        ZoneType.AUDIBLE_24HR,
+        ZoneType.SILENT_24HR,
+        ZoneType.RF_ARM_STAY,
+        ZoneType.RF_ARM_AWAY,
+        ZoneType.RF_DISARM,
+    )
     return zone
 
 
