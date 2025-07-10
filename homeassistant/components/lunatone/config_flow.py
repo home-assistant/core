@@ -75,7 +75,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.dali_device_scan_task: asyncio.Task | None = None
 
     @property
-    def _title(self):
+    def _title(self) -> str:
         return f"{self.name or 'DALI Gateway'} {self.serial_number}"
 
     async def async_step_user(
