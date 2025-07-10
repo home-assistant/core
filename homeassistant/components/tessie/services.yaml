@@ -1,0 +1,12 @@
+share:
+  fields:
+    device:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: tessie
+    content:
+      required: true
+      selector:
+        text:

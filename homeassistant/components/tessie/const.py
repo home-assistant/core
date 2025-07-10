@@ -6,6 +6,8 @@ from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
 
+SERVICE_SHARE = "share"
+
 MODELS = {
     "model3": "Model 3",
     "modelx": "Model X",

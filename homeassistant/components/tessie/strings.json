@@ -528,6 +528,25 @@
     },
     "command_failed": {
       "message": "Command failed, {message}"
+    },
+    "invalid_device": {
+      "message": "The device {device_id} coud not be found or is not part of the Tessie integration"
+    }
+  },
+  "services": {
+    "share": {
+      "name": "Share",
+      "description": "Shares an address, latitude/longitude or video URL to the vehicle.",
+      "fields": {
+        "device": {
+          "name": "Vehicle",
+          "description": "Vehicle to share content with."
+        },
+        "content": {
+          "name": "Content",
+          "description": "Content to share with the vehicle."
+        }
+      }
     }
   }
 }
