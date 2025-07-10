@@ -207,7 +207,10 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         super().__init__(coordinator)
         self.event_id = int(key.split(":")[-1])
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
+            coordinator.device,
+            coordinator.mac,
+            key,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)

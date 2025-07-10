@@ -97,8 +97,8 @@
         'value_id': '52-113-0-Home Security-Cover status',
       }),
       dict({
-        'disabled': False,
-        'disabled_by': None,
+        'disabled': True,
+        'disabled_by': 'integration',
         'domain': 'button',
         'entity_category': 'config',
         'entity_id': 'button.multisensor_6_idle_home_security_cover_status',
@@ -120,8 +120,8 @@
         'value_id': '52-113-0-Home Security-Cover status',
       }),
       dict({
-        'disabled': False,
-        'disabled_by': None,
+        'disabled': True,
+        'disabled_by': 'integration',
         'domain': 'button',
         'entity_category': 'config',
         'entity_id': 'button.multisensor_6_idle_home_security_motion_sensor_status',

@@ -1,25 +1,37 @@
 """Common base for entities."""
 
+from dataclasses import dataclass
 from typing import Any
 
 from pysmarlaapi import Federwiege
-from pysmarlaapi.federwiege.classes import Property
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DEVICE_MODEL_NAME, DOMAIN, MANUFACTURER_NAME
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmarlaEntityDescription(EntityDescription):
+    """Class describing Swing2Sleep Smarla entities."""
+
+    service: str
+    property: str
 
 
 class SmarlaBaseEntity(Entity):
     """Common Base Entity class for defining Smarla device."""
 
+    entity_description: SmarlaEntityDescription
+
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, federwiege: Federwiege, prop: Property) -> None:
+    def __init__(self, federwiege: Federwiege, desc: SmarlaEntityDescription) -> None:
         """Initialise the entity."""
-        self._property = prop
+        self.entity_description = desc
+        self._property = federwiege.get_property(desc.service, desc.property)
+        self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, federwiege.serial_number)},
             name=DEVICE_MODEL_NAME,

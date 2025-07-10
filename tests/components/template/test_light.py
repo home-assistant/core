@@ -79,6 +79,7 @@ OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG = {
             "action": "set_temperature",
             "caller": "{{ this.entity_id }}",
             "color_temp": "{{color_temp}}",
+            "color_temp_kelvin": "{{color_temp_kelvin}}",
         },
     },
 }
@@ -1535,6 +1536,7 @@ async def test_temperature_action_no_template(
     assert calls[-1].data["action"] == "set_temperature"
     assert calls[-1].data["caller"] == "light.test_template_light"
     assert calls[-1].data["color_temp"] == 345
+    assert calls[-1].data["color_temp_kelvin"] == 2898
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
