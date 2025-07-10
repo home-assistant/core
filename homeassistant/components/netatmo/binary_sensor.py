@@ -95,7 +95,10 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
         value = cast(
             StateType, getattr(self.device, self.entity_description.netatmo_name)
         )
-        if value is not None:
-            value = self.entity_description.value_fn(value)
-        self._attr_is_on = value
+
+        if value is None:
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = bool(self.entity_description.value_fn(value))
+
         self.async_write_ha_state()
