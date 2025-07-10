@@ -7,8 +7,8 @@ rules:
   appropriate-polling: todo
   brands: todo
   common-modules: todo
-  config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: todo
   docs-actions:
     status: exempt
