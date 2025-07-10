@@ -72,8 +72,6 @@ class MatterMaxNumberEntityDescription(
 ):
     """Describe Matter Number Input entities with static min and attribute max values."""
 
-    ha_to_device: Callable[[Any], Any]
-
     # attribute descriptors to get the max value
     max_attribute: type[ClusterAttributeDescriptor]
 
@@ -148,18 +146,16 @@ class MatterRangeMaxNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        send_value = self.entity_description.ha_to_device(value)
         # custom command defined to set the new value
+        value = int(value)
         await self.send_device_command(
-            self.entity_description.command(send_value),
+            self.entity_description.command(value),
         )
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.device_to_ha:
-            value = value_convert(value)
         self._attr_native_value = value
         self._attr_native_max_value = cast(
             int,
@@ -356,8 +352,6 @@ DISCOVERY_SCHEMAS = [
             native_min_value=1,  # 1 second minimum cook time
             native_step=1,  # 1 second
             native_unit_of_measurement=UnitOfTime.SECONDS,
-            device_to_ha=lambda x: x,
-            ha_to_device=lambda x: x,
             max_attribute=clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
             mode=NumberMode.SLIDER,
         ),
