@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'cap_available': True,
+    'ct_connected': True,
+    'device_info': dict({
+      'model': 'Home Pro',
+      'name': 'Ohme Home Pro',
+      'sw_version': 'v2.65',
+    }),
+    'vehicles': list([
+      'Nissan Leaf',
+      'Tesla Model 3',
+    ]),
+  })
+# ---

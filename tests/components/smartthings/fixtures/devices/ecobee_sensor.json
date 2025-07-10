@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "deviceId": "d5dc3299-c266-41c7-bd08-f540aea54b89",
+      "name": "ecobee Sensor",
+      "label": "Child Bedroom",
+      "manufacturerName": "0A0b",
+      "presentationId": "ST_635a866e-a3ea-4184-9d60-9c72ea603dfd",
+      "deviceManufacturerCode": "ecobee",
+      "locationId": "b6fe1fcb-e82b-4ce8-a5e1-85e96adba06c",
+      "ownerId": "b473ee01-2b1f-7bb1-c433-3caec75960bc",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "motionSensor",
+              "version": 1
+            },
+            {
+              "id": "presenceSensor",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "MotionSensor",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-01-16T21:14:07.283Z",
+      "profile": {
+        "id": "8ab3ca07-0d07-471b-a276-065e46d7aa8a"
+      },
+      "viper": {
+        "manufacturerName": "ecobee",
+        "modelName": "aresSmart-ecobee3_remote_sensor",
+        "swVersion": "250206213001",
+        "hwVersion": "250206213001",
+        "endpointAppId": "viper_92ccdcc0-4184-11eb-b9c5-036180216747"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

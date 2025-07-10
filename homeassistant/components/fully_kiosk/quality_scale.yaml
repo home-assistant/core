@@ -1,0 +1,66 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup: done
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: todo
+  reauthentication-flow: todo
+  parallel-updates: todo
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not utilize an options flow.
+
+  # Gold
+  entity-translations: todo
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices:
+    status: exempt
+    comment: Each config entry maps to a single device
+  diagnostics: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry maps to a single device
+  discovery-update-info: done
+  repair-issues: todo
+  docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-data-update: todo
+  docs-known-limitations: done
+  docs-troubleshooting: todo
+  docs-examples: done
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: todo

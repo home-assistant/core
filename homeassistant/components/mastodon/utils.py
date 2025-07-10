@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from mastodon import Mastodon
+import mimetypes
+from typing import Any
 
-from .const import ACCOUNT_USERNAME, DEFAULT_NAME, INSTANCE_DOMAIN, INSTANCE_URI
+from mastodon import Mastodon
+from mastodon.Mastodon import Account, Instance, InstanceV2
+
+from .const import DEFAULT_NAME
 
 
 def create_mastodon_client(
@@ -20,13 +24,20 @@ def create_mastodon_client(
 
 
 def construct_mastodon_username(
-    instance: dict[str, str] | None, account: dict[str, str] | None
+    instance: InstanceV2 | Instance | None, account: Account | None
 ) -> str:
     """Construct a mastodon username from the account and instance."""
     if instance and account:
-        return (
-            f"@{account[ACCOUNT_USERNAME]}@"
-            f"{instance.get(INSTANCE_URI, instance.get(INSTANCE_DOMAIN))}"
-        )
+        if type(instance) is InstanceV2:
+            return f"@{account.username}@{instance.domain}"
+        return f"@{account.username}@{instance.uri}"
 
     return DEFAULT_NAME
+
+
+def get_media_type(media_path: Any = None) -> Any:
+    """Get media type."""
+
+    (media_type, _) = mimetypes.guess_type(media_path)
+
+    return media_type

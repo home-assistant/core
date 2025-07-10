@@ -9,13 +9,21 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "The email address used to sign in to the Switcher app.",
+          "token": "The local control token received from Switcher."
         }
       },
       "reauth_confirm": {
-        "description": "Found a Switcher device that requires a token\nEnter your username and token\nFor more information see https://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
+        "description": "[%key:component::switcher_kis::config::step::credentials::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "[%key:component::switcher_kis::config::step::credentials::data_description::username%]",
+          "token": "[%key:component::switcher_kis::config::step::credentials::data_description::token%]"
         }
       }
     },
@@ -59,19 +67,24 @@
       },
       "auto_shutdown": {
         "name": "Auto shutdown"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
       },
-      "temperature": {
-        "name": "Current temperature"
+      "multi_child_lock": {
+        "name": "Child lock {cover_id}"
       }
     }
   },
   "services": {
     "set_auto_off": {
-      "name": "Set auto off",
-      "description": "Updates Switcher device auto off setting.",
+      "name": "Set auto-off",
+      "description": "Updates Switcher device auto-off setting.",
       "fields": {
         "auto_off": {
-          "name": "Auto off",
+          "name": "Auto-off",
           "description": "Time period string containing hours and minutes."
         }
       }
@@ -82,7 +95,7 @@
       "fields": {
         "timer_minutes": {
           "name": "Timer",
-          "description": "Time to turn on."
+          "description": "Duration to turn on the Switcher."
         }
       }
     }

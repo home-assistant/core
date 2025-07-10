@@ -1,5 +1,8 @@
 """Define fixtures available for all Acmeda tests."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.acmeda.const import DOMAIN
@@ -18,3 +21,10 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     mock_config_entry.add_to_hass(hass)
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_hub_run() -> Generator[AsyncMock]:
+    """Mock the hub run method."""
+    with patch("homeassistant.components.acmeda.hub.aiopulse.Hub.run") as mock_run:
+        yield mock_run

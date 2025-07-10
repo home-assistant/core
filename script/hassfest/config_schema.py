@@ -6,6 +6,7 @@ import ast
 
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
+from . import ast_parse_module
 from .model import Config, Integration
 
 CONFIG_SCHEMA_IGNORE = {
@@ -60,7 +61,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         # Virtual integrations don't have any implementation
         return
 
-    init = ast.parse(init_file.read_text())
+    init = ast_parse_module(init_file)
 
     # No YAML Support
     if not _has_function(
@@ -81,7 +82,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
     config_file = integration.path / "config.py"
     if config_file.is_file():
-        config_module = ast.parse(config_file.read_text())
+        config_module = ast_parse_module(config_file)
         if _has_function(config_module, ast.AsyncFunctionDef, "async_validate_config"):
             return
 

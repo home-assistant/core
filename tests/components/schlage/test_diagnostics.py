@@ -4,7 +4,8 @@ from unittest.mock import Mock
 
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from . import MockSchlageConfigEntry
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -12,7 +13,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_added_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_lock: Mock,
 ) -> None:
     """Test Schlage diagnostics."""

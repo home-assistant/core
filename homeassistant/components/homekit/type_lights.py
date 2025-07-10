@@ -52,6 +52,7 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
+from .util import get_min_max
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,12 +121,14 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            self.min_mireds = color_temperature_kelvin_to_mired(
+            min_mireds = color_temperature_kelvin_to_mired(
                 attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
             )
-            self.max_mireds = color_temperature_kelvin_to_mired(
+            max_mireds = color_temperature_kelvin_to_mired(
                 attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
             )
+            # Ensure min is less than max
+            self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds
             self.char_color_temp = serv_light.configure_char(
@@ -282,7 +285,11 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
-            elif hue_sat := attributes.get(ATTR_HS_COLOR):
+            elif (
+                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                and isinstance(hue_sat, (list, tuple))
+                and len(hue_sat) == 2
+            ):
                 hue, saturation = hue_sat
             else:
                 hue = None

@@ -7,7 +7,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
@@ -21,6 +20,11 @@ from homeassistant.components.upnp.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .conftest import (
     TEST_DISCOVERY,
@@ -109,14 +113,14 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn=TEST_USN,
             # ssdp_udn=TEST_UDN,  # Not provided.
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             upnp={
-                ssdp.ATTR_UPNP_DEVICE_TYPE: ST_IGD_V1,
-                # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
+                ATTR_UPNP_DEVICE_TYPE: ST_IGD_V1,
+                # ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
             },
         ),
     )
@@ -130,14 +134,14 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn=TEST_USN,
             ssdp_udn=TEST_UDN,
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             ssdp_all_locations=[TEST_LOCATION],
             upnp={
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
+                ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
             },
         ),
     )
@@ -449,7 +453,7 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
     """Test config flow: discovered + configured through ssdp, where the UDN differs in the SSDP-discovery vs device description."""
     # Discovered via step ssdp.
     test_discovery = copy.deepcopy(TEST_DISCOVERY)
-    test_discovery.upnp[ssdp.ATTR_UPNP_UDN] = "uuid:another_udn"
+    test_discovery.upnp[ATTR_UPNP_UDN] = "uuid:another_udn"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

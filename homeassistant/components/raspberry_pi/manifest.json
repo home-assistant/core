@@ -6,5 +6,6 @@
   "config_flow": false,
   "dependencies": ["hardware"],
   "documentation": "https://www.home-assistant.io/integrations/raspberry_pi",
-  "integration_type": "hardware"
+  "integration_type": "hardware",
+  "quality_scale": "legacy"
 }

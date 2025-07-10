@@ -110,7 +110,7 @@ def _setup_androidtv(
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
-        # Use "pure-python-adb" (communicate with ADB server)
+        # Communicate via ADB server
         signer = None
         adb_log = (
             "using ADB server at"
@@ -135,15 +135,16 @@ async def async_connect_androidtv(
     )
 
     aftv = await async_androidtv_setup(
-        config[CONF_HOST],
-        config[CONF_PORT],
-        adbkey,
-        config.get(CONF_ADB_SERVER_IP),
-        config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
-        state_detection_rules,
-        config[CONF_DEVICE_CLASS],
-        timeout,
-        signer,
+        host=config[CONF_HOST],
+        port=config[CONF_PORT],
+        adbkey=adbkey,
+        adb_server_ip=config.get(CONF_ADB_SERVER_IP),
+        adb_server_port=config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
+        state_detection_rules=state_detection_rules,
+        device_class=config[CONF_DEVICE_CLASS],
+        auth_timeout_s=timeout,
+        signer=signer,
+        log_errors=False,
     )
 
     if not aftv.available:

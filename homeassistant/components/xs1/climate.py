@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from xs1_api_client.api_constants import ActuatorType
+from xs1_api_client.device.actuator import XS1Actuator
+from xs1_api_client.device.sensor import XS1Sensor
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,11 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS
+from . import ACTUATORS, DOMAIN, SENSORS
 from .entity import XS1DeviceEntity
-
-MIN_TEMP = 8
-MAX_TEMP = 25
 
 
 def setup_platform(
@@ -30,8 +29,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 thermostat platform."""
-    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
-    sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
+    actuators: list[XS1Actuator] = hass.data[DOMAIN][ACTUATORS]
+    sensors: list[XS1Sensor] = hass.data[DOMAIN][SENSORS]
 
     thermostat_entities = []
     for actuator in actuators:
@@ -56,20 +55,21 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _enable_turn_on_off_backwards_compatibility = False
+    _attr_min_temp = 8
+    _attr_max_temp = 25
 
-    def __init__(self, device, sensor):
+    def __init__(self, device: XS1Actuator, sensor: XS1Sensor) -> None:
         """Initialize the actuator."""
         super().__init__(device)
         self.sensor = sensor
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device if any."""
         return self.device.name()
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.sensor is None:
             return None
@@ -82,19 +82,9 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         return self.device.unit()
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the current target temperature."""
         return self.device.new_value()
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return MAX_TEMP
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 from hyperion import client, const
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -29,7 +28,8 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
 from . import create_hyperion_client
 from .const import (
@@ -155,7 +155,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
@@ -210,7 +210,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         except ValueError:
             self._data[CONF_PORT] = const.DEFAULT_PORT_JSON
 
-        if not (hyperion_id := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL)):
+        if not (hyperion_id := discovery_info.upnp.get(ATTR_UPNP_SERIAL)):
             return self.async_abort(reason="no_id")
 
         # For discovery mechanisms, we set the unique_id as early as possible to

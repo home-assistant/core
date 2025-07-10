@@ -5,6 +5,8 @@ import logging
 DOMAIN = "anthropic"
 LOGGER = logging.getLogger(__package__)
 
+DEFAULT_CONVERSATION_NAME = "Claude conversation"
+
 CONF_RECOMMENDED = "recommended"
 CONF_PROMPT = "prompt"
 CONF_CHAT_MODEL = "chat_model"
@@ -13,3 +15,15 @@ CONF_MAX_TOKENS = "max_tokens"
 RECOMMENDED_MAX_TOKENS = 1024
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
+CONF_THINKING_BUDGET = "thinking_budget"
+RECOMMENDED_THINKING_BUDGET = 0
+MIN_THINKING_BUDGET = 1024
+
+THINKING_MODELS = [
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-latest",
+    "claude-opus-4-20250514",
+    "claude-opus-4-0",
+    "claude-sonnet-4-20250514",
+    "claude-sonnet-4-0",
+]

@@ -16,10 +16,11 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfEnergy,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
@@ -127,7 +128,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_CALORIES,
         translation_key="calories",
-        native_unit_of_measurement="kcal",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -181,7 +182,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TractiveConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
     client = entry.runtime_data.client

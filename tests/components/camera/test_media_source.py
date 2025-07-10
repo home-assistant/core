@@ -92,7 +92,7 @@ async def test_browsing_webrtc(hass: HomeAssistant) -> None:
         assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-@pytest.mark.usefixtures("mock_camera_hls")
+@pytest.mark.usefixtures("mock_camera")
 async def test_resolving(hass: HomeAssistant) -> None:
     """Test resolving."""
     # Adding stream enables HLS camera
@@ -110,7 +110,7 @@ async def test_resolving(hass: HomeAssistant) -> None:
     assert item.mime_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-@pytest.mark.usefixtures("mock_camera_hls")
+@pytest.mark.usefixtures("mock_camera")
 async def test_resolving_errors(hass: HomeAssistant) -> None:
     """Test resolving."""
 

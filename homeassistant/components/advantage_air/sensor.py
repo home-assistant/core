@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_OPEN
@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AdvantageAirDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir sensor platform."""
 
@@ -103,7 +103,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
-        self._attr_name = f'{self._zone["name"]} vent'
+        self._attr_name = f"{self._zone['name']} vent"
         self._attr_unique_id += "-vent"
 
     @property
@@ -131,7 +131,7 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} signal'
+        self._attr_name = f"{self._zone['name']} signal"
         self._attr_unique_id += "-signal"
 
     @property
@@ -165,7 +165,7 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} temperature'
+        self._attr_name = f"{self._zone['name']} temperature"
         self._attr_unique_id += "-temp"
 
     @property

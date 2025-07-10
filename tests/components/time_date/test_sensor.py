@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.time_date.const import OPTION_TYPES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import load_int
 

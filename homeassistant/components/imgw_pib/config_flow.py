@@ -45,12 +45,14 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 imgwpib = await ImgwPib.create(
-                    client_session, hydrological_station_id=station_id
+                    client_session,
+                    hydrological_station_id=station_id,
+                    hydrological_details=False,
                 )
                 hydrological_data = await imgwpib.get_hydrological_data()
             except (ClientError, TimeoutError, ApiError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

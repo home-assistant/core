@@ -4,20 +4,20 @@
       "already_configured": "That student has already been added.",
       "all_student_already_configured": "All students have already been added.",
       "reauth_successful": "Reauth successful",
-      "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student."
+      "no_matching_entries": "No matching entries found, please use different account or remove outdated student integration."
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "expired_token": "Expired token - please generate a new token",
-      "invalid_pin": "Invalid pin",
+      "invalid_pin": "Invalid PIN",
       "invalid_symbol": "Invalid symbol",
       "expired_credentials": "Expired credentials - please create new on Vulcan mobile app registration page",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "auth": {
-        "description": "Login to your Vulcan Account using mobile app registration page.",
+        "description": "Log in to your Vulcan Account using mobile app registration page.",
         "data": {
           "token": "Token",
           "region": "Symbol",

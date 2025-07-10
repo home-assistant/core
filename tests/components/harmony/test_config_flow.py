@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +65,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://192.168.1.12:8088/description",
@@ -120,7 +120,7 @@ async def test_form_ssdp_fails_to_get_remote_id(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://192.168.1.12:8088/description",
@@ -159,7 +159,7 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://2.2.2.2:8088/description",

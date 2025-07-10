@@ -13,7 +13,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .entity import BondEntity
@@ -34,7 +34,7 @@ def _hass_to_bond_position(hass_position: int) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond cover devices."""
     data = entry.runtime_data

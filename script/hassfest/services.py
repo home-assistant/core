@@ -77,6 +77,8 @@ CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
 
 CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
     {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("collapsed"): bool,
         vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
     }
@@ -231,7 +233,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             )
         if service_schema is None:
             continue
-        if "name" not in service_schema:
+        if "name" not in service_schema and integration.core:
             try:
                 strings["services"][service_name]["name"]
             except KeyError:
@@ -240,7 +242,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     f"Service {service_name} has no name {error_msg_suffix}",
                 )
 
-        if "description" not in service_schema:
+        if "description" not in service_schema and integration.core:
             try:
                 strings["services"][service_name]["description"]
             except KeyError:
@@ -255,7 +257,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             if "fields" in field_schema:
                 # This is a section
                 continue
-            if "name" not in field_schema:
+            if "name" not in field_schema and integration.core:
                 try:
                     strings["services"][service_name]["fields"][field_name]["name"]
                 except KeyError:
@@ -264,7 +266,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                         f"Service {service_name} has a field {field_name} with no name {error_msg_suffix}",
                     )
 
-            if "description" not in field_schema:
+            if "description" not in field_schema and integration.core:
                 try:
                     strings["services"][service_name]["fields"][field_name][
                         "description"
@@ -294,13 +296,14 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             if "fields" not in section_schema:
                 # This is not a section
                 continue
-            try:
-                strings["services"][service_name]["sections"][section_name]["name"]
-            except KeyError:
-                integration.add_error(
-                    "services",
-                    f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
-                )
+            if "name" not in section_schema and integration.core:
+                try:
+                    strings["services"][service_name]["sections"][section_name]["name"]
+                except KeyError:
+                    integration.add_error(
+                        "services",
+                        f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
+                    )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

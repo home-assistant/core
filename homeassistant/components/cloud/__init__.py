@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 from typing import cast
 
 from hass_nabucasa import Cloud
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
+    FORMAT_DATETIME,
     Platform,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
@@ -33,17 +35,23 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.signal_type import SignalType
 
-from . import account_link, http_api
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import (
+    account_link,
+    backup,  # noqa: F401
+    http_api,
+)
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
     CONF_ACCOUNTS_SERVER,
     CONF_ACME_SERVER,
     CONF_ALEXA,
-    CONF_ALEXA_SERVER,
     CONF_ALIASES,
     CONF_CLOUDHOOK_SERVER,
     CONF_COGNITO_CLIENT_ID,
@@ -53,14 +61,15 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
-    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
     DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
 )
+from .helpers import FixedSizeQueueLogHandler
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
@@ -121,11 +130,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
                 vol.Optional(CONF_ACCOUNTS_SERVER): str,
                 vol.Optional(CONF_ACME_SERVER): str,
-                vol.Optional(CONF_ALEXA_SERVER): str,
                 vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
-                vol.Optional(CONF_THINGTALK_SERVER): str,
                 vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )
@@ -240,6 +247,8 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
+    log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
+
     # Process configs
     if DOMAIN in config:
         kwargs = dict(config[DOMAIN])
@@ -262,6 +271,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _shutdown(event: Event) -> None:
         """Shutdown event."""
         await cloud.stop()
+        logging.root.removeHandler(log_handler)
+        del hass.data[DATA_CLOUD_LOG_HANDLER]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
@@ -400,3 +411,19 @@ def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
+
+
+async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
+    fmt = (
+        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    )
+    handler = FixedSizeQueueLogHandler()
+    handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+
+    integration = await async_get_integration(hass, DOMAIN)
+    loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}
+
+    for logger_name in loggers:
+        logging.getLogger(logger_name).addHandler(handler)
+
+    return handler

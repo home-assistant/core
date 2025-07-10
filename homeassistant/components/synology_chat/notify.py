@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FILE_URL = "file_url"

@@ -11,9 +11,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.feedreader.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import async_setup_config_entry, create_mock_entry
 from .const import (
@@ -50,6 +51,23 @@ async def test_setup(
 
     # no new events
     assert not events
+
+
+async def test_setup_error(
+    hass: HomeAssistant,
+    feed_one_event,
+) -> None:
+    """Test setup error."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get"
+    ) as feedreader:
+        feedreader.side_effect = urllib.error.URLError("Test")
+        feedreader.return_value = feed_one_event
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_storage_data_writing(

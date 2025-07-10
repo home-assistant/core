@@ -46,8 +46,8 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
+from .common import help_all_subscribe_calls, help_test_unload_config_entry
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
-from .test_common import help_all_subscribe_calls, help_test_unload_config_entry
 from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
 
 from tests.common import (
@@ -195,8 +195,8 @@ async def mock_mqtt_flow(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_subscribing_config_topic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -356,7 +356,7 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, ' '"cmps": ""}',
+        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, "cmps": ""}',
     )
     await hass.async_block_till_done()
     assert (
@@ -388,23 +388,181 @@ async def test_only_valid_components(
     assert not mock_dispatcher_send.called
 
 
-async def test_correct_config_discovery(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+@pytest.mark.parametrize(
+    ("discovery_topic", "discovery_hash"),
+    [
+        ("homeassistant/binary_sensor/bla/config", ("binary_sensor", "bla")),
+        ("homeassistant/binary_sensor/node/bla/config", ("binary_sensor", "node bla")),
+    ],
+    ids=["without_node", "with_node"],
+)
+async def test_correct_config_discovery_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    discovery_topic: str,
+    discovery_hash: tuple[str, str],
 ) -> None:
     """Test sending in correct JSON."""
     await mqtt_mock_entry()
+    config_init = {
+        "name": "Beer",
+        "state_topic": "test-topic",
+        "unique_id": "bla001",
+        "device": {"identifiers": "0AFFD2", "name": "test_device1"},
+        "o": {"name": "foobar"},
+    }
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
-        '{ "name": "Beer", "state_topic": "test-topic" }',
+        discovery_topic,
+        json.dumps(config_init),
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.test_device1_beer")
 
     assert state is not None
-    assert state.name == "Beer"
-    assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
+    assert state.name == "test_device1 Beer"
+    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    assert device_entry.name == "test_device1"
+
+    # Update the device and component
+    config_update = {
+        "name": "Milk",
+        "state_topic": "test-topic",
+        "unique_id": "bla001",
+        "device": {"identifiers": "0AFFD2", "name": "test_device2"},
+        "o": {"name": "foobar"},
+    }
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps(config_update),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_device1_beer")
+
+    assert state is not None
+    assert state.name == "test_device2 Milk"
+    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    assert device_entry.name == "test_device2"
+
+    # Remove the device and component
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        "",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_device1_beer")
+
+    assert state is None
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is None
+
+
+@pytest.mark.parametrize(
+    ("discovery_topic", "discovery_hash"),
+    [
+        ("homeassistant/device/some_id/config", ("binary_sensor", "some_id bla")),
+        (
+            "homeassistant/device/node_id/some_id/config",
+            ("binary_sensor", "some_id node_id bla"),
+        ),
+    ],
+    ids=["without_node", "with_node"],
+)
+async def test_correct_config_discovery_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    discovery_topic: str,
+    discovery_hash: tuple[str, str],
+) -> None:
+    """Test sending in correct JSON."""
+    await mqtt_mock_entry()
+    config_init = {
+        "cmps": {
+            "bla": {
+                "platform": "binary_sensor",
+                "name": "Beer",
+                "state_topic": "test-topic",
+                "unique_id": "bla001",
+            },
+        },
+        "device": {"identifiers": "0AFFD2", "name": "test_device1"},
+        "o": {"name": "foobar"},
+    }
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps(config_init),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_device1_beer")
+
+    assert state is not None
+    assert state.name == "test_device1 Beer"
+    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    assert device_entry.name == "test_device1"
+
+    # Update the device and component
+    config_update = {
+        "cmps": {
+            "bla": {
+                "platform": "binary_sensor",
+                "name": "Milk",
+                "state_topic": "test-topic",
+                "unique_id": "bla001",
+            },
+        },
+        "device": {"identifiers": "0AFFD2", "name": "test_device2"},
+        "o": {"name": "foobar"},
+    }
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps(config_update),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_device1_beer")
+
+    assert state is not None
+    assert state.name == "test_device2 Milk"
+    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    assert device_entry.name == "test_device2"
+
+    # Remove the device and component
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        "",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_device1_beer")
+
+    assert state is None
+
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is None
 
 
 @pytest.mark.parametrize(
@@ -1522,6 +1680,7 @@ async def test_rapid_rediscover_unique(
         "homeassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
     )
+    # Removal, immediately followed by rediscover
     async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
@@ -1533,8 +1692,10 @@ async def test_rapid_rediscover_unique(
     assert len(hass.states.async_entity_ids("binary_sensor")) == 2
     state = hass.states.get("binary_sensor.ale")
     assert state is not None
-    state = hass.states.get("binary_sensor.milk")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
+    state = hass.states.get("binary_sensor.milk")
+    assert state is None
 
     assert len(events) == 4
     # Add the entity
@@ -1544,7 +1705,7 @@ async def test_rapid_rediscover_unique(
     assert events[2].data["entity_id"] == "binary_sensor.beer"
     assert events[2].data["new_state"] is None
     # Add the entity
-    assert events[3].data["entity_id"] == "binary_sensor.milk"
+    assert events[3].data["entity_id"] == "binary_sensor.beer"
     assert events[3].data["old_state"] is None
 
 
@@ -1946,7 +2107,12 @@ async def test_cleanup_device_multiple_config_entries(
     mqtt_mock = await mqtt_mock_entry()
     ws_client = await hass_ws_client(hass)
 
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(
+        domain="test",
+        data={},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2042,7 +2208,12 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 ) -> None:
     """Test discovered device is cleaned up when removed through MQTT."""
     mqtt_mock = await mqtt_mock_entry()
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(
+        domain="test",
+        data={},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2370,7 +2541,6 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_PRECISION",
     "CONF_QOS",
     "CONF_SCHEMA",
-    "CONF_SWING_MODE_LIST",
     "CONF_TEMP_STEP",
     # Removed
     "CONF_WHITE_VALUE",
@@ -2437,12 +2607,14 @@ async def test_no_implicit_state_topic_switch(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
-        }
+        (
+            {mqtt.CONF_BROKER: "mock-broker"},
+            {
+                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+            },
+        )
     ],
 )
 async def test_complex_discovery_topic_prefix(
@@ -2497,7 +2669,13 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         """Handle birth message."""
         birth.set()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        options=ENTRY_DEFAULT_BIRTH_MESSAGE,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     with (
         patch(
@@ -2562,7 +2740,13 @@ async def test_mqtt_discovery_flow_starts_once(
         """Handle birth message."""
         birth.set()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        options=ENTRY_DEFAULT_BIRTH_MESSAGE,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
 
     with (
@@ -2987,3 +3171,139 @@ async def test_shared_state_topic(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "New state3"
+
+
+@pytest.mark.parametrize("single_configs", [copy.deepcopy(TEST_SINGLE_CONFIGS)])
+async def test_discovery_with_late_via_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    single_configs: list[tuple[str, dict[str, Any]]],
+) -> None:
+    """Test a via device is available and the discovery of the via device is late."""
+    await mqtt_mock_entry()
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    via_device_entry = device_registry.async_get_device(
+        {("mqtt", "id_via_very_unique")}
+    )
+    assert via_device_entry is None
+    # Discovery single config schema
+    for discovery_topic, config in single_configs:
+        config["device"]["via_device"] = "id_via_very_unique"
+        payload = json.dumps(config)
+        async_fire_mqtt_message(
+            hass,
+            discovery_topic,
+            payload,
+        )
+        via_device_entry = device_registry.async_get_device(
+            {("mqtt", "id_via_very_unique")}
+        )
+        assert via_device_entry is not None
+        assert via_device_entry.name is None
+
+    await hass.async_block_till_done()
+
+    # Now discover the via device (a switch)
+    via_device_config = {
+        "name": None,
+        "command_topic": "test-switch-topic",
+        "unique_id": "very_unique_switch",
+        "device": {"identifiers": ["id_via_very_unique"], "name": "My Switch"},
+    }
+    payload = json.dumps(via_device_config)
+    via_device_discovery_topic = "homeassistant/switch/very_unique/config"
+    async_fire_mqtt_message(
+        hass,
+        via_device_discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    via_device_entry = device_registry.async_get_device(
+        {("mqtt", "id_via_very_unique")}
+    )
+    assert via_device_entry is not None
+    assert via_device_entry.name == "My Switch"
+
+    await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+@pytest.mark.parametrize("single_configs", [copy.deepcopy(TEST_SINGLE_CONFIGS)])
+async def test_discovery_with_late_via_device_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    single_configs: list[tuple[str, dict[str, Any]]],
+) -> None:
+    """Test a via device is available and the discovery of the via device is is set via an update."""
+    await mqtt_mock_entry()
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    via_device_entry = device_registry.async_get_device(
+        {("mqtt", "id_via_very_unique")}
+    )
+    assert via_device_entry is None
+    # Discovery single config schema without via device
+    for discovery_topic, config in single_configs:
+        payload = json.dumps(config)
+        async_fire_mqtt_message(
+            hass,
+            discovery_topic,
+            payload,
+        )
+        via_device_entry = device_registry.async_get_device(
+            {("mqtt", "id_via_very_unique")}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert via_device_entry is None
+
+    # Resend the discovery update to set the via device
+    for discovery_topic, config in single_configs:
+        config["device"]["via_device"] = "id_via_very_unique"
+        payload = json.dumps(config)
+        async_fire_mqtt_message(
+            hass,
+            discovery_topic,
+            payload,
+        )
+        via_device_entry = device_registry.async_get_device(
+            {("mqtt", "id_via_very_unique")}
+        )
+        assert via_device_entry is not None
+        assert via_device_entry.name is None
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Now discover the via device (a switch)
+    via_device_config = {
+        "name": None,
+        "command_topic": "test-switch-topic",
+        "unique_id": "very_unique_switch",
+        "device": {"identifiers": ["id_via_very_unique"], "name": "My Switch"},
+    }
+    payload = json.dumps(via_device_config)
+    via_device_discovery_topic = "homeassistant/switch/very_unique/config"
+    async_fire_mqtt_message(
+        hass,
+        via_device_discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    via_device_entry = device_registry.async_get_device(
+        {("mqtt", "id_via_very_unique")}
+    )
+    assert via_device_entry is not None
+    assert via_device_entry.name == "My Switch"
+
+    await help_check_discovered_items(hass, device_registry, tag_mock)

@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
-TEST_URL = f"http://test:{DEFAULT_PORT+1}"
+TEST_URL = f"http://test:{DEFAULT_PORT + 1}"
 TEST_CAMERA_ID = 100
 TEST_CAMERA_NAME = "Test Camera"
 TEST_CAMERA_ENTITY_ID = "camera.test_camera"

@@ -8,7 +8,7 @@ from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode
@@ -17,6 +17,9 @@ from .entity import TuyaEntity
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 CAMERAS: tuple[str, ...] = (
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
+    "dghsxj",
     # Smart Camera (including doorbells)
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sp",
@@ -24,7 +27,9 @@ CAMERAS: tuple[str, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cameras dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

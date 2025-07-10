@@ -4,15 +4,17 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import DisplayBrightness
+from aiostreammagic.models import ControlBusMode, DisplayBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import CambridgeAudioEntity
+from . import CambridgeAudioConfigEntry
+from .entity import CambridgeAudioEntity, command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,13 +76,27 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
         value_fn=_audio_output_value_fn,
         set_value_fn=_audio_output_set_value_fn,
     ),
+    CambridgeAudioSelectEntityDescription(
+        key="control_bus_mode",
+        translation_key="control_bus_mode",
+        options=[
+            ControlBusMode.AMPLIFIER.value,
+            ControlBusMode.RECEIVER.value,
+            ControlBusMode.OFF.value,
+        ],
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda client: client.state.control_bus,
+        set_value_fn=lambda client, value: client.set_control_bus_mode(
+            ControlBusMode(value)
+        ),
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CambridgeAudioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio select entities based on a config entry."""
 
@@ -116,6 +132,7 @@ class CambridgeAudioSelect(CambridgeAudioEntity, SelectEntity):
         """Return the state of the select."""
         return self.entity_description.value_fn(self.client)
 
+    @command
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.client, option)

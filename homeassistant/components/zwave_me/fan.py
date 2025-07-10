@@ -8,7 +8,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, ZWaveMePlatform
 from .entity import ZWaveMeEntity
@@ -19,7 +19,7 @@ DEVICE_NAME = ZWaveMePlatform.FAN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan platform."""
 
@@ -49,7 +49,6 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int:

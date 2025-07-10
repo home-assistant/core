@@ -16,11 +16,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as ZONEMINDER_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def setup_platform(
 
     sensors: list[SensorEntity] = []
     zm_client: ZoneMinder
-    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
+    for zm_client in hass.data[DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
             raise PlatformNotReady(
                 "Sensor could not fetch any monitors from ZoneMinder"

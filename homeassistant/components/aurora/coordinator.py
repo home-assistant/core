@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,10 +16,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD
 
-if TYPE_CHECKING:
-    from . import AuroraConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
+
+type AuroraConfigEntry = ConfigEntry[AuroraDataUpdateCoordinator]
 
 
 class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
@@ -27,12 +26,13 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
 
     config_entry: AuroraConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: AuroraConfigEntry) -> None:
         """Initialize the data updater."""
 
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="Aurora",
             update_interval=timedelta(minutes=5),
         )

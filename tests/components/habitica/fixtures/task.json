@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "data": {
+    "_id": "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+    "date": "2024-09-27T22:17:00.000Z",
+    "completed": false,
+    "collapseChecklist": false,
+    "checklist": [],
+    "type": "todo",
+    "text": "Buch zu Ende lesen",
+    "notes": "Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.",
+    "tags": [],
+    "value": 0,
+    "priority": 1,
+    "attribute": "str",
+    "challenge": {},
+    "group": {
+      "completedBy": {},
+      "assignedUsers": []
+    },
+    "reminders": [],
+    "byHabitica": false,
+    "createdAt": "2024-09-21T22:17:57.816Z",
+    "updatedAt": "2024-09-21T22:17:57.816Z",
+    "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+    "id": "88de7cd9-af2b-49ce-9afd-bf941d87336b"
+  },
+  "notifications": [
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_orca_mount",
+        "title": "Orcas for Summer Splash!",
+        "text": "To celebrate Summer Splash, we've given you an Orca Mount!",
+        "destination": "stable"
+      },
+      "seen": true,
+      "id": "b7a85df1-06ed-4ab1-b56d-43418fc6a5e5"
+    },
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 2
+      },
+      "seen": true,
+      "id": "bc3f8a69-231f-4eb1-ba48-a00b6c0e0f37"
+    }
+  ],
+  "userV": 589,
+  "appVersion": "5.28.6"
+}

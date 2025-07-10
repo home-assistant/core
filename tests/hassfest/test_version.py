@@ -16,13 +16,12 @@ from script.hassfest.model import Config, Integration
 def integration():
     """Fixture for hassfest integration model."""
     integration = Integration(
-        "",
+        Path(),
         _config=Config(
             root=Path(".").absolute(),
             specific_integrations=None,
             action="validate",
             requirements=True,
-            core_integrations_path=Path("homeassistant/components"),
         ),
     )
     integration._manifest = {

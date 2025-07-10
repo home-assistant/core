@@ -1,0 +1,24 @@
+{
+  "position": {
+    "lat": 48.807166,
+    "lon": 2.239895,
+    "alti": 76,
+    "name": "Meudon",
+    "country": "FR - France",
+    "dept": "92",
+    "timezone": "Europe/Paris"
+  },
+  "updated_on": 1589995200,
+  "quality": 0,
+  "forecast": [
+    { "dt": 1589996100, "rain": 1, "desc": "Temps sec" },
+    { "dt": 1589996400, "rain": 1, "desc": "Temps sec" },
+    { "dt": 1589996700, "rain": 1, "desc": "Temps sec" },
+    { "dt": 1589997000, "rain": 2, "desc": "Pluie faible" },
+    { "dt": 1589997300, "rain": 3, "desc": "Pluie modérée" },
+    { "dt": 1589997600, "rain": 2, "desc": "Pluie faible" },
+    { "dt": 1589998200, "rain": 1, "desc": "Temps sec" },
+    { "dt": 1589998800, "rain": 1, "desc": "Temps sec" },
+    { "dt": 1589999400, "rain": 1, "desc": "Temps sec" }
+  ]
+}

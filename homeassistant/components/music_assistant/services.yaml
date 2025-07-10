@@ -1,0 +1,240 @@
+# Descriptions for Music Assistant custom services
+
+play_media:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    media_id:
+      required: true
+      example: "spotify://playlist/aabbccddeeff"
+      selector:
+        object:
+    media_type:
+      example: "playlist"
+      selector:
+        select:
+          translation_key: media_type
+          options:
+            - artist
+            - album
+            - audiobook
+            - folder
+            - playlist
+            - podcast
+            - track
+            - radio
+    artist:
+      example: "Queen"
+      selector:
+        text:
+    album:
+      example: "News of the world"
+      selector:
+        text:
+    enqueue:
+      selector:
+        select:
+          options:
+            - "play"
+            - "replace"
+            - "next"
+            - "replace_next"
+            - "add"
+          translation_key: enqueue
+    radio_mode:
+      advanced: true
+      selector:
+        boolean:
+
+play_announcement:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+        - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+  fields:
+    url:
+      required: true
+      example: "http://someremotesite.com/doorbell.mp3"
+      selector:
+        text:
+    use_pre_announce:
+      example: "true"
+      selector:
+        boolean:
+    announce_volume:
+      example: 75
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+
+transfer_queue:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+  fields:
+    source_player:
+      selector:
+        entity:
+          domain: media_player
+          integration: music_assistant
+    auto_play:
+      example: "true"
+      selector:
+        boolean:
+
+get_queue:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+
+search:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
+    name:
+      required: true
+      example: "We Are The Champions"
+      selector:
+        text:
+    media_type:
+      example: "playlist"
+      selector:
+        select:
+          multiple: true
+          translation_key: media_type
+          options:
+            - artist
+            - album
+            - audiobook
+            - playlist
+            - podcast
+            - track
+            - radio
+    artist:
+      example: "Queen"
+      selector:
+        text:
+    album:
+      example: "News of the world"
+      selector:
+        text:
+    limit:
+      advanced: true
+      example: 25
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+    library_only:
+      example: "true"
+      default: false
+      selector:
+        boolean:
+
+get_library:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
+    media_type:
+      required: true
+      example: "playlist"
+      selector:
+        select:
+          translation_key: media_type
+          options:
+            - artist
+            - album
+            - audiobook
+            - playlist
+            - podcast
+            - track
+            - radio
+    favorite:
+      example: "true"
+      default: false
+      selector:
+        boolean:
+    search:
+      example: "We Are The Champions"
+      selector:
+        text:
+    limit:
+      advanced: true
+      example: 25
+      default: 25
+      selector:
+        number:
+          min: 1
+          max: 500
+          step: 1
+    offset:
+      advanced: true
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 1
+          max: 1000000
+          step: 1
+    order_by:
+      example: "random"
+      selector:
+        select:
+          translation_key: order_by
+          options:
+            - name
+            - name_desc
+            - sort_name
+            - sort_name_desc
+            - timestamp_added
+            - timestamp_added_desc
+            - last_played
+            - last_played_desc
+            - play_count
+            - play_count_desc
+            - year
+            - year_desc
+            - position
+            - position_desc
+            - artist_name
+            - artist_name_desc
+            - random
+            - random_play_count
+    album_type:
+      example: "single"
+      selector:
+        select:
+          multiple: true
+          translation_key: album_type
+          options:
+            - album
+            - single
+            - compilation
+            - ep
+            - unknown
+    album_artists_only:
+      example: "true"
+      default: false
+      selector:
+        boolean:

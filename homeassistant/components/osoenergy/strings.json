@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "OSO Energy Auth",
-        "description": "Enter the generated 'Subscription Key' for your account at 'https://portal.osoenergy.no/'",
+        "title": "OSO Energy auth",
+        "description": "Enter the 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth": {
-        "title": "OSO Energy Auth",
-        "description": "Generate and enter a new 'Subscription Key' for your account at 'https://portal.osoenergy.no/'.",
+        "title": "OSO Energy auth",
+        "description": "Enter a new 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -55,12 +55,12 @@
       "heater_mode": {
         "name": "Heater mode",
         "state": {
-          "auto": "Auto",
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "extraenergy": "Extra energy",
           "ffr": "Fast frequency reserve",
           "legionella": "Legionella",
-          "manual": "Manual",
-          "off": "Off",
           "powersave": "Power save",
           "voltage": "Voltage"
         }
@@ -70,7 +70,7 @@
         "state": {
           "advanced": "Advanced",
           "gridcompany": "Grid company",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "oso": "OSO",
           "smartcompany": "Smart company"
         }
@@ -95,11 +95,11 @@
   "services": {
     "get_profile": {
       "name": "Get heater profile",
-      "description": "Get the temperature profile of water heater"
+      "description": "Gets the temperature profile for water heater"
     },
     "set_profile": {
       "name": "Set heater profile",
-      "description": "Set the temperature profile of water heater",
+      "description": "Sets the temperature profile for water heater",
       "fields": {
         "hour_00": {
           "name": "00:00",
@@ -201,7 +201,7 @@
     },
     "set_v40_min": {
       "name": "Set v40 min",
-      "description": "Set the minimum quantity of water at 40°C for a heater",
+      "description": "Sets the minimum quantity of water at 40°C for a heater",
       "fields": {
         "v40_min": {
           "name": "V40 Min",
@@ -211,21 +211,21 @@
     },
     "turn_off": {
       "name": "Turn off heating",
-      "description": "Turn off heating for one hour or until min temperature is reached",
+      "description": "Turns off heating for one hour or until min temperature is reached",
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",
-          "description": "Choose if heating should be off until min temperature (True) is reached or for one hour (False)"
+          "description": "Whether heating should be off until the minimum temperature is reached instead of for one hour."
         }
       }
     },
     "turn_on": {
       "name": "Turn on heating",
-      "description": "Turn on heating for one hour or until max temperature is reached",
+      "description": "Turns on heating for one hour or until max temperature is reached",
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",
-          "description": "Choose if heating should be on until max temperature (True) is reached or for one hour (False)"
+          "description": "Whether heating should be on until the maximum temperature is reached instead of for one hour."
         }
       }
     }

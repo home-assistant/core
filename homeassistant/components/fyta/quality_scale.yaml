@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: No custom action.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: No custom action.
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: No custom action.
+  reauthentication-flow: done
+  parallel-updates:
+    status: exempt
+    comment: |
+      Coordinator and only sensor platform.
+
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow.
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: No noisy entities.
+  discovery:
+    status: done
+    comment: DHCP
+  stale-devices: done
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: No configuration besides credentials.
+  dynamic-devices: done
+  discovery-update-info:
+    status: exempt
+    comment: Fyta can be discovered but does not have a local connection.
+  repair-issues:
+    status: exempt
+    comment: |
+      No issues/repairs.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      No known issues that could be resolved by the user.
+  docs-examples:
+    status: exempt
+    comment: |
+      As only sensors are provided, no examples deemed necessary/appropriate.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

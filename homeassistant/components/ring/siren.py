@@ -22,7 +22,7 @@ from homeassistant.components.siren import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
@@ -35,6 +35,10 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,7 +85,7 @@ SIRENS: tuple[RingSirenEntityDescription[Any], ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the sirens for the Ring devices."""
     ring_data = entry.runtime_data

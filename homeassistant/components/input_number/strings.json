@@ -41,7 +41,7 @@
     },
     "increment": {
       "name": "Increment",
-      "description": "Increments the value by 1 step."
+      "description": "Increments the current value by 1 step."
     },
     "set_value": {
       "name": "Set",

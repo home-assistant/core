@@ -11,7 +11,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -35,7 +35,7 @@ from .entity import ModernFormsDeviceEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Modern Forms platform from config entry."""
 
@@ -78,7 +78,6 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_translation_key = "fan"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator

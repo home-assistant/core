@@ -13,11 +13,13 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +65,10 @@ SELECT_TYPES: tuple[BMWSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities: list[BMWSelect] = []
 
@@ -121,6 +123,10 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
         try:
             await self.entity_description.remote_service(self.vehicle, option)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
 
         self.coordinator.async_update_listeners()

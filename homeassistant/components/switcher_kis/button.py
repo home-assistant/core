@@ -6,21 +6,17 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
 
-from aioswitcher.api import (
-    DeviceState,
-    SwitcherApi,
-    SwitcherBaseResponse,
-    ThermostatSwing,
-)
+from aioswitcher.api import SwitcherApi
+from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.api.remotes import SwitcherBreezeRemote
-from aioswitcher.device import DeviceCategory
+from aioswitcher.device import DeviceCategory, DeviceState, ThermostatSwing
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
@@ -81,7 +77,7 @@ THERMOSTAT_BUTTONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SwitcherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher button from config entry."""
 

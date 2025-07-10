@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -123,7 +123,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AussieBroadbandConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Aussie Broadband sensor platform from a config entry."""
 

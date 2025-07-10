@@ -41,7 +41,7 @@
       }
     },
     "enable_motion_recording": {
-      "name": "Enables motion recording",
+      "name": "Enable motion recording",
       "description": "Enables recording a clip to camera storage when motion is detected.",
       "fields": {
         "entity_id": {
@@ -51,8 +51,8 @@
       }
     },
     "disable_motion_recording": {
-      "name": "Disables motion recording",
-      "description": "Disable recording a clip to camera storage when motion is detected.",
+      "name": "Disable motion recording",
+      "description": "Disables recording a clip to camera storage when motion is detected.",
       "fields": {
         "entity_id": {
           "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",

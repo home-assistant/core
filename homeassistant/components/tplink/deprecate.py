@@ -6,16 +6,20 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from kasa import Device
+
 from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
+from . import legacy_device_id
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
+    from .entity import CoordinatedTPLinkEntity, TPLinkEntityDescription
 
 
 @dataclass(slots=True)
@@ -30,7 +34,7 @@ class DeprecatedInfo:
 def async_check_create_deprecated(
     hass: HomeAssistant,
     unique_id: str,
-    entity_description: TPLinkFeatureEntityDescription,
+    entity_description: TPLinkEntityDescription,
 ) -> bool:
     """Return true if the entity should be created based on the deprecated_info.
 
@@ -58,13 +62,21 @@ def async_check_create_deprecated(
     return not entity_entry.disabled
 
 
-def async_cleanup_deprecated(
+def async_process_deprecated(
     hass: HomeAssistant,
-    platform: str,
+    platform_domain: str,
     entry_id: str,
-    entities: Sequence[CoordinatedTPLinkFeatureEntity],
+    entities: Sequence[CoordinatedTPLinkEntity],
+    device: Device,
 ) -> None:
-    """Remove disabled deprecated entities or create issues if necessary."""
+    """Process deprecated entities for a device.
+
+    Create issues for deprececated entities that appear in automations.
+    Delete entities that are no longer provided by the integration either
+    because they have been removed at the end of the deprecation period, or
+    they are disabled by the user so the async_check_create_deprecated
+    returned false.
+    """
     ent_reg = er.async_get(hass)
     for entity in entities:
         if not (deprecated_info := entity.entity_description.deprecated_info):
@@ -72,7 +84,7 @@ def async_cleanup_deprecated(
 
         assert entity.unique_id
         entity_id = ent_reg.async_get_entity_id(
-            platform,
+            platform_domain,
             DOMAIN,
             entity.unique_id,
         )
@@ -94,17 +106,27 @@ def async_cleanup_deprecated(
                 translation_placeholders={
                     "entity": entity_id,
                     "info": item,
-                    "platform": platform,
+                    "platform": platform_domain,
                     "new_platform": deprecated_info.new_platform,
                 },
             )
 
+    # The light platform does not currently support cleaning up disabled
+    # deprecated entities because it uses two entity classes so a completeness
+    # check is not possible. It also uses the mac address as device id in some
+    # instances instead of device_id.
+    if platform_domain == LIGHT_DOMAIN:
+        return
+
     # Remove entities that are no longer provided and have been disabled.
+    device_id = legacy_device_id(device)
+
     unique_ids = {entity.unique_id for entity in entities}
     for entity_entry in er.async_entries_for_config_entry(ent_reg, entry_id):
         if (
-            entity_entry.domain == platform
+            entity_entry.domain == platform_domain
             and entity_entry.disabled
+            and entity_entry.unique_id.startswith(device_id)
             and entity_entry.unique_id not in unique_ids
         ):
             ent_reg.async_remove(entity_entry.entity_id)

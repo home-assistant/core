@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import socket
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.data import NVR, Bootstrap, CloudAccount
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, ssdp
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
@@ -23,6 +22,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from . import (
     DEVICE_HOSTNAME,
@@ -37,13 +38,13 @@ from .conftest import MAC_ADDR
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
     macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 SSDP_DISCOVERY = (
-    ssdp.SsdpServiceInfo(
+    SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location=f"http://{DEVICE_IP_ADDRESS}:41417/rootDesc.xml",
@@ -324,7 +325,6 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "disable_rtsp": True,
             "override_connection_host": True,
             "max_media": 1000,
-            "allow_ea_channel": False,
         }
         await hass.async_block_till_done()
         await hass.config_entries.async_unload(mock_config.entry_id)
@@ -338,7 +338,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
     ],
 )
 async def test_discovered_by_ssdp_or_dhcp(
-    hass: HomeAssistant, source: str, data: dhcp.DhcpServiceInfo | ssdp.SsdpServiceInfo
+    hass: HomeAssistant, source: str, data: DhcpServiceInfo | SsdpServiceInfo
 ) -> None:
     """Test we handoff to unifi-discovery when discovered via ssdp or dhcp."""
 
@@ -793,6 +793,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         },
         unique_id="FFFFFFAAAAAA",
     )
+    mock_config.runtime_data = Mock(async_stop=AsyncMock())
     mock_config.add_to_hass(hass)
 
     other_ip_dict = UNIFI_DISCOVERY_DICT.copy()
@@ -854,7 +855,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         "port": 443,
         "verify_ssl": True,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
     assert len(mock_setup.mock_calls) == 1
 
 

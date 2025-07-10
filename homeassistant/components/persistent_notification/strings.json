@@ -21,17 +21,17 @@
     },
     "dismiss": {
       "name": "Dismiss",
-      "description": "Removes a notification from the notifications panel.",
+      "description": "Deletes a notification from the notifications panel.",
       "fields": {
         "notification_id": {
           "name": "[%key:component::persistent_notification::services::create::fields::notification_id::name%]",
-          "description": "ID of the notification to be removed."
+          "description": "ID of the notification to be deleted."
         }
       }
     },
     "dismiss_all": {
       "name": "Dismiss all",
-      "description": "Removes all notifications from the notifications panel."
+      "description": "Deletes all notifications from the notifications panel."
     }
   }
 }

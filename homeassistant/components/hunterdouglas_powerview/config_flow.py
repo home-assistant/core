@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Any, Self
 
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, HUB_EXCEPTIONS
 from .util import async_connect_hub
@@ -110,7 +111,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         return info, None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         self.discovered_ip = discovery_info.ip
@@ -118,7 +119,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.discovered_ip = discovery_info.host
@@ -128,7 +129,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         self.discovered_ip = discovery_info.host

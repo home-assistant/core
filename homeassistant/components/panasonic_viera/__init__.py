@@ -13,7 +13,7 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 

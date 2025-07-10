@@ -9,7 +9,6 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
@@ -66,19 +66,19 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         return RainMachineOptionsFlowHandler()
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via zeroconf."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_homekit_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via zeroconf."""
         ip_address = discovery_info.host

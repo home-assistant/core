@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 import logging
 from operator import attrgetter
 import sys
@@ -47,6 +47,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
 from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
@@ -108,10 +109,13 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
+DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
+DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
+
 
 @bind_hass
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
@@ -122,7 +126,7 @@ def async_active_zone(
     closest: State | None = None
 
     # This can be called before async_setup by device tracker
-    zone_entity_ids: Iterable[str] = hass.data.get(ZONE_ENTITY_IDS, ())
+    zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
 
     for entity_id in zone_entity_ids:
         if (
@@ -168,8 +172,8 @@ def async_active_zone(
 @callback
 def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     """Set up track of entity IDs for zones."""
-    zone_entity_ids: list[str] = hass.states.async_entity_ids(DOMAIN)
-    hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
+    zone_entity_ids = hass.states.async_entity_ids(DOMAIN)
+    hass.data[DATA_ZONE_ENTITY_IDS] = zone_entity_ids
 
     @callback
     def _async_add_zone_entity_id(
@@ -290,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
-    hass.data[DOMAIN] = storage_collection
+    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
 
     return True
 
@@ -312,13 +316,11 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up zone as config entry."""
-    storage_collection = cast(ZoneStorageCollection, hass.data[DOMAIN])
-
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await storage_collection.async_create_item(data)
+    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
 
     hass.async_create_task(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
@@ -363,7 +365,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @classmethod
@@ -371,7 +373,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @property

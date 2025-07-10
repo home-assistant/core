@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/oru",
   "iot_class": "cloud_polling",
   "loggers": ["oru"],
+  "quality_scale": "legacy",
   "requirements": ["oru==0.1.11"]
 }

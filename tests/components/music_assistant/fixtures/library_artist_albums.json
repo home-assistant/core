@@ -1,0 +1,88 @@
+{
+  "library_artist_albums": [
+    {
+      "item_id": "115",
+      "provider": "library",
+      "name": "A Sea of Stars",
+      "version": "",
+      "sort_name": "sea of stars, a",
+      "uri": "library://album/115",
+      "external_ids": [["barcode", "859741010126"]],
+      "media_type": "album",
+      "provider_mappings": [
+        {
+          "item_id": "157401232",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--56X5qDS7",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/album/157401232",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/f55c749b/6642/40e3/a291/ff01fd2915cf/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "2021 NRW Records, under exclusive license to NewRetroWave, LLC",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 0,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "year": 2021,
+      "artists": [
+        {
+          "item_id": 127,
+          "provider": "library",
+          "name": "W O L F C L U B",
+          "version": "",
+          "sort_name": "w o l f c l u b",
+          "uri": "library://artist/127",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        },
+        {
+          "item_id": 128,
+          "provider": "library",
+          "name": "Dora Pereli",
+          "version": "",
+          "sort_name": "dora pereli",
+          "uri": "library://artist/128",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album_type": "single"
+    }
+  ]
+}

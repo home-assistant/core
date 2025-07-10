@@ -2,7 +2,7 @@
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity
@@ -14,7 +14,7 @@ ADVANTAGE_AIR_INACTIVE = "Inactive"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AdvantageAirDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir select platform."""
 

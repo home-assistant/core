@@ -1,6 +1,5 @@
 """The tests for Home Assistant frontend."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -95,7 +94,6 @@ async def frontend_themes(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:
@@ -166,7 +164,7 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     text = await resp.text()
 
     # Test we can retrieve frontend.js
-    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{11}.js)", text)
+    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{16}.js)", text)
 
     assert frontendjs is not None, text
     resp = await mock_http_client.get(frontendjs.groups(0)[0])
@@ -689,7 +687,7 @@ async def test_auth_authorize(mock_http_client: TestClient) -> None:
 
     # Test we can retrieve authorize.js
     authorizejs = re.search(
-        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{11}.js)", text
+        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{16}.js)", text
     )
 
     assert authorizejs is not None, text

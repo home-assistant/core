@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 
 def test_raise_if_invalid_filename() -> None:

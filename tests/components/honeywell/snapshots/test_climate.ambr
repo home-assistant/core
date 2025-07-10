@@ -12,6 +12,7 @@
     ]),
     'friendly_name': 'device1',
     'humidity': None,
+    'hvac_action': <HVACAction.OFF: 'off'>,
     'hvac_modes': list([
       <HVACMode.OFF: 'off'>,
       <HVACMode.HEAT_COOL: 'heat_cool'>,

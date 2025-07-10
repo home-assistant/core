@@ -102,8 +102,6 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial user step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if user_input is None:
             return self.async_show_form(step_id=STEP_USER, data_schema=BASE_SCHEMA)
 
@@ -160,8 +158,6 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if CONF_SEND_INTERVAL in import_data:
             self._options[CONF_SEND_INTERVAL] = import_data.pop(CONF_SEND_INTERVAL)
         if CONF_MAX_DELAY in import_data:

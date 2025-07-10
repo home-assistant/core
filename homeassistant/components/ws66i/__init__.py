@@ -78,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the coordinator for the WS66i
     coordinator: Ws66iDataUpdateCoordinator = Ws66iDataUpdateCoordinator(
         hass,
+        entry,
         ws66i,
         zones,
     )

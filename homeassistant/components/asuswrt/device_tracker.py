@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AsusWrtConfigEntry
 from .router import AsusWrtDevInfo, AsusWrtRouter
@@ -18,7 +18,7 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AsusWrtConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = entry.runtime_data
@@ -38,7 +38,9 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+    router: AsusWrtRouter,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []

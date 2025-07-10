@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import PushBulletNotificationProvider
 from .const import DATA_UPDATED, DOMAIN
@@ -68,7 +68,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pushbullet sensors from config entry."""
 
@@ -114,7 +116,12 @@ class PushBulletNotificationSensor(SensorEntity):
         attributes into self._state_attributes.
         """
         try:
-            self._attr_native_value = self.pb_provider.data[self.entity_description.key]
+            value = self.pb_provider.data[self.entity_description.key]
+            # Truncate state value to MAX_LENGTH_STATE_STATE while preserving full content in attributes
+            if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
+                self._attr_native_value = value[: MAX_LENGTH_STATE_STATE - 3] + "..."
+            else:
+                self._attr_native_value = value
             self._attr_extra_state_attributes = self.pb_provider.data
         except (KeyError, TypeError):
             pass

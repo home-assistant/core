@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import (
     Health,
@@ -20,14 +20,27 @@ from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.components.calendar import CalendarEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import RadarrConfigEntry
+
+@dataclass(kw_only=True, slots=True)
+class RadarrData:
+    """Radarr data type."""
+
+    calendar: CalendarUpdateCoordinator
+    disk_space: DiskSpaceDataUpdateCoordinator
+    health: HealthDataUpdateCoordinator
+    movie: MoviesDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+
+
+type RadarrConfigEntry = ConfigEntry[RadarrData]
 
 T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int | None)
 
@@ -53,6 +66,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
@@ -60,6 +74,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=self._update_interval,
         )
@@ -140,11 +155,12 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, host_configuration, api_client)
+        super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 

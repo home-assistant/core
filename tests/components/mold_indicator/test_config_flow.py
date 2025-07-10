@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.mold_indicator.const import (
@@ -70,6 +70,9 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_INDOOR_TEMP: "sensor.indoor_temp",
+            CONF_INDOOR_HUMIDITY: "sensor.indoor_humidity",
+            CONF_OUTDOOR_TEMP: "sensor.outdoor_temp",
             CONF_CALIBRATION_FACTOR: 3.0,
         },
     )

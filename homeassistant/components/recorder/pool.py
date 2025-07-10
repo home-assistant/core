@@ -47,9 +47,9 @@ class RecorderPool(SingletonThreadPool, NullPool):
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
-        assert (
-            recorder_and_worker_thread_ids is not None
-        ), "recorder_and_worker_thread_ids is required"
+        assert recorder_and_worker_thread_ids is not None, (
+            "recorder_and_worker_thread_ids is required"
+        )
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
@@ -90,7 +90,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]  # noqa: RET503
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
         try:
@@ -100,7 +100,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
             # which is allowed but discouraged since its much slower
             return self._do_get_db_connection_protected()
         # In the event loop, raise an exception
-        raise_for_blocking_call(  # noqa: RET503
+        raise_for_blocking_call(
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,

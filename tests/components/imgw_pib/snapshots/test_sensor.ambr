@@ -1,17 +1,20 @@
 # serializer version: 1
-# name: test_sensor[sensor.river_name_station_name_flood_alarm_level-entry]
+# name: test_sensor[sensor.river_name_station_name_water_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.river_name_station_name_flood_alarm_level',
+    'entity_category': None,
+    'entity_id': 'sensor.river_name_station_name_water_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,86 +24,36 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
-    'original_name': 'Flood alarm level',
+    'original_name': 'Water flow',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'flood_alarm_level',
-    'unique_id': '123_flood_alarm_level',
-    'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
+    'translation_key': 'water_flow',
+    'unique_id': '123_water_flow',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 'm³/s'>,
   })
 # ---
-# name: test_sensor[sensor.river_name_station_name_flood_alarm_level-state]
+# name: test_sensor[sensor.river_name_station_name_water_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by IMGW-PIB',
-      'device_class': 'distance',
-      'friendly_name': 'River Name (Station Name) Flood alarm level',
-      'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'River Name (Station Name) Water flow',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 'm³/s'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.river_name_station_name_flood_alarm_level',
+    'entity_id': 'sensor.river_name_station_name_water_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '630.0',
-  })
-# ---
-# name: test_sensor[sensor.river_name_station_name_flood_warning_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.river_name_station_name_flood_warning_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Flood warning level',
-    'platform': 'imgw_pib',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'flood_warning_level',
-    'unique_id': '123_flood_warning_level',
-    'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
-  })
-# ---
-# name: test_sensor[sensor.river_name_station_name_flood_warning_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by IMGW-PIB',
-      'device_class': 'distance',
-      'friendly_name': 'River Name (Station Name) Flood warning level',
-      'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.river_name_station_name_flood_warning_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '590.0',
+    'state': '123.45',
   })
 # ---
 # name: test_sensor[sensor.river_name_station_name_water_level-entry]
@@ -112,6 +65,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -135,6 +89,7 @@
     'original_name': 'Water level',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level',
     'unique_id': '123_water_level',
@@ -167,6 +122,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -190,6 +146,7 @@
     'original_name': 'Water temperature',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_temperature',
     'unique_id': '123_water_temperature',

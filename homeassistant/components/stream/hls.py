@@ -188,9 +188,13 @@ class HlsPlaylistView(StreamView):
         if track.stream_settings.ll_hls:
             playlist.extend(
                 [
-                    f"#EXT-X-PART-INF:PART-TARGET={track.stream_settings.part_target_duration:.3f}",
-                    f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*track.stream_settings.part_target_duration:.3f}",
-                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*track.stream_settings.part_target_duration:.3f},PRECISE=YES",
+                    "#EXT-X-PART-INF:PART-TARGET="
+                    f"{track.stream_settings.part_target_duration:.3f}",
+                    "#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK="
+                    f"{2 * track.stream_settings.part_target_duration:.3f}",
+                    "#EXT-X-START:TIME-OFFSET=-"
+                    f"{EXT_X_START_LL_HLS * track.stream_settings.part_target_duration:.3f}"
+                    ",PRECISE=YES",
                 ]
             )
         else:
@@ -203,7 +207,9 @@ class HlsPlaylistView(StreamView):
             # which seems to take precedence for setting target delay. Yet it also
             # doesn't seem to hurt, so we can stick with it for now.
             playlist.append(
-                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*track.target_duration:.3f},PRECISE=YES"
+                "#EXT-X-START:TIME-OFFSET=-"
+                f"{EXT_X_START_NON_LL_HLS * track.target_duration:.3f}"
+                ",PRECISE=YES"
             )
 
         last_stream_id = first_segment.stream_id

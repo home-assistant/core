@@ -73,7 +73,6 @@ class MaxCubeClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -94,7 +93,7 @@ class MaxCubeClimate(ClimateEntity):
         ]
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp = self._device.min_temperature or MIN_TEMPERATURE
         # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
@@ -102,7 +101,7 @@ class MaxCubeClimate(ClimateEntity):
         return max(temp, MIN_TEMPERATURE)
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temperature or MAX_TEMPERATURE
 
@@ -134,8 +133,6 @@ class MaxCubeClimate(ClimateEntity):
             self._set_target(MAX_DEVICE_MODE_MANUAL, temp)
         elif hvac_mode == HVACMode.AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
-        else:
-            raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
         """Set the mode and/or temperature of the thermostat.
@@ -172,8 +169,8 @@ class MaxCubeClimate(ClimateEntity):
         else:
             return None
 
-        # Assume heating when valve is open
-        if valve > 0:
+        # Assume heating when valve is open.
+        if valve:
             return HVACAction.HEATING
 
         return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE

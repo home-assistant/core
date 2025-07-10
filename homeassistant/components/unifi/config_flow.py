@@ -18,7 +18,6 @@ from urllib.parse import urlparse
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntryState,
@@ -34,8 +33,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from . import UnifiConfigEntry
 from .const import (
@@ -52,7 +56,7 @@ from .const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
-    DOMAIN as UNIFI_DOMAIN,
+    DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
@@ -68,7 +72,7 @@ MODEL_PORTS = {
 }
 
 
-class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
+class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1
@@ -212,12 +216,12 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info.ssdp_location)
-        model_description = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
-        mac_address = format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        model_description = discovery_info.upnp[ATTR_UPNP_MODEL_DESCRIPTION]
+        mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
 
         self.config = {
             CONF_HOST: parsed_url.hostname,

@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType
@@ -31,7 +31,11 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_TOPIC,
+    DEFAULT_PAYLOAD_OFF,
+    DEFAULT_PAYLOAD_ON,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -43,11 +47,9 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Switch"
-DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_PAYLOAD_OFF = "OFF"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
@@ -68,7 +70,7 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT switch through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -89,7 +91,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
-    _is_on_map: dict[str | bytes, bool | None]
+    _is_on_map: dict[str | bytes | bytearray, bool | None]
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 

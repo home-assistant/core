@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_STEP,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
@@ -55,6 +56,9 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_thermostats import (
+    FAN_STATE_ACTIVE,
+    FAN_STATE_IDLE,
+    FAN_STATE_INACTIVE,
     HC_HEAT_COOL_AUTO,
     HC_HEAT_COOL_COOL,
     HC_HEAT_COOL_HEAT,
@@ -68,7 +72,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -76,6 +79,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import async_mock_service
 
@@ -857,6 +861,7 @@ async def test_thermostat_fahrenheit(
 ) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     # support_ = True
     hass.states.async_set(
@@ -868,10 +873,7 @@ async def test_thermostat_fahrenheit(
         },
     )
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
     hk_driver.add_accessory(acc)
     acc.run()
     await hass.async_block_till_done()
@@ -921,8 +923,8 @@ async def test_thermostat_fahrenheit(
     await hass.async_block_till_done()
     assert call_set_temperature[0]
     assert call_set_temperature[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == 73.5
-    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 68
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == 73.4
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 68.18
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "CoolingThresholdTemperature to 23°C"
 
@@ -942,8 +944,8 @@ async def test_thermostat_fahrenheit(
     await hass.async_block_till_done()
     assert call_set_temperature[1]
     assert call_set_temperature[1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 73.5
-    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_LOW] == 71.5
+    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 73.4
+    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_LOW] == 71.6
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == "HeatingThresholdTemperature to 22°C"
 
@@ -962,7 +964,7 @@ async def test_thermostat_fahrenheit(
     await hass.async_block_till_done()
     assert call_set_temperature[2]
     assert call_set_temperature[2].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.0
+    assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.2
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] == "TargetTemperature to 24.0°C"
 
@@ -1785,13 +1787,11 @@ async def test_water_heater_fahrenheit(
 ) -> None:
     """Test if accessory and HA are update accordingly."""
     entity_id = "water_heater.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     hass.states.async_set(entity_id, HVACMode.HEAT)
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     acc.run()
     await hass.async_block_till_done()
 
@@ -2009,8 +2009,8 @@ async def test_thermostat_with_temp_clamps(hass: HomeAssistant, hk_driver) -> No
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
-        ATTR_MAX_TEMP: 50,
-        ATTR_MIN_TEMP: 100,
+        ATTR_MAX_TEMP: 100,
+        ATTR_MIN_TEMP: 50,
     }
     hass.states.async_set(
         entity_id,
@@ -2024,14 +2024,14 @@ async def test_thermostat_with_temp_clamps(hass: HomeAssistant, hk_driver) -> No
     acc.run()
     await hass.async_block_till_done()
 
-    assert acc.char_cooling_thresh_temp.value == 100
-    assert acc.char_heating_thresh_temp.value == 100
+    assert acc.char_cooling_thresh_temp.value == 50
+    assert acc.char_heating_thresh_temp.value == 50
 
     assert acc.char_cooling_thresh_temp.properties[PROP_MAX_VALUE] == 100
-    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] == 100
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] == 50
     assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.1
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == 100
-    assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 100
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 50
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
 
     assert acc.char_target_heat_cool.value == 3
@@ -2048,7 +2048,7 @@ async def test_thermostat_with_temp_clamps(hass: HomeAssistant, hk_driver) -> No
         },
     )
     await hass.async_block_till_done()
-    assert acc.char_heating_thresh_temp.value == 100.0
+    assert acc.char_heating_thresh_temp.value == 50.0
     assert acc.char_cooling_thresh_temp.value == 100.0
     assert acc.char_current_heat_cool.value == 1
     assert acc.char_target_heat_cool.value == 3
@@ -2496,6 +2496,98 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
     assert not acc.fan_chars
 
 
+async def test_thermostat_fan_state_with_preheating_and_defrosting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test thermostat fan state mappings for preheating and defrosting actions."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify fan state characteristics are available
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert hasattr(acc, "char_current_fan_state")
+
+    # Test PREHEATING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.PREHEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test DEFROSTING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.DEFROSTING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test other actions for comparison
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.OFF,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_INACTIVE
+
+
 async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) -> None:
     """Test a thermostat can handle unknown state."""
     entity_id = "climate.test"
@@ -2633,3 +2725,44 @@ async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) 
     assert call_set_hvac_mode
     assert call_set_hvac_mode[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_hvac_mode[1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+
+
+async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> None:
+    """Test reversed min/max temperatures."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.HEAT_COOL,
+            HVACMode.FAN_ONLY,
+            HVACMode.COOL,
+            HVACMode.OFF,
+            HVACMode.AUTO,
+        ],
+        ATTR_MAX_TEMP: DEFAULT_MAX_TEMP,
+        ATTR_MIN_TEMP: DEFAULT_MIN_TEMP,
+    }
+    # support_auto = True
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        base_attrs,
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_cooling_thresh_temp.value == 23.0
+    assert acc.char_heating_thresh_temp.value == 19.0
+
+    assert acc.char_cooling_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.1
+    assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1

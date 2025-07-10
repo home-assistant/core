@@ -78,7 +78,7 @@ async def _async_get_component_icons(
 class _IconsCache:
     """Cache for icons."""
 
-    __slots__ = ("_hass", "_loaded", "_cache", "_lock")
+    __slots__ = ("_cache", "_hass", "_loaded", "_lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""

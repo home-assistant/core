@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -24,14 +24,16 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DEVICE_UPDATE_INTERVAL
+from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
+PARALLEL_UPDATES = 0
 RESUME_AFTER_INSTALL = 15
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
@@ -73,7 +75,7 @@ HOST_UPDATE_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Reolink component."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -182,6 +184,7 @@ class ReolinkUpdateBaseEntity(
             f"## Release notes\n\n{new_firmware.release_notes}"
         )
 
+    @raise_translated_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -194,8 +197,12 @@ class ReolinkUpdateBaseEntity(
         try:
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
+            if err.translation_key:
+                raise
             raise HomeAssistantError(
-                f"Error trying to update Reolink firmware: {err}"
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"err": str(err)},
             ) from err
         finally:
             self.async_write_ha_state()
@@ -212,7 +219,7 @@ class ReolinkUpdateBaseEntity(
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
-    async def _resume_update_coordinator(self, *args) -> None:
+    async def _resume_update_coordinator(self, *args: Any) -> None:
         """Resume updating the states using the data update coordinator (after reboots)."""
         self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
         try:
@@ -220,7 +227,7 @@ class ReolinkUpdateBaseEntity(
         finally:
             self._cancel_resume = None
 
-    async def _async_update_progress(self, *args) -> None:
+    async def _async_update_progress(self, *args: Any) -> None:
         """Request update."""
         self.async_write_ha_state()
         if self._installing:
@@ -228,7 +235,7 @@ class ReolinkUpdateBaseEntity(
                 self.hass, POLL_PROGRESS, self._async_update_progress
             )
 
-    async def _async_update_future(self, *args) -> None:
+    async def _async_update_future(self, *args: Any) -> None:
         """Request update."""
         try:
             await self.async_update()

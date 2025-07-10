@@ -8,14 +8,14 @@ from unittest.mock import patch
 import aiounifi
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import DOMAIN
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import ConfigEntryFactoryType, WebsocketStateManager
 
@@ -49,7 +49,7 @@ async def test_hub_setup(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(UNIFI_DOMAIN, config_entry.unique_id)},
+        identifiers={(DOMAIN, config_entry.unique_id)},
     )
 
     assert device_entry.sw_version == "7.4.162"
@@ -76,7 +76,7 @@ async def test_reset_fails(
         return_value=False,
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
-        assert config_entry_setup.state is ConfigEntryState.LOADED
+        assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
 
 
 @pytest.mark.usefixtures("mock_device_registry")

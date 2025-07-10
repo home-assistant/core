@@ -14,12 +14,15 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfMass
+from homeassistant.const import PERCENTAGE, UnitOfMass, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -49,6 +52,14 @@ SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
         ),
         value_fn=lambda scale: scale.weight,
     ),
+    AcaiaDynamicUnitSensorEntityDescription(
+        key="flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda scale: scale.flow_rate,
+    ),
 )
 RESTORE_SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
     AcaiaSensorEntityDescription(
@@ -66,7 +77,7 @@ RESTORE_SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AcaiaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import re
-import telnetlib  # pylint: disable=deprecated-module
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)

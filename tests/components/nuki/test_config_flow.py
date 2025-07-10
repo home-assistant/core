@@ -6,11 +6,11 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .mock import DHCP_FORMATTED_MAC, HOST, MOCK_INFO, NAME, setup_nuki_integration
 
@@ -151,9 +151,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Test that DHCP discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
-            hostname=NAME, ip=HOST, macaddress=DHCP_FORMATTED_MAC
-        ),
+        data=DhcpServiceInfo(hostname=NAME, ip=HOST, macaddress=DHCP_FORMATTED_MAC),
         context={"source": config_entries.SOURCE_DHCP},
     )
 
@@ -196,9 +194,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     await setup_nuki_integration(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
-            hostname=NAME, ip=HOST, macaddress=DHCP_FORMATTED_MAC
-        ),
+        data=DhcpServiceInfo(hostname=NAME, ip=HOST, macaddress=DHCP_FORMATTED_MAC),
         context={"source": config_entries.SOURCE_DHCP},
     )
 

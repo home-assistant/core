@@ -6,9 +6,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextcloudConfigEntry
 from .const import DOMAIN
-from .coordinator import NextcloudDataUpdateCoordinator
+from .coordinator import NextcloudConfigEntry, NextcloudDataUpdateCoordinator
 
 
 class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):

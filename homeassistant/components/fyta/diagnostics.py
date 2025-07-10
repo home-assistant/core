@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FytaConfigEntry
+from .coordinator import FytaConfigEntry
 
 TO_REDACT = [
     CONF_PASSWORD,

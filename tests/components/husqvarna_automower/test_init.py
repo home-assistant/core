@@ -1,16 +1,18 @@
 """Tests for init module."""
 
 from asyncio import Event
-from datetime import datetime
+from collections.abc import Callable
+from copy import deepcopy
+from datetime import datetime, timedelta
 import http
 import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
+    HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
 )
 from aioautomower.model import MowerAttributes, WorkArea
 from freezegun.api import FrozenDateTimeFactory
@@ -20,7 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -33,6 +35,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
+NUMBER_OF_ENTITIES_MOWER_2 = 11
 
 
 async def test_load_unload_entry(
@@ -111,8 +114,8 @@ async def test_expired_token_refresh_failure(
 @pytest.mark.parametrize(
     ("exception", "entry_state"),
     [
-        (ApiException, ConfigEntryState.SETUP_RETRY),
-        (AuthException, ConfigEntryState.SETUP_ERROR),
+        (ApiError, ConfigEntryState.SETUP_RETRY),
+        (AuthError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
@@ -142,7 +145,7 @@ async def test_update_failed(
         ),
         (
             ["start_listening"],
-            TimeoutException,
+            HusqvarnaTimeoutError,
             "Failed to listen to websocket.",
         ),
     ],
@@ -220,6 +223,73 @@ async def test_device_info(
     assert reg_device == snapshot
 
 
+async def test_constant_polling(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Verify that receiving a WebSocket update does not interrupt the regular polling cycle.
+
+    The test simulates a WebSocket update that changes an entity's state, then advances time
+    to trigger a scheduled poll to confirm polled data also arrives.
+    """
+    test_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert mock_automower_client.register_data_callback.called
+    assert "cb" in callback_holder
+
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "100"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "40"
+
+    test_values[TEST_MOWER_ID].battery.battery_percent = 77
+
+    freezer.tick(SCAN_INTERVAL - timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    callback_holder["cb"](test_values)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "77"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "40"
+
+    test_values[TEST_MOWER_ID].work_areas[123456].progress = 50
+    mock_automower_client.get_status.return_value = test_values
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_automower_client.get_status.assert_awaited()
+    state = hass.states.get("sensor.test_mower_1_battery")
+    assert state is not None
+    assert state.state == "77"
+    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    assert state is not None
+    assert state.state == "50"
+
+
 async def test_coordinator_automatic_registry_cleanup(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -227,31 +297,81 @@ async def test_coordinator_automatic_registry_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test automatic registry cleanup."""
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.async_block_till_done()
 
+    # Count current entitties and devices
     current_entites = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
     current_devices = len(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
-
-    values.pop(TEST_MOWER_ID)
+    # Remove mower 2 and check if it worked
+    mower2 = values.pop("1234")
     mock_automower_client.get_status.return_value = values
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
         len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-        == current_entites - 37
+        == current_entites - NUMBER_OF_ENTITIES_MOWER_2
     )
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices - 1
+    )
+    # Add mower 2 and check if it worked
+    values["1234"] = mower2
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices
+    )
+
+    # Remove mower 1 and check if it worked
+    mower1 = values.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == NUMBER_OF_ENTITIES_MOWER_2
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices - 1
+    )
+    # Add mower 1 and check if it worked
+    values[TEST_MOWER_ID] = mower1
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices
+    )
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
     )
 
 

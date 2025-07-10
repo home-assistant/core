@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 from logging import getLogger
-from typing import cast
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
@@ -15,13 +14,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Enigma2ConfigEntry
-from .coordinator import Enigma2UpdateCoordinator
+from .coordinator import Enigma2ConfigEntry, Enigma2UpdateCoordinator
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -34,7 +31,7 @@ _LOGGER = getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Enigma2ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Enigma2 media player platform."""
     async_add_entities([Enigma2Device(entry.runtime_data)])
@@ -58,6 +55,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
     )
 
     def __init__(self, coordinator: Enigma2UpdateCoordinator) -> None:
@@ -65,10 +63,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
 
         super().__init__(coordinator)
 
-        self._attr_unique_id = (
-            coordinator.device.mac_address
-            or cast(ConfigEntry, coordinator.config_entry).entry_id
-        )
+        self._attr_unique_id = coordinator.unique_id
 
         self._attr_device_info = coordinator.device_info
 

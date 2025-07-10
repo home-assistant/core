@@ -1,7 +1,7 @@
 """Test helpers for Freebox."""
 
 import json
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freebox_api.exceptions import HttpRequestError
 import pytest
@@ -16,7 +16,9 @@ from .const import (
     DATA_HOME_PIR_GET_VALUE,
     DATA_HOME_SET_VALUE,
     DATA_LAN_GET_HOSTS_LIST,
+    DATA_LAN_GET_HOSTS_LIST_GUEST,
     DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE,
+    DATA_LAN_GET_INTERFACES,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
@@ -32,16 +34,6 @@ def mock_path():
     with (
         patch("homeassistant.components.freebox.router.Path"),
         patch("homeassistant.components.freebox.router.os.makedirs"),
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def enable_all_entities():
-    """Make sure all entities are enabled."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
     ):
         yield
 
@@ -78,7 +70,12 @@ def mock_router(mock_device_registry_devices):
         instance.open = AsyncMock()
         instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
         # device_tracker
-        instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
+        instance.lan.get_interfaces = AsyncMock(return_value=DATA_LAN_GET_INTERFACES)
+        instance.lan.get_hosts_list = AsyncMock(
+            side_effect=lambda interface: DATA_LAN_GET_HOSTS_LIST
+            if interface == "pub"
+            else DATA_LAN_GET_HOSTS_LIST_GUEST
+        )
         # sensor
         instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
         instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
@@ -105,6 +102,12 @@ def mock_router(mock_device_registry_devices):
 @pytest.fixture(name="router_bridge_mode")
 def mock_router_bridge_mode(mock_device_registry_devices, router):
     """Mock a successful connection to Freebox Bridge mode."""
+
+    router().lan.get_interfaces = AsyncMock(
+        side_effect=HttpRequestError(
+            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
+        )
+    )
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(

@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -41,6 +41,8 @@ PRECIPITATION_TYPE = [
     "sleet",
     "yes",
 ]
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,7 +89,8 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="wind_direction",
         value_fn=lambda data: data.winddirection,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",
@@ -202,7 +205,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TVWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 

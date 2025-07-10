@@ -5,11 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from types import MappingProxyType
 from typing import Any
 
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk, Panel
+from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
 import voluptuous as vol
 
@@ -27,12 +26,11 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -63,6 +61,7 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .models import ELKM1Data
+from .services import async_setup_services
 
 type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
@@ -80,19 +79,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-SPEAK_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
-        vol.Optional("prefix", default=""): cv.string,
-    }
-)
-
-SET_TIME_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("prefix", default=""): cv.string,
-    }
-)
-
 
 def hostname_from_url(url: str) -> str:
     """Return the hostname from a url."""
@@ -101,9 +87,11 @@ def hostname_from_url(url: str) -> str:
 
 def _host_validator(config: dict[str, str]) -> dict[str, str]:
     """Validate that a host is properly configured."""
-    if config[CONF_HOST].startswith("elks://"):
+    if config[CONF_HOST].startswith(("elks://", "elksv1_2://")):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
-            raise vol.Invalid("Specify username and password for elks://")
+            raise vol.Invalid(
+                "Specify username and password for elks:// or elksv1_2://"
+            )
     elif not config[CONF_HOST].startswith("elk://") and not config[
         CONF_HOST
     ].startswith("serial://"):
@@ -178,7 +166,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    _create_elk_services(hass)
+    async_setup_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
@@ -233,7 +221,7 @@ def _async_find_matching_config_entry(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
-    conf: MappingProxyType[str, Any] = entry.data
+    conf = entry.data
 
     host = hostname_from_url(entry.data[CONF_HOST])
 
@@ -325,17 +313,6 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
-def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
-    """Search all config entries for a given prefix."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if not entry.runtime_data:
-            continue
-        elk_data: ELKM1Data = entry.runtime_data
-        if elk_data.prefix == prefix:
-            return elk_data.elk
-    return None
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -389,39 +366,3 @@ async def async_wait_for_elk_to_sync(
         _LOGGER.debug("Received %s event", name)
 
     return success
-
-
-@callback
-def _async_get_elk_panel(hass: HomeAssistant, service: ServiceCall) -> Panel:
-    """Get the ElkM1 panel from a service call."""
-    prefix = service.data["prefix"]
-    elk = _find_elk_by_prefix(hass, prefix)
-    if elk is None:
-        raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
-    return elk.panel
-
-
-def _create_elk_services(hass: HomeAssistant) -> None:
-    """Create ElkM1 services."""
-
-    @callback
-    def _speak_word_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).speak_word(service.data["number"])
-
-    @callback
-    def _speak_phrase_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).speak_phrase(service.data["number"])
-
-    @callback
-    def _set_time_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).set_time(dt_util.now())
-
-    hass.services.async_register(
-        DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "speak_phrase", _speak_phrase_service, SPEAK_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "set_time", _set_time_service, SET_TIME_SERVICE_SCHEMA
-    )

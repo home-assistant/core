@@ -37,7 +37,7 @@ DUMMY_SECRET = "FPPTH34D4E3MI2HG"
 
 def _generate_qr_code(data: str) -> str:
     """Generate a base64 PNG string represent QR Code image of data."""
-    import pyqrcode  # pylint: disable=import-outside-toplevel
+    import pyqrcode  # noqa: PLC0415
 
     qr_code = pyqrcode.create(data)
 
@@ -59,7 +59,7 @@ def _generate_qr_code(data: str) -> str:
 
 def _generate_secret_and_qr_code(username: str) -> tuple[str, str, str]:
     """Generate a secret, url, and QR code."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     ota_secret = pyotp.random_base32()
     url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
@@ -107,14 +107,14 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _add_ota_secret(self, user_id: str, secret: str | None = None) -> str:
         """Create a ota_secret for user."""
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         ota_secret: str = secret or pyotp.random_base32()
 
         self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> TotpSetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -163,7 +163,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _validate_2fa(self, user_id: str, code: str) -> bool:
         """Validate two factor authentication code."""
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         if (ota_secret := self._users.get(user_id)) is None:  # type: ignore[union-attr]
             # even we cannot find user, we still do verify
@@ -174,10 +174,9 @@ class TotpAuthModule(MultiFactorAuthModule):
         return bool(pyotp.TOTP(ota_secret).verify(code, valid_window=1))
 
 
-class TotpSetupFlow(SetupFlow):
+class TotpSetupFlow(SetupFlow[TotpAuthModule]):
     """Handler for the setup flow."""
 
-    _auth_module: TotpAuthModule
     _ota_secret: str
     _url: str
     _image: str
@@ -197,7 +196,7 @@ class TotpSetupFlow(SetupFlow):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         errors: dict[str, str] = {}
 

@@ -35,8 +35,7 @@ from homeassistant.const import (
     CONF_SENDER,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.template as template_helper
+from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)

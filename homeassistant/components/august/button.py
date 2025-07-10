@@ -2,7 +2,7 @@
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AugustConfigEntry
 from .entity import AugustEntity
@@ -11,7 +11,7 @@ from .entity import AugustEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AugustConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up August lock wake buttons."""
     data = config_entry.runtime_data

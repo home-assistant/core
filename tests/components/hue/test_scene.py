@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonArrayType
@@ -20,7 +20,7 @@ async def test_scene(
     """Test if (config) scenes get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "scene")
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 3 entities should be created from test data
@@ -80,7 +80,7 @@ async def test_scene_turn_on_service(
     """Test calling the turn on service on a scene."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "scene")
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
 
     test_entity_id = "scene.test_room_regular_test_scene"
 
@@ -117,7 +117,7 @@ async def test_scene_advanced_turn_on_service(
     """Test calling the advanced turn on service on a scene."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "scene")
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
 
     test_entity_id = "scene.test_room_regular_test_scene"
 
@@ -154,7 +154,7 @@ async def test_scene_updates(
     """Test scene events from bridge."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "scene")
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
 
     test_entity_id = "scene.test_room_mocked_scene"
 

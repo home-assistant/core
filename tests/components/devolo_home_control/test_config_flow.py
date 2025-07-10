@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.devolo_home_control.const import DEFAULT_MYDEVOLO, DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
@@ -64,46 +64,6 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_form_advanced_options(hass: HomeAssistant) -> None:
-    """Test if we get the advanced options if user has enabled it."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with (
-        patch(
-            "homeassistant.components.devolo_home_control.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-        patch(
-            "homeassistant.components.devolo_home_control.Mydevolo.uuid",
-            return_value="123456",
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-                "mydevolo_url": "https://test_mydevolo_url.test",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "devolo Home Control"
-    assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "mydevolo_url": "https://test_mydevolo_url.test",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_zeroconf(hass: HomeAssistant) -> None:
@@ -170,7 +130,6 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -207,7 +166,6 @@ async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -229,7 +187,6 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -281,7 +238,6 @@ async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "mydevolo_url": DEFAULT_MYDEVOLO,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

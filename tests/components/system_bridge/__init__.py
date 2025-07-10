@@ -15,9 +15,9 @@ from systembridgemodels.fixtures.modules.processes import FIXTURE_PROCESSES
 from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgemodels.modules import Module, ModulesData
 
-from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +44,7 @@ FIXTURE_ZEROCONF_INPUT = {
     CONF_PORT: "9170",
 }
 
-FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
+FIXTURE_ZEROCONF = ZeroconfServiceInfo(
     ip_address=ip_address(FIXTURE_USER_INPUT[CONF_HOST]),
     ip_addresses=[ip_address(FIXTURE_USER_INPUT[CONF_HOST])],
     port=9170,
@@ -62,7 +62,7 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
     },
 )
 
-FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
+FIXTURE_ZEROCONF_BAD = ZeroconfServiceInfo(
     ip_address=ip_address(FIXTURE_USER_INPUT[CONF_HOST]),
     ip_addresses=[ip_address(FIXTURE_USER_INPUT[CONF_HOST])],
     port=9170,

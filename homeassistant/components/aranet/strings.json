@@ -21,5 +21,17 @@
       "no_devices_found": "No unconfigured Aranet devices found.",
       "outdated_version": "This device is using outdated firmware. Please update it to at least v1.2.0 and try again."
     }
+  },
+  "entity": {
+    "sensor": {
+      "threshold": {
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "green": "Green",
+          "yellow": "Yellow",
+          "red": "Red"
+        }
+      }
+    }
   }
 }

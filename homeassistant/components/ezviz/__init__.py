@@ -2,8 +2,8 @@
 
 import logging
 
-from pyezviz.client import EzvizClient
-from pyezviz.exceptions import (
+from pyezvizapi.client import EzvizClient
+from pyezvizapi.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
     HTTPError,
@@ -11,7 +11,6 @@ from pyezviz.exceptions import (
     PyEzvizError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TIMEOUT, CONF_TYPE, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -22,12 +21,11 @@ from .const import (
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
-    DATA_COORDINATOR,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +48,8 @@ PLATFORMS_BY_TYPE: dict[str, list] = {
 }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> bool:
     """Set up EZVIZ from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     sensor_type: str = entry.data[CONF_TYPE]
     ezviz_client = None
 
@@ -90,20 +87,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady from error
 
         coordinator = EzvizDataUpdateCoordinator(
-            hass, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]
+            hass, entry, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]
         )
 
         await coordinator.async_config_entry_first_refresh()
 
-        hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
+        entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Check EZVIZ cloud account entity is present, reload cloud account entities for camera entity change to take effect.
     # Cameras are accessed via local RTSP stream with unique credentials per camera.
     # Separate camera entities allow for credential changes per camera.
-    if sensor_type == ATTR_TYPE_CAMERA and hass.data[DOMAIN]:
-        for item in hass.config_entries.async_entries(domain=DOMAIN):
+    if sensor_type == ATTR_TYPE_CAMERA:
+        for item in hass.config_entries.async_loaded_entries(domain=DOMAIN):
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 _LOGGER.debug("Reload Ezviz main account with camera entry")
                 await hass.config_entries.async_reload(item.entry_id)
@@ -116,19 +113,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> bool:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_TYPE]
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
-    if sensor_type == ATTR_TYPE_CLOUD and unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: EzvizConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

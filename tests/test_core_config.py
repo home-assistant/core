@@ -5,7 +5,6 @@ from collections import OrderedDict
 import copy
 import os
 from pathlib import Path
-import re
 from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
@@ -39,14 +38,14 @@ from homeassistant.core_config import (
     async_process_ha_core_config,
 )
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityPlatformState
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
 
-from .common import MockUser, async_capture_events
+from .common import MockEntityPlatform, MockUser, async_capture_events
 
 
 def test_core_config_schema() -> None:
@@ -181,7 +180,8 @@ def test_validate_stun_or_turn_url() -> None:
     invalid_urls = (
         "custom_stun_server",
         "custom_stun_server:3478",
-        "bum:custom_stun_server:3478" "http://blah.com:80",
+        "bum:custom_stun_server:3478",
+        "http://blah.com:80",
     )
 
     valid_urls = (
@@ -221,6 +221,8 @@ async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State |
     entity = Entity()
     entity.entity_id = "test.test"
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    entity._platform_state = EntityPlatformState.ADDED
     entity.schedule_update_ha_state()
 
     await hass.async_block_till_done()
@@ -831,7 +833,7 @@ async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> 
         },
     )
 
-    assert not getattr(hass.config, "legacy_templates")
+    assert not hass.config.legacy_templates
 
 
 async def test_config_defaults() -> None:
@@ -1070,14 +1072,25 @@ async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
     assert not hass.config.debug
 
 
-async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
-    """Test set_time_zone is deprecated."""
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            "Detected code that set the time zone using set_time_zone instead of "
-            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
-            "Please report this issue.",
-        ),
-    ):
-        await hass.config.set_time_zone("America/New_York")
+async def test_core_config_schema_imperial_unit(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test core config schema."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Home",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "currency": "USD",
+            "country": "US",
+            "language": "en",
+            "radius": 150,
+        },
+    )
+
+    issue = issue_registry.async_get_issue("homeassistant", "imperial_unit_system")
+    assert issue

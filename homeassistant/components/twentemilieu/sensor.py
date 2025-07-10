@@ -12,12 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import TwenteMilieuConfigEntry
 from .entity import TwenteMilieuEntity
 
 
@@ -64,8 +64,8 @@ SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TwenteMilieuConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
     async_add_entities(
@@ -80,7 +80,7 @@ class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: TwenteMilieuConfigEntry,
         description: TwenteMilieuSensorDescription,
     ) -> None:
         """Initialize the Twente Milieu entity."""

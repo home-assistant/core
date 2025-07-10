@@ -8,12 +8,12 @@ from homeassistant.core import HomeAssistant
 
 from ...common import async_wait_recording_done
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -22,7 +22,7 @@ async def mock_recorder_before_hass(
 @pytest.mark.parametrize("enable_schema_validation", [True])
 async def test_validate_db_schema_fix_utf8_issue(
     hass: HomeAssistant,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
     recorder_dialect_name: None,
@@ -56,7 +56,7 @@ async def test_validate_db_schema_fix_utf8_issue(
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
 async def test_validate_db_schema_fix_float_issue(
     hass: HomeAssistant,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     table: str,
     db_engine: str,
@@ -87,6 +87,7 @@ async def test_validate_db_schema_fix_float_issue(
         "created_ts DOUBLE PRECISION",
         "start_ts DOUBLE PRECISION",
         "mean DOUBLE PRECISION",
+        "mean_weight DOUBLE PRECISION",
         "min DOUBLE PRECISION",
         "max DOUBLE PRECISION",
         "last_reset_ts DOUBLE PRECISION",
@@ -100,7 +101,7 @@ async def test_validate_db_schema_fix_float_issue(
 @pytest.mark.parametrize("db_engine", ["mysql"])
 async def test_validate_db_schema_fix_collation_issue(
     hass: HomeAssistant,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_dialect_name: None,
     db_engine: str,

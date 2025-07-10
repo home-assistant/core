@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from abc import ABC
-from dataclasses import dataclass
-from typing import Any, cast
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
+from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass(slots=True)
@@ -18,6 +20,7 @@ class PlayMedia:
 
     url: str
     mime_type: str
+    path: Path | None = field(kw_only=True, default=None)
 
 
 class BrowseMediaSource(BrowseMedia):
@@ -46,6 +49,16 @@ class MediaSourceItem:
     identifier: str
     target_media_player: str | None
 
+    @property
+    def media_source_id(self) -> str:
+        """Return the media source ID."""
+        uri = URI_SCHEME
+        if self.domain:
+            uri += self.domain
+            if self.identifier:
+                uri += f"/{self.identifier}"
+        return uri
+
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
@@ -71,7 +84,7 @@ class MediaSourceItem:
                         can_play=False,
                         can_expand=True,
                     )
-                    for source in self.hass.data[DOMAIN].values()
+                    for source in self.hass.data[MEDIA_SOURCE_DATA].values()
                 ),
                 key=lambda item: item.title,
             )
@@ -86,7 +99,9 @@ class MediaSourceItem:
     @callback
     def async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
-        return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
+        if TYPE_CHECKING:
+            assert self.domain is not None
+        return self.hass.data[MEDIA_SOURCE_DATA][self.domain]
 
     @classmethod
     def from_uri(
@@ -102,7 +117,7 @@ class MediaSourceItem:
         return cls(hass, domain, identifier, target_media_player)
 
 
-class MediaSource(ABC):
+class MediaSource:
     """Represents a source of media files."""
 
     name: str | None = None

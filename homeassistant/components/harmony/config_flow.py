@@ -11,7 +11,6 @@ from aioharmony.hubconnector_websocket import HubConnector
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -26,6 +25,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
@@ -93,13 +96,13 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Harmony device."""
         _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
 
         parsed_url = urlparse(discovery_info.ssdp_location)
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
 
         self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 

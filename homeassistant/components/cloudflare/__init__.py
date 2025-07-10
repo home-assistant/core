@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 import socket
 
@@ -26,8 +27,18 @@ from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
+type CloudflareConfigEntry = ConfigEntry[CloudflareRuntimeData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class CloudflareRuntimeData:
+    """Runtime data for Cloudflare config entry."""
+
+    client: pycfdns.Client
+    dns_zone: pycfdns.ZoneModel
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
     """Set up Cloudflare from a config entry."""
     session = async_get_clientsession(hass)
     client = pycfdns.Client(
@@ -45,12 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except pycfdns.ComunicationException as error:
         raise ConfigEntryNotReady from error
 
-    async def update_records(now):
+    entry.runtime_data = CloudflareRuntimeData(client, dns_zone)
+
+    async def update_records(now: datetime) -> None:
         """Set up recurring update."""
         try:
-            await _async_update_cloudflare(
-                hass, client, dns_zone, entry.data[CONF_RECORDS]
-            )
+            await _async_update_cloudflare(hass, entry)
         except (
             pycfdns.AuthenticationException,
             pycfdns.ComunicationException,
@@ -60,9 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
         try:
-            await _async_update_cloudflare(
-                hass, client, dns_zone, entry.data[CONF_RECORDS]
-            )
+            await _async_update_cloudflare(hass, entry)
         except (
             pycfdns.AuthenticationException,
             pycfdns.ComunicationException,
@@ -74,27 +83,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_track_time_interval(hass, update_records, update_interval)
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
     """Unload Cloudflare config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
 
 
 async def _async_update_cloudflare(
     hass: HomeAssistant,
-    client: pycfdns.Client,
-    dns_zone: pycfdns.ZoneModel,
-    target_records: list[str],
+    entry: CloudflareConfigEntry,
 ) -> None:
+    client = entry.runtime_data.client
+    dns_zone = entry.runtime_data.dns_zone
+    target_records: list[str] = entry.data[CONF_RECORDS]
+
     _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
     records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")

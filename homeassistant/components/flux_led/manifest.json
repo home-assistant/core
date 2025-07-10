@@ -53,5 +53,5 @@
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
   "iot_class": "local_push",
   "loggers": ["flux_led"],
-  "requirements": ["flux-led==1.0.4"]
+  "requirements": ["flux-led==1.2.0"]
 }

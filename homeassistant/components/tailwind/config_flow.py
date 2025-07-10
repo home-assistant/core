@@ -15,8 +15,6 @@ from gotailwind import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
@@ -27,6 +25,8 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -83,7 +83,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of a Tailwind device."""
         if not (device_id := discovery_info.properties.get("device_id")):

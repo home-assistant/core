@@ -8,6 +8,7 @@
     "PYTHONASYNCIODEBUG": "1"
   },
   "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // Port 5683 udp is used by Shelly integration
@@ -62,7 +63,7 @@
         "json.schemas": [
           {
             "fileMatch": ["homeassistant/components/*/manifest.json"],
-            "url": "./script/json_schemas/manifest_schema.json"
+            "url": "${containerWorkspaceFolder}/script/json_schemas/manifest_schema.json"
           }
         ]
       }

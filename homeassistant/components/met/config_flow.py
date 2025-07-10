@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,

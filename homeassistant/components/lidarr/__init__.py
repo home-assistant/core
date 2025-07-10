@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import fields
 
 from aiopyarr.lidarr_client import LidarrClient
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -18,25 +17,14 @@ from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
     AlbumsDataUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
+    LidarrConfigEntry,
+    LidarrData,
     QueueDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
     WantedDataUpdateCoordinator,
 )
 
-type LidarrConfigEntry = ConfigEntry[LidarrData]
-
 PLATFORMS = [Platform.SENSOR]
-
-
-@dataclass(kw_only=True, slots=True)
-class LidarrData:
-    """Lidarr data type."""
-
-    disk_space: DiskSpaceDataUpdateCoordinator
-    queue: QueueDataUpdateCoordinator
-    status: StatusDataUpdateCoordinator
-    wanted: WantedDataUpdateCoordinator
-    albums: AlbumsDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
@@ -52,11 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         request_timeout=60,
     )
     data = LidarrData(
-        disk_space=DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
-        queue=QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
-        status=StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
-        wanted=WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
-        albums=AlbumsDataUpdateCoordinator(hass, host_configuration, lidarr),
+        disk_space=DiskSpaceDataUpdateCoordinator(
+            hass, entry, host_configuration, lidarr
+        ),
+        queue=QueueDataUpdateCoordinator(hass, entry, host_configuration, lidarr),
+        status=StatusDataUpdateCoordinator(hass, entry, host_configuration, lidarr),
+        wanted=WantedDataUpdateCoordinator(hass, entry, host_configuration, lidarr),
+        albums=AlbumsDataUpdateCoordinator(hass, entry, host_configuration, lidarr),
     )
     for field in fields(data):
         coordinator = getattr(data, field.name)

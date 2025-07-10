@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)

@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import (
@@ -36,7 +37,6 @@ from homeassistant.const import (
     URL_API_STREAM,
     URL_API_TEMPLATE,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
@@ -260,11 +260,18 @@ class APIEntityStateView(HomeAssistantView):
         if not user.is_admin:
             raise Unauthorized(entity_id=entity_id)
         hass = request.app[KEY_HASS]
+
+        body = await request.text()
+
         try:
-            data = await request.json()
+            data: Any = json_loads(body) if body else None
         except ValueError:
             return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
+        if not isinstance(data, dict):
+            return self.json_message(
+                "State data should be a JSON object.", HTTPStatus.BAD_REQUEST
+            )
         if (new_state := data.get("state")) is None:
             return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
@@ -477,9 +484,19 @@ class APITemplateView(HomeAssistantView):
     @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Render a template."""
+        body = await request.text()
+
         try:
-            data = await request.json()
-            tpl = _cached_template(data["template"], request.app[KEY_HASS])
+            data: Any = json_loads(body) if body else None
+        except ValueError:
+            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
+
+        if not isinstance(data, dict):
+            return self.json_message(
+                "Template data should be a JSON object.", HTTPStatus.BAD_REQUEST
+            )
+        tpl = _cached_template(data["template"], request.app[KEY_HASS])
+        try:
             return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
         except (ValueError, TemplateError) as ex:
             return self.json_message(

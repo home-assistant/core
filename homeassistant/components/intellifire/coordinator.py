@@ -9,25 +9,32 @@ from intellifire4py.control import IntelliFireController
 from intellifire4py.model import IntelliFirePollData
 from intellifire4py.read import IntelliFireDataProvider
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 
+type IntellifireConfigEntry = ConfigEntry[IntellifireDataUpdateCoordinator]
+
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData]):
     """Class to manage the polling of the fireplace API."""
 
+    config_entry: IntellifireConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IntellifireConfigEntry,
         fireplace: UnifiedFireplace,
     ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
         )

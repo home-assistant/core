@@ -62,32 +62,17 @@ async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
 def mock_camera_hls_fixture(mock_camera: None) -> Generator[None]:
     """Initialize a demo camera platform with HLS."""
     with patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=StreamType.HLS),
-    ):
-        yield
-
-
-@pytest.fixture
-async def mock_camera_webrtc_frontendtype_only(
-    hass: HomeAssistant,
-) -> AsyncGenerator[None]:
-    """Initialize a demo camera platform with WebRTC."""
-    assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+        "homeassistant.components.camera.Camera.camera_capabilities",
+        new_callable=PropertyMock(
+            return_value=camera.CameraCapabilities({StreamType.HLS})
+        ),
     ):
         yield
 
 
 @pytest.fixture
 async def mock_camera_webrtc(
-    mock_camera_webrtc_frontendtype_only: None,
+    mock_camera: None,
 ) -> AsyncGenerator[None]:
     """Initialize a demo camera platform with WebRTC."""
 
@@ -96,9 +81,17 @@ async def mock_camera_webrtc(
     ) -> None:
         send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
-    with patch(
-        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
-        side_effect=async_handle_async_webrtc_offer,
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.camera_capabilities",
+            new_callable=PropertyMock(
+                return_value=camera.CameraCapabilities({StreamType.WEB_RTC})
+            ),
+        ),
     ):
         yield
 
@@ -168,18 +161,19 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         _attr_supported_features: camera.CameraEntityFeature = (
             camera.CameraEntityFeature.STREAM
         )
-        _attr_frontend_stream_type: camera.StreamType = camera.StreamType.WEB_RTC
 
         async def stream_source(self) -> str | None:
             return STREAM_SOURCE
 
-    class SyncCamera(BaseCamera):
-        """Mock Camera with native sync WebRTC support."""
+    class AsyncNoCandidateCamera(BaseCamera):
+        """Mock Camera with native async WebRTC support but not implemented candidate support."""
 
-        _attr_name = "Sync"
+        _attr_name = "Async No Candidate"
 
-        async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
-            return WEBRTC_ANSWER
+        async def async_handle_async_webrtc_offer(
+            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        ) -> None:
+            send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
     class AsyncCamera(BaseCamera):
         """Mock Camera with native async WebRTC support."""
@@ -207,7 +201,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [camera.DOMAIN]
+            config_entry, [Platform.CAMERA]
         )
         return True
 
@@ -216,7 +210,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
     ) -> bool:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
-            config_entry, camera.DOMAIN
+            config_entry, Platform.CAMERA
         )
         return True
 
@@ -229,7 +223,10 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         ),
     )
     setup_test_component_platform(
-        hass, camera.DOMAIN, [SyncCamera(), AsyncCamera()], from_config_entry=True
+        hass,
+        camera.DOMAIN,
+        [AsyncNoCandidateCamera(), AsyncCamera()],
+        from_config_entry=True,
     )
     mock_platform(hass, f"{domain}.config_flow", Mock())
 

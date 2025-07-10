@@ -28,7 +28,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import _WH_TO_CAL, _WH_TO_J
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -748,10 +749,12 @@ async def test_cost_sensor_price_entity_total_no_reset(
 @pytest.mark.parametrize(
     ("energy_unit", "factor"),
     [
+        (UnitOfEnergy.MILLIWATT_HOUR, 1e6),
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
         (UnitOfEnergy.MEGA_WATT_HOUR, 0.001),
-        (UnitOfEnergy.GIGA_JOULE, 0.001 * 3.6),
+        (UnitOfEnergy.GIGA_JOULE, _WH_TO_J / 1e6),
+        (UnitOfEnergy.CALORIE, _WH_TO_CAL * 1e3),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -815,6 +818,7 @@ async def test_cost_sensor_handle_energy_units(
 @pytest.mark.parametrize(
     ("price_unit", "factor"),
     [
+        (f"EUR/{UnitOfEnergy.MILLIWATT_HOUR}", 1e-6),
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
         (f"EUR/{UnitOfEnergy.MEGA_WATT_HOUR}", 1000),
@@ -994,7 +998,7 @@ async def test_cost_sensor_handle_late_price_sensor(
 
 @pytest.mark.parametrize(
     "unit",
-    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS],
+    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS, UnitOfVolume.LITERS],
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit

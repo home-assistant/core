@@ -21,11 +21,12 @@ from homeassistant.components.climate import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -47,6 +48,12 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
 
 
 CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
+    # Electric Fireplace
+    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    "dbl": TuyaClimateEntityDescription(
+        key="dbl",
+        switch_only_hvac_mode=HVACMode.HEAT,
+    ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": TuyaClimateEntityDescription(
@@ -81,7 +88,9 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya climate dynamically through Tuya discovery."""
     hass_data = entry.runtime_data
@@ -120,7 +129,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -289,7 +297,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         commands = [{"code": DPCode.MODE, "value": preset_mode}]
         self._send_command(commands)

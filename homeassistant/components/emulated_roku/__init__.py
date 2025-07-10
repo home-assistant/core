@@ -7,7 +7,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .binding import EmulatedRoku
@@ -46,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+type EmulatedRokuConfigEntry = ConfigEntry[EmulatedRoku]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the emulated roku component."""
@@ -65,22 +67,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: EmulatedRokuConfigEntry
+) -> bool:
     """Set up an emulated roku server from a config entry."""
-    config = config_entry.data
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    name = config[CONF_NAME]
-    listen_port = config[CONF_LISTEN_PORT]
-    host_ip = config.get(CONF_HOST_IP) or await async_get_source_ip(hass)
-    advertise_ip = config.get(CONF_ADVERTISE_IP)
-    advertise_port = config.get(CONF_ADVERTISE_PORT)
-    upnp_bind_multicast = config.get(CONF_UPNP_BIND_MULTICAST)
+    config = entry.data
+    name: str = config[CONF_NAME]
+    listen_port: int = config[CONF_LISTEN_PORT]
+    host_ip: str = config.get(CONF_HOST_IP) or await async_get_source_ip(hass)
+    advertise_ip: str | None = config.get(CONF_ADVERTISE_IP)
+    advertise_port: int | None = config.get(CONF_ADVERTISE_PORT)
+    upnp_bind_multicast: bool | None = config.get(CONF_UPNP_BIND_MULTICAST)
 
     server = EmulatedRoku(
         hass,
+        entry.entry_id,
         name,
         host_ip,
         listen_port,
@@ -88,14 +89,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         advertise_port,
         upnp_bind_multicast,
     )
-
-    hass.data[DOMAIN][name] = server
-
+    entry.runtime_data = server
     return await server.setup()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: EmulatedRokuConfigEntry
+) -> bool:
     """Unload a config entry."""
-    name = entry.data[CONF_NAME]
-    server = hass.data[DOMAIN].pop(name)
-    return await server.unload()
+    return await entry.runtime_data.unload()

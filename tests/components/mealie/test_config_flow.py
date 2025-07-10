@@ -85,6 +85,40 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_ingress_host(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test disallow ingress host."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "http://homeassistant/hassio/ingress/db21ed7f_mealie",
+            CONF_API_TOKEN: "token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "ingress_url"}
+
+    mock_mealie_client.get_user_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "http://homeassistant:9001", CONF_API_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.parametrize(
     ("version"),
     [

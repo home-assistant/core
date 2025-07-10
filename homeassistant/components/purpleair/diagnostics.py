@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -14,8 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
+from .coordinator import PurpleAirConfigEntry
 
 CONF_TITLE = "title"
 
@@ -30,14 +28,13 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: PurpleAirConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": coordinator.data.dict(),
+            "data": entry.runtime_data.data.model_dump(),
         },
         TO_REDACT,
     )

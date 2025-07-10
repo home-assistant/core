@@ -10,14 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import SabnzbdUpdateCoordinator
+from .coordinator import SabnzbdConfigEntry
 from .entity import SabnzbdEntity
 
 
@@ -116,13 +114,11 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SabnzbdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Sabnzbd sensor entry."""
-
-    entry_id = config_entry.entry_id
-    coordinator: SabnzbdUpdateCoordinator = hass.data[DOMAIN][entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities([SabnzbdSensor(coordinator, sensor) for sensor in SENSOR_TYPES])
 

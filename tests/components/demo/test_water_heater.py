@@ -43,6 +43,7 @@ async def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes.get("temperature") == 119
     assert state.attributes.get("away_mode") == "off"
     assert state.attributes.get("operation_mode") == "eco"
+    assert state.attributes.get("target_temp_step") == 1
 
 
 async def test_default_setup_params(hass: HomeAssistant) -> None:

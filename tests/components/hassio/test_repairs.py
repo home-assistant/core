@@ -17,7 +17,7 @@ from aiohasupervisor.models import (
 import pytest
 
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON

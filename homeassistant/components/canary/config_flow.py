@@ -54,17 +54,10 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return CanaryOptionsFlowHandler()
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(import_data)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
         default_username = ""
 

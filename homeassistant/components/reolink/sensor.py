@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import (
@@ -28,6 +28,8 @@ from .entity import (
     ReolinkHostEntityDescription,
 )
 from .util import ReolinkConfigEntry, ReolinkData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,6 +73,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_percent",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -81,6 +84,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_temperature",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         translation_key="battery_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -93,6 +97,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_state",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         translation_key="battery_state",
         device_class=SensorDeviceClass.ENUM,
@@ -101,6 +106,17 @@ SENSORS = (
         options=[state.name for state in BatteryEnum],
         value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
         supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="day_night_state",
+        cmd_id=33,
+        cmd_key="296",
+        translation_key="day_night_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["day", "night", "led_day"],
+        value=lambda api, ch: api.baichuan.day_night_state(ch),
+        supported=lambda api, ch: api.supported(ch, "day_night_state"),
     ),
 )
 
@@ -145,7 +161,7 @@ HDD_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data

@@ -6,14 +6,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_VIDEO_SOURCE,
-    DOMAIN as AXIS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -33,6 +32,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
@@ -45,7 +47,7 @@ DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -84,7 +86,7 @@ async def test_manual_configuration_duplicate_fails(
     assert config_entry_setup.data[CONF_HOST] == "1.2.3.4"
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -120,7 +122,7 @@ async def test_flow_fails_on_api(
 ) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -150,18 +152,18 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
 ) -> None:
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
     )
     entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
     )
     entry2.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -268,7 +270,7 @@ async def test_reconfiguration_flow_update_configuration(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
@@ -276,7 +278,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -312,7 +314,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(DEFAULT_HOST),
                 ip_addresses=[ip_address(DEFAULT_HOST)],
                 port=80,
@@ -335,7 +337,7 @@ async def test_discovery_flow(
 ) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -376,7 +378,7 @@ async def test_discovery_flow(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
@@ -384,7 +386,7 @@ async def test_discovery_flow(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -396,7 +398,7 @@ async def test_discovery_flow(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(DEFAULT_HOST),
                 ip_addresses=[ip_address(DEFAULT_HOST)],
                 hostname="mock_hostname",
@@ -418,7 +420,7 @@ async def test_discovered_device_already_configured(
     assert config_entry_setup.data[CONF_HOST] == DEFAULT_HOST
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -431,7 +433,7 @@ async def test_discovered_device_already_configured(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
                 macaddress=DHCP_FORMATTED_MAC,
@@ -440,7 +442,7 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -453,7 +455,7 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address("2.3.4.5"),
                 ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
@@ -486,7 +488,7 @@ async def test_discovery_flow_updated_configuration(
 
     mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
     await hass.async_block_till_done()
 
@@ -507,7 +509,7 @@ async def test_discovery_flow_updated_configuration(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname="",
                 ip="",
                 macaddress=dr.format_mac("01234567890").replace(":", ""),
@@ -515,7 +517,7 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -527,7 +529,7 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=None,
                 ip_addresses=[],
                 hostname="mock_hostname",
@@ -544,7 +546,7 @@ async def test_discovery_flow_ignore_non_axis_device(
 ) -> None:
     """Test that discovery flow ignores devices with non Axis OUI."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -556,7 +558,7 @@ async def test_discovery_flow_ignore_non_axis_device(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
                 macaddress=DHCP_FORMATTED_MAC,
@@ -564,7 +566,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -576,7 +578,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address("169.254.3.4"),
                 ip_addresses=[ip_address("169.254.3.4")],
                 hostname="mock_hostname",
@@ -593,7 +595,7 @@ async def test_discovery_flow_ignore_link_local_address(
 ) -> None:
     """Test that discovery flow ignores devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT

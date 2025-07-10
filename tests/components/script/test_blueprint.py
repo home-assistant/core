@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from tests.common import MockConfigEntry, async_mock_service
 
@@ -37,7 +37,7 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
             return orig_load(self, path)
 
         return Blueprint(
-            yaml.load_yaml(data_path),
+            yaml_util.load_yaml(data_path),
             expected_domain=self.domain,
             path=path,
             schema=BLUEPRINT_SCHEMA,

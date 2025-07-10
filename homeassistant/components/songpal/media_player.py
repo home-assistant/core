@@ -34,7 +34,10 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
@@ -63,7 +66,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]

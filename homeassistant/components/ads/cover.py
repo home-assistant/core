@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,7 +37,7 @@ STATE_KEY_POSITION = "position"
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ADS_VAR): cv.string,
+        vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
         vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
         vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,

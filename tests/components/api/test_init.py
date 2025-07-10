@@ -11,10 +11,9 @@ from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
-from homeassistant import const
+from homeassistant import const, core as ha
 from homeassistant.auth.models import Credentials
 from homeassistant.bootstrap import DATA_LOGGING
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -23,12 +22,12 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def mock_api_client(
+async def mock_api_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component and return admin API client."""
-    hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
-    return hass.loop.run_until_complete(hass_client())
+    await async_setup_component(hass, "api", {})
+    return await hass_client()
 
 
 async def test_api_list_state_entities(
@@ -128,6 +127,28 @@ async def test_api_state_change_with_bad_data(
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_api_state_change_with_invalid_json(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if API sends appropriate error if send invalid json data."""
+    resp = await mock_api_client.post("/api/states/test.test", data="{,}")
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {"message": "Invalid JSON specified."}
+
+
+async def test_api_state_change_with_string_body(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if API sends appropriate error if we send a string instead of a JSON object."""
+    resp = await mock_api_client.post(
+        "/api/states/bad.entity.id", json='"{"state": "new_state"}"'
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {"message": "State data should be a JSON object."}
 
 
 async def test_api_state_change_to_zero_value(
@@ -528,6 +549,31 @@ async def test_api_template_error(
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_api_template_with_invalid_json(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if API sends appropriate error if send invalid json data."""
+    resp = await mock_api_client.post(const.URL_API_TEMPLATE, data="{,}")
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {"message": "Invalid JSON specified."}
+
+
+async def test_api_template_error_with_string_body(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test that the API returns an appropriate error when a string is sent in the body."""
+    hass.states.async_set("sensor.temperature", 10)
+
+    resp = await mock_api_client.post(
+        const.URL_API_TEMPLATE,
+        json='"{"template": "{{ states.sensor.temperature.state"}"',
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {"message": "Template data should be a JSON object."}
 
 
 async def test_stream(hass: HomeAssistant, mock_api_client: TestClient) -> None:

@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,7 +64,7 @@ class SonyProjector(SwitchEntity):
         self._attributes = {}
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if projector is available."""
         return self._available
 

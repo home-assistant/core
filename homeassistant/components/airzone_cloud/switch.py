@@ -13,10 +13,9 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirzoneCloudConfigEntry
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneCloudConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
@@ -39,7 +38,7 @@ ZONE_SWITCH_TYPES: Final[tuple[AirzoneSwitchDescription, ...]] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirzoneCloudConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud switch from a config_entry."""
     coordinator = entry.runtime_data

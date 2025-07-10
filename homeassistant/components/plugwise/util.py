@@ -7,6 +7,7 @@ from plugwise.exceptions import PlugwiseException
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .entity import PlugwiseEntity
 
 
@@ -24,10 +25,14 @@ def plugwise_command[_PlugwiseEntityT: PlugwiseEntity, **_P, _R](
     ) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except PlugwiseException as error:
+        except PlugwiseException as err:
             raise HomeAssistantError(
-                f"Error communicating with API: {error}"
-            ) from error
+                translation_domain=DOMAIN,
+                translation_key="error_communicating_with_api",
+                translation_placeholders={
+                    "error": str(err),
+                },
+            ) from err
         finally:
             await self.coordinator.async_request_refresh()
 

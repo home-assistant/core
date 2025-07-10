@@ -1,1 +1,0 @@
-"""The simulated component."""

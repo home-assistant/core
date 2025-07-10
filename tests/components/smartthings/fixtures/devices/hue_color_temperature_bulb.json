@@ -1,0 +1,73 @@
+{
+  "items": [
+    {
+      "deviceId": "440063de-a200-40b5-8a6b-f3399eaa0370",
+      "name": "hue-color-temperature-bulb",
+      "label": "Bathroom spot",
+      "manufacturerName": "0A2r",
+      "presentationId": "ST_b93bec0e-1a81-4471-83fc-4dddca504acd",
+      "deviceManufacturerCode": "Signify Netherlands B.V.",
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "ownerId": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "colorTemperature",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "synthetic.lightingEffectCircadian",
+              "version": 1
+            },
+            {
+              "id": "synthetic.lightingEffectFade",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Light",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-12-17T18:11:41.453Z",
+      "profile": {
+        "id": "a79e4507-ecaa-3c7e-b660-a3a71f30eafb"
+      },
+      "viper": {
+        "uniqueIdentifier": "ea409b82a6184ad9b49bd6318692cc1c",
+        "manufacturerName": "Signify Netherlands B.V.",
+        "modelName": "Hue ambiance spot",
+        "swVersion": "1.122.2",
+        "hwVersion": "LTG002",
+        "endpointAppId": "viper_71ee45b0-a794-11e9-86b2-fdd6b9f75ce6"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

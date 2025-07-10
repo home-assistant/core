@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ebox",
   "iot_class": "cloud_polling",
   "loggers": ["pyebox"],
+  "quality_scale": "legacy",
   "requirements": ["pyebox==1.1.4"]
 }

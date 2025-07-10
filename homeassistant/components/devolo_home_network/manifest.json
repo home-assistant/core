@@ -3,12 +3,12 @@
   "name": "devolo Home Network",
   "codeowners": ["@2Fake", "@Shutgun"],
   "config_flow": true,
+  "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["devolo_plc_api"],
-  "quality_scale": "platinum",
-  "requirements": ["devolo-plc-api==1.4.1"],
+  "requirements": ["devolo-plc-api==1.5.1"],
   "zeroconf": [
     {
       "type": "_dvl-deviceapi._tcp.local.",

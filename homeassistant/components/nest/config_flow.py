@@ -15,6 +15,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from google_nest_sdm.admin_client import (
+    DEFAULT_TOPIC_IAM_POLICY,
     AdminClient,
     EligibleSubscriptions,
     EligibleTopics,
@@ -25,6 +26,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util import get_random_string
 
 from . import api
@@ -41,8 +47,9 @@ from .const import (
 )
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
+TOPIC_FORMAT = "projects/{cloud_project_id}/topics/home-assistant-{rnd}"
 SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-{rnd}"
-SUBSCRIPTION_RAND_LENGTH = 10
+RAND_LENGTH = 10
 
 MORE_INFO_URL = "https://www.home-assistant.io/integrations/nest/#configuration"
 
@@ -59,6 +66,7 @@ DEVICE_ACCESS_CONSOLE_URL = "https://console.nest.google.com/device-access/"
 DEVICE_ACCESS_CONSOLE_EDIT_URL = (
     "https://console.nest.google.com/device-access/project/{project_id}/information"
 )
+CREATE_NEW_TOPIC_KEY = "create_new_topic"
 CREATE_NEW_SUBSCRIPTION_KEY = "create_new_subscription"
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,8 +74,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_subscription_id(cloud_project_id: str) -> str:
     """Create a new subscription id."""
-    rnd = get_random_string(SUBSCRIPTION_RAND_LENGTH)
+    rnd = get_random_string(RAND_LENGTH)
     return SUBSCRIPTION_FORMAT.format(cloud_project_id=cloud_project_id, rnd=rnd)
+
+
+def _generate_topic_id(cloud_project_id: str) -> str:
+    """Create a new topic id."""
+    rnd = get_random_string(RAND_LENGTH)
+    return TOPIC_FORMAT.format(cloud_project_id=cloud_project_id, rnd=rnd)
 
 
 def generate_config_title(structures: Iterable[Structure]) -> str | None:
@@ -130,7 +144,7 @@ class NestFlowHandler(
         if self.source == SOURCE_REAUTH:
             _LOGGER.debug("Skipping Pub/Sub configuration")
             return await self._async_finish()
-        return await self.async_step_pubsub()
+        return await self.async_step_pubsub_topic()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -192,7 +206,9 @@ class NestFlowHandler(
     ) -> ConfigFlowResult:
         """Handle cloud project in user input."""
         if user_input is not None:
-            self._data.update(user_input)
+            self._data[CONF_CLOUD_PROJECT_ID] = user_input[
+                CONF_CLOUD_PROJECT_ID
+            ].strip()
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
@@ -213,7 +229,7 @@ class NestFlowHandler(
         """Collect device access project from user input."""
         errors = {}
         if user_input is not None:
-            project_id = user_input[CONF_PROJECT_ID]
+            project_id = user_input[CONF_PROJECT_ID].strip()
             if project_id == self._data[CONF_CLOUD_PROJECT_ID]:
                 _LOGGER.error(
                     "Device Access Project ID and Cloud Project ID must not be the"
@@ -240,72 +256,83 @@ class NestFlowHandler(
             errors=errors,
         )
 
-    async def async_step_pubsub(
+    async def async_step_pubsub_topic(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure and the pre-requisites to configure Pub/Sub topics and subscriptions."""
-        data = {
-            **self._data,
-            **(user_input if user_input is not None else {}),
-        }
-        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
-        device_access_project_id = data[CONF_PROJECT_ID]
-
-        errors: dict[str, str] = {}
-        if cloud_project_id:
+        """Configure and create Pub/Sub topic."""
+        cloud_project_id = self._data[CONF_CLOUD_PROJECT_ID]
+        if self._admin_client is None:
             access_token = self._data["token"]["access_token"]
             self._admin_client = api.new_pubsub_admin_client(
-                self.hass, access_token=access_token, cloud_project_id=cloud_project_id
+                self.hass,
+                access_token=access_token,
+                cloud_project_id=cloud_project_id,
             )
-            try:
-                eligible_topics = await self._admin_client.list_eligible_topics(
-                    device_access_project_id=device_access_project_id
-                )
-            except ApiException as err:
-                _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
-                errors["base"] = "pubsub_api_error"
-            else:
-                if not eligible_topics.topic_names:
-                    errors["base"] = "no_pubsub_topics"
+        errors = {}
+        if user_input is not None:
+            topic_name = user_input[CONF_TOPIC_NAME]
+            if topic_name == CREATE_NEW_TOPIC_KEY:
+                topic_name = _generate_topic_id(cloud_project_id)
+                _LOGGER.debug("Creating topic %s", topic_name)
+                try:
+                    await self._admin_client.create_topic(topic_name)
+                    await self._admin_client.set_topic_iam_policy(
+                        topic_name, DEFAULT_TOPIC_IAM_POLICY
+                    )
+                except ApiException as err:
+                    _LOGGER.error("Error creating Pub/Sub topic: %s", err)
+                    errors["base"] = "pubsub_api_error"
             if not errors:
-                self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
-                self._eligible_topics = eligible_topics
-                return await self.async_step_pubsub_topic()
+                self._data[CONF_TOPIC_NAME] = topic_name
+                return await self.async_step_pubsub_topic_confirm()
 
+        device_access_project_id = self._data[CONF_PROJECT_ID]
+        try:
+            eligible_topics = await self._admin_client.list_eligible_topics(
+                device_access_project_id=device_access_project_id
+            )
+        except ApiException as err:
+            _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
+            return self.async_abort(reason="pubsub_api_error")
+        topics = [
+            *eligible_topics.topic_names,  # Untranslated topic paths
+            CREATE_NEW_TOPIC_KEY,
+        ]
         return self.async_show_form(
-            step_id="pubsub",
+            step_id="pubsub_topic",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID, default=cloud_project_id): str,
+                    vol.Required(
+                        CONF_TOPIC_NAME, default=next(iter(topics))
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            translation_key="topic_name",
+                            mode=SelectSelectorMode.LIST,
+                            options=topics,
+                        )
+                    )
                 }
             ),
             description_placeholders={
-                "url": CLOUD_CONSOLE_URL,
                 "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
                 "more_info_url": MORE_INFO_URL,
             },
             errors=errors,
         )
 
-    async def async_step_pubsub_topic(
-        self, user_input: dict[str, Any] | None = None
+    async def async_step_pubsub_topic_confirm(
+        self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Configure and create Pub/Sub topic."""
-        if TYPE_CHECKING:
-            assert self._eligible_topics
+        """Have the user confirm the Pub/Sub topic is set correctly in Device Access Console."""
         if user_input is not None:
-            self._data.update(user_input)
             return await self.async_step_pubsub_subscription()
-        topics = list(self._eligible_topics.topic_names)
         return self.async_show_form(
-            step_id="pubsub_topic",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_TOPIC_NAME, default=topics[0]): vol.In(topics),
-                }
-            ),
+            step_id="pubsub_topic_confirm",
             description_placeholders={
-                "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
+                "device_access_console_url": DEVICE_ACCESS_CONSOLE_EDIT_URL.format(
+                    project_id=self._data[CONF_PROJECT_ID]
+                ),
+                "topic_name": self._data[CONF_TOPIC_NAME],
                 "more_info_url": MORE_INFO_URL,
             },
         )
@@ -362,7 +389,7 @@ class NestFlowHandler(
                     )
                 return await self._async_finish()
 
-        subscriptions = {}
+        subscriptions = []
         try:
             eligible_subscriptions = (
                 await self._admin_client.list_eligible_subscriptions(
@@ -375,10 +402,8 @@ class NestFlowHandler(
             )
             errors["base"] = "pubsub_api_error"
         else:
-            subscriptions.update(
-                {name: name for name in eligible_subscriptions.subscription_names}
-            )
-        subscriptions[CREATE_NEW_SUBSCRIPTION_KEY] = "Create New"
+            subscriptions.extend(eligible_subscriptions.subscription_names)
+        subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
         return self.async_show_form(
             step_id="pubsub_subscription",
             data_schema=vol.Schema(
@@ -386,7 +411,13 @@ class NestFlowHandler(
                     vol.Optional(
                         CONF_SUBSCRIPTION_NAME,
                         default=next(iter(subscriptions)),
-                    ): vol.In(subscriptions),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            translation_key="subscription_name",
+                            mode=SelectSelectorMode.LIST,
+                            options=subscriptions,
+                        )
+                    )
                 }
             ),
             description_placeholders={

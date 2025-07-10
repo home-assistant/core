@@ -3,17 +3,14 @@
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import EafmConfigEntry, EafmCoordinator
 
 UNIT_MAPPING = {
     "http://qudt.org/1.1/vocab/unit#Meter": UnitOfLength.METERS,
@@ -22,11 +19,11 @@ UNIT_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EafmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up UK Flood Monitoring Sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     created_entities: set[str] = set()
 
     @callback
@@ -70,7 +67,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator, key):
+    def __init__(self, coordinator: EafmCoordinator, key: str) -> None:
         """Initialise the gauge with a data instance and station."""
         super().__init__(coordinator)
         self.key = key

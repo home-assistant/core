@@ -45,7 +45,6 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "relayer_server": "test-relayer-server",
                     "accounts_server": "test-acounts-server",
                     "cloudhook_server": "test-cloudhook-server",
-                    "alexa_server": "test-alexa-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
                 },
@@ -62,7 +61,6 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.iot.ws_server_url == "wss://test-relayer-server/websocket"
     assert cl.accounts_server == "test-acounts-server"
     assert cl.cloudhook_server == "test-cloudhook-server"
-    assert cl.alexa_server == "test-alexa-server"
     assert cl.acme_server == "test-acme-server"
     assert cl.remotestate_server == "test-remotestate-server"
 

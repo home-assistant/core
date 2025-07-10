@@ -77,12 +77,11 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
+    _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ, HVACMode.OFF]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -111,9 +110,14 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ACTIVE_MODE, HVAC_MODES_TO_OVERKIZ[hvac_mode]
-        )
+        if hvac_mode is HVACMode.OFF:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_ON_OFF, OverkizCommandParam.OFF
+            )
+        else:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_ACTIVE_MODE, HVAC_MODES_TO_OVERKIZ[hvac_mode]
+            )
 
     @property
     def preset_mode(self) -> str | None:

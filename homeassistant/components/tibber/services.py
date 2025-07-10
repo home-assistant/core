@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from functools import partial
 from typing import Any, Final
 
 import voluptuous as vol
@@ -33,8 +32,8 @@ SERVICE_SCHEMA: Final = vol.Schema(
 )
 
 
-async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResponse:
-    tibber_connection = hass.data[DOMAIN]
+async def __get_prices(call: ServiceCall) -> ServiceResponse:
+    tibber_connection = call.hass.data[DOMAIN]
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
@@ -79,7 +78,6 @@ def __get_date(date_input: str | None, mode: str | None) -> datetime:
         return dt_util.as_local(value)
 
     raise ServiceValidationError(
-        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -95,7 +93,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         PRICE_SERVICE_NAME,
-        partial(__get_prices, hass=hass),
+        __get_prices,
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

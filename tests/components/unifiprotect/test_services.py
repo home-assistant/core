@@ -9,9 +9,19 @@ from uiprotect.data import Camera, Chime, Color, Light, ModelType
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    ATTR_MESSAGE,
+    DOMAIN,
+    KEYRINGS_KEY_TYPE,
+    KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
+    KEYRINGS_KEY_TYPE_ID_NFC,
+    KEYRINGS_ULP_ID,
+    KEYRINGS_USER_FULL_NAME,
+    KEYRINGS_USER_STATUS,
+)
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
+    SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
@@ -56,7 +66,9 @@ async def test_global_service_bad_device(
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -75,7 +87,9 @@ async def test_global_service_exception(
     """Test global service, unexpected error."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
     with pytest.raises(HomeAssistantError):
@@ -94,7 +108,9 @@ async def test_add_doorbell_text(
     """Test add_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -112,7 +128,9 @@ async def test_remove_doorbell_text(
     """Test remove_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["remove_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["remove_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.remove_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -129,7 +147,9 @@ async def test_add_doorbell_text_disabled_config_entry(
 ) -> None:
     """Test add_doorbell_text service."""
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.config_entries.async_set_disabled_by(
@@ -158,10 +178,10 @@ async def test_set_chime_paired_doorbells(
 
     ufp.api.update_device = AsyncMock()
 
-    camera1 = doorbell.copy()
+    camera1 = doorbell.model_copy()
     camera1.name = "Test Camera 1"
 
-    camera2 = doorbell.copy()
+    camera2 = doorbell.model_copy()
     camera2.name = "Test Camera 2"
 
     await init_entry(hass, ufp, [camera1, camera2, chime])
@@ -239,3 +259,86 @@ async def test_remove_privacy_zone(
     )
     ufp.api.update_device.assert_called()
     assert not doorbell.privacy_zones
+
+
+@pytest.mark.asyncio
+async def get_user_keyring_info(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test get_user_keyring_info service."""
+
+    ulp_user = Mock(full_name="Test User", status="active", ulp_id="user_ulp_id")
+    keyring = Mock(
+        registry_type="nfc",
+        registry_id="123456",
+        ulp_user="user_ulp_id",
+    )
+    keyring_2 = Mock(
+        registry_type="fingerprint",
+        registry_id="2",
+        ulp_user="user_ulp_id",
+    )
+    ufp.api.bootstrap.ulp_users.as_list = Mock(return_value=[ulp_user])
+    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[keyring, keyring_2])
+
+    await init_entry(hass, ufp, [doorbell])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_USER_KEYRING_INFO,
+        {ATTR_DEVICE_ID: camera_entry.device_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "users": [
+            {
+                KEYRINGS_USER_FULL_NAME: "Test User",
+                "keys": [
+                    {
+                        KEYRINGS_KEY_TYPE: "nfc",
+                        KEYRINGS_KEY_TYPE_ID_NFC: "123456",
+                    },
+                    {
+                        KEYRINGS_KEY_TYPE_ID_FINGERPRINT: "2",
+                        KEYRINGS_KEY_TYPE: "fingerprint",
+                    },
+                ],
+                KEYRINGS_USER_STATUS: "active",
+                KEYRINGS_ULP_ID: "user_ulp_id",
+            },
+        ],
+    }
+
+
+async def test_get_user_keyring_info_no_users(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test get_user_keyring_info service with no users."""
+
+    ufp.api.bootstrap.ulp_users.as_list = Mock(return_value=[])
+    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[])
+
+    await init_entry(hass, ufp, [doorbell])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+
+    with pytest.raises(
+        HomeAssistantError, match="No users found, please check Protect permissions."
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_USER_KEYRING_INFO,
+            {ATTR_DEVICE_ID: camera_entry.device_id},
+            blocking=True,
+            return_response=True,
+        )

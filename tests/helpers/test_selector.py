@@ -7,7 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import selector
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -77,7 +77,7 @@ def _test_selector(
         "selector": {selector_type: selector_instance.config}
     }
     # Test serialized selector can be dumped to YAML
-    yaml.dump(selector_instance.serialize())
+    yaml_util.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
@@ -88,6 +88,7 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
+        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -395,7 +396,13 @@ def test_assist_pipeline_selector_schema(
         ({"min": -100, "max": 100, "step": 5}, (), ()),
         ({"min": -20, "max": -10, "mode": "box"}, (), ()),
         (
-            {"min": 0, "max": 100, "unit_of_measurement": "seconds", "mode": "slider"},
+            {
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "seconds",
+                "mode": "slider",
+                "translation_key": "foo",
+            },
             (),
             (),
         ),
@@ -589,7 +596,28 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
+    [
+        ({}, ("abc123",), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (),
+            (),
+        ),
+    ],
+    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
@@ -814,7 +842,44 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                # We require entity_id when accept is not set
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
+        ),
+        (
+            {
+                "accept": ["image/*"],
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
         ),
     ],
 )
@@ -979,6 +1044,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections) 
     ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!"))],
 )
+@pytest.mark.usefixtures("hass")
 def test_template_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
@@ -1260,3 +1326,30 @@ def test_label_selector_schema(schema, valid_selections, invalid_selections) -> 
 def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test floor selector."""
     _test_selector("floor", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+        (
+            {"multiple": True},
+            (["sensor.temperature", "sensor:external_temperature"], []),
+            ("sensor.temperature",),
+        ),
+        (
+            {"multiple": False},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+    ],
+)
+def test_statistic_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test statistic selector."""
+    _test_selector("statistic", schema, valid_selections, invalid_selections)
