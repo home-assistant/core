@@ -80,6 +80,8 @@ async def test_generate_data(
             ),
         ],
     ]
+    file1 = File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE)
+    file2 = File(name="context.txt", state=FileState.ACTIVE)
     with (
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -98,10 +100,7 @@ async def test_generate_data(
         ),
         patch(
             "google.genai.files.Files.upload",
-            side_effect=[
-                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
-                File(name="context.txt", state=FileState.ACTIVE),
-            ],
+            side_effect=[file1, file2],
         ) as mock_upload,
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
@@ -117,6 +116,9 @@ async def test_generate_data(
                 {"media_content_id": "media-source://media/context.txt"},
             ],
         )
+
+    outgoing_message = mock_send_message_stream.mock_calls[1][2]["message"]
+    assert outgoing_message == ["Test prompt", file1, file2]
 
     assert result.data == "Hi there!"
     assert len(mock_upload.mock_calls) == 2
