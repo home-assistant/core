@@ -14,6 +14,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -89,6 +90,13 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
+POWER_CONSUMPTION_DESCRIPTION_IN_MA = SensorEntityDescription(
+    key="electricityOfDay",
+    device_class=SensorDeviceClass.ENERGY,
+    state_class=SensorStateClass.TOTAL,
+    native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+)
+
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Meter": (
@@ -114,10 +122,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION_IN_MA,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION_IN_MA,
     ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
