@@ -1,0 +1,13 @@
+{
+  "energy_import_kwh": 123.456,
+  "energy_export_kwh": 78.91,
+  "power_w": 123,
+  "voltage_v": 230,
+  "current_a": 1.5,
+  "apparent_current_a": 1.6,
+  "reactive_current_a": 0.5,
+  "apparent_power_va": 345,
+  "reactive_power_var": 67,
+  "power_factor": 0.95,
+  "frequency_hz": 50
+}
