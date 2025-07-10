@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from total_connect_client import ArmingHelper
-from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
+from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid, FailedToBypassZone
 from total_connect_client.location import TotalConnectLocation
 
 from homeassistant.components.alarm_control_panel import (
@@ -282,6 +282,10 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not bypass zones"
+            ) from error
+        except FailedToBypassZone as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to bypass zones for {self.name}."
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
