@@ -61,7 +61,6 @@ async def test_coordinator_initialization(
     """Test coordinator initialization."""
     assert coordinator.client == mock_nsapi
     assert coordinator.config_entry == mock_config_entry
-    assert coordinator._routes == []
     assert coordinator._stations == []
 
 

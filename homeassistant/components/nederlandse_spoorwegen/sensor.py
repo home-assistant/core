@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NSConfigEntry
-from .const import ATTR_ATTRIBUTION, CONF_FROM, CONF_TO, CONF_VIA, DOMAIN
+from .const import CONF_FROM, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class NSServiceSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "service"
-    _attr_attribution = ATTR_ATTRIBUTION
+    _attr_attribution = "Data provided by NS"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(

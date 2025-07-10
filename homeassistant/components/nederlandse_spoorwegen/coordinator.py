@@ -58,7 +58,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.config_entry = config_entry
-        self._routes: list[dict[str, Any]] = []
         self._stations: list[Any] = []
 
         # Assign UUID to any route missing 'route_id' (for upgrades)
@@ -84,6 +83,16 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Connection test failed: %s", ex)
             raise
 
+    def _get_routes(self) -> list[dict[str, Any]]:
+        """Get routes from config entry options or data."""
+        return (
+            self.config_entry.options.get(
+                CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
+            )
+            if self.config_entry is not None
+            else []
+        )
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
@@ -97,19 +106,19 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             approved_station_codes_updated = runtime_data.get(
                 "approved_station_codes_updated"
             )
-            should_fetch = False
+            station_cache_expired = False
             now_utc = datetime.now(UTC)
             if not approved_station_codes or not approved_station_codes_updated:
-                should_fetch = True
+                station_cache_expired = True
             else:
                 try:
                     updated_dt = datetime.fromisoformat(approved_station_codes_updated)
                     if (now_utc - updated_dt) > timedelta(days=1):
-                        should_fetch = True
+                        station_cache_expired = True
                 except (ValueError, TypeError):
-                    should_fetch = True
+                    station_cache_expired = True
 
-            if should_fetch:
+            if station_cache_expired:
                 self._stations = await self.hass.async_add_executor_job(
                     self.client.get_stations  # type: ignore[attr-defined]
                 )
@@ -124,11 +133,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 runtime_data["approved_station_codes_updated"] = now_utc.isoformat()
                 if self.config_entry is not None:
                     self.config_entry.runtime_data = runtime_data
-                _LOGGER.debug(
-                    "Fetched and stored %d approved_station_codes (updated %s)",
-                    len(codes),
-                    runtime_data["approved_station_codes_updated"],
-                )
             else:
                 codes = (
                     approved_station_codes if approved_station_codes is not None else []
@@ -141,21 +145,9 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             self.code = code
 
                     self._stations = [StationStub(code) for code in codes]
-                _LOGGER.debug(
-                    "Using cached approved_station_codes (%d codes, updated %s)",
-                    len(codes),
-                    approved_station_codes_updated,
-                )
 
             # Get routes from config entry options or data
-            routes = (
-                self.config_entry.options.get(
-                    CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
-                )
-                if self.config_entry is not None
-                else []
-            )
-            _LOGGER.debug("Loaded %d routes from config", len(routes))
+            routes = self._get_routes()
 
             # Fetch trip data for each route
             route_data = {}
@@ -168,29 +160,11 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     route_key = f"{route.get(CONF_NAME, '')}_{route.get(CONF_FROM, '')}_{route.get(CONF_TO, '')}"
                     if route.get(CONF_VIA):
                         route_key += f"_{route.get(CONF_VIA)}"
-                _LOGGER.debug(
-                    "Processing route: %s (key: %s)",
-                    route.get(CONF_NAME, "?"),
-                    route_key,
-                )
 
                 try:
                     trips = await self.hass.async_add_executor_job(
                         self._get_trips_for_route, route
                     )
-                    # Only log trip count and first trip time if available
-                    if trips:
-                        first_trip_time = getattr(
-                            trips[0], "departure_time_actual", None
-                        ) or getattr(trips[0], "departure_time_planned", None)
-                        _LOGGER.debug(
-                            "Fetched %d trips for route %s, first departs at: %s",
-                            len(trips),
-                            route_key,
-                            first_trip_time,
-                        )
-                    else:
-                        _LOGGER.debug("No trips found for route %s", route_key)
                     route_data[route_key] = {
                         ATTR_ROUTE: route,
                         ATTR_TRIPS: trips,
@@ -258,7 +232,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         route[CONF_TO] = to_station
         if CONF_VIA in route:
             route[CONF_VIA] = via_station
-        # Debug: print all station codes and raw objects before validation
         # Use the stored approved station codes from runtime_data for validation
         valid_station_codes = set()
         if (
@@ -280,27 +253,28 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if code
             }
         # Store approved station codes in runtime_data for use in config flow
-        prev_codes = []
+        current_codes = []
         if (
             self.config_entry is not None
             and hasattr(self.config_entry, "runtime_data")
             and self.config_entry.runtime_data
         ):
-            prev_codes = self.config_entry.runtime_data.get(
+            current_codes = self.config_entry.runtime_data.get(
                 "approved_station_codes", []
             )
         # Always sort both lists before comparing and storing
-        new_codes = sorted(valid_station_codes)
-        prev_codes_sorted = sorted(prev_codes)
-        if new_codes != prev_codes_sorted:
+        sorted_valid_codes = sorted(valid_station_codes)
+        sorted_current_codes = sorted(current_codes)
+        if sorted_valid_codes != sorted_current_codes:
             if self.config_entry is not None:
                 if hasattr(self.config_entry, "runtime_data"):
-                    self.config_entry.runtime_data["approved_station_codes"] = new_codes
+                    self.config_entry.runtime_data["approved_station_codes"] = (
+                        sorted_valid_codes
+                    )
                 else:
                     self.config_entry.runtime_data = {
-                        "approved_station_codes": new_codes
+                        "approved_station_codes": sorted_valid_codes
                     }
-            _LOGGER.debug("Updated approved_station_codes: %s", new_codes)
         if from_station not in valid_station_codes:
             _LOGGER.error(
                 "'from' station code '%s' not found in NS station list for route: %s",
@@ -318,13 +292,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Build trip time string for NS API (use configured time or now)
         tz_nl = ZoneInfo("Europe/Amsterdam")
         now_nl = datetime.now(tz=tz_nl)
-        now_utc = datetime.now(UTC)
-        _LOGGER.debug(
-            "Trip time context: now_nl=%s, now_utc=%s, route=%s",
-            now_nl,
-            now_utc,
-            route,
-        )
         if time_value:
             try:
                 hour, minute, *rest = map(int, time_value.split(":"))
@@ -336,17 +303,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             trip_time = now_nl
         trip_time_str = trip_time.strftime("%d-%m-%Y %H:%M")
-        # Log the arguments sent to the NS API
-        _LOGGER.debug(
-            "Calling NSAPI.get_trips with: trip_time_str=%s, from_station=%s, via_station=%s, to_station=%s, departure=%s, previous=%s, next=%s",
-            trip_time_str,
-            from_station,
-            via_station if via_station else None,
-            to_station,
-            True,
-            0,
-            2,
-        )
+
         try:
             trips = self.client.get_trips(  # type: ignore[attr-defined]
                 trip_time_str,
@@ -360,19 +317,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except RequestParametersError as ex:
             _LOGGER.error("Error calling NSAPI.get_trips: %s", ex)
             return []
-        # Log summary of the API response
-        if trips:
-            _LOGGER.debug(
-                "NSAPI.get_trips returned %d trips: %s",
-                len(trips),
-                [
-                    getattr(t, "departure_time_actual", None)
-                    or getattr(t, "departure_time_planned", None)
-                    for t in trips
-                ],
-            )
-        else:
-            _LOGGER.debug("NSAPI.get_trips returned no trips")
         # Filter out trips in the past (match official logic)
         future_trips = []
         for trip in trips or []:
@@ -385,39 +329,22 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Add a new route and trigger refresh, deduplicating by all properties."""
         if self.config_entry is None:
             return
-        _LOGGER.debug("Attempting to add route: %s", route)
-        routes = list(
-            self.config_entry.options.get(
-                CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
-            )
-        )
-        _LOGGER.debug("Current routes before add: %s", routes)
+        routes = list(self._get_routes())
         # Only add if not already present (deep equality)
         if route not in routes:
             routes.append(route)
-            _LOGGER.debug("Route added. New routes list: %s", routes)
             if self.config_entry is not None:
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, options={CONF_ROUTES: routes}
                 )
             await self.async_refresh()
-        else:
-            _LOGGER.debug("Route already present, not adding: %s", route)
-        # else: do nothing (idempotent)
 
     async def async_remove_route(self, route_name: str) -> None:
         """Remove a route and trigger refresh."""
         if self.config_entry is None:
             return
-        _LOGGER.debug("Attempting to remove route with name: %s", route_name)
-        routes = list(
-            self.config_entry.options.get(
-                CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
-            )
-        )
-        _LOGGER.debug("Current routes before remove: %s", routes)
+        routes = list(self._get_routes())
         routes = [r for r in routes if r.get(CONF_NAME) != route_name]
-        _LOGGER.debug("Routes after remove: %s", routes)
         self.hass.config_entries.async_update_entry(
             self.config_entry, options={CONF_ROUTES: routes}
         )
