@@ -14,12 +14,7 @@
     "master_mode": {
       "type": "Enum",
       "value": {
-        "range": [
-          "disarmed",
-          "arm",
-          "home",
-          "sos"
-        ]
+        "range": ["disarmed", "arm", "home", "sos"]
       }
     },
     "delay_set": {
@@ -83,19 +78,13 @@
     "master_state": {
       "type": "Enum",
       "value": {
-        "range": [
-          "normal",
-          "alarm"
-        ]
+        "range": ["normal", "alarm"]
       }
     },
     "sub_class": {
       "type": "Enum",
       "value": {
-        "range": [
-          "remote_controller",
-          "detector"
-        ]
+        "range": ["remote_controller", "detector"]
       }
     },
     "sub_admin": {
@@ -107,12 +96,7 @@
     "master_mode": {
       "type": "Enum",
       "value": {
-        "range": [
-          "disarmed",
-          "arm",
-          "home",
-          "sos"
-        ]
+        "range": ["disarmed", "arm", "home", "sos"]
       }
     },
     "delay_set": {
@@ -197,19 +181,13 @@
     "master_state": {
       "type": "Enum",
       "value": {
-        "range": [
-          "normal",
-          "alarm"
-        ]
+        "range": ["normal", "alarm"]
       }
     },
     "sub_class": {
       "type": "Enum",
       "value": {
-        "range": [
-          "remote_controller",
-          "detector"
-        ]
+        "range": ["remote_controller", "detector"]
       }
     },
     "sub_admin": {
@@ -219,12 +197,7 @@
     "sub_state": {
       "type": "Enum",
       "value": {
-        "range": [
-          "normal",
-          "alarm",
-          "fault",
-          "others"
-        ]
+        "range": ["normal", "alarm", "fault", "others"]
       }
     }
   },
