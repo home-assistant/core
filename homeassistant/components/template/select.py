@@ -212,11 +212,14 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         if CONF_STATE in config:
             self._to_render_simple.append(CONF_STATE)
 
-        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
+            self.add_script(
+                CONF_SELECT_OPTION,
+                select_option,
+                self._rendered.get(CONF_NAME, DEFAULT_NAME),
+                DOMAIN,
+            )
 
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
@@ -227,17 +230,17 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
             return
 
         write_ha_state = False
-        for key, attr, validator in (
-            (ATTR_OPTIONS, "_attr_options", vol.All(cv.ensure_list, [cv.string])),
-            (CONF_STATE, "_attr_current_option", cv.string),
-        ):
-            if (rendered := self._rendered.get(key)) is not None:
-                setattr(self, attr, validator(rendered))
+        if (options := self._rendered.get(ATTR_OPTIONS)) is not None:
+            self._attr_options = vol.All(cv.ensure_list, [cv.string])(options)
+            write_ha_state = True
+
+        if (state := self._rendered.get(CONF_STATE)) is not None:
+            self._attr_current_option = cv.string(state)
+            write_ha_state = True
 
         if len(self._rendered) > 0:
             # In case any non optimistic template
             write_ha_state = True
 
         if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()
