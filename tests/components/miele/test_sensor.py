@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from pymiele import MieleDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -72,69 +73,96 @@ async def test_fridge_freezer_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
-@pytest.mark.parametrize("load_device_file", ["oven_scenario/001_off.json"])
+@pytest.mark.parametrize("load_device_file", ["oven.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_oven_temperatures_scenario(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
     setup_platform: None,
     mock_config_entry: MockConfigEntry,
+    device_fixture: MieleDevices,
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
-    check_sensor_state(hass, "sensor.oven", "off", 0)
+    # Initial state when the oven is and created for the first time - don't know if it supports probe temperature
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 0)
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 0)
 
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven_scenario/002_on.json", DOMAIN
+    # Simulate temperature settings, no probe temperature
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
+        80.0
     )
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = 2150
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.5
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_sensor_state(hass, "sensor.oven", "on", 1)
-    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 1)
-    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 1)
+    check_sensor_state(hass, "sensor.oven_temperature", "21.5", 1)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 1)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 1)
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 1)
 
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven_scenario/003_set_temperature.json", DOMAIN
+    # Simulate unsetting temperature
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
+        None
     )
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_sensor_state(hass, "sensor.oven", "pause", 2)
-    check_sensor_state(hass, "sensor.oven_temperature", "21.5", 2)
-    check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 2)
+    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 2)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 2)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 2)
-    check_sensor_state(hass, "sensor.oven_core_target_temperature", "30.0", 2)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 2)
 
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven_scenario/004_use_probe.json", DOMAIN
+    # Simulate temperature settings with probe temperature
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
+        80.0
     )
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0]["value_raw"] = 3000
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_localized"
+    ] = 30.0
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = 2183
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.83
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_sensor_state(hass, "sensor.oven", "in_use", 3)
     check_sensor_state(hass, "sensor.oven_temperature", "21.83", 3)
-    check_sensor_state(hass, "sensor.oven_target_temperature", "25.0", 3)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 3)
     check_sensor_state(hass, "sensor.oven_core_temperature", "22.0", 2)
-    check_sensor_state(hass, "sensor.oven_core_target_temperature", "unknown", 3)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", "30.0", 3)
 
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven_scenario/001_off.json", DOMAIN
+    # Simulate unsetting temperature
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
+        None
     )
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_raw"
+    ] = -32768
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_localized"
+    ] = None
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_sensor_state(hass, "sensor.oven", "off", 3)
-    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 3)
-    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 3)
-    check_sensor_state(hass, "sensor.oven_core_temperature", "unknown", 2)
-    check_sensor_state(hass, "sensor.oven_core_target_temperature", "unknown", 3)
+    check_sensor_state(hass, "sensor.oven_temperature", "unknown", 4)
+    check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 4)
+    check_sensor_state(hass, "sensor.oven_core_temperature", "unknown", 4)
+    check_sensor_state(hass, "sensor.oven_core_target_temperature", "unknown", 4)
 
 
 def check_sensor_state(
@@ -158,15 +186,22 @@ def check_sensor_state(
         )
 
 
-@pytest.mark.parametrize("load_device_file", ["oven_scenario/004_use_probe.json"])
+@pytest.mark.parametrize("load_device_file", ["oven.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_temperature_sensor_registry_lookup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_miele_client: MagicMock,
     setup_platform: None,
+    device_fixture: MieleDevices,
 ) -> None:
     """Test that core temperature sensor is provided by the integration after looking up in entity registry."""
+
+    # Initial state, the oven is showing core temperature (probe)
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = "sensor.oven_core_temperature"
 
@@ -175,7 +210,7 @@ async def test_temperature_sensor_registry_lookup(
 
     # reload device when turned off, reporting the invalid value
     mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "oven_scenario/001_off.json", DOMAIN
+        "oven.json", DOMAIN
     )
 
     # unload config entry and reload to make sure that the entity is still provided
