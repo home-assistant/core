@@ -35,6 +35,7 @@ from openai.types.responses import (
     ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses.response import IncompleteDetails
+from openai.types.responses.response_function_web_search import ActionSearch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -95,10 +96,12 @@ def mock_create_stream() -> Generator[AsyncMock]:
         )
         yield ResponseCreatedEvent(
             response=response,
+            sequence_number=0,
             type="response.created",
         )
         yield ResponseInProgressEvent(
             response=response,
+            sequence_number=0,
             type="response.in_progress",
         )
         response.status = "completed"
@@ -123,16 +126,19 @@ def mock_create_stream() -> Generator[AsyncMock]:
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
+                sequence_number=0,
                 type="response.incomplete",
             )
         elif response.status == "failed":
             yield ResponseFailedEvent(
                 response=response,
+                sequence_number=0,
                 type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
                 response=response,
+                sequence_number=0,
                 type="response.completed",
             )
 
@@ -301,7 +307,7 @@ async def test_incomplete_response(
             "OpenAI response failed: Rate limit exceeded",
         ),
         (
-            ResponseErrorEvent(type="error", message="Some error"),
+            ResponseErrorEvent(type="error", message="Some error", sequence_number=0),
             "OpenAI response error: Some error",
         ),
     ],
@@ -359,6 +365,7 @@ def create_message_item(
                 status="in_progress",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseContentPartAddedEvent(
@@ -366,6 +373,7 @@ def create_message_item(
             item_id=id,
             output_index=output_index,
             part=content,
+            sequence_number=0,
             type="response.content_part.added",
         ),
     ]
@@ -377,6 +385,7 @@ def create_message_item(
             delta=delta,
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.output_text.delta",
         )
         for delta in text
@@ -389,6 +398,7 @@ def create_message_item(
                 item_id=id,
                 output_index=output_index,
                 text="".join(text),
+                sequence_number=0,
                 type="response.output_text.done",
             ),
             ResponseContentPartDoneEvent(
@@ -396,6 +406,7 @@ def create_message_item(
                 item_id=id,
                 output_index=output_index,
                 part=content,
+                sequence_number=0,
                 type="response.content_part.done",
             ),
             ResponseOutputItemDoneEvent(
@@ -407,6 +418,7 @@ def create_message_item(
                     type="message",
                 ),
                 output_index=output_index,
+                sequence_number=0,
                 type="response.output_item.done",
             ),
         ]
@@ -433,6 +445,7 @@ def create_function_tool_call_item(
                 status="in_progress",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         )
     ]
@@ -442,6 +455,7 @@ def create_function_tool_call_item(
             delta=delta,
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.function_call_arguments.delta",
         )
         for delta in arguments
@@ -452,6 +466,7 @@ def create_function_tool_call_item(
             arguments="".join(arguments),
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.function_call_arguments.done",
         )
     )
@@ -467,6 +482,7 @@ def create_function_tool_call_item(
                 status="completed",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         )
     )
@@ -483,8 +499,10 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAA",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseOutputItemDoneEvent(
@@ -493,8 +511,10 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
                 summary=[],
                 type="reasoning",
                 status=None,
+                encrypted_content="AAABBB",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         ),
     ]
@@ -505,31 +525,42 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
     return [
         ResponseOutputItemAddedEvent(
             item=ResponseFunctionWebSearch(
-                id=id, status="in_progress", type="web_search_call"
+                id=id,
+                status="in_progress",
+                action=ActionSearch(query="query", type="search"),
+                type="web_search_call",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.added",
         ),
         ResponseWebSearchCallInProgressEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.in_progress",
         ),
         ResponseWebSearchCallSearchingEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.searching",
         ),
         ResponseWebSearchCallCompletedEvent(
             item_id=id,
             output_index=output_index,
+            sequence_number=0,
             type="response.web_search_call.completed",
         ),
         ResponseOutputItemDoneEvent(
             item=ResponseFunctionWebSearch(
-                id=id, status="completed", type="web_search_call"
+                id=id,
+                status="completed",
+                action=ActionSearch(query="query", type="search"),
+                type="web_search_call",
             ),
             output_index=output_index,
+            sequence_number=0,
             type="response.output_item.done",
         ),
     ]
@@ -537,7 +568,7 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
 
 async def test_function_call(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_reasoning_model: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
@@ -588,6 +619,7 @@ async def test_function_call(
         "id": "rs_A",
         "summary": [],
         "type": "reasoning",
+        "encrypted_content": "AAABBB",
     }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
