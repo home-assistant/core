@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from math import log, pow
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
@@ -84,6 +85,8 @@ async def async_setup_entry(
         OctoPrintJobPercentageSensor(coordinator, device_id),
         OctoPrintEstimatedFinishTimeSensor(coordinator, device_id),
         OctoPrintStartTimeSensor(coordinator, device_id),
+        OctoPrintFileNameSensor(coordinator, device_id),
+        OctoPrintFileSizeSensor(coordinator, device_id),
     ]
 
     async_add_entities(entities)
@@ -257,6 +260,77 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
                 return round(val, 2)
 
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+
+
+class OctoPrintFileNameSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_should_poll = True
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Current file", device_id)
+
+    @property
+    def native_value(self) -> str | None:
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        if not job:
+            return None
+
+        return job.job.file.name or None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+
+
+class OctoPrintFileSizeSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_should_poll = True
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Current file size", device_id)
+
+    @property
+    def native_value(self) -> str | None:
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        if not job:
+            return None
+
+        file_size_raw = job.job.file.size or 0
+        if file_size_raw == 0:
+            return "0B"
+        file_size_binary_log = log(file_size_raw, 1024)
+        file_size_units = "B"
+        if file_size_binary_log >= 4.0:
+            file_size_units = "TB"
+        elif file_size_binary_log >= 3.0:
+            file_size_units = "GB"
+        elif file_size_binary_log >= 2.0:
+            file_size_units = "MB"
+        elif file_size_binary_log >= 1.0:
+            file_size_units = "KB"
+        size_divisor = pow(1024, int(file_size_binary_log))
+        adjusted_size = file_size_raw / size_divisor
+        return f"{adjusted_size:.1f}{file_size_units}"
 
     @property
     def available(self) -> bool:
