@@ -47,6 +47,12 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
 
 
 CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
+    # Electric Fireplace
+    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    "dbl": TuyaClimateEntityDescription(
+        key="dbl",
+        switch_only_hvac_mode=HVACMode.HEAT,
+    ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": TuyaClimateEntityDescription(
@@ -77,9 +83,6 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wkf",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
-    # Electric Fireplace
-    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
-    "dbl": TuyaClimateEntityDescription(key="dbl", switch_only_hvac_mode=HVACMode.HEAT),
 }
 
 
