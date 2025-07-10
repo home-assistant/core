@@ -35,7 +35,7 @@ from .coordinator import (
     SwissPublicTransportDataUpdateCoordinator,
 )
 from .helper import offset_opendata, unique_id_from_config
-from .services import setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Swiss public transport component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

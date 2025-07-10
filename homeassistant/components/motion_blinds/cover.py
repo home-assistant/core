@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
     BlindType.InsectScreen: CoverDeviceClass.SHADE,
+    BlindType.RadioReceiver: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -61,6 +62,7 @@ TILT_DEVICE_MAP = {
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
+    BlindType.RollerTiltMotor: CoverDeviceClass.BLIND,
 }
 
 TILT_ONLY_DEVICE_MAP = {

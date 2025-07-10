@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests_mock
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from total_connect_client.exceptions import (
     AuthenticationError,
     BadResultCodeError,

@@ -29,6 +29,9 @@ from .const import (
 )
 from .entity import LMSStatusEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,

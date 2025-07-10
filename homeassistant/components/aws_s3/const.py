@@ -12,7 +12,8 @@ CONF_SECRET_ACCESS_KEY = "secret_access_key"
 CONF_ENDPOINT_URL = "endpoint_url"
 CONF_BUCKET = "bucket"
 
-DEFAULT_ENDPOINT_URL = "https://s3.eu-central-1.amazonaws.com/"
+AWS_DOMAIN = "amazonaws.com"
+DEFAULT_ENDPOINT_URL = f"https://s3.eu-central-1.{AWS_DOMAIN}/"
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"

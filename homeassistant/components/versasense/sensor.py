@@ -86,7 +86,7 @@ class VSensor(SensorEntity):
         return self._unit
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the sensor is available."""
         return self._available
 

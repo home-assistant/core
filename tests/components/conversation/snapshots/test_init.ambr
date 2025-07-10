@@ -29,18 +29,21 @@
   dict({
     'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
+    'supports_streaming': False,
   })
 # ---
 # name: test_get_agent_info.1
   dict({
     'id': 'mock-entry',
     'name': 'Mock Title',
+    'supports_streaming': False,
   })
 # ---
 # name: test_get_agent_info.2
   dict({
     'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
+    'supports_streaming': False,
   })
 # ---
 # name: test_turn_on_intent[None-turn kitchen on-None]

@@ -2,13 +2,22 @@
 
 import logging
 
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.helpers import llm
+
 DOMAIN = "google_generative_ai_conversation"
+DEFAULT_TITLE = "Google Generative AI"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 
+DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
+DEFAULT_TTS_NAME = "Google AI TTS"
+DEFAULT_AI_TASK_NAME = "Google AI Task"
+
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-RECOMMENDED_CHAT_MODEL = "models/gemini-2.0-flash"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.5-flash"
+RECOMMENDED_TTS_MODEL = "models/gemini-2.5-flash-preview-tts"
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
@@ -27,3 +36,17 @@ RECOMMENDED_USE_GOOGLE_SEARCH_TOOL = False
 
 TIMEOUT_MILLIS = 10000
 FILE_POLLING_INTERVAL_SECONDS = 0.05
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_TTS_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}

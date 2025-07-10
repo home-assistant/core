@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 12
+  CACHE_VERSION: 4
   UV_CACHE_VERSION: 1
-  MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2025.6"
+  MYPY_CACHE_VERSION: 1
+  HA_SHORT_VERSION: "2025.8"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -259,7 +259,7 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -276,7 +276,7 @@ jobs:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
@@ -306,7 +306,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -315,7 +315,7 @@ jobs:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Run ruff-format
         run: |
@@ -346,7 +346,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -355,12 +355,12 @@ jobs:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Run ruff
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
+          pre-commit run --hook-stage manual ruff-check --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
 
@@ -386,7 +386,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -395,7 +395,7 @@ jobs:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
 
       - name: Register yamllint problem matcher
@@ -501,7 +501,7 @@ jobs:
         with:
           path: venv
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -509,10 +509,10 @@ jobs:
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-uv-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-uv-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
@@ -598,7 +598,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Run hassfest
         run: |
@@ -631,7 +631,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Run gen_requirements_all.py
         run: |
@@ -653,7 +653,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.6.0
+        uses: actions/dependency-review-action@v4.7.1
         with:
           license-check: false # We use our own license audit checks
 
@@ -688,7 +688,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Extract license data
         run: |
@@ -731,7 +731,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register pylint problem matcher
         run: |
@@ -778,7 +778,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register pylint problem matcher
         run: |
@@ -830,17 +830,17 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
         uses: actions/cache@v4.2.3
         with:
           path: .mypy_cache
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-mypy-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-mypy-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-mypy-${{
             env.MYPY_CACHE_VERSION }}-${{ steps.generate-mypy-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
       - name: Register mypy problem matcher
@@ -900,7 +900,7 @@ jobs:
           path: venv
           fail-on-cache-miss: true
           key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Run split_tests.py
         run: |
@@ -944,7 +944,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev
+            libgammu-dev \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -959,7 +960,8 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register Python problem matcher
         run: |
@@ -1019,6 +1021,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1069,7 +1077,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libmariadb-dev-compat
+            libmariadb-dev-compat \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1084,7 +1093,8 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register Python problem matcher
         run: |
@@ -1152,6 +1162,12 @@ jobs:
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1200,7 +1216,8 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            libturbojpeg
+            libturbojpeg \
+            libxml2-utils
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get -y install \
             postgresql-server-dev-14
@@ -1218,7 +1235,8 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register Python problem matcher
         run: |
@@ -1287,6 +1305,12 @@ jobs:
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1317,7 +1341,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1354,7 +1378,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev
+            libgammu-dev \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1369,7 +1394,8 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Register Python problem matcher
         run: |
@@ -1432,6 +1458,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1459,7 +1491,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
