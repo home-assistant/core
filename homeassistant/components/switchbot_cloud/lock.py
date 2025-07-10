@@ -40,6 +40,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     ) -> None:
         """Init devices."""
         super().__init__(api, device, coordinator)
+        self.__model = device.device_type
         self.__set_features()
 
     def _set_attributes(self) -> None:
@@ -66,7 +67,5 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         self.async_write_ha_state()
 
     def __set_features(self) -> None:
-        if self.device_info:
-            model: str | None = self.device_info.get("model")
-            if model in LockV2Commands.get_supported_devices():
-                self._attr_supported_features = LockEntityFeature.OPEN
+        if self.__model in LockV2Commands.get_supported_devices():
+            self._attr_supported_features = LockEntityFeature.OPEN
