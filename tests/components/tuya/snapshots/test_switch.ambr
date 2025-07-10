@@ -531,7 +531,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren_sound-entry]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -544,7 +544,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.multifunction_alarm_siren_sound',
+    'entity_id': 'switch.multifunction_alarm_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -556,7 +556,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Siren Sound',
+    'original_name': 'Siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -566,13 +566,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren_sound-state]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Multifunction alarm Siren Sound',
+      'friendly_name': 'Multifunction alarm Siren',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.multifunction_alarm_siren_sound',
+    'entity_id': 'switch.multifunction_alarm_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
