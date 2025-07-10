@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==1.2.0
+aioautomower==1.2.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -268,7 +268,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.10.1
+aioimmich==0.10.2
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -283,7 +283,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.2.0
+aiolifx==1.2.1
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.105.0
+hass-nabucasa==0.106.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1068,7 +1068,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.1.0
+imgw_pib==1.2.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1368,7 +1368,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.93.0
+openai==1.93.3
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1766,7 +1766,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.1
+pylitterbot==2024.2.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.24.0
@@ -2471,7 +2471,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.14.1
+uiprotect==7.14.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2613,7 +2613,7 @@ yalexs==8.10.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.5.5
+yolink-api==0.5.7
 
 # homeassistant.components.youless
 youless-api==2.2.0

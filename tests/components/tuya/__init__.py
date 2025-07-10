@@ -13,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "clkg_curtain_switch": [
+        # https://github.com/home-assistant/core/issues/136055
+        Platform.COVER,
+        Platform.LIGHT,
+    ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
         Platform.SELECT,
@@ -33,6 +39,19 @@ DEVICE_MOCKS = {
     "cz_dual_channel_metering": [
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "dlq_earu_electric_eawcpt": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "dlq_metering_3pn_wifi": [
+        # https://github.com/home-assistant/core/issues/143499
+        Platform.SENSOR,
+    ],
+    "kg_smart_valve": [
+        # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
     ],
     "kj_bladeless_tower_fan": [
@@ -64,6 +83,14 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
         Platform.SWITCH,
+    ],
+    "wsdcg_temperature_humidity": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+    ],
+    "zndb_smart_meter": [
+        # https://github.com/home-assistant/core/issues/138372
+        Platform.SENSOR,
     ],
 }
 
