@@ -218,6 +218,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *BATTERY_SENSORS,
     ),
     # Pet Fountain
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r0as4ln
