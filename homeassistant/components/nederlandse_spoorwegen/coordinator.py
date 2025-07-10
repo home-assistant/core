@@ -22,7 +22,6 @@ from .const import (
     ATTR_NEXT_TRIP,
     ATTR_ROUTE,
     ATTR_ROUTES,
-    ATTR_STATIONS,
     ATTR_TRIPS,
     CONF_FROM,
     CONF_ROUTES,
@@ -58,12 +57,9 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.config_entry = config_entry
-        self._stations: list[Any] = []
 
         # Assign UUID to any route missing 'route_id' (for upgrades)
-        routes = self.config_entry.options.get(
-            CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
-        )
+        routes = self._get_routes()
         changed = False
         for route in routes:
             if "route_id" not in route:
@@ -119,13 +115,13 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     station_cache_expired = True
 
             if station_cache_expired:
-                self._stations = await self.hass.async_add_executor_job(
+                stations = await self.hass.async_add_executor_job(
                     self.client.get_stations  # type: ignore[attr-defined]
                 )
                 codes = sorted(
                     [
                         c
-                        for c in (getattr(s, "code", None) for s in self._stations)
+                        for c in (getattr(s, "code", None) for s in stations)
                         if c is not None
                     ]
                 )
@@ -133,18 +129,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 runtime_data["approved_station_codes_updated"] = now_utc.isoformat()
                 if self.config_entry is not None:
                     self.config_entry.runtime_data = runtime_data
-            else:
-                codes = (
-                    approved_station_codes if approved_station_codes is not None else []
-                )
-                # Only reconstruct self._stations if needed for downstream code
-                if not self._stations:
-
-                    class StationStub:
-                        def __init__(self, code: str) -> None:
-                            self.code = code
-
-                    self._stations = [StationStub(code) for code in codes]
 
             # Get routes from config entry options or data
             routes = self._get_routes()
@@ -197,7 +181,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             return {
                 ATTR_ROUTES: route_data,
-                ATTR_STATIONS: self._stations,
             }
 
     def _get_trips_for_route(self, route: dict[str, Any]) -> list[Any]:
@@ -242,16 +225,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             valid_station_codes = set(
                 self.config_entry.runtime_data.get("approved_station_codes", [])
             )
-        if not valid_station_codes:
-            # Fallback: build from stations if runtime_data is missing
-            valid_station_codes = {
-                code.upper()
-                for s in self._stations
-                for code in (
-                    getattr(s, "code", None) if hasattr(s, "code") else s.get("code"),
-                )
-                if code
-            }
         # Store approved station codes in runtime_data for use in config flow
         current_codes = []
         if (
@@ -329,21 +302,20 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Add a new route and trigger refresh, deduplicating by all properties."""
         if self.config_entry is None:
             return
-        routes = list(self._get_routes())
+        routes = self._get_routes().copy()
         # Only add if not already present (deep equality)
         if route not in routes:
             routes.append(route)
-            if self.config_entry is not None:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, options={CONF_ROUTES: routes}
-                )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options={CONF_ROUTES: routes}
+            )
             await self.async_refresh()
 
     async def async_remove_route(self, route_name: str) -> None:
         """Remove a route and trigger refresh."""
         if self.config_entry is None:
             return
-        routes = list(self._get_routes())
+        routes = self._get_routes().copy()
         routes = [r for r in routes if r.get(CONF_NAME) != route_name]
         self.hass.config_entries.async_update_entry(
             self.config_entry, options={CONF_ROUTES: routes}

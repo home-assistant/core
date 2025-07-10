@@ -16,7 +16,6 @@ ATTR_ROUTE = "route"
 ATTR_TRIPS = "trips"
 ATTR_FIRST_TRIP = "first_trip"
 ATTR_NEXT_TRIP = "next_trip"
-ATTR_STATIONS = "stations"
 ATTR_ROUTES = "routes"
 
 STATION_LIST_URL = (

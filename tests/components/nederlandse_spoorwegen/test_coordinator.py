@@ -61,7 +61,6 @@ async def test_coordinator_initialization(
     """Test coordinator initialization."""
     assert coordinator.client == mock_nsapi
     assert coordinator.config_entry == mock_config_entry
-    assert coordinator._stations == []
 
 
 async def test_test_connection_success(coordinator, mock_hass, mock_nsapi) -> None:
@@ -88,8 +87,7 @@ async def test_update_data_no_routes(coordinator, mock_hass, mock_nsapi) -> None
 
     result = await coordinator._async_update_data()
 
-    assert result == {"routes": {}, "stations": stations}
-    assert coordinator._stations == stations
+    assert result == {"routes": {}}
 
 
 async def test_update_data_with_routes(
@@ -212,11 +210,6 @@ async def test_get_trips_for_route(coordinator, mock_nsapi) -> None:
     ]
     mock_nsapi.get_trips.return_value = trips
 
-    coordinator._stations = [
-        MagicMock(code="AMS"),
-        MagicMock(code="UTR"),
-        MagicMock(code="RTD"),
-    ]
     coordinator.config_entry.runtime_data = {
         "approved_station_codes": ["AMS", "UTR", "RTD"]
     }
@@ -240,7 +233,6 @@ async def test_get_trips_for_route_no_optional_params(coordinator, mock_nsapi) -
     trips = [MagicMock(departure_time_actual=now, departure_time_planned=now)]
     mock_nsapi.get_trips.return_value = trips
 
-    coordinator._stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
     coordinator.config_entry.runtime_data = {"approved_station_codes": ["AMS", "UTR"]}
 
     result = coordinator._get_trips_for_route(route)
