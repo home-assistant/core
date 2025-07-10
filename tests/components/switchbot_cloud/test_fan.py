@@ -131,7 +131,7 @@ async def test_set_percentage(
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
         {"power": "on", "mode": "baby", "fanSpeed": "0"},
-        {"power": "on", "mode": "direct", "fanSpeed": "5"},
+        {"power": "off", "mode": "direct", "fanSpeed": "5"},
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -147,7 +147,7 @@ async def test_set_percentage(
             {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 5},
             blocking=True,
         )
-    mock_send_command.assert_not_called()
+    mock_send_command.assert_called()
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
@@ -156,7 +156,7 @@ async def test_set_percentage(
             {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 5},
             blocking=True,
         )
-    mock_send_command.assert_called_once()
+    mock_send_command.assert_called()
 
 
 async def test_set_preset_mode(
