@@ -186,10 +186,8 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
             base_url=self.url,
         )
         scan = DALIScan(auth)
-        await scan.async_update()
-
-        if scan.is_busy:
-            await self._async_is_dali_device_scan_done(scan)
+        await scan.async_cancel()
+        await self._async_is_dali_device_scan_done(scan)
 
         if method == DALIDeviceScanMethod.SYSTEM_EXTENSION:
             start_scan_data = StartScanData()
