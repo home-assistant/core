@@ -355,7 +355,7 @@ async def test_setup_component_with_delay(
 
         await hass.async_block_till_done()
 
-        assert mock_post_api_request.call_count == 7
+        assert mock_post_api_request.call_count == 8
 
         mock_impl.assert_called_once()
         mock_webhook.assert_not_called()
