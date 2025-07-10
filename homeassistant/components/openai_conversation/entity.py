@@ -293,6 +293,7 @@ class OpenAIBaseLLMEntity(Entity):
                 "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                 "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                 "user": chat_log.conversation_id,
+                "store": False,
                 "stream": True,
             }
             if tools:
@@ -304,8 +305,7 @@ class OpenAIBaseLLMEntity(Entity):
                         CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                     )
                 }
-            else:
-                model_args["store"] = False
+                model_args["include"] = ["reasoning.encrypted_content"]
 
             try:
                 result = await client.responses.create(**model_args)
