@@ -666,7 +666,7 @@
             "yaml": "Copy the YAML configuration below:"
           },
           "data_description": {
-            "yaml": "Place your YAML configuration [configuration.yaml]({url}#yaml-configuration-listed-per-item)."
+            "yaml": "Place YAML configuration in your [configuration.yaml]({url}#yaml-configuration-listed-per-item)."
           }
         },
         "export_discovery": {
