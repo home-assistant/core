@@ -88,6 +88,11 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
             return self.get("vehicle_state_software_update_install_perc")
         return None
 
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes of the latest version available."""
+        return f"https://stats.tessie.com/versions/{self.latest_version}"
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
