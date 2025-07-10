@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -16,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LunatoneDALIIoTConfigEntry
 from .const import DOMAIN
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -40,7 +43,7 @@ async def async_setup_entry(
 
 
 class LunatoneLight(LightEntity):
-    """Representation of a Lunatone Light."""
+    """Representation of a Lunatone light."""
 
     unique_id: str
 
@@ -48,6 +51,7 @@ class LunatoneLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_should_poll = True
 
     def __init__(
         self, device: Device, unique_id_prefix: str, interface_version: AwesomeVersion

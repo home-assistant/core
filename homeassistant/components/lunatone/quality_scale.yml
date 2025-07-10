@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  appropriate-polling: todo
+  appropriate-polling: done
   brands: todo
   common-modules: todo
   config-flow-test-coverage: done
