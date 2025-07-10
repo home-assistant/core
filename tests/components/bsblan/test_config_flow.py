@@ -42,24 +42,6 @@ def zeroconf_discovery_info_no_mac() -> Mock:
     discovery_info.name = "BSB-LAN web service._http._tcp.local."
     discovery_info.type = "_http._tcp.local."
     discovery_info.properties = {}  # No MAC in properties
-    discovery_info.properties_raw = {}  # No MAC in properties_raw either
-    discovery_info.port = 80
-    discovery_info.hostname = "BSB-LAN.local."
-    return discovery_info
-
-
-@pytest.fixture
-def zeroconf_discovery_info_properties_raw() -> Mock:
-    """Return zeroconf discovery info with MAC in properties_raw."""
-    discovery_info = Mock()
-    discovery_info.ip_address = ip_address("10.0.2.60")
-    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
-    discovery_info.name = "BSB-LAN web service._http._tcp.local."
-    discovery_info.type = "_http._tcp.local."
-    discovery_info.properties = {}  # No MAC in properties
-    discovery_info.properties_raw = {
-        b"mac=00:80:41:19:69:90": b""
-    }  # MAC in properties_raw
     discovery_info.port = 80
     discovery_info.hostname = "BSB-LAN.local."
     return discovery_info
@@ -283,43 +265,6 @@ async def test_abort_if_existing_entry_for_zeroconf(
 
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
     _assert_abort_result(result, "already_configured")
-
-
-async def test_zeroconf_discovery_mac_from_properties_raw(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
-    zeroconf_discovery_info_properties_raw: Mock,
-) -> None:
-    """Test Zeroconf discovery when MAC is found in properties_raw instead of properties."""
-    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_properties_raw)
-    _assert_form_result(result, "discovery_confirm")
-
-    result2 = await _configure_flow(
-        hass,
-        result["flow_id"],
-        {
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-    )
-
-    _assert_create_entry_result(
-        result2,
-        format_mac("00:80:41:19:69:90"),
-        {
-            CONF_HOST: "10.0.2.60",
-            CONF_PORT: 80,
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-        format_mac("00:80:41:19:69:90"),
-    )
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_bsblan.device.mock_calls) == 1
 
 
 async def test_zeroconf_discovery_no_mac_requires_auth(

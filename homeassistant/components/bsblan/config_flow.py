@@ -55,15 +55,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.host = str(discovery_info.ip_address)
         self.port = discovery_info.port or DEFAULT_PORT
 
-        # Try to get MAC from properties first (for new firmware)
+        # Get MAC from properties
         self.mac = discovery_info.properties.get("mac")
-
-        # If MAC not found in properties, try to parse from raw TXT records
-        if not self.mac and hasattr(discovery_info, "properties_raw"):
-            for key in discovery_info.properties_raw:
-                if key.startswith(b"mac="):
-                    self.mac = key[4:].decode("utf-8")
-                    break
 
         # If MAC was found in zeroconf, use it immediately
         if self.mac:
