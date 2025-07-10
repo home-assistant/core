@@ -84,7 +84,7 @@ async def test_oven_temperatures_scenario(
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
-    # Initial state when the oven is and created for the first time - don't know if it supports probe temperature
+    # Initial state when the oven is and created for the first time - don't know if it supports core temperature (probe)
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 0)
