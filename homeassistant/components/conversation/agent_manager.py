@@ -18,7 +18,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -63,7 +63,7 @@ def async_get_agent(
     """Get specified agent."""
     manager = get_agent_manager(hass)
 
-    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
+    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
         return manager.default_agent
 
     if "." in agent_id:

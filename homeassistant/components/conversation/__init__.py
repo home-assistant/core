@@ -50,7 +50,6 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
@@ -64,7 +63,6 @@ from .trigger import TriggerDetails
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
-    "OLD_HOME_ASSISTANT_AGENT",
     "AssistantContent",
     "AssistantContentDeltaDict",
     "ChatLog",
@@ -268,15 +266,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
     await component.async_setup({})
-
-    # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # noqa: PLC0415
-        async_migrate_engine,
-    )
-
-    async_migrate_engine(
-        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
-    )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:
         """Parse text into commands."""

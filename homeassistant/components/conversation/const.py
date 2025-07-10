@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 DOMAIN = "conversation"
 HOME_ASSISTANT_AGENT = "conversation.home_assistant"
-OLD_HOME_ASSISTANT_AGENT = "homeassistant"
 
 ATTR_TEXT = "text"
 ATTR_LANGUAGE = "language"
