@@ -721,7 +721,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cook time',
     'platform': 'matter',
@@ -736,6 +736,7 @@
 # name: test_numbers[microwave_oven][number.microwave_oven_cook_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Microwave Oven Cook time',
       'max': 86400,
       'min': 1,

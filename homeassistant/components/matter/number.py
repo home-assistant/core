@@ -349,13 +349,14 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterMaxNumberEntityDescription(
             key="MicrowaveOvenControlCookTime",
             translation_key="cook_time",
+            device_class=NumberDeviceClass.DURATION,
             command=lambda value: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
                 cookTime=int(value)
             ),
             native_min_value=1,  # 1 second minimum cook time
             native_step=1,  # 1 second
             native_unit_of_measurement=UnitOfTime.SECONDS,
-            device_to_ha=lambda x: None if x is None else x,
+            device_to_ha=lambda x: x,
             ha_to_device=lambda x: x,
             max_attribute=clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
             mode=NumberMode.SLIDER,
