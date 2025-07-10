@@ -10,7 +10,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::mqtt::issues::subentry_migration_discovery::title%]",
-            "description": "Exported MQTT Device \"{name}\" identified via MQTT discovery. Confirm that the MQTT device is migrated to the main MQTT configuration, the replaced subentry of the MQTT device is to be removed. Make sure that the discovery is retained at the MQTT broker, or is resent after the subentry is removed, so that the MQTT device will be set up correctly."
+            "description": "Exported MQTT device \"{name}\" identified via MQTT discovery. Confirm that the MQTT device is migrated to the main MQTT configuration, the replaced subentry of the MQTT device is to be removed. Make sure that the discovery is retained at the MQTT broker, or is resent after the subentry is removed, so that the MQTT device will be set up correctly."
           }
         }
       }
@@ -21,7 +21,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::mqtt::issues::subentry_migration_yaml::title%]",
-            "description": "Exported MQTT Device \"{name}\" identified in YAML configuration. Confirm to migrate the MQTT device to main MQTT config entry, and to remove the replaced MQTT device subentry."
+            "description": "Exported MQTT device \"{name}\" identified in YAML configuration. Confirm to migrate the MQTT device to main MQTT config entry, and to remove the replaced MQTT device subentry."
           }
         }
       }
@@ -653,7 +653,7 @@
         },
         "export": {
           "title": "Export MQTT device config",
-          "description": "An export allows you to migrate the MQTT device configuration to YAML based configuration or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
+          "description": "An export allows you to migrate the MQTT device configuration to YAML-based configuration or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
           "menu_options": {
             "export_discovery": "Export MQTT discovery information",
             "export_yaml": "Export to YAML configuration"
@@ -661,7 +661,7 @@
         },
         "export_yaml": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the MQTT device was tried to set up via YAML instead, and will offer a repair flow to clean up the redundant subentry.",
+          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the setup of the MQTT device was tried via YAML instead, and will offer a repair flow to clean up the redundant subentry.",
           "data": {
             "yaml": "Copy the YAML configuration below:"
           },
@@ -671,13 +671,13 @@
         },
         "export_discovery": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the MQTT device was tried set up via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry.",
+          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the setup of the MQTT device was tried via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry.",
           "data": {
             "discovery_topic": "Discovery topic",
             "discovery_payload": "Discovery payload:"
           },
           "data_description": {
-            "discovery_topic": "The [discovery topic]({url}#discovery-topic) to publish the discovery payload to, to trigger MQTT discovery. An empty payload published to this topic, will remove the device and discovered entities.",
+            "discovery_topic": "The [discovery topic]({url}#discovery-topic) to publish the discovery payload, used to trigger MQTT discovery. An empty payload published to this topic will remove the device and discovered entities.",
             "discovery_payload": "The JSON [discovery payload]({url}#discovery-discovery-payload) that contains information about the MQTT device."
           }
         }
