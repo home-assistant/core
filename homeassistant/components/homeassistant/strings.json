@@ -40,7 +40,7 @@
     },
     "python_version": {
       "title": "Support for Python {current_python_version} is being removed",
-      "description": "Support for running Home Assistant in the current used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking."
+      "description": "Support for running Home Assistant in the currently used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking."
     },
     "config_entry_only": {
       "title": "The {domain} integration does not support YAML configuration",
@@ -81,7 +81,7 @@
       "title": "Integration {domain} not found",
       "fix_flow": {
         "abort": {
-          "issue_ignored": "Not existing integration {domain} ignored."
+          "issue_ignored": "Non-existent integration {domain} ignored."
         },
         "step": {
           "init": {
@@ -124,6 +124,7 @@
     "info": {
       "arch": "CPU architecture",
       "config_dir": "Configuration directory",
+      "container_arch": "Container architecture",
       "dev": "Development",
       "docker": "Docker",
       "hassio": "Supervisor",
@@ -273,7 +274,7 @@
       "message": "Failed to process the returned action response data, expected a dictionary, but got {response_data_type}."
     },
     "service_should_be_blocking": {
-      "message": "A non blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
+      "message": "A non-blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
     }
   }
 }

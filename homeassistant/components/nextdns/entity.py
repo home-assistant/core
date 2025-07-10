@@ -1,14 +1,18 @@
 """Define NextDNS entities."""
 
+from nextdns.model import NextDnsData
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .coordinator import NextDnsUpdateCoordinator
 
 
-class NextDnsEntity(CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]]):
+class NextDnsEntity[CoordinatorDataT: NextDnsData](
+    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]]
+):
     """Define NextDNS entity."""
 
     _attr_has_entity_name = True

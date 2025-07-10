@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -44,15 +43,9 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
-    DOMAIN,
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
-
-CHARGER_STATION = "station"
-UPDATE_INTERVAL = 30
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -180,13 +173,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
 
     async_add_entities(
         WallboxSensor(coordinator, description)
         for ent in coordinator.data
         if (description := SENSOR_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSensor(WallboxEntity, SensorEntity):

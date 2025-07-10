@@ -1,9 +1,15 @@
 """Tests helpers."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.openai_conversation.const import (
+    CONF_CHAT_MODEL,
+    DEFAULT_CONVERSATION_NAME,
+)
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -13,7 +19,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_subentry_data() -> dict[str, Any]:
+    """Mock subentry data."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_subentry_data: dict[str, Any]
+) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="OpenAI",
@@ -21,6 +35,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "api_key": "bla",
         },
+        version=2,
+        subentries_data=[
+            ConfigSubentryData(
+                data=mock_subentry_data,
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            )
+        ],
     )
     entry.add_to_hass(hass)
     return entry
@@ -31,8 +54,23 @@ def mock_config_entry_with_assist(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_reasoning_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "o4-mini"},
     )
     return mock_config_entry
 

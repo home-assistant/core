@@ -278,7 +278,13 @@
 # name: test_diagnostics[HWE-P1]
   dict({
     'data': dict({
-      'batteries': None,
+      'batteries': dict({
+        'max_consumption_w': 1600.0,
+        'max_production_w': 800.0,
+        'mode': 'zero',
+        'power_w': -404.0,
+        'target_power_w': -400.0,
+      }),
       'device': dict({
         'api_version': '1.0.0',
         'firmware_version': '4.19',
