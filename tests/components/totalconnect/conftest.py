@@ -19,7 +19,7 @@ from homeassistant.components.totalconnect.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import LOCATION_ID, PASSWORD, USERCODES, USERNAME
+from .const import CODE, LOCATION_ID, PASSWORD, USERCODES, USERNAME
 
 from tests.common import (
     MockConfigEntry,
@@ -181,11 +181,18 @@ def mock_client(mock_location: TotalConnectLocation) -> Generator[TotalConnectCl
     ):
         client.return_value.get_number_locations.return_value = 1
         client.return_value.locations = {mock_location.location_id: mock_location}
+        client.return_value.usercodes = {mock_location.location_id: CODE}
         yield client.return_value
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def code_required() -> bool:
+    """Return whether a code is required."""
+    return False
+
+
+@pytest.fixture
+def mock_config_entry(code_required: bool) -> MockConfigEntry:
     """Create a mock config entry for testing."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -194,5 +201,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: PASSWORD,
             CONF_USERCODES: USERCODES,
         },
-        options={AUTO_BYPASS: False, CODE_REQUIRED: False},
+        options={AUTO_BYPASS: False, CODE_REQUIRED: code_required},
     )
