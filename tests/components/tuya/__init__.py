@@ -13,6 +13,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "clkg_curtain_switch": [
+        # https://github.com/home-assistant/core/issues/136055
+        Platform.COVER,
+        Platform.LIGHT,
+    ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
         Platform.FAN,
         Platform.HUMIDIFIER,
@@ -33,6 +38,10 @@ DEVICE_MOCKS = {
     "cz_dual_channel_metering": [
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "kg_smart_valve": [
+        # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
     ],
     "kj_bladeless_tower_fan": [
