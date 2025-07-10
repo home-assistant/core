@@ -655,10 +655,7 @@ class HomeConnectCoordinator(
                     "times": str(MAX_EXECUTIONS),
                     "time_window": str(MAX_EXECUTIONS_TIME_WINDOW // 60),
                     "home_connect_resource_url": "https://www.home-connect.com/global/help-support/error-codes#/Togglebox=15362315-13320636-1/",
-                    "home_assistant_core_new_issue_url": (
-                        "https://github.com/home-assistant/core/issues/new?template=bug_report.yml"
-                        f"&integration_name={DOMAIN}&integration_link=https://www.home-assistant.io/integrations/{DOMAIN}/"
-                    ),
+                    "home_assistant_core_issue_url": "https://github.com/home-assistant/core/issues/147299",
                 },
             )
             return True
