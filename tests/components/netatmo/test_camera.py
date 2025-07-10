@@ -578,4 +578,4 @@ async def test_camera_image_raises_exception(
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 9
+    assert fake_post_hits == 10
