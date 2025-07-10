@@ -139,6 +139,6 @@
     },
     "arm_away_instant_invalid_code": {
       "message": "Usercode is invalid, did not arm away instant"
-    },
+    }
   }
 }
