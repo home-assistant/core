@@ -150,7 +150,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         )
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 3
+        assert fake_post_hits == 4
 
         assert hass.config_entries.async_entries(DOMAIN)
         assert len(hass.states.async_all()) == 0
