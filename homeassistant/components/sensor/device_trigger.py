@@ -75,7 +75,7 @@ CONF_SOUND_PRESSURE = "sound_pressure"
 CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
-CONF_TEMPERATURE_INTERVAL = "temperature_interval"
+CONF_TEMPERATURE_DELTA = "temperature_delta"
 CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
@@ -136,7 +136,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
-    SensorDeviceClass.TEMPERATURE_INTERVAL: [{CONF_TYPE: CONF_TEMPERATURE_INTERVAL}],
+    SensorDeviceClass.TEMPERATURE_DELTA: [{CONF_TYPE: CONF_TEMPERATURE_DELTA}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
@@ -204,7 +204,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SPEED,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
-                    CONF_TEMPERATURE_INTERVAL,
+                    CONF_TEMPERATURE_DELTA,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,

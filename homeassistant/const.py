@@ -691,7 +691,7 @@ class UnitOfTemperature(StrEnum):
 
 
 # Temperature units
-class UnitOfTemperatureInterval(StrEnum):
+class UnitOfTemperatureDelta(StrEnum):
     """Temperature interval units."""
 
     CELSIUS = "Δ°C"

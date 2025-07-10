@@ -151,7 +151,7 @@
     "temperature": {
       "default": "mdi:thermometer"
     },
-    "temperature_interval": {
+    "temperature_delta": {
       "default": "mdi:thermometer"
     },
     "timestamp": {

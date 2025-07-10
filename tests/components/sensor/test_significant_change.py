@@ -7,7 +7,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
-    UnitOfTemperatureInterval,
+    UnitOfTemperatureDelta,
 )
 
 AQI_ATTRS = {
@@ -33,13 +33,13 @@ TEMP_FREEDOM_ATTRS = {
 }
 
 TEMP_INTERVAL_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_INTERVAL,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureInterval.CELSIUS,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureDelta.CELSIUS,
 }
 
 TEMP_INTERVAL_FAHRENHEIT_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_INTERVAL,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureInterval.FAHRENHEIT,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureDelta.FAHRENHEIT,
 }
 
 

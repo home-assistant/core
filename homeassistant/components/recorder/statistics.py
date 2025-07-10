@@ -61,7 +61,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
-    TemperatureIntervalConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -217,9 +217,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **dict.fromkeys(ReactiveEnergyConverter.VALID_UNITS, ReactiveEnergyConverter),
     **dict.fromkeys(SpeedConverter.VALID_UNITS, SpeedConverter),
     **dict.fromkeys(TemperatureConverter.VALID_UNITS, TemperatureConverter),
-    **dict.fromkeys(
-        TemperatureIntervalConverter.VALID_UNITS, TemperatureIntervalConverter
-    ),
+    **dict.fromkeys(TemperatureDeltaConverter.VALID_UNITS, TemperatureDeltaConverter),
     **dict.fromkeys(UnitlessRatioConverter.VALID_UNITS, UnitlessRatioConverter),
     **dict.fromkeys(VolumeConverter.VALID_UNITS, VolumeConverter),
     **dict.fromkeys(VolumeFlowRateConverter.VALID_UNITS, VolumeFlowRateConverter),

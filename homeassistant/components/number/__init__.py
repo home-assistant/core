@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_MODE,
     CONF_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
-    UnitOfTemperatureInterval,
+    UnitOfTemperatureDelta,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -186,11 +186,9 @@ _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT: dict[UnitOfTemperature, str] =
     UnitOfTemperature.CELSIUS: UnitOfTemperature.CELSIUS,
     UnitOfTemperature.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
 }
-_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT: dict[
-    UnitOfTemperature, str
-] = {
-    UnitOfTemperature.CELSIUS: UnitOfTemperatureInterval.CELSIUS,
-    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureInterval.FAHRENHEIT,
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT: dict[UnitOfTemperature, str] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
 }
 _DEVICECLASS_NATIVE_CONFIG_TO_UOM: dict[
     NumberDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
@@ -199,9 +197,9 @@ _DEVICECLASS_NATIVE_CONFIG_TO_UOM: dict[
         UnitOfTemperature.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
         UnitOfTemperature.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
     },
-    NumberDeviceClass.TEMPERATURE_INTERVAL: {
-        UnitOfTemperatureInterval.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
-        UnitOfTemperatureInterval.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
+    NumberDeviceClass.TEMPERATURE_DELTA: {
+        UnitOfTemperatureDelta.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
+        UnitOfTemperatureDelta.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
     },
 }
 
