@@ -50,6 +50,7 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
+    CONF_REALTIME_UPDATES,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -456,6 +457,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_UPTIME_SENSORS,
                         default=self.hub.config.option_allow_uptime_sensors,
+                    ): bool,
+                    vol.Optional(
+                        CONF_REALTIME_UPDATES,
+                        default=self.hub.config.option_realtime_updates,
                     ): bool,
                 }
             ),

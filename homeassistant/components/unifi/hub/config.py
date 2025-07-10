@@ -24,6 +24,7 @@ from ..const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
+    CONF_REALTIME_UPDATES,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -34,6 +35,7 @@ from ..const import (
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
+    DEFAULT_REALTIME_UPDATES,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -55,6 +57,9 @@ class UnifiConfig:
 
     option_supported_clients: list[str]
     """Allow creating entities from clients."""
+
+    option_realtime_updates: bool
+    """Config entry option to enable/disable real-time updates (websocket)."""
 
     # Device tracker options
 
@@ -120,5 +125,8 @@ class UnifiConfig:
             ),
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+            ),
+            option_realtime_updates=options.get(
+                CONF_REALTIME_UPDATES, DEFAULT_REALTIME_UPDATES
             ),
         )

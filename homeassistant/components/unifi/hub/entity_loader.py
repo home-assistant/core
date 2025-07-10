@@ -51,10 +51,7 @@ class UnifiEntityLoader:
             hub.api.traffic_routes.update,
             hub.api.wlans.update,
         )
-        self.polling_api_updaters = (
-            hub.api.traffic_rules.update,
-            hub.api.traffic_routes.update,
-        )
+        self.build_polling_api_updaters()
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._dataUpdateCoordinator = DataUpdateCoordinator(
@@ -80,6 +77,20 @@ class UnifiEntityLoader:
 
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
+
+    def build_polling_api_updaters(self) -> None:
+        """Build the tuple of polling API updaters based on config."""
+        self.polling_api_updaters: tuple[
+            Callable[[], Coroutine[Any, Any, None]], ...
+        ] = (
+            self.hub.api.traffic_rules.update,
+            self.hub.api.traffic_routes.update,
+        )
+        if not self.hub.config.option_realtime_updates:
+            self.polling_api_updaters += (
+                self.hub.api.clients.update,
+                self.hub.api.devices.update,
+            )
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
