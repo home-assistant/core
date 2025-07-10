@@ -21,13 +21,13 @@
         "default": "mdi:trophy"
       },
       "earned_trophies_gold": {
-        "default": "mdi:trophy-variant"
+        "default": "mdi:trophy-outline"
       },
       "earned_trophies_silver": {
         "default": "mdi:trophy-variant"
       },
       "earned_trophies_bronze": {
-        "default": "mdi:trophy-variant"
+        "default": "mdi:trophy-variant-outline"
       },
       "online_id": {
         "default": "mdi:account"
