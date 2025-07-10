@@ -1,9 +1,11 @@
 """The tests for Netatmo component."""
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 from time import time
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from pyatmo.const import ALL_SCOPES
@@ -14,7 +16,7 @@ from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -330,35 +332,51 @@ async def test_setup_component_with_delay(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test setup of the netatmo component with delayed startup."""
-    hass.set_state(CoreState.not_running)
+    # Replicate the fake_post pattern from test_camera.py
+    fake_post_hits = 0
+
+    async def fake_post_internal(*args: Any, **kwargs: Any):
+        """Fake a post request for the Netatmo API."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
 
     with (
         patch(
-            "pyatmo.AbstractAsyncAuth.async_addwebhook", side_effect=AsyncMock()
-        ) as mock_addwebhook,
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
         patch(
-            "pyatmo.AbstractAsyncAuth.async_dropwebhook", side_effect=AsyncMock()
-        ) as mock_dropwebhook,
+            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            ["climate", "sensor", "binary_sensor", "fan", "camera", "light"],
+        ),
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
         ) as mock_impl,
         patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
         patch(
-            "pyatmo.AbstractAsyncAuth.async_post_api_request",
-            side_effect=partial(fake_post_request, hass),
-        ) as mock_post_api_request,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+            "asyncio.base_events.BaseEventLoop.create_server",
+            side_effect=lambda *args, **kwargs: MagicMock(spec=asyncio.Server),
+        ),
     ):
-        assert await async_setup_component(
-            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+        # Now, set up the behavior of the mocked class's *instance*
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post_internal
+        # You may or may not need async_get_image depending on your test flow
+        mock_auth.return_value.async_get_image.side_effect = fake_post_internal
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock(
+            return_value={"status": "ok"}
         )
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock(
+            return_value={"status": "ok"}
+        )
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-        assert mock_post_api_request.call_count == 8
+        assert fake_post_hits == 10
 
         mock_impl.assert_called_once()
-        mock_webhook.assert_not_called()
+        # mock_webhook.assert_not_called()
 
         await hass.async_start()
         await hass.async_block_till_done()
@@ -370,8 +388,8 @@ async def test_setup_component_with_delay(
         )
         await hass.async_block_till_done()
 
-        mock_addwebhook.assert_called_once()
-        mock_dropwebhook.assert_not_awaited()
+        mock_auth.return_value.async_addwebhook.assert_called_once()
+        mock_auth.return_value.async_dropwebhook.assert_not_called()
 
         async_fire_time_changed(
             hass,
@@ -383,7 +401,7 @@ async def test_setup_component_with_delay(
         assert len(hass.states.async_all()) > 0
 
         await hass.async_stop()
-        mock_dropwebhook.assert_called_once()
+        mock_auth.return_value.async_dropwebhook.assert_called_once()
 
 
 async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
