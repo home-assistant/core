@@ -6,6 +6,7 @@ from psnawp_api.models.trophies import PlatformType
 
 DOMAIN = "playstation_network"
 CONF_NPSSO: Final = "npsso"
+CONF_SHOW_ENTITY_PICTURES: Final = "show_entity_pictures"
 
 SUPPORTED_PLATFORMS = {
     PlatformType.PS5,

@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import ASSETS_PATH
+from .const import ASSETS_PATH, CONF_SHOW_ENTITY_PICTURES
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
 from .entity import PlaystationNetworkServiceEntity
 
@@ -113,18 +113,6 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         key=PlaystationNetworkSensor.ONLINE_ID,
         translation_key=PlaystationNetworkSensor.ONLINE_ID,
         value_fn=lambda psn: psn.username,
-        entity_picture=(
-            lambda psn: next(
-                (
-                    pic.get("url")
-                    for pic in psn.profile.get("personalDetail", {}).get(
-                        "profilePictures"
-                    )
-                    if pic.get("size") == "xl"
-                ),
-                None,
-            )
-        ),
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.LAST_ONLINE,
@@ -177,8 +165,20 @@ class PlaystationNetworkSensorEntity(
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
+        if self.entity_description.key is PlaystationNetworkSensor.ONLINE_ID and (
+            profile_pictures := self.coordinator.data.profile.get(
+                "personalDetail", {}
+            ).get("profilePictures")
+        ):
+            return next(
+                (pic.get("url") for pic in profile_pictures if pic.get("size") == "xl"),
+                None,
+            )
 
-        if (entity_picture := self.entity_description.entity_picture) is not None:
+        if (
+            self.coordinator.config_entry.options.get(CONF_SHOW_ENTITY_PICTURES)
+            and (entity_picture := self.entity_description.entity_picture) is not None
+        ):
             return (
                 entity_picture(self.coordinator.data)
                 if callable(entity_picture)

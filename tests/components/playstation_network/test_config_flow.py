@@ -1,6 +1,6 @@
 """Test the Playstation Network config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -10,7 +10,11 @@ from homeassistant.components.playstation_network.config_flow import (
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
 )
-from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
+from homeassistant.components.playstation_network.const import (
+    CONF_NPSSO,
+    CONF_SHOW_ENTITY_PICTURES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -325,3 +329,34 @@ async def test_flow_reconfigure(
     assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_options_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test options flow."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options.get(CONF_SHOW_ENTITY_PICTURES) is None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SHOW_ENTITY_PICTURES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_SHOW_ENTITY_PICTURES: True}
+    assert len(mock_setup_entry.mock_calls) == 1
