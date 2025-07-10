@@ -1,7 +1,7 @@
 """Pandora media player tests."""
 
 from homeassistant.components.media_player import DOMAIN as PLATFORM_DOMAIN
-from homeassistant.components.pandora import DOMAIN as PANDORA_DOMAIN
+from homeassistant.components.pandora import DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -19,7 +19,7 @@ async def test_repair_issue_is_created(
         {
             PLATFORM_DOMAIN: [
                 {
-                    CONF_PLATFORM: PANDORA_DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                 }
             ],
         },
@@ -27,5 +27,5 @@ async def test_repair_issue_is_created(
     await hass.async_block_till_done()
     assert (
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_system_packages_yaml_integration_{PANDORA_DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
     ) in issue_registry.issues

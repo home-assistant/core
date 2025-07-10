@@ -1,1 +1,1 @@
-"""Helpers for KNX."""
+"""Handle persistent storage for the KNX integration."""

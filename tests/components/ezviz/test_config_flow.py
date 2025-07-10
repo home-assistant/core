@@ -129,6 +129,7 @@ async def test_async_step_reauth(
             CONF_PASSWORD: "test-password",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -639,6 +640,7 @@ async def test_reauth_errors(
             CONF_PASSWORD: "test-password",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

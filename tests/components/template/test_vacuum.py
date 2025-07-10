@@ -26,8 +26,26 @@ from tests.components.vacuum import common
 TEST_OBJECT_ID = "test_vacuum"
 TEST_ENTITY_ID = f"vacuum.{TEST_OBJECT_ID}"
 
-STATE_INPUT_SELECT = "input_select.state"
-BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
+TEST_STATE_SENSOR = "sensor.test_state"
+TEST_SPEED_SENSOR = "sensor.test_fan_speed"
+TEST_BATTERY_LEVEL_SENSOR = "sensor.test_battery_level"
+TEST_AVAILABILITY_ENTITY = "availability_state.state"
+
+TEST_STATE_TRIGGER = {
+    "trigger": {
+        "trigger": "state",
+        "entity_id": [
+            TEST_STATE_SENSOR,
+            TEST_SPEED_SENSOR,
+            TEST_BATTERY_LEVEL_SENSOR,
+            TEST_AVAILABILITY_ENTITY,
+        ],
+    },
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "action": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+    ],
+}
 
 START_ACTION = {
     "start": {
@@ -140,6 +158,24 @@ async def async_setup_modern_format(
     await hass.async_block_till_done()
 
 
+async def async_setup_trigger_format(
+    hass: HomeAssistant, count: int, vacuum_config: dict[str, Any]
+) -> None:
+    """Do setup of vacuum integration via trigger format."""
+    config = {"template": {"vacuum": vacuum_config, **TEST_STATE_TRIGGER}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 async def setup_vacuum(
     hass: HomeAssistant,
@@ -152,6 +188,8 @@ async def setup_vacuum(
         await async_setup_legacy_format(hass, count, vacuum_config)
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(hass, count, vacuum_config)
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(hass, count, vacuum_config)
 
 
 @pytest.fixture
@@ -169,6 +207,10 @@ async def setup_test_vacuum_with_extra_config(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass, count, {"name": TEST_OBJECT_ID, **vacuum_config, **extra_config}
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass, count, {"name": TEST_OBJECT_ID, **vacuum_config, **extra_config}
         )
 
@@ -194,6 +236,16 @@ async def setup_state_vacuum(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": state_template,
+                **TEMPLATE_VACUUM_ACTIONS,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass,
             count,
             {
@@ -228,6 +280,17 @@ async def setup_base_vacuum(
     elif style == ConfigurationStyle.MODERN:
         state_config = {"state": state_template} if state_template else {}
         await async_setup_modern_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **state_config,
+                **extra_config,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        state_config = {"state": state_template} if state_template else {}
+        await async_setup_trigger_format(
             hass,
             count,
             {
@@ -277,6 +340,19 @@ async def setup_single_attribute_state_vacuum(
                 **extra_config,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        state_config = {"state": state_template} if state_template else {}
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **state_config,
+                **TEMPLATE_VACUUM_ACTIONS,
+                **extra,
+                **extra_config,
+            },
+        )
 
 
 @pytest.fixture
@@ -313,6 +389,18 @@ async def setup_attributes_state_vacuum(
                 **TEMPLATE_VACUUM_ACTIONS,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        state_config = {"state": state_template} if state_template else {}
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                "attributes": attributes,
+                **state_config,
+                **TEMPLATE_VACUUM_ACTIONS,
+            },
+        )
 
 
 @pytest.mark.parametrize("count", [1])
@@ -328,6 +416,13 @@ async def setup_attributes_state_vacuum(
         ),
         (
             ConfigurationStyle.MODERN,
+            None,
+            {"start": {"service": "script.vacuum_start"}},
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             None,
             {"start": {"service": "script.vacuum_start"}},
             STATE_UNKNOWN,
@@ -354,6 +449,16 @@ async def setup_attributes_state_vacuum(
             100,
         ),
         (
+            ConfigurationStyle.TRIGGER,
+            "{{ 'cleaning' }}",
+            {
+                "battery_level": "{{ 100 }}",
+                "start": {"service": "script.vacuum_start"},
+            },
+            VacuumActivity.CLEANING,
+            100,
+        ),
+        (
             ConfigurationStyle.LEGACY,
             "{{ 'abc' }}",
             {
@@ -365,6 +470,16 @@ async def setup_attributes_state_vacuum(
         ),
         (
             ConfigurationStyle.MODERN,
+            "{{ 'abc' }}",
+            {
+                "battery_level": "{{ 101 }}",
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             "{{ 'abc' }}",
             {
                 "battery_level": "{{ 101 }}",
@@ -395,18 +510,35 @@ async def setup_attributes_state_vacuum(
             STATE_UNKNOWN,
             None,
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            "{{ this_function_does_not_exist() }}",
+            {
+                "battery_level": "{{ this_function_does_not_exist() }}",
+                "fan_speed": "{{ this_function_does_not_exist() }}",
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNAVAILABLE,
+            None,
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_base_vacuum")
 async def test_valid_legacy_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
     """Test: configs."""
+
+    # Ensure trigger entity templates are rendered
+    hass.states.async_set(TEST_STATE_SENSOR, None)
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_all("vacuum")) == count
     _verify(hass, parm1, parm2)
 
 
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "extra_config"),
@@ -423,13 +555,14 @@ async def test_invalid_configs(hass: HomeAssistant, count) -> None:
 
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
-    [(1, "{{ states('input_select.state') }}", {})],
+    [(1, "{{ states('sensor.test_state') }}", {})],
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
         (ConfigurationStyle.LEGACY, "battery_level_template"),
         (ConfigurationStyle.MODERN, "battery_level"),
+        (ConfigurationStyle.TRIGGER, "battery_level"),
     ],
 )
 @pytest.mark.parametrize(
@@ -447,6 +580,10 @@ async def test_battery_level_template(
     hass: HomeAssistant, expected: int | None
 ) -> None:
     """Test templates with values from other entities."""
+    # Ensure trigger entity templates are rendered
+    hass.states.async_set(TEST_STATE_SENSOR, None)
+    await hass.async_block_till_done()
+
     _verify(hass, STATE_UNKNOWN, expected)
 
 
@@ -455,7 +592,7 @@ async def test_battery_level_template(
     [
         (
             1,
-            "{{ states('input_select.state') }}",
+            "{{ states('sensor.test_state') }}",
             {
                 "fan_speeds": ["low", "medium", "high"],
             },
@@ -467,6 +604,7 @@ async def test_battery_level_template(
     [
         (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
 )
 @pytest.mark.parametrize(
@@ -481,33 +619,39 @@ async def test_battery_level_template(
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> None:
     """Test templates with values from other entities."""
+    # Ensure trigger entity templates are rendered
+    hass.states.async_set(TEST_STATE_SENSOR, None)
+    await hass.async_block_till_done()
+
     _verify(hass, STATE_UNKNOWN, None, expected)
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template", "extra_config"),
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
     [
         (
             1,
             "{{ 'on' }}",
-            "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+            "{% if states.sensor.test_state.state %}mdi:check{% endif %}",
             {},
+            "icon",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "expected"),
     [
-        (ConfigurationStyle.MODERN, "icon"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
-async def test_icon_template(hass: HomeAssistant) -> None:
+async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == expected
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -515,29 +659,31 @@ async def test_icon_template(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template", "extra_config"),
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
     [
         (
             1,
             "{{ 'on' }}",
-            "{% if states.switch.test_state.state %}local/vacuum.png{% endif %}",
+            "{% if states.sensor.test_state.state %}local/vacuum.png{% endif %}",
             {},
+            "picture",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "expected"),
     [
-        (ConfigurationStyle.MODERN, "picture"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
-async def test_picture_template(hass: HomeAssistant) -> None:
+async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
     """Test picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == expected
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -560,6 +706,7 @@ async def test_picture_template(hass: HomeAssistant) -> None:
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
@@ -567,14 +714,14 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
 
     # When template returns true..
-    hass.states.async_set("availability_state.state", STATE_ON)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
     assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
-    hass.states.async_set("availability_state.state", STATE_OFF)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
@@ -597,15 +744,22 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
+
+    # Ensure state change triggers trigger entity.
+    hass.states.async_set(TEST_STATE_SENSOR, None)
+    await hass.async_block_till_done()
+
     assert hass.states.get(TEST_ENTITY_ID) != STATE_UNAVAILABLE
-    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+    err = "'x' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -627,7 +781,7 @@ async def test_attribute_templates(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["test_attribute"] == "It ."
 
-    hass.states.async_set("sensor.test_state", "Works")
+    hass.states.async_set(TEST_STATE_SENSOR, "Works")
     await hass.async_block_till_done()
     await async_update_entity(hass, TEST_ENTITY_ID)
     state = hass.states.get(TEST_ENTITY_ID)
@@ -635,26 +789,31 @@ async def test_attribute_templates(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("count", "state_template", "attributes"),
     [
         (
             1,
-            "{{ states('input_select.state') }}",
+            "{{ states('sensor.test_state') }}",
             {"test_attribute": "{{ this_function_does_not_exist() }}"},
         )
     ],
 )
 @pytest.mark.usefixtures("setup_attributes_state_vacuum")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that errors are logged if rendering template fails."""
+
+    hass.states.async_set(TEST_STATE_SENSOR, "Works")
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_all("vacuum")) == 1
-    assert "test_attribute" in caplog_setup_text
-    assert "TemplateError" in caplog_setup_text
+    err = "'this_function_does_not_exist' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
 
 
 @pytest.mark.parametrize("count", [1])
@@ -689,6 +848,21 @@ async def test_invalid_attribute_template(
                 },
             ],
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            [
+                {
+                    "name": "test_template_vacuum_01",
+                    "state": "{{ true }}",
+                    **UNIQUE_ID_CONFIG,
+                },
+                {
+                    "name": "test_template_vacuum_02",
+                    "state": "{{ false }}",
+                    **UNIQUE_ID_CONFIG,
+                },
+            ],
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
@@ -701,7 +875,8 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     ("count", "state_template", "extra_config"), [(1, None, START_ACTION)]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_base_vacuum")
 async def test_unused_services(hass: HomeAssistant) -> None:
@@ -741,10 +916,11 @@ async def test_unused_services(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("count", "state_template"),
-    [(1, "{{ states('input_select.state') }}")],
+    [(1, "{{ states('sensor.test_state') }}")],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "action",
@@ -782,8 +958,8 @@ async def test_state_services(
     [
         (
             1,
-            "{{ states('input_select.state') }}",
-            "{{ states('input_select.fan_speed') }}",
+            "{{ states('sensor.test_state') }}",
+            "{{ states('sensor.test_fan_speed') }}",
             {
                 "fan_speeds": ["low", "medium", "high"],
             },
@@ -795,6 +971,7 @@ async def test_state_services(
     [
         (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
@@ -835,8 +1012,8 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     [
         (
             1,
-            "{{ states('input_select.state') }}",
-            "{{ states('input_select.fan_speed') }}",
+            "{{ states('sensor.test_state') }}",
+            "{{ states('sensor.test_fan_speed') }}",
         )
     ],
 )
@@ -845,6 +1022,7 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     [
         (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
@@ -918,7 +1096,8 @@ async def test_nested_unique_id(
 
 @pytest.mark.parametrize(("count", "vacuum_config"), [(1, {"start": []})])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("extra_config", "supported_features"),
