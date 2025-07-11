@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LunatoneDALIIoTConfigEntry
 from .const import DOMAIN
+from .coordinator import LunatoneConfigEntry
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -24,12 +24,15 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: LunatoneDALIIoTConfigEntry,
+    config_entry: LunatoneConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lunatone Light platform."""
-    info = config_entry.runtime_data.info
-    devices = config_entry.runtime_data.devices
+    coordinator_info = config_entry.runtime_data.coordinator_info
+    coordinator_devices = config_entry.runtime_data.coordinator_devices
+
+    info = coordinator_info.info
+    devices = coordinator_devices.devices
 
     interface_version = AwesomeVersion(info.version.split("/")[0][1:])
 
