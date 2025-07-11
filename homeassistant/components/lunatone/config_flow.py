@@ -61,8 +61,8 @@ DALI_SCAN_SCHEMA: Final[vol.Schema] = vol.Schema(
 )
 
 
-class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Lunatone DALI IoT config flow."""
+class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Lunatone config flow."""
 
     VERSION = 0
     MINOR_VERSION = 2
