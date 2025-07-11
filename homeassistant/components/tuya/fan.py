@@ -22,7 +22,8 @@ from homeassistant.util.percentage import (
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import EnumTypeData, IntegerTypeData
 
 TUYA_SUPPORT_TYPE = {
     "cs",  # Dehumidifier
