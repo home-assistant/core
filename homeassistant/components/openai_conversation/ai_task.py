@@ -1,8 +1,9 @@
-"""AI Task integration for Google Generative AI Conversation."""
+"""AI Task integration for OpenAI."""
 
 from __future__ import annotations
 
 from json import JSONDecodeError
+import logging
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -11,8 +12,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import LOGGER
-from .entity import ERROR_GETTING_RESPONSE, GoogleGenerativeAILLMBaseEntity
+from .entity import OpenAIBaseLLMEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -26,21 +28,18 @@ async def async_setup_entry(
             continue
 
         async_add_entities(
-            [GoogleGenerativeAITaskEntity(config_entry, subentry)],
+            [OpenAITaskEntity(config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class GoogleGenerativeAITaskEntity(
+class OpenAITaskEntity(
     ai_task.AITaskEntity,
-    GoogleGenerativeAILLMBaseEntity,
+    OpenAIBaseLLMEntity,
 ):
-    """Google Generative AI AI Task entity."""
+    """OpenAI AI Task entity."""
 
-    _attr_supported_features = (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-    )
+    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
 
     async def _async_generate_data(
         self,
@@ -48,14 +47,12 @@ class GoogleGenerativeAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(chat_log, task.structure, task.attachments)
+        await self._async_handle_chat_log(chat_log, task.name, task.structure)
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            LOGGER.error(
-                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
-                chat_log.content[-1],
+            raise HomeAssistantError(
+                "Last content in chat log is not an AssistantContent"
             )
-            raise HomeAssistantError(ERROR_GETTING_RESPONSE)
 
         text = chat_log.content[-1].content or ""
 
@@ -64,16 +61,15 @@ class GoogleGenerativeAITaskEntity(
                 conversation_id=chat_log.conversation_id,
                 data=text,
             )
-
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
-            LOGGER.error(
+            _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
                 text,
             )
-            raise HomeAssistantError(ERROR_GETTING_RESPONSE) from err
+            raise HomeAssistantError("Error with OpenAI structured response") from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
