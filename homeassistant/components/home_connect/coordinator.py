@@ -6,6 +6,7 @@ from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any, cast
 
@@ -36,9 +37,14 @@ from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOpti
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -638,6 +644,13 @@ class HomeConnectCoordinator(
         execution_tracker.append(now)
 
         if len(execution_tracker) >= MAX_EXECUTIONS:
+            now_dt = datetime.now(UTC)
+            time_window_start = now_dt - timedelta(seconds=MAX_EXECUTIONS_TIME_WINDOW)
+            entity_id = er.async_get(self.hass).async_get_entity_id(
+                Platform.BINARY_SENSOR,
+                DOMAIN,
+                f"{appliance_ha_id}-{EventKey.BSH_COMMON_APPLIANCE_CONNECTED}",
+            )
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -654,6 +667,11 @@ class HomeConnectCoordinator(
                     "appliance_name": self.data[appliance_ha_id].info.name,
                     "times": str(MAX_EXECUTIONS),
                     "time_window": str(MAX_EXECUTIONS_TIME_WINDOW // 60),
+                    "logbook_url": (
+                        f"/logbook?entity_id={entity_id}"
+                        f"&start_date={time_window_start.isoformat(timespec='milliseconds').replace('+00:00', 'Z')}"
+                        f"&end_date={now_dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')}"
+                    ),
                     "home_connect_resource_url": "https://www.home-connect.com/global/help-support/error-codes#/Togglebox=15362315-13320636-1/",
                     "home_assistant_core_issue_url": "https://github.com/home-assistant/core/issues/147299",
                 },

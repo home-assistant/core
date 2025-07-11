@@ -1,10 +1,11 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import parse_qs, urlparse
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -25,6 +26,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
 )
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -76,7 +78,7 @@ INITIAL_FETCH_CLIENT_METHODS = [
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
-    return [Platform.SENSOR, Platform.SWITCH]
+    return [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR]
 
 
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
@@ -599,20 +601,34 @@ async def test_coordinator_disabling_updates_for_appliance(
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.CONNECTED,
-                data=ArrayOfEvents([]),
-            )
-            for _ in range(8)
-        ]
-    )
-    await hass.async_block_till_done()
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with freeze_time(now):
+        await client.add_events(
+            [
+                EventMessage(
+                    appliance_ha_id,
+                    EventType.CONNECTED,
+                    data=ArrayOfEvents([]),
+                )
+                for _ in range(8)
+            ]
+        )
+        await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue
+
+    assert issue.translation_placeholders
+    log_book_url_params = parse_qs(
+        urlparse(issue.translation_placeholders["logbook_url"]).query
+    )
+    assert log_book_url_params["entity_id"] == ["binary_sensor.dishwasher_connectivity"]
+    start_dt = datetime.fromisoformat(log_book_url_params["start_date"][0])
+    end_dt = datetime.fromisoformat(log_book_url_params["end_date"][0])
+    assert start_dt == now - timedelta(hours=1)
+    assert end_dt == now
+    assert start_dt.tzname() == "UTC"
+    assert end_dt.tzname() == "UTC"
 
     get_settings_original_side_effect = client.get_settings.side_effect
 
