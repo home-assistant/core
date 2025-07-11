@@ -381,7 +381,7 @@ async def test_generate_content_service(
     """Test generate content service."""
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-4o-mini"
-    expected_args["max_output_tokens"] = 150
+    expected_args["max_output_tokens"] = 3000
     expected_args["top_p"] = 1.0
     expected_args["temperature"] = 1.0
     expected_args["user"] = None
