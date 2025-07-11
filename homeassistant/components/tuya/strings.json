@@ -210,12 +210,6 @@
       },
       "down_delay": {
         "name": "Down delay"
-      },
-      "delay_set": {
-        "name": "Arm delay"
-      },
-      "alarm_delay_time": {
-        "name": "Alarm delay"
       }
     },
     "select": {
