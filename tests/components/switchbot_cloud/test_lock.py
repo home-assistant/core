@@ -13,9 +13,7 @@ from homeassistant.core import HomeAssistant
 from . import configure_integration
 
 
-async def test_lock_unlock(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
+async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
     """Test locking and unlocking."""
     mock_list_devices.return_value = [
         Device(
@@ -47,33 +45,3 @@ async def test_lock_unlock(
             LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
     assert hass.states.get(lock_id).state == LockState.LOCKED
-
-
-# async def test_deadbolt(
-#     hass: HomeAssistant, mock_list_devices, mock_get_status
-# ) -> None:
-#     """Test deadbolt."""
-#     mock_list_devices.return_value = [
-#         Device(
-#             version="V1.0",
-#             deviceId="lock-id-1",
-#             deviceName="lock-1",
-#             deviceType="Smart Lock Pro",
-#             hubDeviceId="test-hub-id",
-#         ),
-#     ]
-#
-#     mock_get_status.return_value = {"lockState": "locked"}
-#
-#     entry = await configure_integration(hass)
-#
-#     assert entry.state is ConfigEntryState.LOADED
-#
-#     lock_id = "lock.lock_1"
-#     assert hass.states.get(lock_id).state == LockState.LOCKED
-#
-#     with patch.object(SwitchBotAPI, "send_command"):
-#         await hass.services.async_call(
-#             LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: lock_id}, blocking=True
-#         )
-#     assert hass.states.get(lock_id).state == LockState.LOCKED
