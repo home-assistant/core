@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
-from propcache.api import cached_property
 
 from chip.clusters import Objects as clusters
 from matter_server.common.models import EventType, MatterNodeEvent
@@ -43,6 +42,7 @@ DOOR_LOCK_OPERATION_SOURCE = {
 }
 
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -102,7 +102,11 @@ class MatterLock(MatterEntity, LockEntity):
             case clusters.DoorLock.Events.DoorLockAlarm.event_id:  # Event 0
                 match data.data.get("alarmCode"):
                     case 0:  # lock is jammed
-                        # don't reset the optimisically (un)locking state on state update
+                        # set in an uncertain state if jammed
+                        self._attr_is_locked = None
+                        self._attr_is_open = None
+                        self._attr_is_opening = None
+                        self._attr_is_locking = None
                         self._attr_is_jammed = True
                         self.async_write_ha_state()
             case clusters.DoorLock.Events.LockOperation.event_id:  # Event 2
@@ -112,11 +116,28 @@ class MatterLock(MatterEntity, LockEntity):
                     operation_source, "Unknown"
                 )
                 self._attr_user_index = data.data.get("userIndex")
-                self.async_write_ha_state()
+                # self.async_write_ha_state()
             case clusters.DoorLock.Events.LockOperationError.event_id:  # Event 3
-                match data.data.get("lockOperationError"):
-                    case 0 | 1:  # Lock or Unlock Error
-                        self._attr_is_jammed = True
+                match data.data.get("operationError"):
+                    case 0:  # unspecified
+                        self._attr_is_opening = False
+                        self._attr_is_locking = False
+                        self.async_write_ha_state()
+                    case 1:  # invalid credentials
+                        self._attr_is_opening = False
+                        self._attr_is_locking = False
+                        self.async_write_ha_state()
+                    case 2:  # Disabled user Denied
+                        self._attr_is_opening = False
+                        self._attr_is_locking = False
+                        self.async_write_ha_state()
+                    case 3:  # Restricted
+                        self._attr_is_opening = False
+                        self._attr_is_locking = False
+                        self.async_write_ha_state()
+                    case 4:  # Insuffficient Battery
+                        self._attr_is_opening = False
+                        self._attr_is_locking = False
                         self.async_write_ha_state()
 
     @property
@@ -125,7 +146,7 @@ class MatterLock(MatterEntity, LockEntity):
         return self._attr_user_index
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the additional user_index state attribute of the lock."""
         attrs = super().extra_state_attributes or {}
         attrs[ATTR_USER_INDEX] = self._attr_user_index
@@ -156,9 +177,9 @@ class MatterLock(MatterEntity, LockEntity):
         if not self._attr_is_locked:
             # optimistically signal locking to state machine
             self._attr_is_locking = True
+            self._attr_is_unlocking = False
+            self._attr_is_opening = False
             self.async_write_ha_state()
-            # the lock should acknowledge the command with an attribute update
-            # if lock fails to do so, the jammed event will be raised.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -167,19 +188,42 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the lock with pin if needed."""
+        LOGGER.debug("async_unlock called with arguments: %s", kwargs)
+        """Unlock the lock. Do not unbolt, even if supported."""
         if self._attr_is_locked:
             # optimistically signal unlocking to state machine
-            self._attr_is_unlocking = True
-            self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
-            # if lock fails to do so, the jammed event will be raised
+            # if lock fails to do so, the jammed or lock operation error event
+            # will be raised to clear the optimistic state.
+            self._attr_is_locking = False
+            self._attr_is_unlocking = True
+            self._attr_is_opening = False
+            self.async_write_ha_state()
+        code: str | None = kwargs.get(ATTR_CODE)
+        code_bytes = code.encode() if code else None
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
+        )
+
+    async def async_open(self, **kwargs: Any) -> None:
+        LOGGER.debug("async_open called with arguments: %s", kwargs)
+        """Unlock and pull the door latch."""
+        # optimistically signal unlocking and pulling door latch to state machine
+        # the lock should acknowledge the command with an attribute update
+        # if lock fails to do so, the jammed or lock operation error event
+        # will be raised to clear the optimistic state.
+        if self._attr_is_locked:
+            self._attr_is_locking = False
+            self._attr_is_unlocking = True
+        if not self._attr_is_open:
+            self._attr_is_opening = True
+        self.async_write_ha_state()
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         if self._attr_supported_features & LockEntityFeature.OPEN:
-            # if the lock reports it has separate unbolt support,
-            # the unlock command should unbolt only on the unlock command
-            # and unlatch on the HA 'open' command.
+            # async_open should only be called if the lock reports it has unbolt support,
+            # however, guard against a mistaken call to async_open and call UnLockDoor if it does not have unbolt support.
             await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
                 timed_request_timeout_ms=1000,
@@ -189,19 +233,6 @@ class MatterLock(MatterEntity, LockEntity):
                 command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
                 timed_request_timeout_ms=1000,
             )
-
-    async def async_open(self, **kwargs: Any) -> None:
-        """Open the door latch."""
-        # optimistically signal opening to state machine
-        # if lock fails to do so, the jammed event will be raised
-        self._attr_is_opening = True
-        self.async_write_ha_state()
-        code: str | None = kwargs.get(ATTR_CODE)
-        code_bytes = code.encode() if code else None
-        await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
-        )
 
     @callback
     def _update_from_device(self) -> None:
@@ -213,33 +244,56 @@ class MatterLock(MatterEntity, LockEntity):
             clusters.DoorLock.Attributes.LockState
         )
 
-        LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
+        LOGGER.debug(
+            "Received _update_from_device with lock state: %s for %s",
+            lock_state,
+            self.entity_id,
+        )
 
-        if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
-            # unlocked and unlatched
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
+            # State 0 - Not Fully Locked is an uncertain lock state, treat as jammed
+            LOGGER.debug("processing kNotFullyLocked state")
             self._attr_is_locked = False
-            self._attr_is_open = True
-            self._attr_is_jammed = False
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
-            # locked and latched.
-            self._attr_is_locked = True  # lock is open, but latch is closed
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
             self._attr_is_open = False
-            self._attr_is_jammed = False
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:
-            # unlocked but latched
-            self._attr_is_locked = False
-            self._attr_is_open = False
-            self._attr_is_jammed = False
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            # uncertain lock state, treat as jammed
-            self._attr_is_locked = False
-            self._attr_is_open = False
+            self._attr_is_opening = False
             self._attr_is_jammed = True
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
+            # State 1 - fully locked, latch/bolt not pulled
+            LOGGER.debug("processing kLocked state")
+            self._attr_is_locked = True
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = False
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
+            # State 2 - unlocked, latch/bolt is not pulled
+            LOGGER.debug("processing kUnlocked state")
+            self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = False
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
+            # State 3 - fully unlocked and latch/bolt is pulled
+            LOGGER.debug("processing kUnlatched state")
+            self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = True
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
         else:
-            # Treat any other state as unknown.
-            # NOTE: A null state can happen during device startup.
+            # NOTE: A null state can happen during device startup. Treat as unknown.
+            LOGGER.debug("processing NULL state")
             self._attr_is_locked = None
+            self._attr_is_locking = None
+            self._attr_is_unlocking = None
             self._attr_is_open = None
+            self._attr_is_opening = None
             self._attr_is_jammed = None
             self._attr_changed_by = None
             self._attr_user_index = None
