@@ -570,7 +570,7 @@ async def async_setup_entry(
 
     def _get_entity_class(definition: MieleSensorDefinition) -> type[MieleSensor]:
         """Get the entity class for the sensor."""
-        {
+        return {
             "state_status": MieleStatusSensor,
             "state_program_id": MieleProgramIdSensor,
             "state_program_phase": MielePhaseSensor,
@@ -716,7 +716,7 @@ class MielePlateSensor(MieleSensor):
                 cast(
                     int,
                     self.device.state_plate_step[
-                        self.entity_description.zone - 1
+                        cast(int, self.entity_description.zone) - 1
                     ].value_raw,
                 )
             ).name
