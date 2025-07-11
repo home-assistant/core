@@ -20,5 +20,24 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Update the Datadog configuration.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "prefix": "Prefix",
+          "rate": "Rate"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Datadog agent.",
+          "port": "Port the Datadog agent is listening on",
+          "prefix": "Metric prefix to use",
+          "rate": "The sample rate of UDP packets sent to Datadog."
+        }
+      }
+    }
   }
 }

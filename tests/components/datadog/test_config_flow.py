@@ -3,8 +3,6 @@
 from unittest import mock
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components import datadog
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -94,7 +92,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == new_config
 
 
-@pytest.mark.asyncio
 async def test_validate_connection_success() -> None:
     """Test validate_datadog_connection succeeds."""
     client = mock.MagicMock()
@@ -102,7 +99,6 @@ async def test_validate_connection_success() -> None:
     client.increment.assert_called_once_with("connection_test")
 
 
-@pytest.mark.asyncio
 async def test_validate_connection_oserror() -> None:
     """Test validate_datadog_connection fails with OSError."""
     client = mock.MagicMock()
@@ -110,7 +106,6 @@ async def test_validate_connection_oserror() -> None:
     assert not await datadog.validate_datadog_connection(client)
 
 
-@pytest.mark.asyncio
 async def test_validate_connection_valueerror() -> None:
     """Test validate_datadog_connection fails with ValueError."""
     client = mock.MagicMock()
@@ -118,7 +113,6 @@ async def test_validate_connection_valueerror() -> None:
     assert not await datadog.validate_datadog_connection(client)
 
 
-@pytest.mark.asyncio
 async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
     """Test state_changed_listener skips None and unknown states."""
     with (

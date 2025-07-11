@@ -1,6 +1,5 @@
 """Support for sending data to Datadog."""
 
-import asyncio
 import logging
 
 from datadog import DogStatsd, initialize
@@ -9,6 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PORT,
     CONF_PREFIX,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional("port", default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
                 vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
     """Set up Datadog from a config entry."""
 
-    conf = {**entry.data, **entry.options}
+    conf = entry.options
     host = conf["host"]
     port = conf["port"]
     prefix = conf["prefix"]
@@ -129,19 +129,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> 
     runtime.flush()
     runtime.close_socket()
     return True
-
-
-async def validate_datadog_connection(client: DogStatsd) -> bool:
-    """Attempt to send a test metric to the Datadog agent."""
-    loop = asyncio.get_running_loop()
-
-    try:
-        await loop.run_in_executor(None, client.increment, "connection_test")
-    except OSError:
-        # Connection issues like ECONNREFUSED
-        return False
-    except ValueError:
-        # Likely a bad host/port/prefix format
-        return False
-    else:
-        return True

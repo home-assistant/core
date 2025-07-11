@@ -1,5 +1,6 @@
 """Config flow for Datadog."""
 
+import asyncio
 from typing import Any
 
 from datadog import DogStatsd
@@ -7,10 +8,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
 from homeassistant.core import callback
 
-from . import validate_datadog_connection
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_PREFIX, DEFAULT_RATE, DOMAIN
+from .const import (
+    CONF_RATE,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_PREFIX,
+    DEFAULT_RATE,
+    DOMAIN,
+)
 
 
 class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -31,16 +39,18 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not success:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title="Datadog", data=user_input)
+                return self.async_create_entry(
+                    title="Datadog", data={}, options=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host", default=DEFAULT_HOST): str,
-                    vol.Required("port", default=DEFAULT_PORT): int,
-                    vol.Required("prefix", default=DEFAULT_PREFIX): str,
-                    vol.Required("rate", default=DEFAULT_RATE): int,
+                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_PREFIX, default=DEFAULT_PREFIX): str,
+                    vol.Required(CONF_RATE, default=DEFAULT_RATE): int,
                 }
             ),
             errors=errors,
@@ -69,17 +79,33 @@ class DatadogOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Datadog options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
-        data = {**self._config_entry.data, **self._config_entry.options}
+        data = self._config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host", default=data["host"]): str,
-                    vol.Required("port", default=data["port"]): int,
-                    vol.Required("prefix", default=data["prefix"]): str,
-                    vol.Required("rate", default=data["rate"]): int,
+                    vol.Required(CONF_HOST, default=data["host"]): str,
+                    vol.Required(CONF_PORT, default=data["port"]): int,
+                    vol.Required(CONF_PREFIX, default=data["prefix"]): str,
+                    vol.Required(CONF_RATE, default=data["rate"]): int,
                 }
             ),
         )
+
+
+async def validate_datadog_connection(client: DogStatsd) -> bool:
+    """Attempt to send a test metric to the Datadog agent."""
+    loop = asyncio.get_running_loop()
+
+    try:
+        await loop.run_in_executor(None, client.increment, "connection_test")
+    except OSError:
+        # Connection issues like ECONNREFUSED
+        return False
+    except ValueError:
+        # Likely a bad host/port/prefix format
+        return False
+    else:
+        return True
