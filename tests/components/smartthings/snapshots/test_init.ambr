@@ -728,6 +728,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_rvc_map_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '05accb39-2017-c98b-a5ab-04a81f4d3d9a',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'JETBOT_COMBO_9X00_24K',
+    'model_id': None,
+    'name': 'Robot vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '20250123.105306',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_rvc_normal_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
