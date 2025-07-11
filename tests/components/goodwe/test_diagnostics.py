@@ -6,7 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.goodwe import CONF_MODEL_FAMILY, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +25,7 @@ async def test_entry_diagnostics(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "localhost", CONF_MODEL_FAMILY: "ET"},
+        data={CONF_HOST: "localhost", CONF_PORT: 8899, CONF_MODEL_FAMILY: "ET"},
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
     )
     config_entry.add_to_hass(hass)

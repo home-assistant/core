@@ -5,6 +5,7 @@
       'data': dict({
         'host': 'localhost',
         'model_family': 'ET',
+        'port': 8899,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
