@@ -66,7 +66,10 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is not None:
+        if (
+            self.coordinator.waze_data is not None
+            and self.coordinator.waze_data.duration is not None
+        ):
             self._attr_native_value = round(self.coordinator.waze_data.duration)
             self.async_write_ha_state()
 
