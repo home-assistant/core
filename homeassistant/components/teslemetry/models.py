@@ -28,6 +28,7 @@ class TeslemetryData:
     vehicles: list[TeslemetryVehicleData]
     energysites: list[TeslemetryEnergyData]
     scopes: list[Scope]
+    stream: TeslemetryStream
 
 
 @dataclass

@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC, WaterFurnaceData
+from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceData
 
 SENSORS = [
     SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
@@ -104,7 +104,7 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    client = hass.data[WF_DOMAIN]
+    client = hass.data[DOMAIN]
 
     add_entities(WaterFurnaceSensor(client, description) for description in SENSORS)
 

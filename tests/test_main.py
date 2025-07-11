@@ -36,7 +36,7 @@ def test_validate_python(mock_exit) -> None:
     with patch(
         "sys.version_info",
         new_callable=PropertyMock(
-            return_value=(REQUIRED_PYTHON_VER[0] - 1,) + REQUIRED_PYTHON_VER[1:]
+            return_value=(REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:])
         ),
     ):
         main.validate_python()
@@ -55,7 +55,7 @@ def test_validate_python(mock_exit) -> None:
     with patch(
         "sys.version_info",
         new_callable=PropertyMock(
-            return_value=(REQUIRED_PYTHON_VER[:2]) + (REQUIRED_PYTHON_VER[2] + 1,)
+            return_value=(*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1)
         ),
     ):
         main.validate_python()

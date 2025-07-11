@@ -17,7 +17,7 @@
       "invalid_security_code": "Failed to register with provided code. If this keeps happening, try restarting the gateway.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "Timeout validating the code.",
-      "cannot_authenticate": "Cannot authenticate, is Gateway paired with another server like e.g. Homekit?"
+      "cannot_authenticate": "Cannot authenticate, is your gateway paired with another server like e.g. HomeKit?"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

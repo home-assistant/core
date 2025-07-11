@@ -51,7 +51,6 @@ from .const import (
     DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
@@ -65,7 +64,6 @@ from .trace import ConversationTraceEventType, async_conversation_trace_append
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
-    "OLD_HOME_ASSISTANT_AGENT",
     "AssistantContent",
     "AssistantContentDeltaDict",
     "ChatLog",
@@ -203,7 +201,11 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
-        return AgentInfo(id=agent.entity_id, name=name)
+        return AgentInfo(
+            id=agent.entity_id,
+            name=name,
+            supports_streaming=agent.supports_streaming,
+        )
 
     manager = get_agent_manager(hass)
 
@@ -264,15 +266,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_default_agent(
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
-    )
-
-    # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
-        async_migrate_engine,
-    )
-
-    async_migrate_engine(
-        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:

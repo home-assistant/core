@@ -1,4 +1,4 @@
-"""Base class for KNX devices."""
+"""Base classes for KNX entities."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 
 class KnxUiEntityPlatformController(PlatformControllerBase):

@@ -6,6 +6,7 @@ from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging
 from typing import Any
+import warnings
 
 from qnapstats import QNAPStats
 import urllib3
@@ -37,7 +38,8 @@ def suppress_insecure_request_warning():
     Was added in here to solve the following issue, not being solved upstream.
     https://github.com/colinodell/python-qnapstats/issues/96
     """
-    with urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
         yield
 
 

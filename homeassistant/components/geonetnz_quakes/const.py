@@ -11,8 +11,6 @@ PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
 CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 CONF_MMI = "mmi"
 
-FEED = "feed"
-
 DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_MMI = 3
