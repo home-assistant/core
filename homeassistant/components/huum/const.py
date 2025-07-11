@@ -5,9 +5,9 @@ from homeassistant.const import Platform
 DOMAIN = "huum"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
-    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 UPDATE_INTERVAL = 30

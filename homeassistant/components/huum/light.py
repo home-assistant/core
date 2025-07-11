@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from huum.huum import Huum
 
@@ -61,12 +62,12 @@ class HuumLight(CoordinatorEntity, LightEntity):
         """Return the current light status."""
         return self._coordinator.data.light == 1
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if not self.is_on:
             await self._toggle_light()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if self.is_on:
             await self._toggle_light()
