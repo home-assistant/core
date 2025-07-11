@@ -277,7 +277,7 @@ async def test_update_entity_dead(
     zen_31,
     integration,
 ) -> None:
-    """Test update occurs when device is dead after it becomes alive."""
+    """Test update occurs even when device is dead."""
     event = Event(
         "dead",
         data={"source": "node", "event": "dead", "nodeId": zen_31.node_id},
@@ -290,17 +290,7 @@ async def test_update_entity_dead(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
-    # Because node is asleep we shouldn't attempt to check for firmware updates
-    assert len(client.async_send_command.call_args_list) == 0
-
-    event = Event(
-        "alive",
-        data={"source": "node", "event": "alive", "nodeId": zen_31.node_id},
-    )
-    zen_31.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Now that the node is up we can check for updates
+    # Checking for firmware updates should proceed even for dead nodes
     assert len(client.async_send_command.call_args_list) > 0
 
     args = client.async_send_command.call_args_list[0][0][0]

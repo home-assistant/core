@@ -199,18 +199,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
             return
 
-        # If device is asleep/dead, wait for it to wake up/become alive before
-        # attempting an update
-        for status, event_name in (
-            (NodeStatus.ASLEEP, "wake up"),
-            (NodeStatus.DEAD, "alive"),
-        ):
-            if self.node.status == status:
-                if not self._status_unsub:
-                    self._status_unsub = self.node.once(
-                        event_name, self._update_on_status_change
-                    )
-                return
+        # If device is asleep, wait for it to wake up before attempting an update
+        if self.node.status == NodeStatus.ASLEEP:
+            if not self._status_unsub:
+                self._status_unsub = self.node.once(
+                    "wake up", self._update_on_status_change
+                )
+            return
 
         try:
             # Retrieve all firmware updates including non-stable ones but filter
