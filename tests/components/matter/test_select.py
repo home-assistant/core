@@ -248,44 +248,37 @@ async def test_microwave_oven(
     # SupportedWatts    on MicrowaveOvenControl cluster (1/96/6)
     # SelectedWattIndex on MicrowaveOvenControl cluster (1/96/7)
     matter_client.write_attribute.reset_mock()
-    state = hass.states.get("select.microwave_oven_power_level")
+    state = hass.states.get("select.microwave_oven_power_level_w")
     assert state
     assert state.state == "1000"
     assert state.attributes["options"] == [
-        100,
-        200,
-        300,
-        400,
-        500,
-        600,
-        700,
-        800,
-        900,
-        1000,
+        "100",
+        "200",
+        "300",
+        "400",
+        "500",
+        "600",
+        "700",
+        "800",
+        "900",
+        "1000",
     ]
-    # Set SelectedWattIndex attribute value to 0 which corresponds to 100 W
-    # set_node_attribute(matter_node, 1, 96, 7, 0)
-    # await trigger_subscription_callback(hass, matter_client)
-    # state = hass.states.get("select.microwave_oven_power_level")
-    # assert state.state == 100
 
     # test select option
     await hass.services.async_call(
         "select",
         "select_option",
         {
-            "entity_id": "select.microwave_oven_power_level",
+            "entity_id": "select.microwave_oven_power_level_w",
             "option": "900",
         },
         blocking=True,
     )
-    assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args == call(
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=1,
-            attribute=clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                wattSettingIndex=900
-            ),
+        endpoint_id=1,
+        command=clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+            wattSettingIndex=8
         ),
     )

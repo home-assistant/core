@@ -79,6 +79,18 @@ class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
+class MatterIntSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterMapSelectEntityDescription."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of integers)
+    list_attribute: type[ClusterAttributeDescriptor]
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
@@ -136,6 +148,52 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
         ]
         # use base implementation from MatterAttributeSelectEntity to set the current option
         super()._update_from_device()
+
+
+class MatterIntListSelectEntity(MatterEntity, SelectEntity):
+    """Representation of a Matter select entity where the options are defined in an int list."""
+
+    entity_description: MatterIntSelectEntityDescription
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        option_id = self._attr_options.index(option)
+
+        if TYPE_CHECKING:
+            assert option_id is not None
+
+        if self.entity_description.command:
+            # custom command defined to set the new value
+            await self.send_device_command(
+                self.entity_description.command(option_id),
+            )
+            return
+        # regular write attribute to set the new value
+        await self.write_attribute(
+            value=option_id,
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # the options can dynamically change based on the state of the device
+        available_values = cast(
+            list[int],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        # map available (int) values to string representation
+        self._attr_options = [
+            mapped_value
+            for value in available_values
+            if (mapped_value := str(value))  # convert int to string
+        ]
+        current_option_idx: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        try:
+            self._attr_current_option = self._attr_options[current_option_idx]
+        except IndexError:
+            self._attr_current_option = None
 
 
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
@@ -445,18 +503,15 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=MatterListSelectEntityDescription(
+        entity_description=MatterIntSelectEntityDescription(
             key="MicrowaveOvenControlSelectedWattIndex",
             translation_key="power_level",
             command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
                 wattSettingIndex=selected_index
             ),
-            # List of int but select entity require list of strings
-            # list_values = cast(list[int], self.get_matter_attribute_value(clusters.MicrowaveOvenControl.Attributes.SupportedWatts,)),
-            # options = [str(i) for i in list_values],
             list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
         ),
-        entity_class=MatterListSelectEntity,
+        entity_class=MatterIntListSelectEntity,
         required_attributes=(
             clusters.MicrowaveOvenControl.Attributes.SelectedWattIndex,
             clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
