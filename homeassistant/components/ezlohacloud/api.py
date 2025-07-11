@@ -7,7 +7,7 @@ import logging
 
 import httpx
 
-from .const import EZLO_API_URI, SIGNUP_UUID
+from .const import EZLO_API_URI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,6 @@ async def signup(username, email, password, ha_instance_id):
         "username": username,
         "password": password,
         "email": email,
-        "uuid": SIGNUP_UUID,
         "ha_instance_id": ha_instance_id,
     }
 
