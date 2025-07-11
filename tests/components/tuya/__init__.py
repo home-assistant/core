@@ -88,6 +88,11 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
     ],
+    "wxkg_wireless_switch": [
+        # https://github.com/home-assistant/core/issues/93975
+        Platform.EVENT,
+        Platform.SENSOR,
+    ],
     "zndb_smart_meter": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
