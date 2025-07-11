@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -63,15 +63,15 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         self._attr_unique_id = unique_id
         self._attr_name = name
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
         if (
             self.coordinator.waze_data is not None
             and self.coordinator.waze_data.duration is not None
         ):
-            self._attr_native_value = round(self.coordinator.waze_data.duration)
-            self.async_write_ha_state()
+            return round(self.coordinator.waze_data.duration)
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
