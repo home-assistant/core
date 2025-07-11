@@ -5,7 +5,7 @@ import logging
 from datadog import DogStatsd, initialize
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -56,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "import"},
+            context={"source": SOURCE_IMPORT},
             data=config[DOMAIN],
         )
     )
