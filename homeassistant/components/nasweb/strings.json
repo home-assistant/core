@@ -45,6 +45,11 @@
       "switch_output": {
         "name": "Relay Switch {index}"
       }
+    },
+    "alarm_control_panel": {
+      "zone": {
+        "name": "Zone {index}"
+      }
     }
   }
 }
