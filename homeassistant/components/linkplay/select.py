@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from linkplay.bridge import LinkPlayPlayer
+from linkplay.bridge import LinkPlayBridge, LinkPlayPlayer
 from linkplay.consts import AudioOutputHwMode
 from linkplay.manufacturers import MANUFACTURER_WIIM
 
@@ -32,21 +32,26 @@ AUDIO_OUTPUT_HW_MODE_MAP_INV: dict[str, AudioOutputHwMode] = {
 }
 
 
+async def _get_current_option(bridge: LinkPlayBridge) -> str:
+    """Get the current hardware mode."""
+    modes = await bridge.player.get_audio_output_hw_mode()
+    return AUDIO_OUTPUT_HW_MODE_MAP[modes.hardware]
+
+
 @dataclass(frozen=True, kw_only=True)
 class LinkPlaySelectEntityDescription(SelectEntityDescription):
     """Class describing LinkPlay select entities."""
 
     set_option_fn: Callable[[LinkPlayPlayer, Any], Coroutine[Any, Any, None]]
     current_option_fn: Callable[[LinkPlayPlayer], Awaitable[Any]]
-    current_option: Callable[[Any], Any]
+    # current_option: Callable[[Any], Any]
 
 
 SELECT_TYPES_WIIM: tuple[LinkPlaySelectEntityDescription, ...] = (
     LinkPlaySelectEntityDescription(
         key="audio_output_hardware_mode",
         translation_key="audio_output_hardware_mode",
-        current_option_fn=lambda linkplay_bridge: linkplay_bridge.player.get_audio_output_hw_mode(),
-        current_option=lambda modes: AUDIO_OUTPUT_HW_MODE_MAP[modes.hardware],
+        current_option_fn=_get_current_option,
         set_option_fn=(
             lambda linkplay_bridge,
             option: linkplay_bridge.player.set_audio_output_hw_mode(
@@ -91,8 +96,11 @@ class LinkPlaySelect(LinkPlayBaseEntity, SelectEntity):
     async def async_update(self) -> None:
         """Get the current value from the device."""
         try:
-            modes = await self.entity_description.current_option_fn(self._bridge)
-            self._attr_current_option = self.entity_description.current_option(modes)
+            # modes = await self.entity_description.current_option_fn(self._bridge)
+            self._attr_current_option = await self.entity_description.current_option_fn(
+                self._bridge
+            )
+
         except ValueError as ex:
             _LOGGER.debug(
                 "Cannot retrieve hardware mode value from device with error:, %s", ex
