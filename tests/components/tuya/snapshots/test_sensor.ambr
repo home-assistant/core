@@ -141,7 +141,7 @@
     'supported_features': 0,
     'translation_key': 'filter_duration',
     'unique_id': 'tuya.23536058083a8dc57d96filter_life',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': 'min',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_filter_duration-state]
@@ -150,7 +150,7 @@
       'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Filter duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_filter_duration',
@@ -197,7 +197,7 @@
     'supported_features': 0,
     'translation_key': 'uv_runtime',
     'unique_id': 'tuya.23536058083a8dc57d96uv_runtime',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_uv_runtime-state]
@@ -206,7 +206,7 @@
       'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain UV runtime',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_uv_runtime',
@@ -301,7 +301,7 @@
     'supported_features': 0,
     'translation_key': 'pump_time',
     'unique_id': 'tuya.23536058083a8dc57d96pump_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': 'min',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_pump_duration-state]
@@ -310,7 +310,7 @@
       'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water pump duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_pump_duration',
@@ -357,7 +357,7 @@
     'supported_features': 0,
     'translation_key': 'water_time',
     'unique_id': 'tuya.23536058083a8dc57d96water_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': 'min',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_usage_duration-state]
@@ -366,7 +366,7 @@
       'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water usage duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_usage_duration',
@@ -416,7 +416,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_current-state]
@@ -425,7 +425,7 @@
       'device_class': 'current',
       'friendly_name': 'HVAC Meter Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_current',
@@ -472,7 +472,7 @@
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_power-state]
@@ -481,7 +481,7 @@
       'device_class': 'power',
       'friendly_name': 'HVAC Meter Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_power',
@@ -531,7 +531,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_voltage-state]
@@ -540,7 +540,7 @@
       'device_class': 'voltage',
       'friendly_name': 'HVAC Meter Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_voltage',
@@ -575,7 +575,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -590,7 +590,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': 'tuya.mocked_device_idcur_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'mA',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_current-state]
@@ -599,14 +599,14 @@
       'device_class': 'current',
       'friendly_name': '一路带计量磁保持通断器 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'mA',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.198',
+    'state': '2198.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power-entry]
@@ -646,7 +646,7 @@
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'tuya.mocked_device_idcur_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power-state]
@@ -655,7 +655,7 @@
       'device_class': 'power',
       'friendly_name': '一路带计量磁保持通断器 Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power',
@@ -705,7 +705,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'tuya.mocked_device_idcur_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_voltage-state]
@@ -714,7 +714,7 @@
       'device_class': 'voltage',
       'friendly_name': '一路带计量磁保持通断器 Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_voltage',
