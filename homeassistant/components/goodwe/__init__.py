@@ -1,42 +1,51 @@
 """The Goodwe inverter component."""
 
 from goodwe import InverterError, connect
-from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .config_flow import GoodweFlowHandler
 from .const import CONF_MODEL_FAMILY, DOMAIN, PLATFORMS
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
-    """Set up the Goodwe components from a config entry."""
+    """Set up the Goodwe components from a config entry or updates an old config entry before setting up."""
+    flow_handler = GoodweFlowHandler()
     host = entry.data[CONF_HOST]
+    if CONF_PORT not in entry.data:
+        try:
+            inverter, port = await flow_handler.async_detect_inverter_port(host=host)
+        except InverterError as err:
+            raise ConfigEntryNotReady from err
+        else:
+            update_entry: bool = hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_MODEL_FAMILY: type(inverter).__name__,
+                },
+            )
+            if not update_entry:
+                raise ConfigEntryNotReady
+    else:
+        port = entry.data[CONF_PORT]
     model_family = entry.data[CONF_MODEL_FAMILY]
 
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
             host=host,
-            port=GOODWE_UDP_PORT,
+            port=port,
             family=model_family,
             retries=10,
         )
-    except InverterError as err_udp:
-        # First try with UDP failed, trying with the TCP port
-        try:
-            inverter = await connect(
-                host=host,
-                port=GOODWE_TCP_PORT,
-                family=model_family,
-                retries=10,
-            )
-        except InverterError:
-            # Both ports are unavailable
-            raise ConfigEntryNotReady from err_udp
+    except InverterError as err:
+        raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
         configuration_url="https://www.semsportal.com",
