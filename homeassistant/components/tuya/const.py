@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
 )
 
@@ -587,6 +588,14 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfTime.SECONDS,
+        device_classes={SensorDeviceClass.DURATION},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfTime.MINUTES,
+        device_classes={SensorDeviceClass.DURATION},
     ),
 )
 

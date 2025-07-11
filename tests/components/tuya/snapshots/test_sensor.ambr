@@ -128,8 +128,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Filter duration',
     'platform': 'tuya',
@@ -138,15 +141,16 @@
     'supported_features': 0,
     'translation_key': 'filter_duration',
     'unique_id': 'tuya.23536058083a8dc57d96filter_life',
-    'unit_of_measurement': 'min',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_filter_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Filter duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'min',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_filter_duration',
@@ -180,8 +184,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'UV runtime',
     'platform': 'tuya',
@@ -190,15 +197,16 @@
     'supported_features': 0,
     'translation_key': 'uv_runtime',
     'unique_id': 'tuya.23536058083a8dc57d96uv_runtime',
-    'unit_of_measurement': 's',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_uv_runtime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain UV runtime',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 's',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_uv_runtime',
@@ -280,8 +288,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Water pump duration',
     'platform': 'tuya',
@@ -290,15 +301,16 @@
     'supported_features': 0,
     'translation_key': 'pump_time',
     'unique_id': 'tuya.23536058083a8dc57d96pump_time',
-    'unit_of_measurement': 'min',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_pump_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water pump duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'min',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_pump_duration',
@@ -332,8 +344,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Water usage duration',
     'platform': 'tuya',
@@ -342,15 +357,16 @@
     'supported_features': 0,
     'translation_key': 'water_time',
     'unique_id': 'tuya.23536058083a8dc57d96water_time',
-    'unit_of_measurement': 'min',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_usage_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water usage duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'min',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_usage_duration',
