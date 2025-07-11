@@ -42,9 +42,8 @@ async def _get_current_option(bridge: LinkPlayBridge) -> str:
 class LinkPlaySelectEntityDescription(SelectEntityDescription):
     """Class describing LinkPlay select entities."""
 
-    set_option_fn: Callable[[LinkPlayPlayer, Any], Coroutine[Any, Any, None]]
-    current_option_fn: Callable[[LinkPlayPlayer], Awaitable[Any]]
-    # current_option: Callable[[Any], Any]
+    set_option_fn: Callable[[LinkPlayPlayer, str], Coroutine[Any, Any, None]]
+    current_option_fn: Callable[[LinkPlayPlayer], Awaitable[str]]
 
 
 SELECT_TYPES_WIIM: tuple[LinkPlaySelectEntityDescription, ...] = (
