@@ -278,7 +278,7 @@ class OctoPrintFileNameSensor(OctoPrintSensorBase):
         device_id: str,
     ) -> None:
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, "Current file", device_id)
+        super().__init__(coordinator, "Current File", device_id)
 
     @property
     def native_value(self) -> str | None:
@@ -306,7 +306,7 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
         device_id: str,
     ) -> None:
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, "Current file size", device_id)
+        super().__init__(coordinator, "Current File Size", device_id)
 
     @property
     def native_value(self) -> str | None:
@@ -317,7 +317,7 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
 
         file_size_raw = job.job.file.size or 0
         if file_size_raw == 0:
-            return "0B"
+            return None
         file_size_binary_log = log(file_size_raw, 1024)
         file_size_units = "B"
         if file_size_binary_log >= 4.0:
@@ -330,6 +330,8 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
             file_size_units = "KB"
         size_divisor = pow(1024, int(file_size_binary_log))
         adjusted_size = file_size_raw / size_divisor
+        if file_size_units == "B":
+            return f"{adjusted_size:.0f}{file_size_units}"
         return f"{adjusted_size:.1f}{file_size_units}"
 
     @property
