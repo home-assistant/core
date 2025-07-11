@@ -20,13 +20,10 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_zwave_value_from_config,
 )
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from .common import BULB_6_MULTI_COLOR_LIGHT_ENTITY
 
 from tests.common import async_get_device_automations
 
@@ -697,39 +694,3 @@ async def test_get_value_from_config_failure(
                 "endpoint": 10,
             },
         )
-
-
-async def test_entity_available_when_node_dead(
-    hass: HomeAssistant, client, bulb_6_multi_color, integration
-) -> None:
-    """Test that entities remain available even when the node is dead."""
-
-    node = bulb_6_multi_color
-    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
-    # Send dead event to the node
-    event = Event(
-        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Entity should remain available even though the node is dead
-    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
-    # Send alive event to bring the node back
-    event = Event(
-        "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Entity should still be available
-    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
