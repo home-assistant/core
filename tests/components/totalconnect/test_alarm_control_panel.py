@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from total_connect_client import ArmingState, ArmType
@@ -33,7 +34,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import CODE
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "alarm_control_panel.test"
 ENTITY_ID_2 = "alarm_control_panel.test_partition_2"
@@ -223,8 +224,8 @@ async def test_instant_arming(
 
 
 @pytest.mark.parametrize(
-    ("exception", "suffix"),
-    [(UsercodeInvalid, "invalid_code"), (BadResultCodeError, "failed")],
+    ("exception", "suffix", "flows"),
+    [(UsercodeInvalid, "invalid_code", 1), (BadResultCodeError, "failed", 0)],
 )
 @pytest.mark.parametrize(
     ("service", "prefix"),
@@ -244,6 +245,7 @@ async def test_arming_exceptions(
     prefix: str,
     exception: Exception,
     suffix: str,
+    flows: int,
 ) -> None:
     """Test arming method exceptions."""
     await setup_integration(hass, mock_config_entry)
@@ -270,429 +272,121 @@ async def test_arming_exceptions(
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert mock_location.get_panel_meta_data.call_count == 1
 
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == flows
 
-# async def assert_usercode_invalid(
-#     hass: HomeAssistant,
-#     freezer: FrozenDateTimeFactory,
-#     action,
-#     result,
-#     alarm_state: AlarmControlPanelState,
-# ):
-#     """Invalid usercode with this service should cause re-auth."""
-#     domain = _pick_domain(action)
-#     with (
-#         patch(ARMING_HELPER, side_effect=UsercodeInvalid) as arming_mock,
-#         pytest.raises(HomeAssistantError),
-#     ):
-#         await hass.services.async_call(domain, action, DATA, blocking=True)
-#     arming_mock.assert_called_once()
-#     await assert_state(hass, freezer, result, alarm_state)
-#     # should have started a re-auth flow
-#     assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
-#
-#
-# async def assert_failure(
-#     hass: HomeAssistant,
-#     freezer: FrozenDateTimeFactory,
-#     action: str,
-#     result,
-#     alarm_state: AlarmControlPanelState,
-# ):
-#     """TotalConnect failure raises HomeAssistantError."""
-#     domain = _pick_domain(action)
-#     with (
-#         patch(ARMING_HELPER, side_effect=BadResultCodeError),
-#         pytest.raises(HomeAssistantError),
-#     ):
-#         await hass.services.async_call(domain, action, DATA, blocking=True)
-#     await assert_state(hass, freezer, result, alarm_state)
-#
-#
-# async def assert_success(
-#     hass: HomeAssistant,
-#     freezer: FrozenDateTimeFactory,
-#     action,
-#     result,
-#     alarm_state: AlarmControlPanelState,
-#     data: Any = None,
-# ):
-#     """Assert that alarm successfully gets to the given state."""
-#     domain = _pick_domain(action)
-#     data = data or DATA
-#     with patch(ARMING_HELPER, side_effect=None):
-#         await hass.services.async_call(domain, action, data, blocking=True)
-#     await assert_state(hass, freezer, result, alarm_state)
-#
-#
-# async def test_arm_home(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test arm home method success."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # failure: usercode invalid
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # failure: can't arm for some reason
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME,
-#         PANEL_STATUS_ARMED_HOME,
-#         AlarmControlPanelState.ARMED_HOME,
-#     )
-#
-#
-# async def test_arm_home_instant(
-#     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-# ) -> None:
-#     """Test arm home instant."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME_INSTANT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME_INSTANT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_HOME_INSTANT,
-#         PANEL_STATUS_ARMED_HOME_INSTANT,
-#         AlarmControlPanelState.ARMED_HOME,
-#     )
-#
-#
-# async def test_arm_away_instant(
-#     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-# ) -> None:
-#     """Test arm home instant."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY_INSTANT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY_INSTANT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY_INSTANT,
-#         PANEL_STATUS_ARMED_AWAY_INSTANT,
-#         AlarmControlPanelState.ARMED_AWAY,
-#     )
-#
-#
-# async def test_arm_away(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test arm away method success."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # failure: usercode invalid
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # failure: can't arm for some reason
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY,
-#         PANEL_STATUS_ARMED_AWAY,
-#         AlarmControlPanelState.ARMED_AWAY,
-#     )
-#
-#
-# async def test_disarm(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test disarm method."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY
-#     )
-#
-#     # failure: usercode invalid
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_DISARM,
-#         PANEL_STATUS_ARMED_AWAY,
-#         AlarmControlPanelState.ARMED_AWAY,
-#     )
-#
-#     # failure: can't arm for some reason
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_DISARM,
-#         PANEL_STATUS_ARMED_AWAY,
-#         AlarmControlPanelState.ARMED_AWAY,
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_DISARM,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#
-# async def test_disarm_code_required(
-#     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-# ) -> None:
-#     """Test disarm with code."""
-#     await setup_platform(hass, ALARM_DOMAIN, code_required=True)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY
-#     )
-#
-#     # runtime user entered code is bad
-#     DATA_WITH_CODE = DATA.copy()
-#     DATA_WITH_CODE["code"] = "666"
-#     with pytest.raises(ServiceValidationError, match="Incorrect code entered"):
-#         await hass.services.async_call(
-#             ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
-#         )
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY
-#     )
-#
-#     # runtime user entered code that is in config
-#     DATA_WITH_CODE["code"] = USERCODES[LOCATION_ID]
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_DISARM,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#         data=DATA_WITH_CODE,
-#     )
-#
-#
-# async def test_arm_night(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test arm night method."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # failure: usercode invalid
-#     await assert_usercode_invalid(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_NIGHT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # failure: can't arm for some reason
-#     await assert_failure(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_NIGHT,
-#         PANEL_STATUS_DISARMED,
-#         AlarmControlPanelState.DISARMED,
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_NIGHT,
-#         PANEL_STATUS_ARMED_HOME_NIGHT,
-#         AlarmControlPanelState.ARMED_NIGHT,
-#     )
-#
-#
-# async def test_arming(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test arming."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_ARM_AWAY,
-#         PANEL_STATUS_ARMING,
-#         AlarmControlPanelState.ARMING,
-#     )
-#
-#
-# async def test_disarming(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test disarming."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY
-#     )
-#
-#     # success
-#     await assert_success(
-#         hass,
-#         freezer,
-#         SERVICE_ALARM_DISARM,
-#         PANEL_STATUS_DISARMING,
-#         AlarmControlPanelState.DISARMING,
-#     )
-#
-#
-# async def test_triggered(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test triggered responses."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     # TotalConnect triggered fire --> HA triggered
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_TRIGGERED_FIRE, AlarmControlPanelState.TRIGGERED
-#     )
-#     # TotalConnect triggered police --> HA triggered
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_TRIGGERED_POLICE, AlarmControlPanelState.TRIGGERED
-#     )
-#     # TotalConnect triggered gas/carbon monoxide --> HA triggered
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_TRIGGERED_GAS, AlarmControlPanelState.TRIGGERED
-#     )
-#
-#
-# async def test_armed_custom(
-#     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-# ) -> None:
-#     """Test armed custom."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(
-#         hass,
-#         freezer,
-#         PANEL_STATUS_ARMED_CUSTOM,
-#         AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-#     )
-#
-#
-# async def test_unknown(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-#     """Test unknown arm status."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     await assert_state(hass, freezer, PANEL_STATUS_UNKNOWN, STATE_UNAVAILABLE)
-#
-#
-# async def test_other_update_failures(
-#     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-# ) -> None:
-#     """Test other failures seen during updates."""
-#     await setup_platform(hass, ALARM_DOMAIN)
-#     # first things work as planned
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # then an error: TotalConnect ServiceUnavailable --> HA UpdateFailed
-#     freezer.tick(SCAN_INTERVAL)
-#     async_fire_time_changed(hass)
-#     await hass.async_block_till_done(wait_background_tasks=True)
-#     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-#
-#     # works again
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # then an error: TotalConnectError --> UpdateFailed
-#     freezer.tick(SCAN_INTERVAL)
-#     async_fire_time_changed(hass)
-#     await hass.async_block_till_done(wait_background_tasks=True)
-#     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-#
-#     # works again
-#     await assert_state(
-#         hass, freezer, PANEL_STATUS_DISARMED, AlarmControlPanelState.DISARMED
-#     )
-#
-#     # unknown TotalConnect status via ValueError
-#     freezer.tick(SCAN_INTERVAL)
-#     async_fire_time_changed(hass)
-#     await hass.async_block_till_done(wait_background_tasks=True)
-#     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-#
-#
-# async def test_authentication_error(hass: HomeAssistant) -> None:
-#     """Test other failures seen during updates."""
-#     entry = await setup_platform(hass, ALARM_DOMAIN)
-#
-#     with patch(
-#         "homeassistant.components.totalconnect.TotalConnectClient.http_request",
-#         side_effect=AuthenticationError,
-#     ):
-#         await async_update_entity(hass, ENTITY_ID)
-#         await hass.async_block_till_done()
-#
-#     assert entry.state is ConfigEntryState.LOADED
-#
-#     flows = hass.config_entries.flow.async_progress()
-#     assert len(flows) == 1
-#
-#     flow = flows[0]
-#     assert flow.get("step_id") == "reauth_confirm"
-#     assert flow.get("handler") == DOMAIN
-#
-#     assert "context" in flow
-#     assert flow["context"].get("source") == SOURCE_REAUTH
-#     assert flow["context"].get("entry_id") == entry.entry_id
+
+@pytest.mark.parametrize(
+    ("exception", "suffix", "flows"),
+    [(UsercodeInvalid, "invalid_code", 1), (BadResultCodeError, "failed", 0)],
+)
+@pytest.mark.parametrize(
+    ("service", "prefix"),
+    [
+        (SERVICE_ALARM_ARM_HOME_INSTANT, "arm_home_instant"),
+        (SERVICE_ALARM_ARM_AWAY_INSTANT, "arm_away_instant"),
+    ],
+)
+async def test_instant_arming_exceptions(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_partition: AsyncMock,
+    mock_location: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    prefix: str,
+    exception: Exception,
+    suffix: str,
+    flows: int,
+) -> None:
+    """Test arming method exceptions."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "alarm_control_panel.test"
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+    assert mock_location.get_panel_meta_data.call_count == 1
+
+    mock_partition.arm.side_effect = exception
+
+    mock_partition.arming_state = ArmingState.ARMING
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert mock_partition.arm.call_count == 1
+
+    assert exc.value.translation_key == f"{prefix}_{suffix}"
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+    assert mock_location.get_panel_meta_data.call_count == 1
+
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == flows
+
+
+@pytest.mark.parametrize(
+    ("arming_state", "state"),
+    [
+        (ArmingState.DISARMED, AlarmControlPanelState.DISARMED),
+        (ArmingState.DISARMED_BYPASS, AlarmControlPanelState.DISARMED),
+        (ArmingState.DISARMED_ZONE_FAULTED, AlarmControlPanelState.DISARMED),
+        (ArmingState.ARMED_STAY_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (ArmingState.ARMED_STAY_NIGHT_BYPASS_PROA7, AlarmControlPanelState.ARMED_NIGHT),
+        (
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_PROA7,
+            AlarmControlPanelState.ARMED_NIGHT,
+        ),
+        (
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7,
+            AlarmControlPanelState.ARMED_NIGHT,
+        ),
+        (ArmingState.ARMED_STAY, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_PROA7, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_BYPASS, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_BYPASS_PROA7, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_INSTANT, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_INSTANT_PROA7, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_INSTANT_BYPASS, AlarmControlPanelState.ARMED_HOME),
+        (
+            ArmingState.ARMED_STAY_INSTANT_BYPASS_PROA7,
+            AlarmControlPanelState.ARMED_HOME,
+        ),
+        (ArmingState.ARMED_STAY_OTHER, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (ArmingState.ARMED_AWAY_BYPASS, AlarmControlPanelState.ARMED_AWAY),
+        (ArmingState.ARMED_AWAY_INSTANT, AlarmControlPanelState.ARMED_AWAY),
+        (ArmingState.ARMED_AWAY_INSTANT_BYPASS, AlarmControlPanelState.ARMED_AWAY),
+        (ArmingState.ARMED_CUSTOM_BYPASS, AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+        (ArmingState.ARMING, AlarmControlPanelState.ARMING),
+        (ArmingState.DISARMING, AlarmControlPanelState.DISARMING),
+        (ArmingState.ALARMING, AlarmControlPanelState.TRIGGERED),
+        (ArmingState.ALARMING_FIRE_SMOKE, AlarmControlPanelState.TRIGGERED),
+        (ArmingState.ALARMING_CARBON_MONOXIDE, AlarmControlPanelState.TRIGGERED),
+        (ArmingState.ALARMING_CARBON_MONOXIDE_PROA7, AlarmControlPanelState.TRIGGERED),
+    ],
+)
+async def test_arming_state(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_partition: AsyncMock,
+    mock_location: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    arming_state: ArmingState,
+    state: AlarmControlPanelState,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test arming state transitions."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "alarm_control_panel.test"
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+    mock_partition.arming_state = arming_state
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == state

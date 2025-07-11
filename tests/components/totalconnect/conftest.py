@@ -9,6 +9,7 @@ from total_connect_client import ArmingState, TotalConnectClient
 from total_connect_client.device import TotalConnectDevice
 from total_connect_client.location import TotalConnectLocation
 from total_connect_client.partition import TotalConnectPartition
+from total_connect_client.user import TotalConnectUser
 from total_connect_client.zone import TotalConnectZone, ZoneStatus, ZoneType
 
 from homeassistant.components.totalconnect.const import (
@@ -119,7 +120,9 @@ def mock_partition() -> TotalConnectPartition:
     partition.name = "Test1"
     partition.is_stay_armed = False
     partition.is_fire_armed = False
+    partition.is_fire_enabled = False
     partition.is_common_armed = False
+    partition.is_common_enabled = False
     partition.is_locked = False
     partition.is_new_partition = False
     partition.is_night_stay_enabled = 0
@@ -136,7 +139,9 @@ def mock_partition_2() -> TotalConnectPartition:
     partition.name = "Test2"
     partition.is_stay_armed = False
     partition.is_fire_armed = False
+    partition.is_fire_enabled = False
     partition.is_common_armed = False
+    partition.is_common_enabled = False
     partition.is_locked = False
     partition.is_new_partition = False
     partition.is_night_stay_enabled = 0
@@ -152,6 +157,7 @@ def mock_location(
     """Create a mock TotalConnectLocation."""
     location = AsyncMock(spec=TotalConnectLocation, autospec=True)
     location.location_id = LOCATION_ID
+    location.location_name = "Test Location"
     location.security_device_id = 7654321
     location.set_usercode.return_value = True
     location.partitions = {1: mock_partition, 2: mock_partition_2}
@@ -166,6 +172,15 @@ def mock_location(
     location.is_cover_tampered.return_value = False
     location.is_ac_loss.return_value = False
     location.arming_state = ArmingState.DISARMED
+    location._module_flags = {
+        "can_bypass_zones": True,
+        "can_clear_bypass": True,
+        "can_set_usercodes": True,
+    }
+    location.ac_loss = False
+    location.low_battery = False
+    location.auto_bypass_low_battery = False
+    location.cover_tampered = False
     return location
 
 
@@ -176,13 +191,31 @@ def mock_client(mock_location: TotalConnectLocation) -> Generator[TotalConnectCl
         patch(
             "homeassistant.components.totalconnect.config_flow.TotalConnectClient",
             autospec=True,
-        ) as client,
-        patch("homeassistant.components.totalconnect.TotalConnectClient", new=client),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.totalconnect.TotalConnectClient", new=mock_client
+        ),
     ):
-        client.return_value.get_number_locations.return_value = 1
-        client.return_value.locations = {mock_location.location_id: mock_location}
-        client.return_value.usercodes = {mock_location.location_id: CODE}
-        yield client.return_value
+        client = mock_client.return_value
+        client.get_number_locations.return_value = 1
+        client.locations = {mock_location.location_id: mock_location}
+        client.usercodes = {mock_location.location_id: CODE}
+        client.auto_bypass_low_battery = False
+        client._module_flags = {}
+        client.retry_delay = 0
+        client._invalid_credentials = False
+        user_mock = AsyncMock(spec=TotalConnectUser, autospec=True)
+        user_mock._master_user = True
+        user_mock._user_admin = True
+        user_mock._config_admin = True
+        user_mock.security_problem.return_value = False
+        user_mock._features = {
+            "can_set_usercodes": True,
+            "can_bypass_zones": True,
+            "can_clear_bypass": True,
+        }
+        setattr(client, "_user", user_mock)
+        yield client
 
 
 @pytest.fixture
@@ -202,4 +235,15 @@ def mock_config_entry(code_required: bool) -> MockConfigEntry:
             CONF_USERCODES: USERCODES,
         },
         options={AUTO_BYPASS: False, CODE_REQUIRED: code_required},
+        unique_id=USERNAME,
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock the setup entry for TotalConnect."""
+    with patch(
+        "homeassistant.components.totalconnect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
