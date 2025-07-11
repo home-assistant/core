@@ -389,11 +389,7 @@ set_program_and_options:
           example: 3600
           required: false
           selector:
-            number:
-              min: 0
-              step: 1
-              mode: box
-              unit_of_measurement: s
+            object:
         dishcare_dishwasher_option_intensiv_zone:
           example: false
           required: false
@@ -573,11 +569,7 @@ set_program_and_options:
           example: 3600
           required: false
           selector:
-            number:
-              min: 0
-              step: 1
-              mode: box
-              unit_of_measurement: s
+            object:
         laundry_care_washer_option_i_dos1_active:
           example: false
           required: false

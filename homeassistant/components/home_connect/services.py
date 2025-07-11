@@ -20,7 +20,11 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
@@ -56,8 +60,8 @@ PROGRAM_OPTIONS = {
     )
     for key, value in {
         OptionKey.BSH_COMMON_DURATION: int,
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: int,
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: int,
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: vol.Any(cv.template, int),
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: vol.Any(cv.template, int),
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
@@ -469,7 +473,8 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
             )
         elif option in PROGRAM_OPTIONS:
             option_key = PROGRAM_OPTIONS[option][0]
-            options.append(Option(option_key, value))
+            rendered_value = template.render_complex(value)
+            options.append(Option(option_key, rendered_value))
 
     method_call: Awaitable[Any]
     exception_translation_key: str
