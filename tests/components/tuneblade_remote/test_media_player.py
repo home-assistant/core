@@ -13,11 +13,12 @@ from homeassistant.components.tuneblade_remote.media_player import (
     TuneBladeHubMediaPlayer,
     TuneBladeMediaPlayer,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @pytest.fixture
-def mock_coordinator():
+def mock_coordinator() -> AsyncMock:
     """Return a mock DataUpdateCoordinator with dummy TuneBlade device data."""
     coordinator = AsyncMock(spec=DataUpdateCoordinator)
     coordinator.data = {
@@ -36,9 +37,11 @@ def mock_coordinator():
     return coordinator
 
 
-def test_hub_properties(mock_coordinator) -> None:
+@pytest.mark.asyncio
+async def test_hub_properties(hass: HomeAssistant, mock_coordinator: AsyncMock) -> None:
     """Test properties and state mapping of the master hub entity."""
     entity = TuneBladeHubMediaPlayer(mock_coordinator)
+    await entity.async_added_to_hass(hass)
     entity._handle_coordinator_update()
 
     assert entity.name == "Master"
@@ -54,11 +57,15 @@ def test_hub_properties(mock_coordinator) -> None:
     assert entity.device_info["identifiers"] == {(DOMAIN, "MASTER")}
 
 
-def test_device_properties(mock_coordinator) -> None:
+@pytest.mark.asyncio
+async def test_device_properties(
+    hass: HomeAssistant, mock_coordinator: AsyncMock
+) -> None:
     """Test properties and state mapping of a normal device entity."""
     entity = TuneBladeMediaPlayer(
         mock_coordinator, "abc123", mock_coordinator.data["abc123"]
     )
+    await entity.async_added_to_hass(hass)
     entity._handle_coordinator_update()
 
     assert entity.name == "Living Room"
@@ -71,7 +78,7 @@ def test_device_properties(mock_coordinator) -> None:
 
 
 @pytest.mark.asyncio
-async def test_hub_control_methods(mock_coordinator) -> None:
+async def test_hub_control_methods(mock_coordinator: AsyncMock) -> None:
     """Test the turn_on, turn_off, and volume methods of the hub media player."""
     entity = TuneBladeHubMediaPlayer(mock_coordinator)
 
@@ -86,7 +93,7 @@ async def test_hub_control_methods(mock_coordinator) -> None:
 
 
 @pytest.mark.asyncio
-async def test_device_control_methods(mock_coordinator) -> None:
+async def test_device_control_methods(mock_coordinator: AsyncMock) -> None:
     """Test the turn_on, turn_off, and volume methods of a normal media player device."""
     entity = TuneBladeMediaPlayer(
         mock_coordinator, "abc123", mock_coordinator.data["abc123"]
