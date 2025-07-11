@@ -18,6 +18,7 @@ from hass_nabucasa.auth import (
     UnknownError,
 )
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1008,16 +1009,14 @@ async def test_websocket_subscription_info(
     cloud: MagicMock,
     setup_cloud: None,
 ) -> None:
-    """Test subscription info and connecting because valid account."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
+    """Test subscription info."""
+    cloud.payments.subscription_info.return_value = {"provider": "stripe"}
     client = await hass_ws_client(hass)
-    mock_renew = cloud.auth.async_renew_access_token
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
 
     assert response["result"] == {"provider": "stripe"}
-    assert mock_renew.call_count == 1
 
 
 async def test_websocket_subscription_fail(
@@ -1028,7 +1027,9 @@ async def test_websocket_subscription_fail(
     setup_cloud: None,
 ) -> None:
     """Test subscription info fail."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    cloud.payments.subscription_info.side_effect = PaymentsApiError(
+        "Failed to fetch subscription information"
+    )
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})

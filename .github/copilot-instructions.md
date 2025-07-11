@@ -1149,7 +1149,7 @@ _LOGGER.debug("Processing data: %s", data)  # Use lazy logging
 ### Validation Commands
 ```bash
 # Check specific integration
-python -m script.hassfest --integration my_integration
+python -m script.hassfest --integration-path homeassistant/components/my_integration
 
 # Validate quality scale
 # Check quality_scale.yaml against current rules
