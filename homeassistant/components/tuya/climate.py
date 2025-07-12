@@ -289,10 +289,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._fan_dp_code = None
         if DPCode.WINDSPEED in device.function:
             self._fan_dp_code = DPCode.WINDSPEED
-        elif (
-            hasattr(DPCode, "FAN_SPEED_ENUM")
-            and DPCode.FAN_SPEED_ENUM in device.function
-        ):
+        elif DPCode.FAN_SPEED_ENUM in device.function:
             self._fan_dp_code = DPCode.FAN_SPEED_ENUM
 
         LOGGER.debug(
