@@ -94,7 +94,9 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
             return func(self, *args, **kwargs)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
