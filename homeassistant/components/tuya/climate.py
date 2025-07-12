@@ -321,7 +321,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not hasattr(self, "_fan_dp_code") or not self._fan_dp_code:
+        if not self._fan_dp_code:
             raise HomeAssistantError("No valid fan DPCode set for this device.")
 
         self._send_command([{"code": self._fan_dp_code, "value": fan_mode}])
@@ -480,7 +480,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        if not hasattr(self, "_fan_dp_code") or not self._fan_dp_code:
+        if not self._fan_dp_code:
             return None
 
         return self.device.status.get(self._fan_dp_code)
