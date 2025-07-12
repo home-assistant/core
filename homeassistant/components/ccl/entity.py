@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import time
-
 from aioccl import CCLSensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -47,13 +45,8 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
             manufacturer="CCL Electronics",
             sw_version=self._device.fw_ver,
         )
-        self._attr_should_poll = True
 
     @property
     def available(self) -> bool:
         """Return the availability."""
-        return (
-            self._internal.value is not None
-            and super().available
-            and time.monotonic() - self._internal.last_update_time <= 600
-        )
+        return self._internal.value is not None and super().available

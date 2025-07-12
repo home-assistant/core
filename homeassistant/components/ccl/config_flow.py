@@ -46,4 +46,5 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        self._set_confirm_only()
         return self.async_show_form(step_id="user")
