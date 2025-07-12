@@ -287,9 +287,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine which DPCode to use for fan mode
         self._fan_dp_code = None
-        if DPCode.WINDSPEED in device.function:
+        if DPCode.WINDSPEED in self.device.function:
             self._fan_dp_code = DPCode.WINDSPEED
-        elif DPCode.FAN_SPEED_ENUM in device.function:
+        elif DPCode.FAN_SPEED_ENUM in self.device.function:
             self._fan_dp_code = DPCode.FAN_SPEED_ENUM
 
         LOGGER.debug(
