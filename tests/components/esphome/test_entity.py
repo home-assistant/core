@@ -375,7 +375,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_ON
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "123"
+    assert state.state == "123.0"
 
     await mock_device.mock_disconnect(False)
     await hass.async_block_till_done()
@@ -394,7 +394,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_ON
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "123"
+    assert state.state == "123.0"
 
     await mock_device.mock_disconnect(True)
     await hass.async_block_till_done()
@@ -754,9 +754,9 @@ async def test_entity_assignment_to_sub_device(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=False, missing_state=False),
-        BinarySensorState(key=3, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=0),
+        BinarySensorState(key=2, state=False, missing_state=False, device_id=11111111),
+        BinarySensorState(key=3, state=True, missing_state=False, device_id=22222222),
     ]
 
     device = await mock_esphome_device(
@@ -938,7 +938,7 @@ async def test_entity_switches_between_devices(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=0),
     ]
 
     device = await mock_esphome_device(
@@ -1507,7 +1507,7 @@ async def test_entity_device_id_rename_in_yaml(
     ]
 
     states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
     ]
 
     device = await mock_esphome_device(

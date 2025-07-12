@@ -307,19 +307,19 @@ async def test_template_state(hass: HomeAssistant) -> None:
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.test_template_lock")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.LOCKED
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.test_template_lock")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.UNLOCKED
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OPEN)
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.test_template_lock")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.OPEN
 
 
@@ -888,7 +888,16 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
-    "test_state", [LockState.UNLOCKING, LockState.LOCKING, LockState.JAMMED]
+    "test_state",
+    [
+        LockState.LOCKED,
+        LockState.UNLOCKED,
+        LockState.OPEN,
+        LockState.UNLOCKING,
+        LockState.LOCKING,
+        LockState.JAMMED,
+        LockState.OPENING,
+    ],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_state(hass: HomeAssistant, test_state) -> None:

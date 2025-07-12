@@ -82,6 +82,7 @@ class WorkMode(StrEnum):
 class DPType(StrEnum):
     """Data point types."""
 
+    BITMAP = "Bitmap"
     BOOLEAN = "Boolean"
     ENUM = "Enum"
     INTEGER = "Integer"
@@ -393,6 +394,7 @@ class DPCode(StrEnum):
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATER_TIME = "water_time"  # Water usage duration
+    WATER_LEVEL = "water_level"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
