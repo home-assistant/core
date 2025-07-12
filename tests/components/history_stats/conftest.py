@@ -15,6 +15,7 @@ from homeassistant.components.history_stats.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
@@ -48,6 +49,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
         CONF_TYPE: "count",
         CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
         CONF_END: "{{ utcnow() }}",
+        CONF_STATE_CLASS: "measurement",
     }
 
 
