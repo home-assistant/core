@@ -97,6 +97,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
     ],
+    "am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.COVER,
+    ],
 }
 
 

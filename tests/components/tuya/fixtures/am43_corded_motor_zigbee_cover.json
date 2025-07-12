@@ -8,45 +8,45 @@
   "function": {
     "control": {
       "type": "Enum",
-      "values": "{\"range\": [\"open\", \"stop\", \"close\", \"continue\"]}"
+      "value": { "range": ["open", "stop", "close", "continue"] }
     },
     "percent_control": {
       "type": "Integer",
-      "values": "{\"unit\": \"%\", \"min\": 0, \"max\": 100, \"scale\": 0, \"step\": 1}"
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
     },
     "control_back_mode": {
       "type": "Enum",
-      "values": "{\"range\": [\"forward\", \"back\"]}"
+      "value": { "range": ["forward", "back"] }
     }
   },
   "status_range": {
     "control": {
       "type": "Enum",
-      "values": "{\"range\": [\"open\", \"stop\", \"close\", \"continue\"]}"
+      "value": { "range": ["open", "stop", "close", "continue"] }
     },
     "percent_control": {
       "type": "Integer",
-      "values": "{\"unit\": \"%\", \"min\": 0, \"max\": 100, \"scale\": 0, \"step\": 1}"
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
     },
     "percent_state": {
       "type": "Integer",
-      "values": "{\"unit\": \"%\", \"min\": 0, \"max\": 100, \"scale\": 0, \"step\": 1}"
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
     },
     "control_back_mode": {
       "type": "Enum",
-      "values": "{\"range\": [\"forward\", \"back\"]}"
+      "value": { "range": ["forward", "back"] }
     },
     "work_state": {
       "type": "Enum",
-      "values": "{\"range\": [\"opening\", \"closing\"]}"
+      "value": { "range": ["opening", "closing"] }
     },
     "situation_set": {
       "type": "Enum",
-      "values": "{\"range\": [\"fully_open\", \"fully_close\"]}"
+      "value": { "range": ["fully_open", "fully_close"] }
     },
     "fault": {
       "type": "Bitmap",
-      "values": "{\"label\": [\"motor_fault\"]}"
+      "value": { "label": ["motor_fault"] }
     }
   },
   "status": {
