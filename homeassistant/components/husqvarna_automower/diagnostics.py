@@ -35,7 +35,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: AutomowerConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN:
             if (

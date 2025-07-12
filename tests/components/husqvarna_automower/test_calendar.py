@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 import urllib
 import zoneinfo
 
-from aioautomower.model import MowerAttributes
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,14 +19,19 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
+from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.test_mower_1"
@@ -87,17 +92,22 @@ async def test_empty_calendar(
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     get_events: GetEventsFn,
     mower_time_zone: zoneinfo.ZoneInfo,
 ) -> None:
     """State if there is no schedule set."""
-
-    mower_data: dict[str, MowerAttributes] = mock_automower_client.data
-    mower_data[TEST_MOWER_ID].calendar.tasks = []
-    mock_automower_client.get_status.return_value = mower_data
     await setup_integration(hass, mock_config_entry)
+    json_values = load_json_value_fixture("mower.json", DOMAIN)
+    json_values["data"][0]["attributes"]["calendar"]["tasks"] = []
+    values = mower_list_to_dictionary_dataclass(
+        json_values,
+        mower_time_zone,
+    )
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
     state = hass.states.get("calendar.test_mower_1")
     assert state is not None
     assert state.state == "off"

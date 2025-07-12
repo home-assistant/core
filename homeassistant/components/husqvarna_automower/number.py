@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     entities: list[NumberEntity] = []
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:

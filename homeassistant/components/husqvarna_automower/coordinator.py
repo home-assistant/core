@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -13,13 +14,14 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import MowerDictionary
+from aioautomower.model import MessageData, MowerDictionary
 from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -29,7 +31,16 @@ MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 
-type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
+
+@dataclass
+class AutomowerData:
+    """Data for the Teslemetry integration."""
+
+    coordinator: AutomowerDataUpdateCoordinator
+    message_coordinators: dict[str, AutomowerMessageUpdateCoordinator]
+
+
+type AutomowerConfigEntry = ConfigEntry[AutomowerData]
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
@@ -53,7 +64,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
         self.api = api
         self.ws_connected: bool = False
-        self.message_data_available: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
@@ -61,6 +71,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._devices_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
+        # self.message_coordinators = {}
 
     def _async_add_remove_devices_and_entities(self, data: MowerDictionary) -> None:
         """Add/remove devices and dynamic entities, when amount of devices changed."""
@@ -84,19 +95,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
         self._async_add_remove_devices_and_entities(data)
-
-        # We only fetch message data once, and get updates via websocket
-        if not self.message_data_available:
-            try:
-                await asyncio.gather(
-                    *(self.api.async_get_message(mower_id) for mower_id in data)
-                )
-            except ApiError as err:
-                raise UpdateFailed(err) from err
-            except AuthError as err:
-                raise ConfigEntryAuthFailed(err) from err
-            self.message_data_available = True
-        return self.api.data
+        return data
 
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
@@ -151,6 +150,33 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 "reconnect_task",
             )
 
+    # async def add_message_coordinators(self, new_devices: set):
+    #     for mower_id in new_devices:
+    #         self.message_coordinators[mower_id] = AutomowerMessageUpdateCoordinator(
+    #             self.hass,
+    #             self.config_entry,
+    #             self.api,
+    #             mower_id,
+    #             device=DeviceInfo(
+    #                 identifiers={(DOMAIN, mower_id)},
+    #                 manufacturer="Husqvarna",
+    #                 model=self.data[mower_id]
+    #                 .system.model.removeprefix("HUSQVARNA ")
+    #                 .removeprefix("Husqvarna "),
+    #                 name=self.data[mower_id].system.name,
+    #                 serial_number=self.data[mower_id].system.serial_number,
+    #                 suggested_area="Garden",
+    #             ),
+    #         )
+    #     await asyncio.gather(
+    #         *(
+    #             self.message_coordinators[mower_id].async_request_refresh()
+    #             for mower_id in self.message_coordinators
+    #         )
+    #     )
+    #     self.config_entry.runtime_data.message_coordinators = self.message_coordinators
+    #     self._add_new_devices(new_devices)
+
     def _async_add_remove_devices(self, data: MowerDictionary) -> None:
         """Add new device, remove non-existing device."""
         current_devices = set(data)
@@ -171,6 +197,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             self.data = data
             _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
             self._add_new_devices(new_devices)
+            # self.hass.create_task(self.add_message_coordinators(new_devices))
 
         # Update device state
         self._devices_last_update = current_devices
@@ -282,3 +309,79 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                         entity_registry.async_remove(entity_entry.entity_id)
 
         return current_areas
+
+
+class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
+    """Class to manage fetching Husqvarna data."""
+
+    config_entry: AutomowerConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AutomowerConfigEntry,
+        api: AutomowerSession,
+        mower_id: str,
+        device: DeviceInfo,
+    ) -> None:
+        """Initialize data updater."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=None,
+        )
+        self.api = api
+        self.reconnect_time = DEFAULT_RECONNECT_TIME
+        self.mower_id = mower_id
+        self.device = device
+        self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
+        self._devices_last_update: set[str] = set()
+
+    async def _async_setup(self) -> None:
+        """Subscribe for websocket."""
+        self.api.register_message_callback(self.handle_websocket_updates)
+
+    async def _async_update_data(self) -> MessageData:
+        """Poll data from the API."""
+        try:
+            data = await self.api.async_get_message(self.mower_id)
+        except ApiError as err:
+            raise UpdateFailed(err) from err
+        except AuthError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        # self._async_add_devices(data)
+        return data
+
+    @callback
+    def handle_websocket_updates(self, mower_id: str, ws_data: MessageData) -> None:
+        """Process websocket callbacks and write them to the DataUpdateCoordinator."""
+        if mower_id == self.mower_id:
+            self.async_set_updated_data(ws_data)
+
+    # def _async_add_devices(self, data: MessageData) -> None:
+    #     """Add new device, remove non-existing device."""
+    #     current_devices = set(data)
+
+    #     # Skip update if no changes
+    #     if current_devices == self._devices_last_update:
+    #         return
+
+    #     # Process removed devices
+    #     # This is handled by the main coordinator
+
+    #     # Process new device
+    #     new_devices = current_devices - self._devices_last_update
+    #     if new_devices:
+    #         self.data = data
+    #         _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
+    #         self._add_new_devices(new_devices)
+
+    #     # Update device state
+    #     self._devices_last_update = current_devices
+
+    def _add_new_devices(self, new_devices: set[str]) -> None:
+        """Add new device and trigger callbacks."""
+        for mower_callback in self.new_devices_callbacks:
+            mower_callback(new_devices)

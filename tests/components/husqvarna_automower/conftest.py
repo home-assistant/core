@@ -6,7 +6,8 @@ import time
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aioautomower.commands import MowerCommands, WorkAreaSettings
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MessageData, MowerAttributes
+from aioautomower.model.model_message import MessageAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
+from .const import CLIENT_ID, CLIENT_SECRET, TEST_MOWER_ID, USER_ID
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
@@ -56,6 +57,18 @@ def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
         load_json_value_fixture("mower.json", DOMAIN),
         mower_time_zone,
     )
+
+
+@pytest.fixture(name="messages")
+def mock_messages() -> MessageData:
+    """Fixture to set correct scope for the token."""
+    raw_data = load_json_value_fixture("messages.json", DOMAIN)
+    return {
+        TEST_MOWER_ID: MessageData.from_dict(raw_data["data"]),
+        "1234": MessageData.from_dict(
+            {"type": "messages", "id": "messages", "attributes": {}}
+        ),
+    }
 
 
 @pytest.fixture(name="values_one_mower")
@@ -110,6 +123,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture
 def mock_automower_client(
     values: dict[str, MowerAttributes],
+    messages: MessageData,
 ) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
@@ -119,17 +133,25 @@ def mock_automower_client(
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
+    async def get_message_side_effect(mower_id: str) -> MessageData:
+        return messages.get(
+            mower_id,
+            MessageData(
+                type="messages",
+                id=mower_id,
+                attributes=MessageAttributes(messages=[]),
+            ),
+        )
+
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
         autospec=True,
         spec_set=True,
     ) as mock:
         mock_instance = mock.return_value
-        mock_instance.data = values
         mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-        # nun liest get_status() immer aus mock_instance.data
-        mock_instance.get_status = AsyncMock(side_effect=lambda: mock_instance.data)
-        mock_instance.async_get_message = AsyncMock()
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.async_get_message = AsyncMock(side_effect=get_message_side_effect)
         mock_instance.start_listening = AsyncMock(side_effect=listen)
         mock_instance.commands = create_autospec(
             MowerCommands, instance=True, spec_set=True

@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutomowerDataUpdateCoordinator
+from . import AutomowerDataUpdateCoordinator, AutomowerMessageUpdateCoordinator
 from .const import DOMAIN, EXECUTION_TIME_DELAY
 
 _LOGGER = logging.getLogger(__name__)
@@ -166,3 +166,20 @@ class WorkAreaAvailableEntity(AutomowerAvailableEntity):
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
     """Base entity for work areas with control function."""
+
+
+class AutomowerMessageBaseEntity(CoordinatorEntity[AutomowerMessageUpdateCoordinator]):
+    """Defining the Automower base Entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        mower_id: str,
+        coordinator: AutomowerMessageUpdateCoordinator,
+        device: DeviceInfo,
+    ) -> None:
+        """Initialize AutomowerEntity."""
+        super().__init__(coordinator)
+        self.mower_id = mower_id
+        self._attr_device_info = device

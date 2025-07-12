@@ -1289,6 +1289,55 @@
     'state': 'week_schedule',
   })
 # ---
+# name: test_sensor_snapshot[sensor.test_mower_1_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_last_error_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 1 Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-06-28T19:36:27+00:00',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
