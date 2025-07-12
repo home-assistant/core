@@ -101,13 +101,26 @@ _LOGGER = logging.getLogger(__name__)
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 
+def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+    return {
+        "config_entry_id": config_entry.entry_id,
+        "id": bot.id,
+        "first_name": bot.first_name,
+        "last_name": bot.last_name,
+        "username": bot.username,
+    }
+
+
 class BaseTelegramBot:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass: HomeAssistant, config: TelegramBotConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: TelegramBotConfigEntry, bot: Bot
+    ) -> None:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self._bot = bot
 
     @abstractmethod
     async def shutdown(self) -> None:
@@ -133,6 +146,8 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        event_data["bot"] = _get_bot_info(self._bot, self.config)
 
         event_context = Context()
 
@@ -442,6 +457,9 @@ class TelegramNotificationService:
                     event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
                         ATTR_MESSAGE_THREAD_ID
                     ]
+
+                event_data["bot"] = _get_bot_info(self.bot, self.config)
+
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
