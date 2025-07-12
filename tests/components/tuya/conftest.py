@@ -143,7 +143,7 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
         hass, f"{mock_device_code}.json", DOMAIN
     )
     device = MagicMock(spec=CustomerDevice)
-    device.id = details["id"]
+    device.id = details.get("id", "mocked_device_id")
     device.name = details["name"]
     device.category = details["category"]
     device.product_id = details["product_id"]

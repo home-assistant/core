@@ -19,6 +19,7 @@ DEVICE_MOCKS = {
         Platform.LIGHT,
     ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
+        Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
         Platform.SELECT,
@@ -39,6 +40,15 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
         Platform.SWITCH,
+    ],
+    "dlq_earu_electric_eawcpt": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "dlq_metering_3pn_wifi": [
+        # https://github.com/home-assistant/core/issues/143499
+        Platform.SENSOR,
     ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
@@ -73,6 +83,19 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
         Platform.SWITCH,
+    ],
+    "wsdcg_temperature_humidity": [
+        # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+    ],
+    "wxkg_wireless_switch": [
+        # https://github.com/home-assistant/core/issues/93975
+        Platform.EVENT,
+        Platform.SENSOR,
+    ],
+    "zndb_smart_meter": [
+        # https://github.com/home-assistant/core/issues/138372
+        Platform.SENSOR,
     ],
 }
 
