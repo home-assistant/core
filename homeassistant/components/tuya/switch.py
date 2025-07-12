@@ -436,12 +436,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "mal": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_SOUND,
-            translation_key="alarm_sound",
+            # This switch is called "Arm Beep" in the official Tuya app
+            translation_key="arm_beep",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_LIGHT,
-            translation_key="alarm_light",
+            # This switch is called "Siren" in the official Tuya app
+            translation_key="siren",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

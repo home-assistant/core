@@ -371,10 +371,10 @@
       "sterilization": {
         "default": "mdi:minus-circle-outline"
       },
-      "alarm_sound": {
+      "arm_beep": {
         "default": "mdi:volume-high"
       },
-      "alarm_light": {
+      "siren": {
         "default": "mdi:alarm-light"
       }
     }
