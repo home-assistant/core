@@ -77,6 +77,8 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     210: ChargerStatus.LOCKED_CAR_CONNECTED,
 }
 
+type WallboxConfigEntry = ConfigEntry[WallboxCoordinator]
+
 
 def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     func: Callable[Concatenate[_WallboxCoordinatorT, _P], Any],
@@ -118,10 +120,10 @@ async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
-    config_entry: ConfigEntry
+    config_entry: WallboxConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, wallbox: Wallbox
+        self, hass: HomeAssistant, config_entry: WallboxConfigEntry, wallbox: Wallbox
     ) -> None:
         """Initialize."""
         self._station = config_entry.data[CONF_STATION]
