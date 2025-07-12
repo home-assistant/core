@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -251,6 +251,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         )
 
         # Determine fan modes
+        self._fan_dp_code = None
         if enum_type := self.find_dpcode(
             (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
@@ -258,6 +259,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._attr_fan_modes = enum_type.range
+            self._fan_dp_code = enum_type.dpcode
 
         # Determine swing modes
         if self.find_dpcode(
@@ -284,19 +286,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
-
-        # Determine which DPCode to use for fan mode
-        self._fan_dp_code = None
-        if DPCode.WINDSPEED in self.device.function:
-            self._fan_dp_code = DPCode.WINDSPEED
-        elif DPCode.FAN_SPEED_ENUM in self.device.function:
-            self._fan_dp_code = DPCode.FAN_SPEED_ENUM
-
-        LOGGER.debug(
-            "Using '%s' for fan mode for device %s",
-            self._fan_dp_code,
-            self.device.id,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
