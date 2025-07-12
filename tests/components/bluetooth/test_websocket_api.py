@@ -66,7 +66,7 @@ async def test_subscribe_advertisements(
                 "connectable": True,
                 "manufacturer_data": {},
                 "name": "wohand_signal_100",
-                "rssi": -127,
+                "rssi": -100,
                 "service_data": {},
                 "service_uuids": [],
                 "source": HCI0_SOURCE_ADDRESS,
