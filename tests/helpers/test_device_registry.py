@@ -1652,6 +1652,7 @@ async def test_removing_config_entries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
+        "device": entry3,
     }
 
 
@@ -1724,10 +1725,12 @@ async def test_deleted_device_removing_config_entries(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": entry2,
     }
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
+        "device": entry3,
     }
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
@@ -1973,6 +1976,7 @@ async def test_removing_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": entry,
     }
 
 
@@ -2102,6 +2106,7 @@ async def test_deleted_device_removing_config_subentries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": entry4,
     }
 
     device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
@@ -2925,6 +2930,7 @@ async def test_update_remove_config_entries(
     assert update_events[6].data == {
         "action": "remove",
         "device_id": entry3.id,
+        "device": entry3,
     }
 
 
@@ -3104,6 +3110,7 @@ async def test_update_remove_config_subentries(
         config_entry_3.entry_id: {None},
     }
 
+    entry_before_remove = entry
     entry = device_registry.async_update_device(
         entry_id,
         remove_config_entry_id=config_entry_3.entry_id,
@@ -3201,6 +3208,7 @@ async def test_update_remove_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry_id,
+        "device": entry_before_remove,
     }
 
 
@@ -3422,7 +3430,7 @@ async def test_restore_device(
     )
 
     # Apply user customizations
-    device_registry.async_update_device(
+    entry = device_registry.async_update_device(
         entry.id,
         area_id="12345A",
         disabled_by=dr.DeviceEntryDisabler.USER,
@@ -3543,6 +3551,7 @@ async def test_restore_device(
     assert update_events[2].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": entry,
     }
     assert update_events[3].data == {
         "action": "create",
@@ -3865,6 +3874,7 @@ async def test_restore_shared_device(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": updated_device,
     }
     assert update_events[4].data == {
         "action": "create",
@@ -3873,6 +3883,7 @@ async def test_restore_shared_device(
     assert update_events[5].data == {
         "action": "remove",
         "device_id": entry.id,
+        "device": entry2,
     }
     assert update_events[6].data == {
         "action": "create",

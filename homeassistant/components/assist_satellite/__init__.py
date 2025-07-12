@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {
                     vol.Optional("message"): str,
                     vol.Optional("media_id"): _media_id_validator,
-                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce", default=True): bool,
                     vol.Optional("preannounce_media_id"): _media_id_validator,
                 }
             ),
@@ -89,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {
                     vol.Optional("start_message"): str,
                     vol.Optional("start_media_id"): _media_id_validator,
-                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce", default=True): bool,
                     vol.Optional("preannounce_media_id"): _media_id_validator,
                     vol.Optional("extra_system_prompt"): str,
                 }
@@ -114,7 +114,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ask_question_args = {
             "question": call.data.get("question"),
             "question_media_id": call.data.get("question_media_id"),
-            "preannounce": call.data.get("preannounce", False),
+            "preannounce": call.data.get("preannounce", True),
             "answers": call.data.get("answers"),
         }
 
@@ -137,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
                 vol.Optional("question"): str,
                 vol.Optional("question_media_id"): _media_id_validator,
-                vol.Optional("preannounce"): bool,
+                vol.Optional("preannounce", default=True): bool,
                 vol.Optional("preannounce_media_id"): _media_id_validator,
                 vol.Optional("answers"): [
                     {

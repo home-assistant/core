@@ -11,7 +11,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOMEE_ID, HOMEE_IP, HOMEE_NAME, NEW_HOMEE_IP, TESTPASS, TESTUSER
+from .conftest import (
+    HOMEE_ID,
+    HOMEE_IP,
+    HOMEE_NAME,
+    NEW_HOMEE_IP,
+    NEW_TESTPASS,
+    NEW_TESTUSER,
+    TESTPASS,
+    TESTUSER,
+)
 
 from tests.common import MockConfigEntry
 
@@ -113,7 +122,6 @@ async def test_flow_already_configured(
 ) -> None:
     """Test config flow aborts when already configured."""
     mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -130,6 +138,130 @@ async def test_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_homee", "mock_setup_entry")
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["handler"] == DOMAIN
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: NEW_TESTUSER,
+            CONF_PASSWORD: NEW_TESTPASS,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+    # Confirm that the config entry has been updated
+    assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
+    assert mock_config_entry.data[CONF_USERNAME] == NEW_TESTUSER
+    assert mock_config_entry.data[CONF_PASSWORD] == NEW_TESTPASS
+
+
+@pytest.mark.parametrize(
+    ("side_eff", "error"),
+    [
+        (
+            HomeeConnectionFailedException("connection timed out"),
+            {"base": "cannot_connect"},
+        ),
+        (
+            HomeeAuthFailedException("wrong username or password"),
+            {"base": "invalid_auth"},
+        ),
+        (
+            Exception,
+            {"base": "unknown"},
+        ),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: AsyncMock,
+    side_eff: Exception,
+    error: dict[str, str],
+) -> None:
+    """Test reconfigure flow errors."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_homee.get_access_token.side_effect = side_eff
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: NEW_TESTUSER,
+            CONF_PASSWORD: NEW_TESTPASS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == error
+
+    # Confirm that the config entry is unchanged
+    assert mock_config_entry.data[CONF_USERNAME] == TESTUSER
+    assert mock_config_entry.data[CONF_PASSWORD] == TESTPASS
+
+    mock_homee.get_access_token.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: NEW_TESTUSER,
+            CONF_PASSWORD: NEW_TESTPASS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # Confirm that the config entry has been updated
+    assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
+    assert mock_config_entry.data[CONF_USERNAME] == NEW_TESTUSER
+    assert mock_config_entry.data[CONF_PASSWORD] == NEW_TESTPASS
+
+
+async def test_reauth_wrong_uid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: AsyncMock,
+) -> None:
+    """Test reauth flow with wrong UID."""
+    mock_homee.settings.uid = "wrong_uid"
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: NEW_TESTUSER,
+            CONF_PASSWORD: NEW_TESTPASS,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_hub"
+
+    # Confirm that the config entry is unchanged
+    assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
