@@ -2,14 +2,42 @@
 
 from __future__ import annotations
 
-from microbot import MicroBotApiClient
+from collections.abc import Generator
+from contextlib import contextmanager
+
+import bleak
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import MicroBotConfigEntry, MicroBotDataUpdateCoordinator
+
+@contextmanager
+def patch_unused_bleak_discover_import() -> Generator[None]:
+    """Patch bleak.discover import in microbot. It is unused and was removed in bleak 1.0.0."""
+
+    def getattr_bleak(name: str) -> object:
+        if name == "discover":
+            return None
+        raise AttributeError
+
+    original_func = bleak.__dict__.get("__getattr__")
+    bleak.__dict__["__getattr__"] = getattr_bleak
+    try:
+        yield
+    finally:
+        if original_func is not None:
+            bleak.__dict__["__getattr__"] = original_func
+
+
+with patch_unused_bleak_discover_import():
+    from microbot import MicroBotApiClient
+
+from .coordinator import (  # noqa: E402
+    MicroBotConfigEntry,
+    MicroBotDataUpdateCoordinator,
+)
 
 PLATFORMS: list[str] = [Platform.SWITCH]
 
