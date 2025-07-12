@@ -20,11 +20,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -284,6 +285,22 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
+        # Determine which DPCode to use for fan mode
+        self._fan_dp_code = None
+        if "windspeed" in device.function:
+            self._fan_dp_code = "windspeed"
+        elif (
+            hasattr(DPCode, "FAN_SPEED_ENUM")
+            and DPCode.FAN_SPEED_ENUM in device.function
+        ):
+            self._fan_dp_code = DPCode.FAN_SPEED_ENUM
+
+        LOGGER.debug(
+            "Using '%s' for fan mode for device %s",
+            self._fan_dp_code,
+            self.device.id,
+        )
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
@@ -304,7 +321,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._send_command([{"code": DPCode.FAN_SPEED_ENUM, "value": fan_mode}])
+        if not hasattr(self, "_fan_dp_code") or not self._fan_dp_code:
+            raise HomeAssistantError("No valid fan DPCode set for this device.")
+
+        self._send_command([{"code": self._fan_dp_code, "value": fan_mode}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -460,7 +480,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        return self.device.status.get(DPCode.FAN_SPEED_ENUM)
+        if not hasattr(self, "_fan_dp_code") or not self._fan_dp_code:
+            return None
+
+        return self.device.status.get(self._fan_dp_code)
 
     @property
     def swing_mode(self) -> str:
