@@ -23,14 +23,24 @@ _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
 StateT = TypeVar("StateT", bound=QbusMqttState)
 
 
-def add_new_outputs(
+def create_new_entities(
     coordinator: QbusControllerCoordinator,
     added_outputs: list[QbusMqttOutput],
     filter_fn: Callable[[QbusMqttOutput], bool],
     entity_type: type[QbusEntity],
-    entities: list[QbusEntity],
-) -> None:
+) -> list[QbusEntity]:
     """Create entities for new outputs."""
+
+    new_outputs = determine_new_outputs(coordinator, added_outputs, filter_fn)
+    return [entity_type(output) for output in new_outputs]
+
+
+def determine_new_outputs(
+    coordinator: QbusControllerCoordinator,
+    added_outputs: list[QbusMqttOutput],
+    filter_fn: Callable[[QbusMqttOutput], bool],
+) -> list[QbusMqttOutput]:
+    """Determine new outputs."""
 
     added_ref_ids = {k.ref_id for k in added_outputs}
 
@@ -42,7 +52,8 @@ def add_new_outputs(
 
     if new_outputs:
         added_outputs.extend(new_outputs)
-        entities.extend([entity_type(output) for output in new_outputs])
+
+    return new_outputs
 
 
 def format_ref_id(ref_id: str) -> str | None:
@@ -67,7 +78,11 @@ class QbusEntity(Entity, Generic[StateT], ABC):
     _attr_should_poll = False
 
     def __init__(
-        self, mqtt_output: QbusMqttOutput, link_to_main_device: bool = False
+        self,
+        mqtt_output: QbusMqttOutput,
+        *,
+        id_suffix: str = "",
+        link_to_main_device: bool = False,
     ) -> None:
         """Initialize the Qbus entity."""
 
@@ -80,7 +95,12 @@ class QbusEntity(Entity, Generic[StateT], ABC):
         )
 
         ref_id = format_ref_id(mqtt_output.ref_id)
-        self._attr_unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
+        unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
+
+        if id_suffix:
+            unique_id += f"_{id_suffix}"
+
+        self._attr_unique_id = unique_id
 
         if link_to_main_device:
             self._attr_device_info = DeviceInfo(

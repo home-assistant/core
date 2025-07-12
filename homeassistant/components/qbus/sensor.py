@@ -4,16 +4,18 @@ from dataclasses import dataclass
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import (
-    GaugeKey,
+    GaugeStateProperty,
     QbusMqttGaugeState,
     QbusMqttHumidityState,
     QbusMqttThermoState,
     QbusMqttVentilationState,
+    QbusMqttWeatherState,
 )
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -36,121 +38,179 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import QbusConfigEntry
-from .entity import QbusEntity, add_new_outputs
+from .entity import QbusEntity, create_new_entities, determine_new_outputs
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class Description:
-    """Custom description for sensors."""
+class QbusGaugeDescription:
+    """Custom description for sensors.
+
+    This description does not have a `key` property.
+    """
 
     device_class: SensorDeviceClass | None = None
     unit: str | None = None
     state_class: SensorStateClass | str | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class QbusWeatherDescription(SensorEntityDescription):
+    """Description for Qbus entities with properties."""
+
+    property: str
+
+
+_WEATHER_DESCRIPTIONS = (
+    QbusWeatherDescription(
+        key="daylight",
+        property="dayLight",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    QbusWeatherDescription(
+        key="light",
+        property="light",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    QbusWeatherDescription(
+        key="light_east",
+        property="lightEast",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    QbusWeatherDescription(
+        key="light_south",
+        property="lightSouth",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    QbusWeatherDescription(
+        key="light_west",
+        property="lightWest",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    QbusWeatherDescription(
+        key="temperature",
+        property="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    QbusWeatherDescription(
+        key="wind",
+        property="wind",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+)
+
 _GAUGE_VARIANT_DESCRIPTIONS = {
-    "AIRPRESSURE": Description(
+    "AIRPRESSURE": QbusGaugeDescription(
         device_class=SensorDeviceClass.PRESSURE,
         unit=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "AIRQUALITY": Description(
+    "AIRQUALITY": QbusGaugeDescription(
         device_class=SensorDeviceClass.CO2,
         unit=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "CURRENT": Description(
+    "CURRENT": QbusGaugeDescription(
         device_class=SensorDeviceClass.CURRENT,
         unit=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "ENERGY": Description(
+    "ENERGY": QbusGaugeDescription(
         device_class=SensorDeviceClass.ENERGY,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
     ),
-    "GAS": Description(
+    "GAS": QbusGaugeDescription(
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         unit=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "GASFLOW": Description(
+    "GASFLOW": QbusGaugeDescription(
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         unit=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "HUMIDITY": Description(
+    "HUMIDITY": QbusGaugeDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         unit=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "LIGHT": Description(
+    "LIGHT": QbusGaugeDescription(
         device_class=SensorDeviceClass.ILLUMINANCE,
         unit=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "LOUDNESS": Description(
+    "LOUDNESS": QbusGaugeDescription(
         device_class=SensorDeviceClass.SOUND_PRESSURE,
         unit=UnitOfSoundPressure.DECIBEL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "POWER": Description(
+    "POWER": QbusGaugeDescription(
         device_class=SensorDeviceClass.POWER,
         unit=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "PRESSURE": Description(
+    "PRESSURE": QbusGaugeDescription(
         device_class=SensorDeviceClass.PRESSURE,
         unit=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "TEMPERATURE": Description(
+    "TEMPERATURE": QbusGaugeDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         unit=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "VOLTAGE": Description(
+    "VOLTAGE": QbusGaugeDescription(
         device_class=SensorDeviceClass.VOLTAGE,
         unit=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "VOLUME": Description(
+    "VOLUME": QbusGaugeDescription(
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         unit=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "WATER": Description(
+    "WATER": QbusGaugeDescription(
         device_class=SensorDeviceClass.WATER,
         unit=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL,
     ),
-    "WATERFLOW": Description(
+    "WATERFLOW": QbusGaugeDescription(
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         unit=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "WATERLEVEL": Description(
+    "WATERLEVEL": QbusGaugeDescription(
         device_class=SensorDeviceClass.DISTANCE,
         unit=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "WATERPRESSURE": Description(
+    "WATERPRESSURE": QbusGaugeDescription(
         device_class=SensorDeviceClass.PRESSURE,
         unit=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "WIND": Description(
+    "WIND": QbusGaugeDescription(
         device_class=SensorDeviceClass.WIND_SPEED,
         unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
-_SUPPORTED_GAUGE_PROPERTIES = [
-    "consumptionValue",
-    "currentValue",
-]
 
 
 def _is_gauge_with_variant(output: QbusMqttOutput) -> bool:
@@ -158,16 +218,6 @@ def _is_gauge_with_variant(output: QbusMqttOutput) -> bool:
         output.type == "gauge"
         and isinstance(output.variant, str)
         and _GAUGE_VARIANT_DESCRIPTIONS.get(output.variant.upper()) is not None
-    )
-
-
-def _is_gauge_with_properties(output: QbusMqttOutput) -> bool:
-    return (
-        output.type == "gauge"
-        and not isinstance(output.variant, str)
-        and any(
-            supported in output.properties for supported in _SUPPORTED_GAUGE_PROPERTIES
-        )
     )
 
 
@@ -185,72 +235,88 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     added_outputs: list[QbusMqttOutput] = []
 
-    def _check_thermo_outputs(entities: list[QbusEntity]) -> None:
-        add_new_outputs(
-            coordinator,
-            added_outputs,
-            lambda output: output.type == "thermo",
-            QbusThermoSensor,
-            entities,
+    def _create_weather_entities() -> list[QbusEntity]:
+        new_outputs = determine_new_outputs(
+            coordinator, added_outputs, lambda output: output.type == "weatherstation"
         )
 
-    def _check_gauge_variant_outputs(entities: list[QbusEntity]) -> None:
-        add_new_outputs(
-            coordinator,
-            added_outputs,
-            _is_gauge_with_variant,
-            QbusGaugeVariantSensor,
-            entities,
-        )
-
-    def _check_gauge_property_outputs(entities: list[QbusEntity]) -> None:
-        add_new_outputs(
-            coordinator,
-            added_outputs,
-            _is_gauge_with_properties,
-            QbusGaugePropertySensor,
-            entities,
-        )
-
-    def _check_ventilation_outputs(entities: list[QbusEntity]) -> None:
-        add_new_outputs(
-            coordinator,
-            added_outputs,
-            _is_ventilation_with_co2,
-            QbusVentilationSensor,
-            entities,
-        )
-
-    # def _check_weather_outputs(entities: list[QbusEntity]) -> None:
-    #     add_new_outputs(
-    #         coordinator,
-    #         added_outputs,
-    #         lambda output: output.type == "weatherstation",
-    #         QbusThermoSensor,
-    #         entities,
-    #     )
-
-    def _check_humidity_outputs(entities: list[QbusEntity]) -> None:
-        add_new_outputs(
-            coordinator,
-            added_outputs,
-            lambda output: output.type == "humidity",
-            QbusHumiditySensor,
-            entities,
-        )
+        return [
+            QbusWeatherSensor(output, description)
+            for output in new_outputs
+            for description in _WEATHER_DESCRIPTIONS
+        ]
 
     def _check_outputs() -> None:
-        entities: list[QbusEntity] = []
-
-        # _check_gauge_property_outputs(entities)
-        _check_gauge_variant_outputs(entities)
-        _check_humidity_outputs(entities)
-        _check_thermo_outputs(entities)
-        _check_ventilation_outputs(entities)
+        entities: list[QbusEntity] = [
+            *create_new_entities(
+                coordinator,
+                added_outputs,
+                _is_gauge_with_variant,
+                QbusGaugeVariantSensor,
+            ),
+            *create_new_entities(
+                coordinator,
+                added_outputs,
+                lambda output: output.type == "humidity",
+                QbusHumiditySensor,
+            ),
+            *create_new_entities(
+                coordinator,
+                added_outputs,
+                lambda output: output.type == "thermo",
+                QbusThermoSensor,
+            ),
+            *create_new_entities(
+                coordinator,
+                added_outputs,
+                _is_ventilation_with_co2,
+                QbusVentilationSensor,
+            ),
+            *_create_weather_entities(),
+        ]
 
         async_add_entities(entities)
 
+    _check_outputs()
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
+
+
+class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
+    """Representation of a Qbus sensor entity for gauges with variant."""
+
+    _state_cls = QbusMqttGaugeState
+
+    _attr_name = None
+    _attr_suggested_display_precision = 2
+
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
+        """Initialize sensor entity."""
+
+        super().__init__(mqtt_output)
+
+        variant = str(mqtt_output.variant)
+        description = _GAUGE_VARIANT_DESCRIPTIONS[variant.upper()]
+
+        self._attr_device_class = description.device_class
+        self._attr_native_unit_of_measurement = description.unit
+        self._attr_state_class = description.state_class
+
+    async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
+        self._attr_native_value = state.read_value(GaugeStateProperty.CURRENT_VALUE)
+
+
+class QbusHumiditySensor(QbusEntity, SensorEntity):
+    """Representation of a Qbus sensor entity for humidity modules."""
+
+    _state_cls = QbusMqttHumidityState
+
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_name = None
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    async def _handle_state_received(self, state: QbusMqttHumidityState) -> None:
+        self._attr_native_value = state.read_value()
 
 
 class QbusThermoSensor(QbusEntity, SensorEntity):
@@ -267,98 +333,39 @@ class QbusThermoSensor(QbusEntity, SensorEntity):
         self._attr_native_value = state.read_current_temperature()
 
 
-class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
-    """Representation of a Qbus sensor entity for gauges with variant."""
-
-    _state_cls = QbusMqttGaugeState
-
-    _attr_suggested_display_precision = 2
-
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
-        """Initialize sensor entity."""
-
-        super().__init__(mqtt_output, link_to_main_device=True)
-
-        variant = str(mqtt_output.variant)
-        description = _GAUGE_VARIANT_DESCRIPTIONS[variant.upper()]
-
-        self._attr_device_class = description.device_class
-        self._attr_name = mqtt_output.name.title()
-        self._attr_native_unit_of_measurement = description.unit
-        self._attr_state_class = description.state_class
-
-    async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
-        self._attr_native_value = state.read_value(GaugeKey.CURRENT_VALUE)
-
-
-class QbusGaugePropertySensor(QbusEntity, SensorEntity):
-    """Representation of a Qbus sensor entity for gauges with properties."""
-
-    _state_cls = QbusMqttGaugeState
-
-    _attr_suggested_display_precision = 2
-
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
-        """Initialize sensor entity."""
-
-        super().__init__(mqtt_output, link_to_main_device=True)
-
-        current_value_property: dict = mqtt_output.properties.get("currentValue", {})
-        unit = current_value_property.get("unit")
-
-        self._attr_name = mqtt_output.name.title()
-        self._attr_native_unit_of_measurement = unit
-
-        match unit:
-            case "kWh":
-                self._attr_device_class = SensorDeviceClass.ENERGY
-                self._attr_state_class = SensorStateClass.TOTAL
-            case "L":
-                self._attr_device_class = SensorDeviceClass.VOLUME_STORAGE
-                self._attr_state_class = SensorStateClass.TOTAL
-            case _:
-                self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
-        self._attr_native_value = state.read_value(GaugeKey.CURRENT_VALUE)
-
-
 class QbusVentilationSensor(QbusEntity, SensorEntity):
     """Representation of a Qbus sensor entity for ventilations."""
 
     _state_cls = QbusMqttVentilationState
 
     _attr_device_class = SensorDeviceClass.CO2
+    _attr_name = None
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
-
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
-        """Initialize sensor entity."""
-
-        super().__init__(mqtt_output, link_to_main_device=True)
-
-        self._attr_name = mqtt_output.name.title()
 
     async def _handle_state_received(self, state: QbusMqttVentilationState) -> None:
         self._attr_native_value = state.read_co2()
 
 
-class QbusHumiditySensor(QbusEntity, SensorEntity):
-    """Representation of a Qbus sensor entity for humidity modules."""
+class QbusWeatherSensor(QbusEntity, SensorEntity):
+    """Representation of a Qbus weather sensor."""
 
-    _state_cls = QbusMqttHumidityState
+    _state_cls = QbusMqttWeatherState
 
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_name = None
 
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
+    entity_description: QbusWeatherDescription
+
+    def __init__(
+        self, mqtt_output: QbusMqttOutput, description: QbusWeatherDescription
+    ) -> None:
         """Initialize sensor entity."""
 
-        super().__init__(mqtt_output, link_to_main_device=True)
+        super().__init__(mqtt_output, id_suffix=description.key)
 
-        self._attr_name = mqtt_output.name.title()
+        self.entity_description = description
 
-    async def _handle_state_received(self, state: QbusMqttHumidityState) -> None:
-        self._attr_native_value = state.read_value()
+    async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
+        if value := state.read_property(self.entity_description.property, None):
+            self.native_value = value
