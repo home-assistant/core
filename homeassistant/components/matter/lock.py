@@ -67,9 +67,8 @@ class MatterLock(MatterEntity, LockEntity):
     _attr_user_index: int | None = None
 
     async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
+        """Subscribe to events to handle jammed and other event conditions"""
         await super().async_added_to_hass()
-
         # subscribe to NodeEvent events
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -92,14 +91,18 @@ class MatterLock(MatterEntity, LockEntity):
             return
 
         LOGGER.debug(
-            "Received _on_matter_node_event: event %s for %s with data %s",
+            "Received _on_matter_node_event: event type %s, event id %s for %s with data %s",
+            event,
             data.event_id,
             self.entity_id,
             data.data,
         )
 
+        # handle the DoorLock events
         match data.event_id:
-            case clusters.DoorLock.Events.DoorLockAlarm.event_id:  # Event 0
+            case (
+                clusters.DoorLock.Events.DoorLockAlarm.event_id
+            ):  # Lock cluster event 0
                 match data.data.get("alarmCode"):
                     case 0:  # lock is jammed
                         # set in an uncertain state if jammed
@@ -109,36 +112,22 @@ class MatterLock(MatterEntity, LockEntity):
                         self._attr_is_locking = None
                         self._attr_is_jammed = True
                         self.async_write_ha_state()
-            case clusters.DoorLock.Events.LockOperation.event_id:  # Event 2
-                # update the changed_by attribute with the translated value
+            case clusters.DoorLock.Events.LockOperation.event_id:  # Lock cluster vent 2
+                # update the changed_by attribute to indicate lock operation source
                 operation_source = data.data.get("operationSource")
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
+                # update the user index attribute to indicate which user performed the operation
                 self._attr_user_index = data.data.get("userIndex")
-                # self.async_write_ha_state()
-            case clusters.DoorLock.Events.LockOperationError.event_id:  # Event 3
-                match data.data.get("operationError"):
-                    case 0:  # unspecified
-                        self._attr_is_opening = False
-                        self._attr_is_locking = False
-                        self.async_write_ha_state()
-                    case 1:  # invalid credentials
-                        self._attr_is_opening = False
-                        self._attr_is_locking = False
-                        self.async_write_ha_state()
-                    case 2:  # Disabled user Denied
-                        self._attr_is_opening = False
-                        self._attr_is_locking = False
-                        self.async_write_ha_state()
-                    case 3:  # Restricted
-                        self._attr_is_opening = False
-                        self._attr_is_locking = False
-                        self.async_write_ha_state()
-                    case 4:  # Insuffficient Battery
-                        self._attr_is_opening = False
-                        self._attr_is_locking = False
-                        self.async_write_ha_state()
+                self.async_write_ha_state()
+            case (
+                clusters.DoorLock.Events.LockOperationError.event_id
+            ):  # Lock cluster event 3
+                # if an operation error occurs, clear the optimistic state
+                self._attr_is_opening = False
+                self._attr_is_locking = False
+                self.async_write_ha_state()
 
     @property
     def user_index(self) -> int | None:
@@ -188,7 +177,6 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
-        LOGGER.debug("async_unlock called with arguments: %s", kwargs)
         """Unlock the lock. Do not unbolt, even if supported."""
         if self._attr_is_locked:
             # optimistically signal unlocking to state machine
@@ -207,7 +195,6 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     async def async_open(self, **kwargs: Any) -> None:
-        LOGGER.debug("async_open called with arguments: %s", kwargs)
         """Unlock and pull the door latch."""
         # optimistically signal unlocking and pulling door latch to state machine
         # the lock should acknowledge the command with an attribute update
@@ -249,46 +236,27 @@ class MatterLock(MatterEntity, LockEntity):
             lock_state,
             self.entity_id,
         )
-
+        # start with the lock attributes as False, and change as needed
+        self._attr_is_locked = False
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_open = False
+        self._attr_is_opening = False
+        self._attr_is_jammed = False
         if lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            # State 0 - Not Fully Locked is an uncertain lock state, treat as jammed
-            LOGGER.debug("processing kNotFullyLocked state")
-            self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-            self._attr_is_open = False
-            self._attr_is_opening = False
+            # State 0 - lock is an uncertain lock state, treat as jammed
             self._attr_is_jammed = True
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             # State 1 - fully locked, latch/bolt not pulled
-            LOGGER.debug("processing kLocked state")
             self._attr_is_locked = True
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-            self._attr_is_open = False
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
-            # State 2 - unlocked, latch/bolt is not pulled
-            LOGGER.debug("processing kUnlocked state")
-            self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-            self._attr_is_open = False
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
+            # State 2 - unlocked, latch/bolt is not pulled, False states are correct here
+            pass
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
-            # State 3 - fully unlocked and latch/bolt is pulled
-            LOGGER.debug("processing kUnlatched state")
-            self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
+            # State 3 - lock is unlocked and latch/bolt is pulled
             self._attr_is_open = True
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
         else:
             # NOTE: A null state can happen during device startup. Treat as unknown.
-            LOGGER.debug("processing NULL state")
             self._attr_is_locked = None
             self._attr_is_locking = None
             self._attr_is_unlocking = None
