@@ -35,7 +35,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
-    if isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
+    if isinstance(coordinator.device, switchbot.SwitchbotGarageDoorOpener):
+        async_add_entities([SwitchbotGarageDoorOpenerEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
         async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotRollerShade):
         async_add_entities([SwitchBotRollerShadeEntity(coordinator)])
@@ -294,4 +296,31 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_position = self.parsed_data["position"]
         self._attr_is_closed = self.parsed_data["position"] <= 20
 
+        self.async_write_ha_state()
+
+
+class SwitchbotGarageDoorOpenerEntity(SwitchbotEntity, CoverEntity):
+    """Representation of a Switchbot garage door."""
+
+    _device: switchbot.SwitchbotGarageDoorOpener
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_translation_key = "garage_door"
+    _attr_name = None
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, else False."""
+        return not self._device.door_open()
+
+    @exception_handler
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the garage door."""
+        await self._device.open()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the garage door."""
+        await self._device.close()
         self.async_write_ha_state()
