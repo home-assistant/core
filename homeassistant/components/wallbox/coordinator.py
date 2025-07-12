@@ -233,7 +233,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
                     translation_key="insufficient_rights",
                 )
-                raise InvalidAuth(
+                raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
@@ -270,7 +270,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
                     translation_key="insufficient_rights",
                 )
-                raise InvalidAuth(
+                raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
@@ -336,7 +336,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
                     translation_key="insufficient_rights",
                 )
-                raise InvalidAuth(
+                raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
@@ -402,3 +402,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InsufficientRights(HomeAssistantError):
+    """Error to indicate there are insufficient right for the user."""
