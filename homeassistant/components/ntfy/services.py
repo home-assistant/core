@@ -7,16 +7,10 @@ from datetime import timedelta
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
-    DOMAIN as NOTIFY_DOMAIN,
-)
+from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
 
 from .const import (
@@ -32,6 +26,7 @@ from .const import (
     DOMAIN,
     SERVICE_PUBLISH,
 )
+from .notify import async_get_entities
 
 SERVICE_PUBLISH_SCHEMA = {
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -50,15 +45,6 @@ SERVICE_PUBLISH_SCHEMA = {
     vol.Optional(ATTR_CALL): cv.string,
     vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
 }
-
-
-def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
-    """Get entities for a domain."""
-    entities: dict[str, Entity] = {}
-    for platform in async_get_platforms(hass, DOMAIN):
-        if platform.domain == NOTIFY_DOMAIN:
-            entities.update(platform.entities)
-    return entities
 
 
 async def _publish(call: ServiceCall) -> None:
