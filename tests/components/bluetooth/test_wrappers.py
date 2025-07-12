@@ -99,18 +99,6 @@ class FakeBleakClient(BaseFakeBleakClient):
         return True
 
 
-class FakeBleakClientFailsToConnect(BaseFakeBleakClient):
-    """Fake bleak client that fails to connect."""
-
-    async def connect(self, *args, **kwargs):
-        """Connect."""
-
-    @property
-    def is_connected(self):
-        """Not connected."""
-        return False
-
-
 class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
     """Fake bleak client that raises on connect."""
 
@@ -152,16 +140,6 @@ def mock_platform_client_fixture():
     with patch(
         "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClient,
-    ):
-        yield
-
-
-@pytest.fixture(name="mock_platform_client_that_fails_to_connect")
-def mock_platform_client_that_fails_to_connect_fixture():
-    """Fixture that mocks the platform client that fails to connect."""
-    with patch(
-        "habluetooth.wrappers.get_platform_client_backend_type",
-        return_value=FakeBleakClientFailsToConnect,
     ):
         yield
 
@@ -276,7 +254,7 @@ async def test_test_switch_adapters_when_out_of_slots(
 async def test_release_slot_on_connect_failure(
     hass: HomeAssistant,
     install_bleak_catcher,
-    mock_platform_client_that_fails_to_connect,
+    mock_platform_client_that_raises_on_connect,
 ) -> None:
     """Ensure the slot gets released on connection failure."""
     manager = _get_manager()
@@ -292,7 +270,8 @@ async def test_release_slot_on_connect_failure(
     ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        await client.connect()
+        with pytest.raises(ConnectionError):
+            await client.connect()
         assert client.is_connected is False
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
