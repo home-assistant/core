@@ -117,7 +117,7 @@
   "issues": {
     "insufficient_rights": {
       "title": "The Wallbox account has insufficient rights.",
-      "description": "The Wallbox account has insufficient right to lock/unlock and change the charging power. Please assign the user admin rights in the Wallbox portal."
+      "description": "The Wallbox account has insufficient rights to lock/unlock and change the charging power. Please assign the user admin rights in the Wallbox portal."
     }
   },
   "exceptions": {
