@@ -1,11 +1,11 @@
 """Tests for the Bluetooth integration."""
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 import itertools
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -211,34 +211,35 @@ def inject_bluetooth_service_info(
 
 
 @contextmanager
-def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
+def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> Generator[None]:
     """Mock all the discovered devices from all the scanners."""
     manager = _get_manager()
-    original_history = {}
     scanners = list(
         itertools.chain(
             manager._connectable_scanners, manager._non_connectable_scanners
         )
     )
-    for scanner in scanners:
-        data = scanner.discovered_devices_and_advertisement_data
-        original_history[scanner] = data.copy()
-        data.clear()
-    if scanners:
-        data = scanners[0].discovered_devices_and_advertisement_data
-        data.clear()
-        data.update(
-            {device.address: (device, MagicMock()) for device in mock_discovered}
-        )
-    yield
-    for scanner in scanners:
-        data = scanner.discovered_devices_and_advertisement_data
-        data.clear()
-        data.update(original_history[scanner])
+    if scanners and getattr(scanners[0], "scanner", None):
+        with patch.object(
+            scanners[0].scanner.__class__,
+            "discovered_devices_and_advertisement_data",
+            new=PropertyMock(
+                side_effect=[
+                    {
+                        device.address: (device, MagicMock())
+                        for device in mock_discovered
+                    },
+                ]
+                + [{}] * (len(scanners))
+            ),
+        ):
+            yield
+    else:
+        yield
 
 
 @contextmanager
-def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
+def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> Generator[None]:
     """Mock the combined best path to discovered devices from all the scanners."""
     manager = _get_manager()
     original_all_history = manager._all_history
