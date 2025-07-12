@@ -7,7 +7,6 @@ from typing import Any
 
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
-from huum.huum import Huum
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -18,14 +17,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import HuumDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,13 +32,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Huum sauna with config flow."""
-    data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [HuumDevice(data.get("coordinator"), data.get("huum"), entry.entry_id)], True
+        [HuumDevice(hass.data[DOMAIN][entry.entry_id], entry.entry_id)], True
     )
 
 
-class HuumDevice(CoordinatorEntity, ClimateEntity):
+class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     """Representation of a heater."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
@@ -56,23 +51,15 @@ class HuumDevice(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, huum: Huum, unique_id: str
-    ) -> None:
+    def __init__(self, coordinator: HuumDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the heater."""
         CoordinatorEntity.__init__(self, coordinator)
 
         self._attr_unique_id = unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name="Huum sauna",
-            manufacturer="Huum",
-            model="UKU WiFi",
-            serial_number=coordinator.data.sauna_name,
-        )
+        self._attr_device_info = coordinator.device_info
 
-        self._huum = huum
         self._coordinator = coordinator
+        self._huum = coordinator.huum
 
     @property
     def min_temp(self) -> int:

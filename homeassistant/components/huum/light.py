@@ -5,16 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from huum.huum import Huum
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import HuumDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +23,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light."""
-    data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [HuumLight(data.get("coordinator"), data.get("huum"), entry.entry_id)], True
+        [HuumLight(hass.data[DOMAIN][entry.entry_id], entry.entry_id)], True
     )
 
 
-class HuumLight(CoordinatorEntity, LightEntity):
+class HuumLight(CoordinatorEntity[HuumDataUpdateCoordinator], LightEntity):
     """Representation of a light."""
 
     _attr_has_entity_name = True
@@ -39,23 +36,15 @@ class HuumLight(CoordinatorEntity, LightEntity):
     _attr_supported_color_modes = set(ColorMode.ONOFF)
     _attr_color_mode = ColorMode.ONOFF
 
-    def __init__(
-        self, coordinator: CoordinatorEntity, huum: Huum, unique_id: str
-    ) -> None:
+    def __init__(self, coordinator: HuumDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the light."""
         CoordinatorEntity.__init__(self, coordinator)
 
         self._attr_unique_id = f"{unique_id}_light"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name="Huum sauna",
-            manufacturer="Huum",
-            model="UKU WiFi",
-            serial_number=coordinator.data.sauna_name,
-        )
+        self._attr_device_info = coordinator.device_info
 
-        self._huum = huum
         self._coordinator = coordinator
+        self._huum = coordinator.huum
 
     @property
     def is_on(self) -> bool | None:
