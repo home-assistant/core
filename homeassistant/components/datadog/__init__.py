@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
+from . import config_flow as config_flow
 from .const import (
     CONF_RATE,
     DEFAULT_HOST,

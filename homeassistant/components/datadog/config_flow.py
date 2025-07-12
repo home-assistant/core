@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_RATE,
@@ -60,6 +60,12 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from configuration.yaml."""
         return await self.async_step_user(import_config)
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
+        """Get the options flow handler."""
+        return DatadogOptionsFlowHandler()
+
 
 class DatadogOptionsFlowHandler(OptionsFlow):
     """Handle Datadog options."""
@@ -89,11 +95,7 @@ async def validate_datadog_connection(hass: HomeAssistant, client: DogStatsd) ->
     """Attempt to send a test metric to the Datadog agent."""
     try:
         hass.async_add_executor_job(client.increment, "connection_test")
-    except OSError:
-        # Connection issues like ECONNREFUSED
-        return False
-    except ValueError:
-        # Likely a bad host/port/prefix format
+    except (OSError, ValueError):
         return False
     else:
         return True
