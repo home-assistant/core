@@ -41,7 +41,8 @@ def mock_coordinator() -> AsyncMock:
 async def test_hub_properties(hass: HomeAssistant, mock_coordinator: AsyncMock) -> None:
     """Test properties and state mapping of the master hub entity."""
     entity = TuneBladeHubMediaPlayer(mock_coordinator)
-    await entity.async_added_to_hass(hass)
+    entity.hass = hass  # Set hass directly to avoid calling async_added_to_hass
+    entity.entity_id = "media_player.master"  # Important: Set entity_id to avoid NoEntitySpecifiedError
     entity._handle_coordinator_update()
 
     assert entity.name == "Master"
@@ -65,7 +66,8 @@ async def test_device_properties(
     entity = TuneBladeMediaPlayer(
         mock_coordinator, "abc123", mock_coordinator.data["abc123"]
     )
-    await entity.async_added_to_hass(hass)
+    entity.hass = hass
+    entity.entity_id = "media_player.living_room"  # Important: Set entity_id to avoid NoEntitySpecifiedError
     entity._handle_coordinator_update()
 
     assert entity.name == "Living Room"

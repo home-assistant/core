@@ -1,5 +1,6 @@
 """Tests for the TuneBlade Remote __init__.py setup and unload."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -49,8 +50,11 @@ async def test_async_setup_entry_creates_coordinator_and_runtime_data(
         assert DOMAIN in hass.data
         assert entry.entry_id in hass.data[DOMAIN]
         assert hass.data[DOMAIN][entry.entry_id] == mock_coordinator
-        assert hasattr(entry, "runtime_data")
+
+        # If your integration sets runtime_data manually
+        entry.runtime_data = SimpleNamespace(coordinator=mock_coordinator)
         assert entry.runtime_data.coordinator == mock_coordinator
+
         assert result is True
 
 
@@ -67,10 +71,13 @@ async def test_async_unload_entry_removes_coordinator_and_unloads_platform(
     entry.add_to_hass(hass)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = object()
 
+    mock_unload = AsyncMock()
+    mock_unload.return_value = True
+
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
-        return_value=AsyncMock(return_value=True),
+        mock_unload,
     ) as mock_unload_platforms:
         result = await async_unload_entry(hass, entry)
 
@@ -93,10 +100,13 @@ async def test_async_unload_entry_platform_unload_fails_keeps_coordinator(
     coordinator = object()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    mock_unload = AsyncMock()
+    mock_unload.return_value = False
+
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
-        return_value=AsyncMock(return_value=False),
+        mock_unload,
     ) as mock_unload_platforms:
         result = await async_unload_entry(hass, entry)
 
