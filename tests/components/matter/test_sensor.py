@@ -17,6 +17,7 @@ from .common import (
 )
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
@@ -381,6 +382,21 @@ async def test_draft_electrical_measurement_sensor(
     assert state.state == "unknown"
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_countdown_time_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CountdownTime sensor."""
+    # OperationalState Cluster / CountdownTime (1/96/2)
+    state = hass.states.get("sensor.microwave_oven_estimated_end_time")
+    assert state
+    # 1/96/2 = 30 seconds, so 30 s should be added to the current time.
+    assert state.state == "2025-01-01T14:00:30+00:00"
+
+
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
 async def test_list_sensor(
     hass: HomeAssistant,
@@ -523,6 +539,18 @@ async def test_water_heater(
     state = hass.states.get("sensor.water_heater_appliance_energy_state")
     assert state
     assert state.state == "offline"
+
+    # DeviceEnergyManagement -> OptOutState attribute
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "no_opt_out"
+
+    set_node_attribute(matter_node, 2, 152, 7, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "opt_out"
 
 
 @pytest.mark.parametrize("node_fixture", ["pump"])

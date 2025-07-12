@@ -172,6 +172,9 @@ class DnsIPOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        if self.config_entry.data[CONF_HOSTNAME] == DEFAULT_HOSTNAME:
+            return self.async_abort(reason="no_options")
+
         errors = {}
         if user_input is not None:
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)

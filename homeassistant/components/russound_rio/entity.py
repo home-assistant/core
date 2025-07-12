@@ -6,6 +6,7 @@ from typing import Any, Concatenate
 
 from aiorussound import Controller, RussoundClient
 from aiorussound.models import CallbackType
+from aiorussound.rio import ZoneControlSurface
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -58,6 +59,7 @@ class RussoundBaseEntity(Entity):
             self._controller.mac_address
             or f"{self._primary_mac_address}-{self._controller.controller_id}"
         )
+        self._zone_id = zone_id
         if not zone_id:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._device_identifier)},
@@ -73,6 +75,11 @@ class RussoundBaseEntity(Entity):
             suggested_area=zone.name,
             via_device=(DOMAIN, self._device_identifier),
         )
+
+    @property
+    def _zone(self) -> ZoneControlSurface:
+        assert self._zone_id
+        return self._controller.zones[self._zone_id]
 
     async def _state_update_callback(
         self, _client: RussoundClient, _callback_type: CallbackType
