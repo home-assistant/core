@@ -562,7 +562,7 @@ async def test_new_websocket_message(
 
     # This would call all callbacks; here we directly call only the test mower
     # (so we simulate the library’s internal filtering)
-    callback_holder[TEST_MOWER_ID](other_message)
+    callback_holder["1234"](other_message)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_mower_1_last_error")
