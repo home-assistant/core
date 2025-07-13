@@ -213,9 +213,29 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
+            # del self.config_entry.runtime_data.message_coordinators[mower_id]
 
     def _add_new_devices(self, new_devices: set[str]) -> None:
         """Add new device and trigger callbacks."""
+        # for mower_id in new_devices:
+        #     self.config_entry.runtime_data.message_coordinators[mower_id] = (
+        #         AutomowerMessageUpdateCoordinator(
+        #             self.hass,
+        #             self.config_entry,
+        #             self.api,
+        #             mower_id,
+        #             device=DeviceInfo(
+        #                 identifiers={(DOMAIN, mower_id)},
+        #                 manufacturer="Husqvarna",
+        #                 model=self.data[mower_id]
+        #                 .system.model.removeprefix("HUSQVARNA ")
+        #                 .removeprefix("Husqvarna "),
+        #                 name=self.data[mower_id].system.name,
+        #                 serial_number=self.data[mower_id].system.serial_number,
+        #                 suggested_area="Garden",
+        #             ),
+        #         )
+        #     )
         for mower_callback in self.new_devices_callbacks:
             mower_callback(new_devices)
 
@@ -359,29 +379,3 @@ class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         if mower_id == self.mower_id:
             self.async_set_updated_data(ws_data)
-
-    # def _async_add_devices(self, data: MessageData) -> None:
-    #     """Add new device, remove non-existing device."""
-    #     current_devices = set(data)
-
-    #     # Skip update if no changes
-    #     if current_devices == self._devices_last_update:
-    #         return
-
-    #     # Process removed devices
-    #     # This is handled by the main coordinator
-
-    #     # Process new device
-    #     new_devices = current_devices - self._devices_last_update
-    #     if new_devices:
-    #         self.data = data
-    #         _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
-    #         self._add_new_devices(new_devices)
-
-    #     # Update device state
-    #     self._devices_last_update = current_devices
-
-    def _add_new_devices(self, new_devices: set[str]) -> None:
-        """Add new device and trigger callbacks."""
-        for mower_callback in self.new_devices_callbacks:
-            mower_callback(new_devices)

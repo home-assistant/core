@@ -400,10 +400,10 @@ async def test_coordinator_automatic_registry_cleanup(
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices
     )
-    # assert (
-    #     len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-    #     == current_entites
-    # )
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
+    )
 
 
 async def test_add_and_remove_work_area(

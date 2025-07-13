@@ -498,10 +498,6 @@ async def async_setup_entry(
             if description.exists_fn(coordinator.data[mower_id])
         )
     for mower_id in message_coordinator:
-        _LOGGER.debug(
-            "message_coordinator[mower_id]:%s",
-            message_coordinator[mower_id].data,
-        )
         entities.extend(
             AutomowerMessageSensorEntity(
                 mower_id,
@@ -528,35 +524,12 @@ async def async_setup_entry(
         )
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
-        async_add_entities(
+        entities: list[SensorEntity] = []
+        entities.extend(
             AutomowerSensorEntity(mower_id, coordinator, description)
             for mower_id in mower_ids
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
-        )
-        async_add_entities(
-            AutomowerMessageSensorEntity(
-                mower_id,
-                message_coordinator[mower_id],
-                description,
-                message_coordinator[mower_id].device,
-            )
-            for description in MESSAGE_SENSOR_TYPES
-            for mower_id in mower_ids
-            if description.exists_fn(message_coordinator[mower_id].data)
-        )
-        for mower_id in mower_ids:
-            mower_data = coordinator.data[mower_id]
-            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
-                _async_add_new_work_areas(
-                    mower_id,
-                    set(mower_data.work_areas.keys()),
-                )
-
-    def _async_add_new_devices_messages(mower_ids: set[str]) -> None:
-        _LOGGER.debug(
-            "message_coordinator[mower_id]:%s",
-            message_coordinator[mower_id].data,
         )
         entities.extend(
             AutomowerMessageSensorEntity(
@@ -566,15 +539,20 @@ async def async_setup_entry(
                 message_coordinator[mower_id].device,
             )
             for description in MESSAGE_SENSOR_TYPES
+            for mower_id in mower_ids
             if description.exists_fn(message_coordinator[mower_id].data)
         )
+        async_add_entities(entities)
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                _async_add_new_work_areas(
+                    mower_id,
+                    set(mower_data.work_areas.keys()),
+                )
 
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
     coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
-    for mower_id in message_coordinator:
-        message_coordinator[mower_id].new_devices_callbacks.append(
-            _async_add_new_devices_messages
-        )
 
 
 class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
