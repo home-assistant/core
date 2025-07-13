@@ -23,11 +23,12 @@ rules:
     comment: Local calculation does not require setup.
   unique-config-entry:
     status: done
-    comment: >- The multiple config entry was removed due to
-    multiple bugs in the integration and low ROI.
-    We might consider revisiting this as an additional feature in the future
-    to allow supportong multiple languages for states, multiple locations and maybe
-  use it as a solution for multiple Zmanim configurations.
+    comment: >-
+      The multiple config entry was removed due to multiple bugs in the
+      integration and low ROI.
+      We might consider revisiting this as an additional feature in the future
+      to allow supportong multiple languages for states, multiple locations and maybe
+      use it as a solution for multiple Zmanim configurations.
 
   # Silver
   action-exceptions: done
@@ -47,7 +48,9 @@ rules:
     comment: This integration does not require reauthentication, since it is a local calculation.
   test-coverage:
     status: todo
-    comment: |- The following points should be addressed:
+    comment: |-
+      The following points should be addressed:
+
       * Don't use if-statements in tests (test_jewish_calendar_sensor, test_shabbat_times_sensor)
 
   # Gold
