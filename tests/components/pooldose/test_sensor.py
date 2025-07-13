@@ -6,10 +6,7 @@ from pooldose.request_handler import RequestStatus
 import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
-from homeassistant.components.pooldose.sensor import (
-    PooldoseSensor,
-    PooldoseStaticSensor,
-)
+from homeassistant.components.pooldose.sensor import PooldoseSensor
 
 
 @pytest.fixture
@@ -49,8 +46,10 @@ def mock_device_info():
     """Create mock device info dict."""
     return {
         "SERIAL_NUMBER": "SN123456789",
+        "SW_VERSION": "1.0.0",
         "API_VERSION": "v1.0",
         "FW_VERSION": "1.2.3",
+        "FW_CODE": "53212",
         "MODEL": "PoolDose Pro",
     }
 
@@ -107,44 +106,6 @@ def test_dynamic_sensor_api_error(mock_client, mock_device_info) -> None:
         "temperature",
         "temperature",
         None,
-        None,
-        "SN123456789",
-        None,
-        mock_device_info,
-        True,
-    )
-
-    assert sensor.native_value is None
-
-
-def test_static_sensor_native_value(
-    mock_static_coordinator, mock_client, mock_device_info
-) -> None:
-    """Test that the static sensor returns the correct value from device info."""
-    sensor = PooldoseStaticSensor(
-        mock_static_coordinator,
-        mock_client,
-        "api_version",  # translation_key
-        "API_VERSION",  # key
-        None,  # device_class
-        "SN123456789",  # serialnumber
-        None,  # entity_category
-        mock_device_info,  # device_info_dict
-        True,  # enabled_by_default
-    )
-
-    assert sensor.native_value == "v1.0"
-
-
-def test_static_sensor_missing_key(
-    mock_static_coordinator, mock_client, mock_device_info
-) -> None:
-    """Test that the static sensor returns None if key is missing."""
-    sensor = PooldoseStaticSensor(
-        mock_static_coordinator,
-        mock_client,
-        "missing_key",
-        "MISSING_KEY",  # Not in device_info
         None,
         "SN123456789",
         None,
@@ -223,9 +184,9 @@ def test_sensor_empty_data(mock_client, mock_device_info) -> None:
 def test_sensor_with_mapping_patched(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test sensor with patched DYNAMIC_SENSOR_MAP."""
+    """Test sensor with patched SENSOR_MAP."""
     with patch(
-        "homeassistant.components.pooldose.const.DYNAMIC_SENSOR_MAP",
+        "homeassistant.components.pooldose.const.SENSOR_MAP",
         {"temperature": (None, None, True)},  # (device_class, entity_category, enabled)
     ):
         sensor = PooldoseSensor(

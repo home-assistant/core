@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PooldoseConfigEntry
-from .const import DYNAMIC_SENSOR_MAP, STATIC_SENSOR_MAP, device_info
+from .const import SENSOR_MAP, device_info
 from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,43 +35,16 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
-    # Static sensors for device info entries
-    for name in client.device_info:
-        _LOGGER.debug("Static sensor %s: key=%s", name, client.device_info[name])
-        if name not in STATIC_SENSOR_MAP:
-            _LOGGER.debug(
-                "Static sensor %s is not defined in SENSOR_MAP, skipping", name
-            )
-            continue
-
-        device_class, entity_category, enabled = STATIC_SENSOR_MAP[name]
-        entities.append(
-            PooldoseStaticSensor(
-                coordinator,
-                client,
-                name.lower(),
-                name,
-                device_class,
-                serialnumber,
-                entity_category,
-                device_info_dict,
-                enabled,
-            )
-        )
-
-    # Dynamic sensors
     for name, sensor in client.available_sensors().items():
         _LOGGER.debug("Sensor  %s: key=%s, type=%s", name, sensor.key, sensor.type)
         if sensor.conversion is not None:
             _LOGGER.debug("    conversion: %s", sensor.conversion)
 
-        if name not in DYNAMIC_SENSOR_MAP:
-            _LOGGER.debug(
-                "Dynamic sensor %s is not defined in SENSOR_MAP, skipping", name
-            )
+        if name not in SENSOR_MAP:
+            _LOGGER.debug("Sensor %s is not defined in SENSOR_MAP, skipping", name)
             continue
 
-        device_class, entity_category, enabled = DYNAMIC_SENSOR_MAP[name]
+        device_class, entity_category, enabled = SENSOR_MAP[name]
 
         entities.append(
             PooldoseSensor(
@@ -164,47 +137,4 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             if unit and unit != "UNDEFINED":
                 return unit
 
-        return None
-
-
-class PooldoseStaticSensor(PooldoseEntity, SensorEntity):
-    """Static sensor entity for PoolDose device info."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator,
-        client: Any,
-        translation_key: str,
-        key: str,
-        device_class: SensorDeviceClass | None,
-        serialnumber: str,
-        entity_category: EntityCategory | None,
-        device_info_dict: dict[str, Any],
-        enabled_by_default: bool = True,
-    ) -> None:
-        """Initialize a static Pooldose sensor entity."""
-        super().__init__(
-            coordinator,
-            client,
-            translation_key,
-            key,
-            serialnumber,
-            device_info(device_info_dict),
-            enabled_by_default,
-        )
-        self._attr_device_class = device_class
-        self._attr_entity_category = entity_category
-        self._attr_entity_registry_enabled_default = enabled_by_default
-        self._device_info_dict = device_info_dict
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the static value from device info."""
-        return self._device_info_dict.get(self._key)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Static sensors typically don't have units."""
         return None

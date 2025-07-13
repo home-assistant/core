@@ -1,30 +1,25 @@
-"""PoolDose API Coordinator."""
+"""Data update coordinator for PoolDose."""
 
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_handler import RequestStatus
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import PooldoseConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
+type PooldoseConfigEntry = ConfigEntry[PooldoseClient]
 
 
 class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, Any]]]):
-    """Coordinator for PoolDose API."""
-
-    config_entry: PooldoseConfigEntry
+    """Class to manage fetching data from the PoolDose API."""
 
     def __init__(
         self,
@@ -33,7 +28,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
         update_interval: timedelta,
         config_entry: PooldoseConfigEntry,
     ) -> None:
-        """Initialize the PoolDose coordinator."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
@@ -53,6 +48,10 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
             ) from err
         except (ConnectionError, OSError) as err:
             raise UpdateFailed(f"Failed to connect to PoolDose device: {err}") from err
+        except Exception as err:
+            raise UpdateFailed(
+                f"Unexpected error communicating with device: {err}"
+            ) from err
 
         if status != RequestStatus.SUCCESS:
             raise UpdateFailed(f"API returned status: {status}")
@@ -65,4 +64,4 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
     @property
     def available(self) -> bool:
         """Return True if coordinator is available."""
-        return self.last_update_success
+        return self.last_update_success and self.data is not None

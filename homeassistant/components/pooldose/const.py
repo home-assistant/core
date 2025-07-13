@@ -21,65 +21,38 @@ MANUFACTURER = "SEKO"
 def device_info(info: dict | None) -> DeviceInfo:
     """Return device info dict for Pooldose device."""
     info = info or {}
+    api_version = info.get("API_VERSION")
+    # Remove trailing slash from API version
+    if api_version:
+        api_version = api_version[:-1]
     return DeviceInfo(
         identifiers={(DOMAIN, info.get("SERIAL_NUMBER", "unknown"))},
         manufacturer=MANUFACTURER,
-        model=info.get("MODEL"),
-        model_id=info.get("MODEL_ID"),
-        name=info.get("NAME"),
-        serial_number=info.get("SERIAL_NUMBER"),
-        sw_version=info.get("SW_VERSION"),
-        hw_version=info.get("FW_CODE"),
-        connections={(CONNECTION_NETWORK_MAC, str(info.get("MAC")))},
-        configuration_url=f"http://{info.get('IP')}/index.html",
+        model=info.get("MODEL") or None,
+        model_id=info.get("MODEL_ID") or None,
+        name=info.get("NAME") or None,
+        serial_number=info.get("SERIAL_NUMBER") or None,
+        sw_version=(
+            f"{info.get('SW_VERSION', '')} (API {api_version})"
+            if info.get("SW_VERSION") and api_version
+            else None
+        ),
+        hw_version=(
+            f"{info.get('FW_CODE', '')} (Firmware v{info.get('FW_VERSION', '')})"
+            if info.get("FW_CODE") and info.get("FW_VERSION")
+            else None
+        ),
+        connections={(CONNECTION_NETWORK_MAC, str(info["MAC"]))}
+        if info.get("MAC")
+        else set(),
+        configuration_url=(
+            f"http://{info['IP']}/index.html" if info.get("IP") else None
+        ),
     )
 
 
-STATIC_SENSOR_MAP: dict[
-    str, tuple[SensorDeviceClass | None, EntityCategory | None, bool]
-] = {
-    # Static sensors
-    "OWNERID": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "WIFI_SSID": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        True,
-    ),
-    "WIFI_KEY": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "AP_SSID": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        True,
-    ),
-    "AP_KEY": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "API_VERSION": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "FW_VERSION": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-}
-
 # dynamic sensors
-DYNAMIC_SENSOR_MAP: dict[
-    str, tuple[SensorDeviceClass | None, EntityCategory | None, bool]
-] = {
+SENSOR_MAP: dict[str, tuple[SensorDeviceClass | None, EntityCategory | None, bool]] = {
     "temperature": (
         SensorDeviceClass.TEMPERATURE,  # DeviceClass
         None,  # EntityCategory
