@@ -73,17 +73,17 @@ class JewishCalendarEntity(Entity):
             havdalah_offset=self.data.havdalah_offset,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._schedule_update()
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._update_unsub:
             self._update_unsub()
             self._update_unsub = None
         return await super().async_will_remove_from_hass()
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        self._schedule_update()
 
     @abstractmethod
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
