@@ -550,13 +550,13 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.16.0
+bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.9.0
+bleak-retry-connector==4.0.0
 
 # homeassistant.components.bluetooth
-bleak==0.22.3
+bleak==1.0.1
 
 # homeassistant.components.blebox
 blebox-uniapi==2.5.0
@@ -574,7 +574,7 @@ bluemaestro-ble==0.4.1
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.21.4
+bluetooth-adapters==2.0.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.5.2
@@ -985,7 +985,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
-habluetooth==3.49.0
+habluetooth==4.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.106.0
@@ -1329,7 +1329,7 @@ numato-gpio==0.13.0
 numpy==2.3.0
 
 # homeassistant.components.nyt_games
-nyt_games==0.4.4
+nyt_games==0.5.0
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -1553,7 +1553,7 @@ pyatag==0.3.5.3
 pyatmo==9.2.1
 
 # homeassistant.components.apple_tv
-pyatv==0.16.0
+pyatv==0.16.1
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
