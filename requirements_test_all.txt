@@ -67,7 +67,7 @@ PyMetEireann==2024.11.0
 PyMetno==0.13.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.17
+PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
