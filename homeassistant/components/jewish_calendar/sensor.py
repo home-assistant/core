@@ -212,7 +212,7 @@ async def async_setup_entry(
     config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Jewish calendar sensors ."""
+    """Set up the Jewish calendar sensors."""
     sensors: list[JewishCalendarBaseSensor] = [
         JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
     ]
