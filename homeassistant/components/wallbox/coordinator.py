@@ -38,7 +38,6 @@ from .const import (
     CODE_KEY,
     CONF_STATION,
     DOMAIN,
-    INSUFFICIENT_RIGHTS_URL,
     UPDATE_INTERVAL,
     ChargerStatus,
     EcoSmartMode,
@@ -117,19 +116,6 @@ def _validate(wallbox: Wallbox) -> None:
 async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
     """Get new sensor data for Wallbox component."""
     await hass.async_add_executor_job(_validate, wallbox)
-
-
-def _create_insufficient_rights_issue(hass: HomeAssistant) -> None:
-    """Creates an issue for insufficient rights."""
-    ir.create_issue(
-        hass,
-        DOMAIN,
-        "insufficient_rights",
-        is_fixable=False,
-        severity=ir.IssueSeverity.ERROR,
-        learn_more_url=INSUFFICIENT_RIGHTS_URL,
-        translation_key="insufficient_rights",
-    )
 
 
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -238,9 +224,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="insufficient_rights"
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -267,9 +254,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="insufficient_rights"
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -325,9 +313,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="insufficient_rights"
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -396,3 +385,30 @@ class InvalidAuth(HomeAssistantError):
 
 class InsufficientRights(HomeAssistantError):
     """Error to indicate there are insufficient right for the user."""
+
+    def __init__(
+        self,
+        *args: object,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+        hass: HomeAssistant,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(
+            self, *args, translation_domain, translation_key, translation_placeholders
+        )
+        self.hass = hass
+        self._create_insufficient_rights_issue()
+
+    def _create_insufficient_rights_issue(self) -> None:
+        """Creates an issue for insufficient rights."""
+        ir.create_issue(
+            self.hass,
+            DOMAIN,
+            "insufficient_rights",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
+            translation_key="insufficient_rights",
+        )

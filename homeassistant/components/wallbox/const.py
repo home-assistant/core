@@ -79,8 +79,3 @@ class EcoSmartMode(StrEnum):
     ECO_MODE = "eco_mode"
     FULL_SOLAR = "full_solar"
     DISABLED = "disabled"
-
-
-INSUFFICIENT_RIGHTS_URL = (
-    "https://www.home-assistant.io/integrations/wallbox/#troubleshooting"
-)
