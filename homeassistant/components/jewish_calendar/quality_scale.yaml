@@ -22,6 +22,11 @@ rules:
     status: exempt
     comment: Local calculation does not require setup.
   unique-config-entry: done
+    comment: >- The multiple config entry was removed due to
+    multiple bugs in the integration and low ROI.
+    We might consider revisiting this as an additional feature in the future
+    to allow supportong multiple languages for states, multiple locations and maybe
+  use it as a solution for multiple Zmanim configurations.
 
   # Silver
   action-exceptions: done
