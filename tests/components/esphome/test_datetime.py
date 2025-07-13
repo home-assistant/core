@@ -50,7 +50,7 @@ async def test_generic_datetime_entity(
         },
         blocking=True,
     )
-    mock_client.datetime_command.assert_has_calls([call(1, 946689825)])
+    mock_client.datetime_command.assert_has_calls([call(1, 946689825, device_id=0)])
     mock_client.datetime_command.reset_mock()
 
 

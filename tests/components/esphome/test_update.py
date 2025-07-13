@@ -544,7 +544,9 @@ async def test_generic_device_update_entity_has_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    mock_client.update_command.assert_called_with(key=1, command=UpdateCommand.CHECK)
+    mock_client.update_command.assert_called_with(
+        key=1, command=UpdateCommand.CHECK, device_id=0
+    )
 
 
 async def test_update_entity_release_notes(
