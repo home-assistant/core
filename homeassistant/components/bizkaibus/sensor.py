@@ -2,37 +2,60 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
-import voluptuous as vol
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
-from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
+from .const import ATTRIBUTION, CONF_STOP_ID, DOMAIN, LINE_ID
+from .coordinator import ArrivalData, BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
-ATTR_DUE_IN = "Due in"
 
-CONF_STOP_ID = "stopid"
-CONF_ROUTE = "route"
+@dataclass(kw_only=True, frozen=True)
+class BizkaibusSensorEntityDescription(SensorEntityDescription):
+    """Describes bizkaibus transport sensor entity."""
 
-DEFAULT_NAME = "Next bus"
+    value_fn: Callable[[ArrivalData], StateType | datetime]
+    icon: str | None = None
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STOP_ID): cv.string,
-        # vol.Optional(CONF_ROUTE): cv.string,
-        # vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+
+SENSORS: tuple[BizkaibusSensorEntityDescription, ...] = (
+    BizkaibusSensorEntityDescription(
+        key="bus_id",
+        translation_key="bus_id",
+        value_fn=lambda x: x.bus_id,
+        icon="mdi:bus-sign",
+    ),
+    BizkaibusSensorEntityDescription(
+        key="nearest_arrival",
+        translation_key="nearest_arrival",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda x: x.nearest_arrival,
+        icon="mdi:bus",
+    ),
+    BizkaibusSensorEntityDescription(
+        key="next_arrival",
+        translation_key="next_arrival",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda x: x.next_arrival,
+        icon="mdi:bus-clock",
+    ),
+    BizkaibusSensorEntityDescription(
+        key="bus_name",
+        translation_key="bus_name",
+        value_fn=lambda x: x.bus_name,
+        icon="mdi:bus-stop",
+    ),
 )
 
 
@@ -45,35 +68,58 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    async_add_entities([BizkaibusSensor(coordinator)], True)
+    async_add_entities(
+        (BizkaibusSensor(coordinator, description) for description in SENSORS), True
+    )
 
 
 class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntity):
     """The class for handling the data."""
 
+    entity_description: BizkaibusSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_should_poll = True
     _attr_attribution = ATTRIBUTION
-    idx = 0
 
-    def __init__(self, coordinator: BizkaibusUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: BizkaibusUpdateCoordinator,
+        entity_description: BizkaibusSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+
+        if not coordinator.config_entry:
+            raise ValueError("Config entry data is empty")
+
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.config_entry.data[CONF_STOP_ID]}_{coordinator.config_entry.data[LINE_ID]}_{entity_description.key}"
+        self._attr_icon = entity_description.icon
+        unique_id = f"{coordinator.config_entry.data[CONF_STOP_ID]}"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.api.stop)},
+            identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.api.stop}_{'asd'}"
-        self._attr_name = coordinator.friendly_name
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        departure = self.coordinator.data[self.idx].departure
-        if departure is not None:
-            now = datetime.now(UTC)
-            time = departure - now
-            self.native_value = int(time.total_seconds() // 60)
-        else:
-            self.native_value = None
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        index = self._find_index_by_bus_id()
+
+        return self.entity_description.value_fn(self.coordinator.data[index])
+
+    def _find_index_by_bus_id(self) -> int:
+        """Return the index of the element with the given bus_id, or None if not found."""
+        if not self.coordinator.config_entry:
+            raise ValueError("Config entry data is empty")
+
+        if not self.coordinator.data:
+            return 0
+        for idx, item in enumerate(self.coordinator.data):
+            if (
+                getattr(item, "bus_id", None)
+                == self.coordinator.config_entry.data[LINE_ID]
+            ):
+                return idx
+        return 0

@@ -2,10 +2,8 @@
 
 DOMAIN = "bizkaibus"
 
-
-ATTR_DUE_IN = "Due in"
-
-CONF_STOP_ID = "stopid"
+CONF_STOP_ID = "stop_id"
+LINE_ID = "line_id"
 
 SCAN_INTERVAL = 30
 

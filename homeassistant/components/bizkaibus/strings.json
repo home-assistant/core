@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "bus_id": {
+        "name": "Id"
+      },
+      "nearest_arrival": {
+        "name": "Arrival"
+      },
+      "next_arrival": {
+        "name": "Next arrival"
+      },
+      "bus_name": {
+        "name": "Name"
+      }
+    }
+  }
+}

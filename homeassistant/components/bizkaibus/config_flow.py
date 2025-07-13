@@ -8,9 +8,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_STOP_ID, DOMAIN
+from .const import CONF_STOP_ID, DOMAIN, LINE_ID
 
-USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_STOP_ID): cv.string})
+USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Optional(LINE_ID): cv.string,
+    }
+)
 
 
 class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):

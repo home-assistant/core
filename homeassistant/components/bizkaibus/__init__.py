@@ -7,19 +7,21 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_S
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STOP_ID
+from .const import CONF_STOP_ID, LINE_ID
 from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend({vol.Required(CONF_STOP_ID): cv.string})
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Optional(LINE_ID): cv.string,
+    }
+)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Bizkaibus component."""
-
-    # Return boolean to indicate that initialization was successful.
+async def async_setup(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
+    """Set up entry."""
     return True
 
 
@@ -27,16 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BizkaibusConfigEntry) ->
     """Config entry example."""
 
     my_api = BizkaibusData(entry.data[CONF_STOP_ID])
-    coordinator = BizkaibusUpdateCoordinator(hass, my_api)
+    coordinator = BizkaibusUpdateCoordinator(hass, my_api, entry)
 
-    # Fetch initial data so we have data when entities subscribe
-    #
-    # If the refresh fails, async_config_entry_first_refresh will
-    # raise ConfigEntryNotReady and setup will try again later
-    #
-    # If you do not want to retry setup on failure, use
-    # coordinator.async_refresh() instead
-    #
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -44,3 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BizkaibusConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

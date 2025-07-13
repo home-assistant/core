@@ -6,34 +6,42 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from bizkaibus.bizkaibus import BizkaibusArrival, BizkaibusData
+from bizkaibus.bizkaibus import BizkaibusArrivalTime, BizkaibusData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import CONF_STOP_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 type BizkaibusConfigEntry = ConfigEntry[BizkaibusUpdateCoordinator]
 
 
 @dataclass
-class DataConnection:
+class ArrivalData:
     """A connection data class."""
 
-    departure: datetime | None
     bus_id: str
+    nearest_arrival: datetime
+    next_arrival: datetime | None = None
+    bus_name: str | None = None
 
 
-class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
+class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     """Bizkaibus Update Coordinator class."""
 
-    def __init__(self, hass: HomeAssistant, api: BizkaibusData) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: BizkaibusData,
+        config_entry: BizkaibusConfigEntry,
+    ) -> None:
         """Initialize the data service."""
         self.api = api
-        self.friendly_name = api.stop
+        self.config_entry = config_entry
+        self.friendly_name = config_entry.data[CONF_STOP_ID]
 
         super().__init__(
             hass,
@@ -42,12 +50,16 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
-    def __departure_time(self, arrival: BizkaibusArrival) -> datetime | None:
-        """Get departure time."""
-        start_datetime = dt_util.parse_datetime(arrival.closestArrival.GetUTC())
+    def __arrival_time(
+        self, arrivalTime: BizkaibusArrivalTime | None
+    ) -> datetime | None:
+        """Get arrival time."""
+        if arrivalTime is None:
+            return None
+        start_datetime = dt_util.parse_datetime(arrivalTime.GetUTC())
         return start_datetime.astimezone() if start_datetime else None
 
-    async def _async_update_data(self) -> list[DataConnection]:
+    async def _async_update_data(self) -> list[ArrivalData]:
         """Async update wrapper."""
         timetable = await self.api.GetTimetable()
 
@@ -57,13 +69,21 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
         if timetable.name:
             self.friendly_name = timetable.name
 
-        departures = []
+        arrivals = []
         for arrival in timetable.arrivals.values():
-            departure = self.__departure_time(arrival)
-            dataConnection = DataConnection(
-                departure=departure,
-                bus_id=arrival.line.route,
+            nearest_arrival = self.__arrival_time(arrival.closestArrival)
+            nearest_arrival = (
+                nearest_arrival if nearest_arrival is not None else dt_util.utcnow()
             )
-            departures.append(dataConnection)
+            next_arrival = self.__arrival_time(arrival.farestArrival)
 
-        return departures
+            arrivalData = ArrivalData(
+                nearest_arrival=nearest_arrival,
+                bus_id=arrival.line.id,
+                next_arrival=next_arrival,
+                bus_name=arrival.line.route,
+            )
+
+            arrivals.append(arrivalData)
+
+        return arrivals
