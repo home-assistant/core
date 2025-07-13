@@ -26,25 +26,25 @@ PARALLEL_UPDATES = 0
 class JewishCalendarBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Binary Sensor Entity description for Jewish Calendar."""
 
-    is_on: Callable[[Zmanim, dt.datetime], bool]
+    is_on: Callable[[Zmanim], Callable[[dt.datetime], bool]]
 
 
 BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
     JewishCalendarBinarySensorEntityDescription(
         key="issur_melacha_in_effect",
         translation_key="issur_melacha_in_effect",
-        is_on=lambda state, now: bool(state.issur_melacha_in_effect(now)),
+        is_on=lambda state: state.issur_melacha_in_effect,
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
         translation_key="erev_shabbat_hag",
-        is_on=lambda state, now: bool(state.erev_shabbat_chag(now)),
+        is_on=lambda state: state.erev_shabbat_chag,
         entity_registry_enabled_default=False,
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         translation_key="motzei_shabbat_hag",
-        is_on=lambda state, now: bool(state.motzei_shabbat_chag(now)),
+        is_on=lambda state: state.motzei_shabbat_chag,
         entity_registry_enabled_default=False,
     ),
 )
@@ -73,7 +73,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         zmanim = self.make_zmanim(dt.date.today())
-        return self.entity_description.is_on(zmanim, dt_util.now())
+        return self.entity_description.is_on(zmanim)(dt_util.now())
 
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
         """Return a list of times to update the sensor."""
