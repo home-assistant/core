@@ -641,9 +641,11 @@ class HomeConnectCoordinator(
         if len(execution_tracker) >= MAX_EXECUTIONS:
             if initial_len < MAX_EXECUTIONS:
                 _LOGGER.warning(
-                    'Too many connected/pairing events for appliance "%s" (%s times in less than %s minutes), '
-                    "updates have been disabled and they will be enabled back whenever it stabilizes. "
-                    "Consider trying to unplug the appliance for a while to perform a soft reset",
+                    'Too many connected/pairing events for appliance "%s" '
+                    "(%s times in less than %s minutes), updates have been disabled "
+                    "and they will be enabled back whenever it stabilizes. "
+                    "Consider trying to unplug the appliance "
+                    "for a while to perform a soft reset",
                     self.data[appliance_ha_id].info.name,
                     MAX_EXECUTIONS,
                     MAX_EXECUTIONS_TIME_WINDOW // 60,
@@ -651,7 +653,8 @@ class HomeConnectCoordinator(
             return True
         if initial_len >= MAX_EXECUTIONS:
             _LOGGER.info(
-                'Connected/paired events from the appliance "%s" have been stabilized, updates have been re-enabled',
+                'Connected/paired events from the appliance "%s" have been stabilized,'
+                " updates have been re-enabled",
                 self.data[appliance_ha_id].info.name,
             )
 
