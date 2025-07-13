@@ -137,7 +137,7 @@ class UserContent:
 
     role: Literal["user"] = field(init=False, default="user")
     content: str
-    attachments: list[Attachment] | None = field(default_factory=list)
+    attachments: list[Attachment] | None = field(default=None)
 
 
 @dataclass(frozen=True)
