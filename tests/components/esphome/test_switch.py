@@ -47,7 +47,7 @@ async def test_switch_generic_entity(
         {ATTR_ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
-    mock_client.switch_command.assert_has_calls([call(1, True)])
+    mock_client.switch_command.assert_has_calls([call(1, True, device_id=0)])
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -55,4 +55,4 @@ async def test_switch_generic_entity(
         {ATTR_ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
-    mock_client.switch_command.assert_has_calls([call(1, False)])
+    mock_client.switch_command.assert_has_calls([call(1, False, device_id=0)])
