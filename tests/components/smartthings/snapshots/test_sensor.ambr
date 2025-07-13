@@ -951,7 +951,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-state]
@@ -960,7 +960,7 @@
       'device_class': 'pm1',
       'friendly_name': '에어모니터 플러스 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1',
@@ -1004,7 +1004,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-state]
@@ -1013,7 +1013,7 @@
       'device_class': 'pm10',
       'friendly_name': '에어모니터 플러스 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10',
@@ -1057,7 +1057,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-state]
@@ -1066,7 +1066,7 @@
       'device_class': 'pm25',
       'friendly_name': '에어모니터 플러스 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5',
@@ -2820,7 +2820,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm10-state]
@@ -2829,7 +2829,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Corridor A/C PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.corridor_a_c_pm10',
@@ -2873,7 +2873,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm2_5-state]
@@ -2882,7 +2882,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Corridor A/C PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.corridor_a_c_pm2_5',

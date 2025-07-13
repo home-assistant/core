@@ -94,7 +94,7 @@
     'supported_features': 0,
     'translation_key': <PinecilNumber.CALIBRATION_OFFSET: 'calibration_offset'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_calibration_offset',
-    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
   })
 # ---
 # name: test_state[number.pinecil_calibration_offset-state]
@@ -105,7 +105,7 @@
       'min': 100,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_calibration_offset',

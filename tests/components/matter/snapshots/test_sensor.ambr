@@ -468,7 +468,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm1-state]
@@ -477,7 +477,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Air Purifier PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm1',
@@ -521,7 +521,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm10-state]
@@ -530,7 +530,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Air Purifier PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm10',
@@ -574,7 +574,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm2_5-state]
@@ -583,7 +583,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm2_5',
@@ -1017,7 +1017,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM1Sensor-1068-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm1-state]
@@ -1026,7 +1026,7 @@
       'device_class': 'pm1',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm1',
@@ -1070,7 +1070,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM10Sensor-1069-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm10-state]
@@ -1079,7 +1079,7 @@
       'device_class': 'pm10',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm10',
@@ -1123,7 +1123,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM25Sensor-1066-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm2_5-state]
@@ -1132,7 +1132,7 @@
       'device_class': 'pm25',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm2_5',

@@ -135,7 +135,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[sensor.test_air_conditioner_pm1-state]
@@ -144,7 +144,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Test air conditioner PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm1',
@@ -188,7 +188,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[sensor.test_air_conditioner_pm10-state]
@@ -197,7 +197,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Test air conditioner PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm10',
@@ -241,7 +241,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[sensor.test_air_conditioner_pm2_5-state]
@@ -250,7 +250,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Test air conditioner PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm2_5',
