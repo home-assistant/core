@@ -42,7 +42,7 @@ from openai.types.responses.web_search_tool_param import UserLocation
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components import ai_task, conversation
+from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -288,7 +288,6 @@ class OpenAIBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
-        attachments: list[ai_task.PlayMediaWithId] | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -347,15 +346,13 @@ class OpenAIBaseLLMEntity(Entity):
             for m in _convert_content_to_param(content)
         ]
 
+        last_content = chat_log.content[-1]
+
         # Handle attachments by adding them to the last user message
-        if attachments:
-            if any(a.path is None for a in attachments):
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
+        if last_content.role == "user" and last_content.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [a.path for a in attachments],  # type: ignore[misc]
+                [a.path for a in last_content.attachments],
             )
             last_message = messages[-1]
             assert (
