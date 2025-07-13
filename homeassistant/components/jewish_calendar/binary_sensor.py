@@ -22,11 +22,11 @@ from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class JewishCalendarBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Binary Sensor Entity description for Jewish Calendar."""
 
-    is_on: Callable[[Zmanim, dt.datetime], bool] = lambda _, __: False
+    is_on: Callable[[Zmanim, dt.datetime], bool]
 
 
 BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
