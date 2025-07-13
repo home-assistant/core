@@ -46,9 +46,21 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
     async def _async_update_data(self) -> tuple[RequestStatus, dict[str, Any]]:
         """Fetch data from the PoolDose API."""
         try:
-            return await self.client.instant_values()
-        except Exception as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
+            status, instant_values = await self.client.instant_values()
+        except TimeoutError as err:
+            raise UpdateFailed(
+                f"Timeout communicating with PoolDose device: {err}"
+            ) from err
+        except (ConnectionError, OSError) as err:
+            raise UpdateFailed(f"Failed to connect to PoolDose device: {err}") from err
+
+        if status != RequestStatus.SUCCESS:
+            raise UpdateFailed(f"API returned status: {status}")
+
+        if instant_values is None:
+            raise UpdateFailed("No data received from API")
+
+        return status, instant_values
 
     @property
     def available(self) -> bool:
