@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 import logging
 
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.helpers import llm
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "openai_conversation"
@@ -26,6 +28,7 @@ class ImageData:
 DATA_IMAGES: HassKey[dict[str, ImageData]] = HassKey(DOMAIN)
 
 DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
 DEFAULT_NAME = "OpenAI Conversation"
 
 CONF_CHAT_MODEL = "chat_model"
@@ -44,7 +47,7 @@ CONF_WEB_SEARCH_REGION = "region"
 CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
-RECOMMENDED_MAX_TOKENS = 150
+RECOMMENDED_MAX_TOKENS = 3000
 RECOMMENDED_REASONING_EFFORT = "low"
 RECOMMENDED_TEMPERATURE = 1.0
 RECOMMENDED_TOP_P = 1.0
@@ -71,3 +74,12 @@ UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
     "o1",
     "o3-mini",
 ]
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+}
+RECOMMENDED_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}

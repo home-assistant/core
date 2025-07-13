@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from io import BytesIO
 from pathlib import Path
+from types import MappingProxyType
 
 from aiohttp import web
 import openai
@@ -56,11 +57,13 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DATA_IMAGES,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
     DOMAIN,
     IMAGE_EXPIRY_TIME,
     LOGGER,
     MAX_IMAGES,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
@@ -73,7 +76,7 @@ from .entity import async_prepare_files_for_prompt
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
 
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
@@ -296,28 +299,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             EasyInputMessageParam(type="message", role="user", content=content)
         ]
 
-        try:
-            model_args = {
-                "model": model,
-                "input": messages,
-                "max_output_tokens": conversation_subentry.data.get(
-                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                ),
-                "top_p": conversation_subentry.data.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                "temperature": conversation_subentry.data.get(
-                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                ),
-                "user": call.context.user_id,
-                "store": False,
+        model_args = {
+            "model": model,
+            "input": messages,
+            "max_output_tokens": conversation_subentry.data.get(
+                CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+            ),
+            "top_p": conversation_subentry.data.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            "temperature": conversation_subentry.data.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            ),
+            "user": call.context.user_id,
+            "store": False,
+        }
+
+        if model.startswith("o"):
+            model_args["reasoning"] = {
+                "effort": conversation_subentry.data.get(
+                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                )
             }
 
-            if model.startswith("o"):
-                model_args["reasoning"] = {
-                    "effort": conversation_subentry.data.get(
-                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                    )
-                }
-
+        try:
             response: Response = await client.responses.create(**model_args)
 
         except openai.OpenAIError as err:
@@ -578,6 +581,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
             )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    if entry.version == 2 and entry.minor_version == 2:
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

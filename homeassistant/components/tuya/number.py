@@ -16,7 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
