@@ -39,7 +39,10 @@ class OpenAITaskEntity(
 ):
     """OpenAI AI Task entity."""
 
-    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
+    _attr_supported_features = (
+        ai_task.AITaskEntityFeature.GENERATE_DATA
+        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+    )
 
     async def _async_generate_data(
         self,
@@ -47,7 +50,9 @@ class OpenAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(chat_log, task.name, task.structure)
+        await self._async_handle_chat_log(
+            chat_log, task.name, task.structure, task.attachments
+        )
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
