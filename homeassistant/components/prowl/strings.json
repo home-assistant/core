@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter name of Prowl key and the API key.",
+        "description": "Enter the Prowl API key and its name.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "name": "[%key:common::config_flow::data::name%]"
