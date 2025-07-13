@@ -362,18 +362,25 @@ class OpenAIBaseLLMEntity(Entity):
 
             try:
                 result = await client.responses.create(**model_args)
+
+                async for content in chat_log.async_add_delta_content_stream(
+                    self.entity_id, _transform_stream(chat_log, result, messages)
+                ):
+                    if not isinstance(content, conversation.AssistantContent):
+                        messages.extend(_convert_content_to_param(content))
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
+                if (
+                    isinstance(err, openai.APIError)
+                    and err.type == "insufficient_quota"
+                ):
+                    LOGGER.error("Insufficient funds for OpenAI: %s", err)
+                    raise HomeAssistantError("Insufficient funds for OpenAI") from err
+
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
-
-            async for content in chat_log.async_add_delta_content_stream(
-                self.entity_id, _transform_stream(chat_log, result, messages)
-            ):
-                if not isinstance(content, conversation.AssistantContent):
-                    messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break
