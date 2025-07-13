@@ -13,3 +13,12 @@ async def test_sensor(
     """Test the Coolmaster sensor."""
     assert hass.states.get("sensor.l1_100_error_code").state == "OK"
     assert hass.states.get("sensor.l1_101_error_code").state == "Err1"
+
+
+async def test_sensor_with_error(
+    hass: HomeAssistant,
+    load_int_with_error: ConfigEntry,
+) -> None:
+    """Test the Coolmaster sensor."""
+    assert hass.states.get("sensor.l1_100_error_code").state == "OK"
+    assert hass.states.get("sensor.l1_101_error_code").state == "Err1"

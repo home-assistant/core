@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_RETRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,24 @@ class CoolmasterDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, CoolMasterNetUnit]:
         """Fetch data from Coolmaster."""
-        try:
-            return await self._coolmaster.status()
-        except OSError as error:
-            raise UpdateFailed from error
+        retries_left = MAX_RETRIES
+        while retries_left > 0:
+            try:
+                return await self._coolmaster.status()
+            except OSError as error:
+                retries_left -= 1
+                if retries_left == 0:
+                    _LOGGER.error(
+                        "Error communicating with Coolmaster (aborting after %d retries): %s",
+                        MAX_RETRIES,
+                        str(error),
+                    )
+                    raise UpdateFailed from error
+                _LOGGER.debug(
+                    "Error communicating with coolmaster (%d retries left): %s",
+                    retries_left,
+                    str(error),
+                )
+
+        # This code will never run but without it mypy will complain about missing return
+        return await self._coolmaster.status()
