@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import DOMAIN
 from .entity import AdvantageAirEntity
 from .models import AdvantageAirData
 
@@ -32,9 +32,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
         """Initialize the Advantage Air App."""
         super().__init__(instance)
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
-            },
+            identifiers={(DOMAIN, self.coordinator.data["system"]["rid"])},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
             name=self.coordinator.data["system"]["name"],

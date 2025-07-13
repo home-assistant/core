@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 from typing import Any, cast
 
+from pymiele import completed_warnings
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -32,7 +34,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    miele_data = {
+    miele_data: dict[str, Any] = {
         "devices": redact_identifiers(
             {
                 device_id: device_data.raw
@@ -46,6 +48,9 @@ async def async_get_config_entry_diagnostics(
             }
         ),
     }
+    miele_data["missing_code_warnings"] = (
+        sorted(completed_warnings) if len(completed_warnings) > 0 else ["None"]
+    )
 
     return {
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
@@ -65,7 +70,7 @@ async def async_get_device_diagnostics(
     coordinator = config_entry.runtime_data
 
     device_id = cast(str, device.serial_number)
-    miele_data = {
+    miele_data: dict[str, Any] = {
         "devices": {
             hash_identifier(device_id): coordinator.data.devices[device_id].raw
         },
@@ -74,6 +79,10 @@ async def async_get_device_diagnostics(
         },
         "programs": "Not implemented",
     }
+    miele_data["missing_code_warnings"] = (
+        sorted(completed_warnings) if len(completed_warnings) > 0 else ["None"]
+    )
+
     return {
         "info": async_redact_data(info, TO_REDACT),
         "data": async_redact_data(config_entry.data, TO_REDACT),

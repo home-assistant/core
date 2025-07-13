@@ -2,26 +2,48 @@
 
 from __future__ import annotations
 
-import logging
+from collections.abc import Generator
+from contextlib import contextmanager
 
-from microbot import MicroBotApiClient
+import bleak
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-from .coordinator import MicroBotDataUpdateCoordinator
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+@contextmanager
+def patch_unused_bleak_discover_import() -> Generator[None]:
+    """Patch bleak.discover import in microbot. It is unused and was removed in bleak 1.0.0."""
+
+    def getattr_bleak(name: str) -> object:
+        if name == "discover":
+            return None
+        raise AttributeError
+
+    original_func = bleak.__dict__.get("__getattr__")
+    bleak.__dict__["__getattr__"] = getattr_bleak
+    try:
+        yield
+    finally:
+        if original_func is not None:
+            bleak.__dict__["__getattr__"] = original_func
+
+
+with patch_unused_bleak_discover_import():
+    from microbot import MicroBotApiClient
+
+from .coordinator import (  # noqa: E402
+    MicroBotConfigEntry,
+    MicroBotDataUpdateCoordinator,
+)
+
 PLATFORMS: list[str] = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
     """Set up this integration using UI."""
-    hass.data.setdefault(DOMAIN, {})
     token: str = entry.data[CONF_ACCESS_TOKEN]
     bdaddr: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, bdaddr)
@@ -35,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, client=client, ble_device=ble_device
     )
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(coordinator.async_start())
@@ -43,9 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
     """Handle removal of an entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

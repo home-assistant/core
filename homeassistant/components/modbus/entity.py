@@ -285,10 +285,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry)
-                if v_temp is None:
-                    v_result.append("0")
-                else:
+                if self._data_type != DataType.CUSTOM:
                     v_result.append(str(v_temp))
+                else:
+                    v_result.append(str(v_temp) if v_temp is not None else "0")
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints

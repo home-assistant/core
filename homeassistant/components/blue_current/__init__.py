@@ -24,7 +24,7 @@ from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
 DATA = "data"
 DELAY = 5

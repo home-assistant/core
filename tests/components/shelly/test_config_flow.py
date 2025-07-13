@@ -870,6 +870,19 @@ async def test_options_flow_abort_no_scripts_support(
     assert result["reason"] == "no_scripts_support"
 
 
+async def test_options_flow_abort_zigbee_enabled(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if Zigbee is enabled for the device."""
+    monkeypatch.setattr(mock_rpc_device, "zigbee_enabled", True)
+    entry = await init_integration(hass, 4)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "zigbee_enabled"
+
+
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 

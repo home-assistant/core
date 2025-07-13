@@ -28,6 +28,8 @@ from .utils import (
     get_virtual_component_ids,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RpcSelectDescription(RpcEntityDescription, SelectEntityDescription):
@@ -38,7 +40,6 @@ RPC_SELECT_ENTITIES: Final = {
     "enum": RpcSelectDescription(
         key="enum",
         sub_key="value",
-        has_entity_name=True,
     ),
 }
 

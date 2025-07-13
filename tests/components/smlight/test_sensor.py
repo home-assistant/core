@@ -13,7 +13,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 pytestmark = [
     pytest.mark.usefixtures(
@@ -98,7 +102,7 @@ async def test_zigbee_type_sensors(
     """Test for zigbee type sensor with second radio."""
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
-        load_json_object_fixture("info-MR1.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
 

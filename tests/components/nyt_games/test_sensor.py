@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from nyt_games import NYTGamesError, WordleStats
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,7 +18,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -70,7 +70,7 @@ async def test_new_account(
 ) -> None:
     """Test handling an exception during update."""
     mock_nyt_games_client.get_latest_stats.return_value = WordleStats.from_json(
-        load_fixture("new_account.json", DOMAIN)
+        await async_load_fixture(hass, "new_account.json", DOMAIN)
     ).player.stats
     await setup_integration(hass, mock_config_entry)
 

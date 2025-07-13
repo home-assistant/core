@@ -64,6 +64,7 @@
         }),
       }),
       'name': 'W1080000',
+      'raw': None,
       'rssi': -60,
       'service_data': dict({
         '0000fd3d-0000-1000-8000-00805f9b34fb': dict({

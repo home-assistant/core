@@ -164,12 +164,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode not in self.hvac_modes:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_hvac_mode",
-                translation_placeholders={"hvac_mode": hvac_mode},
-            )
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
         else:

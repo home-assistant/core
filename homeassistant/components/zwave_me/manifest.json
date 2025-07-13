@@ -6,7 +6,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_me",
   "iot_class": "local_push",
-  "requirements": ["zwave-me-ws==0.4.3", "url-normalize==2.2.0"],
+  "requirements": ["zwave-me-ws==0.4.3", "url-normalize==2.2.1"],
   "zeroconf": [
     {
       "type": "_hap._tcp.local.",

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsStats
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
 
@@ -23,10 +24,13 @@ from homeassistant.components.hassio import (
     is_hassio as deprecated_is_hassio,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
-from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio.const import (
+    HASSIO_UPDATE_INTERVAL,
+    REQUEST_REFRESH_DELAY,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
@@ -404,7 +408,7 @@ async def test_setup_api_existing_hassio_user(
     assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
 
 
-async def test_setup_core_push_timezone(
+async def test_setup_core_push_config(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
@@ -421,9 +425,10 @@ async def test_setup_core_push_timezone(
     assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
-        await hass.config.async_update(time_zone="America/New_York")
+        await hass.config.async_update(time_zone="America/New_York", country="US")
     await hass.async_block_till_done()
     assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
+    assert aioclient_mock.mock_calls[-1][2]["country"] == "US"
 
 
 async def test_setup_hassio_no_additional_data(
@@ -1093,7 +1098,9 @@ def test_deprecated_function_is_hassio(
         (
             "homeassistant.components.hassio",
             logging.WARNING,
-            "is_hassio is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.is_hassio instead",
+            "The deprecated function is_hassio was called. It will be "
+            "removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.is_hassio instead",
         )
     ]
 
@@ -1109,7 +1116,9 @@ def test_deprecated_function_get_supervisor_ip(
         (
             "homeassistant.helpers.hassio",
             logging.WARNING,
-            "get_supervisor_ip is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.get_supervisor_ip instead",
+            "The deprecated function get_supervisor_ip was called. It will "
+            "be removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.get_supervisor_ip instead",
         )
     ]
 
@@ -1139,3 +1148,312 @@ def test_deprecated_constants(
         replacement,
         "2025.11",
     )
+
+
+@pytest.mark.parametrize(
+    ("board", "issue_id"),
+    [
+        ("rpi3", "deprecated_os_aarch64"),
+        ("rpi4", "deprecated_os_aarch64"),
+        ("tinker", "deprecated_os_armv7"),
+        ("odroid-xu4", "deprecated_os_armv7"),
+        ("rpi2", "deprecated_os_armv7"),
+    ],
+)
+async def test_deprecated_installation_issue_os_armv7(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    board: str,
+    issue_id: str,
+) -> None:
+    """Test deprecated installation issue."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info", return_value={"board": board}
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "armv7"},
+        ),
+        patch("homeassistant.components.hardware.async_setup", return_value=True),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        freezer.tick(REQUEST_REFRESH_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue.domain == "homeassistant"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_guide": "https://www.home-assistant.io/installation/",
+    }
+
+
+@pytest.mark.parametrize(
+    "arch",
+    [
+        "i386",
+        "armhf",
+        "armv7",
+    ],
+)
+async def test_deprecated_installation_issue_32bit_os(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    arch: str,
+) -> None:
+    """Test deprecated architecture issue."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info",
+            return_value={"board": "rpi3-64"},
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": arch},
+        ),
+        patch("homeassistant.components.hardware.async_setup", return_value=True),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        freezer.tick(REQUEST_REFRESH_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue("homeassistant", "deprecated_architecture")
+    assert issue.domain == "homeassistant"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"installation_type": "OS", "arch": arch}
+
+
+@pytest.mark.parametrize(
+    "arch",
+    [
+        "i386",
+        "armhf",
+        "armv7",
+    ],
+)
+async def test_deprecated_installation_issue_32bit_supervised(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    arch: str,
+) -> None:
+    """Test deprecated architecture issue."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info",
+            return_value={"board": "rpi3-64"},
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
+        ),
+        patch("homeassistant.components.hardware.async_setup", return_value=True),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        freezer.tick(REQUEST_REFRESH_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        "homeassistant", "deprecated_method_architecture"
+    )
+    assert issue.domain == "homeassistant"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_type": "Supervised",
+        "arch": arch,
+    }
+
+
+@pytest.mark.parametrize(
+    "arch",
+    [
+        "amd64",
+        "aarch64",
+    ],
+)
+async def test_deprecated_installation_issue_64bit_supervised(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    arch: str,
+) -> None:
+    """Test deprecated architecture issue."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info",
+            return_value={"board": "generic-x86-64"},
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
+        ),
+        patch("homeassistant.components.hardware.async_setup", return_value=True),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        freezer.tick(REQUEST_REFRESH_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue("homeassistant", "deprecated_method")
+    assert issue.domain == "homeassistant"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_type": "Supervised",
+        "arch": arch,
+    }
+
+
+@pytest.mark.parametrize(
+    ("board", "issue_id"),
+    [
+        ("rpi5", "deprecated_os_aarch64"),
+    ],
+)
+async def test_deprecated_installation_issue_supported_board(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    board: str,
+    issue_id: str,
+) -> None:
+    """Test no deprecated installation issue for a supported board."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info", return_value={"board": board}
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "aarch64"},
+        ),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        freezer.tick(REQUEST_REFRESH_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0

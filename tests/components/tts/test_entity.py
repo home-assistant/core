@@ -1,5 +1,7 @@
 """Tests for the TTS entity."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components import tts
@@ -142,3 +144,34 @@ async def test_tts_entity_subclass_properties(
             if record.exc_info is not None
         ]
     )
+
+
+def test_streaming_supported() -> None:
+    """Test streaming support."""
+    base_entity = tts.TextToSpeechEntity()
+    assert base_entity.async_supports_streaming_input() is False
+
+    class StreamingEntity(tts.TextToSpeechEntity):
+        async def async_stream_tts_audio(self) -> None:
+            pass
+
+    streaming_entity = StreamingEntity()
+    assert streaming_entity.async_supports_streaming_input() is True
+
+    class NonStreamingEntity(tts.TextToSpeechEntity):
+        async def async_get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            pass
+
+    non_streaming_entity = NonStreamingEntity()
+    assert non_streaming_entity.async_supports_streaming_input() is False
+
+    class SyncNonStreamingEntity(tts.TextToSpeechEntity):
+        def get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            pass
+
+    sync_non_streaming_entity = SyncNonStreamingEntity()
+    assert sync_non_streaming_entity.async_supports_streaming_input() is False
