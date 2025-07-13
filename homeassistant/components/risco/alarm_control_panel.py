@@ -101,19 +101,15 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._code = code
         self._attr_code_arm_required = options[CONF_CODE_ARM_REQUIRED]
         self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
-        self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
-        self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
-        for state in self._ha_to_risco:
-            self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
-
-    @property
-    def code_format(self) -> CodeFormat | None:
-        """Code format or None if no code is required."""
-        return (
+        self._attr_code_format = (
             CodeFormat.NUMBER
             if self._attr_code_arm_required or self._code_disarm_required
             else None
         )
+        self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
+        self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
+        for state in self._ha_to_risco:
+            self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
