@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
@@ -136,6 +137,24 @@ class UserContent:
 
     role: Literal["user"] = field(init=False, default="user")
     content: str
+    attachments: list[Attachment] | None = field(default=None)
+
+
+@dataclass(frozen=True)
+class Attachment:
+    """Attachment for a chat message."""
+
+    media_content_id: str
+    """Media content ID of the attachment."""
+
+    url: str
+    """URL of the attachment."""
+
+    mime_type: str
+    """MIME type of the attachment."""
+
+    path: Path
+    """Path to the attachment on disk."""
 
 
 @dataclass(frozen=True)
