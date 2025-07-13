@@ -17,16 +17,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .entity import (
-    JewishCalendarConfigEntry,
-    JewishCalendarDataResults,
-    JewishCalendarEntity,
-)
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -235,41 +230,11 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
 
     entity_description: JewishCalendarBaseSensorDescription
 
-    def _schedule_update(self) -> None:
-        """Schedule the next update of the sensor."""
-        now = dt_util.now()
-        zmanim = self.make_zmanim(now.date())
-        update = None
-        if self.entity_description.next_update_fn:
-            update = self.entity_description.next_update_fn(zmanim)
-        next_midnight = dt_util.start_of_local_day() + dt.timedelta(days=1)
-        if update is None or now > update:
-            update = next_midnight
-        if self._update_unsub:
-            self._update_unsub()
-        self._update_unsub = event.async_track_point_in_time(
-            self.hass, self._update, update
-        )
-
-    @callback
-    def _update(self, now: dt.datetime | None = None) -> None:
-        """Update the sensor data."""
-        self._update_unsub = None
-        self._schedule_update()
-        self.create_results(now)
-        self.async_write_ha_state()
-
-    def create_results(self, now: dt.datetime | None = None) -> None:
-        """Create the results for the sensor."""
-        if now is None:
-            now = dt_util.now()
-
-        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
-
-        today = now.date()
-        zmanim = self.make_zmanim(today)
-        dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
-        self.data.results = JewishCalendarDataResults(dateinfo, zmanim)
+    def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
+        """Return a list of times to update the sensor."""
+        if self.entity_description.next_update_fn is None:
+            return []
+        return [self.entity_description.next_update_fn(zmanim)]
 
     def get_dateinfo(self, now: dt.datetime | None = None) -> HDateInfo:
         """Get the next date info."""

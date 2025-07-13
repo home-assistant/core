@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -76,26 +75,10 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
         zmanim = self.make_zmanim(dt.date.today())
         return self.entity_description.is_on(zmanim, dt_util.now())
 
-    @callback
-    def _update(self, now: dt.datetime | None = None) -> None:
-        """Update the state of the sensor."""
-        self._update_unsub = None
-        self._schedule_update()
-        self.async_write_ha_state()
-
-    def _schedule_update(self) -> None:
-        """Schedule the next update of the sensor."""
-        now = dt_util.now()
-        zmanim = self.make_zmanim(now.date())
-        update = zmanim.netz_hachama.local + dt.timedelta(days=1)
-        candle_lighting = zmanim.candle_lighting
-        if candle_lighting is not None and now < candle_lighting < update:
-            update = candle_lighting
-        havdalah = zmanim.havdalah
-        if havdalah is not None and now < havdalah < update:
-            update = havdalah
-        if self._update_unsub:
-            self._update_unsub()
-        self._update_unsub = event.async_track_point_in_time(
-            self.hass, self._update, update
-        )
+    def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
+        """Return a list of times to update the sensor."""
+        return [
+            zmanim.netz_hachama.local + dt.timedelta(days=1),
+            zmanim.candle_lighting,
+            zmanim.havdalah,
+        ]
