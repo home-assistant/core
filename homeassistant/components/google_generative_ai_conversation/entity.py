@@ -30,7 +30,7 @@ from google.genai.types import (
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components import ai_task, conversation
+from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -338,7 +338,6 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
-        attachments: list[ai_task.PlayMediaWithId] | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -442,15 +441,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
         chat_request: str | list[Part] = user_message.content
-        if attachments:
-            if any(a.path is None for a in attachments):
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
+        if user_message.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 self._genai_client,
-                [a.path for a in attachments],  # type: ignore[misc]
+                [a.path for a in user_message.attachments],
             )
             chat_request = [chat_request, *files]
 
