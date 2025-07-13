@@ -16,9 +16,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from tests.common import (
@@ -1983,6 +1984,67 @@ async def test_update_device_race(
     await hass.async_block_till_done()
 
     assert not entity_registry.async_is_registered(entry.entity_id)
+
+
+async def test_update_device_race_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test race when a device is removed.
+
+    This test simulates the behavior of helpers which are removed when the
+    source entity is removed.
+    """
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # Create device
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    # Add entity to the device, from the same config entry
+    entry_same_config_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    # Add entity to the device, not from the same config entry
+    entry_no_config_entry = entity_registry.async_get_or_create(
+        "light",
+        "helper",
+        "abcd",
+        device_id=device_entry.id,
+    )
+    # Add a third entity to the device, from the same config entry
+    entry_same_config_entry_2 = entity_registry.async_get_or_create(
+        "sensor",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    # Add a listener to remove the 2nd entity it when 1st entity is removed
+    @callback
+    def on_entity_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        if event.data["action"] == "remove":
+            entity_registry.async_remove(entry_no_config_entry.entity_id)
+
+    async_track_entity_registry_updated_event(
+        hass, entry_same_config_entry.entity_id, on_entity_event
+    )
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+
+    assert not entity_registry.async_is_registered(entry_same_config_entry.entity_id)
+    assert not entity_registry.async_is_registered(entry_no_config_entry.entity_id)
+    assert not entity_registry.async_is_registered(entry_same_config_entry_2.entity_id)
 
 
 async def test_disable_device_disables_entities(
