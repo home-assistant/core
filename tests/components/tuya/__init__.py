@@ -13,6 +13,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.COVER,
+    ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
@@ -96,10 +100,6 @@ DEVICE_MOCKS = {
     "zndb_smart_meter": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
-    ],
-    "am43_corded_motor_zigbee_cover": [
-        # https://github.com/home-assistant/core/issues/71242
-        Platform.COVER,
     ],
 }
 
