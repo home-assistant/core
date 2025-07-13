@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -11,15 +12,26 @@ from pooldose.request_handler import RequestStatus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import SCAN_INTERVAL
 from .coordinator import PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-"""Configure the Seko PoolDose entry."""
+
+@dataclass
+class PooldoseRuntimeData:
+    """Runtime data for Pooldose integration."""
+
+    client: PooldoseClient
+    coordinator: PooldoseCoordinator
+    device_info: dict[str, str | None]
+
+
+type PooldoseConfigEntry = ConfigEntry[PooldoseRuntimeData]
 
 
 async def async_update_device_info(client: PooldoseClient) -> dict[str, str | None]:
@@ -32,7 +44,7 @@ async def async_update_device_info(client: PooldoseClient) -> dict[str, str | No
     return device_info
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
     """Set up Seko PoolDose from a config entry."""
     # Obtain values, preferring options (re‑configure) over static data
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
@@ -41,25 +53,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client_status, client = await PooldoseClient.create(host)
     if client_status != RequestStatus.SUCCESS:
         _LOGGER.error("Failed to create PoolDose client: %s", client_status)
-        return False
+        raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")
 
-    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=SCAN_INTERVAL))
+    coordinator = PooldoseCoordinator(
+        hass, client, timedelta(seconds=SCAN_INTERVAL), entry
+    )
     await coordinator.async_config_entry_first_refresh()
 
     # Update device info on every reload
     device_info = await async_update_device_info(client)
 
-    hass.data.setdefault("pooldose", {})[entry.entry_id] = {
-        "client": client,
-        "coordinator": coordinator,
-        "device_info": device_info,
-    }
+    # Store runtime data
+    entry.runtime_data = PooldoseRuntimeData(
+        client=client,
+        coordinator=coordinator,
+        device_info=device_info,
+    )
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
     """Unload the Seko PoolDose entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

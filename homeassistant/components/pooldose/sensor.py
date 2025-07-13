@@ -11,12 +11,11 @@ from typing import Any
 from pooldose.request_handler import RequestStatus
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import PooldoseConfigEntry
 from .const import DYNAMIC_SENSOR_MAP, STATIC_SENSOR_MAP, device_info
 from .entity import PooldoseEntity
 
@@ -25,20 +24,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PooldoseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PoolDose sensor entities from a config entry."""
-    data = hass.data["pooldose"][entry.entry_id]
-    coordinator: DataUpdateCoordinator[dict[str, Any]] = data["coordinator"]
-    client = data["client"]
+    coordinator = entry.runtime_data.coordinator
+    client = entry.runtime_data.client
     serialnumber = entry.data["serialnumber"]
-    device_info_dict = data.get("device_info", {})
+    device_info_dict = entry.runtime_data.device_info
 
     entities: list[SensorEntity] = []
 
-    # static sensors for device info entries
-    # These sensors are not dynamic and do not require updates from the API.
+    # Static sensors for device info entries
     for name in client.device_info:
         _LOGGER.debug("Static sensor %s: key=%s", name, client.device_info[name])
         if name not in STATIC_SENSOR_MAP:
@@ -52,8 +49,8 @@ async def async_setup_entry(
             PooldoseStaticSensor(
                 coordinator,
                 client,
-                name.lower(),  # translation_key
-                name,  # key
+                name.lower(),
+                name,
                 device_class,
                 serialnumber,
                 entity_category,
@@ -62,7 +59,7 @@ async def async_setup_entry(
             )
         )
 
-    # dynamic sensors
+    # Dynamic sensors
     for name, sensor in client.available_sensors().items():
         _LOGGER.debug("Sensor  %s: key=%s, type=%s", name, sensor.key, sensor.type)
         if sensor.conversion is not None:
@@ -80,9 +77,9 @@ async def async_setup_entry(
             PooldoseSensor(
                 coordinator,
                 client,
-                name.lower(),  # translation_key is the same as key for dynamic sensors
-                name,  # key
-                None,  # sensor.unit,
+                name.lower(),
+                name,
+                None,
                 device_class,
                 serialnumber,
                 entity_category,
@@ -99,7 +96,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        coordinator,
         client: Any,
         translation_key: str,
         key: str,
@@ -137,12 +134,11 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
                 "PoolDose API returned status %s, entities will be unavailable", status
             )
             return None
+
         if self._key not in data:
-            _LOGGER.warning(
-                "Key %s not found in PoolDose API data, entities will be unavailable",
-                self._key,
-            )
+            _LOGGER.debug("Key %s not found in PoolDose API data", self._key)
             return None
+
         sensor_data = data[self._key]
         if not sensor_data:
             return None
@@ -153,11 +149,11 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement, dynamically determined from API data."""
-        # Falls bereits statisch gesetzt (z.B. °C), verwende das
+        # Return static unit if set
         if self._attr_native_unit_of_measurement:
             return self._attr_native_unit_of_measurement
 
-        # Ansonsten versuche es aus den API-Daten zu lesen
+        # Try to get unit from coordinator data
         if not self.coordinator.data:
             return None
 
@@ -178,7 +174,7 @@ class PooldoseStaticSensor(PooldoseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        coordinator,
         client: Any,
         translation_key: str,
         key: str,
@@ -207,3 +203,8 @@ class PooldoseStaticSensor(PooldoseEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the static value from device info."""
         return self._device_info_dict.get(self._key)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Static sensors typically don't have units."""
+        return None

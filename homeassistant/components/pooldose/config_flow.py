@@ -38,7 +38,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
 
-            # test connection to host
+            # Test connection to host
             status, handler = await RequestHandler.create(host)
             if status == RequestStatus.HOST_UNREACHABLE:
                 errors["base"] = "cannot_connect"
@@ -54,9 +54,9 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "api_not_supported"
                     error_placeholders = api_versions
                 else:  # SUCCESS
+                    # Use the factory method to create client
                     client_status, client = await PooldoseClient.create(host)
                     if client_status != RequestStatus.SUCCESS:
-                        # All cases handled by RequestHandler before
                         errors["base"] = "cannot_connect"
                     else:  # SUCCESS
                         serial_number = client.device_info.get("SERIAL_NUMBER")
