@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
         hass,
         entry,
         rest,
-        DEFAULT_SCAN_INTERVAL,
+        rest_config[CONF_SCAN_INTERVAL],
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

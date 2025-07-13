@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -69,6 +70,7 @@ from .const import (
     CONF_SELECT,
     DEFAULT_ENCODING,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
@@ -97,6 +99,9 @@ RESOURCE_SETUP = {
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TextSelector(),
+    vol.Optional(
+        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL.total_seconds()
+    ): NumberSelector(NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)),
 }
 
 SENSOR_SETUP = {

@@ -18,7 +18,8 @@
           "method": "Method",
           "payload": "Payload",
           "timeout": "Timeout",
-          "encoding": "Character encoding"
+          "encoding": "Character encoding",
+          "scan_interval": "Scan Interval"
         },
         "data_description": {
           "resource": "The URL to the website that contains the value.",
@@ -27,7 +28,8 @@
           "headers": "Headers to use for the web request.",
           "timeout": "Timeout for connection to website.",
           "encoding": "Character encoding to use. Defaults to UTF-8.",
-          "payload": "Payload to use when method is POST."
+          "payload": "Payload to use when method is POST.",
+          "scan_interval": "How often to scan the resource. Defaults to 10 minutes"
         }
       },
       "sensor": {
@@ -122,7 +124,8 @@
           "headers": "[%key:component::scrape::config::step::user::data::headers%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "timeout": "[%key:component::scrape::config::step::user::data::timeout%]",
-          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]"
+          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]",
+          "scan_interval": "[%key:component::scrape::config::step::user::data::scan_interval%]"
         },
         "data_description": {
           "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
@@ -131,7 +134,8 @@
           "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
           "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
           "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]",
-          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]"
+          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]",
+          "scan_interval": "[%key:component::scrape::config::step::user::data_description::scan_interval%]"
         }
       }
     }
