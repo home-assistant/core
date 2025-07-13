@@ -3,7 +3,6 @@
 from datetime import UTC, datetime
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -11,22 +10,10 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 
 
-@pytest.mark.parametrize(
-    ("file_size", "expected_formatted_file_size"),
-    [
-        (123, "123B"),
-        (123456, "120.6KB"),
-        (123456789, "117.7MB"),
-        (123456789012, "115.0GB"),
-        (123456789012345, "112.3TB"),
-    ],
-)
 async def test_sensors(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
-    file_size: int,
-    expected_formatted_file_size: str,
 ) -> None:
     """Test the underlying sensors."""
     printer = {
@@ -36,7 +23,7 @@ async def test_sensors(
         },
         "temperature": {"tool1": {"actual": 18.83136, "target": 37.83136}},
     }
-    job = __standard_job(file_size)
+    job = __standard_job(123456)
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC))
     await init_integration(hass, "sensor", printer=printer, job=job)
 
@@ -98,7 +85,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.octoprint_current_file_size")
     assert state is not None
-    assert state.state == expected_formatted_file_size
+    assert state.state == "123456"
     assert state.name == "OctoPrint Current File Size"
     entry = entity_registry.async_get("sensor.octoprint_current_file_size")
     assert entry.unique_id == "Current File Size-uuid"
