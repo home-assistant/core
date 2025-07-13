@@ -23,7 +23,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -434,6 +433,7 @@ MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageSensorEntityDescription, ...] = (
     ),
     AutomowerMessageSensorEntityDescription(
         key="last_error_time",
+        translation_key="last_error_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda data: bool(data.attributes.messages),
         value_fn=lambda data: (
@@ -503,7 +503,6 @@ async def async_setup_entry(
                 mower_id,
                 message_coordinator[mower_id],
                 description,
-                message_coordinator[mower_id].device,
             )
             for description in MESSAGE_SENSOR_TYPES
             if description.exists_fn(message_coordinator[mower_id].data)
@@ -536,7 +535,6 @@ async def async_setup_entry(
                 mower_id,
                 message_coordinator[mower_id],
                 description,
-                message_coordinator[mower_id].device,
             )
             for description in MESSAGE_SENSOR_TYPES
             for mower_id in mower_ids
@@ -631,10 +629,9 @@ class AutomowerMessageSensorEntity(AutomowerMessageBaseEntity, SensorEntity):
         mower_id: str,
         coordinator: AutomowerMessageUpdateCoordinator,
         description: AutomowerMessageSensorEntityDescription,
-        device: DeviceInfo,
     ) -> None:
         """Set up AutomowerSensors."""
-        super().__init__(mower_id, coordinator, device)
+        super().__init__(mower_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{description.key}"
 

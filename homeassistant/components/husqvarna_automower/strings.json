@@ -348,6 +348,9 @@
           "zone_generator_problem": "[%key:component::husqvarna_automower::entity::sensor::error::state::zone_generator_problem%]"
         }
       },
+      "last_error_time": {
+        "name": "Last error time"
+      },
       "my_lawn_last_time_completed": {
         "name": "My lawn last time completed"
       },

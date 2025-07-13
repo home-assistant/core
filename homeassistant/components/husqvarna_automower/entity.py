@@ -177,9 +177,8 @@ class AutomowerMessageBaseEntity(CoordinatorEntity[AutomowerMessageUpdateCoordin
         self,
         mower_id: str,
         coordinator: AutomowerMessageUpdateCoordinator,
-        device: DeviceInfo,
     ) -> None:
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        self._attr_device_info = device
+        self._attr_device_info = coordinator.device
