@@ -33,6 +33,11 @@
       "energy_usage": {
         "name": "Energy usage"
       }
+    },
+    "select": {
+      "hot_water_plus": {
+        "name": "Hot Water+"
+      }
     }
   }
 }

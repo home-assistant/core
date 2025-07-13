@@ -29,7 +29,11 @@ FIXTURE_USER_INPUT = {
 
 
 def build_device_fixture(
-    heat_pump: bool, mode_pending: bool, setpoint_pending: bool, has_vacation_mode: bool
+    heat_pump: bool,
+    mode_pending: bool,
+    setpoint_pending: bool,
+    has_vacation_mode: bool,
+    supports_hot_water_plus: bool,
 ):
     """Build a fixture for a device."""
     supported_modes: list[SupportedOperationModeInfo] = [
