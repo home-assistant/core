@@ -77,6 +77,8 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     210: ChargerStatus.LOCKED_CAR_CONNECTED,
 }
 
+type WallboxConfigEntry = ConfigEntry[WallboxCoordinator]
+
 
 def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     func: Callable[Concatenate[_WallboxCoordinatorT, _P], Any],
@@ -92,7 +94,9 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
             return func(self, *args, **kwargs)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
@@ -106,7 +110,9 @@ def _validate(wallbox: Wallbox) -> None:
         wallbox.authenticate()
     except requests.exceptions.HTTPError as wallbox_connection_error:
         if wallbox_connection_error.response.status_code == 403:
-            raise InvalidAuth from wallbox_connection_error
+            raise InvalidAuth(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from wallbox_connection_error
         raise ConnectionError from wallbox_connection_error
 
 
@@ -118,10 +124,10 @@ async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
-    config_entry: ConfigEntry
+    config_entry: WallboxConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, wallbox: Wallbox
+        self, hass: HomeAssistant, config_entry: WallboxConfigEntry, wallbox: Wallbox
     ) -> None:
         """Initialize."""
         self._station = config_entry.data[CONF_STATION]
@@ -222,7 +228,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
+                raise InvalidAuth(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="too_many_requests"
@@ -248,7 +256,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
+                raise InvalidAuth(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="too_many_requests"
@@ -303,7 +313,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
+                raise InvalidAuth(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="too_many_requests"
