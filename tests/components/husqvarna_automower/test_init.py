@@ -487,31 +487,40 @@ async def test_new_websocket_message(
     values: dict[str, MowerAttributes],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test new message via websocket."""
-    callback_holder: dict[str, Callable] = {}
+    """Test that a new message arriving over the websocket updates the sensor."""
+
+    callback_holder: dict[str, Callable[[MessageData], None]] = {}
 
     @callback
-    def fake_register_websocket_response(
-        cb: Callable[[str, MessageData], None],
+    def fake_register_message_callback(
+        cb: Callable[[MessageData], None],
+        mower_id: str,
     ) -> None:
-        callback_holder["cb"] = cb
+        callback_holder[mower_id] = cb
 
     mock_automower_client.register_message_callback.side_effect = (
-        fake_register_websocket_response
+        fake_register_message_callback
     )
+
+    # Set up integration
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_mower_1_last_error")
-    assert state is not None
-    assert state.state == "no_loop_signal"
-    assert mock_automower_client.register_message_callback.called
-    assert "cb" in callback_holder
-
-    freezer.tick(SCAN_INTERVAL - timedelta(seconds=10))
+    # Force first update to complete setup of all entities
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Ensure callback registered
+    assert mock_automower_client.register_message_callback.called
+    assert TEST_MOWER_ID in callback_holder
+
+    # Baseline
+    state = hass.states.get("sensor.test_mower_1_last_error")
+    assert state is not None
+    assert state.state == "no_loop_signal"
+
+    # Send valid message for TEST_MOWER_ID
     message = MessageData(
         type="messages",
         id=TEST_MOWER_ID,
@@ -527,14 +536,14 @@ async def test_new_websocket_message(
             ]
         ),
     )
-
-    callback_holder["cb"](message)
+    callback_holder[TEST_MOWER_ID](message)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_mower_1_last_error")
     assert state.state == "trapped"
 
-    message = MessageData(
+    # Send message for a different mower – should be ignored
+    other_message = MessageData(
         type="messages",
         id="1234",
         attributes=MessageAttributes(
@@ -549,9 +558,10 @@ async def test_new_websocket_message(
             ]
         ),
     )
-
-    callback_holder["cb"](message)
+    callback_holder["1234"](other_message)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_mower_1_last_error")
-    assert state.state == "trapped"
+    assert (
+        state.state == "trapped"
+    )  # Should still be "trapped", not "internal_voltage_error"

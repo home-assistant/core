@@ -309,7 +309,7 @@ class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
         self.device = device
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self._devices_last_update: set[str] = set()
-        self.api.register_message_callback(self.handle_websocket_updates)
+        self.api.register_message_callback(self.handle_websocket_updates, mower_id)
 
     async def _async_update_data(self) -> MessageData:
         """Poll data from the API."""
@@ -322,7 +322,6 @@ class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
         return data
 
     @callback
-    def handle_websocket_updates(self, _: str, ws_data: MessageData) -> None:
-        """Process websocket callbacks and write them to the DataUpdateCoordinator."""
-        if ws_data.id == self.mower_id:
-            self.async_set_updated_data(ws_data)
+    def handle_websocket_updates(self, msg_data: MessageData) -> None:
+        """Handle updates from websocket."""
+        self.async_set_updated_data(msg_data)
