@@ -129,6 +129,9 @@
     },
     "invalid_auth": {
       "message": "Invalid authentication"
+    },
+    "insufficient_rights": {
+      "message": "Insufficient rights for Wallbox user"
     }
   }
 }

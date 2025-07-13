@@ -38,6 +38,7 @@ from .const import (
     CODE_KEY,
     CONF_STATION,
     DOMAIN,
+    INSUFFICIENT_RIGHTS_URL,
     UPDATE_INTERVAL,
     ChargerStatus,
     EcoSmartMode,
@@ -230,11 +231,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "insufficient_rights",
                     is_fixable=False,
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
+                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
                     translation_key="insufficient_rights",
                 )
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                    translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -267,11 +268,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "insufficient_rights",
                     is_fixable=False,
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
+                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
                     translation_key="insufficient_rights",
                 )
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                    translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -333,11 +334,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "insufficient_rights",
                     is_fixable=False,
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
+                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
                     translation_key="insufficient_rights",
                 )
                 raise InsufficientRights(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                    translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
