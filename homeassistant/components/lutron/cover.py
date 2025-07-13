@@ -48,18 +48,31 @@ class LutronCover(LutronDevice, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
     _lutron_device: Output
     _attr_name = None
 
     def close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        self._lutron_device.level = 0
+        """Start lowering the shade."""
+        if self._lutron_device._output_type == "MOTOR":
+            # MOTOR outputs don't support setting level directly
+            self._lutron_device.start_lower()
+        else:
+            self._lutron_device.level = 0
 
     def open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        self._lutron_device.level = 100
+        """Start raising the shade."""
+        if self._lutron_device._output_type == "MOTOR":
+            # MOTOR outputs don't support setting level directly
+            self._lutron_device.start_raise()
+        else:
+            self._lutron_device.level = 100
+
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop shade movement."""
+        self._lutron_device.stop()
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
