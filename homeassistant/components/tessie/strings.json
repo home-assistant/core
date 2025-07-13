@@ -538,7 +538,7 @@
       "name": "Share",
       "description": "Shares an address, latitude/longitude or video URL to the vehicle.",
       "fields": {
-        "device": {
+        "device_id": {
           "name": "Vehicle",
           "description": "Vehicle to share content with."
         },

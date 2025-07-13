@@ -13,27 +13,25 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tessie import Tessie
-from tessie_api import get_state_of_all_vehicles, share
+from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, MODELS, SERVICE_SHARE
+from .const import DOMAIN, MODELS
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
 from .models import TessieData, TessieEnergyData, TessieVehicleData
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -53,6 +51,14 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 type TessieConfigEntry = ConfigEntry[TessieData]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Tessie integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
@@ -179,41 +185,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
 
     entry.runtime_data = TessieData(vehicles, energysites)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def service_share(call: ServiceCall) -> None:
-        _LOGGER.debug("service call to share: %s", call.data)
-        device_id = call.data["device"]
-        content = call.data["content"]
-        dev_reg = dr.async_get(hass)
-        if (
-            device_id in dev_reg.devices
-            and (device := dev_reg.async_get(device_id)) is not None
-        ):
-            try:
-                response = await share(
-                    session=session,
-                    vin=device.serial_number,
-                    api_key=api_key,
-                    value=content,
-                )
-            except ClientResponseError as e:
-                raise HomeAssistantError from e
-            if response["result"] is False:
-                name: str = getattr(device, "name", device.id)
-                reason: str = response.get("reason", "unknown")
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key=reason.replace(" ", "_"),
-                    translation_placeholders={"name": name},
-                )
-        else:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_device",
-                translation_placeholders={"device_id": device_id},
-            )
-
-    hass.services.async_register(DOMAIN, SERVICE_SHARE, service_share)
 
     return True
 
