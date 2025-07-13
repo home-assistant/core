@@ -60,6 +60,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "mal_alarm_host": [
+        # Alarm Host support
+        Platform.ALARM_CONTROL_PANEL,
+        Platform.SWITCH,
+    ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
