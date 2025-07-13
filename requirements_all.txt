@@ -2716,7 +2716,7 @@ sanix==1.0.6
 satel-integra==0.3.7
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.10.0
+screenlogicpy==0.10.2
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
