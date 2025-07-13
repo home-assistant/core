@@ -345,6 +345,26 @@ class OpenAIBaseLLMEntity(Entity):
             for content in chat_log.content
             for m in _convert_content_to_param(content)
         ]
+
+        last_content = chat_log.content[-1]
+
+        # Handle attachments by adding them to the last user message
+        if last_content.role == "user" and last_content.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                [a.path for a in last_content.attachments],
+            )
+            last_message = messages[-1]
+            assert (
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
+            )
+            last_message["content"] = [
+                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
+                *files,  # type: ignore[list-item]
+            ]
+
         if structure and structure_name:
             model_args["text"] = {
                 "format": {
