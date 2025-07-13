@@ -119,6 +119,19 @@ async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
     await hass.async_add_executor_job(_validate, wallbox)
 
 
+def _create_insufficient_rights_issue(hass: HomeAssistant) -> None:
+    """Creates an issue for insufficient rights."""
+    ir.create_issue(
+        hass,
+        DOMAIN,
+        "insufficient_rights",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        learn_more_url=INSUFFICIENT_RIGHTS_URL,
+        translation_key="insufficient_rights",
+    )
+
+
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
@@ -225,15 +238,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                ir.create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "insufficient_rights",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
-                    translation_key="insufficient_rights",
-                )
+                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
@@ -262,15 +267,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                ir.create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "insufficient_rights",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
-                    translation_key="insufficient_rights",
-                )
+                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
@@ -328,15 +325,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                ir.create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "insufficient_rights",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    learn_more_url=INSUFFICIENT_RIGHTS_URL,
-                    translation_key="insufficient_rights",
-                )
+                _create_insufficient_rights_issue(self.hass)
                 raise InsufficientRights(
                     translation_domain=DOMAIN, translation_key="insufficient_rights"
                 ) from wallbox_connection_error
