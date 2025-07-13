@@ -12,7 +12,9 @@ from homeassistant.components.tuneblade_remote.const import DOMAIN
 from homeassistant.components.tuneblade_remote.media_player import (
     TuneBladeHubMediaPlayer,
     TuneBladeMediaPlayer,
+    async_setup_entry,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -42,7 +44,9 @@ async def test_hub_properties(hass: HomeAssistant, mock_coordinator: AsyncMock) 
     """Test properties and state mapping of the master hub entity."""
     entity = TuneBladeHubMediaPlayer(mock_coordinator)
     entity.hass = hass  # Set hass directly to avoid calling async_added_to_hass
-    entity.entity_id = "media_player.master"  # Important: Set entity_id to avoid NoEntitySpecifiedError
+    entity.entity_id = (
+        "media_player.master"  # Set entity_id to avoid NoEntitySpecifiedError
+    )
     entity._handle_coordinator_update()
 
     assert entity.name == "Master"
@@ -67,7 +71,9 @@ async def test_device_properties(
         mock_coordinator, "abc123", mock_coordinator.data["abc123"]
     )
     entity.hass = hass
-    entity.entity_id = "media_player.living_room"  # Important: Set entity_id to avoid NoEntitySpecifiedError
+    entity.entity_id = (
+        "media_player.living_room"  # Set entity_id to avoid NoEntitySpecifiedError
+    )
     entity._handle_coordinator_update()
 
     assert entity.name == "Living Room"
@@ -109,3 +115,47 @@ async def test_device_control_methods(mock_coordinator: AsyncMock) -> None:
 
     await entity.async_set_volume_level(0.8)
     mock_coordinator.client.set_volume.assert_called_once_with("abc123", 80)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_adds_entities(hass: HomeAssistant) -> None:
+    """Test that async_setup_entry adds all TuneBlade media player entities."""
+    coordinator = AsyncMock(spec=DataUpdateCoordinator)
+    coordinator.data = {
+        "MASTER": {"name": "Hub", "status_code": "100", "volume": 70},
+        "dev1": {"name": "Device One", "status_code": "200", "volume": 30},
+    }
+    coordinator.client = AsyncMock()
+
+    config_entry = ConfigEntry(
+        entry_id="test_entry_id",
+        domain=DOMAIN,
+        title="TuneBlade",
+        data={},
+        options={},
+        version=1,
+        discovery_keys=[],
+        minor_version=1,
+        source="user",
+        subentries_data={},
+        unique_id="tuneblade_unique",
+    )
+    config_entry.runtime_data = {"coordinator": coordinator}
+
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        "coordinator": coordinator
+    }
+
+    added_entities = []
+
+    def mock_add_entities(entities, update_before_add=False):
+        for entity in entities:
+            entity.hass = hass
+            entity.entity_id = f"media_player.{entity.device_id.lower()}"
+        added_entities.extend(entities)
+
+    await async_setup_entry(hass, config_entry, mock_add_entities)
+
+    assert len(added_entities) == 2
+    assert any(isinstance(e, TuneBladeHubMediaPlayer) for e in added_entities)
+    assert any(isinstance(e, TuneBladeMediaPlayer) for e in added_entities)
