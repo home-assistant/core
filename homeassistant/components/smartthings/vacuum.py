@@ -1,4 +1,4 @@
-"""Vacuum platform for SmartThings integration using Jet Bot."""
+"""Vacuum with Jet Bot."""
 
 from __future__ import annotations
 
