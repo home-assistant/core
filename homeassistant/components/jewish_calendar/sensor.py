@@ -248,11 +248,11 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
         if self._update_unsub:
             self._update_unsub()
         self._update_unsub = event.async_track_point_in_time(
-            self.hass, self._update_data, update
+            self.hass, self._update, update
         )
 
     @callback
-    def _update_data(self, now: dt.datetime | None = None) -> None:
+    def _update(self, now: dt.datetime | None = None) -> None:
         """Update the sensor data."""
         self._update_unsub = None
         self._schedule_update()
