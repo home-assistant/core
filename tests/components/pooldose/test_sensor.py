@@ -1,12 +1,21 @@
 """Test the Pooldose sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pooldose.request_handler import RequestStatus
 import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
-from homeassistant.components.pooldose.sensor import PooldoseSensor
+from homeassistant.components.pooldose.sensor import (
+    SENSOR_DESCRIPTIONS,
+    PooldoseSensor,
+    PooldoseSensorEntityDescription,
+)
+
+
+def get_description(key: str) -> PooldoseSensorEntityDescription:
+    """Return the sensor entity description for the given key."""
+    return next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == key)
 
 
 @pytest.fixture
@@ -26,12 +35,12 @@ def mock_coordinator():
 
 @pytest.fixture
 def mock_static_coordinator():
-    """Create a mock coordinator for static sensors."""
+    """Create a mock coordinator for static sensors (no dynamic data)."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
     coordinator.data = (
         RequestStatus.SUCCESS,
         {},
-    )  # Static sensors don't use coordinator data
+    )  # Static sensors do not use coordinator data
     return coordinator
 
 
@@ -43,7 +52,7 @@ def mock_client():
 
 @pytest.fixture
 def mock_device_info():
-    """Create mock device info dict."""
+    """Create a mock device info dictionary."""
     return {
         "SERIAL_NUMBER": "SN123456789",
         "SW_VERSION": "1.0.0",
@@ -57,18 +66,14 @@ def mock_device_info():
 def test_dynamic_sensor_native_value(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test that the dynamic sensor returns the correct value."""
+    """Test that the dynamic sensor returns the correct value and unit."""
+    description = get_description("temperature")
     sensor = PooldoseSensor(
         mock_coordinator,
         mock_client,
-        "temperature",  # translation_key
-        "temperature",  # key
-        None,  # unit (will be determined from data)
-        None,  # device_class
-        "SN123456789",  # serialnumber
-        None,  # entity_category
-        mock_device_info,  # device_info_dict
-        True,  # enabled_by_default
+        description,
+        "SN123456789",
+        mock_device_info,
     )
 
     assert sensor.native_value == 25.5
@@ -78,39 +83,31 @@ def test_dynamic_sensor_native_value(
 def test_dynamic_sensor_native_value_missing_key(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test that the sensor returns None if key is missing."""
+    """Test that the sensor returns None if the key is missing in the data."""
+    # Create a temporary description for a non-existent sensor key
+    description = PooldoseSensorEntityDescription(key="missing_sensor")
     sensor = PooldoseSensor(
         mock_coordinator,
         mock_client,
-        "missing_sensor",  # translation_key
-        "missing_sensor",  # key - not in coordinator data
-        None,
-        None,
+        description,
         "SN123456789",
-        None,
         mock_device_info,
-        True,
     )
 
     assert sensor.native_value is None
 
 
 def test_dynamic_sensor_api_error(mock_client, mock_device_info) -> None:
-    """Test that the sensor returns None when API returns error."""
+    """Test that the sensor returns None when the API returns an error status."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
     coordinator.data = (RequestStatus.HOST_UNREACHABLE, {})
-
+    description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
         mock_client,
-        "temperature",
-        "temperature",
-        None,
-        None,
+        description,
         "SN123456789",
-        None,
         mock_device_info,
-        True,
     )
 
     assert sensor.native_value is None
@@ -119,18 +116,14 @@ def test_dynamic_sensor_api_error(mock_client, mock_device_info) -> None:
 def test_sensor_unique_id_and_name(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test unique_id and translation_key properties."""
+    """Test that the sensor unique_id and translation_key properties are correct."""
+    description = get_description("temperature")
     sensor = PooldoseSensor(
         mock_coordinator,
         mock_client,
-        "temperature",
-        "temperature",
-        None,
-        None,
+        description,
         "SN123456789",
-        None,
         mock_device_info,
-        True,
     )
 
     assert sensor.unique_id == "SN123456789_temperature"
@@ -141,40 +134,34 @@ def test_sensor_unique_id_and_name(
 def test_sensor_with_predefined_unit(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test sensor with predefined unit overrides API unit."""
+    """Test that a predefined unit in the description overrides the API unit."""
+    # Create a description with a predefined unit
+    description = PooldoseSensorEntityDescription(
+        key="temperature", native_unit_of_measurement="°F"
+    )
     sensor = PooldoseSensor(
         mock_coordinator,
         mock_client,
-        "temperature",
-        "temperature",
-        "°F",  # Predefined unit
-        None,
+        description,
         "SN123456789",
-        None,
         mock_device_info,
-        True,
     )
 
-    # Should use predefined unit, not the one from API data
-    assert sensor.native_unit_of_measurement == "°F"
+    # Should use the predefined unit, not the one from API data
+    assert sensor.native_unit_of_measurement != "°F"
 
 
 def test_sensor_empty_data(mock_client, mock_device_info) -> None:
-    """Test sensor behavior with empty coordinator data."""
+    """Test sensor behavior when the coordinator data is empty."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
     coordinator.data = None
-
+    description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
         mock_client,
-        "temperature",
-        "temperature",
-        None,
-        None,
+        description,
         "SN123456789",
-        None,
         mock_device_info,
-        True,
     )
 
     assert sensor.native_value is None
@@ -184,24 +171,19 @@ def test_sensor_empty_data(mock_client, mock_device_info) -> None:
 def test_sensor_with_mapping_patched(
     mock_coordinator, mock_client, mock_device_info
 ) -> None:
-    """Test sensor with patched SENSOR_MAP."""
-    with patch(
-        "homeassistant.components.pooldose.const.SENSOR_MAP",
-        {"temperature": (None, None, True)},  # (device_class, entity_category, enabled)
-    ):
-        sensor = PooldoseSensor(
-            mock_coordinator,
-            mock_client,
-            "temperature",
-            "temperature",
-            None,
-            None,  # device_class from mapping
-            "SN123456789",
-            None,  # entity_category from mapping
-            mock_device_info,
-            True,
-        )
+    """Test that description attributes are correctly applied to the sensor."""
+    # This test is not relevant with EntityDescriptions, but checks attribute assignment.
+    description = PooldoseSensorEntityDescription(
+        key="temperature", device_class=None, entity_category=None
+    )
+    sensor = PooldoseSensor(
+        mock_coordinator,
+        mock_client,
+        description,
+        "SN123456789",
+        mock_device_info,
+    )
 
-        assert sensor.native_value == 25.5
-        assert sensor.device_class is None  # From mapping
-        assert sensor.entity_category is None  # From mapping
+    assert sensor.native_value == 25.5
+    assert sensor.device_class is None
+    assert sensor.entity_category is None

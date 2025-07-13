@@ -4,8 +4,6 @@ All entity maps include an 'enabled_by_default' boolean as last tuple value.
 This controls if the entity is enabled by default in the entity registry.
 """
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
 DOMAIN = "pooldose"
@@ -49,83 +47,3 @@ def device_info(info: dict | None) -> DeviceInfo:
             f"http://{info['IP']}/index.html" if info.get("IP") else None
         ),
     )
-
-
-# dynamic sensors
-SENSOR_MAP: dict[str, tuple[SensorDeviceClass | None, EntityCategory | None, bool]] = {
-    "temperature": (
-        SensorDeviceClass.TEMPERATURE,  # DeviceClass
-        None,  # EntityCategory
-        True,  # enabled_by_default
-    ),
-    "ph": (
-        None,
-        None,
-        True,
-    ),
-    "orp": (
-        None,
-        None,
-        True,
-    ),
-    "ph_type_dosing": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        True,
-    ),
-    "peristaltic_ph_dosing": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "ofa_ph_value": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "orp_type_dosing": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "peristaltic_orp_dosing": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "ofa_orp_value": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "ph_calibration_type": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "ph_calibration_offset": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "ph_calibration_slope": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "orp_calibration_type": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "orp_calibration_offset": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-    "orp_calibration_slope": (
-        None,
-        EntityCategory.DIAGNOSTIC,
-        False,
-    ),
-}
