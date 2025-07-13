@@ -35,9 +35,10 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+from tests.typing import WebSocketGenerator
 
 _TEST_OBJECT_ID = "template_number"
 _TEST_NUMBER = f"number.{_TEST_OBJECT_ID}"
@@ -608,3 +609,24 @@ async def test_empty_action_config(hass: HomeAssistant, setup_number) -> None:
 
     state = hass.states.get(_TEST_NUMBER)
     assert float(state.state) == 4
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        number.DOMAIN,
+        {
+            "name": "My template",
+            "min": 0.0,
+            "max": 100.0,
+            **TEST_REQUIRED,
+        },
+    )
+
+    assert state["state"] == "0.0"
