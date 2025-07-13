@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from tests.common import MockConfigEntry
 
 DEFAULT_JOB = {
-    "job": {},
+    "job": {"file": {}},
     "progress": {"completion": 50},
 }
 
