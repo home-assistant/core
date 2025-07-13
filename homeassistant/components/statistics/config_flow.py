@@ -106,6 +106,19 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
+        vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            EntitySelectorConfig(read_only=True)
+        ),
+        vol.Optional(CONF_STATE_CHARACTERISTIC): SelectSelector(
+            SelectSelectorConfig(
+                options=list(
+                    set(list(STATS_BINARY_SUPPORT) + list(STATS_NUMERIC_SUPPORT))
+                ),
+                translation_key=CONF_STATE_CHARACTERISTIC,
+                mode=SelectSelectorMode.DROPDOWN,
+                read_only=True,
+            )
+        ),
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),

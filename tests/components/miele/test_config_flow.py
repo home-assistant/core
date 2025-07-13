@@ -46,7 +46,6 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -118,7 +117,6 @@ async def test_flow_reauth_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -187,7 +185,6 @@ async def test_flow_reconfigure_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -225,6 +222,16 @@ async def test_zeroconf_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -237,7 +244,6 @@ async def test_zeroconf_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()

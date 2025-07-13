@@ -25,7 +25,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -47,6 +48,12 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
 
 
 CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
+    # Electric Fireplace
+    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    "dbl": TuyaClimateEntityDescription(
+        key="dbl",
+        switch_only_hvac_mode=HVACMode.HEAT,
+    ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": TuyaClimateEntityDescription(
@@ -77,9 +84,6 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wkf",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
-    # Electric Fireplace
-    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
-    "dbl": TuyaClimateEntityDescription(key="dbl", switch_only_hvac_mode=HVACMode.HEAT),
 }
 
 
@@ -293,7 +297,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         commands = [{"code": DPCode.MODE, "value": preset_mode}]
         self._send_command(commands)

@@ -9,6 +9,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -228,7 +229,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         super().__init__(data.live_coordinator, key)
 
     @property
-    def _value(self) -> int:
+    def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
         return (
             self.coordinator.data.get("wall_connectors", {})
@@ -261,8 +262,3 @@ class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
         self._attr_translation_key = key
         self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.stream.connected

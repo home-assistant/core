@@ -73,7 +73,7 @@ async def test_number_entities(
     mock_homewizardenergy.system.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
         await hass.services.async_call(
             number.DOMAIN,

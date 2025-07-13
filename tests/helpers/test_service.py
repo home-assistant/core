@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
+import dataclasses
 import io
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -16,6 +17,7 @@ from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
+from homeassistant.components.input_button import DOMAIN as DOMAIN_INPUT_BUTTON
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
@@ -32,6 +34,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     SupportsResponse,
 )
 from homeassistant.helpers import (
@@ -41,7 +44,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
-from homeassistant.loader import async_get_integration
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.loader import (
+    Integration,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
@@ -1091,37 +1099,65 @@ async def test_async_get_all_descriptions_failing_integration(
     """Test async_get_all_descriptions when async_get_integrations returns an exception."""
     group_config = {DOMAIN_GROUP: {}}
     await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    descriptions = await service.async_get_all_descriptions(hass)
-
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
 
     logger_config = {DOMAIN_LOGGER: {}}
     await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
+
+    input_button_config = {DOMAIN_INPUT_BUTTON: {}}
+    await async_setup_component(hass, DOMAIN_INPUT_BUTTON, input_button_config)
+
+    async def wrap_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
+        integrations = await async_get_integrations(hass, domains)
+        integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
+        return integrations
+
+    async def wrap_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        translations = await async_get_translations(
+            hass, language, category, integrations, config_flow
+        )
+        return {
+            key: value
+            for key, value in translations.items()
+            if not key.startswith("component.logger.services.")
+        }
+
     with (
         patch(
             "homeassistant.helpers.service.async_get_integrations",
-            return_value={"logger": ImportError},
+            wraps=wrap_get_integrations,
         ),
         patch(
             "homeassistant.helpers.service.translation.async_get_translations",
-            return_value={},
+            wrap_get_translations,
         ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-    assert "Failed to load integration: logger" in caplog.text
+    assert len(descriptions) == 3
+    assert "Failed to load services.yaml for integration: logger" in caplog.text
 
     # Services are empty defaults if the load fails but should
     # not raise
+    assert descriptions[DOMAIN_GROUP]["remove"]["description"]
+    assert descriptions[DOMAIN_GROUP]["remove"]["fields"]
+
     assert descriptions[DOMAIN_LOGGER]["set_level"] == {
         "description": "",
         "fields": {},
         "name": "",
     }
+
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["description"]
+    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["fields"] == {}
+    assert "target" in descriptions[DOMAIN_INPUT_BUTTON]["press"]
 
     hass.services.async_register(DOMAIN_LOGGER, "new_service", lambda x: None, None)
     service.async_set_service_schema(
@@ -1646,6 +1682,33 @@ async def test_register_admin_service(
     )
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+@pytest.mark.parametrize(
+    "supports_response",
+    [SupportsResponse.ONLY, SupportsResponse.OPTIONAL],
+)
+async def test_register_admin_service_return_response(
+    hass: HomeAssistant, supports_response: SupportsResponse
+) -> None:
+    """Test the register admin service for a service that returns response data."""
+
+    async def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Service handler coroutine."""
+        assert call.return_response
+        return {"test-reply": "test-value1"}
+
+    service.async_register_admin_service(
+        hass, "test", "test", mock_service, supports_response=supports_response
+    )
+    result = await hass.services.async_call(
+        "test",
+        "test",
+        service_data={},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"test-reply": "test-value1"}
 
 
 async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
@@ -2260,3 +2323,80 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     ]
     await asyncio.gather(*tasks)
     assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
+
+
+async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> None:
+    """Test that the deprecated ServiceTargetSelector class forwards correctly."""
+    call = ServiceCall(
+        hass,
+        "test",
+        "test",
+        {
+            "entity_id": ["light.test", "switch.test"],
+            "area_id": "kitchen",
+            "device_id": ["device1", "device2"],
+            "floor_id": "first_floor",
+            "label_id": ["label1", "label2"],
+        },
+    )
+    selector = service.ServiceTargetSelector(call)
+
+    assert selector.entity_ids == {"light.test", "switch.test"}
+    assert selector.area_ids == {"kitchen"}
+    assert selector.device_ids == {"device1", "device2"}
+    assert selector.floor_ids == {"first_floor"}
+    assert selector.label_ids == {"label1", "label2"}
+    assert selector.has_any_selector is True
+
+
+async def test_deprecated_selected_entities_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that the deprecated SelectedEntities class forwards correctly."""
+    selected = service.SelectedEntities(
+        referenced={"entity.test"},
+        indirectly_referenced=set(),
+        referenced_devices=set(),
+        referenced_areas=set(),
+        missing_devices={"missing_device"},
+        missing_areas={"missing_area"},
+        missing_floors={"missing_floor"},
+        missing_labels={"missing_label"},
+    )
+
+    missing_entities = {"entity.missing"}
+    selected.log_missing(missing_entities)
+    assert (
+        "Referenced floors missing_floor, areas missing_area, "
+        "devices missing_device, entities entity.missing, "
+        "labels missing_label are missing or not currently available" in caplog.text
+    )
+
+
+async def test_deprecated_async_extract_referenced_entity_ids(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the deprecated async_extract_referenced_entity_ids function forwards correctly."""
+    from homeassistant.helpers import target  # noqa: PLC0415
+
+    mock_selected = target.SelectedEntities(
+        referenced={"entity.test"},
+        indirectly_referenced={"entity.indirect"},
+    )
+    with patch(
+        "homeassistant.helpers.target.async_extract_referenced_entity_ids",
+        return_value=mock_selected,
+    ) as mock_target_func:
+        call = ServiceCall(hass, "test", "test", {"entity_id": "light.test"})
+        result = service.async_extract_referenced_entity_ids(
+            hass, call, expand_group=False
+        )
+
+        # Verify target helper was called with correct parameters
+        mock_target_func.assert_called_once()
+        args = mock_target_func.call_args
+        assert args[0][0] is hass
+        assert args[0][1].entity_ids == {"light.test"}
+        assert args[0][2] is False
+
+        assert dataclasses.asdict(result) == dataclasses.asdict(mock_selected)

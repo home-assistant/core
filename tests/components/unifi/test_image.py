@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY

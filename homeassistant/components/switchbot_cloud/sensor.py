@@ -113,11 +113,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
-        CURRENT_DESCRIPTION_IN_A,
+        CURRENT_DESCRIPTION_IN_MA,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
-        CURRENT_DESCRIPTION_IN_A,
+        CURRENT_DESCRIPTION_IN_MA,
     ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
@@ -134,8 +134,10 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
         CO2_DESCRIPTION,
     ),
-    "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock": (BATTERY_DESCRIPTION,),
+    "Smart Lock Lite": (BATTERY_DESCRIPTION,),
+    "Smart Lock Pro": (BATTERY_DESCRIPTION,),
+    "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
 }
 
 

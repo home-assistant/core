@@ -108,7 +108,9 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
                     description=item.specification,
                     status=TodoItemStatus.NEEDS_ACTION,
                 )
-                for item in self.bring_list.content.items.purchase
+                for item in sorted(
+                    self.bring_list.content.items.purchase, key=lambda i: i.itemId
+                )
             ),
             *(
                 TodoItem(
