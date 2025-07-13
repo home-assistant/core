@@ -313,6 +313,11 @@ def async_setup_entity_entry_helper(
                 component_config.pop("platform")
                 component_config.update(availability_config)
                 component_config.update(device_mqtt_options)
+                if (
+                    CONF_ENTITY_CATEGORY in component_config
+                    and component_config[CONF_ENTITY_CATEGORY] is None
+                ):
+                    component_config.pop(CONF_ENTITY_CATEGORY)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -382,16 +387,6 @@ def async_setup_entity_entry_helper(
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
     _async_setup_entities()
-
-
-def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
-) -> None:
-    """Set entity_id from object_id if defined in config."""
-    if CONF_OBJECT_ID in config:
-        entity.entity_id = async_generate_entity_id(
-            entity_id_format, config[CONF_OBJECT_ID], None, hass
-        )
 
 
 class MqttAttributesMixin(Entity):
@@ -640,8 +635,7 @@ async def cleanup_device_registry(
     entities, triggers or tags.
     """
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -1308,6 +1302,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _update_registry_entity_id: str | None = None
 
     def __init__(
         self,
@@ -1342,13 +1337,33 @@ class MqttEntity(
 
     def _init_entity_id(self) -> None:
         """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
+        if CONF_OBJECT_ID not in self._config:
+            return
+        self.entity_id = async_generate_entity_id(
+            self._entity_id_format, self._config[CONF_OBJECT_ID], None, self.hass
         )
+        if self.unique_id is None:
+            return
+        # Check for previous deleted entities
+        entity_registry = er.async_get(self.hass)
+        entity_platform = self._entity_id_format.split(".")[0]
+        if (
+            deleted_entry := entity_registry.deleted_entities.get(
+                (entity_platform, DOMAIN, self.unique_id)
+            )
+        ) and deleted_entry.entity_id != self.entity_id:
+            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            self._update_registry_entity_id = self.entity_id
 
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        if self._update_registry_entity_id is not None:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.entity_id, new_entity_id=self._update_registry_entity_id
+            )
+
         await super().async_added_to_hass()
         self._subscriptions = {}
         self._prepare_subscribe_topics()

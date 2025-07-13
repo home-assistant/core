@@ -342,6 +342,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
+        },
+    ],
     "_amzn-alexa._tcp.local.": [
         {
             "domain": "roomba",
@@ -527,6 +532,11 @@ ZEROCONF = {
     "_hap._udp.local.": [
         {
             "domain": "homekit_controller",
+        },
+    ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
         },
     ],
     "_homeconnect._tcp.local.": [
@@ -766,6 +776,16 @@ ZEROCONF = {
             "domain": "onewire",
         },
     ],
+    "_philipstv_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
+    "_philipstv_s_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
@@ -908,6 +928,11 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "uzg-01*",
+        },
+    ],
+    "_vege._tcp.local.": [
+        {
+            "domain": "vegehub",
         },
     ],
     "_viziocast._tcp.local.": [
