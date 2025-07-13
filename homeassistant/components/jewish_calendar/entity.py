@@ -7,6 +7,7 @@ from hdate import HDateInfo, Location, Zmanim
 from hdate.translator import Language, set_language
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -39,6 +40,8 @@ class JewishCalendarEntity(Entity):
     """An HA implementation for Jewish Calendar entity."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
+    _update_unsub: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -63,3 +66,18 @@ class JewishCalendarEntity(Entity):
             candle_lighting_offset=self.data.candle_lighting_offset,
             havdalah_offset=self.data.havdalah_offset,
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+        return await super().async_will_remove_from_hass()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._schedule_update()
+
+    def _schedule_update(self) -> None:
+        """Schedule the next update of the sensor."""

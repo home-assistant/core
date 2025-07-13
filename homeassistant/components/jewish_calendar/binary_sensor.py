@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True)
 class JewishCalendarBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Binary Sensor description mixin class for Jewish Calendar."""
+    """Binary Sensor Entity description for Jewish Calendar."""
 
     is_on: Callable[[Zmanim, dt.datetime], bool] = lambda _, __: False
 
@@ -66,9 +66,7 @@ async def async_setup_entry(
 class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _update_unsub: CALLBACK_TYPE | None = None
 
     entity_description: JewishCalendarBinarySensorEntityDescription
 
@@ -77,18 +75,6 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
         """Return true if sensor is on."""
         zmanim = self.make_zmanim(dt.date.today())
         return self.entity_description.is_on(zmanim, dt_util.now())
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        self._schedule_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._update_unsub:
-            self._update_unsub()
-            self._update_unsub = None
-        return await super().async_will_remove_from_hass()
 
     @callback
     def _update(self, now: dt.datetime | None = None) -> None:

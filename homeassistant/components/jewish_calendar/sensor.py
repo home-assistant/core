@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -231,23 +231,9 @@ async def async_setup_entry(
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
     """Base class for Jewish calendar sensors."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _update_unsub: CALLBACK_TYPE | None = None
 
     entity_description: JewishCalendarBaseSensorDescription
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        self._schedule_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._update_unsub:
-            self._update_unsub()
-            self._update_unsub = None
-        return await super().async_will_remove_from_hass()
 
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
