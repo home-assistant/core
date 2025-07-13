@@ -24,17 +24,10 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
-class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
+class JewishCalendarBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
     is_on: Callable[[Zmanim, dt.datetime], bool] = lambda _, __: False
-
-
-@dataclass(frozen=True)
-class JewishCalendarBinarySensorEntityDescription(
-    JewishCalendarBinarySensorMixIns, BinarySensorEntityDescription
-):
-    """Binary Sensor Entity description for Jewish Calendar."""
 
 
 BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
