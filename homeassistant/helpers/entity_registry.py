@@ -1113,6 +1113,9 @@ class EntityRegistry(BaseRegistry):
                 ):
                     self.async_remove(entity.entity_id)
                 else:
+                    if entity.entity_id not in self.entities:
+                        # Entity has been removed already, skip it
+                        continue
                     self.async_update_entity(entity.entity_id, device_id=None)
             return
 
