@@ -11,7 +11,10 @@ from homeassistant.helpers.device import (
     async_entity_id_to_device_id,
     async_remove_stale_devices_links_keep_entity_device,
 )
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,
+    async_remove_helper_config_entry_from_source_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Derivative from a config entry."""
 
+    # This can be removed in HA Core 2026.2
     async_remove_stale_devices_links_keep_entity_device(
         hass, entry.entry_id, entry.options[CONF_SOURCE]
     )
@@ -29,20 +33,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_SOURCE: source_entity_id},
         )
 
-    async def source_entity_removed() -> None:
-        # The source entity has been removed, we need to clean the device links.
-        async_remove_stale_devices_links_keep_entity_device(hass, entry.entry_id, None)
-
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
+            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
                 hass, entry.options[CONF_SOURCE]
             ),
             source_entity_id_or_uuid=entry.options[CONF_SOURCE],
-            source_entity_removed=source_entity_removed,
         )
     )
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
@@ -83,6 +83,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             hass.config_entries.async_update_entry(
                 config_entry, options=new_options, version=1, minor_version=2
+            )
+
+        if config_entry.minor_version < 3:
+            # Remove the derivative config entry from the source device
+            if source_device_id := async_entity_id_to_device_id(
+                hass, config_entry.options[CONF_SOURCE]
+            ):
+                async_remove_helper_config_entry_from_source_device(
+                    hass,
+                    helper_config_entry_id=config_entry.entry_id,
+                    source_device_id=source_device_id,
+                )
+            hass.config_entries.async_update_entry(
+                config_entry, version=1, minor_version=3
             )
 
     _LOGGER.debug(
