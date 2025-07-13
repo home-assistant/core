@@ -98,6 +98,20 @@ async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> N
     assert state
 
 
+async def test_enbrighten_58446_zwa4013(
+    hass: HomeAssistant, client, enbrighten_58446_zwa4013, integration
+) -> None:
+    """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
+    node = enbrighten_58446_zwa4013
+    assert node.device_class.specific.label == "Multilevel Power Switch"
+
+    state = hass.states.get("light.zwa4013_fan")
+    assert not state
+
+    state = hass.states.get("fan.zwa4013_fan")
+    assert state
+
+
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
 ) -> None:
