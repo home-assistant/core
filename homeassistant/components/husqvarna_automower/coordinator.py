@@ -12,6 +12,7 @@ from aioautomower.exceptions import (
     ApiError,
     AuthError,
     HusqvarnaTimeoutError,
+    HusqvarnaWSClientError,
     HusqvarnaWSServerHandshakeError,
 )
 from aioautomower.model import MessageData, MowerDictionary
@@ -130,7 +131,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             # Reset reconnect time after successful connection
             self.reconnect_time = DEFAULT_RECONNECT_TIME
             await automower_client.start_listening()
-        except HusqvarnaWSServerHandshakeError as err:
+        except (HusqvarnaWSServerHandshakeError, HusqvarnaWSClientError) as err:
             _LOGGER.debug(
                 "Failed to connect to websocket. Trying to reconnect: %s",
                 err,
@@ -304,11 +305,8 @@ class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
             update_interval=None,
         )
         self.api = api
-        self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.mower_id = mower_id
         self.device = device
-        self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
-        self._devices_last_update: set[str] = set()
         self.api.register_message_callback(self.handle_websocket_updates, mower_id)
 
     async def _async_update_data(self) -> MessageData:

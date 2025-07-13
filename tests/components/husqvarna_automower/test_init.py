@@ -489,38 +489,39 @@ async def test_new_websocket_message(
 ) -> None:
     """Test that a new message arriving over the websocket updates the sensor."""
 
+    # Capture callbacks per mower_id
     callback_holder: dict[str, Callable[[MessageData], None]] = {}
 
     @callback
-    def fake_register_message_callback(
+    def fake_register_websocket_response(
         cb: Callable[[MessageData], None],
         mower_id: str,
     ) -> None:
         callback_holder[mower_id] = cb
 
     mock_automower_client.register_message_callback.side_effect = (
-        fake_register_message_callback
+        fake_register_websocket_response
     )
 
     # Set up integration
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    # Force first update to complete setup of all entities
+    # Wait for all coordinator/entity setup
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Ensure callback registered
+    # Ensure callback was registered for the test mower
     assert mock_automower_client.register_message_callback.called
     assert TEST_MOWER_ID in callback_holder
 
-    # Baseline
+    # Check initial state
     state = hass.states.get("sensor.test_mower_1_last_error")
     assert state is not None
     assert state.state == "no_loop_signal"
 
-    # Send valid message for TEST_MOWER_ID
+    # Simulate a new message for this mower
     message = MessageData(
         type="messages",
         id=TEST_MOWER_ID,
@@ -542,7 +543,7 @@ async def test_new_websocket_message(
     state = hass.states.get("sensor.test_mower_1_last_error")
     assert state.state == "trapped"
 
-    # Send message for a different mower – should be ignored
+    # Simulate a message for another mower – should NOT affect this sensor
     other_message = MessageData(
         type="messages",
         id="1234",
@@ -558,7 +559,10 @@ async def test_new_websocket_message(
             ]
         ),
     )
-    callback_holder["1234"](other_message)
+
+    # This would call all callbacks; here we directly call only the test mower
+    # (so we simulate the library’s internal filtering)
+    callback_holder[TEST_MOWER_ID](other_message)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_mower_1_last_error")
