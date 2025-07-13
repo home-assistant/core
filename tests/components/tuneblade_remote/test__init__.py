@@ -40,6 +40,11 @@ async def test_async_setup_entry_creates_coordinator_and_runtime_data(
             "homeassistant.components.tuneblade_remote.TuneBladeDataUpdateCoordinator",
             return_value=AsyncMock(),
         ) as mock_coordinator_class,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(),
+        ) as mock_forward,
     ):
         mock_coordinator = mock_coordinator_class.return_value
         mock_coordinator.async_init = AsyncMock()
@@ -47,11 +52,12 @@ async def test_async_setup_entry_creates_coordinator_and_runtime_data(
         result = await async_setup_entry(hass, entry)
 
         mock_coordinator.async_init.assert_awaited_once()
+        mock_forward.assert_awaited_once_with(entry, ["media_player"])
         assert DOMAIN in hass.data
         assert entry.entry_id in hass.data[DOMAIN]
         assert hass.data[DOMAIN][entry.entry_id] == mock_coordinator
 
-        # If your integration sets runtime_data manually
+        # Optional: simulate runtime_data if you're assigning it manually
         entry.runtime_data = SimpleNamespace(coordinator=mock_coordinator)
         assert entry.runtime_data.coordinator == mock_coordinator
 
