@@ -10,12 +10,10 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 
 DOMAIN = "pooldose"
 
-DEFAULT_TIMEOUT = 30  # seconds
-DEFAULT_SCAN_INTERVAL = 600  # seconds
+SCAN_INTERVAL = 600  # seconds
 DEFAULT_HOST = "KOMMSPOT"  # Default host for PoolDose device, used in config flow
 
 CONF_SERIALNUMBER = "serialnumber"
-CONF_INCLUDE_SENSITIVE_DATA = "include_sensitive_data"
 
 MANUFACTURER = "SEKO"
 
@@ -157,42 +155,4 @@ DYNAMIC_SENSOR_MAP: dict[
         EntityCategory.DIAGNOSTIC,
         False,
     ),
-}
-
-VALUE_CONVERSION_TABLE: dict[str, dict[str, str]] = {
-    # pH Type Dosing
-    "PDPR1H1HAW100_FW539187_w_1eklg44ro": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklg44ro_ALCALYNE|": "alcalyne",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklg44ro_ACID|": "acid",
-    },
-    # Peristaltic pH Dosing
-    "PDPR1H1HAW100_FW539187_w_1eklj6euj": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklj6euj_OFF|": "off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklj6euj_PROPORTIONAL|": "proportional",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklj6euj_ON_OFF|": "on_off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklj6euj_TIMED|": "timed",
-    },
-    # ORP Type Dosing
-    "PDPR1H1HAW100_FW539187_w_1eklgnolb": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklgnolb_LOW|": "low",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklgnolb_HIGH|": "high",
-    },
-    # Peristaltic ORP Dosing
-    "PDPR1H1HAW100_FW539187_w_1eo1s18s8": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eo1s18s8_OFF|": "off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eo1s18s8_PROPORTIONAL|": "proportional",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eo1s18s8_ON_OFF|": "on_off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eo1s18s8_TIMED|": "timed",
-    },
-    "PDPR1H1HAW100_FW539187_w_1eklh8gb7": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8gb7_OFF|": "off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8gb7_REFERENCE|": "reference",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8gb7_1_POINT|": "1_point",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8gb7_2_POINTS|": "2_points",
-    },
-    "PDPR1H1HAW100_FW539187_w_1eklh8i5t": {
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8i5t_OFF|": "off",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8i5t_REFERENCE|": "reference",
-        "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8i5t_1_POINT|": "1_point",
-    },
 }

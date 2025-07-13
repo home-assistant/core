@@ -5,16 +5,10 @@
         "title": "Set up SEKO PoolDose Device",
         "description": "The device password must be set to default (0000).",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "scan_interval": "Poll intervall",
-          "timeout": "Connection timeout",
-          "include_sensitive_data": "Include sensitive data"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "IP address or hostname of your device",
-          "scan_interval": "How often to poll data from the device in seconds",
-          "timeout": "Connection timeout in seconds",
-          "include_sensitive_data": "Create entity attributes with sensitive data (e.g., WiFi passwords)"
+          "host": "IP address or hostname of your device"
         }
       }
     },
@@ -34,17 +28,7 @@
     "step": {
       "init": {
         "title": "Configure SEKO PoolDose options",
-        "description": "Adjust settings for your device.",
-        "data": {
-          "scan_interval": "New poll intervall",
-          "timeout": "New connection timeout",
-          "include_sensitive_data": "Include sensitive data"
-        },
-        "data_description": {
-          "scan_interval": "How often to poll data from the device in seconds",
-          "timeout": "Connection timeout in seconds",
-          "include_sensitive_data": "Create entity attributes with sensitive data (e.g., WiFi passwords)"
-        }
+        "description": "Adjust settings for your device."
       }
     },
     "error": {

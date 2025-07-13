@@ -9,10 +9,10 @@ from pooldose.client import PooldoseClient
 from pooldose.request_handler import RequestStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_INCLUDE_SENSITIVE_DATA, DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT
+from .const import SCAN_INTERVAL
 from .coordinator import PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,21 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Seko PoolDose from a config entry."""
     # Obtain values, preferring options (re‑configure) over static data
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    timeout = entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-    include_sensitive_data = entry.options.get(
-        CONF_INCLUDE_SENSITIVE_DATA, entry.data.get(CONF_INCLUDE_SENSITIVE_DATA, False)
-    )
 
     # Create the PoolDose API client
-    client_status, client = await PooldoseClient.create(
-        host, timeout, include_sensitive_data
-    )
+    client_status, client = await PooldoseClient.create(host)
     if client_status != RequestStatus.SUCCESS:
         _LOGGER.error("Failed to create PoolDose client: %s", client_status)
         return False
 
-    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=scan_interval))
+    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=SCAN_INTERVAL))
     await coordinator.async_config_entry_first_refresh()
 
     # Update device info on every reload
