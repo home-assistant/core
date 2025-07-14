@@ -19,6 +19,9 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured_service": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "options": {
@@ -41,6 +44,12 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "Datadog YAML configuration is deprecated",
+      "description": "Configuring Datadog using YAML is being removed. Please remove the Datadog YAML configuration from your configuration.yaml file and continue to set up the integration manually."
     }
   }
 }

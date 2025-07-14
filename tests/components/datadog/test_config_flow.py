@@ -154,3 +154,38 @@ async def test_async_step_user_connection_fail(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import_flow_abort_already_configured(hass: HomeAssistant) -> None:
+    """Test that import flow aborts if config already exists."""
+    mock_entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data=MOCK_CONFIG,
+        options=MOCK_CONFIG,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        datadog.DOMAIN,
+        context={"source": "import"},
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_flow_abort_cannot_connect(hass: HomeAssistant) -> None:
+    """Test import flow aborts if cannot connect to Datadog."""
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd.increment",
+        side_effect=OSError("Connection failed"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            datadog.DOMAIN,
+            context={"source": "import"},
+            data=MOCK_CONFIG,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"

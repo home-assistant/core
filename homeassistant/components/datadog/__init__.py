@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow as config_flow
@@ -54,6 +55,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    # Create YAML deprecation issue
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        translation_placeholders={"integration": "Datadog"},
+    )
+
+    # Migrate YAML to config flow
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -69,10 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> b
     """Set up Datadog from a config entry."""
 
     conf = entry.options
-    host = conf["host"]
-    port = conf["port"]
-    prefix = conf["prefix"]
-    sample_rate = conf["rate"]
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    prefix = conf[CONF_PREFIX]
+    sample_rate = conf[CONF_RATE]
 
     statsd_client = DogStatsd(host=host, port=port, namespace=prefix)
     entry.runtime_data = statsd_client

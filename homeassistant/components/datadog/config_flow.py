@@ -5,8 +5,12 @@ from typing import Any
 from datadog import DogStatsd
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
@@ -20,7 +24,7 @@ from .const import (
 )
 
 
-class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Datadog."""
 
     VERSION = 1
@@ -56,13 +60,31 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: dict) -> ConfigFlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        return await self.async_step_user(import_config)
+
+        # Check for duplicates
+        for entry in self._async_current_entries():
+            if (
+                entry.data.get(CONF_HOST) == import_config[CONF_HOST]
+                and entry.data.get(CONF_PORT) == import_config[CONF_PORT]
+            ):
+                return self.async_abort(reason="already_configured")
+
+        # Validate connection
+        success = await validate_datadog_connection(self.hass, import_config)
+        if not success:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(
+            title=f"Datadog {import_config[CONF_HOST]}", data={}, options=import_config
+        )
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow handler."""
         return DatadogOptionsFlowHandler()
 
@@ -105,7 +127,9 @@ async def validate_datadog_connection(
 ) -> bool:
     """Attempt to send a test metric to the Datadog agent."""
     try:
-        client = DogStatsd(user_input["host"], user_input["port"], user_input["prefix"])
+        client = DogStatsd(
+            user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_PREFIX]
+        )
         hass.async_add_executor_job(client.increment, "connection_test")
     except (OSError, ValueError):
         return False
