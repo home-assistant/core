@@ -269,8 +269,11 @@ class TargetStateChangeTracker:
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
+    def async_setup(self) -> Callable[[], None]:
+        """Set up the state change tracking."""
         self._setup_registry_listeners()
         self._track_entities_state_change()
+        return self._unsubscribe
 
     def _track_entities_state_change(self) -> None:
         """Set up state change tracking for currently selected entities."""
@@ -323,7 +326,7 @@ class TargetStateChangeTracker:
             ),
         ]
 
-    def unsub(self) -> None:
+    def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         for registry_unsub in self._registry_unsubs:
             registry_unsub()
@@ -345,4 +348,4 @@ def async_track_target_selector_state_change_event(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
     tracker = TargetStateChangeTracker(hass, selector_data, action)
-    return tracker.unsub
+    return tracker.async_setup()
