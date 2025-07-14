@@ -113,3 +113,15 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
             candle_lighting_offset=self.config_data.candle_lighting_offset,
             havdalah_offset=self.config_data.havdalah_offset,
         )
+
+    @property
+    def zmanim(self) -> Zmanim:
+        """Return the current Zmanim."""
+        assert self.data.zmanim is not None, "Zmanim data not available"
+        return self.data.zmanim
+
+    @property
+    def dateinfo(self) -> HDateInfo:
+        """Return the current HDateInfo."""
+        assert self.data.dateinfo is not None, "HDateInfo data not available"
+        return self.data.dateinfo
