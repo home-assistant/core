@@ -1,4 +1,4 @@
-state: # Trigger which fires when light state changes to a specific value
+state:
   fields:
     target:
       required: true
@@ -18,4 +18,4 @@ state: # Trigger which fires when light state changes to a specific value
     state:
       required: true
       selector:
-        state: # I do not know how to say "The union of every states (mode) of the target"
+        state:
