@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+import voluptuous as vol
+
+from homeassistant.components import conversation, media_source
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -17,6 +20,8 @@ async def async_generate_data(
     task_name: str,
     entity_id: str | None = None,
     instructions: str,
+    structure: vol.Schema | None = None,
+    attachments: list[dict] | None = None,
 ) -> GenDataTaskResult:
     """Run a task in the AI Task integration."""
     if entity_id is None:
@@ -34,10 +39,40 @@ async def async_generate_data(
             f"AI Task entity {entity_id} does not support generating data"
         )
 
+    # Resolve attachments
+    resolved_attachments: list[conversation.Attachment] | None = None
+
+    if attachments:
+        if AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features:
+            raise HomeAssistantError(
+                f"AI Task entity {entity_id} does not support attachments"
+            )
+
+        resolved_attachments = []
+
+        for attachment in attachments:
+            media = await media_source.async_resolve_media(
+                hass, attachment["media_content_id"], None
+            )
+            if media.path is None:
+                raise HomeAssistantError(
+                    "Only local attachments are currently supported"
+                )
+            resolved_attachments.append(
+                conversation.Attachment(
+                    media_content_id=attachment["media_content_id"],
+                    url=media.url,
+                    mime_type=media.mime_type,
+                    path=media.path,
+                )
+            )
+
     return await entity.internal_async_generate_data(
         GenDataTask(
             name=task_name,
             instructions=instructions,
+            structure=structure,
+            attachments=resolved_attachments,
         )
     )
 
@@ -51,6 +86,12 @@ class GenDataTask:
 
     instructions: str
     """Instructions on what needs to be done."""
+
+    structure: vol.Schema | None = None
+    """Optional structure for the data to be generated."""
+
+    attachments: list[conversation.Attachment] | None = None
+    """List of attachments to go along the instructions."""
 
     def __str__(self) -> str:
         """Return task as a string."""
