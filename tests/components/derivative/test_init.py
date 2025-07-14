@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import derivative
 from homeassistant.components.derivative.config_flow import ConfigFlowHandler
 from homeassistant.components.derivative.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
@@ -421,3 +421,65 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check we got the expected events
     assert events == []
+
+
+@pytest.mark.parametrize(
+    ("unit_prefix", "expect_prefix"),
+    [
+        ({}, None),
+        ({"unit_prefix": "k"}, "k"),
+        ({"unit_prefix": "none"}, None),
+    ],
+)
+async def test_migration(hass: HomeAssistant, unit_prefix, expect_prefix) -> None:
+    """Test migration from v1.1 deletes "none" unit_prefix."""
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My derivative",
+            "round": 1.0,
+            "source": "sensor.power",
+            "time_window": {"seconds": 0.0},
+            **unit_prefix,
+            "unit_time": "min",
+        },
+        title="My derivative",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options["unit_time"] == "min"
+    assert config_entry.options.get("unit_prefix") == expect_prefix
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from future version."""
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My derivative",
+            "round": 1.0,
+            "source": "sensor.power",
+            "time_window": {"seconds": 0.0},
+            "unit_prefix": "k",
+            "unit_time": "min",
+        },
+        title="My derivative",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

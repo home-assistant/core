@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SOURCE, Platform
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,8 @@ from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_entity_device,
 )
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -54,3 +58,37 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, (Platform.SENSOR,))
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        if config_entry.minor_version < 2:
+            new_options = {**config_entry.options}
+
+            if new_options.get("unit_prefix") == "none":
+                # Before we had support for optional selectors, "none" was used for selecting nothing
+                del new_options["unit_prefix"]
+
+            hass.config_entries.async_update_entry(
+                config_entry, options=new_options, version=1, minor_version=2
+            )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
