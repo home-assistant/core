@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pycoolmasternet_async import CoolMasterNet
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
@@ -48,7 +47,7 @@ class CoolmasterDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, CoolMasterNetUnit]:
         """Fetch data from Coolmaster."""
         retries_left = MAX_RETRIES
-        status: dict[Any, CoolMasterNetUnit] = {}
+        status: dict[str, CoolMasterNetUnit] = {}
         while retries_left > 0 and not status:
             try:
                 status = await self._coolmaster.status()
