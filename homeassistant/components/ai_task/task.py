@@ -45,7 +45,7 @@ async def async_generate_data(
     resolved_attachments: list[conversation.Attachment] = []
 
     if (
-        attachments is not None
+        attachments
         and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
     ):
         raise HomeAssistantError(
