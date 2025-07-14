@@ -675,6 +675,9 @@ class ESPHomeManager:
 
         # Connected to device without key and the device supports encryption,
         # so we need to generate (and store) a new key
+        _LOGGER.debug(
+            "Generating new encryption key for device %s", self.entry.unique_id
+        )
         storage = await async_get_encryption_key_storage(self.hass)
         try:
             new_key = base64.b64encode(secrets.token_bytes(32))
