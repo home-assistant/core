@@ -43,6 +43,12 @@ async def async_setup_entry(
     if coordinator.data and "routes" in coordinator.data:
         for route_key, route_data in coordinator.data["routes"].items():
             route = route_data["route"]
+            # Validate route has required fields before creating sensor
+            if not all(key in route for key in (CONF_NAME, CONF_FROM, CONF_TO)):
+                _LOGGER.warning(
+                    "Skipping sensor creation for malformed route: %s", route
+                )
+                continue
             entities.append(
                 NSTripSensor(
                     coordinator,

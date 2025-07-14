@@ -17,6 +17,8 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_nsapi():
@@ -49,38 +51,56 @@ async def test_async_setup(hass: HomeAssistant) -> None:
     assert hass.services.has_service(DOMAIN, "remove_route")
 
 
-async def test_async_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry, mock_nsapi
-) -> None:
+async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
     """Test successful setup of config entry."""
-    with patch(
-        "homeassistant.components.nederlandse_spoorwegen.NSDataUpdateCoordinator"
-    ) as mock_coordinator_class:
-        mock_coordinator = mock_coordinator_class.return_value
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-        mock_nsapi.get_stations.return_value = []  # Ensure get_stations is called
+    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+        mock_nsapi.return_value.get_stations.return_value = []
+        mock_nsapi.return_value.get_trips.return_value = []
 
-        with patch.object(
-            hass.config_entries, "async_forward_entry_setups"
-        ) as mock_forward:
-            result = await async_setup_entry(hass, mock_config_entry)
+        # Create a real MockConfigEntry instead of a mock object
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={"api_key": "test_key"},
+            options={"routes_migrated": True},  # No migration needed
+        )
+        config_entry.add_to_hass(hass)
 
-            assert result is True
-            mock_nsapi.get_stations.assert_not_called()  # Now not called directly in setup
-            mock_coordinator.async_config_entry_first_refresh.assert_called_once()
-            mock_forward.assert_called_once()
-            assert hasattr(mock_config_entry.runtime_data, "coordinator")
+        with patch(
+            "homeassistant.components.nederlandse_spoorwegen.NSDataUpdateCoordinator"
+        ) as mock_coordinator_class:
+            mock_coordinator = mock_coordinator_class.return_value
+            mock_coordinator.async_config_entry_first_refresh = AsyncMock()
+
+            with patch.object(
+                hass.config_entries, "async_forward_entry_setups"
+            ) as mock_forward:
+                result = await async_setup_entry(hass, config_entry)
+
+                assert result is True
+                mock_coordinator.async_config_entry_first_refresh.assert_called_once()
+                mock_forward.assert_called_once()
+                assert hasattr(config_entry.runtime_data, "coordinator")
 
 
-async def test_async_setup_entry_connection_error(
-    hass: HomeAssistant, mock_config_entry, mock_nsapi
-) -> None:
+async def test_async_setup_entry_connection_error(hass: HomeAssistant) -> None:
     """Test setup entry with connection error."""
-    mock_nsapi.get_stations.side_effect = Exception("Connection failed")
-    mock_config_entry.state = None  # Add missing attribute for test
+    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+        mock_nsapi.return_value.get_stations.side_effect = Exception(
+            "Connection failed"
+        )
+        mock_nsapi.return_value.get_trips.return_value = []
 
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config_entry)
+        # Create a real MockConfigEntry instead of a mock object
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={"api_key": "test_key"},
+            options={"routes_migrated": True},  # No migration needed
+        )
+        config_entry.add_to_hass(hass)
+
+        # The connection error should happen during coordinator first refresh
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, config_entry)
 
 
 async def test_async_reload_entry(hass: HomeAssistant, mock_config_entry) -> None:

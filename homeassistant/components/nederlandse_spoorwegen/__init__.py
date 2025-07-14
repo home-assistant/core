@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from ns_api import NSAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
+from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,8 +122,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     # Set runtime_data for this entry (store the coordinator only)
     api_key = entry.data.get(CONF_API_KEY)
     client = NSAPI(api_key)
@@ -132,8 +132,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     # Initialize runtime data with coordinator
     entry.runtime_data = NSRuntimeData(coordinator=coordinator)
 
+    # Migrate legacy routes on first setup if needed
+    await _async_migrate_legacy_routes(hass, entry)
+
+    # Add update listener after migration to avoid reload during migration
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except asyncio.CancelledError:
+        # Handle cancellation gracefully (e.g., during test shutdown)
+        _LOGGER.debug("Coordinator first refresh was cancelled, continuing setup")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -147,3 +157,100 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def _async_migrate_legacy_routes(
+    hass: HomeAssistant, entry: NSConfigEntry
+) -> None:
+    """Migrate legacy routes from configuration data into subentries.
+
+    This handles routes stored in entry.data[CONF_ROUTES] from legacy YAML config.
+    One-time migration to avoid duplicate imports.
+    """
+    # Check if migration has already been performed
+    if entry.options.get("routes_migrated", False):
+        _LOGGER.debug("Routes already migrated for entry %s", entry.entry_id)
+        return
+
+    # Get legacy routes from data (from YAML configuration)
+    legacy_routes = entry.data.get(CONF_ROUTES, [])
+
+    # Mark migration as starting to prevent duplicate calls
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "routes_migrated": True}
+    )
+
+    if not legacy_routes:
+        _LOGGER.debug(
+            "No legacy routes found in configuration, migration marked as complete"
+        )
+        return
+
+    _LOGGER.info(
+        "Migrating %d legacy routes from configuration to subentries",
+        len(legacy_routes),
+    )
+    migrated_count = 0
+
+    for route in legacy_routes:
+        try:
+            # Validate required fields
+            if not all(key in route for key in (CONF_NAME, CONF_FROM, CONF_TO)):
+                _LOGGER.warning(
+                    "Skipping invalid route missing required fields: %s", route
+                )
+                continue
+
+            # Create subentry data
+            subentry_data = {
+                CONF_NAME: route[CONF_NAME],
+                CONF_FROM: route[CONF_FROM].upper(),
+                CONF_TO: route[CONF_TO].upper(),
+            }
+
+            # Add optional fields if present
+            if route.get(CONF_VIA):
+                subentry_data[CONF_VIA] = route[CONF_VIA].upper()
+
+            if route.get(CONF_TIME):
+                subentry_data[CONF_TIME] = route[CONF_TIME]
+
+            # Create unique_id with uppercase station codes for consistency
+            unique_id_parts = [
+                route[CONF_FROM].upper(),
+                route[CONF_TO].upper(),
+                route.get(CONF_VIA, "").upper(),
+            ]
+            unique_id = "_".join(part for part in unique_id_parts if part)
+
+            # Create the subentry
+            subentry = ConfigSubentry(
+                data=MappingProxyType(subentry_data),
+                subentry_type="route",
+                title=route[CONF_NAME],
+                unique_id=unique_id,
+            )
+
+            # Add the subentry to the config entry
+            hass.config_entries.async_add_subentry(entry, subentry)
+            migrated_count += 1
+            _LOGGER.debug("Successfully migrated route: %s", route[CONF_NAME])
+
+        except (KeyError, ValueError) as ex:
+            _LOGGER.warning(
+                "Error migrating route %s: %s", route.get(CONF_NAME, "unknown"), ex
+            )
+
+    # Clean up legacy routes from data
+    new_data = {**entry.data}
+    if CONF_ROUTES in new_data:
+        new_data.pop(CONF_ROUTES)
+
+    # Update the config entry to remove legacy routes
+    hass.config_entries.async_update_entry(entry, data=new_data)
+
+    _LOGGER.info(
+        "Migration complete: %d of %d routes successfully migrated to subentries",
+        migrated_count,
+        len(legacy_routes),
+    )

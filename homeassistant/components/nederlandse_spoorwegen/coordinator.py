@@ -6,13 +6,13 @@ from datetime import UTC, datetime, timedelta
 import importlib
 import logging
 import re
+from types import MappingProxyType
 from typing import Any
-import uuid
 from zoneinfo import ZoneInfo
 
 import requests
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -58,19 +58,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         self.config_entry = config_entry
 
-        # Assign UUID to any route missing 'route_id' (for upgrades)
-        routes = self._get_routes()
-        changed = False
-        for route in routes:
-            if "route_id" not in route:
-                route["route_id"] = str(uuid.uuid4())
-                changed = True
-        if changed:
-            # Save updated routes with UUIDs back to config entry
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options={CONF_ROUTES: routes}
-            )
-
     async def test_connection(self) -> None:
         """Test connection to the API."""
         try:
@@ -80,13 +67,28 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise
 
     def _get_routes(self) -> list[dict[str, Any]]:
-        """Get routes from config entry options or data."""
-        return (
-            self.config_entry.options.get(
-                CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
-            )
-            if self.config_entry is not None
-            else []
+        """Get routes from config entry subentries (preferred) or fallback to options/data."""
+        if self.config_entry is None:
+            return []
+
+        # First, try to get routes from subentries (new format)
+        routes = []
+        for subentry in self.config_entry.subentries.values():
+            if subentry.subentry_type == "route":
+                # Convert subentry data to route format
+                route_data = dict(subentry.data)
+                # Ensure route has a route_id
+                if "route_id" not in route_data:
+                    route_data["route_id"] = subentry.subentry_id
+                routes.append(route_data)
+
+        # If we have routes from subentries, use those
+        if routes:
+            return routes
+
+        # Fallback to legacy format (for backward compatibility during migration)
+        return self.config_entry.options.get(
+            CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -296,25 +298,61 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return future_trips
 
     async def async_add_route(self, route: dict[str, Any]) -> None:
-        """Add a new route and trigger refresh, deduplicating by all properties."""
+        """Add a new route as a subentry and trigger refresh."""
         if self.config_entry is None:
             return
-        routes = self._get_routes().copy()
-        # Only add if not already present (deep equality)
-        if route not in routes:
-            routes.append(route)
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options={CONF_ROUTES: routes}
-            )
-            await self.async_refresh()
+
+        # Check if route already exists as subentry
+        for subentry in self.config_entry.subentries.values():
+            if subentry.subentry_type == "route" and dict(subentry.data) == route:
+                return  # Route already exists
+
+        # Create route data for subentry
+        subentry_data = {
+            CONF_NAME: route[CONF_NAME],
+            CONF_FROM: route[CONF_FROM].upper(),
+            CONF_TO: route[CONF_TO].upper(),
+        }
+
+        # Add optional fields if present
+        if route.get(CONF_VIA):
+            subentry_data[CONF_VIA] = route[CONF_VIA].upper()
+        if route.get(CONF_TIME):
+            subentry_data[CONF_TIME] = route[CONF_TIME]
+
+        # Create unique_id with uppercase station codes for consistency
+        unique_id_parts = [
+            route[CONF_FROM].upper(),
+            route[CONF_TO].upper(),
+            route.get(CONF_VIA, "").upper(),
+        ]
+        unique_id = "_".join(part for part in unique_id_parts if part)
+
+        # Create the subentry
+        subentry = ConfigSubentry(
+            data=MappingProxyType(subentry_data),
+            subentry_type="route",
+            title=route[CONF_NAME],
+            unique_id=unique_id,
+        )
+
+        # Add the subentry to the config entry
+        self.hass.config_entries.async_add_subentry(self.config_entry, subentry)
+        await self.async_refresh()
 
     async def async_remove_route(self, route_name: str) -> None:
-        """Remove a route and trigger refresh."""
+        """Remove a route subentry and trigger refresh."""
         if self.config_entry is None:
             return
-        routes = self._get_routes().copy()
-        routes = [r for r in routes if r.get(CONF_NAME) != route_name]
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, options={CONF_ROUTES: routes}
-        )
-        await self.async_refresh()
+
+        # Find and remove the subentry with matching route name
+        for subentry_id, subentry in self.config_entry.subentries.items():
+            if (
+                subentry.subentry_type == "route"
+                and subentry.data.get(CONF_NAME) == route_name
+            ):
+                self.hass.config_entries.async_remove_subentry(
+                    self.config_entry, subentry_id
+                )
+                await self.async_refresh()
+                return
