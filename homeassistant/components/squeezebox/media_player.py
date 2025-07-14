@@ -314,15 +314,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        try:
-            self.coordinator.config_entry.runtime_data.known_player_ids.remove(
-                self.coordinator.player.player_id
-            )
-        except ValueError:
-            _LOGGER.debug(
-                "Player %s not found in known_player_ids during removal",
-                self.coordinator.player.player_id,
-            )
+        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+            self.coordinator.player.player_id
+        )
 
     @property
     def volume_level(self) -> float | None:
