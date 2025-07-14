@@ -97,17 +97,16 @@ jobs:
         run: |
           echo "${{ secrets.CONFIG_CORE_SECRETS_BASE64 }}" | base64 -d > homeassistant/config_core_secrets.py
       
-      # TODO: figure out why nightly is not working. 
-      # - name: Download nightly wheels of frontend
-      #   if: needs.init.outputs.channel == 'dev'
-      #   uses: dawidd6/action-download-artifact@v9
-      #   with:
-      #     github_token: ${{secrets.GITHUB_TOKEN}}
-      #     repo: my-smart-homes/frontend-ha
-      #     branch: dev
-      #     workflow: nightly.yaml
-      #     workflow_conclusion: success
-      #     name: wheels
+      - name: Download nightly wheels of frontend
+        if: needs.init.outputs.channel == 'dev'
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          repo: my-smart-homes/frontend-ha
+          branch: dev
+          workflow: nightly.yaml
+          workflow_conclusion: success
+          name: wheels
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
