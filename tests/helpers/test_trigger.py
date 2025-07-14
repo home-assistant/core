@@ -727,6 +727,19 @@ async def test_async_get_all_descriptions_with_bad_description(
     ) in caplog.text
 
 
+async def test_invalid_trigger_platform(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid trigger platform."""
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(hass, "test.trigger", MockPlatform())
+
+    await async_setup_component(hass, "test", {})
+
+    assert "Integration test does not provide trigger support, skipping" in caplog.text
+
+
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_triggers", return_value=True)
 async def test_subscribe_triggers(
@@ -767,16 +780,3 @@ async def test_subscribe_triggers(
 
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
-
-
-async def test_invalid_trigger_platform(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test invalid trigger platform."""
-    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
-    mock_platform(hass, "test.trigger", MockPlatform())
-
-    await async_setup_component(hass, "test", {})
-
-    assert "Integration test does not provide trigger support, skipping" in caplog.text
