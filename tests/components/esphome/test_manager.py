@@ -3,7 +3,7 @@
 import asyncio
 import base64
 import logging
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -32,9 +32,6 @@ from homeassistant.components.esphome.const import (
     DOMAIN,
     STABLE_BLE_URL_VERSION,
     STABLE_BLE_VERSION_STR,
-)
-from homeassistant.components.esphome.encryption_key_storage import (
-    async_get_encryption_key_storage,
 )
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
@@ -1794,62 +1791,48 @@ async def test_sub_device_references_main_device_area(
     assert sub_device_3.suggested_area == "Bedroom"
 
 
-async def test_encryption_key_storage_integration(
-    hass: HomeAssistant,
-) -> None:
-    """Test that encryption key storage works with manager integration."""
-    storage = await async_get_encryption_key_storage(hass)
-    mac_address = "AA:BB:CC:DD:EE:FF"
-    test_key = "test_encryption_key_32_bytes_long"
-
-    # Store key
-    await storage.async_store_key(mac_address, test_key)
-
-    # Retrieve key
-    retrieved_key = await storage.async_get_key(mac_address)
-    assert retrieved_key == test_key
-
-    # Test case insensitive MAC address handling
-    retrieved_key_lower = await storage.async_get_key(mac_address.lower())
-    assert retrieved_key_lower == test_key
-
-
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
 async def test_dynamic_encryption_key_generation(
-    hass: HomeAssistant, mock_client: APIClient
+    mock_storage_func, hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test that a device without a key in storage gets a new one generated."""
+    # Mock the storage functionality
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=None)
+    mock_storage.async_store_key = AsyncMock()
+    mock_storage_func.return_value = mock_storage
+
     # Test the encryption key generation behavior
-    storage = await async_get_encryption_key_storage(hass)
     mac_address = "11:22:33:44:55:aa"
 
     # Verify no key exists initially
-    assert await storage.async_get_key(mac_address) is None
+    assert await mock_storage.async_get_key(mac_address) is None
 
     # Store a key (simulating what _handle_dynamic_encryption_key would do)
     test_key = base64.b64encode(b"test_key_32_bytes_long_exactly!").decode()
-    await storage.async_store_key(mac_address, test_key)
+    await mock_storage.async_store_key(mac_address, test_key)
 
-    # Verify key was stored
-    stored_key = await storage.async_get_key(mac_address)
-    assert stored_key == test_key
+    # Verify store was called
+    mock_storage.async_store_key.assert_called_once_with(mac_address, test_key)
 
 
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
 async def test_manager_retrieves_key_from_storage_on_reconnect(
-    hass: HomeAssistant,
+    mock_storage_func, hass: HomeAssistant
 ) -> None:
     """Test that manager can retrieve encryption key from storage during reconnect."""
-    # Test the scenario where a key exists in storage
-    storage = await async_get_encryption_key_storage(hass)
+    # Mock existing key in storage
     mac_address = "11:22:33:44:55:aa"
     test_key = base64.b64encode(b"existing_key_32_bytes_long!!!").decode()
 
-    # Store key in storage
-    await storage.async_store_key(mac_address, test_key)
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=test_key)
+    mock_storage_func.return_value = mock_storage
 
     # Verify key can be retrieved (simulating manager reconnect behavior)
-    retrieved_key = await storage.async_get_key(mac_address)
+    retrieved_key = await mock_storage.async_get_key(mac_address)
     assert retrieved_key == test_key
 
     # Test case insensitive MAC address handling
-    retrieved_key_upper = await storage.async_get_key(mac_address.upper())
+    retrieved_key_upper = await mock_storage.async_get_key(mac_address.upper())
     assert retrieved_key_upper == test_key

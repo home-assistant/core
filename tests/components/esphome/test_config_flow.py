@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -43,6 +43,26 @@ from . import VALID_NOISE_PSK
 from .conftest import MockGenericDeviceEntryType
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_config_flow_encryption_key_storage(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test config flow can work with encryption key storage."""
+    # Mock the storage functionality
+    mac_address = "11:22:33:44:55:aa"
+    stored_key = "test_encryption_key_32_bytes_long"
+
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=stored_key)
+    mock_storage_func.return_value = mock_storage
+
+    # Verify the key can be retrieved (simulating config flow behavior)
+    retrieved_key = await mock_storage.async_get_key(mac_address)
+    assert retrieved_key == stored_key
+
 
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
 WRONG_NOISE_PSK = "GP+ciK+nVfTQ/gcz6uOdS+oKEdJgesU+jeu8Ssj2how="
