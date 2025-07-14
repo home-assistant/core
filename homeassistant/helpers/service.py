@@ -7,6 +7,7 @@ from collections.abc import Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
+import inspect
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
@@ -997,7 +998,7 @@ def verify_domain_control(
         service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
-        if not asyncio.iscoroutinefunction(service_handler):
+        if not inspect.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
 
         async def check_permissions(call: ServiceCall) -> Any:
