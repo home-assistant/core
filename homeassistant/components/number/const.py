@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -78,6 +79,11 @@ class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
     # NumberDeviceClass should be aligned with SensorDeviceClass
+    ABSOLUTE_HUMIDITY = "absolute_humidity"
+    """Absolute humidity.
+
+    Unit of measurement: `g/m³`, `mg/m³`
+    """
 
     APPARENT_POWER = "apparent_power"
     """Apparent power.
@@ -452,6 +458,10 @@ class NumberDeviceClass(StrEnum):
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
+    NumberDeviceClass.ABSOLUTE_HUMIDITY: {
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
     NumberDeviceClass.AREA: set(UnitOfArea),
