@@ -794,9 +794,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Return boolean if a key was retrieved.
         """
-        if self._device_mac is None:
-            return False
-
+        assert self._device_mac is not None  # for type checking
         storage = await async_get_encryption_key_storage(self.hass)
         if stored_key := await storage.async_get_key(self._device_mac):
             self._noise_psk = stored_key

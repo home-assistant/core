@@ -81,10 +81,7 @@ from .const import (
 )
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
-from .encryption_key_storage import (
-    ESPHomeEncryptionKeyStorage,
-    async_get_encryption_key_storage,
-)
+from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -678,9 +675,7 @@ class ESPHomeManager:
 
         # Connected to device without key and the device supports encryption,
         # so we need to generate (and store) a new key
-        storage: ESPHomeEncryptionKeyStorage = await async_get_encryption_key_storage(
-            self.hass
-        )
+        storage = await async_get_encryption_key_storage(self.hass)
         try:
             new_key = base64.b64encode(secrets.token_bytes(32))
 
