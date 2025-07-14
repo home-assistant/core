@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysmartthings import Command
+from pysmartthings import Command, SmartThings
 from pysmartthings.capability import Capability
 
 from homeassistant.components.vacuum import (
@@ -53,16 +53,13 @@ async def async_setup_entry(
 class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
     """Representation of a Samsung Jet Bot vacuum as a Home Assistant entity."""
 
-    def __init__(self, client, device: FullDevice) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the Jet Bot vacuum entity."""
         super().__init__(
             client,
             device,
             {
                 Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-                Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE,
-                Capability.SAMSUNG_CE_ROBOT_CLEANER_DRIVING_MODE,
-                Capability.SAMSUNG_CE_ROBOT_CLEANER_WATER_SPRAY_LEVEL,
             },
         )
         self._attr_unique_id = f"{device.device.device_id}"
