@@ -1,7 +1,6 @@
 """Conversation support for OpenRouter."""
 
 from collections.abc import AsyncGenerator
-import json
 from typing import Literal
 
 import openai
@@ -10,7 +9,6 @@ from openai.types.chat import (
     ChatCompletionMessage,
     ChatCompletionMessageParam,
     ChatCompletionSystemMessageParam,
-    ChatCompletionToolMessageParam,
     ChatCompletionUserMessageParam,
 )
 
@@ -45,13 +43,7 @@ def _convert_content_to_chat_message(
     """Convert any native chat message for this agent to the native format."""
     LOGGER.debug("_convert_content_to_chat_message=%s", content)
     if isinstance(content, conversation.ToolResultContent):
-        return ChatCompletionToolMessageParam(
-            # Note: The functionary 'tool' role expects a name which is
-            # not supported in llama cpp python and the openai protos.
-            role="tool",
-            tool_call_id=content.tool_call_id,
-            content=json.dumps(content.tool_result),
-        )
+        return None
 
     role: Literal["user", "assistant", "system"] = content.role
     if role == "system" and content.content:
