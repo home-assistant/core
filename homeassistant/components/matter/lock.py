@@ -65,6 +65,7 @@ class MatterLock(MatterEntity, LockEntity):
     _feature_map: int | None = None
     _platform_translation_key = "lock"
     _attr_user_index: int | None = None
+    _attr_changed_by = "Unknown"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events to handle jammed and other event conditions"""
