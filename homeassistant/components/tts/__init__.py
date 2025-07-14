@@ -382,7 +382,7 @@ async def _async_convert_audio(
             assert process.stderr
             stderr_data = await process.stderr.read()
             _LOGGER.error(stderr_data.decode())
-            raise RuntimeError(
+            raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
