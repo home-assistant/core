@@ -54,7 +54,7 @@ class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version == 1:
-            # version 2 introduced in 2025.7
+            # version 2 introduced in 2025.8
             migrate_1_to_2(old_data)
 
         return old_data
