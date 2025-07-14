@@ -244,17 +244,14 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
             now = dt_util.now()
 
         today = now.date()
-        assert self.coordinator.data.zmanim is not None, "Data not available"
-        zmanim = self.coordinator.data.zmanim
         update = None
         if self.entity_description.next_update_fn:
-            update = self.entity_description.next_update_fn(zmanim)
+            update = self.entity_description.next_update_fn(self.coordinator.zmanim)
 
         _LOGGER.debug("Today: %s, update: %s", today, update)
-        assert self.coordinator.data.dateinfo is not None, "Data not available"
         if update is not None and now >= update:
-            return self.coordinator.data.dateinfo.next_day
-        return self.coordinator.data.dateinfo
+            return self.coordinator.dateinfo.next_day
+        return self.coordinator.dateinfo
 
 
 class JewishCalendarSensor(JewishCalendarBaseSensor):
@@ -297,11 +294,8 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     @property
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
-        assert self.coordinator.data.zmanim is not None, "Data not available"
         if self.entity_description.value_fn is None:
-            return self.coordinator.data.zmanim.zmanim[
-                self.entity_description.key
-            ].local
+            return self.coordinator.zmanim.zmanim[self.entity_description.key].local
         return self.entity_description.value_fn(
             self.get_dateinfo(), self.coordinator.make_zmanim
         )

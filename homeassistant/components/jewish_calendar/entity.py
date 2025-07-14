@@ -57,10 +57,9 @@ class JewishCalendarEntity(Entity):
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
-        zmanim = self.coordinator.data.zmanim
         update = dt_util.start_of_local_day() + dt.timedelta(days=1)
 
-        for update_time in self._update_times(zmanim):
+        for update_time in self._update_times(self.coordinator.zmanim):
             if update_time is not None and now < update_time < update:
                 update = update_time
 
