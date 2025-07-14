@@ -138,7 +138,7 @@ class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the current brightness."""
-        return (int)(self.functional_channel.dimLevel * 255.0)
+        return int(self.functional_channel.dimLevel * 255.0)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -169,10 +169,9 @@ class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
             # If no brightness is set, use the current brightness
             dim_level = self.functional_channel.dimLevel or 1.0
 
-        result = await self.functional_channel.set_hue_saturation_dim_level_async(
+        await self.functional_channel.set_hue_saturation_dim_level_async(
             hue=hue, saturation_level=saturation, dim_level=dim_level
         )
-        _logger.debug(result)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
