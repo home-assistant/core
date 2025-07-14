@@ -6,7 +6,7 @@
         You are a voice assistant for Home Assistant.
         Answer questions about the world truthfully.
         Answer in plain text. Keep it simple and to the point.
-        Current time is 03:56:59. Today's date is 2025-07-13.
+        Current time is 05:00:00. Today's date is 2024-05-24.
       ''',
       'role': 'system',
     }),
@@ -27,7 +27,7 @@
         You are a voice assistant for Home Assistant.
         Answer questions about the world truthfully.
         Answer in plain text. Keep it simple and to the point.
-        Current time is 03:56:59. Today's date is 2025-07-13.
+        Current time is 05:00:00. Today's date is 2024-05-24.
       ''',
       'role': 'system',
     }),

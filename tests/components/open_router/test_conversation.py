@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,13 @@ from homeassistant.helpers import area_registry as ar, device_registry as dr, in
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def freeze_the_time():
+    """Freeze the time."""
+    with freeze_time("2024-05-24 12:00:00", tz_offset=0):
+        yield
 
 
 @pytest.mark.parametrize("agent_id", [None, "conversation.gpt_3_5_turbo"])
