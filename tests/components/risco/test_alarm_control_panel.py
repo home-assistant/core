@@ -460,7 +460,7 @@ async def test_cloud_sets_with_correct_code(
 async def test_cloud_sets_without_code(
     hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
 ) -> None:
-    """Test settings the various modes when code is required."""
+    """Test settings the various modes when code is not required."""
     await _test_cloud_service_call(
         hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
@@ -1084,7 +1084,7 @@ async def test_local_sets_with_incorrect_code(
 async def test_local_sets_without_code(
     hass: HomeAssistant, two_part_local_alarm, setup_risco_local
 ) -> None:
-    """Test settings the various modes when code is required."""
+    """Test settings the various modes when code is not required."""
     await _test_local_service_call(
         hass,
         SERVICE_ALARM_DISARM,
