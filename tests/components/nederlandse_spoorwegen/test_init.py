@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.nederlandse_spoorwegen import (
     DOMAIN,
+    NSRuntimeData,
     async_reload_entry,
     async_setup,
     async_setup_entry,
@@ -33,7 +34,7 @@ def mock_config_entry():
     entry.entry_id = "test_entry_id"
     entry.data = {CONF_API_KEY: "test_api_key"}
     entry.options = {}
-    entry.runtime_data = {}
+    entry.runtime_data = NSRuntimeData(coordinator=MagicMock())
     entry.async_on_unload = MagicMock()
     entry.add_update_listener = MagicMock()
     return entry
@@ -68,7 +69,7 @@ async def test_async_setup_entry_success(
             mock_nsapi.get_stations.assert_not_called()  # Now not called directly in setup
             mock_coordinator.async_config_entry_first_refresh.assert_called_once()
             mock_forward.assert_called_once()
-            assert "coordinator" in mock_config_entry.runtime_data
+            assert hasattr(mock_config_entry.runtime_data, "coordinator")
 
 
 async def test_async_setup_entry_connection_error(

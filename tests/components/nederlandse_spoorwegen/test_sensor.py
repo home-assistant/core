@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.nederlandse_spoorwegen import DOMAIN
+from homeassistant.components.nederlandse_spoorwegen import DOMAIN, NSRuntimeData
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
 )
@@ -158,7 +158,7 @@ async def test_async_setup_entry_no_routes(
 ) -> None:
     """Test setup entry with no routes configured."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
 
     # Mock coordinator data with no routes
     mock_coordinator.data = {"routes": {}, "stations": []}
@@ -182,7 +182,7 @@ async def test_async_setup_entry_with_routes(
 ) -> None:
     """Test setup entry with routes configured."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
 
     # Mock coordinator data with routes
     mock_coordinator.data = {
@@ -218,7 +218,7 @@ async def test_async_setup_entry_no_coordinator_data(
 ) -> None:
     """Test setup entry when coordinator has no data yet."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
 
     # Mock coordinator with no data
     mock_coordinator.data = None
@@ -397,7 +397,7 @@ async def test_async_setup_entry_no_routes_addentities(
 ) -> None:
     """Test async_setup_entry with no routes configured adds only service sensor."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
     mock_coordinator.data = {"routes": {}, "stations": []}
     entities = []
 
@@ -417,7 +417,7 @@ async def test_async_setup_entry_with_routes_addentities(
 ) -> None:
     """Test async_setup_entry with routes configured adds service and trip sensors."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
     mock_coordinator.data = {
         "routes": {
             "Test Route_AMS_UTR": {
@@ -449,7 +449,7 @@ async def test_async_setup_entry_no_coordinator_data_addentities(
 ) -> None:
     """Test async_setup_entry when coordinator has no data adds only service sensor."""
     mock_config_entry = MagicMock()
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
     mock_coordinator.data = None
     entities = []
 

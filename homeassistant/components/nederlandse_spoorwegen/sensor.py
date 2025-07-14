@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NS sensors from a config entry."""
-    coordinator = entry.runtime_data.get("coordinator")
+    coordinator = entry.runtime_data.coordinator
     if coordinator is None:
         _LOGGER.error("Coordinator not found in runtime_data for NS integration")
         return

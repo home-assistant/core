@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.nederlandse_spoorwegen import DOMAIN
+from homeassistant.components.nederlandse_spoorwegen import DOMAIN, NSRuntimeData
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
 )
@@ -55,7 +55,7 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_coordinator: MagicMock
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
-    mock_config_entry.runtime_data = {"coordinator": mock_coordinator}
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
 
     # Setup component to register services
     await async_setup_component(hass, DOMAIN, {})
@@ -70,9 +70,9 @@ async def test_add_route_service(
     """Test the add_route service."""
     # Create a fully mocked config entry with the required attributes
     mock_entry = MagicMock()
-    mock_entry.runtime_data = {
-        "coordinator": init_integration.runtime_data["coordinator"]
-    }
+    mock_entry.runtime_data = NSRuntimeData(
+        coordinator=init_integration.runtime_data.coordinator
+    )
     mock_state = MagicMock()
     mock_state.name = "LOADED"
     mock_entry.state = mock_state
@@ -84,7 +84,7 @@ async def test_add_route_service(
         mock_entries.return_value = [mock_entry]
 
         with patch.object(
-            init_integration.runtime_data["coordinator"], "async_add_route"
+            init_integration.runtime_data.coordinator, "async_add_route"
         ) as mock_add:
             await hass.services.async_call(
                 DOMAIN,
@@ -115,9 +115,9 @@ async def test_remove_route_service(
     """Test the remove_route service."""
     # Create a fully mocked config entry with the required attributes
     mock_entry = MagicMock()
-    mock_entry.runtime_data = {
-        "coordinator": init_integration.runtime_data["coordinator"]
-    }
+    mock_entry.runtime_data = NSRuntimeData(
+        coordinator=init_integration.runtime_data.coordinator
+    )
     mock_state = MagicMock()
     mock_state.name = "LOADED"
     mock_entry.state = mock_state
@@ -129,7 +129,7 @@ async def test_remove_route_service(
         mock_entries.return_value = [mock_entry]
 
         with patch.object(
-            init_integration.runtime_data["coordinator"], "async_remove_route"
+            init_integration.runtime_data.coordinator, "async_remove_route"
         ) as mock_remove:
             await hass.services.async_call(
                 DOMAIN,
@@ -202,9 +202,9 @@ async def test_add_route_service_with_via_and_time(
     """Test the add_route service with optional via and time parameters."""
     # Create a fully mocked config entry with the required attributes
     mock_entry = MagicMock()
-    mock_entry.runtime_data = {
-        "coordinator": init_integration.runtime_data["coordinator"]
-    }
+    mock_entry.runtime_data = NSRuntimeData(
+        coordinator=init_integration.runtime_data.coordinator
+    )
     mock_state = MagicMock()
     mock_state.name = "LOADED"
     mock_entry.state = mock_state
@@ -216,7 +216,7 @@ async def test_add_route_service_with_via_and_time(
         mock_entries.return_value = [mock_entry]
 
         with patch.object(
-            init_integration.runtime_data["coordinator"], "async_add_route"
+            init_integration.runtime_data.coordinator, "async_add_route"
         ) as mock_add:
             await hass.services.async_call(
                 DOMAIN,
@@ -249,9 +249,9 @@ async def test_add_route_service_without_optional_params(
     """Test the add_route service without optional parameters."""
     # Create a fully mocked config entry with the required attributes
     mock_entry = MagicMock()
-    mock_entry.runtime_data = {
-        "coordinator": init_integration.runtime_data["coordinator"]
-    }
+    mock_entry.runtime_data = NSRuntimeData(
+        coordinator=init_integration.runtime_data.coordinator
+    )
     mock_state = MagicMock()
     mock_state.name = "LOADED"
     mock_entry.state = mock_state
@@ -263,7 +263,7 @@ async def test_add_route_service_without_optional_params(
         mock_entries.return_value = [mock_entry]
 
         with patch.object(
-            init_integration.runtime_data["coordinator"], "async_add_route"
+            init_integration.runtime_data.coordinator, "async_add_route"
         ) as mock_add:
             await hass.services.async_call(
                 DOMAIN,

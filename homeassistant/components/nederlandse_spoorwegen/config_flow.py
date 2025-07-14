@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import UTC, datetime
 import logging
 from typing import Any, cast
-import uuid
 
 from ns_api import NSAPI
 import voluptuous as vol
@@ -14,23 +14,14 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
 
-from .const import (
-    CONF_ACTION,
-    CONF_FROM,
-    CONF_NAME,
-    CONF_ROUTE_IDX,
-    CONF_TIME,
-    CONF_TO,
-    CONF_VIA,
-    DOMAIN,
-    STATION_LIST_URL,
-)
+from .const import CONF_FROM, CONF_NAME, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +33,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        # Only log flow initialization at debug level
-        _LOGGER.debug("NSConfigFlow initialized")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,11 +43,26 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             # Only log API key validation attempt
             _LOGGER.debug("Validating user API key for NS integration")
+            client = NSAPI(api_key)
             try:
-                client = NSAPI(api_key)
                 await self.hass.async_add_executor_job(client.get_stations)
-            except (ValueError, ConnectionError, TimeoutError, Exception) as ex:
-                _LOGGER.debug("API validation failed: %s", ex)
+            except ValueError as ex:
+                _LOGGER.debug("API validation failed with ValueError: %s", ex)
+                if (
+                    "401" in str(ex)
+                    or "unauthorized" in str(ex).lower()
+                    or "invalid" in str(ex).lower()
+                ):
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+            except (ConnectionError, TimeoutError) as ex:
+                _LOGGER.debug("API validation failed with connection error: %s", ex)
+                errors["base"] = "cannot_connect"
+            except (
+                Exception  # Allowed in config flows for robustness  # noqa: BLE001
+            ) as ex:
+                _LOGGER.debug("API validation failed with unexpected error: %s", ex)
                 if (
                     "401" in str(ex)
                     or "unauthorized" in str(ex).lower()
@@ -68,28 +72,27 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             if not errors:
-                await self.async_set_unique_id(api_key)
+                # Use a stable unique ID instead of the API key since keys can be rotated
+                await self.async_set_unique_id("nederlandse_spoorwegen")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Nederlandse Spoorwegen",
                     data={CONF_API_KEY: api_key},
-                    options={"routes": []},
                 )
         data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"station_list_url": STATION_LIST_URL},
         )
 
-    @staticmethod
+    @classmethod
     @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> NSOptionsFlowHandler:
-        """Return the options flow handler for this config entry."""
-        return NSOptionsFlowHandler(config_entry)
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"route": RouteSubentryFlowHandler}
 
     async def async_step_reauth(
         self, user_input: Mapping[str, Any]
@@ -146,208 +149,36 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class NSOptionsFlowHandler(OptionsFlow):
-    """Options flow handler for Nederlandse Spoorwegen integration."""
+class RouteSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying routes."""
 
-    def __init__(self, config_entry) -> None:
-        """Initialize the options flow handler."""
-        super().__init__()
-        _LOGGER.debug("NS OptionsFlow initialized for entry: %s", config_entry.entry_id)
-        self._config_entry = config_entry
-        self._action = None
-        self._edit_idx = None
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new route subentry."""
+        return await self._async_step_route_form(user_input)
 
-    async def _get_station_name_map(self) -> dict[str, str]:
-        """Get a mapping of station code to human-friendly name for dropdowns."""
-        stations = []
-        # Try to get full station objects from runtime_data if available
-        if (
-            hasattr(self._config_entry, "runtime_data")
-            and self._config_entry.runtime_data
-        ):
-            stations = self._config_entry.runtime_data.get("stations", [])
-        if (
-            not stations
-            and hasattr(self._config_entry, "runtime_data")
-            and self._config_entry.runtime_data
-        ):
-            # Fallback: try to get from coordinator if present
-            coordinator = self._config_entry.runtime_data.get("coordinator")
-            if coordinator and hasattr(coordinator, "stations"):
-                stations = coordinator.stations
-        # Build mapping {code: name}
-        code_name = {}
-        for s in stations:
-            code = getattr(s, "code", None) if hasattr(s, "code") else s.get("code")
-            name = (
-                getattr(s, "names", {}).get("long")
-                if hasattr(s, "names")
-                else s.get("names", {}).get("long")
-            )
-            if code and name:
-                code_name[code.upper()] = name
-        return code_name
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure an existing route subentry."""
+        return await self._async_step_route_form(user_input)
 
-    async def _get_station_options(self) -> list[dict[str, str]] | list[str]:
-        """Get the list of approved station codes for dropdowns, with names if available, sorted by name."""
-        code_name = await self._get_station_name_map()
-        if code_name:
-            # Sort by station name (label)
-            return sorted(
-                [{"value": code, "label": name} for code, name in code_name.items()],
-                key=lambda x: x["label"].lower(),
-            )
-        # fallback: just codes, sorted
-        codes = (
-            self._config_entry.runtime_data.get("approved_station_codes", [])
-            if hasattr(self._config_entry, "runtime_data")
-            and self._config_entry.runtime_data
-            else []
-        )
-        return sorted(codes)
-
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-        """Show the default options flow step for Home Assistant compatibility."""
-        return await self.async_step_options_init(user_input)
-
-    async def async_step_options_init(self, user_input=None) -> ConfigFlowResult:
-        """Show the initial options step for managing routes (add, edit, delete)."""
+    async def _async_step_route_form(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Show the route configuration form."""
         errors: dict[str, str] = {}
-        ACTIONS = {
-            "add": "Add route",
-            "edit": "Edit route",
-            "delete": "Delete route",
-        }
-        data_schema = vol.Schema({vol.Required(CONF_ACTION): vol.In(ACTIONS)})
+
         if user_input is not None:
-            action = user_input["action"]
-            self._action = action
-            _LOGGER.debug("Options flow: action selected: %s", action)
-            if action == "add":
-                return await self.async_step_add_route()
-            if action == "edit":
-                return await self.async_step_select_route({"action": "edit"})
-            if action == "delete":
-                return await self.async_step_select_route({"action": "delete"})
-        return self.async_show_form(
-            step_id="init",
-            data_schema=data_schema,
-            errors=errors,
-        )
+            # Validate the route data
+            try:
+                await self._ensure_stations_available()
+                station_options = await self._get_station_options()
 
-    async def async_step_select_route(self, user_input=None) -> ConfigFlowResult:
-        """Show a form to select a route for editing or deletion."""
-        errors: dict[str, str] = {}
-        routes = (
-            self._config_entry.options.get("routes")
-            or self._config_entry.data.get("routes")
-            or []
-        )
-        action = (
-            user_input.get(CONF_ACTION)
-            if user_input and CONF_ACTION in user_input
-            else self._action
-        )
-        if not routes:
-            errors["base"] = "no_routes"
-            return await self.async_step_init()
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_ROUTE_IDX): vol.In(
-                    {
-                        str(i): s
-                        for i, s in enumerate(
-                            [
-                                f"{route.get('name', f'Route {i + 1}')}: {route.get('from', '?')} → {route.get('to', '?')}"
-                                + (
-                                    f" [{route.get('time')} ]"
-                                    if route.get("time")
-                                    else ""
-                                )
-                                for i, route in enumerate(routes)
-                            ]
-                        )
-                    }
-                )
-            }
-        )
-        if user_input is not None and CONF_ROUTE_IDX in user_input:
-            idx = int(user_input[CONF_ROUTE_IDX])
-            if action == "edit":
-                return await self.async_step_edit_route({"idx": idx})
-            if action == "delete":
-                routes = routes.copy()
-                routes.pop(idx)
-                return self.async_create_entry(title="", data={"routes": routes})
-        return self.async_show_form(
-            step_id="select_route",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders={"action": action or "manage"},
-        )
-
-    async def async_step_add_route(self, user_input=None) -> ConfigFlowResult:
-        """Show a form to add a new route to the integration."""
-        errors: dict[str, str] = {}
-        try:
-            station_options = await self._get_station_options()
-            if not station_options:
-                # Manual entry fallback: use text fields for from/to/via
-                ROUTE_SCHEMA = vol.Schema(
-                    {
-                        vol.Required(CONF_NAME): str,
-                        vol.Required(CONF_FROM): str,
-                        vol.Required(CONF_TO): str,
-                        vol.Optional(CONF_VIA): str,
-                        vol.Optional(CONF_TIME): str,
-                    }
-                )
-            else:
-                # If station_options is a list of dicts, use as-is; else build list of dicts
-                options = (
-                    station_options
-                    if station_options and isinstance(station_options[0], dict)
-                    else [{"value": c, "label": c} for c in station_options]
-                )
-                ROUTE_SCHEMA = vol.Schema(
-                    {
-                        vol.Required(CONF_NAME): str,
-                        vol.Required(CONF_FROM): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                }
-                            }
-                        ),
-                        vol.Required(CONF_TO): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                }
-                            }
-                        ),
-                        vol.Optional(CONF_VIA): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                    "mode": "dropdown",
-                                    "custom_value": True,
-                                }
-                            }
-                        ),
-                        vol.Optional(CONF_TIME): str,
-                    }
-                )
-            routes = (
-                self._config_entry.options.get("routes")
-                or self._config_entry.data.get("routes")
-                or []
-            )
-            if user_input is not None and any(user_input.values()):
-                # Only log add action, not full user_input
-                _LOGGER.debug("Options flow: adding route")
-                # Validate required fields
-                if (
+                if not station_options:
+                    errors["base"] = "no_stations_available"
+                elif (
                     not user_input.get(CONF_NAME)
                     or not user_input.get(CONF_FROM)
                     or not user_input.get(CONF_TO)
@@ -356,136 +187,170 @@ class NSOptionsFlowHandler(OptionsFlow):
                 elif user_input.get(CONF_FROM) == user_input.get(CONF_TO):
                     errors["base"] = "same_station"
                 else:
-                    routes = routes.copy()
-                    # Always store codes in uppercase
-                    route_to_add = {
-                        "route_id": str(uuid.uuid4()),
-                        CONF_NAME: user_input[CONF_NAME],
-                        CONF_FROM: user_input[CONF_FROM].upper(),
-                        CONF_TO: user_input[CONF_TO].upper(),
-                        CONF_VIA: user_input.get(CONF_VIA, "").upper()
-                        if user_input.get(CONF_VIA)
-                        else "",
-                        CONF_TIME: user_input.get(CONF_TIME, ""),
-                    }
-                    routes.append(route_to_add)
-                    return self.async_create_entry(title="", data={"routes": routes})
-        except Exception:
-            _LOGGER.exception("Exception in async_step_add_route")
-            errors["base"] = "unknown"
-        return self.async_show_form(
-            step_id="add_route",
-            data_schema=ROUTE_SCHEMA if "ROUTE_SCHEMA" in locals() else vol.Schema({}),
-            errors=errors,
-            description_placeholders={"station_list_url": STATION_LIST_URL},
-        )
+                    # Validate stations exist
+                    from_station = user_input.get(CONF_FROM)
+                    to_station = user_input.get(CONF_TO)
+                    via_station = user_input.get(CONF_VIA)
 
-    async def async_step_edit_route(self, user_input=None) -> ConfigFlowResult:
-        """Show a form to edit an existing route in the integration."""
-        errors: dict[str, str] = {}
+                    station_codes = [opt["value"] for opt in station_options]
+
+                    if from_station and from_station not in station_codes:
+                        errors[CONF_FROM] = "invalid_station"
+                    if to_station and to_station not in station_codes:
+                        errors[CONF_TO] = "invalid_station"
+                    if via_station and via_station not in station_codes:
+                        errors[CONF_VIA] = "invalid_station"
+
+                    if not errors:
+                        # Create the route configuration - store codes in uppercase
+                        route_config = {
+                            CONF_NAME: user_input[CONF_NAME],
+                            CONF_FROM: from_station.upper() if from_station else "",
+                            CONF_TO: to_station.upper() if to_station else "",
+                        }
+                        if via_station:
+                            route_config[CONF_VIA] = via_station.upper()
+                        if user_input.get(CONF_TIME):
+                            route_config[CONF_TIME] = user_input[CONF_TIME]
+
+                        return self.async_create_entry(
+                            title=user_input[CONF_NAME], data=route_config
+                        )
+
+            except Exception:  # Allowed in config flows for robustness
+                _LOGGER.exception("Exception in route subentry flow")
+                errors["base"] = "unknown"
+
+        # Show the form
         try:
-            routes = (
-                self._config_entry.options.get("routes")
-                or self._config_entry.data.get("routes")
-                or []
-            )
+            await self._ensure_stations_available()
             station_options = await self._get_station_options()
-            # Store idx on first call, use self._edit_idx on submit
-            if user_input is not None and "idx" in user_input:
-                idx = user_input["idx"]
-                self._edit_idx = idx
-            else:
-                idx = getattr(self, "_edit_idx", None)
-            if idx is None or not (0 <= idx < len(routes)):
-                errors["base"] = "invalid_route_index"
-                return await self.async_step_options_init()
-            route = routes[idx]
+
             if not station_options:
-                # Manual entry fallback: use text fields for from/to/via
-                ROUTE_SCHEMA = vol.Schema(
-                    {
-                        vol.Required(CONF_NAME, default=route.get(CONF_NAME, "")): str,
-                        vol.Required(CONF_FROM, default=route.get(CONF_FROM, "")): str,
-                        vol.Required(CONF_TO, default=route.get(CONF_TO, "")): str,
-                        vol.Optional(CONF_VIA, default=route.get(CONF_VIA, "")): str,
-                        vol.Optional(CONF_TIME, default=route.get(CONF_TIME, "")): str,
-                    }
+                errors["base"] = "no_stations_available"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema({}),
+                    errors=errors,
+                )
+
+            # Get current route data if reconfiguring
+            current_route: dict[str, Any] = {}
+            if self.source == "reconfigure":
+                try:
+                    subentry = self._get_reconfigure_subentry()
+                    current_route = dict(subentry.data)
+                except (ValueError, KeyError) as ex:
+                    _LOGGER.warning(
+                        "Failed to get subentry data for reconfigure: %s", ex
+                    )
+
+            route_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_NAME, default=current_route.get(CONF_NAME, "")
+                    ): str,
+                    vol.Required(
+                        CONF_FROM, default=current_route.get(CONF_FROM, "")
+                    ): selector({"select": {"options": station_options}}),
+                    vol.Required(
+                        CONF_TO, default=current_route.get(CONF_TO, "")
+                    ): selector({"select": {"options": station_options}}),
+                    vol.Optional(
+                        CONF_VIA, default=current_route.get(CONF_VIA, "")
+                    ): selector(
+                        {
+                            "select": {
+                                "options": station_options,
+                                "mode": "dropdown",
+                                "custom_value": True,
+                            }
+                        }
+                    ),
+                    vol.Optional(
+                        CONF_TIME, default=current_route.get(CONF_TIME, "")
+                    ): str,
+                }
+            )
+
+            return self.async_show_form(
+                step_id="user",
+                data_schema=route_schema,
+                errors=errors,
+            )
+
+        except Exception:  # Allowed in config flows for robustness
+            _LOGGER.exception("Exception creating route form")
+            errors["base"] = "unknown"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({}),
+                errors=errors,
+            )
+
+    async def _ensure_stations_available(self) -> None:
+        """Ensure stations are available in runtime_data, fetch if needed."""
+        entry = self._get_entry()
+        if (
+            not hasattr(entry, "runtime_data")
+            or not entry.runtime_data
+            or not hasattr(entry.runtime_data, "stations")
+            or not entry.runtime_data.stations
+        ):
+            # For tests or when runtime_data is not available, we can't fetch stations
+            if not hasattr(entry, "runtime_data") or not entry.runtime_data:
+                _LOGGER.debug("No runtime_data available, cannot fetch stations")
+                return
+
+            # Fetch stations using the coordinator's client
+            coordinator = entry.runtime_data.coordinator
+            try:
+                stations = await self.hass.async_add_executor_job(
+                    coordinator.client.get_stations
+                )
+                # Store in runtime_data
+                entry.runtime_data.stations = stations
+                entry.runtime_data.stations_updated = datetime.now(UTC).isoformat()
+            except (ValueError, ConnectionError, TimeoutError) as ex:
+                _LOGGER.warning("Failed to fetch stations for subentry flow: %s", ex)
+
+    async def _get_station_options(self) -> list[dict[str, str]]:
+        """Get the list of station options for dropdowns, sorted by name."""
+        entry = self._get_entry()
+        stations = []
+        if (
+            hasattr(entry, "runtime_data")
+            and entry.runtime_data
+            and hasattr(entry.runtime_data, "stations")
+            and entry.runtime_data.stations
+        ):
+            stations = entry.runtime_data.stations
+
+        if not stations:
+            return []
+
+        # Convert to dropdown options with station names as labels
+        station_options = []
+        for station in stations:
+            if hasattr(station, "code") and hasattr(station, "name"):
+                station_options.append(
+                    {"value": station.code, "label": f"{station.name} ({station.code})"}
                 )
             else:
-                options = (
-                    station_options
-                    if station_options and isinstance(station_options[0], dict)
-                    else [{"value": c, "label": c} for c in station_options]
+                # Fallback for dict format
+                code = (
+                    station.get("code", "")
+                    if isinstance(station, dict)
+                    else str(station)
                 )
-                ROUTE_SCHEMA = vol.Schema(
+                name = station.get("name", code) if isinstance(station, dict) else code
+                station_options.append(
                     {
-                        vol.Required(CONF_NAME, default=route.get(CONF_NAME, "")): str,
-                        vol.Required(
-                            CONF_FROM, default=route.get(CONF_FROM, "")
-                        ): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                }
-                            }
-                        ),
-                        vol.Required(CONF_TO, default=route.get(CONF_TO, "")): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                }
-                            }
-                        ),
-                        vol.Optional(
-                            CONF_VIA, default=route.get(CONF_VIA, "")
-                        ): selector(
-                            {
-                                "select": {
-                                    "options": options,
-                                    "mode": "dropdown",
-                                    "custom_value": True,
-                                }
-                            }
-                        ),
-                        vol.Optional(CONF_TIME, default=route.get(CONF_TIME, "")): str,
+                        "value": code,
+                        "label": f"{name} ({code})" if name != code else code,
                     }
                 )
-            if user_input is not None and any(
-                k in user_input for k in (CONF_NAME, CONF_FROM, CONF_TO)
-            ):
-                _LOGGER.debug("Options flow: editing route idx=%s", idx)
-                # Validate required fields
-                if (
-                    not user_input.get(CONF_NAME)
-                    or not user_input.get(CONF_FROM)
-                    or not user_input.get(CONF_TO)
-                ):
-                    errors["base"] = "missing_fields"
-                else:
-                    routes = routes.copy()
-                    # Always store codes in uppercase
-                    old_route = routes[idx]
-                    route_to_edit = {
-                        "route_id": old_route.get("route_id", str(uuid.uuid4())),
-                        CONF_NAME: user_input[CONF_NAME],
-                        CONF_FROM: user_input[CONF_FROM].upper(),
-                        CONF_TO: user_input.get(CONF_TO, "").upper(),
-                        CONF_VIA: user_input.get(CONF_VIA, "").upper()
-                        if user_input.get(CONF_VIA)
-                        else "",
-                        CONF_TIME: user_input.get(CONF_TIME, ""),
-                    }
-                    routes[idx] = route_to_edit
-                    # Clean up idx after edit
-                    if hasattr(self, "_edit_idx"):
-                        del self._edit_idx
-                    return self.async_create_entry(title="", data={"routes": routes})
-        except Exception:
-            _LOGGER.exception("Exception in async_step_edit_route")
-            errors["base"] = "unknown"
-        return self.async_show_form(
-            step_id="edit_route",
-            data_schema=ROUTE_SCHEMA if "ROUTE_SCHEMA" in locals() else vol.Schema({}),
-            errors=errors,
-            description_placeholders={"station_list_url": STATION_LIST_URL},
-        )
+
+        # Sort by label (station name)
+        station_options.sort(key=lambda x: x["label"])
+        return station_options

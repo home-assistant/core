@@ -92,23 +92,17 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            # Use runtime_data to cache station codes and timestamp
-            runtime_data = (
-                getattr(self.config_entry, "runtime_data", {})
-                if self.config_entry is not None
-                else {}
-            )
-            approved_station_codes = runtime_data.get("approved_station_codes")
-            approved_station_codes_updated = runtime_data.get(
-                "approved_station_codes_updated"
-            )
+            # Use runtime_data to cache stations and timestamp
+            runtime_data = getattr(self.config_entry, "runtime_data", None)
+            stations = runtime_data.stations if runtime_data else None
+            stations_updated = runtime_data.stations_updated if runtime_data else None
             station_cache_expired = False
             now_utc = datetime.now(UTC)
-            if not approved_station_codes or not approved_station_codes_updated:
+            if not stations or not stations_updated:
                 station_cache_expired = True
             else:
                 try:
-                    updated_dt = datetime.fromisoformat(approved_station_codes_updated)
+                    updated_dt = datetime.fromisoformat(stations_updated)
                     if (now_utc - updated_dt) > timedelta(days=1):
                         station_cache_expired = True
                 except (ValueError, TypeError):
@@ -118,17 +112,11 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 stations = await self.hass.async_add_executor_job(
                     self.client.get_stations  # type: ignore[attr-defined]
                 )
-                codes = sorted(
-                    [
-                        c
-                        for c in (getattr(s, "code", None) for s in stations)
-                        if c is not None
-                    ]
-                )
-                runtime_data["approved_station_codes"] = codes
-                runtime_data["approved_station_codes_updated"] = now_utc.isoformat()
+                # Store full stations in runtime_data for UI dropdowns
                 if self.config_entry is not None:
-                    self.config_entry.runtime_data = runtime_data
+                    runtime_data = self.config_entry.runtime_data
+                    runtime_data.stations = stations
+                    runtime_data.stations_updated = now_utc.isoformat()
 
             # Get routes from config entry options or data
             routes = self._get_routes()
@@ -215,39 +203,48 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         route[CONF_TO] = to_station
         if CONF_VIA in route:
             route[CONF_VIA] = via_station
-        # Use the stored approved station codes from runtime_data for validation
+        # Use the stored station codes from runtime_data for validation
         valid_station_codes = set()
         if (
             self.config_entry is not None
             and hasattr(self.config_entry, "runtime_data")
             and self.config_entry.runtime_data
+            and self.config_entry.runtime_data.stations
         ):
-            valid_station_codes = set(
-                self.config_entry.runtime_data.get("approved_station_codes", [])
-            )
+            # Extract codes from stations
+            valid_station_codes = {
+                getattr(station, "code", None) or station.get("code", "")
+                for station in self.config_entry.runtime_data.stations
+                if hasattr(station, "code")
+                or (isinstance(station, dict) and "code" in station)
+            }
         # Store approved station codes in runtime_data for use in config flow
-        current_codes = []
+        current_codes: list[str] = []
         if (
             self.config_entry is not None
             and hasattr(self.config_entry, "runtime_data")
             and self.config_entry.runtime_data
+            and self.config_entry.runtime_data.stations
         ):
-            current_codes = self.config_entry.runtime_data.get(
-                "approved_station_codes", []
-            )
+            # Extract codes from stations
+            current_codes = [
+                getattr(station, "code", None) or station.get("code", "")
+                for station in self.config_entry.runtime_data.stations
+                if hasattr(station, "code")
+                or (isinstance(station, dict) and "code" in station)
+            ]
         # Always sort both lists before comparing and storing
         sorted_valid_codes = sorted(valid_station_codes)
         sorted_current_codes = sorted(current_codes)
         if sorted_valid_codes != sorted_current_codes:
-            if self.config_entry is not None:
-                if hasattr(self.config_entry, "runtime_data"):
-                    self.config_entry.runtime_data["approved_station_codes"] = (
-                        sorted_valid_codes
-                    )
-                else:
-                    self.config_entry.runtime_data = {
-                        "approved_station_codes": sorted_valid_codes
-                    }
+            if (
+                self.config_entry is not None
+                and hasattr(self.config_entry, "runtime_data")
+                and self.config_entry.runtime_data
+            ):
+                self.config_entry.runtime_data.approved_station_codes = (
+                    sorted_valid_codes
+                )
         if from_station not in valid_station_codes:
             _LOGGER.error(
                 "'from' station code '%s' not found in NS station list for route: %s",

@@ -8,6 +8,7 @@ from ns_api import RequestParametersError
 import pytest
 import requests
 
+from homeassistant.components.nederlandse_spoorwegen import NSRuntimeData
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
 )
@@ -210,9 +211,10 @@ async def test_get_trips_for_route(coordinator, mock_nsapi) -> None:
     ]
     mock_nsapi.get_trips.return_value = trips
 
-    coordinator.config_entry.runtime_data = {
-        "approved_station_codes": ["AMS", "UTR", "RTD"]
-    }
+    coordinator.config_entry.runtime_data = NSRuntimeData(
+        coordinator=coordinator,
+        stations=[MagicMock(code="AMS"), MagicMock(code="UTR"), MagicMock(code="RTD")],
+    )
 
     result = coordinator._get_trips_for_route(route)
 
@@ -233,7 +235,9 @@ async def test_get_trips_for_route_no_optional_params(coordinator, mock_nsapi) -
     trips = [MagicMock(departure_time_actual=now, departure_time_planned=now)]
     mock_nsapi.get_trips.return_value = trips
 
-    coordinator.config_entry.runtime_data = {"approved_station_codes": ["AMS", "UTR"]}
+    coordinator.config_entry.runtime_data = NSRuntimeData(
+        coordinator=coordinator, stations=[MagicMock(code="AMS"), MagicMock(code="UTR")]
+    )
 
     result = coordinator._get_trips_for_route(route)
 

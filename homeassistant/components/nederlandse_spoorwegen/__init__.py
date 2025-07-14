@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import TypedDict
+from typing import Any
 
 from ns_api import NSAPI
 import voluptuous as vol
@@ -25,17 +26,16 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 # Define runtime data structure for this integration
-class NSRuntimeData(TypedDict, total=False):
-    """TypedDict for runtime data used by the Nederlandse Spoorwegen integration."""
+@dataclass
+class NSRuntimeData:
+    """Runtime data for the Nederlandse Spoorwegen integration."""
 
     coordinator: NSDataUpdateCoordinator
-    approved_station_codes: list[str]
-    approved_station_codes_updated: str
+    stations: list[Any] | None = None  # Full station objects with code and names
+    stations_updated: str | None = None
 
 
-class NSConfigEntry(ConfigEntry[NSRuntimeData]):
-    """Config entry for the Nederlandse Spoorwegen integration."""
-
+type NSConfigEntry = ConfigEntry[NSRuntimeData]
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "Nederlandse Spoorwegen integration not loaded"
             )
 
-        coordinator = entry.runtime_data["coordinator"]
+        coordinator = entry.runtime_data.coordinator
 
         # Create route dict from service call data
         route = {
@@ -102,7 +102,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "Nederlandse Spoorwegen integration not loaded"
             )
 
-        coordinator = entry.runtime_data["coordinator"]
+        coordinator = entry.runtime_data.coordinator
 
         # Remove route via coordinator
         await coordinator.async_remove_route(call.data[CONF_NAME])
@@ -129,12 +129,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     # Create coordinator
     coordinator = NSDataUpdateCoordinator(hass, client, entry)
 
+    # Initialize runtime data with coordinator
+    entry.runtime_data = NSRuntimeData(coordinator=coordinator)
+
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = NSRuntimeData(
-        coordinator=coordinator,
-    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
