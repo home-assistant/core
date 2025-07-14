@@ -13,6 +13,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.SELECT,
+        Platform.COVER,
+    ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
@@ -58,6 +63,11 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
         Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "mal_alarm_host": [
+        # Alarm Host support
+        Platform.ALARM_CONTROL_PANEL,
         Platform.SWITCH,
     ],
     "mcs_door_sensor": [
