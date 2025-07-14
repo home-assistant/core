@@ -14,7 +14,6 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -95,9 +94,9 @@ CO2_DESCRIPTION = SensorEntityDescription(
 
 POWER_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_POWER_CONSUMPTION,
-    device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPower.WATT,
 )
 
 DURATION_OF_USED_DESCRIPTION = SensorEntityDescription(
