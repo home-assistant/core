@@ -20,7 +20,6 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     EventStateChangedData,
-    HassJobType,
     HomeAssistant,
     callback,
 )
@@ -260,13 +259,11 @@ class TargetStateChangeTracker:
         self,
         hass: HomeAssistant,
         selector_data: TargetSelectorData,
-        job_type: HassJobType | None,
         action: Callable[[Event[EventStateChangedData]], Any],
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
         self._selector_data = selector_data
-        self._job_type = job_type
         self._action = action
 
         self._state_change_unsub: CALLBACK_TYPE | None = None
@@ -294,7 +291,7 @@ class TargetStateChangeTracker:
 
         _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
         self._state_change_unsub = async_track_state_change_event(
-            self._hass, tracked_entities, state_change_listener, job_type=self._job_type
+            self._hass, tracked_entities, state_change_listener
         )
 
     def _setup_registry_listeners(self) -> None:
@@ -340,7 +337,6 @@ def async_track_target_selector_state_change_event(
     hass: HomeAssistant,
     target_selector_config: ConfigType,
     action: Callable[[Event[EventStateChangedData]], Any],
-    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track state changes for entities referenced directly or indirectly in a target selector."""
     selector_data = TargetSelectorData(target_selector_config)
@@ -348,5 +344,5 @@ def async_track_target_selector_state_change_event(
         raise HomeAssistantError(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
-    tracker = TargetStateChangeTracker(hass, selector_data, job_type, action)
+    tracker = TargetStateChangeTracker(hass, selector_data, action)
     return tracker.unsub
