@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Any
 
+import aiohttp
 from awesomeversion import AwesomeVersion
 from lunatone_dali_api_client import Device
 from lunatone_dali_api_client.models import ControlData
@@ -17,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LunatoneConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -50,6 +54,8 @@ class LunatoneLight(LightEntity):
     """Representation of a Lunatone light."""
 
     unique_id: str
+
+    _unavailable_logged: bool = False
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
@@ -93,4 +99,15 @@ class LunatoneLight(LightEntity):
         """
         if self._interface_version >= "1.10.0" and self._interface_version < "1.15.0":
             await asyncio.sleep(0.02)
-        await self._device.async_update()
+        try:
+            await self._device.async_update()
+        except aiohttp.ClientConnectionError as ex:
+            self._attr_available = False
+            if not self._unavailable_logged:
+                _LOGGER.info("Light %s is unavailable: %s", self.entity_id, ex)
+                self._unavailable_logged = True
+        else:
+            self._attr_available = True
+            if self._unavailable_logged:
+                _LOGGER.info("Light %s is back online", self.entity_id)
+                self._unavailable_logged = False

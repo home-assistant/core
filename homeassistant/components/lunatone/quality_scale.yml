@@ -37,9 +37,9 @@ rules:
     status: exempt
     comment: No options to configure
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt
