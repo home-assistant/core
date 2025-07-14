@@ -46,7 +46,6 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         VacuumEntityFeature.START
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.PAUSE
-        | VacuumEntityFeature.STOP
         | VacuumEntityFeature.STATE
     )
 
