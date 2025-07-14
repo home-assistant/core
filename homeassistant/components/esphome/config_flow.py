@@ -51,6 +51,7 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
@@ -159,7 +160,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow."""
         errors = {}
 
-        if await self._retrieve_encryption_key_from_dashboard():
+        if (
+            await self._retrieve_encryption_key_from_storage()
+            or await self._retrieve_encryption_key_from_dashboard()
+        ):
             error = await self.fetch_device_info()
             if error is None:
                 return await self._async_authenticate_or_add()
@@ -226,8 +230,20 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 
+            # try to retrieve an existing key from dashboard or storage
             if (
                 self._device_name
+                and await self._retrieve_encryption_key_from_dashboard()
+            ) or (
+                self._device_mac
+                and await self._retrieve_encryption_key_from_dashboard()
+            ):
+                response = await self.fetch_device_info()
+
+            if (
+                self._device_name and await self._retrieve_encryption_key_from_storage()
+            ) or (
+                self._device_mac
                 and await self._retrieve_encryption_key_from_dashboard()
             ):
                 response = await self.fetch_device_info()
@@ -284,6 +300,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
+        self._device_mac = mac_address
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
 
         # Check if already configured
@@ -771,6 +788,21 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._noise_psk = noise_psk
         return True
+
+    async def _retrieve_encryption_key_from_storage(self) -> bool:
+        """Try to retrieve the encryption key from storage.
+
+        Return boolean if a key was retrieved.
+        """
+        if self._device_mac is None:
+            return False
+
+        storage = await async_get_encryption_key_storage(self.hass)
+        if stored_key := await storage.async_get_key(self._device_mac):
+            self._noise_psk = stored_key
+            return True
+
+        return False
 
     @staticmethod
     @callback
