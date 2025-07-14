@@ -15,6 +15,7 @@ from homematicip.base.functionalChannels import NotificationLightChannel
 from homematicip.device import (
     BrandDimmer,
     BrandSwitchNotificationLight,
+    Device,
     Dimmer,
     DinRailDimmer3,
     FullFlushDimmer,
@@ -126,7 +127,7 @@ class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, hap: HomematicipHAP, device, channel_index: int) -> None:
+    def __init__(self, hap: HomematicipHAP, device: Device, channel_index: int) -> None:
         """Initialize the light entity."""
         super().__init__(hap, device, channel=channel_index, is_multi_channel=True)
 
