@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -484,35 +484,32 @@ async def test_async_track_target_selector_state_change_event(
     hass: HomeAssistant,
 ) -> None:
     """Test async_track_target_selector_state_change_event with multiple targets."""
-    calls = []
+    events: list[Event[EventStateChangedData]] = []
 
     @callback
-    def state_change_callback(event):
+    def state_change_callback(event: Event[EventStateChangedData]):
         """Handle state change events."""
-        calls.append(event)
+        events.append(event)
 
-    # List of entities to toggle state during the test. This list should be insert-only
-    # so that all entities are changed every time.
-    entities_to_set_state = []
-    # List of entities that should assert a state change when toggled. Contrary to
-    # entities_to_set_state, entities should be added and removed.
-    entities_to_assert_change = []
     last_state = STATE_OFF
 
-    async def toggle_states():
-        """Toggle the state of all the entities in test."""
+    async def set_states_and_check_events(
+        entities_to_set_state: list[str], entities_to_assert_change: list[str]
+    ) -> None:
+        """Toggle the state entities and check for events."""
         nonlocal last_state
         last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
         for entity_id in entities_to_set_state:
             hass.states.async_set(entity_id, last_state)
         await hass.async_block_till_done()
 
-    def assert_entity_calls_and_reset() -> None:
-        assert len(calls) == len(entities_to_assert_change)
-        for change_call in calls:
-            assert change_call.data["entity_id"] in entities_to_assert_change
-            assert change_call.data["new_state"].state == last_state
-        calls.clear()
+        assert len(events) == len(entities_to_assert_change)
+        entities_seen = set()
+        for event in events:
+            entities_seen.add(event.data["entity_id"])
+            assert event.data["new_state"].state == last_state
+        assert entities_seen == set(entities_to_assert_change)
+        events.clear()
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -551,10 +548,10 @@ async def test_async_track_target_selector_state_change_event(
 
     targeted_entity = "light.test_light"
 
-    entities_to_set_state.extend(
-        [targeted_entity, device_entity, untargeted_entity, untargeted_device_entity]
-    )
-    await toggle_states()
+    # List of entities to toggle state during the test. This list should be insert-only
+    # so that all entities are changed every time.
+    targeted_entities = [targeted_entity, device_entity]
+    await set_states_and_check_events(targeted_entities, [])
 
     label = lr.async_get(hass).async_create("Test Label").name
     area = ar.async_get(hass).async_create("Test Area").id
@@ -572,9 +569,7 @@ async def test_async_track_target_selector_state_change_event(
     )
 
     # Test directly targeted entity and device
-    entities_to_assert_change.extend([targeted_entity, device_entity])
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(targeted_entities, targeted_entities)
 
     # Add new entity to the targeted device -> should trigger on state change
     device_entity_2 = entity_reg.async_get_or_create(
@@ -584,70 +579,71 @@ async def test_async_track_target_selector_state_change_event(
         device_id=device_entry.id,
     ).entity_id
 
-    entities_to_set_state.append(device_entity_2)
-    entities_to_assert_change.append(device_entity_2)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    targeted_entities = [targeted_entity, device_entity, device_entity_2]
+    await set_states_and_check_events(targeted_entities, targeted_entities)
 
     # Test untargeted entity -> should not trigger
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
 
     # Add label to untargeted entity -> should trigger now
     entity_reg.async_update_entity(untargeted_entity, labels={label})
-    entities_to_assert_change.append(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], [*targeted_entities, untargeted_entity]
+    )
 
     # Remove label from untargeted entity -> should not trigger anymore
     entity_reg.async_update_entity(untargeted_entity, labels={})
-    entities_to_assert_change.remove(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
 
     # Add area to untargeted entity -> should trigger now
     entity_reg.async_update_entity(untargeted_entity, area_id=area)
-    entities_to_assert_change.append(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], [*targeted_entities, untargeted_entity]
+    )
 
     # Remove area from untargeted entity -> should not trigger anymore
     entity_reg.async_update_entity(untargeted_entity, area_id=None)
-    entities_to_assert_change.remove(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
 
     # Add area to untargeted device -> should trigger on state change
     device_reg.async_update_device(untargeted_device_entry.id, area_id=area)
-    entities_to_assert_change.append(untargeted_device_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_device_entity],
+        [*targeted_entities, untargeted_device_entity],
+    )
 
     # Remove area from untargeted device -> should not trigger anymore
     device_reg.async_update_device(untargeted_device_entry.id, area_id=None)
-    entities_to_assert_change.remove(untargeted_device_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_device_entity], targeted_entities
+    )
 
     # Set the untargeted area on the untargeted entity -> should not trigger
     untracked_area = ar.async_get(hass).async_create("Untargeted Area").id
     entity_reg.async_update_entity(untargeted_entity, area_id=untracked_area)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
 
     # Set targeted floor on the untargeted area -> should trigger now
     ar.async_get(hass).async_update(untracked_area, floor_id=floor)
-    entities_to_assert_change.append(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity],
+        [*targeted_entities, untargeted_entity],
+    )
 
     # Remove untargeted area from targeted floor -> should not trigger anymore
     ar.async_get(hass).async_update(untracked_area, floor_id=None)
-    entities_to_assert_change.remove(untargeted_entity)
-    await toggle_states()
-    assert_entity_calls_and_reset()
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
 
     # After unsubscribing, changes should not trigger
     unsub()
-    await toggle_states()
-    assert len(calls) == 0
+    await set_states_and_check_events(targeted_entities, [])
