@@ -34,13 +34,13 @@ class DatadogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Validate connection to Datadog Agent
             success = await validate_datadog_connection(
                 self.hass,
-                DogStatsd(user_input["host"], user_input["port"], user_input["prefix"]),
+                user_input,
             )
             if not success:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title="Datadog", data={}, options=user_input
+                    title=f"Datadog {user_input['host']}", data={}, options=user_input
                 )
 
         return self.async_show_form(
@@ -74,8 +74,16 @@ class DatadogOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Datadog options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
+        errors: dict[str, str] = {}
+        if user_input:
+            success = await validate_datadog_connection(
+                self.hass,
+                user_input,
+            )
+            if not success:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(data=user_input)
 
         data = self.config_entry.options
         return self.async_show_form(
@@ -88,12 +96,16 @@ class DatadogOptionsFlowHandler(OptionsFlow):
                     vol.Required(CONF_RATE, default=data["rate"]): int,
                 }
             ),
+            errors=errors,
         )
 
 
-async def validate_datadog_connection(hass: HomeAssistant, client: DogStatsd) -> bool:
+async def validate_datadog_connection(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> bool:
     """Attempt to send a test metric to the Datadog agent."""
     try:
+        client = DogStatsd(user_input["host"], user_input["port"], user_input["prefix"])
         hass.async_add_executor_job(client.increment, "connection_test")
     except (OSError, ValueError):
         return False

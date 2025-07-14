@@ -38,6 +38,9 @@
           "rate": "[%key:component::datadog::config::step::user::data_description::rate%]"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

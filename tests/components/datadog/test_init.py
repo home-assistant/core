@@ -27,22 +27,22 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
     config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
 
     with (
-        patch("homeassistant.components.datadog.initialize") as mock_init,
-        patch("homeassistant.components.datadog.DogStatsd"),
-        patch("socket.socket", autospec=True),
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd"
+        ) as mock_dogstatsd,
     ):
         assert await async_setup_component(hass, datadog.DOMAIN, config)
 
-        assert mock_init.call_count == 1
-        assert mock_init.call_args == mock.call(statsd_host="host", statsd_port=123)
+        assert mock_dogstatsd.call_count == 1
+        assert mock_dogstatsd.call_args == mock.call("host", 123, "foo")
 
 
 async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
     with (
-        patch("homeassistant.components.datadog.initialize") as mock_init,
-        patch("homeassistant.components.datadog.DogStatsd"),
-        patch("socket.socket", autospec=True),
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd"
+        ) as mock_dogstatsd,
     ):
         assert await async_setup_component(
             hass,
@@ -56,16 +56,17 @@ async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
             },
         )
 
-        assert mock_init.call_count == 1
-        assert mock_init.call_args == mock.call(statsd_host="host", statsd_port=8125)
+        assert mock_dogstatsd.call_count == 1
+        assert mock_dogstatsd.call_args == mock.call("host", 8125, "hass")
 
 
 async def test_logbook_entry(hass: HomeAssistant) -> None:
     """Test event listener."""
     with (
-        patch("homeassistant.components.datadog.initialize"),
         patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class,
-        patch("socket.socket", autospec=True),
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd", mock_statsd_class
+        ),
     ):
         mock_statsd = mock_statsd_class.return_value
 
@@ -98,15 +99,14 @@ async def test_logbook_entry(hass: HomeAssistant) -> None:
             tags=["entity:sensor.foo.bar", "domain:automation"],
         )
 
-        mock_statsd.event.reset_mock()
-
 
 async def test_state_changed(hass: HomeAssistant) -> None:
     """Test event listener."""
     with (
-        patch("homeassistant.components.datadog.initialize"),
         patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class,
-        patch("socket.socket", autospec=True),
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd", mock_statsd_class
+        ),
     ):
         mock_statsd = mock_statsd_class.return_value
 
@@ -186,31 +186,46 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 async def test_validate_connection_success(hass: HomeAssistant) -> None:
     """Test validate_datadog_connection succeeds."""
-    client = mock.MagicMock()
-    assert await validate_datadog_connection(hass, client)
-    client.increment.assert_called_once_with("connection_test")
+    with (
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd.increment"
+        ) as mock_increment,
+    ):
+        result = await validate_datadog_connection(hass, MOCK_CONFIG)
+        assert result is True
+        mock_increment.assert_called_once_with("connection_test")
 
 
 async def test_validate_connection_oserror(hass: HomeAssistant) -> None:
     """Test validate_datadog_connection fails with OSError."""
-    client = mock.MagicMock()
-    client.increment.side_effect = OSError
-    assert not await validate_datadog_connection(hass, client)
+    with (
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd.increment",
+            side_effect=OSError,
+        ),
+    ):
+        result = await validate_datadog_connection(hass, MOCK_CONFIG)
+        assert result is False
 
 
 async def test_validate_connection_valueerror(hass: HomeAssistant) -> None:
     """Test validate_datadog_connection fails with ValueError."""
-    client = mock.MagicMock()
-    client.increment.side_effect = ValueError
-    assert not await validate_datadog_connection(hass, client)
+    with (
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd.increment",
+            side_effect=ValueError,
+        ),
+    ):
+        result = await validate_datadog_connection(hass, MOCK_CONFIG)
+        assert result is False
 
 
 async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
     """Test state_changed_listener skips None and unknown states."""
     with (
-        patch("homeassistant.components.datadog.initialize"),
-        patch("homeassistant.components.datadog.DogStatsd") as mock_statsd,
-        patch("socket.socket", autospec=True),
+        patch(
+            "homeassistant.components.datadog.config_flow.DogStatsd"
+        ) as mock_dogstatsd,
     ):
         assert await async_setup_component(
             hass,
@@ -227,11 +242,11 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
         # Test None state
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": None})
         await hass.async_block_till_done()
-        assert not mock_statsd.gauge.called
+        assert not mock_dogstatsd.gauge.called
 
         # Test STATE_UNKNOWN
         unknown_state = mock.MagicMock()
         unknown_state.state = STATE_UNKNOWN
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": unknown_state})
         await hass.async_block_till_done()
-        assert not mock_statsd.gauge.called
+        assert not mock_dogstatsd.gauge.called
