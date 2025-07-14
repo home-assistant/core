@@ -6,15 +6,6 @@ state:
         target:
           entity:
             domain: light
-    behavior:
-      required: true
-      default: any
-      selector:
-        select:
-          options:
-            - first
-            - last
-            - any
     state:
       required: true
       selector:
