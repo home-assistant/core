@@ -71,7 +71,7 @@ PyMetEireann==2024.11.0
 PyMetno==0.13.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.17
+PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -186,7 +186,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==3.2.8
+aioamazondevices==3.2.10
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -382,7 +382,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.7.1
+aioshelly==13.7.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2717,7 +2717,7 @@ sanix==1.0.6
 satel-integra==0.3.7
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.10.0
+screenlogicpy==0.10.2
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
