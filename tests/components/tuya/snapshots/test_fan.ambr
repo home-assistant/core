@@ -153,6 +153,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[cs_pro_breeze_30l_dehumidifier][fan.pro_breeze_30l_compressor_dehumidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.pro_breeze_30l_compressor_dehumidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.bfd6d197ec1c027a46etni',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_pro_breeze_30l_dehumidifier][fan.pro_breeze_30l_compressor_dehumidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pro Breeze 30L Compressor Dehumidifier',
+      'supported_features': <FanEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.pro_breeze_30l_compressor_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[kj_bladeless_tower_fan][fan.bree-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -71,9 +71,20 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if description := HUMIDIFIERS.get(device.category):
-                entities.append(
-                    TuyaHumidifierEntity(device, hass_data.manager, description)
-                )
+                # Check if device has any of the required DPCodes before creating entity
+                entity = TuyaHumidifierEntity(device, hass_data.manager, description)
+                if entity.has_required_dpcodes:
+                    entities.append(entity)
+                else:
+                    LOGGER.warning(
+                        "Skipping %s device '%s' (device_id: %s) as it does not support "
+                        "any of the expected control codes: %s. Device category: %s",
+                        description.device_class,
+                        device.name,
+                        device.id,
+                        description.dpcode or DPCode(description.key),
+                        device.category,
+                    )
         async_add_entities(entities)
 
     async_discover_device([*hass_data.manager.device_map])
@@ -108,6 +119,28 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             description.dpcode or DPCode(description.key), prefer_function=True
         )
 
+        # Log diagnostic information if no switch DPCode is found
+        if self._switch_dpcode is None:
+            available_codes = {
+                "function": list(self.device.function.keys()),
+                "status": list(self.device.status.keys()),
+                "status_range": list(self.device.status_range.keys()),
+            }
+            LOGGER.warning(
+                "No suitable switch DPCode found for %s device '%s' (device_id: %s, category: %s). "
+                "Expected one of: %s. Available DPCodes: %s. "
+                "This device may not be controllable through Home Assistant. "
+                "Note that some devices have more features available in the Smart Life or Tuya Smart "
+                "apps than can be controlled remotely through Home Assistant. Consider reporting this "
+                "issue with your device diagnostics to help improve support",
+                description.device_class,
+                self.device.name,
+                self.device.id,
+                self.device.category,
+                description.dpcode or DPCode(description.key),
+                available_codes,
+            )
+
         # Determine humidity parameters
         if int_type := self.find_dpcode(
             description.humidity, dptype=DPType.INTEGER, prefer_function=True
@@ -131,9 +164,14 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             self._attr_available_modes = enum_type.range
 
     @property
+    def has_required_dpcodes(self) -> bool:
+        """Return if the device has the required DPCodes to function."""
+        return self._switch_dpcode is not None
+
+    @property
     def is_on(self) -> bool:
         """Return the device is on or off."""
-        if self._switch_dpcode is None:
+        if not self.has_required_dpcodes:
             return False
         return self.device.status.get(self._switch_dpcode, False)
 
@@ -169,10 +207,24 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        if not self.has_required_dpcodes:
+            raise RuntimeError(
+                f"Cannot turn on {self.entity_description.device_class} device '{self.device.name}' "
+                f"(device_id: {self.device.id}). Device does not support any of the expected "
+                f"control codes: {self.entity_description.dpcode}. Available function codes: "
+                f"{list(self.device.function.keys())}, status codes: {list(self.device.status.keys())}"
+            )
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if not self.has_required_dpcodes:
+            raise RuntimeError(
+                f"Cannot turn off {self.entity_description.device_class} device '{self.device.name}' "
+                f"(device_id: {self.device.id}). Device does not support any of the expected "
+                f"control codes: {self.entity_description.dpcode}. Available function codes: "
+                f"{list(self.device.function.keys())}, status codes: {list(self.device.status.keys())}"
+            )
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:

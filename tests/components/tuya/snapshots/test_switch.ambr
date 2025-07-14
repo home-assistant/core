@@ -194,6 +194,55 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[cs_pro_breeze_30l_dehumidifier][switch.pro_breeze_30l_compressor_dehumidifier_ionizer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pro_breeze_30l_compressor_dehumidifier_ionizer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:atom',
+    'original_name': 'Ionizer',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ionizer',
+    'unique_id': 'tuya.bfd6d197ec1c027a46etnianion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_pro_breeze_30l_dehumidifier][switch.pro_breeze_30l_compressor_dehumidifier_ionizer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pro Breeze 30L Compressor Dehumidifier Ionizer',
+      'icon': 'mdi:atom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pro_breeze_30l_compressor_dehumidifier_ionizer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_filter_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

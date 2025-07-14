@@ -59,6 +59,12 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_pro_breeze_30l_dehumidifier": [
+        # Real Pro Breeze 30L device - missing required humidifier DPCodes (switch, humidity controls)
+        # Core Tuya integration creates: fan (unknown state), ionizer switch
+        Platform.FAN,  # fan entity with no features
+        Platform.SWITCH,  # anion (ionizer) switch only
+    ],
     "cwwsq_cleverio_pf100": [
         # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,

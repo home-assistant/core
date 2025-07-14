@@ -54,3 +54,29 @@ async def test_platform_setup_no_discovery(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
+
+@pytest.mark.parametrize("mock_device_code", ["cs_pro_breeze_30l_dehumidifier"])
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.HUMIDIFIER])
+async def test_humidifier_missing_dpcodes(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test humidifier setup with real Pro Breeze device missing required DPCodes."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    # No entities should be created for device without required DPCodes
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Check that warning was logged for real Pro Breeze device
+    assert (
+        "Skipping dehumidifier device 'Pro Breeze 30L Compressor Dehumidifier'"
+        in caplog.text
+    )
+    assert "does not support any of the expected control codes" in caplog.text
