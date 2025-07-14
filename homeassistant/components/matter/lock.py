@@ -171,14 +171,9 @@ class MatterLock(MatterEntity, LockEntity):
             self.async_write_ha_state()
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        result = await self.send_device_command(
+        await self.send_device_command(
             command=clusters.DoorLock.Commands.LockDoor(code_bytes),
             timed_request_timeout_ms=1000,
-        )
-        LOGGER.debug(
-            "Received response from LockDoor command: %s for %s",
-            result,
-            self.entity_id,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -236,11 +231,6 @@ class MatterLock(MatterEntity, LockEntity):
             clusters.DoorLock.Attributes.LockState
         )
 
-        LOGGER.debug(
-            "Received _update_from_device with lock state: %s for %s",
-            lock_state,
-            self.entity_id,
-        )
         # start by setting all the lock operation attributes as False, then change as needed
         self._attr_is_locked = False
         self._attr_is_locking = False
