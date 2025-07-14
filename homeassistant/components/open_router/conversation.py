@@ -1,12 +1,10 @@
 """Conversation support for OpenRouter."""
 
-from collections.abc import AsyncGenerator
 from typing import Literal
 
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
-    ChatCompletionMessage,
     ChatCompletionMessageParam,
     ChatCompletionSystemMessageParam,
     ChatCompletionUserMessageParam,
@@ -60,17 +58,6 @@ def _convert_content_to_chat_message(
     return None
 
 
-async def _transform_response(
-    message: ChatCompletionMessage,
-) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
-    """Transform the OpenAI API message to a ChatLog format."""
-    data: conversation.AssistantContentDeltaDict = {
-        "role": message.role,
-        "content": message.content,
-    }
-    yield data
-
-
 class OpenRouterConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -89,16 +76,6 @@ class OpenRouterConversationEntity(
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        conversation.async_set_agent(self.hass, self.entry, self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """When entity will be removed from Home Assistant."""
-        conversation.async_unset_agent(self.hass, self.entry)
-        await super().async_will_remove_from_hass()
-
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
@@ -108,11 +85,11 @@ class OpenRouterConversationEntity(
         options = self.subentry.data
 
         try:
-            await chat_log.async_update_llm_data(
-                DOMAIN,
-                user_input,
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
                 options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
@@ -139,18 +116,13 @@ class OpenRouterConversationEntity(
             LOGGER.error("Error talking to API: %s", err)
             raise HomeAssistantError("Error talking to API") from err
 
-        convert_message = _convert_content_to_chat_message
         result_message = result.choices[0].message
 
-        messages.extend(
-            [
-                msg
-                async for content in chat_log.async_add_delta_content_stream(
-                    user_input.agent_id,
-                    _transform_response(result_message),
-                )
-                if (msg := convert_message(content))
-            ]
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id=user_input.agent_id,
+                content=result_message.content,
+            )
         )
 
         intent_response = intent.IntentResponse(language=user_input.language)
