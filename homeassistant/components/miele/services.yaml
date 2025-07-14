@@ -1,12 +1,12 @@
 # Services descriptions for Miele integration
 
 set_program:
-  target:
-    device:
-      integration: "miele"
-    entity:
-      integration: "miele"
   fields:
+    device_id:
+      selector:
+        device:
+          integration: miele
+      required: true
     program_id:
       required: true
       selector:

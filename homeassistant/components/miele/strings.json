@@ -1074,6 +1074,10 @@
       "name": "Set program",
       "description": "Sets and starts a program on the appliance.",
       "fields": {
+        "device_id": {
+          "description": "The device to set the program on.",
+          "name": "Device"
+        },
         "program_id": {
           "description": "The ID of the program to set.",
           "name": "Program ID"

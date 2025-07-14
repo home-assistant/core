@@ -7,7 +7,8 @@ import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.components.miele.services import ATTR_DURATION, ATTR_PROGRAM_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -33,8 +34,8 @@ async def test_services(
         DOMAIN,
         "set_program",
         {
-            CONF_DEVICE_ID: device.id,
-            "program_id": 24,
+            ATTR_DEVICE_ID: device.id,
+            ATTR_PROGRAM_ID: 24,
         },
         blocking=True,
     )
@@ -47,15 +48,15 @@ async def test_services(
         DOMAIN,
         "set_program",
         {
-            CONF_DEVICE_ID: device.id,
-            "program_id": 24,
-            "duration": 75,
-            "temperature": 195,
+            ATTR_DEVICE_ID: device.id,
+            ATTR_PROGRAM_ID: 24,
+            ATTR_DURATION: 75,
+            ATTR_TEMPERATURE: 195,
         },
         blocking=True,
     )
     mock_miele_client.set_program.assert_called_once_with(
-        TEST_APPLIANCE, {"programId": 24, "duration": [1, 15], "temperature": 195}
+        TEST_APPLIANCE, {"programId": 24, ATTR_DURATION: [1, 15], ATTR_TEMPERATURE: 195}
     )
     mock_miele_client.reset_mock()
 
@@ -76,7 +77,7 @@ async def test_service_api_errors(
         await hass.services.async_call(
             DOMAIN,
             "set_program",
-            {"device_id": device.id, "program_id": 1},
+            {"device_id": device.id, ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
     mock_miele_client.set_program.assert_called_once_with(
@@ -110,7 +111,7 @@ async def test_service_validation_errors(
         await hass.services.async_call(
             DOMAIN,
             "set_program",
-            {"device_id": device.id, "program_id": "invalid"},
+            {"device_id": device.id, ATTR_PROGRAM_ID: "invalid"},
             blocking=True,
         )
     mock_miele_client.set_program.assert_not_called()
@@ -122,7 +123,7 @@ async def test_service_validation_errors(
         await hass.services.async_call(
             DOMAIN,
             "set_program",
-            {"device_id": "invalid_device", "program_id": 1},
+            {"device_id": "invalid_device", ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
     mock_miele_client.set_program.assert_not_called()

@@ -6,7 +6,7 @@ from typing import cast
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -15,11 +15,15 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import MieleConfigEntry
 
-SERVICE_PROGRAM = cv.make_entity_service_schema(
+ATTR_PROGRAM_ID = "program_id"
+ATTR_DURATION = "duration"
+
+SERVICE_PROGRAM = vol.Schema(
     {
-        vol.Required("program_id"): cv.positive_int,
-        vol.Optional("duration"): cv.positive_int,
-        vol.Optional("temperature"): cv.positive_int,
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+        vol.Optional(ATTR_DURATION): cv.positive_int,
+        vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
     },
 )
 
@@ -50,29 +54,29 @@ async def set_program(call: ServiceCall) -> None:
     config_entry = await extract_our_config_entry(call)
     device_reg = dr.async_get(call.hass)
     api = config_entry.runtime_data.api
-    for device in call.data[CONF_DEVICE_ID]:
-        device_entry = device_reg.async_get(device)
+    device = call.data[ATTR_DEVICE_ID]
+    device_entry = device_reg.async_get(device)
 
-        data = {"programId": call.data["program_id"]}
-        if "duration" in call.data:
-            data["duration"] = [
-                call.data["duration"] // 60,
-                call.data["duration"] % 60,
-            ]
-        if "temperature" in call.data:
-            data["temperature"] = call.data["temperature"]
-        try:
-            if serial_number := cast(dr.DeviceEntry, device_entry).serial_number:
-                await api.set_program(serial_number, data)
-        except aiohttp.ClientResponseError as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_program_error",
-                translation_placeholders={
-                    "status": str(ex.status),
-                    "message": ex.message,
-                },
-            ) from ex
+    data = {"programId": call.data[ATTR_PROGRAM_ID]}
+    if ATTR_DURATION in call.data:
+        data[ATTR_DURATION] = [
+            call.data[ATTR_DURATION] // 60,
+            call.data[ATTR_DURATION] % 60,
+        ]
+    if ATTR_TEMPERATURE in call.data:
+        data[ATTR_TEMPERATURE] = call.data[ATTR_TEMPERATURE]
+    try:
+        if serial_number := cast(dr.DeviceEntry, device_entry).serial_number:
+            await api.set_program(serial_number, data)
+    except aiohttp.ClientResponseError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="set_program_error",
+            translation_placeholders={
+                "status": str(ex.status),
+                "message": ex.message,
+            },
+        ) from ex
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
