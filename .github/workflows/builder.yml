@@ -272,7 +272,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GIT_USER_TOKEN_V2 }}
+          password: ${{ secrets.MSH_ACTIONS_KEY }}
 
       - name: Build base image
         uses: my-smart-homes/builder@master
@@ -306,7 +306,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
-          git-token: ${{ secrets.GIT_USER_TOKEN_V2 }}
+          git-token: ${{ secrets.MSH_ACTIONS_KEY }}
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
@@ -316,7 +316,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: beta
-          git-token: ${{ secrets.GIT_USER_TOKEN_V2 }}
+          git-token: ${{ secrets.MSH_ACTIONS_KEY }}
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
