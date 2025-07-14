@@ -52,6 +52,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
                     # This will only return if there was a broken connection
                     await self.droplet.listen(callback=self.async_set_updated_data)
 
+                self.async_set_updated_data(None)
                 await asyncio.sleep(RECONNECT_DELAY)
 
         async def disconnect(_: Event) -> None:

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import json
 import logging
 import socket
+import ssl
 
 import aiohttp
 
@@ -60,27 +61,37 @@ class Droplet:
 
     async def connect(self) -> bool:
         """Connect to Droplet."""
+        self._log(logging.ERROR, "Connect")
         if self._connected:
             return True
 
         if not self.session:
             return False
 
-        url = f"ws://{self.host}:{self.port}/ws"
+        url = f"wss://{self.host}:{self.port}/ws"
         try:
-            self._client = await self.session.ws_connect(url=url, heartbeat=30)
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            self._client = await self.session.ws_connect(
+                url=url, heartbeat=10, ssl_context=ssl_context
+            )
         except (
             aiohttp.WSServerHandshakeError,
             aiohttp.ClientConnectionError,
             socket.gaierror,
         ) as ex:
-            self._log(logging.DEBUG, "Failed to open connection: %s", str(ex))
+            self._log(logging.ERROR, "Failed to open connection: %s", str(ex))
+            self._available = False
             return False
 
+        self._available = True
         return True
 
     async def disconnect(self) -> None:
         """Disconnect from WebSocket."""
+        self._log(logging.ERROR, "Disconnect")
+        self._available = False
         if self._client:
             await self._client.close()
             self._connected = False
@@ -92,6 +103,7 @@ class Droplet:
             match message.type:
                 case aiohttp.WSMsgType.ERROR:
                     self._log(logging.ERROR, "Received error message")
+                    await self.disconnect()
                     return
                 case aiohttp.WSMsgType.TEXT:
                     try:
@@ -99,10 +111,16 @@ class Droplet:
                             self._available = True
                             callback(None)
                     except json.JSONDecodeError:
-                        self._available = message.data == "online"
+                        pass
                 case aiohttp.WSMsgType.CLOSE | aiohttp.WSMsgType.CLOSED:
                     self._log(logging.ERROR, "Connection closed!")
+                    await self.disconnect()
                     return
+                case _:
+                    self._log(
+                        logging.ERROR,
+                        f"Msg type: {aiohttp.WSMsgType(message.type).name}",
+                    )
 
     def _parse_message(self, msg: dict) -> bool:
         """Parse state message and return true if anything changed."""
@@ -136,6 +154,7 @@ class Droplet:
         """Get Droplet's server status."""
         return self._server_status
 
+    # Implement this with keepalive...?
     def get_availability(self):
         """Return true if Droplet device is available."""
         return self._available
