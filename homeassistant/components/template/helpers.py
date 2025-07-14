@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_platforms,
@@ -155,19 +156,19 @@ def rewrite_legacy_to_modern_configs(
 
 @callback
 def async_create_template_tracking_entities(
-    entity_cls: type,
+    entity_cls: type[Entity],
     async_add_entities: AddEntitiesCallback,
     hass: HomeAssistant,
     definitions: list[dict],
     unique_id_prefix: str | None,
 ) -> None:
     """Create the template tracking entities."""
-    entities = []
+    entities: list[Entity] = []
     for definition in definitions:
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(entity_cls(hass, definition, unique_id))
+        entities.append(entity_cls(hass, definition, unique_id))  # type: ignore[call-arg]
     async_add_entities(entities)
 
 
@@ -182,7 +183,7 @@ async def async_setup_template_platform(
     legacy_fields: dict[str, str] | None = None,
     legacy_key: str | None = None,
 ) -> None:
-    """Set up the Template cover."""
+    """Set up the Template platform."""
     if discovery_info is None:
         # Legacy Configuration
         if legacy_fields is not None:
