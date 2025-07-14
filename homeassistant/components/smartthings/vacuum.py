@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysmartthings import Command, SmartThings
+from pysmartthings import Attribute, Command, SmartThings, Status
 from pysmartthings.capability import Capability
 
 from homeassistant.components.vacuum import (
@@ -53,31 +53,26 @@ async def async_setup_entry(
 class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
     """Representation of a Samsung Jet Bot vacuum as a Home Assistant entity."""
 
+    _attr_name = None
+    _attr_supported_features = SUPPORTED_FEATURES
+
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the Jet Bot vacuum entity."""
         super().__init__(
             client,
             device,
-            {
-                Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            },
+            {Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE},
         )
         self._attr_unique_id = f"{device.device.device_id}"
-        self._attr_supported_features = SUPPORTED_FEATURES
 
     @property
     def activity(self) -> VacuumActivity:
         """Return the current vacuum activity based on operating state."""
-        op_state = (
-            self.device.status[MAIN]
-            .get(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE, {})
-            .get("operatingState")
-        )
+        status: Status = self.device.status[MAIN][
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE
+        ][Attribute.OPERATING_STATE]
 
-        self._attr_name = None
-
-        if isinstance(op_state, dict):
-            op_state = op_state.get("value")
+        op_state = status.value
 
         if not isinstance(op_state, str):
             return VacuumActivity.IDLE
@@ -97,13 +92,13 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         return VacuumActivity.IDLE
 
     # ───────────────────────────────────────────────
-    # Logging
+    # Commands
     # ───────────────────────────────────────────────
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send `start` command to begin cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'start' via turn_on")
         await self.execute_device_command(
-            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command.START,
         )
 
@@ -111,15 +106,15 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `start` command to begin cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'start' via start")
         await self.execute_device_command(
-            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
-            Command("start"),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
+            Command.START,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send `returnToHome` command to dock the vacuum."""
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via turn_off")
         await self.execute_device_command(
-            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command("returnToHome"),
         )
 
@@ -127,7 +122,7 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `pause` command to pause cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'pause'")
         await self.execute_device_command(
-            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command("pause"),
         )
 
@@ -135,6 +130,6 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `returnToHome` command to stop and return to dock."""
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via stop")
         await self.execute_device_command(
-            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command("returnToHome"),
         )
