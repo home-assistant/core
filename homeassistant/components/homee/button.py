@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
     AttributeType.AUTOMATIC_MODE_IMPULSE: ButtonEntityDescription(key="automatic_mode"),
     AttributeType.BRIEFLY_OPEN_IMPULSE: ButtonEntityDescription(key="briefly_open"),
@@ -75,4 +77,4 @@ class HomeeButton(HomeeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.async_set_value(1)
+        await self.async_set_homee_value(1)

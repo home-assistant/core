@@ -146,6 +146,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if content_type:
                 headers[hdrs.CONTENT_TYPE] = content_type
 
+            _LOGGER.debug(
+                "Calling %s %s with headers: %s and payload: %s",
+                method,
+                request_url,
+                headers,
+                payload,
+            )
+
             try:
                 async with getattr(websession, method)(
                     request_url,
@@ -170,6 +178,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         )
 
                     if not service.return_response:
+                        # always read the response to avoid closing the connection
+                        # before the server has finished sending it, while avoiding excessive memory usage
+                        async for _ in response.content.iter_chunked(1024):
+                            pass
+
                         return None
 
                     _content = None
@@ -197,7 +210,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                                 "decoding_type": "text",
                             },
                         ) from err
-                    return {"content": _content, "status": response.status}
+                    return {
+                        "content": _content,
+                        "status": response.status,
+                        "headers": dict(response.headers),
+                    }
 
             except TimeoutError as err:
                 raise HomeAssistantError(

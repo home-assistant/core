@@ -29,7 +29,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,11 +38,10 @@ from homeassistant.util import dt as dt_util
 
 from . import EVOHOME_KEY
 from .const import (
-    ATTR_DURATION_DAYS,
-    ATTR_DURATION_HOURS,
+    ATTR_DURATION,
     ATTR_DURATION_UNTIL,
-    ATTR_SYSTEM_MODE,
-    ATTR_ZONE_TEMP,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
@@ -153,7 +152,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         super().__init__(coordinator, evo_device)
         self._evo_id = evo_device.id
 
-        if evo_device.model.startswith("VisionProWifi"):
+        if evo_device.id == evo_device.tcs.id:
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z"
         else:
@@ -180,7 +179,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return
 
         # otherwise it is EvoService.SET_ZONE_OVERRIDE
-        temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
+        temperature = max(min(data[ATTR_SETPOINT], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
             duration: timedelta = data[ATTR_DURATION_UNTIL]
@@ -349,16 +348,16 @@ class EvoController(EvoClimateEntity):
         Data validation is not required, it will have been done upstream.
         """
         if service == EvoService.SET_SYSTEM_MODE:
-            mode = data[ATTR_SYSTEM_MODE]
+            mode = data[ATTR_MODE]
         else:  # otherwise it is EvoService.RESET_SYSTEM
             mode = EvoSystemMode.AUTO_WITH_RESET
 
-        if ATTR_DURATION_DAYS in data:
+        if ATTR_PERIOD in data:
             until = dt_util.start_of_local_day()
-            until += data[ATTR_DURATION_DAYS]
+            until += data[ATTR_PERIOD]
 
-        elif ATTR_DURATION_HOURS in data:
-            until = dt_util.now() + data[ATTR_DURATION_HOURS]
+        elif ATTR_DURATION in data:
+            until = dt_util.now() + data[ATTR_DURATION]
 
         else:
             until = None

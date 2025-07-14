@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homematicip.aio.device import AsyncDevice
-from homematicip.aio.group import AsyncGroup
 from homematicip.base.functionalChannels import FunctionalChannel
+from homematicip.device import Device
+from homematicip.group import Group
 
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
@@ -100,7 +100,7 @@ class HomematicipGenericEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
-        if isinstance(self._device, AsyncDevice):
+        if isinstance(self._device, Device):
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
@@ -237,14 +237,14 @@ class HomematicipGenericEntity(Entity):
         """Return the state attributes of the generic entity."""
         state_attr = {}
 
-        if isinstance(self._device, AsyncDevice):
+        if isinstance(self._device, Device):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
                 if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
 
-        if isinstance(self._device, AsyncGroup):
+        if isinstance(self._device, Group):
             for attr, attr_key in GROUP_ATTRIBUTES.items():
                 if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value

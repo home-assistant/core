@@ -327,7 +327,7 @@ async def test_loading_floors_from_storage(
     assert len(registry.floors) == 1
 
 
-async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
+async def test_getting_floor_by_name(floor_registry: fr.FloorRegistry) -> None:
     """Make sure we can get the floors by name."""
     floor = floor_registry.async_create("First floor")
     floor2 = floor_registry.async_get_floor_by_name("first floor")
@@ -339,6 +339,27 @@ async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
 
     get_floor = floor_registry.async_get_floor(floor.floor_id)
     assert get_floor == floor
+
+
+async def test_async_get_floors_by_alias(
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can get the floors by alias."""
+    floor1 = floor_registry.async_create("First floor", aliases=("alias_1", "alias_2"))
+    floor2 = floor_registry.async_create("Second floor", aliases=("alias_1", "alias_3"))
+
+    alias1_list = floor_registry.async_get_floors_by_alias("A l i a s_1")
+    alias2_list = floor_registry.async_get_floors_by_alias("A l i a s_2")
+    alias3_list = floor_registry.async_get_floors_by_alias("A l i a s_3")
+
+    assert len(alias1_list) == 2
+    assert len(alias2_list) == 1
+    assert len(alias3_list) == 1
+
+    assert floor1 in alias1_list
+    assert floor1 in alias2_list
+    assert floor2 in alias1_list
+    assert floor2 in alias3_list
 
 
 async def test_async_get_floor_by_name_not_found(

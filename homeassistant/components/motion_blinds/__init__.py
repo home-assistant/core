@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    CONF_BLIND_TYPE_LIST,
     CONF_INTERFACE,
     CONF_WAIT_FOR_PUSH,
     DEFAULT_INTERFACE,
@@ -39,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
     wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
+    blind_type_list = entry.data.get(CONF_BLIND_TYPE_LIST)
 
     # Create multicast Listener
     async with setup_lock:
@@ -81,7 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Connect to motion gateway
     multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
     connect_gateway_class = ConnectMotionGateway(hass, multicast)
-    if not await connect_gateway_class.async_connect_gateway(host, key):
+    if not await connect_gateway_class.async_connect_gateway(
+        host, key, blind_type_list
+    ):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
     api_lock = asyncio.Lock()
@@ -94,6 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinatorMotionBlinds(
         hass, entry, _LOGGER, coordinator_info
     )
+
+    # store blind type list for next time
+    if entry.data.get(CONF_BLIND_TYPE_LIST) != motion_gateway.blind_type_list:
+        data = {
+            **entry.data,
+            CONF_BLIND_TYPE_LIST: motion_gateway.blind_type_list,
+        }
+        hass.config_entries.async_update_entry(entry, data=data)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

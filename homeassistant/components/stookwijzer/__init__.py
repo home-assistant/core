@@ -8,13 +8,26 @@ from stookwijzer import Stookwijzer
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
+from .services import setup_services
 
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Stookwijzer component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> bool:
@@ -43,13 +56,12 @@ async def async_migrate_entry(
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
-        latitude, longitude = await Stookwijzer.async_transform_coordinates(
-            async_get_clientsession(hass),
+        xy = await Stookwijzer.async_transform_coordinates(
             entry.data[CONF_LOCATION][CONF_LATITUDE],
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )
 
-        if not latitude or not longitude:
+        if not xy:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -67,8 +79,8 @@ async def async_migrate_entry(
             entry,
             version=2,
             data={
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
+                CONF_LATITUDE: xy["x"],
+                CONF_LONGITUDE: xy["y"],
             },
         )
 

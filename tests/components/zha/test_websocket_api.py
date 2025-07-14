@@ -420,8 +420,11 @@ async def test_list_groupable_devices(
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
 
-        for entity_reference in endpoint["entities"]:
-            assert entity_reference["original_name"] is not None
+        if len(endpoint["entities"]) == 1:
+            assert endpoint["entities"][0]["original_name"] is None
+        else:
+            for entity_reference in endpoint["entities"]:
+                assert entity_reference["original_name"] is not None
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable

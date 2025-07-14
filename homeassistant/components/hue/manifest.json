@@ -10,6 +10,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiohue"],
-  "requirements": ["aiohue==4.7.3"],
+  "requirements": ["aiohue==4.7.4"],
   "zeroconf": ["_hue._tcp.local."]
 }

@@ -14,7 +14,6 @@ from homeassistant.components.demo.vacuum import (
     FAN_SPEEDS,
 )
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
@@ -67,36 +66,31 @@ async def setup_demo_vacuum(hass: HomeAssistant, vacuum_only: None):
 async def test_supported_features(hass: HomeAssistant) -> None:
     """Test vacuum supported features."""
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 16380
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 16316
     assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MOST)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12412
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12348
     assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_BASIC)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12360
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12296
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MINIMAL)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_NONE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
@@ -116,7 +110,6 @@ async def test_methods(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
     assert state.state == VacuumActivity.DOCKED
 
     await async_setup_component(hass, "notify", {})

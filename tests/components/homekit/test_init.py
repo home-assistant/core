@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
-    DOMAIN as DOMAIN_HOMEKIT,
+    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
 )
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntryState
@@ -60,12 +60,12 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
     )
 
     assert event1["name"] == "HomeKit"
-    assert event1["domain"] == DOMAIN_HOMEKIT
+    assert event1["domain"] == DOMAIN
     assert event1["message"] == "send command lock for Front Door"
     assert event1["entity_id"] == "lock.front_door"
 
     assert event2["name"] == "HomeKit"
-    assert event2["domain"] == DOMAIN_HOMEKIT
+    assert event2["domain"] == DOMAIN
     assert event2["message"] == "send command set_cover_position to 75 for Window"
     assert event2["entity_id"] == "cover.window"
 
@@ -92,7 +92,7 @@ async def test_bridge_with_triggers(
     device_id = entry.device_id
 
     entry = MockConfigEntry(
-        domain=DOMAIN_HOMEKIT,
+        domain=DOMAIN,
         source=SOURCE_ZEROCONF,
         data={
             "name": "HASS Bridge",

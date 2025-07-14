@@ -7,5 +7,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["pyloadapi"],
-  "requirements": ["PyLoadAPI==1.4.1"]
+  "quality_scale": "platinum",
+  "requirements": ["PyLoadAPI==1.4.2"]
 }

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from aiovodafone import VodafoneStationDevice
 import pytest
 
-from homeassistant.components.vodafone_station import DOMAIN
+from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_MAC

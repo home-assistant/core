@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_PORTS, DATA_GC100
+from . import CONF_PORTS, DATA_GC100, GC100Device
 
 _SWITCH_SCHEMA = vol.Schema({cv.string: cv.string})
 
@@ -33,7 +33,7 @@ def setup_platform(
 ) -> None:
     """Set up the GC100 devices."""
     switches = []
-    ports = config[CONF_PORTS]
+    ports: list[dict[str, str]] = config[CONF_PORTS]
     for port in ports:
         for port_addr, port_name in port.items():
             switches.append(GC100Switch(port_name, port_addr, hass.data[DATA_GC100]))
@@ -43,20 +43,20 @@ def setup_platform(
 class GC100Switch(SwitchEntity):
     """Represent a switch/relay from GC100."""
 
-    def __init__(self, name, port_addr, gc100):
+    def __init__(self, name: str, port_addr: str, gc100: GC100Device) -> None:
         """Initialize the GC100 switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port_addr = port_addr
         self._gc100 = gc100
-        self._state = None
+        self._state: bool | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the entity."""
         return self._state
 
@@ -72,7 +72,7 @@ class GC100Switch(SwitchEntity):
         """Update the sensor state."""
         self._gc100.read_sensor(self._port_addr, self.set_state)
 
-    def set_state(self, state):
+    def set_state(self, state: int) -> None:
         """Set the current state."""
         self._state = state == 1
         self.schedule_update_ha_state()

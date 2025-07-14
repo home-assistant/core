@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -195,7 +195,8 @@ class AlertEntity(Entity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
-        LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
+        if not self._can_ack:
+            raise ServiceValidationError("This alert cannot be acknowledged")
         self._ack = True
         self.async_write_ha_state()
 

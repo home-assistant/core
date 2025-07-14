@@ -38,9 +38,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: Explore if this is possible.
+  discovery-update-info: done
   discovery: done
   docs-data-update: done
   docs-examples: done

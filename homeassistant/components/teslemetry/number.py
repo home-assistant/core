@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.number import (
@@ -33,7 +33,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -46,7 +46,7 @@ PARALLEL_UPDATES = 0
 class TeslemetryNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable[[VehicleSpecific, int], Awaitable[Any]]
+    func: Callable[[Vehicle, int], Awaitable[Any]]
     min_key: str | None = None
     max_key: str
     native_min_value: float
@@ -99,7 +99,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
 class TeslemetryNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable[[EnergySpecific, float], Awaitable[Any]]
+    func: Callable[[EnergySite, float], Awaitable[Any]]
     requires: str | None = None
     scopes: list[Scope]
 
@@ -140,7 +140,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingNumberEntity(
+                TeslemetryVehiclePollingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
@@ -172,6 +172,7 @@ async def async_setup_entry(
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     """Vehicle number entity base class."""
 
+    api: Vehicle
     entity_description: TeslemetryNumberVehicleEntityDescription
 
     async def async_set_native_value(self, value: float) -> None:
@@ -183,8 +184,8 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingNumberEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleNumberEntity
+class TeslemetryVehiclePollingNumberEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleNumberEntity
 ):
     """Vehicle polling number entity."""
 
@@ -243,6 +244,7 @@ class TeslemetryStreamingNumberEntity(
                 self._attr_native_value = last_number_data.native_value
             if last_number_data.native_max_value:
                 self._attr_native_max_value = last_number_data.native_max_value
+            self.async_write_ha_state()
 
         # Add listeners
         self.async_on_remove(

@@ -28,6 +28,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_SENSOR_BASE_SCHEMA,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -43,7 +44,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
     }
 )
 

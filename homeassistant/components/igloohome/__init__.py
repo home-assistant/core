@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SENSOR]
 
 
 @dataclass
@@ -35,7 +35,6 @@ type IgloohomeConfigEntry = ConfigEntry[IgloohomeRuntimeData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
     """Set up igloohome from a config entry."""
-
     authentication = IgloohomeAuth(
         session=async_get_clientsession(hass),
         client_id=entry.data[CONF_CLIENT_ID],

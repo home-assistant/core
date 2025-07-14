@@ -156,7 +156,7 @@ async def test_media_next_previous_track(
     getattr(client, client_call[1]).assert_called_once()
 
     # check next/previous for not Live TV channels
-    client.current_app_id = "in1"
+    client.tv_state.current_app_id = "in1"
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     await hass.services.async_call(MP_DOMAIN, service, data, True)
 
@@ -303,8 +303,8 @@ async def test_device_info_startup_off(
     hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test device info when device is off at startup."""
-    client.system_info = None
-    client.is_on = False
+    client.tv_info.system = {}
+    client.tv_state.is_on = False
     entry = await setup_webostv(hass)
     await client.mock_state_update()
 
@@ -335,14 +335,14 @@ async def test_entity_attributes(
     assert state == snapshot(exclude=props("entity_picture"))
 
     # Volume level not available
-    client.volume = None
+    client.tv_state.volume = None
     await client.mock_state_update()
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
     # Channel change
-    client.current_channel = CHANNEL_2
+    client.tv_state.current_channel = CHANNEL_2
     await client.mock_state_update()
     attrs = hass.states.get(ENTITY_ID).attributes
 
@@ -353,8 +353,8 @@ async def test_entity_attributes(
     assert device == snapshot
 
     # Sound output when off
-    client.sound_output = None
-    client.is_on = False
+    client.tv_state.sound_output = None
+    client.tv_state.is_on = False
     await client.mock_state_update()
     state = hass.states.get(ENTITY_ID)
 
@@ -410,13 +410,13 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 3
 
     # Live TV is current app
-    client.apps = {
+    client.tv_state.apps = {
         LIVE_TV_APP_ID: {
             "title": "Live TV",
             "id": "some_id",
         },
     }
-    client.current_app_id = "some_id"
+    client.tv_state.current_app_id = "some_id"
     await client.mock_state_update()
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
@@ -424,7 +424,7 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 3
 
     # Live TV is is in inputs
-    client.inputs = {
+    client.tv_state.inputs = {
         LIVE_TV_APP_ID: {
             "label": "Live TV",
             "id": "some_id",
@@ -438,7 +438,7 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 1
 
     # Live TV is current input
-    client.inputs = {
+    client.tv_state.inputs = {
         LIVE_TV_APP_ID: {
             "label": "Live TV",
             "id": "some_id",
@@ -452,7 +452,7 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 1
 
     # Live TV not found
-    client.current_app_id = "other_id"
+    client.tv_state.current_app_id = "other_id"
     await client.mock_state_update()
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
@@ -460,8 +460,8 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 1
 
     # Live TV not found in sources/apps but is current app
-    client.apps = {}
-    client.current_app_id = LIVE_TV_APP_ID
+    client.tv_state.apps = {}
+    client.tv_state.current_app_id = LIVE_TV_APP_ID
     await client.mock_state_update()
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
@@ -469,7 +469,7 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     assert len(sources) == 1
 
     # Bad update, keep old update
-    client.inputs = {}
+    client.tv_state.inputs = {}
     await client.mock_state_update()
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
@@ -543,7 +543,7 @@ async def test_control_error_handling(
     """Test control errors handling."""
     await setup_webostv(hass)
     client.play.side_effect = exception
-    client.is_on = is_on
+    client.tv_state.is_on = is_on
     await client.mock_state_update()
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
@@ -566,7 +566,7 @@ async def test_turn_off_when_device_is_off(hass: HomeAssistant, client) -> None:
 
 async def test_supported_features(hass: HomeAssistant, client) -> None:
     """Test test supported features."""
-    client.sound_output = "lineout"
+    client.tv_state.sound_output = "lineout"
     await setup_webostv(hass)
     await client.mock_state_update()
 
@@ -577,7 +577,7 @@ async def test_supported_features(hass: HomeAssistant, client) -> None:
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
     # Support volume mute, step
-    client.sound_output = "external_speaker"
+    client.tv_state.sound_output = "external_speaker"
     await client.mock_state_update()
     supported = supported | SUPPORT_WEBOSTV_VOLUME
     attrs = hass.states.get(ENTITY_ID).attributes
@@ -585,7 +585,7 @@ async def test_supported_features(hass: HomeAssistant, client) -> None:
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
     # Support volume mute, step, set
-    client.sound_output = "speaker"
+    client.tv_state.sound_output = "speaker"
     await client.mock_state_update()
     supported = supported | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
@@ -623,8 +623,8 @@ async def test_supported_features(hass: HomeAssistant, client) -> None:
 
 async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
     """Test test supported features."""
-    client.is_on = False
-    client.sound_output = None
+    client.tv_state.is_on = False
+    client.tv_state.sound_output = None
     supported = (
         SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.TURN_ON
     )
@@ -652,8 +652,8 @@ async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
     )
 
     # TV on, support volume mute, step
-    client.is_on = True
-    client.sound_output = "external_speaker"
+    client.tv_state.is_on = True
+    client.tv_state.sound_output = "external_speaker"
     await client.mock_state_update()
 
     supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
@@ -662,8 +662,8 @@ async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
     # TV off, support volume mute, step
-    client.is_on = False
-    client.sound_output = None
+    client.tv_state.is_on = False
+    client.tv_state.sound_output = None
     await client.mock_state_update()
 
     supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
@@ -672,8 +672,8 @@ async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
     # TV on, support volume mute, step, set
-    client.is_on = True
-    client.sound_output = "speaker"
+    client.tv_state.is_on = True
+    client.tv_state.sound_output = "speaker"
     await client.mock_state_update()
 
     supported = (
@@ -684,8 +684,8 @@ async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
     # TV off, support volume mute, step, set
-    client.is_on = False
-    client.sound_output = None
+    client.tv_state.is_on = False
+    client.tv_state.sound_output = None
     await client.mock_state_update()
 
     supported = (
@@ -728,8 +728,8 @@ async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
 
 async def test_supported_features_no_cache(hass: HomeAssistant, client) -> None:
     """Test supported features if device is off and no cache."""
-    client.is_on = False
-    client.sound_output = None
+    client.tv_state.is_on = False
+    client.tv_state.sound_output = None
     await setup_webostv(hass)
 
     supported = (
@@ -772,7 +772,7 @@ async def test_get_image_http(
 ) -> None:
     """Test get image via http."""
     url = "http://something/valid_icon"
-    client.apps[LIVE_TV_APP_ID]["icon"] = url
+    client.tv_state.apps[LIVE_TV_APP_ID]["icon"] = url
     await setup_webostv(hass)
     await client.mock_state_update()
 
@@ -797,7 +797,7 @@ async def test_get_image_http_error(
 ) -> None:
     """Test get image via http error."""
     url = "http://something/icon_error"
-    client.apps[LIVE_TV_APP_ID]["icon"] = url
+    client.tv_state.apps[LIVE_TV_APP_ID]["icon"] = url
     await setup_webostv(hass)
     await client.mock_state_update()
 
@@ -823,7 +823,7 @@ async def test_get_image_https(
 ) -> None:
     """Test get image via http."""
     url = "https://something/valid_icon_https"
-    client.apps[LIVE_TV_APP_ID]["icon"] = url
+    client.tv_state.apps[LIVE_TV_APP_ID]["icon"] = url
     await setup_webostv(hass)
     await client.mock_state_update()
 
@@ -871,18 +871,18 @@ async def test_update_media_state(hass: HomeAssistant, client) -> None:
     """Test updating media state."""
     await setup_webostv(hass)
 
-    client.media_state = [{"playState": "playing"}]
+    client.tv_state.media_state = [{"playState": "playing"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
 
-    client.media_state = [{"playState": "paused"}]
+    client.tv_state.media_state = [{"playState": "paused"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
 
-    client.media_state = [{"playState": "unloaded"}]
+    client.tv_state.media_state = [{"playState": "unloaded"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
 
-    client.is_on = False
+    client.tv_state.is_on = False
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF

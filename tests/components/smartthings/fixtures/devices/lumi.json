@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "deviceId": "692ea4e9-2022-4ed8-8a57-1b884a59cc38",
+      "name": "temp-humid-press-therm-battery-05",
+      "label": "Outdoor Temp",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "cea6ca21-a702-3c43-8fe5-a7872c7a963f",
+      "deviceManufacturerCode": "LUMI",
+      "locationId": "96fe7a00-c7f6-440a-940e-77aa81a9af4b",
+      "ownerId": "eabfbf0b-ba3f-40f5-8dcb-8aaba788f8e3",
+      "roomId": "1eca2d6d-d15d-4f0e-9e32-8709acb9b3fe",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "atmosphericPressureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "legendabsolute60149.atmosPressure",
+              "version": 1
+            },
+            {
+              "id": "relativeHumidityMeasurement",
+              "version": 1
+            },
+            {
+              "id": "configuration",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2024-06-12T21:27:55.959Z",
+      "parentDeviceId": "61f28b8c-b975-415a-9197-fbc4e441e77a",
+      "profile": {
+        "id": "fa7886ec-6139-3357-8f4a-07a66491c173"
+      },
+      "zigbee": {
+        "eui": "00158D000967924A",
+        "networkId": "4B01",
+        "driverId": "c09c02d7-d05d-4bf4-831b-207a1adeae2f",
+        "executingLocally": true,
+        "hubId": "61f28b8c-b975-415a-9197-fbc4e441e77a",
+        "provisioningState": "NONFUNCTIONAL",
+        "fingerprintType": "ZIGBEE_MANUFACTURER",
+        "fingerprintId": "lumi.weather"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

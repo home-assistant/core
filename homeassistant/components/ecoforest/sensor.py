@@ -132,7 +132,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
     ),
     EcoforestSensorEntityDescription(
         key="convecto_air_flow",
-        translation_key="convecto_air_flow",
+        translation_key="convector_air_flow",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.convecto_air_flow,

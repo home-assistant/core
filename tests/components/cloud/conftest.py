@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
-from hass_nabucasa import Cloud
+from hass_nabucasa import Cloud, payments_api
 from hass_nabucasa.auth import CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
@@ -71,6 +71,10 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         mock_cloud.voice = MagicMock(spec=Voice)
         mock_cloud.files = MagicMock(spec=Files)
         mock_cloud.started = None
+        mock_cloud.payments = MagicMock(
+            spec=payments_api.PaymentsApi,
+            subscription_info=AsyncMock(),
+        )
         mock_cloud.ice_servers = MagicMock(
             spec=IceServers,
             async_register_ice_servers_listener=AsyncMock(
@@ -218,9 +222,9 @@ def mock_user_data() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
+async def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud component."""
-    hass.loop.run_until_complete(mock_cloud(hass))
+    await mock_cloud(hass)
     return mock_cloud_prefs(hass, {})
 
 

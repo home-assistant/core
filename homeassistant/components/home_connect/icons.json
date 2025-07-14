@@ -49,6 +49,23 @@
         "default": "mdi:map-marker-remove-variant"
       }
     },
+    "button": {
+      "open_door": {
+        "default": "mdi:door-open"
+      },
+      "partly_open_door": {
+        "default": "mdi:door-open"
+      },
+      "pause_program": {
+        "default": "mdi:pause"
+      },
+      "resume_program": {
+        "default": "mdi:play"
+      },
+      "stop_program": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "operation_state": {
         "default": "mdi:state-machine",
@@ -96,7 +113,7 @@
       "milk_counter": {
         "default": "mdi:cup"
       },
-      "coffee_and_milk": {
+      "coffee_and_milk_counter": {
         "default": "mdi:coffee"
       },
       "ristretto_espresso_counter": {
@@ -208,6 +225,39 @@
       },
       "door-assistant_freezer": {
         "default": "mdi:door"
+      },
+      "silence_on_demand": {
+        "default": "mdi:volume-mute",
+        "state": {
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
+        }
+      },
+      "half_load": {
+        "default": "mdi:fraction-one-half"
+      },
+      "hygiene_plus": {
+        "default": "mdi:silverware-clean"
+      },
+      "eco_dry": {
+        "default": "mdi:sprout"
+      },
+      "fast_pre_heat": {
+        "default": "mdi:fire"
+      },
+      "i_dos_1_active": {
+        "default": "mdi:numeric-1-circle"
+      },
+      "i_dos_2_active": {
+        "default": "mdi:numeric-2-circle"
+      }
+    },
+    "time": {
+      "start_in_relative": {
+        "default": "mdi:progress-clock"
+      },
+      "finish_in_relative": {
+        "default": "mdi:progress-clock"
       }
     }
   }

@@ -27,6 +27,7 @@
         'WLANConfiguration1',
         'X_AVM-DE_Homeauto1',
         'X_AVM-DE_HostFilter1',
+        'X_AVM-DE_UPnP1',
       ]),
       'is_router': True,
       'last_exception': None,

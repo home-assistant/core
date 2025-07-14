@@ -88,13 +88,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         if not self._loaded_backups:
             await self._load_backups()
 
         if backup_id not in self._backups:
-            return None
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         backup, backup_path = self._backups[backup_id]
         if not await self._hass.async_add_executor_job(backup_path.exists):
@@ -107,7 +107,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
                 backup_path,
             )
             self._backups.pop(backup_id)
-            return None
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         return backup
 
@@ -130,10 +130,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         if not self._loaded_backups:
             await self._load_backups()
 
-        try:
-            backup_path = self.get_backup_path(backup_id)
-        except BackupNotFound:
-            return
+        backup_path = self.get_backup_path(backup_id)
         await self._hass.async_add_executor_job(backup_path.unlink, True)
         LOGGER.debug("Deleted backup located at %s", backup_path)
         self._backups.pop(backup_id)

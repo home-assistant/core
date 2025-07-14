@@ -46,7 +46,7 @@
   "services": {
     "update": {
       "name": "Update",
-      "description": "Updates iCloud devices.",
+      "description": "Asks for a state update of all devices linked to an iCloud account.",
       "fields": {
         "account": {
           "name": "Account",

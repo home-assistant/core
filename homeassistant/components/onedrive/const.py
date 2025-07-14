@@ -6,6 +6,8 @@ from typing import Final
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "onedrive"
+CONF_FOLDER_NAME: Final = "folder_name"
+CONF_FOLDER_ID: Final = "folder_id"
 
 CONF_DELETE_PERMANENTLY: Final = "delete_permanently"
 

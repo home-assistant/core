@@ -177,7 +177,7 @@ async def _test_downloading_encrypted_backup(
         enc_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert enc_metadata["protected"] is True
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             pytest.raises(tarfile.ReadError, match="file could not be opened"),
         ):
             # pylint: disable-next=consider-using-with
@@ -209,7 +209,7 @@ async def _test_downloading_encrypted_backup(
         dec_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert dec_metadata == enc_metadata | {"protected": False}
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
         ):
             assert inner_tar.getnames() == [
@@ -232,6 +232,26 @@ async def test_downloading_backup_not_found(
 
     resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
     assert resp.status == 404
+
+
+async def test_downloading_backup_not_found_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test downloading a backup file that does not exist."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.test"])
+    mock_agents["test.test"].async_get_backup.return_value = None
+    mock_agents["test.test"].async_get_backup.side_effect = None
+
+    client = await hass_client()
+
+    resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
+    assert resp.status == 404
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
 
 
 async def test_downloading_as_non_admin(

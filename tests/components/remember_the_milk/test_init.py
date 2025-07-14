@@ -1,127 +1,65 @@
-"""Tests for the Remember The Milk integration."""
+"""Test the Remember The Milk integration."""
 
-import json
-from unittest.mock import mock_open, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import remember_the_milk as rtm
+from homeassistant.components.remember_the_milk import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from .const import JSON_STRING, PROFILE, TOKEN
-
-
-def test_set_get_delete_token(hass: HomeAssistant) -> None:
-    """Test set, get and delete token."""
-    open_mock = mock_open()
-    with patch("homeassistant.components.remember_the_milk.Path.open", open_mock):
-        config = rtm.RememberTheMilkConfiguration(hass)
-        assert open_mock.return_value.write.call_count == 0
-        assert config.get_token(PROFILE) is None
-        assert open_mock.return_value.write.call_count == 0
-        config.set_token(PROFILE, TOKEN)
-        assert open_mock.return_value.write.call_count == 1
-        assert open_mock.return_value.write.call_args[0][0] == json.dumps(
-            {
-                "myprofile": {
-                    "id_map": {},
-                    "token": "mytoken",
-                }
-            }
-        )
-        assert config.get_token(PROFILE) == TOKEN
-        assert open_mock.return_value.write.call_count == 1
-        config.delete_token(PROFILE)
-        assert open_mock.return_value.write.call_count == 2
-        assert open_mock.return_value.write.call_args[0][0] == json.dumps({})
-        assert config.get_token(PROFILE) is None
-        assert open_mock.return_value.write.call_count == 2
+from .const import CONFIG, PROFILE, TOKEN
 
 
-def test_config_load(hass: HomeAssistant) -> None:
-    """Test loading from the file."""
-    with (
-        patch(
-            "homeassistant.components.remember_the_milk.Path.open",
-            mock_open(read_data=JSON_STRING),
-        ),
-    ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-
-    rtm_id = config.get_rtm_id(PROFILE, "123")
-    assert rtm_id is not None
-    assert rtm_id == ("1", "2", "3")
+@pytest.fixture(autouse=True)
+def configure_id() -> Generator[str]:
+    """Fixture to return a configure_id."""
+    mock_id = "1-1"
+    with patch(
+        "homeassistant.components.configurator.Configurator._generate_unique_id"
+    ) as generate_id:
+        generate_id.return_value = mock_id
+        yield mock_id
 
 
 @pytest.mark.parametrize(
-    "side_effect", [FileNotFoundError("Missing file"), OSError("IO error")]
+    ("token", "rtm_entity_exists", "configurator_end_state"),
+    [(TOKEN, True, "configured"), (None, False, "configure")],
 )
-def test_config_load_file_error(hass: HomeAssistant, side_effect: Exception) -> None:
-    """Test loading with file error."""
-    config = rtm.RememberTheMilkConfiguration(hass)
-    with (
-        patch(
-            "homeassistant.components.remember_the_milk.Path.open",
-            side_effect=side_effect,
-        ),
-    ):
-        config = rtm.RememberTheMilkConfiguration(hass)
+async def test_configurator(
+    hass: HomeAssistant,
+    client: MagicMock,
+    storage: MagicMock,
+    configure_id: str,
+    token: str | None,
+    rtm_entity_exists: bool,
+    configurator_end_state: str,
+) -> None:
+    """Test configurator."""
+    storage.get_token.return_value = None
+    client.authenticate_desktop.return_value = ("test-url", "test-frob")
+    client.token = token
+    rtm_entity_id = f"{DOMAIN}.{PROFILE}"
+    configure_entity_id = f"configurator.{DOMAIN}_{PROFILE}"
 
-    # The config should be empty and we should not have any errors
-    # when trying to access it.
-    rtm_id = config.get_rtm_id(PROFILE, "123")
-    assert rtm_id is None
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
+    await hass.async_block_till_done()
 
+    assert hass.states.get(rtm_entity_id) is None
+    state = hass.states.get(configure_entity_id)
+    assert state
+    assert state.state == "configure"
 
-def test_config_load_invalid_data(hass: HomeAssistant) -> None:
-    """Test loading invalid data."""
-    config = rtm.RememberTheMilkConfiguration(hass)
-    with (
-        patch(
-            "homeassistant.components.remember_the_milk.Path.open",
-            mock_open(read_data="random characters"),
-        ),
-    ):
-        config = rtm.RememberTheMilkConfiguration(hass)
+    await hass.services.async_call(
+        "configurator",
+        "configure",
+        {"configure_id": configure_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-    # The config should be empty and we should not have any errors
-    # when trying to access it.
-    rtm_id = config.get_rtm_id(PROFILE, "123")
-    assert rtm_id is None
-
-
-def test_config_set_delete_id(hass: HomeAssistant) -> None:
-    """Test setting and deleting an id from the config."""
-    hass_id = "123"
-    list_id = "1"
-    timeseries_id = "2"
-    rtm_id = "3"
-    open_mock = mock_open()
-    config = rtm.RememberTheMilkConfiguration(hass)
-    with patch("homeassistant.components.remember_the_milk.Path.open", open_mock):
-        config = rtm.RememberTheMilkConfiguration(hass)
-        assert open_mock.return_value.write.call_count == 0
-        assert config.get_rtm_id(PROFILE, hass_id) is None
-        assert open_mock.return_value.write.call_count == 0
-        config.set_rtm_id(PROFILE, hass_id, list_id, timeseries_id, rtm_id)
-        assert (list_id, timeseries_id, rtm_id) == config.get_rtm_id(PROFILE, hass_id)
-        assert open_mock.return_value.write.call_count == 1
-        assert open_mock.return_value.write.call_args[0][0] == json.dumps(
-            {
-                "myprofile": {
-                    "id_map": {
-                        "123": {"list_id": "1", "timeseries_id": "2", "task_id": "3"}
-                    }
-                }
-            }
-        )
-        config.delete_rtm_id(PROFILE, hass_id)
-        assert config.get_rtm_id(PROFILE, hass_id) is None
-        assert open_mock.return_value.write.call_count == 2
-        assert open_mock.return_value.write.call_args[0][0] == json.dumps(
-            {
-                "myprofile": {
-                    "id_map": {},
-                }
-            }
-        )
+    assert bool(hass.states.get(rtm_entity_id)) == rtm_entity_exists
+    state = hass.states.get(configure_entity_id)
+    assert state
+    assert state.state == configurator_end_state
