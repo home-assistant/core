@@ -1,11 +1,11 @@
-"""VacuumJet Bot."""
+"""SmartThings vacuum platform."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from pysmartthings import Attribute, Command, SmartThings, Status
+from pysmartthings import Attribute, Command, SmartThings
 from pysmartthings.capability import Capability
 
 from homeassistant.components.vacuum import (
@@ -22,25 +22,13 @@ from .entity import SmartThingsEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# ───────────────────────────────────────────────
-# Supported Vacuum Features
-# ───────────────────────────────────────────────
-SUPPORTED_FEATURES = (
-    VacuumEntityFeature.TURN_ON
-    | VacuumEntityFeature.TURN_OFF
-    | VacuumEntityFeature.START
-    | VacuumEntityFeature.PAUSE
-    | VacuumEntityFeature.STOP
-    | VacuumEntityFeature.STATE
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Samsung Jet Bot vacuum entities from SmartThings devices."""
+    """Set up vacuum entities from SmartThings devices."""
     entry_data = entry.runtime_data
     async_add_entities(
         SamsungJetBotVacuum(entry_data.client, device)
@@ -51,10 +39,16 @@ async def async_setup_entry(
 
 
 class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
-    """Representation of a Samsung Jet Bot vacuum as a Home Assistant entity."""
+    """Representation of a Vacuum."""
 
     _attr_name = None
-    _attr_supported_features = SUPPORTED_FEATURES
+    _attr_supported_features = (
+        VacuumEntityFeature.START
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.STATE
+    )
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the Jet Bot vacuum entity."""
@@ -63,75 +57,40 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
             device,
             {Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE},
         )
-        self._attr_unique_id = f"{device.device.device_id}"
 
     @property
-    def activity(self) -> VacuumActivity:
+    def activity(self) -> VacuumActivity | None:
         """Return the current vacuum activity based on operating state."""
-        status: Status = self.device.status[MAIN][
-            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE
-        ][Attribute.OPERATING_STATE]
-
-        op_state = status.value
-
-        if not isinstance(op_state, str):
-            return VacuumActivity.IDLE
-
-        raw = op_state.lower()
-        if raw == "cleaning":
-            return VacuumActivity.CLEANING
-        if raw in ("returning", "returntohome", "return_to_base"):
-            return VacuumActivity.RETURNING
-        if raw == "idle":
-            return VacuumActivity.IDLE
-        if raw == "paused":
-            return VacuumActivity.PAUSED
-        if raw == "docked":
-            return VacuumActivity.DOCKED
-        if raw == "error":
-            return VacuumActivity.ERROR
-        if raw == "charging":
-            return VacuumActivity.DOCKED
-
-        return VacuumActivity.IDLE
-
-    # ───────────────────────────────────────────────
-    # Commands
-    # ───────────────────────────────────────────────
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Send `start` command to begin cleaning."""
-        _LOGGER.debug("Jet Bot: Sending 'start' via turn_on")
-        await self.execute_device_command(
+        status = self.get_attribute_value(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            Command.START,
+            Attribute.OPERATING_STATE,
         )
+
+        return {
+            "cleaning": VacuumActivity.CLEANING,
+            "homing": VacuumActivity.RETURNING,
+            "idle": VacuumActivity.IDLE,
+            "paused": VacuumActivity.PAUSED,
+            "docked": VacuumActivity.DOCKED,
+            "error": VacuumActivity.ERROR,
+            "charging": VacuumActivity.DOCKED,
+        }.get(status)
 
     async def async_start(self) -> None:
-        """Send `start` command to begin cleaning."""
-        _LOGGER.debug("Jet Bot: Sending 'start' via start")
+        """Start the vacuum's operation."""
         await self.execute_device_command(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command.START,
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send `returnToHome` command to dock the vacuum."""
-        _LOGGER.debug("Jet Bot: Sending 'returnToHome' via turn_off")
-        await self.execute_device_command(
-            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            Command.RETURN_TO_HOME,
         )
 
     async def async_pause(self) -> None:
-        """Send `pause` command to pause cleaning."""
-        _LOGGER.debug("Jet Bot: Sending 'pause'")
+        """Pause the vacuum's current operation."""
         await self.execute_device_command(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE, Command.PAUSE
         )
 
-    async def async_stop(self, **kwargs: Any) -> None:
-        """Send `returnToHome` command to stop and return to dock."""
-        _LOGGER.debug("Jet Bot: Sending 'returnToHome' via stop")
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Return the vacuum to its base."""
         await self.execute_device_command(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
             Command.RETURN_TO_HOME,

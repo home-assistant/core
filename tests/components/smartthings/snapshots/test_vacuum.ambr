@@ -28,9 +28,9 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12303>,
+    'supported_features': <VacuumEntityFeature: 12316>,
     'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -38,14 +38,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Robot vacuum',
-      'supported_features': <VacuumEntityFeature: 12303>,
+      'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'docked',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-entry]
@@ -77,9 +77,9 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12303>,
+    'supported_features': <VacuumEntityFeature: 12316>,
     'translation_key': None,
-    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44',
+    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -87,7 +87,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Robot vacuum',
-      'supported_features': <VacuumEntityFeature: 12303>,
+      'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum',
