@@ -142,7 +142,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
