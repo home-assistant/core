@@ -575,6 +575,7 @@ async def test_optimistic(hass: HomeAssistant) -> None:
     state = hass.states.get(_TEST_SELECT)
     assert state.state == STATE_UNKNOWN
 
+    # Ensure Trigger template entities update.
     hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
     await hass.async_block_till_done()
 
