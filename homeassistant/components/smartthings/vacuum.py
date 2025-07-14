@@ -23,12 +23,6 @@ from .entity import SmartThingsEntity
 _LOGGER = logging.getLogger(__name__)
 
 # ───────────────────────────────────────────────
-# Capabilities & Attributes (Const.py?)
-# ───────────────────────────────────────────────
-CAPABILITY_OPERATING_STATE_KEY = "samsungce.robotCleanerOperatingState"  # Const.py?
-ATTRIBUTE_OPERATING_STATE = "operatingState"  # Const.py?
-
-# ───────────────────────────────────────────────
 # Supported Vacuum Features
 # ───────────────────────────────────────────────
 SUPPORTED_FEATURES = (
@@ -48,13 +42,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Samsung Jet Bot vacuum entities from SmartThings devices."""
     entry_data = entry.runtime_data
-    vacuums = [
+    async_add_entities(
         SamsungJetBotVacuum(entry_data.client, device)
         for device in entry_data.devices.values()
         if isinstance(device.status.get(MAIN), dict)
-        and CAPABILITY_OPERATING_STATE_KEY in device.status[MAIN]
-    ]
-    async_add_entities(vacuums)
+        and Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE in device.status[MAIN]
+    )
 
 
 class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
@@ -62,9 +55,17 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
 
     def __init__(self, client, device: FullDevice) -> None:
         """Initialize the Jet Bot vacuum entity."""
-        super().__init__(client, device, set())
-        self._attr_name = None  # Use the device name from SmartThings
-        self._attr_unique_id = f"{device.device.device_id}_vacuum"
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
+                Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE,
+                Capability.SAMSUNG_CE_ROBOT_CLEANER_DRIVING_MODE,
+                Capability.SAMSUNG_CE_ROBOT_CLEANER_WATER_SPRAY_LEVEL,
+            },
+        )
+        self._attr_unique_id = f"{device.device.device_id}"
         self._attr_supported_features = SUPPORTED_FEATURES
 
     @property
@@ -72,9 +73,11 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Return the current vacuum activity based on operating state."""
         op_state = (
             self.device.status[MAIN]
-            .get(CAPABILITY_OPERATING_STATE_KEY, {})
-            .get(ATTRIBUTE_OPERATING_STATE)
+            .get(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE, {})
+            .get("operatingState")
         )
+
+        self._attr_name = None
 
         if isinstance(op_state, dict):
             op_state = op_state.get("value")
@@ -103,15 +106,15 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `start` command to begin cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'start' via turn_on")
         await self.execute_device_command(
-            Capability(CAPABILITY_OPERATING_STATE_KEY),
-            Command("start"),
+            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
+            Command.START,
         )
 
     async def async_start(self) -> None:
         """Send `start` command to begin cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'start' via start")
         await self.execute_device_command(
-            Capability(CAPABILITY_OPERATING_STATE_KEY),
+            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
             Command("start"),
         )
 
@@ -119,7 +122,7 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `returnToHome` command to dock the vacuum."""
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via turn_off")
         await self.execute_device_command(
-            Capability(CAPABILITY_OPERATING_STATE_KEY),
+            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
             Command("returnToHome"),
         )
 
@@ -127,7 +130,7 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `pause` command to pause cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'pause'")
         await self.execute_device_command(
-            Capability(CAPABILITY_OPERATING_STATE_KEY),
+            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
             Command("pause"),
         )
 
@@ -135,6 +138,6 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         """Send `returnToHome` command to stop and return to dock."""
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via stop")
         await self.execute_device_command(
-            Capability(CAPABILITY_OPERATING_STATE_KEY),
+            Capability(Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE),
             Command("returnToHome"),
         )
