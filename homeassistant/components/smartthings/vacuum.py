@@ -33,8 +33,7 @@ async def async_setup_entry(
     async_add_entities(
         SamsungJetBotVacuum(entry_data.client, device)
         for device in entry_data.devices.values()
-        if isinstance(device.status.get(MAIN), dict)
-        and Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE in device.status[MAIN]
+        if Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE in device.status[MAIN]
     )
 
 
