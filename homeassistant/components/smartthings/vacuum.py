@@ -88,6 +88,10 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
             return VacuumActivity.PAUSED
         if raw == "docked":
             return VacuumActivity.DOCKED
+        if raw == "error":
+            return VacuumActivity.ERROR
+        if raw == "charging":
+            return VacuumActivity.DOCKED
 
         return VacuumActivity.IDLE
 
@@ -115,15 +119,14 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via turn_off")
         await self.execute_device_command(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            Command("returnToHome"),
+            Command.RETURN_TO_HOME,
         )
 
     async def async_pause(self) -> None:
         """Send `pause` command to pause cleaning."""
         _LOGGER.debug("Jet Bot: Sending 'pause'")
         await self.execute_device_command(
-            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            Command("pause"),
+            Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE, Command.PAUSE
         )
 
     async def async_stop(self, **kwargs: Any) -> None:
@@ -131,5 +134,5 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
         _LOGGER.debug("Jet Bot: Sending 'returnToHome' via stop")
         await self.execute_device_command(
             Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
-            Command("returnToHome"),
+            Command.RETURN_TO_HOME,
         )
