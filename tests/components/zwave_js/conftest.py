@@ -325,6 +325,12 @@ def ge_12730_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fan_ge_12730_state.json", DOMAIN)
 
 
+@pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
+def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
+    return load_json_object_fixture("enbrighten_58446_zwa4013_state.json", DOMAIN)
+
+
 @pytest.fixture(name="aeotec_radiator_thermostat_state", scope="package")
 def aeotec_radiator_thermostat_state_fixture() -> dict[str, Any]:
     """Load the Aeotec Radiator Thermostat node state fixture data."""
@@ -1074,6 +1080,14 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state) -> Node:
 def ge_12730_fixture(client, ge_12730_state) -> Node:
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="enbrighten_58446_zwa4013")
+def enbrighten_58446_zwa4013_fixture(client, enbrighten_58446_zwa4013_state) -> Node:
+    """Mock a Enbrighten_58446/zwa4013 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_58446_zwa4013_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
