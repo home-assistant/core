@@ -233,32 +233,42 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
         group_address_switch_state=conf.get_state_and_passive(CONF_GA_SWITCH),
         group_address_brightness=conf.get_write(CONF_GA_BRIGHTNESS),
         group_address_brightness_state=conf.get_state_and_passive(CONF_GA_BRIGHTNESS),
-        group_address_color=conf.get_write(CONF_COLOR, CONF_GA_COLOR)
-        if color_dpt == LightColorMode.RGB
-        else None,
-        group_address_color_state=conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
-        if color_dpt == LightColorMode.RGB
-        else None,
-        group_address_rgbw=conf.get_write(CONF_COLOR, CONF_GA_COLOR)
-        if color_dpt == LightColorMode.RGBW
-        else None,
-        group_address_rgbw_state=conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
-        if color_dpt == LightColorMode.RGBW
-        else None,
+        group_address_color=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGB
+            else None
+        ),
+        group_address_color_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGB
+            else None
+        ),
+        group_address_rgbw=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGBW
+            else None
+        ),
+        group_address_rgbw_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGBW
+            else None
+        ),
         group_address_hue=conf.get_write(CONF_COLOR, CONF_GA_HUE),
         group_address_hue_state=conf.get_state_and_passive(CONF_COLOR, CONF_GA_HUE),
         group_address_saturation=conf.get_write(CONF_COLOR, CONF_GA_SATURATION),
         group_address_saturation_state=conf.get_state_and_passive(
             CONF_COLOR, CONF_GA_SATURATION
         ),
-        group_address_xyy_color=conf.get_write(CONF_COLOR, CONF_GA_COLOR)
-        if color_dpt == LightColorMode.XYY
-        else None,
-        group_address_xyy_color_state=conf.get_state_and_passive(
-            CONF_COLOR, CONF_GA_COLOR
-        )
-        if color_dpt == LightColorMode.XYY
-        else None,
+        group_address_xyy_color=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.XYY
+            else None
+        ),
+        group_address_xyy_color_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.XYY
+            else None
+        ),
         group_address_tunable_white=group_address_tunable_white,
         group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
