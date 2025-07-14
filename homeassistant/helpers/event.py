@@ -870,7 +870,7 @@ def async_track_state_change_filtered(
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
 
-    Theaction will not be called immediately, but will be scheduled to run
+    The action will not be called immediately, but will be scheduled to run
     in the next event loop iteration, even if the action is decorated with
     @callback.
 
