@@ -10,9 +10,14 @@ from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_US
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .conftest import ADDON_DISCOVERY_INFO, NEW_INPUT, REAUTH_INPUT, USER_INPUT
+from .conftest import (
+    ADDON_DISCOVERY_INFO,
+    ADDON_SERVICE_INFO,
+    NEW_INPUT,
+    REAUTH_INPUT,
+    USER_INPUT,
+)
 
 from tests.common import MockConfigEntry
 
@@ -260,12 +265,7 @@ async def test_hassio_discovery(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
@@ -293,12 +293,7 @@ async def test_hassio_discovery_confirm_only(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
@@ -334,20 +329,13 @@ async def test_hassio_discovery_errors(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["errors"] is None
-
-    mock_pyloadapi.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "pyload", CONF_PASSWORD: "pyload"}
@@ -385,12 +373,7 @@ async def test_hassio_discovery_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
@@ -418,12 +401,7 @@ async def test_hassio_discovery_data_update(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
@@ -448,12 +426,7 @@ async def test_hassio_discovery_ignored(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
-            name="pyLoad-ng Addon",
-            slug="p539df76c_pyload-ng",
-            uuid="1234",
-        ),
+        data=ADDON_SERVICE_INFO,
         context={"source": SOURCE_HASSIO},
     )
 
