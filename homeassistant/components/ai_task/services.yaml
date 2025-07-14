@@ -10,6 +10,7 @@ generate_data:
       required: true
       selector:
         text:
+          multiline: true
     entity_id:
       required: false
       selector:
