@@ -1,4 +1,4 @@
-"""Tests for the Stookwijzer sensor platform."""
+"""Tests for the Stookwijzer services."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,7 +22,7 @@ async def test_service_get_forecast(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Stookwijzer entities."""
+    """Test the Stookwijzer forecast service."""
 
     assert snapshot == await hass.services.async_call(
         DOMAIN,
@@ -39,7 +39,7 @@ async def test_service_entry_not_loaded(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Stookwijzer entities."""
+    """Test error handling when entry is not loaded."""
     mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
     mock_config_entry2.add_to_hass(hass)
 
@@ -59,7 +59,7 @@ async def test_service_integration_not_found(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Stookwijzer entities."""
+    """Test error handling when integration not in registry."""
     with pytest.raises(
         ServiceValidationError, match='Integration "stookwijzer" not found in registry'
     ):
