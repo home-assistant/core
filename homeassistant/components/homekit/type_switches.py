@@ -379,7 +379,7 @@ class ValveBase(HomeAccessory):
         _LOGGER.debug("%s: Get default run time", self.entity_id)
         if self.linked_duration_entity is None:
             _LOGGER.warning(
-                "%s: Linked default run time entity is not configured, returning 0 for default run time",
+                "%s: Linked default run time entity is not configured",
                 self.entity_id,
             )
             return 0
@@ -387,7 +387,7 @@ class ValveBase(HomeAccessory):
         default_duration_state = self.hass.states.get(self.linked_duration_entity)
         if default_duration_state is None:
             _LOGGER.warning(
-                "%s: Linked entity %s has no state, returning 0 for default run time",
+                "%s: Linked entity %s has no state",
                 self.entity_id,
                 self.linked_duration_entity,
             )
@@ -397,7 +397,7 @@ class ValveBase(HomeAccessory):
             default_duration = int(float(default_duration_state.state))
         except ValueError:
             _LOGGER.warning(
-                "%s: State of linked entity %s cannot be parsed, returning 0 for default run time",
+                "%s: State of linked entity %s cannot be parsed",
                 self.entity_id,
                 self.linked_duration_entity,
             )
@@ -412,7 +412,7 @@ class ValveBase(HomeAccessory):
 
         if default_duration < 0:
             _LOGGER.debug(
-                "%s: State of linked entity %s is below 0, returning 0 for default run time",
+                "%s: State of linked entity %s is below 0",
                 self.entity_id,
                 self.linked_duration_entity,
             )
@@ -425,7 +425,7 @@ class ValveBase(HomeAccessory):
         _LOGGER.debug("%s: Get remaining duration", self.entity_id)
         if self.linked_end_time_entity is None:
             _LOGGER.warning(
-                "%s: Linked end time entity is not configured, returning 0 for remaining duration",
+                "%s: Linked end time entity is not configured",
                 self.entity_id,
             )
             return 0
@@ -433,7 +433,7 @@ class ValveBase(HomeAccessory):
         linked_end_time_state = self.hass.states.get(self.linked_end_time_entity)
         if linked_end_time_state is None:
             _LOGGER.warning(
-                "%s: Linked entity %s has no state, returning 0 for remaining duration",
+                "%s: Linked entity %s has no state",
                 self.entity_id,
                 self.linked_end_time_entity,
             )
@@ -442,7 +442,7 @@ class ValveBase(HomeAccessory):
         linked_end_time_utc = dt_util.parse_datetime(linked_end_time_state.state)
         if linked_end_time_utc is None:
             _LOGGER.warning(
-                "%s: State of linked entity %s cannot be parsed, returning 0 for remaining duration",
+                "%s: State of linked entity %s cannot be parsed",
                 self.linked_end_time_entity,
                 linked_end_time_state.state,
             )
