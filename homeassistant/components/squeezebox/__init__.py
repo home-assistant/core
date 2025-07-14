@@ -71,7 +71,7 @@ class SqueezeboxData:
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
-    known_player_ids: list[str] = field(default_factory=list)
+    known_player_ids: set[str] = field(default_factory=set)
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -202,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                     hass, entry, player, lms.uuid
                 )
                 await player_coordinator.async_refresh()
-                entry.runtime_data.known_player_ids.append(player.player_id)
+                entry.runtime_data.known_player_ids.add(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
                 )
