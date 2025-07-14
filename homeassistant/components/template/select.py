@@ -26,8 +26,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
-from .helpers import async_setup_template_platform
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
@@ -71,7 +71,7 @@ async def async_setup_platform(
         hass,
         SELECT_DOMAIN,
         config,
-        StateSelectEntity,
+        TemplateSelect,
         TriggerSelectEntity,
         async_add_entities,
         discovery_info,
@@ -90,7 +90,7 @@ async def async_setup_entry(
     async_add_entities([TemplateSelect(hass, validated_config, config_entry.entry_id)])
 
 
-class AbstractSelectEntity(AbstractTemplateEntity, SelectEntity):
+class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
