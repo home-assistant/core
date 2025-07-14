@@ -4946,6 +4946,47 @@ async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_async_track_state_report_change_event(hass: HomeAssistant) -> None:
+    """Test listen for both state change and state report events."""
+    tracker_called: dict[str, list[str]] = {"light.bowl": [], "light.top": []}
+
+    @ha.callback
+    def on_state_change(event: Event[EventStateChangedData]) -> None:
+        new_state = event.data["new_state"].state
+        tracker_called[event.data["entity_id"]].append(new_state)
+
+    @ha.callback
+    def on_state_report(event: Event[EventStateReportedData]) -> None:
+        new_state = event.data["new_state"].state
+        tracker_called[event.data["entity_id"]].append(new_state)
+
+    async_track_state_change_event(hass, ["light.bowl", "light.top"], on_state_change)
+    async_track_state_report_event(hass, ["light.bowl", "light.top"], on_state_report)
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    hass.states.async_set("light.bowl", "off")
+    hass.states.async_set("light.top", "off")
+    hass.states.async_set("light.bowl", "off")
+    hass.states.async_set("light.top", "off")
+    await hass.async_block_till_done()
+    assert tracker_called == {
+        "light.bowl": [
+            "on",
+            "off",
+            "on",
+            "off",
+        ],
+        "light.top": [
+            "on",
+            "off",
+            "on",
+            "off",
+        ],
+    }
+
+
 async def test_async_track_template_no_hass_deprecated(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
