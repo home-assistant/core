@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
+from homeassistant.components.statistics import DOMAIN
 from homeassistant.components.statistics.sensor import (
     CONF_KEEP_LAST_SAMPLE,
     CONF_PERCENTILE,
@@ -78,7 +78,7 @@ async def test_unique_id(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", STATISTICS_DOMAIN, "uniqueid_sensor_test"
+        "sensor", DOMAIN, "uniqueid_sensor_test"
     )
     assert entity_id == "sensor.test"
 
@@ -1652,7 +1652,7 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("configuration.yaml", "statistics")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            STATISTICS_DOMAIN,
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -1690,7 +1690,7 @@ async def test_device_id(
 
     statistics_config_entry = MockConfigEntry(
         data={},
-        domain=STATISTICS_DOMAIN,
+        domain=DOMAIN,
         options={
             "name": "Statistics",
             "entity_id": "sensor.test_source",

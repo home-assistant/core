@@ -441,6 +441,7 @@ class TeslemetryStreamingRearTrunkEntity(
         """Update the entity attributes."""
 
         self._attr_is_closed = None if value is None else not value
+        self.async_write_ha_state()
 
 
 class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):

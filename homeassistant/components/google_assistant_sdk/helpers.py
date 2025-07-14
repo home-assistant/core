@@ -12,6 +12,7 @@ import aiohttp
 from aiohttp import web
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
+from grpc import RpcError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
@@ -25,6 +26,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_call_later
 
@@ -78,12 +80,22 @@ async def async_send_text_commands(
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
+    command_response_list = []
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
-        command_response_list = []
         for command in commands:
-            resp = await hass.async_add_executor_job(assistant.assist, command)
+            try:
+                resp = await hass.async_add_executor_job(assistant.assist, command)
+            except RpcError as err:
+                _LOGGER.error(
+                    "Failed to send command '%s' to Google Assistant: %s",
+                    command,
+                    err,
+                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="grpc_error"
+                ) from err
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]
@@ -105,7 +117,7 @@ async def async_send_text_commands(
                     blocking=True,
                 )
             command_response_list.append(CommandResponse(text_response))
-        return command_response_list
+    return command_response_list
 
 
 def default_language_code(hass: HomeAssistant) -> str:

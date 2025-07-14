@@ -5,7 +5,7 @@ from pysmarlaapi import Connection, Federwiege
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 
 from .const import HOST, PLATFORMS
 
@@ -18,15 +18,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
 
     # Check if token still has access
     if not await connection.refresh_token():
-        raise ConfigEntryAuthFailed("Invalid authentication")
+        raise ConfigEntryError("Invalid authentication")
 
     federwiege = Federwiege(hass.loop, connection)
     federwiege.register()
-    federwiege.connect()
 
     entry.runtime_data = federwiege
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    federwiege.connect()
 
     return True
 
