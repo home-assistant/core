@@ -27,6 +27,9 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
+from homeassistant.components.esphome.encryption_key_storage import (
+    async_get_encryption_key_storage,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -2370,3 +2373,238 @@ async def test_reconfig_name_conflict_overwrite(
         )
         is None
     )
+
+
+async def test_encryption_key_retrieval_from_storage_user_flow(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_setup_entry: None,
+) -> None:
+    """Test encryption key is retrieved from storage during user flow."""
+    # Pre-populate storage with an encryption key
+    storage = await async_get_encryption_key_storage(hass)
+    stored_key = "test_encryption_key_32_bytes_long"
+    await storage.async_store_key("11:22:33:44:55:aa", stored_key)
+
+    # Mock client to require encryption
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NOISE_PSK] == stored_key
+    assert result["data"][CONF_HOST] == "127.0.0.1"
+    assert result["data"][CONF_PORT] == 80
+
+
+async def test_encryption_key_retrieval_from_storage_discovery_flow(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_setup_entry: None,
+) -> None:
+    """Test encryption key is retrieved from storage during discovery flow."""
+    # Pre-populate storage with an encryption key
+    storage = await async_get_encryption_key_storage(hass)
+    stored_key = "test_encryption_key_32_bytes_long"
+    await storage.async_store_key("11:22:33:44:55:aa", stored_key)
+
+    # Mock client to require encryption
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="test.local.",
+        name="mock_name",
+        port=6053,
+        properties={"mac": "1122334455aa"},
+        type="mock_type",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NOISE_PSK] == stored_key
+    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"][CONF_PORT] == 6053
+
+
+async def test_encryption_key_fallback_to_dashboard(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_dashboard: dict[str, Any],
+    mock_setup_entry: None,
+) -> None:
+    """Test fallback to dashboard when key not in storage."""
+    # Ensure storage is empty
+    storage = await async_get_encryption_key_storage(hass)
+    await storage.async_remove_key("11:22:33:44:55:aa")
+
+    # Add device to dashboard
+    mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    # Mock client to require encryption
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+        )
+
+    # Should have called dashboard API
+    assert len(mock_get_encryption_key.mock_calls) == 1
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_encryption_key_manual_entry_when_not_found(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_setup_entry: None,
+) -> None:
+    """Test manual entry is prompted when key not found in storage or dashboard."""
+    # Ensure storage is empty
+    storage = await async_get_encryption_key_storage(hass)
+    await storage.async_remove_key("11:22:33:44:55:aa")
+
+    # Mock client to require encryption
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+    )
+
+    # Should prompt for encryption key
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    # Enter the encryption key manually
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NOISE_PSK: VALID_NOISE_PSK},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_reauth_with_stored_encryption_key(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_setup_entry: None,
+) -> None:
+    """Test reauth flow retrieves key from storage."""
+    # Create existing config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: "",
+            CONF_DEVICE_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Pre-populate storage with an encryption key
+    storage = await async_get_encryption_key_storage(hass)
+    stored_key = "test_encryption_key_32_bytes_long"
+    await storage.async_store_key("11:22:33:44:55:aa", stored_key)
+
+    # Mock client to require encryption
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # Check entry was updated with encryption key
+    assert entry.data[CONF_NOISE_PSK] == stored_key
