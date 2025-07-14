@@ -4,7 +4,7 @@
       "default": "mdi:eye"
     },
     "absolute_humidity": {
-      "default": "mdi:water"
+      "default": "mdi:water-opacity"
     },
     "apparent_power": {
       "default": "mdi:flash"

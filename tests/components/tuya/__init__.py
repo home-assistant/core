@@ -13,6 +13,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.SELECT,
+        Platform.COVER,
+    ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
@@ -60,6 +65,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "mal_alarm_host": [
+        # Alarm Host support
+        Platform.ALARM_CONTROL_PANEL,
+        Platform.SWITCH,
+    ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
@@ -86,6 +96,11 @@ DEVICE_MOCKS = {
     ],
     "wsdcg_temperature_humidity": [
         # https://github.com/home-assistant/core/issues/102769
+        Platform.SENSOR,
+    ],
+    "wxkg_wireless_switch": [
+        # https://github.com/home-assistant/core/issues/93975
+        Platform.EVENT,
         Platform.SENSOR,
     ],
     "zndb_smart_meter": [
