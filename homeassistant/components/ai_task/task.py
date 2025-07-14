@@ -44,11 +44,13 @@ async def async_generate_data(
     # Resolve attachments
     resolved_attachments: list[conversation.Attachment] = []
 
-    if attachments is not None:
-        if AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features:
-            raise HomeAssistantError(
-                f"AI Task entity {entity_id} does not support attachments"
-            )
+    if (
+        attachments is not None
+        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
+    ):
+        raise HomeAssistantError(
+            f"AI Task entity {entity_id} does not support attachments"
+        )
 
     for attachment in attachments or []:
         media_content_id = attachment["media_content_id"]
