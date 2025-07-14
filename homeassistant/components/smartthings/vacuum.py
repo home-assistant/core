@@ -1,4 +1,4 @@
-"""Vacuum with Jet Bot."""
+"""Vacuum Jet Bot."""
 
 from __future__ import annotations
 
