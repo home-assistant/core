@@ -7,6 +7,7 @@ from typing import Any
 
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
+from huum.huum import Huum
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -32,9 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Huum sauna with config flow."""
-    async_add_entities(
-        [HuumDevice(hass.data[DOMAIN][entry.entry_id], entry.entry_id)], True
-    )
+    async_add_entities([HuumDevice(hass.data[DOMAIN][entry.entry_id])], True)
 
 
 class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
@@ -51,15 +50,15 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: HuumDataUpdateCoordinator, unique_id: str) -> None:
+    def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
         """Initialize the heater."""
         CoordinatorEntity.__init__(self, coordinator)
 
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = coordinator.device_info
 
-        self._coordinator = coordinator
-        self._huum = coordinator.huum
+        self._coordinator: HuumDataUpdateCoordinator = coordinator
+        self._huum: Huum = coordinator.huum
 
     @property
     def min_temp(self) -> int:

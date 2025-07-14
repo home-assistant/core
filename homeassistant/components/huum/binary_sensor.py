@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up door sensor."""
     async_add_entities(
-        [HuumDoorSensor(hass.data[DOMAIN][entry.entry_id], entry.entry_id)],
+        [HuumDoorSensor(hass.data[DOMAIN][entry.entry_id])],
         True,
     )
 
@@ -34,14 +34,14 @@ class HuumDoorSensor(CoordinatorEntity[HuumDataUpdateCoordinator], BinarySensorE
     _attr_name = "Door"
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, coordinator: HuumDataUpdateCoordinator, unique_id: str) -> None:
+    def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
         """Initialize the BinarySensor."""
         CoordinatorEntity.__init__(self, coordinator)
 
-        self._attr_unique_id = f"{unique_id}_door"
+        self._attr_unique_id = f"{coordinator.unique_id}_door"
         self._attr_device_info = coordinator.device_info
 
-        self._coordinator = coordinator
+        self._coordinator: HuumDataUpdateCoordinator = coordinator
 
     @property
     def is_on(self) -> bool | None:

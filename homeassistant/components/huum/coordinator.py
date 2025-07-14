@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from huum.exceptions import Forbidden, NotAuthenticated
@@ -27,6 +27,7 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
         hass: HomeAssistant,
         huum: Huum,
         device_info: DeviceInfo,
+        unique_id: str,
         update_interval: timedelta,
     ) -> None:
         """Initialize."""
@@ -39,6 +40,7 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
 
         self.huum = huum
         self.device_info = device_info
+        self.unique_id = unique_id
 
     async def _async_update_data(self) -> HuumStatusResponse:
         """Get the latest status data."""
@@ -50,3 +52,9 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
             raise ConfigEntryNotReady(
                 "Could not log in to Huum with given credentials"
             ) from err
+
+    def convert_timestamp(self, timestamp: int | None) -> datetime | None:
+        """Convert numeric timestamp to datetime object."""
+        if timestamp:
+            return datetime.fromtimestamp(timestamp, tz=UTC)
+        return None

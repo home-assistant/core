@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         huum=huum,
         device_info=device_info,
+        unique_id=entry.entry_id,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
