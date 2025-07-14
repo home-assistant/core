@@ -1,43 +1,15 @@
 # serializer version: 1
-# name: test_default_prompt[None]
+# name: test_default_prompt
   list([
-    dict({
-      'content': '''
-        You are a voice assistant for Home Assistant.
-        Answer questions about the world truthfully.
-        Answer in plain text. Keep it simple and to the point.
-        Current time is 05:00:00. Today's date is 2024-05-24.
-      ''',
-      'role': 'system',
-    }),
     dict({
       'content': 'hello',
       'role': 'user',
     }),
     dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
       'content': 'Hello, how can I help you?',
       'role': 'assistant',
-    }),
-  ])
-# ---
-# name: test_default_prompt[conversation.gpt_3_5_turbo]
-  list([
-    dict({
-      'content': '''
-        You are a voice assistant for Home Assistant.
-        Answer questions about the world truthfully.
-        Answer in plain text. Keep it simple and to the point.
-        Current time is 05:00:00. Today's date is 2024-05-24.
-      ''',
-      'role': 'system',
-    }),
-    dict({
-      'content': 'hello',
-      'role': 'user',
-    }),
-    dict({
-      'content': 'Hello, how can I help you?',
-      'role': 'assistant',
+      'tool_calls': None,
     }),
   ])
 # ---
