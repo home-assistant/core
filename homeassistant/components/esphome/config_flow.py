@@ -786,9 +786,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Return boolean if a key was retrieved.
         """
-        assert self._device_mac is not None  # for type checking
+        # Try to get MAC address from current flow state or reauth entry
+        mac_address = self._device_mac
+        if mac_address is None and self._reauth_entry is not None:
+            # In reauth flow, get MAC from the existing entry's unique_id
+            mac_address = self._reauth_entry.unique_id
+
+        if mac_address is None:
+            return False
+
         storage = await async_get_encryption_key_storage(self.hass)
-        if stored_key := await storage.async_get_key(self._device_mac):
+        if stored_key := await storage.async_get_key(mac_address):
             self._noise_psk = stored_key
             return True
 
