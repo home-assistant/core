@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.homekit.const import (
@@ -658,3 +659,179 @@ async def test_button_switch(
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
+
+
+async def test_valve_switch_with_set_duration_characteristic(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test valve accessory with set duration characteristic."""
+    entity_id = "switch.sprinkler"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set("input_number.valve_duration", "0")
+    await hass.async_block_till_done()
+
+    acc = ValveSwitch(
+        hass,
+        hk_driver,
+        "Sprinkler",
+        entity_id,
+        5,
+        {"type": "sprinkler", "linked_valve_duration": "input_number.valve_duration"},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Assert initial state is synced
+    assert acc.get_duration() == 0
+
+    # Simulate setting duration from HomeKit
+    call_set_value = async_mock_service(hass, "input_number", "set_value")
+    acc.char_set_duration.client_update_value(300)
+    await hass.async_block_till_done()
+    assert call_set_value
+    assert call_set_value[0].data == {
+        "entity_id": "input_number.valve_duration",
+        "value": 300,
+    }
+
+    # Assert state change in Home Assistant is synced to HomeKit
+    hass.states.async_set("input_number.valve_duration", "600")
+    await hass.async_block_till_done()
+    assert acc.get_duration() == 600
+
+
+async def test_valve_switch_with_remaining_duration_characteristic(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test valve accessory with remaining duration characteristic."""
+    entity_id = "switch.sprinkler"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
+    await hass.async_block_till_done()
+
+    acc = ValveSwitch(
+        hass,
+        hk_driver,
+        "Sprinkler",
+        entity_id,
+        5,
+        {"type": "sprinkler", "linked_valve_end_time": "sensor.valve_end_time"},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.get_remaining_duration() == 0
+
+    # Simulate remaining duration update from Home Assistant
+    with freeze_time(dt_util.utcnow()):
+        hass.states.async_set(
+            "sensor.valve_end_time",
+            (dt_util.utcnow() + timedelta(seconds=90)).isoformat(),
+        )
+        await hass.async_block_till_done()
+        assert acc.get_remaining_duration() == 90
+
+
+async def test_valve_switch_with_duration_characteristics_edge_cases(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test edge cases for valve duration characteristics."""
+    entity_id = "switch.sprinkler"
+
+    # Test with both duration and end time entities linked
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set("input_number.valve_duration", "60")
+    hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
+    await hass.async_block_till_done()
+
+    acc = ValveSwitch(
+        hass,
+        hk_driver,
+        "Sprinkler",
+        entity_id,
+        5,
+        {
+            "type": "sprinkler",
+            "linked_valve_duration": "input_number.valve_duration",
+            "linked_valve_end_time": "sensor.valve_end_time",
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Test update_duration_chars with both characteristics
+    with freeze_time(dt_util.utcnow()):
+        hass.states.async_set(
+            "sensor.valve_end_time",
+            (dt_util.utcnow() + timedelta(seconds=30)).isoformat(),
+        )
+        await hass.async_block_till_done()
+        acc.update_duration_chars()
+        assert acc.char_set_duration.value == 60
+        assert acc.get_remaining_duration() == 30
+
+    # Test get_duration with invalid state
+    hass.states.async_set("input_number.valve_duration", "invalid")
+    await hass.async_block_till_done()
+    assert acc.get_duration() == 0
+
+    # Test get_remaining_duration with invalid state
+    hass.states.async_set("sensor.valve_end_time", "invalid")
+    await hass.async_block_till_done()
+    assert acc.get_remaining_duration() == 0
+
+    # Test get_remaining_duration with past end time
+    hass.states.async_set(
+        "sensor.valve_end_time",
+        (dt_util.utcnow() - timedelta(seconds=10)).isoformat(),
+    )
+    await hass.async_block_till_done()
+    assert acc.get_remaining_duration() == 0
+
+    # Test set_duration with negative value
+    acc.set_duration(-10)
+    await hass.async_block_till_done()
+    assert acc.get_duration() == 0
+
+    # Test set_duration with negative state
+    hass.states.async_set("sensor.valve_duration", -10)
+    await hass.async_block_till_done()
+    assert acc.get_duration() == 0
+
+
+async def test_valve_with_duration_characteristics(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test valve entity (instead of switch) with duration characteristics."""
+    entity_id = "switch.sprinkler"
+
+    # Test with both duration and end time entities linked
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set("input_number.valve_duration", "60")
+    hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
+    await hass.async_block_till_done()
+
+    acc = Valve(
+        hass,
+        hk_driver,
+        "Valve",
+        entity_id,
+        5,
+        {
+            "linked_valve_duration": "input_number.valve_duration",
+            "linked_valve_end_time": "sensor.valve_end_time",
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with freeze_time(dt_util.utcnow()):
+        hass.states.async_set(
+            "sensor.valve_end_time",
+            (dt_util.utcnow() + timedelta(seconds=30)).isoformat(),
+        )
+        await hass.async_block_till_done()
+        assert acc.get_duration() == 60
+        assert acc.get_remaining_duration() == 30

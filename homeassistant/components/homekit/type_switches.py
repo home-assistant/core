@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
@@ -54,7 +55,11 @@ from .const import (
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
+    CHAR_REMAINING_DURATION,
+    CHAR_SET_DURATION,
     CHAR_VALVE_TYPE,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -271,7 +276,21 @@ class ValveBase(HomeAccessory):
         self.on_service = on_service
         self.off_service = off_service
 
-        serv_valve = self.add_preload_service(SERV_VALVE)
+        self.chars = []
+
+        self.linked_duration_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_DURATION
+        )
+        self.linked_end_time_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_END_TIME
+        )
+
+        if self.linked_duration_entity:
+            self.chars.append(CHAR_SET_DURATION)
+        if self.linked_end_time_entity:
+            self.chars.append(CHAR_REMAINING_DURATION)
+
+        serv_valve = self.add_preload_service(SERV_VALVE, self.chars)
         self.char_active = serv_valve.configure_char(
             CHAR_ACTIVE, value=False, setter_callback=self.set_state
         )
@@ -279,6 +298,25 @@ class ValveBase(HomeAccessory):
         self.char_valve_type = serv_valve.configure_char(
             CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type].valve_type
         )
+
+        if CHAR_SET_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_SET_DURATION
+            )
+            self.char_set_duration = serv_valve.configure_char(
+                CHAR_SET_DURATION,
+                value=self.get_duration(),
+                setter_callback=self.set_duration,
+            )
+
+        if CHAR_REMAINING_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_REMAINING_DURATION
+            )
+            self.char_remaining_duration = serv_valve.configure_char(
+                CHAR_REMAINING_DURATION, getter_callback=self.get_remaining_duration
+            )
+
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
@@ -286,6 +324,7 @@ class ValveBase(HomeAccessory):
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        self.update_duration_chars()
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = self.on_service if value else self.off_service
@@ -295,10 +334,141 @@ class ValveBase(HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = 1 if new_state.state in self.open_states else 0
+        self.update_duration_chars()
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+
+    def update_duration_chars(self) -> None:
+        """Update valve duration related properties if characteristics are available."""
+        if CHAR_SET_DURATION in self.chars:
+            duration = self.get_duration()
+            _LOGGER.debug("%s: Set set_duration state to %s", self.entity_id, duration)
+            self.char_set_duration.set_value(duration)
+        if CHAR_REMAINING_DURATION in self.chars:
+            remaining_duration = self.get_remaining_duration()
+            _LOGGER.debug(
+                "%s: Set remaining_duration state to %s",
+                self.entity_id,
+                remaining_duration,
+            )
+            self.char_remaining_duration.set_value(remaining_duration)
+
+    def set_duration(self, value: int) -> None:
+        """Set default duration for how long the valve should remain open."""
+        _LOGGER.debug(
+            "%s: Update state of linked entity %s to %s",
+            self.entity_id,
+            self.linked_duration_entity,
+            value,
+        )
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                "input_number",
+                "set_value",
+                {
+                    ATTR_ENTITY_ID: self.linked_duration_entity,
+                    "value": value,
+                },
+            )
+        )
+
+    def get_duration(self) -> int:
+        """Get the default duration from Home Assistant."""
+        _LOGGER.debug("%s: Get default run time", self.entity_id)
+        if self.linked_duration_entity is None:
+            _LOGGER.warning(
+                "%s: Linked default run time entity is not configured, returning 0 for default run time",
+                self.entity_id,
+            )
+            return 0
+
+        default_duration_state = self.hass.states.get(self.linked_duration_entity)
+        if default_duration_state is None:
+            _LOGGER.warning(
+                "%s: Linked entity %s has no state, returning 0 for default run time",
+                self.entity_id,
+                self.linked_duration_entity,
+            )
+            return 0
+
+        try:
+            default_duration = int(float(default_duration_state.state))
+        except ValueError:
+            _LOGGER.warning(
+                "%s: State of linked entity %s cannot be parsed, returning 0 for default run time",
+                self.entity_id,
+                self.linked_duration_entity,
+            )
+            return 0
+
+        _LOGGER.debug(
+            "%s: State of linked entity %s is %s",
+            self.entity_id,
+            self.linked_duration_entity,
+            default_duration,
+        )
+
+        if default_duration < 0:
+            _LOGGER.debug(
+                "%s: State of linked entity %s is below 0, returning 0 for default run time",
+                self.entity_id,
+                self.linked_duration_entity,
+            )
+            return 0
+
+        return default_duration
+
+    def get_remaining_duration(self) -> int:
+        """Calculate the remaining duration based on end time in Home Assistant."""
+        _LOGGER.debug("%s: Get remaining duration", self.entity_id)
+        if self.linked_end_time_entity is None:
+            _LOGGER.warning(
+                "%s: Linked end time entity is not configured, returning 0 for remaining duration",
+                self.entity_id,
+            )
+            return 0
+
+        linked_end_time_state = self.hass.states.get(self.linked_end_time_entity)
+        if linked_end_time_state is None:
+            _LOGGER.warning(
+                "%s: Linked entity %s has no state, returning 0 for remaining duration",
+                self.entity_id,
+                self.linked_end_time_entity,
+            )
+            return 0
+
+        linked_end_time_utc = dt_util.parse_datetime(linked_end_time_state.state)
+        if linked_end_time_utc is None:
+            _LOGGER.warning(
+                "%s: State of linked entity %s cannot be parsed, returning 0 for remaining duration",
+                self.linked_end_time_entity,
+                linked_end_time_state.state,
+            )
+            return 0
+
+        _LOGGER.debug(
+            "%s: State of linked entity %s is %s",
+            self.entity_id,
+            self.linked_end_time_entity,
+            linked_end_time_utc,
+        )
+
+        time_now_utc = dt_util.utcnow()
+        _LOGGER.debug(
+            "%s: Current time for calculating remaining duration is %s",
+            self.linked_end_time_entity,
+            time_now_utc,
+        )
+
+        remaining_time = (linked_end_time_utc - time_now_utc).total_seconds()
+        _LOGGER.debug(
+            "%s: Calculated remaining duration in seconds is %s",
+            self.linked_end_time_entity,
+            remaining_time,
+        )
+        return int(max(remaining_time, 0))
 
 
 @TYPES.register("ValveSwitch")
