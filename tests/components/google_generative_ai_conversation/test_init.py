@@ -731,7 +731,7 @@ async def test_migration_from_v1_disabled(
     assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -758,6 +758,14 @@ async def test_migration_from_v1_disabled(
     assert len(ai_task_subentries) == 1
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
