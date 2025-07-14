@@ -49,8 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     # Obtain values, preferring options (re‑configure) over static data
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
 
-    # Create the PoolDose API client
-    client_status, client = await PooldoseClient.create(host)
+    # Create the PoolDose API client and connect
+    client = PooldoseClient(host)
+    client_status = await client.connect()
     if client_status != RequestStatus.SUCCESS:
         _LOGGER.error("Failed to create PoolDose client: %s", client_status)
         raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")

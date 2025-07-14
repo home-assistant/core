@@ -16,8 +16,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "api_not_set": "API version not found in device response",
       "api_not_supported": "Unsupported API version {api_version_is} (shall: {api_version_should})",
-      "parama_fetch_failed": "Unable to fetch core parameters from device",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "params_fetch_failed": "Unable to fetch core parameters from device",
+      "no_device_info": "Unable to retrieve device information. The device may not be properly initialized or may be an unsupported model.",
+      "no_serial_number": "No serial number found on the device. The device may not be properly configured or may be an unsupported model.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
