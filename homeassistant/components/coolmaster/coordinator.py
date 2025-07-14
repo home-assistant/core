@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pycoolmasternet_async import CoolMasterNet
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
@@ -47,9 +48,10 @@ class CoolmasterDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, CoolMasterNetUnit]:
         """Fetch data from Coolmaster."""
         retries_left = MAX_RETRIES
-        while retries_left > 0:
+        status: dict[Any, CoolMasterNetUnit] = {}
+        while retries_left > 0 and not status:
             try:
-                return await self._coolmaster.status()
+                status = await self._coolmaster.status()
             except OSError as error:
                 retries_left -= 1
                 if retries_left == 0:
@@ -65,5 +67,4 @@ class CoolmasterDataUpdateCoordinator(
                     str(error),
                 )
 
-        # This code will never run but without it mypy will complain about missing return
-        return await self._coolmaster.status()
+        return status
