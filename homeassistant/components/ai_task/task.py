@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import mimetypes
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -14,6 +15,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DATA_COMPONENT, DATA_PREFERENCES, AITaskEntityFeature
+
+
+def _save_camera_snapshot(image: camera.Image) -> str:
+    """Save camera snapshot to temp file."""
+    with tempfile.NamedTemporaryFile(
+        mode="wb",
+        suffix=mimetypes.guess_extension(image.content_type),
+        delete=False,
+    ) as temp_file:
+        temp_file.write(image.content)
+        return temp_file.name
 
 
 async def async_generate_data(
@@ -63,17 +75,8 @@ async def async_generate_data(
             # Get snapshot from camera
             image = await camera.async_get_image(hass, entity_id)
 
-            # Store snapshot in a temporary file
-            def _save_camera_snapshot(image_content: bytes) -> str:
-                """Save camera snapshot to temp file."""
-                with tempfile.NamedTemporaryFile(
-                    mode="wb", suffix=".jpg", delete=False
-                ) as temp_file:
-                    temp_file.write(image_content)
-                    return temp_file.name
-
             temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image.content
+                _save_camera_snapshot, image
             )
 
             resolved_attachments.append(
