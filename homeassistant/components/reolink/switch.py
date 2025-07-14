@@ -217,6 +217,15 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="privacy_mask",
+        cmd_key="GetMask",
+        translation_key="privacy_mask",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mask"),
+        value=lambda api, ch: api.privacy_mask_enabled(ch),
+        method=lambda api, ch, value: api.set_privacy_mask(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="hardwired_chime_enabled",
         cmd_key="483",
         translation_key="hardwired_chime_enabled",

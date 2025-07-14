@@ -67,6 +67,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 BASE_PRELOAD_PLATFORMS = [
     "backup",
+    "condition",
     "config",
     "config_flow",
     "diagnostics",
@@ -291,7 +292,7 @@ def _get_custom_components(hass: HomeAssistant) -> dict[str, Integration]:
         return {}
 
     try:
-        import custom_components  # pylint: disable=import-outside-toplevel
+        import custom_components  # noqa: PLC0415
     except ImportError:
         return {}
 
@@ -858,14 +859,24 @@ class Integration:
         return self.manifest.get("import_executor", True)
 
     @cached_property
-    def has_translations(self) -> bool:
-        """Return if the integration has translations."""
-        return "translations" in self._top_level_files
+    def has_conditions(self) -> bool:
+        """Return if the integration has conditions."""
+        return "conditions.yaml" in self._top_level_files
 
     @cached_property
     def has_services(self) -> bool:
         """Return if the integration has services."""
         return "services.yaml" in self._top_level_files
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
+    @cached_property
+    def has_triggers(self) -> bool:
+        """Return if the integration has triggers."""
+        return "triggers.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -1392,7 +1403,7 @@ async def async_get_integrations(
 
     # Now the rest use resolve_from_root
     if needed:
-        from . import components  # pylint: disable=import-outside-toplevel
+        from . import components  # noqa: PLC0415
 
         integrations = await hass.async_add_executor_job(
             _resolve_integrations_from_root, hass, components, needed
@@ -1728,7 +1739,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     sys.path.insert(0, hass.config.config_dir)
     with suppress(ImportError):
-        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
+        import custom_components  # noqa: F401, PLC0415
     sys.path.remove(hass.config.config_dir)
     sys.path_importer_cache.pop(hass.config.config_dir, None)
 
@@ -1783,6 +1794,13 @@ def async_get_issue_tracker(
     if not integration and not integration_domain and not module:
         # If we know nothing about the integration, suggest opening an issue on HA core
         return issue_tracker
+
+    if module and not integration_domain:
+        # If we only have a module, we can try to get the integration domain from it
+        if module.startswith("custom_components."):
+            integration_domain = module.split(".")[1]
+        elif module.startswith("homeassistant.components."):
+            integration_domain = module.split(".")[2]
 
     if not integration:
         integration = async_get_issue_integration(hass, integration_domain)
