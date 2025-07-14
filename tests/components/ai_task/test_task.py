@@ -1,5 +1,6 @@
 """Test tasks for the AI Task integration."""
 
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,9 +16,11 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session
+from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -224,8 +227,15 @@ async def test_generate_data_mixed_attachments(
     content = await hass.async_add_executor_job(camera_attachment.path.read_bytes)
     assert content == b"fake_camera_jpeg"
 
-    # Clean up
-    await hass.async_add_executor_job(camera_attachment.path.unlink)
+    # Trigger clean up
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
+    )
+    await hass.async_block_till_done()
+
+    # Verify the temporary file cleaned up
+    assert not camera_attachment.path.exists()
 
     # Check regular media attachment
     media_attachment = task.attachments[1]

@@ -11,21 +11,22 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import camera, conversation, media_source
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.chat_session import async_get_chat_session
 
 from .const import DATA_COMPONENT, DATA_PREFERENCES, AITaskEntityFeature
 
 
-def _save_camera_snapshot(image: camera.Image) -> str:
+def _save_camera_snapshot(image: camera.Image) -> Path:
     """Save camera snapshot to temp file."""
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        suffix=mimetypes.guess_extension(image.content_type),
+        suffix=mimetypes.guess_extension(image.content_type, False),
         delete=False,
     ) as temp_file:
         temp_file.write(image.content)
-        return temp_file.name
+        return Path(temp_file.name)
 
 
 async def async_generate_data(
@@ -55,6 +56,7 @@ async def async_generate_data(
 
     # Resolve attachments
     resolved_attachments: list[conversation.Attachment] = []
+    created_files: list[Path] = []
 
     if (
         attachments
@@ -78,13 +80,13 @@ async def async_generate_data(
             temp_filename = await hass.async_add_executor_job(
                 _save_camera_snapshot, image
             )
+            created_files.append(temp_filename)
 
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    url=f"file://{temp_filename}",
                     mime_type=image.content_type,
-                    path=Path(temp_filename),
+                    path=temp_filename,
                 )
             )
         else:
@@ -97,20 +99,35 @@ async def async_generate_data(
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    url=media.url,
                     mime_type=media.mime_type,
                     path=media.path,
                 )
             )
 
-    return await entity.internal_async_generate_data(
-        GenDataTask(
-            name=task_name,
-            instructions=instructions,
-            structure=structure,
-            attachments=resolved_attachments or None,
+    with async_get_chat_session(hass) as session:
+        if created_files:
+
+            def cleanup_files() -> None:
+                """Cleanup temporary files."""
+                for file in created_files:
+                    file.unlink(missing_ok=True)
+
+            @callback
+            def cleanup_files_callback() -> None:
+                """Cleanup temporary files."""
+                hass.async_add_executor_job(cleanup_files)
+
+            session.async_on_cleanup(cleanup_files_callback)
+
+        return await entity.internal_async_generate_data(
+            session,
+            GenDataTask(
+                name=task_name,
+                instructions=instructions,
+                structure=structure,
+                attachments=resolved_attachments or None,
+            ),
         )
-    )
 
 
 @dataclass(slots=True)
