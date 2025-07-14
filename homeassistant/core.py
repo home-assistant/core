@@ -157,7 +157,6 @@ class EventStateEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    new_state: State | None
 
 
 class EventStateChangedData(EventStateEventData):
@@ -166,6 +165,7 @@ class EventStateChangedData(EventStateEventData):
     A state changed event is fired when on state write the state is changed.
     """
 
+    new_state: State | None
     old_state: State | None
 
 
@@ -175,6 +175,8 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
+    last_reported: datetime.datetime
+    new_state: State
     old_last_reported: datetime.datetime
 
 
@@ -2340,6 +2342,7 @@ class StateMachine:
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
+                    "last_reported": now,
                     "old_last_reported": old_last_reported,
                     "new_state": old_state,
                 },
