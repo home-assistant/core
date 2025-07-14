@@ -79,7 +79,9 @@ class AITaskEntity(RestoreEntity):
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
             )
 
-            chat_log.async_add_user_content(UserContent(task.instructions))
+            chat_log.async_add_user_content(
+                UserContent(task.instructions, attachments=task.attachments)
+            )
 
             yield chat_log
 
