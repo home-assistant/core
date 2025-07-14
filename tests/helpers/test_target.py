@@ -546,8 +546,6 @@ async def test_async_track_target_selector_state_change_event(
 
     targeted_entity = "light.test_light"
 
-    # List of entities to toggle state during the test. This list should be insert-only
-    # so that all entities are changed every time.
     targeted_entities = [targeted_entity, device_entity]
     await set_states_and_check_events(targeted_entities, [])
 
