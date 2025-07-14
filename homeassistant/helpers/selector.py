@@ -1105,7 +1105,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.BOX): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
                 vol.Optional("translation_key"): str,
