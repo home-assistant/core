@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from pycoolmasternet_async import CoolMasterNet
@@ -12,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MAX_RETRIES
+from .const import BACKOFF_BASE_DELAY, DOMAIN, MAX_RETRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,5 +66,7 @@ class CoolmasterDataUpdateCoordinator(
                     retries_left,
                     str(error),
                 )
+                backoff = BACKOFF_BASE_DELAY ** (MAX_RETRIES - retries_left)
+                await asyncio.sleep(backoff)
 
         return status
