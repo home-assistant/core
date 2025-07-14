@@ -686,7 +686,7 @@ class ESPHomeManager:
             result = await self.cli.noise_encryption_set_key(new_key)
             if not result:
                 _LOGGER.error(
-                    "Unable to store new (dynamic) encryption key for device %s (%s)",
+                    "Failed to set dynamic encryption key on device %s (%s)",
                     self.entry.data.get(CONF_DEVICE_NAME, self.host),
                     self.entry.unique_id,
                 )
