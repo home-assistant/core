@@ -117,7 +117,8 @@ class BroadlinkA1UpdateManager(BroadlinkUpdateManager[blk.a1]):
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.check_sensors_raw)
-        
+
+
 class BroadlinkA2UpdateManager(BroadlinkUpdateManager[blk.a2]):
     """Manages updates for Broadlink A2 devices."""
 
