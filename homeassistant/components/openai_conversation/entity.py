@@ -345,6 +345,26 @@ class OpenAIBaseLLMEntity(Entity):
             for content in chat_log.content
             for m in _convert_content_to_param(content)
         ]
+
+        last_content = chat_log.content[-1]
+
+        # Handle attachments by adding them to the last user message
+        if last_content.role == "user" and last_content.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                [a.path for a in last_content.attachments],
+            )
+            last_message = messages[-1]
+            assert (
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
+            )
+            last_message["content"] = [
+                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
+                *files,  # type: ignore[list-item]
+            ]
+
         if structure and structure_name:
             model_args["text"] = {
                 "format": {
@@ -362,18 +382,25 @@ class OpenAIBaseLLMEntity(Entity):
 
             try:
                 result = await client.responses.create(**model_args)
+
+                async for content in chat_log.async_add_delta_content_stream(
+                    self.entity_id, _transform_stream(chat_log, result, messages)
+                ):
+                    if not isinstance(content, conversation.AssistantContent):
+                        messages.extend(_convert_content_to_param(content))
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
+                if (
+                    isinstance(err, openai.APIError)
+                    and err.type == "insufficient_quota"
+                ):
+                    LOGGER.error("Insufficient funds for OpenAI: %s", err)
+                    raise HomeAssistantError("Insufficient funds for OpenAI") from err
+
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
-
-            async for content in chat_log.async_add_delta_content_stream(
-                self.entity_id, _transform_stream(chat_log, result, messages)
-            ):
-                if not isinstance(content, conversation.AssistantContent):
-                    messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break
