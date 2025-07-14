@@ -196,13 +196,13 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
       - name: Debug - Print token (PLAIN TEXT ⚠️)
         run: |
-          echo "Token: ${{ secrets.GIT_USER_TOKEN_V3 }}"
+          echo "Token: ${{ secrets.MSH_ACTIONS_KEY }}"
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GIT_USER_TOKEN_V3 }}
+          password: ${{ secrets.MSH_ACTIONS_KEY }}
 
       - name: Build base image
         uses: my-smart-homes/builder@master
