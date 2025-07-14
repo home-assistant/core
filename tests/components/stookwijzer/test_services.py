@@ -60,8 +60,6 @@ async def test_service_integration_not_found(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Stookwijzer entities."""
-    mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
-    mock_config_entry2.add_to_hass(hass)
     with pytest.raises(
         ServiceValidationError, match='Integration "stookwijzer" not found in registry'
     ):

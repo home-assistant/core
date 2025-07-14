@@ -1,4 +1,4 @@
-"""Define services for the Overseerr integration."""
+"""Define services for the Stookwijzer integration."""
 
 from typing import Required, TypedDict, cast
 
