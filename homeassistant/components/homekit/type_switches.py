@@ -357,12 +357,7 @@ class ValveBase(HomeAccessory):
 
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
-        _LOGGER.debug(
-            "%s: Update state of linked entity %s to %s",
-            self.entity_id,
-            self.linked_duration_entity,
-            value,
-        )
+        _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
         self.hass.async_create_task(
             self.hass.services.async_call(
                 "input_number",
@@ -379,8 +374,7 @@ class ValveBase(HomeAccessory):
         _LOGGER.debug("%s: Get default run time", self.entity_id)
         if self.linked_duration_entity is None:
             _LOGGER.warning(
-                "%s: Linked default run time entity is not configured",
-                self.entity_id,
+                "%s: Linked default run time entity is not configured", self.entity_id
             )
             return 0
 
@@ -403,13 +397,6 @@ class ValveBase(HomeAccessory):
             )
             return 0
 
-        _LOGGER.debug(
-            "%s: State of linked entity %s is %s",
-            self.entity_id,
-            self.linked_duration_entity,
-            default_duration,
-        )
-
         if default_duration < 0:
             _LOGGER.debug(
                 "%s: State of linked entity %s is below 0",
@@ -418,6 +405,9 @@ class ValveBase(HomeAccessory):
             )
             return 0
 
+        _LOGGER.debug(
+            "%s: Default run time is set to %s", self.entity_id, default_duration
+        )
         return default_duration
 
     def get_remaining_duration(self) -> int:
@@ -425,8 +415,7 @@ class ValveBase(HomeAccessory):
         _LOGGER.debug("%s: Get remaining duration", self.entity_id)
         if self.linked_end_time_entity is None:
             _LOGGER.warning(
-                "%s: Linked end time entity is not configured",
-                self.entity_id,
+                "%s: Linked end time entity is not configured", self.entity_id
             )
             return 0
 
@@ -439,33 +428,26 @@ class ValveBase(HomeAccessory):
             )
             return 0
 
-        linked_end_time_utc = dt_util.parse_datetime(linked_end_time_state.state)
-        if linked_end_time_utc is None:
+        linked_end_time = dt_util.parse_datetime(linked_end_time_state.state)
+        if linked_end_time is None:
             _LOGGER.warning(
                 "%s: State of linked entity %s cannot be parsed",
+                self.entity_id,
                 self.linked_end_time_entity,
-                linked_end_time_state.state,
             )
             return 0
 
+        time_now = dt_util.utcnow()
         _LOGGER.debug(
-            "%s: State of linked entity %s is %s",
+            "%s: Calculating remaining duration with end time %s and current time %s",
             self.entity_id,
-            self.linked_end_time_entity,
-            linked_end_time_utc,
+            linked_end_time,
+            time_now,
         )
-
-        time_now_utc = dt_util.utcnow()
-        _LOGGER.debug(
-            "%s: Current time for calculating remaining duration is %s",
-            self.linked_end_time_entity,
-            time_now_utc,
-        )
-
-        remaining_time = (linked_end_time_utc - time_now_utc).total_seconds()
+        remaining_time = (linked_end_time - time_now).total_seconds()
         _LOGGER.debug(
             "%s: Calculated remaining duration in seconds is %s",
-            self.linked_end_time_entity,
+            self.entity_id,
             remaining_time,
         )
         return int(max(remaining_time, 0))
