@@ -119,7 +119,8 @@ jobs:
           workflow: nightly.yaml
           workflow_conclusion: success
           name: package
-          allow_fork: true
+          allow_forks: true
+          if-no-artifact-found: warn
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
