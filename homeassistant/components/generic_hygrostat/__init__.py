@@ -164,7 +164,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
-            # Remove the derivative config entry from the source device
+            # Remove the generic_hygrostat config entry from the source device
             if source_device_id := async_entity_id_to_device_id(
                 hass, options[CONF_HUMIDIFIER]
             ):
