@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+import tempfile
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import conversation, media_source
+from homeassistant.components import camera, conversation, media_source
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -40,27 +42,56 @@ async def async_generate_data(
         )
 
     # Resolve attachments
-    resolved_attachments: list[conversation.Attachment] | None = None
+    resolved_attachments: list[conversation.Attachment] = []
 
-    if attachments:
+    if attachments is not None:
         if AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features:
             raise HomeAssistantError(
                 f"AI Task entity {entity_id} does not support attachments"
             )
 
-        resolved_attachments = []
+    for attachment in attachments or []:
+        media_content_id = attachment["media_content_id"]
 
-        for attachment in attachments:
-            media = await media_source.async_resolve_media(
-                hass, attachment["media_content_id"], None
+        # Special case for camera media sources
+        if media_content_id.startswith("media-source://camera/"):
+            # Extract entity_id from the media content ID
+            entity_id = media_content_id.removeprefix("media-source://camera/")
+
+            # Get snapshot from camera
+            image = await camera.async_get_image(hass, entity_id)
+
+            # Store snapshot in a temporary file
+            def _save_camera_snapshot(image_content: bytes) -> str:
+                """Save camera snapshot to temp file."""
+                with tempfile.NamedTemporaryFile(
+                    mode="wb", suffix=".jpg", delete=False
+                ) as temp_file:
+                    temp_file.write(image_content)
+                    return temp_file.name
+
+            temp_filename = await hass.async_add_executor_job(
+                _save_camera_snapshot, image.content
             )
+
+            resolved_attachments.append(
+                conversation.Attachment(
+                    media_content_id=media_content_id,
+                    url=f"file://{temp_filename}",
+                    mime_type=image.content_type,
+                    path=Path(temp_filename),
+                )
+            )
+        else:
+            # Handle regular media sources
+            media = await media_source.async_resolve_media(hass, media_content_id, None)
             if media.path is None:
                 raise HomeAssistantError(
                     "Only local attachments are currently supported"
                 )
             resolved_attachments.append(
                 conversation.Attachment(
-                    media_content_id=attachment["media_content_id"],
+                    media_content_id=media_content_id,
                     url=media.url,
                     mime_type=media.mime_type,
                     path=media.path,
@@ -72,7 +103,7 @@ async def async_generate_data(
             name=task_name,
             instructions=instructions,
             structure=structure,
-            attachments=resolved_attachments,
+            attachments=resolved_attachments or None,
         )
     )
 
