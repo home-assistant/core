@@ -68,7 +68,7 @@ class MatterLock(MatterEntity, LockEntity):
     _attr_changed_by = "Unknown"
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to events to handle jammed and other event conditions"""
+        """Subscribe to events to handle jammed and other event conditions."""
         await super().async_added_to_hass()
         # subscribe to NodeEvent events
         self._unsubscribes.append(
