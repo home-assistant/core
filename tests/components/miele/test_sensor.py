@@ -1,7 +1,9 @@
 """Tests for miele sensor module."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pymiele import MieleDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,6 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
@@ -85,6 +88,7 @@ async def test_oven_temperatures_scenario(
     setup_platform: None,
     mock_config_entry: MockConfigEntry,
     device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
@@ -95,13 +99,14 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 0)
 
     # Simulate temperature settings, no probe temperature
+    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         80.0
     )
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = 2150
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.5
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     check_sensor_state(hass, "sensor.oven_temperature", "21.5", 1)
@@ -110,13 +115,14 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 1)
 
     # Simulate unsetting temperature
+    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         None
     )
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 2)
@@ -125,6 +131,7 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 2)
 
     # Simulate temperature settings with probe temperature
+    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         80.0
@@ -137,7 +144,7 @@ async def test_oven_temperatures_scenario(
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.83
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     check_sensor_state(hass, "sensor.oven_temperature", "21.83", 3)
@@ -146,6 +153,7 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", "30.0", 3)
 
     # Simulate unsetting temperature
+    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         None
@@ -160,7 +168,7 @@ async def test_oven_temperatures_scenario(
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 4)
@@ -198,13 +206,15 @@ async def test_temperature_sensor_registry_lookup(
     mock_miele_client: MagicMock,
     setup_platform: None,
     device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that core temperature sensor is provided by the integration after looking up in entity registry."""
 
     # Initial state, the oven is showing core temperature (probe)
+    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity_id = "sensor.oven_core_temperature"
