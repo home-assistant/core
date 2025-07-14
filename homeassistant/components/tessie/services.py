@@ -10,7 +10,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SERVICE_SHARE
+from .const import (
+    CONF_LOCALE,
+    CONF_RETRY_DURATION,
+    CONF_VALUE,
+    CONF_WAIT_FOR_COMPLETION,
+    DOMAIN,
+    SERVICE_SHARE,
+)
 
 
 def async_get_device_for_service_call(
@@ -39,7 +46,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def service_share(call: ServiceCall) -> None:
         device_id = call.data[CONF_DEVICE_ID]
-        content = call.data["content"]
+        content = call.data[CONF_VALUE]
+        locale = call.data.get(CONF_LOCALE, "en-US")
+        retry_duration = call.data.get(CONF_RETRY_DURATION, 40)
+        wait_for_completion = call.data.get(CONF_WAIT_FOR_COMPLETION, True)
 
         if (device := async_get_device_for_service_call(hass, call)) is not None and (
             config_entry := async_get_config_for_device(hass, device)
@@ -52,6 +62,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     vin=device.serial_number,
                     api_key=api_key,
                     value=content,
+                    locale=locale,
+                    retry_duration=retry_duration,
+                    wait_for_completion=wait_for_completion,
                 )
             except ClientResponseError as e:
                 raise HomeAssistantError from e

@@ -542,9 +542,21 @@
           "name": "Vehicle",
           "description": "Vehicle to share content with."
         },
-        "content": {
-          "name": "Content",
+        "value": {
+          "name": "Value",
           "description": "Content to share with the vehicle."
+        },
+        "locale": {
+          "name": "Locale",
+          "description": "Locale to use for the content."
+        },
+        "retry_duration": {
+          "name": "Retry duration",
+          "description": "Duration in seconds to retry sharing the content if it fails."
+        },
+        "wait_for_completion": {
+          "name": "Wait for completion",
+          "description": "If true, the service will wait for the sharing to complete before returning."
         }
       }
     }

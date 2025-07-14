@@ -6,7 +6,25 @@ share:
         device:
           filter:
             integration: tessie
-    content:
+    value:
       required: true
       selector:
         text:
+    locale:
+      required: false
+      default: "en-US"
+      selector:
+        text:
+    retry_duration:
+      required: false
+      default: 40
+      selector:
+        number:
+          min: 0
+          max: 90
+          unit_of_measurement: seconds
+    wait_for_completion:
+      required: false
+      default: true
+      selector:
+        boolean:
