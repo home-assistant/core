@@ -4962,14 +4962,11 @@ async def test_async_track_state_report_change_event(hass: HomeAssistant) -> Non
 
     async_track_state_change_event(hass, ["light.bowl", "light.top"], on_state_change)
     async_track_state_report_event(hass, ["light.bowl", "light.top"], on_state_report)
-    hass.states.async_set("light.bowl", "on")
-    hass.states.async_set("light.top", "on")
-    hass.states.async_set("light.bowl", "on")
-    hass.states.async_set("light.top", "on")
-    hass.states.async_set("light.bowl", "off")
-    hass.states.async_set("light.top", "off")
-    hass.states.async_set("light.bowl", "off")
-    hass.states.async_set("light.top", "off")
+    entity_ids = ["light.bowl", "light.top"]
+    state_sequence = ["on", "on", "off", "off"]
+    for state in state_sequence:
+        for entity_id in entity_ids:
+            hass.states.async_set(entity_id, state)
     await hass.async_block_till_done()
     # The out-of-order is a result of state change listeners scheduled with
     # loop.call_soon, whereas state report listeners are called immediately.
