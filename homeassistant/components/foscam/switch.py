@@ -42,7 +42,7 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         turn_on_fn=lambda session: session.mirror_video(1),
     ),
     FoscamSwitchEntityDescription(
-        key="is_openir",
+        key="is_open_ir",
         translation_key="ir_switch",
         icon="mdi:theme-light-dark",
         set_ir_config_auto_close=lambda session: session.set_infra_led_config(0),
@@ -58,42 +58,42 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         turn_on_fn=lambda session: session.sleep(),
     ),
     FoscamSwitchEntityDescription(
-        key="is_openwhitelight",
+        key="is_open_white_light",
         translation_key="white_light_switch",
         icon="mdi:light-flood-down",
         turn_off_fn=lambda session: session.closeWhiteLight(),
         turn_on_fn=lambda session: session.openWhiteLight(),
     ),
     FoscamSwitchEntityDescription(
-        key="is_sirenalarm",
+        key="is_siren_alarm",
         translation_key="siren_alarm_switch",
         icon="mdi:alarm-note",
         turn_off_fn=lambda session: session.setSirenConfig(0, 100, 0),
         turn_on_fn=lambda session: session.setSirenConfig(1, 100, 0),
     ),
     FoscamSwitchEntityDescription(
-        key="is_turnoffvolume",
+        key="is_turn_off_volume",
         translation_key="turn_off_volume_switch",
         icon="mdi:volume-off",
-        turn_off_fn=lambda session: session.setVoiceEnableState(0),
-        turn_on_fn=lambda session: session.setVoiceEnableState(1),
+        turn_off_fn=lambda session: session.setVoiceEnableState(1),
+        turn_on_fn=lambda session: session.setVoiceEnableState(0),
     ),
     FoscamSwitchEntityDescription(
-        key="is_turnofflight",
+        key="is_turn_off_light",
         translation_key="turn_off_light_switch",
         icon="mdi:lightbulb-fluorescent-tube",
         turn_off_fn=lambda session: session.setLedEnableState(1),
         turn_on_fn=lambda session: session.setLedEnableState(0),
     ),
     FoscamSwitchEntityDescription(
-        key="is_openhdr",
+        key="is_open_hdr",
         translation_key="hdr_switch",
         icon="mdi:hdr",
         turn_off_fn=lambda session: session.setHdrMode(0),
         turn_on_fn=lambda session: session.setHdrMode(1),
     ),
     FoscamSwitchEntityDescription(
-        key="is_openwdr",
+        key="is_open_wdr",
         translation_key="wdr_switch",
         icon="mdi:alpha-w-box",
         turn_off_fn=lambda session: session.setWdrMode(0),
@@ -121,10 +121,10 @@ async def async_setup_entry(
         if description.key == "is_asleep":
             if not coordinator.data.is_asleep["supported"]:
                 continue
-        elif description.key == "is_openhdr":
-            if ((1 << 8) & int(reserve3)) != 0:
+        elif description.key == "is_open_hdr":
+            if ((1 << 8) & int(reserve3)) != 0 or ((1 << 7) & int(reserve3)) == 0:
                 continue
-        elif description.key == "is_openwdr":
+        elif description.key == "is_open_wdr":
             if ((1 << 8) & int(reserve3)) == 0:
                 continue
 
@@ -158,12 +158,11 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        # print(self._state)
         return self._state
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        if self.entity_description.key == "is_openir":
+        if self.entity_description.key == "is_open_ir":
             if self.entity_description.set_ir_config_auto_close:
                 self.hass.async_add_executor_job(
                     self.entity_description.set_ir_config_auto_close,
@@ -177,7 +176,7 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
-        if self.entity_description.key == "is_openir":
+        if self.entity_description.key == "is_open_ir":
             if self.entity_description.set_ir_config_auto:
                 self.hass.async_add_executor_job(
                     self.entity_description.set_ir_config_auto, self.coordinator.session
