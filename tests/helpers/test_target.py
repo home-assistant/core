@@ -464,12 +464,10 @@ async def test_async_track_target_selector_state_change_event_empty_selector(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_track_target_selector_state_change_event with empty selector."""
-    calls = []
 
     @callback
     def state_change_callback(event):
         """Handle state change events."""
-        calls.append(event)
 
     with pytest.raises(HomeAssistantError) as excinfo:
         target.async_track_target_selector_state_change_event(
