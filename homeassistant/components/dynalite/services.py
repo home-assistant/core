@@ -50,7 +50,7 @@ async def _request_channel_level(service_call: ServiceCall) -> None:
 
 
 @callback
-def setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Dynalite platform."""
     hass.services.async_register(
         DOMAIN,

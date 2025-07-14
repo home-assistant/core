@@ -6,6 +6,7 @@ import pytest
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
+from homeassistant.components.knx.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -295,4 +296,5 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
             {"address": "1/2/3", "payload": True, "response": False},
             blocking=True,
         )
-    assert str(exc_info.value) == "KNX entry not loaded"
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "integration_not_loaded"

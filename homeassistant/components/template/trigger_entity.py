@@ -65,9 +65,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Render configured variables."""
         if self.coordinator.data is None:
             return {}
-        if self.coordinator.data is None:
-            return {}
-        return self.coordinator.data["run_variables"] or {} or {}
+        return self.coordinator.data["run_variables"] or {}
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""

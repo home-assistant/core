@@ -37,6 +37,137 @@
         "default": "mdi:antenna"
       }
     },
+    "sensor": {
+      "uptime": {
+        "default": "mdi:timer-outline"
+      },
+      "wan_ip_address": {
+        "default": "mdi:ip"
+      },
+      "wan_ipv6_address": {
+        "default": "mdi:ip"
+      },
+      "cell_id": {
+        "default": "mdi:antenna"
+      },
+      "cqi0": {
+        "default": "mdi:speedometer"
+      },
+      "cqi1": {
+        "default": "mdi:speedometer"
+      },
+      "enodeb_id": {
+        "default": "mdi:antenna"
+      },
+      "lac": {
+        "default": "mdi:map-marker"
+      },
+      "nei_cellid": {
+        "default": "mdi:antenna"
+      },
+      "nrcqi0": {
+        "default": "mdi:speedometer"
+      },
+      "nrcqi1": {
+        "default": "mdi:speedometer"
+      },
+      "pci": {
+        "default": "mdi:antenna"
+      },
+      "rac": {
+        "default": "mdi:map-marker"
+      },
+      "tac": {
+        "default": "mdi:map-marker"
+      },
+      "sms_unread": {
+        "default": "mdi:email-arrow-left"
+      },
+      "current_day_transfer": {
+        "default": "mdi:arrow-up-down-bold"
+      },
+      "current_month_download": {
+        "default": "mdi:download"
+      },
+      "current_month_upload": {
+        "default": "mdi:upload"
+      },
+      "wifi_clients_connected": {
+        "default": "mdi:wifi"
+      },
+      "primary_dns_server": {
+        "default": "mdi:ip"
+      },
+      "primary_ipv6_dns_server": {
+        "default": "mdi:ip"
+      },
+      "secondary_dns_server": {
+        "default": "mdi:ip"
+      },
+      "secondary_ipv6_dns_server": {
+        "default": "mdi:ip"
+      },
+      "current_connection_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "current_connection_download": {
+        "default": "mdi:download"
+      },
+      "current_download_rate": {
+        "default": "mdi:download"
+      },
+      "current_connection_upload": {
+        "default": "mdi:upload"
+      },
+      "current_upload_rate": {
+        "default": "mdi:upload"
+      },
+      "total_connected_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "total_download": {
+        "default": "mdi:download"
+      },
+      "total_upload": {
+        "default": "mdi:upload"
+      },
+      "sms_deleted_device": {
+        "default": "mdi:email-minus"
+      },
+      "sms_drafts_device": {
+        "default": "mdi:email-arrow-right-outline"
+      },
+      "sms_inbox_device": {
+        "default": "mdi:email"
+      },
+      "sms_capacity_device": {
+        "default": "mdi:email"
+      },
+      "sms_outbox_device": {
+        "default": "mdi:email-arrow-right"
+      },
+      "sms_unread_device": {
+        "default": "mdi:email-arrow-left"
+      },
+      "sms_drafts_sim": {
+        "default": "mdi:email-arrow-right-outline"
+      },
+      "sms_inbox_sim": {
+        "default": "mdi:email"
+      },
+      "sms_capacity_sim": {
+        "default": "mdi:email"
+      },
+      "sms_outbox_sim": {
+        "default": "mdi:email-arrow-right"
+      },
+      "sms_unread_sim": {
+        "default": "mdi:email-arrow-left"
+      },
+      "sms_messages_sim": {
+        "default": "mdi:email-arrow-left"
+      }
+    },
     "switch": {
       "mobile_data": {
         "default": "mdi:signal-off",

@@ -195,7 +195,10 @@
       "message": "Error compiling {configuration}; Try again in ESPHome dashboard for more information."
     },
     "error_uploading": {
-      "message": "Error during OTA of {configuration}; Try again in ESPHome dashboard for more information."
+      "message": "Error during OTA (Over-The-Air) of {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "ota_in_progress": {
+      "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
   }
 }

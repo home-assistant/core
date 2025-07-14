@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from http import HTTPStatus
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -53,16 +52,11 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 INITIAL_FETCH_CLIENT_METHODS = [
     "get_settings",
@@ -79,42 +73,14 @@ def platforms() -> list[str]:
     return [Platform.SENSOR, Platform.SWITCH]
 
 
-async def test_coordinator_update(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test that the coordinator can update."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
-async def test_coordinator_update_failing_get_appliances(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client_with_exception: MagicMock,
-) -> None:
-    """Test that the coordinator raises ConfigEntryNotReady when it fails to get appliances."""
-    client_with_exception.get_home_appliances.return_value = None
-    client_with_exception.get_home_appliances.side_effect = HomeConnectError()
-
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    freezer: FrozenDateTimeFactory,
     appliance: HomeAppliance,
 ) -> None:
     """Test entity available state via coordinator refresh and event stream."""
@@ -127,7 +93,7 @@ async def test_coordinator_failure_refresh_and_stream(
     entity_id_2 = "binary_sensor.washer_remote_start"
     await async_setup_component(hass, HA_DOMAIN, {})
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id_1)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -238,18 +204,16 @@ async def test_coordinator_failure_refresh_and_stream(
     indirect=True,
 )
 async def test_coordinator_not_fetching_on_disconnected_appliance(
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that the coordinator does not fetch anything on disconnected appliance."""
     appliance.connected = False
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for method in INITIAL_FETCH_CLIENT_METHODS:
         assert getattr(client, method).call_count == 0
@@ -260,11 +224,10 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
     INITIAL_FETCH_CLIENT_METHODS,
 )
 async def test_coordinator_update_failing(
-    mock_method: str,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
+    mock_method: str,
 ) -> None:
     """Test that although is not possible to get settings and status, the config entry is loaded.
 
@@ -272,13 +235,13 @@ async def test_coordinator_update_failing(
     """
     setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     getattr(client, mock_method).assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
@@ -304,25 +267,23 @@ async def test_coordinator_update_failing(
     ],
 )
 async def test_event_listener(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
     event_type: EventType,
     event_key: EventKey,
     event_value: str,
     entity_id: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    appliance: HomeAppliance,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the event listener works."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
-
+    assert state
     event_message = EventMessage(
         appliance.ha_id,
         event_type,
@@ -344,8 +305,7 @@ async def test_event_listener(
 
     new_state = hass.states.get(entity_id)
     assert new_state
-    if state is not None:
-        assert new_state.state != state.state
+    assert new_state.state != state.state
 
     # Following, we are gonna check that the listeners are clean up correctly
     new_entity_id = entity_id + "_new"
@@ -359,7 +319,7 @@ async def test_event_listener(
     def event_filter(_: EventStateReportedData) -> bool:
         return True
 
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener_callback, event_filter)
+    hass.bus.async_listen_once(EVENT_STATE_REPORTED, listener_callback, event_filter)
 
     entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
     await hass.async_block_till_done()
@@ -375,19 +335,17 @@ async def test_event_listener(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that the event listener is capable of receiving settings and status for the first time."""
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
     client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await client.add_events(
         [
@@ -427,15 +385,14 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     )
     await hass.async_block_till_done()
     assert len(config_entry._background_tasks) == 1
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_event_listener_error(
     hass: HomeAssistant,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client_with_exception: MagicMock,
 ) -> None:
     """Test that the configuration entry is reloaded when the event stream raises an API error."""
     client_with_exception.stream_all_events = MagicMock(
@@ -454,7 +411,6 @@ async def test_event_listener_error(
     assert not config_entry._background_tasks
 
 
-@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
@@ -480,17 +436,17 @@ async def test_event_listener_error(
     ],
 )
 async def test_event_listener_resilience(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    exception: HomeConnectError,
     entity_id: str,
     initial_state: str,
     event_key: EventKey,
     event_value: Any,
     after_event_expected_state: str,
-    exception: HomeConnectError,
-    hass: HomeAssistant,
-    appliance: HomeAppliance,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
     future = hass.loop.create_future()
@@ -502,11 +458,10 @@ async def test_event_listener_resilience(
         side_effect=[stream_exception(), client.stream_all_events()]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(config_entry._background_tasks) == 1
 
     state = hass.states.get(entity_id)
@@ -550,11 +505,10 @@ async def test_event_listener_resilience(
 
 async def test_devices_updated_on_refresh(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling of devices added or deleted while event stream is down."""
     appliances: list[HomeAppliance] = (
@@ -566,9 +520,8 @@ async def test_devices_updated_on_refresh(
     )
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for appliance in appliances[:2]:
         assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
@@ -592,17 +545,15 @@ async def test_devices_updated_on_refresh(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that Home Connect API is not fetched after pairing a disconnected device."""
     client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     appliance.connected = False
     await client.add_events(
@@ -623,12 +574,10 @@ async def test_paired_disconnected_devices_not_fetching(
 
 async def test_coordinator_disabling_updates_for_appliance(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test coordinator disables appliance updates on frequent connect/paired events.
 
@@ -636,11 +585,9 @@ async def test_coordinator_disabling_updates_for_appliance(
     When the user confirms the issue the updates should be enabled again.
     """
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
-    issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
@@ -651,13 +598,26 @@ async def test_coordinator_disabling_updates_for_appliance(
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
-            for _ in range(8)
+            for _ in range(6)
         ]
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue
+    freezer.tick(timedelta(minutes=10))
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+            for _ in range(2)
+        ]
+    )
+    await hass.async_block_till_done()
+
+    # At this point, the updates have been blocked because
+    # 6 + 2 connected events have been received in less than an hour
 
     get_settings_original_side_effect = client.get_settings.side_effect
 
@@ -689,18 +649,36 @@ async def test_coordinator_disabling_updates_for_appliance(
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
-    _client = await hass_client()
-    resp = await _client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    # After 55 minutes, the updates should be enabled again
+    # because one hour has passed since the first connect events,
+    # so there are 2 connected events in the execution_tracker
+    freezer.tick(timedelta(minutes=55))
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+        ]
     )
-    assert resp.status == HTTPStatus.OK
-    flow_id = (await resp.json())["flow_id"]
-    resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
-    assert resp.status == HTTPStatus.OK
+    await hass.async_block_till_done()
 
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert hass.states.is_state("switch.dishwasher_power", STATE_OFF)
 
+    # If more connect events are sent, it should be blocked again
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+            for _ in range(5)  # 2 + 1 + 5 = 8 connect events in less than an hour
+        ]
+    )
+    await hass.async_block_till_done()
+    client.get_settings = get_settings_original_side_effect
     await client.add_events(
         [
             EventMessage(
@@ -717,23 +695,18 @@ async def test_coordinator_disabling_updates_for_appliance(
 
 async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_reload(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that updates are enabled again after unloading the entry.
 
     The repair issue should also be deleted.
     """
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
-    issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
@@ -749,17 +722,11 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue
-
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     get_settings_original_side_effect = client.get_settings.side_effect
 

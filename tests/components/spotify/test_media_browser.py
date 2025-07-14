@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.spotify import DOMAIN

@@ -9,12 +9,7 @@ from urllib.error import HTTPError
 from pylutron import Lutron
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -23,6 +18,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
 )
 
+from . import LutronConfigEntry
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +79,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LutronConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

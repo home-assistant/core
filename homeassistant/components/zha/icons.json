@@ -5,6 +5,29 @@
         "default": "mdi:hand-wave"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "smart": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "mdi:looks"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "timer_duration": {
         "default": "mdi:timer"

@@ -56,6 +56,10 @@ from .coordinator import (
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
 )
+from .repairs import (
+    async_manage_ble_scanner_firmware_unsupported_issue,
+    async_manage_outbound_websocket_incorrectly_enabled_issue,
+)
 from .utils import (
     async_create_issue_unsupported_firmware,
     get_coap_context,
@@ -63,6 +67,7 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    remove_stale_blu_trv_devices,
 )
 
 PLATFORMS: Final = [
@@ -299,6 +304,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 runtime_data.rpc_script_events = await get_rpc_scripts_event_types(
                     device, ignore_scripts=[BLE_SCRIPT_NAME]
                 )
+            remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
@@ -319,6 +325,14 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
+        )
+        async_manage_ble_scanner_firmware_unsupported_issue(
+            hass,
+            entry,
+        )
+        async_manage_outbound_websocket_incorrectly_enabled_issue(
+            hass,
+            entry,
         )
     elif (
         sleep_period is None
