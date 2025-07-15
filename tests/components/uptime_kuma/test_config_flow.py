@@ -138,8 +138,6 @@ async def test_flow_reauth(
         {CONF_API_KEY: "newapikey"},
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_API_KEY] == "newapikey"
@@ -175,7 +173,6 @@ async def test_flow_reauth_errors(
         result["flow_id"],
         {CONF_API_KEY: "newapikey"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
