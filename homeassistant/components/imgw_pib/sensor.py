@@ -30,7 +30,7 @@ from .entity import ImgwPibEntity
 PARALLEL_UPDATES = 0
 
 
-def gen_attributes(data: HydrologicalData) -> dict[str, Any] | None:
+def gen_alert_attributes(data: HydrologicalData) -> dict[str, Any] | None:
     """Generate attributes for the alert entity."""
     if data.alert.value == NO_ALERT:
         return None
@@ -58,7 +58,7 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(HYDROLOGICAL_ALERTS_MAP.values()),
         value=lambda data: data.alert.value,
-        attrs=gen_attributes,
+        attrs=gen_alert_attributes,
     ),
     ImgwPibSensorEntityDescription(
         key="water_flow",
