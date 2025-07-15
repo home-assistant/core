@@ -53,7 +53,7 @@ async def target_lights(hass: HomeAssistant) -> None:
     mock_device_registry(hass, {device.id: device})
 
     entity_reg = er.async_get(hass)
-    # Light associated with area (via area_id)
+    # Light associated with area
     light_area = entity_reg.async_get_or_create(
         domain="light",
         platform="test",
@@ -62,7 +62,7 @@ async def target_lights(hass: HomeAssistant) -> None:
     )
     entity_reg.async_update_entity(light_area.entity_id, area_id=area.id)
 
-    # Light associated with device (via device_id)
+    # Light associated with device
     entity_reg.async_get_or_create(
         domain="light",
         platform="test",
@@ -71,7 +71,7 @@ async def target_lights(hass: HomeAssistant) -> None:
         device_id=device.id,
     )
 
-    # Light associated with label (via entity label)
+    # Light associated with label
     light_label = entity_reg.async_get_or_create(
         domain="light",
         platform="test",
