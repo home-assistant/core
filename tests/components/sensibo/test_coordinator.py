@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.exceptions import AuthenticationError, SensiboError
 from pysensibo.model import SensiboData
+import pytest
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensibo.const import DOMAIN
@@ -25,6 +26,7 @@ async def test_coordinator(
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the Sensibo coordinator with errors."""
     config_entry = MockConfigEntry(
@@ -87,3 +89,5 @@ async def test_coordinator(
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
     assert state.state == STATE_UNAVAILABLE
+
+    assert "Platform sensibo does not generate unique IDs" not in caplog.text

@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import (
 )
 
 from . import AgentDVRConfigEntry
-from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN as AGENT_DOMAIN
+from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
@@ -82,7 +82,7 @@ class AgentCamera(MjpegCamera):
             still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(AGENT_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Agent",
             model="Camera",
             name=f"{device.client.name} {device.name}",

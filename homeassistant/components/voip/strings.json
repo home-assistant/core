@@ -58,5 +58,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "non_tts_announcement": {
+      "message": "VoIP does not currently support non-TTS announcements"
+    }
   }
 }

@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -33,6 +34,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    ATTR_BH1750_ILLUMINANCE,
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
     ATTR_BME280_TEMPERATURE,
@@ -83,6 +85,15 @@ class NAMSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
+    NAMSensorEntityDescription(
+        key=ATTR_BH1750_ILLUMINANCE,
+        translation_key="bh1750_illuminance",
+        suggested_display_precision=0,
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.bh1750_illuminance,
+    ),
     NAMSensorEntityDescription(
         key=ATTR_BME280_HUMIDITY,
         translation_key="bme280_humidity",

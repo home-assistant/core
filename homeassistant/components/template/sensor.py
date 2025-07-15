@@ -33,6 +33,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_STATE,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -53,22 +55,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import (
-    CONF_ATTRIBUTE_TEMPLATES,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
-    CONF_TRIGGER,
-)
-from .template_entity import (
-    TEMPLATE_ENTITY_COMMON_SCHEMA,
-    TemplateEntity,
-    rewrite_common_legacy_to_modern_conf,
-)
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_OBJECT_ID
+from .helpers import async_setup_template_platform
+from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
 from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
-    CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
@@ -132,7 +125,7 @@ LEGACY_SENSOR_SCHEMA = vol.All(
 
 def extra_validation_checks(val):
     """Run extra validation checks."""
-    if CONF_TRIGGER in val:
+    if CONF_TRIGGERS in val or CONF_TRIGGER in val:
         raise vol.Invalid(
             "You can only add triggers to template entities if they are defined under"
             " `template:`. See the template documentation for more information:"
@@ -145,31 +138,11 @@ def extra_validation_checks(val):
     return val
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, cfg: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy sensor definitions to modern ones."""
-    sensors = []
-
-    for object_id, entity_cfg in cfg.items():
-        entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
-
-        entity_cfg = rewrite_common_legacy_to_modern_conf(
-            hass, entity_cfg, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
-
-        sensors.append(entity_cfg)
-
-    return sensors
-
-
 PLATFORM_SCHEMA = vol.All(
     SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
+            vol.Optional(CONF_TRIGGERS): cv.match_all,  # to raise custom warning
             vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
         }
     ),
@@ -179,33 +152,6 @@ PLATFORM_SCHEMA = vol.All(
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template sensors."""
-    sensors = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        sensors.append(
-            SensorTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(sensors)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -213,27 +159,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template sensors."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerSensorEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        SENSOR_DOMAIN,
+        config,
+        StateSensorEntity,
+        TriggerSensorEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_SENSORS,
     )
 
 
@@ -246,19 +181,21 @@ async def async_setup_entry(
     _options = dict(config_entry.options)
     _options.pop("template_type")
     validated_config = SENSOR_CONFIG_SCHEMA(_options)
-    async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
+    async_add_entities(
+        [StateSensorEntity(hass, validated_config, config_entry.entry_id)]
+    )
 
 
 @callback
 def async_create_preview_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> SensorTemplate:
+) -> StateSensorEntity:
     """Create a preview sensor."""
     validated_config = SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return SensorTemplate(hass, validated_config, None)
+    return StateSensorEntity(hass, validated_config, None)
 
 
-class SensorTemplate(TemplateEntity, SensorEntity):
+class StateSensorEntity(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     _attr_should_poll = False
@@ -341,6 +278,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         """Initialize."""
         super().__init__(hass, coordinator, config)
 
+        self._parse_result.add(CONF_STATE)
         if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:
             if last_reset_template.is_static:
                 self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template

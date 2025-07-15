@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_clear_night[clear-night_forecast]
+# name: test_clear_night[1][clear-night_forecast]
   dict({
     'weather.smhi_test': dict({
       'forecast': list([
@@ -59,11 +59,11 @@
     }),
   })
 # ---
-# name: test_clear_night[clear_night]
+# name: test_clear_night[1][clear_night]
   ReadOnlyDict({
     'attribution': 'Swedish weather institute (SMHI)',
     'cloud_coverage': 100,
-    'friendly_name': 'test',
+    'friendly_name': 'Test',
     'humidity': 100,
     'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     'pressure': 992.4,
@@ -80,7 +80,7 @@
     'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_forecast_service[get_forecasts]
+# name: test_forecast_service[load_platforms0]
   dict({
     'weather.smhi_test': dict({
       'forecast': list([
@@ -218,7 +218,7 @@
     }),
   })
 # ---
-# name: test_forecast_services
+# name: test_forecast_services[load_platforms0]
   dict({
     'cloud_coverage': 100,
     'condition': 'cloudy',
@@ -233,7 +233,7 @@
     'wind_speed': 10.08,
   })
 # ---
-# name: test_forecast_services.1
+# name: test_forecast_services[load_platforms0].1
   dict({
     'cloud_coverage': 75,
     'condition': 'partlycloudy',
@@ -248,7 +248,7 @@
     'wind_speed': 14.76,
   })
 # ---
-# name: test_forecast_services.2
+# name: test_forecast_services[load_platforms0].2
   dict({
     'cloud_coverage': 100,
     'condition': 'fog',
@@ -263,7 +263,7 @@
     'wind_speed': 9.72,
   })
 # ---
-# name: test_forecast_services.3
+# name: test_forecast_services[load_platforms0].3
   dict({
     'cloud_coverage': 100,
     'condition': 'cloudy',
@@ -278,11 +278,11 @@
     'wind_speed': 12.24,
   })
 # ---
-# name: test_setup_hass
+# name: test_setup_hass[load_platforms0]
   ReadOnlyDict({
     'attribution': 'Swedish weather institute (SMHI)',
     'cloud_coverage': 100,
-    'friendly_name': 'test',
+    'friendly_name': 'Test',
     'humidity': 100,
     'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     'pressure': 992.4,

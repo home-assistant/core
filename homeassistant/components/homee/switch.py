@@ -20,12 +20,15 @@ from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 
 def get_device_class(
     attribute: HomeeAttribute, config_entry: HomeeConfigEntry
 ) -> SwitchDeviceClass:
     """Check device class of Switch according to node profile."""
     node = config_entry.runtime_data.get_node_by_id(attribute.node_id)
+    assert node is not None
     if node.profile in [
         NodeProfile.ON_OFF_PLUG,
         NodeProfile.METERING_PLUG,
@@ -120,8 +123,8 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.async_set_value(1)
+        await self.async_set_homee_value(1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.async_set_value(0)
+        await self.async_set_homee_value(0)

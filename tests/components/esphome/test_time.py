@@ -12,11 +12,13 @@ from homeassistant.components.time import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_generic_time_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic time entity."""
     entity_info = [
@@ -35,24 +37,24 @@ async def test_generic_time_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("time.test_mytime")
+    state = hass.states.get("time.test_my_time")
     assert state is not None
     assert state.state == "12:34:56"
 
     await hass.services.async_call(
         TIME_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "time.test_mytime", ATTR_TIME: "01:23:45"},
+        {ATTR_ENTITY_ID: "time.test_my_time", ATTR_TIME: "01:23:45"},
         blocking=True,
     )
-    mock_client.time_command.assert_has_calls([call(1, 1, 23, 45)])
+    mock_client.time_command.assert_has_calls([call(1, 1, 23, 45, device_id=0)])
     mock_client.time_command.reset_mock()
 
 
 async def test_generic_time_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic time entity with missing state."""
     entity_info = [
@@ -71,6 +73,6 @@ async def test_generic_time_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("time.test_mytime")
+    state = hass.states.get("time.test_my_time")
     assert state is not None
     assert state.state == STATE_UNKNOWN

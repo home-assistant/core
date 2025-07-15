@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
@@ -101,12 +102,15 @@ MOCK_BLOCKS = [
             "overpower": 0,
             "power": 53.4,
             "energy": 1234567.89,
+            "output": True,
+            "totalWorkTime": 3600,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
         energy=1234567.89,
+        totalWorkTime=3600,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -133,11 +137,20 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
+        sensor_ids={
+            "motion": 0,
+            "temp": 22.1,
+            "gas": "mild",
+            "motionActive": 1,
+            "sensorOp": "normal",
+            "selfTest": "pending",
+        },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
+        sensorOp="normal",
+        selfTest="pending",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -176,7 +189,7 @@ MOCK_BLOCKS = [
 ]
 
 MOCK_CONFIG = {
-    "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:0": {"id": 0, "name": "Test input 0", "type": "button"},
     "input:1": {
         "id": 1,
         "type": "analog",
@@ -191,7 +204,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
-    "flood:0": {"id": 0, "name": "Test name"},
+    "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -207,7 +220,7 @@ MOCK_CONFIG = {
     },
     "sys": {
         "ui_data": {},
-        "device": {"name": "Test name"},
+        "device": {"name": "Test name", "mac": MOCK_MAC},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
@@ -247,6 +260,33 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
                 "meta": {},
             },
         },
+        {
+            "key": "blutrv:201",
+            "status": {
+                "id": 201,
+                "target_C": 17.1,
+                "current_C": 17.1,
+                "pos": 0,
+                "rssi": -60,
+                "battery": 100,
+                "packet_id": 58,
+                "last_updated_ts": 1734967725,
+                "paired": True,
+                "rpc": True,
+                "rsv": 61,
+            },
+            "config": {
+                "id": 201,
+                "addr": "f8:44:77:25:f0:de",
+                "name": "TRV-201",
+                "key": None,
+                "trv": "bthomedevice:201",
+                "temp_sensors": [],
+                "dw_sensors": [],
+                "override_delay": 30,
+                "meta": {},
+            },
+        },
     ],
     "blutrv:200": {
         "id": 0,
@@ -259,11 +299,33 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
         "name": "TRV-Name",
         "local_name": "SBTR-001AEU",
     },
+    "blutrv:201": {
+        "id": 1,
+        "enable": True,
+        "min_valve_position": 0,
+        "default_boost_duration": 1800,
+        "default_override_duration": 2147483647,
+        "default_override_target_C": 8,
+        "addr": "f8:44:77:25:f0:de",
+        "name": "TRV-201",
+        "local_name": "SBTR-001AEU",
+    },
 }
 
 
 MOCK_BLU_TRV_REMOTE_STATUS = {
     "blutrv:200": {
+        "id": 0,
+        "pos": 0,
+        "steps": 0,
+        "current_C": 15.2,
+        "target_C": 17.1,
+        "schedule_rev": 0,
+        "rssi": -60,
+        "battery": 100,
+        "errors": [],
+    },
+    "blutrv:201": {
         "id": 0,
         "pos": 0,
         "steps": 0,
@@ -312,7 +374,11 @@ MOCK_STATUS_COAP = {
 
 
 MOCK_STATUS_RPC = {
-    "switch:0": {"output": True},
+    "switch:0": {
+        "id": 0,
+        "output": True,
+        "apower": 85.3,
+    },
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {
@@ -476,9 +542,13 @@ def _mock_rpc_device(version: str | None = None):
         initialized=True,
         connected=True,
         script_getcode=AsyncMock(
-            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
         ),
         xmod_info={},
+        zigbee_enabled=False,
+        ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -497,6 +567,12 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -666,3 +742,21 @@ async def mock_sleepy_rpc_device():
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_setup() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup:
+        yield mock_setup

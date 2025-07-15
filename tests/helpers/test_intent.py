@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import conversation, light, switch
+from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
 )
-from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -613,25 +613,6 @@ def test_async_validate_slots_no_schema() -> None:
     assert handler1.async_validate_slots({"name": {"value": "kitchen"}}) == {
         "name": {"value": "kitchen"}
     }
-
-
-async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
-    """Test that we can't turn on entities that don't support it."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "lock", {})
-
-    hass.states.async_set(
-        "lock.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Lock"}
-    )
-
-    result = await conversation.async_converse(
-        hass, "turn on test lock", None, Context(), None
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 def test_async_register(hass: HomeAssistant) -> None:

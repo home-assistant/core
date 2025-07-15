@@ -41,6 +41,7 @@ from .const import (
     ATTR_KEY_NAME,
     CATEGORY_RECEIVER,
     CHAR_ACTIVE,
+    CHAR_CONFIGURED_NAME,
     CHAR_MUTE,
     CHAR_NAME,
     CHAR_ON,
@@ -100,41 +101,67 @@ class MediaPlayer(HomeAccessory):
         )
 
         if FEATURE_ON_OFF in feature_list:
-            name = self.generate_service_name(FEATURE_ON_OFF)
             serv_on_off = self.add_preload_service(
-                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_ON_OFF
+                SERV_SWITCH, [CHAR_CONFIGURED_NAME, CHAR_NAME], unique_id=FEATURE_ON_OFF
             )
-            serv_on_off.configure_char(CHAR_NAME, value=name)
+            serv_on_off.configure_char(
+                CHAR_NAME, value=self.generate_service_name(FEATURE_ON_OFF)
+            )
+            serv_on_off.configure_char(
+                CHAR_CONFIGURED_NAME,
+                value=self.generated_configured_name(FEATURE_ON_OFF),
+            )
             self.chars[FEATURE_ON_OFF] = serv_on_off.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_on_off
             )
 
         if FEATURE_PLAY_PAUSE in feature_list:
-            name = self.generate_service_name(FEATURE_PLAY_PAUSE)
             serv_play_pause = self.add_preload_service(
-                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_PLAY_PAUSE
+                SERV_SWITCH,
+                [CHAR_CONFIGURED_NAME, CHAR_NAME],
+                unique_id=FEATURE_PLAY_PAUSE,
             )
-            serv_play_pause.configure_char(CHAR_NAME, value=name)
+            serv_play_pause.configure_char(
+                CHAR_NAME, value=self.generate_service_name(FEATURE_PLAY_PAUSE)
+            )
+            serv_play_pause.configure_char(
+                CHAR_CONFIGURED_NAME,
+                value=self.generated_configured_name(FEATURE_PLAY_PAUSE),
+            )
             self.chars[FEATURE_PLAY_PAUSE] = serv_play_pause.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_pause
             )
 
         if FEATURE_PLAY_STOP in feature_list:
-            name = self.generate_service_name(FEATURE_PLAY_STOP)
             serv_play_stop = self.add_preload_service(
-                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_PLAY_STOP
+                SERV_SWITCH,
+                [CHAR_CONFIGURED_NAME, CHAR_NAME],
+                unique_id=FEATURE_PLAY_STOP,
             )
-            serv_play_stop.configure_char(CHAR_NAME, value=name)
+            serv_play_stop.configure_char(
+                CHAR_NAME, value=self.generate_service_name(FEATURE_PLAY_STOP)
+            )
+            serv_play_stop.configure_char(
+                CHAR_CONFIGURED_NAME,
+                value=self.generated_configured_name(FEATURE_PLAY_STOP),
+            )
             self.chars[FEATURE_PLAY_STOP] = serv_play_stop.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_stop
             )
 
         if FEATURE_TOGGLE_MUTE in feature_list:
-            name = self.generate_service_name(FEATURE_TOGGLE_MUTE)
             serv_toggle_mute = self.add_preload_service(
-                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_TOGGLE_MUTE
+                SERV_SWITCH,
+                [CHAR_CONFIGURED_NAME, CHAR_NAME],
+                unique_id=FEATURE_TOGGLE_MUTE,
             )
-            serv_toggle_mute.configure_char(CHAR_NAME, value=name)
+            serv_toggle_mute.configure_char(
+                CHAR_NAME, value=self.generate_service_name(FEATURE_TOGGLE_MUTE)
+            )
+            serv_toggle_mute.configure_char(
+                CHAR_CONFIGURED_NAME,
+                value=self.generated_configured_name(FEATURE_TOGGLE_MUTE),
+            )
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
             )
@@ -145,6 +172,10 @@ class MediaPlayer(HomeAccessory):
         return cleanup_name_for_homekit(
             f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
         )
+
+    def generated_configured_name(self, mode: str) -> str:
+        """Generate name for individual service."""
+        return cleanup_name_for_homekit(MODE_FRIENDLY_NAME[mode])
 
     def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""

@@ -15,7 +15,7 @@ from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, D
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import BACKUP_METADATA, MOCK_LIST_WITH_INFOS
+from .const import BACKUP_METADATA
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -84,14 +84,16 @@ async def test_agents_list_backups(
                 }
             },
             "backup_id": "23e64aec",
-            "date": "2025-02-10T17:47:22.727189+01:00",
             "database_included": True,
+            "date": "2025-02-10T17:47:22.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.1",
             "name": "Automatic backup 2025.2.1",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
     ]
@@ -120,14 +122,16 @@ async def test_agents_get_backup(
             }
         },
         "backup_id": "23e64aec",
-        "date": "2025-02-10T17:47:22.727189+01:00",
         "database_included": True,
+        "date": "2025-02-10T17:47:22.727189+01:00",
         "extra_metadata": {},
+        "failed_addons": [],
+        "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.2.1",
         "name": "Automatic backup 2025.2.1",
-        "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
 
@@ -181,7 +185,6 @@ async def test_agents_upload(
 
     assert resp.status == 201
     assert webdav_client.upload_iter.call_count == 2
-    assert webdav_client.set_property_batch.call_count == 1
 
 
 async def test_agents_download(
@@ -208,7 +211,7 @@ async def test_error_on_agents_download(
     """Test we get not found on a not existing backup on download."""
     client = await hass_client()
     backup_id = BACKUP_METADATA["backup_id"]
-    webdav_client.list_with_infos.side_effect = [MOCK_LIST_WITH_INFOS, []]
+    webdav_client.list_files.return_value = []
 
     resp = await client.get(
         f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
@@ -259,7 +262,7 @@ async def test_agents_delete_not_found_does_not_throw(
     webdav_client: AsyncMock,
 ) -> None:
     """Test agent delete backup."""
-    webdav_client.list_with_infos.return_value = []
+    webdav_client.list_files.return_value = {}
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -280,7 +283,7 @@ async def test_agents_backup_not_found(
     webdav_client: AsyncMock,
 ) -> None:
     """Test backup not found."""
-    webdav_client.list_with_infos.return_value = []
+    webdav_client.list_files.return_value = []
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -297,7 +300,7 @@ async def test_raises_on_403(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we raise on 403."""
-    webdav_client.list_with_infos.side_effect = UnauthorizedError(
+    webdav_client.list_files.side_effect = UnauthorizedError(
         "https://webdav.example.com"
     )
     backup_id = BACKUP_METADATA["backup_id"]

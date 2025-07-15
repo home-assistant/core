@@ -14,6 +14,7 @@ from homeassistant.components.conversation import (
     ConversationInput,
     ConverseError,
     ToolResultContent,
+    UserContent,
     async_get_chat_log,
 )
 from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
@@ -86,7 +87,9 @@ async def test_default_content(
     with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log2,
     ):
+        assert chat_log is chat_log2
         assert len(chat_log.content) == 2
         assert chat_log.content[0].role == "system"
         assert chat_log.content[0].content == ""
@@ -103,9 +106,8 @@ async def test_llm_api(
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api="assist",
             user_llm_prompt=None,
         )
@@ -125,15 +127,55 @@ async def test_unknown_llm_api(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         pytest.raises(ConverseError) as exc_info,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api="unknown-api",
             user_llm_prompt=None,
         )
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+
+
+async def test_multiple_llm_apis(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test when we reference an LLM API."""
+
+    class MyTool(llm.Tool):
+        """Test tool."""
+
+        name = "test_tool"
+        description = "Test function"
+        parameters = vol.Schema(
+            {vol.Optional("param1", description="Test parameters"): str}
+        )
+
+    class MyAPI(llm.API):
+        """Test API."""
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return a list of tools."""
+            return llm.APIInstance(self, "My API Prompt", llm_context, [MyTool()])
+
+    api = MyAPI(hass=hass, id="my-api", name="Test")
+    llm.async_register_api(hass, api)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["assist", "my-api"],
+            user_llm_prompt=None,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api.id == "assist|my-api"
 
 
 async def test_template_error(
@@ -147,9 +189,8 @@ async def test_template_error(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         pytest.raises(ConverseError) as exc_info,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt="{{ invalid_syntax",
         )
@@ -172,9 +213,8 @@ async def test_template_variables(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt=(
                 "The instance name is {{ ha_name }}. "
@@ -204,11 +244,11 @@ async def test_extra_systen_prompt(
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt=None,
+            user_extra_system_prompt=mock_conversation_input.extra_system_prompt,
         )
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
@@ -228,11 +268,11 @@ async def test_extra_systen_prompt(
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt=None,
+            user_extra_system_prompt=mock_conversation_input.extra_system_prompt,
         )
 
     assert chat_log.extra_system_prompt == extra_system_prompt
@@ -245,11 +285,11 @@ async def test_extra_systen_prompt(
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt=None,
+            user_extra_system_prompt=mock_conversation_input.extra_system_prompt,
         )
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
@@ -269,11 +309,11 @@ async def test_extra_systen_prompt(
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api=None,
             user_llm_prompt=None,
+            user_extra_system_prompt=mock_conversation_input.extra_system_prompt,
         )
 
     assert chat_log.extra_system_prompt == extra_system_prompt2
@@ -312,9 +352,8 @@ async def test_tool_call(
             chat_session.async_get_chat_session(hass) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=mock_conversation_input,
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
                 user_llm_hass_api="assist",
                 user_llm_prompt=None,
             )
@@ -389,9 +428,8 @@ async def test_tool_call_exception(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         mock_get_tools.return_value = [mock_tool]
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api="assist",
             user_llm_prompt=None,
         )
@@ -550,9 +588,8 @@ async def test_add_delta_content_stream(
         ) as chat_log,
     ):
         mock_get_tools.return_value = [mock_tool]
-        await chat_log.async_update_llm_data(
-            conversing_domain="test",
-            user_input=mock_conversation_input,
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
             user_llm_hass_api="assist",
             user_llm_prompt=None,
         )
@@ -588,7 +625,7 @@ async def test_add_delta_content_stream_errors(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         # Stream content without LLM API set
-        with pytest.raises(ValueError):  # noqa: PT012
+        with pytest.raises(ValueError):
             async for _tool_result_content in chat_log.async_add_delta_content_stream(
                 "mock-agent-id",
                 stream(
@@ -610,7 +647,7 @@ async def test_add_delta_content_stream_errors(
 
         # Non assistant role
         for role in "system", "user":
-            with pytest.raises(ValueError):  # noqa: PT012
+            with pytest.raises(ValueError):
                 async for (
                     _tool_result_content
                 ) in chat_log.async_add_delta_content_stream(
@@ -641,3 +678,30 @@ async def test_chat_log_reuse(
             assert len(chat_log.content) == 2
             assert chat_log.content[1].role == "user"
             assert chat_log.content[1].content == mock_conversation_input.text
+
+
+async def test_chat_log_continue_conversation(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test continue conversation."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_user_content(UserContent(mock_conversation_input.text))
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Hey? ",
+            )
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Ποιο είναι το αγαπημένο σου χρώμα στα ελληνικά;",
+            )
+        )
+        assert chat_log.continue_conversation is True

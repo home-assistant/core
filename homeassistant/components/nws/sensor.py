@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from types import MappingProxyType
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -115,6 +115,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
@@ -179,7 +180,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: MappingProxyType[str, Any],
+        entry_data: Mapping[str, Any],
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
         station: str,

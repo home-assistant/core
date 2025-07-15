@@ -8,7 +8,11 @@ from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
-from roborock.version_1_apis.roborock_client_v1 import AttributeCache, RoborockClientV1
+from roborock.version_1_apis.roborock_client_v1 import (
+    CLOUD_REQUIRED,
+    AttributeCache,
+    RoborockClientV1,
+)
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
 
@@ -53,14 +57,16 @@ class RoborockEntityV1(RoborockEntity):
         """Get an item from the api cache."""
         return self._api.cache[attribute]
 
-    async def send(
-        self,
+    @classmethod
+    async def _send_command(
+        cls,
         command: RoborockCommand | str,
+        api: RoborockClientV1,
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
-        """Send a command to a vacuum cleaner."""
+        """Send a Roborock command with params to a given api."""
         try:
-            response: dict = await self._api.send_command(command, params)
+            response: dict = await api.send_command(command, params)
         except RoborockException as err:
             if isinstance(command, RoborockCommand):
                 command_name = command.name
@@ -74,6 +80,14 @@ class RoborockEntityV1(RoborockEntity):
                 },
             ) from err
         return response
+
+    async def send(
+        self,
+        command: RoborockCommand | str,
+        params: dict[str, Any] | list[Any] | int | None = None,
+    ) -> dict:
+        """Send a command to a vacuum cleaner."""
+        return await self._send_command(command, self._api, params)
 
     @property
     def api(self) -> RoborockClientV1:
@@ -107,12 +121,15 @@ class RoborockCoordinatedEntityV1(
         listener_request: list[RoborockDataProtocol]
         | RoborockDataProtocol
         | None = None,
+        is_dock_entity: bool = False,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         RoborockEntityV1.__init__(
             self,
             unique_id=unique_id,
-            device_info=coordinator.device_info,
+            device_info=coordinator.device_info
+            if not is_dock_entity
+            else coordinator.dock_device_info,
             api=coordinator.api,
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
@@ -152,7 +169,10 @@ class RoborockCoordinatedEntityV1(
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
-        res = await super().send(command, params)
+        if command in CLOUD_REQUIRED:
+            res = await self._send_command(command, self.coordinator.cloud_api, params)
+        else:
+            res = await self._send_command(command, self._api, params)
         await self.coordinator.async_refresh()
         return res
 

@@ -83,6 +83,7 @@ async def async_get_config_entry_diagnostics(
                 "is_new_partition": partition.is_new_partition,
                 "is_night_stay_enabled": partition.is_night_stay_enabled,
                 "exit_delay_timer": partition.exit_delay_timer,
+                "arming_state": partition.arming_state,
             }
             new_location["partitions"].append(new_partition)
 

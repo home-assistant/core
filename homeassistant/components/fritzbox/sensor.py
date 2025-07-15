@@ -35,20 +35,14 @@ from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass(frozen=True)
-class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
-    """Sensor description mixin for Fritz!Smarthome entities."""
-
-    native_value: Callable[[FritzhomeDevice], StateType | datetime]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzSensorEntityDescription(
-    SensorEntityDescription, FritzEntityDescriptionMixinSensor
+    SensorEntityDescription, FritzEntityDescriptionMixinBase
 ):
     """Description for Fritz!Smarthome sensor entities."""
 
     entity_category_fn: Callable[[FritzhomeDevice], EntityCategory | None] | None = None
+    native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
 def suitable_eco_temperature(device: FritzhomeDevice) -> bool:
@@ -137,6 +131,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.battery_level is not None,
         native_value=lambda device: device.battery_level,

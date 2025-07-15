@@ -24,6 +24,7 @@ async def async_setup_entry(
     async_add_entities(
         FGLairOutsideTemperature(entry.runtime_data, device)
         for device in entry.runtime_data.data.values()
+        if device.outdoor_temperature is not None
     )
 
 

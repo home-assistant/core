@@ -4,14 +4,13 @@ from collections.abc import Callable, Coroutine
 from copy import deepcopy
 import datetime
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from hass_nabucasa import AlreadyConnectedError, thingtalk
+from hass_nabucasa import AlreadyConnectedError
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -19,8 +18,8 @@ from hass_nabucasa.auth import (
     UnknownError,
 )
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
-from hass_nabucasa.voice import TTS_VOICES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,6 +30,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
+from homeassistant.components.cloud.http_api import validate_language_voice
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
@@ -1009,16 +1009,14 @@ async def test_websocket_subscription_info(
     cloud: MagicMock,
     setup_cloud: None,
 ) -> None:
-    """Test subscription info and connecting because valid account."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
+    """Test subscription info."""
+    cloud.payments.subscription_info.return_value = {"provider": "stripe"}
     client = await hass_ws_client(hass)
-    mock_renew = cloud.auth.async_renew_access_token
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
 
     assert response["result"] == {"provider": "stripe"}
-    assert mock_renew.call_count == 1
 
 
 async def test_websocket_subscription_fail(
@@ -1029,7 +1027,9 @@ async def test_websocket_subscription_fail(
     setup_cloud: None,
 ) -> None:
     """Test subscription info fail."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    cloud.payments.subscription_info.side_effect = PaymentsApiError(
+        "Failed to fetch subscription information"
+    )
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})
@@ -1746,70 +1746,6 @@ async def test_enable_alexa_state_report_fail(
     assert response["error"]["code"] == "alexa_relink"
 
 
-async def test_thingtalk_convert(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        return_value={"hello": "world"},
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {"hello": "world"}
-
-
-async def test_thingtalk_convert_timeout(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        side_effect=TimeoutError,
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "timeout"
-
-
-async def test_thingtalk_convert_internal(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        side_effect=thingtalk.ThingTalkConversionError("Did not understand"),
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
-    assert response["error"]["message"] == "Did not understand"
-
-
 async def test_tts_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1822,17 +1758,14 @@ async def test_tts_info(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "languages": json.loads(
-            json.dumps(
-                [
-                    (language, voice)
-                    for language, voices in TTS_VOICES.items()
-                    for voice in voices
-                ]
-            )
-        )
-    }
+    assert "languages" in response["result"]
+    assert all(len(lang) for lang in response["result"]["languages"])
+    assert len(response["result"]["languages"]) > 300
+    assert (
+        len([lang for lang in response["result"]["languages"] if "||" in lang[1]]) > 100
+    )
+    for lang in response["result"]["languages"]:
+        assert validate_language_voice(lang[:2])
 
 
 @pytest.mark.parametrize(
@@ -1999,6 +1932,7 @@ async def test_download_support_package(
                 "virtualenv": False,
                 "python_version": "3.13.1",
                 "docker": False,
+                "container_arch": None,
                 "arch": "x86_64",
                 "timezone": "US/Pacific",
                 "os_name": "Linux",

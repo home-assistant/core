@@ -1,9 +1,17 @@
 """Helper functions for the WebDAV component."""
 
+import logging
+
 from aiowebdav2.client import Client, ClientOptions
+from aiowebdav2.exceptions import WebDavError
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -36,3 +44,25 @@ async def async_ensure_path_exists(client: Client, path: str) -> bool:
             return False
 
     return True
+
+
+async def async_migrate_wrong_folder_path(client: Client, path: str) -> None:
+    """Migrate the wrong encoded folder path to the correct one."""
+    wrong_path = path.replace(" ", "%20")
+    # migrate folder when the old folder exists
+    if wrong_path != path and await client.check(wrong_path):
+        try:
+            await client.move(wrong_path, path)
+        except WebDavError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_migrate_folder",
+                translation_placeholders={
+                    "wrong_path": wrong_path,
+                    "correct_path": path,
+                },
+            ) from err
+
+        _LOGGER.debug(
+            "Migrated wrong encoded folder path from %s to %s", wrong_path, path
+        )

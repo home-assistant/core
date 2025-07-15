@@ -16,13 +16,13 @@
         "name": "Panel light"
       },
       "quiet": {
-        "name": "Quiet"
+        "name": "Quiet mode"
       },
       "fresh_air": {
         "name": "Fresh air"
       },
       "xfan": {
-        "name": "XFan"
+        "name": "Xtra fan"
       },
       "health_mode": {
         "name": "Health mode"

@@ -42,7 +42,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
-    chat_session,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -56,7 +55,7 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .chat_log import AssistantContent, async_get_chat_log
+from .chat_log import AssistantContent, ChatLog
 from .const import (
     DATA_DEFAULT_ENTITY,
     DEFAULT_EXPOSED_ATTRIBUTES,
@@ -332,49 +331,46 @@ class DefaultAgent(ConversationEntity):
 
         return result
 
-    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
-        """Process a sentence."""
+    async def _async_handle_message(
+        self,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
+    ) -> ConversationResult:
+        """Handle a message."""
         response: intent.IntentResponse | None = None
-        with (
-            chat_session.async_get_chat_session(
-                self.hass, user_input.conversation_id
-            ) as session,
-            async_get_chat_log(self.hass, session, user_input) as chat_log,
-        ):
-            # Check if a trigger matched
-            if trigger_result := await self.async_recognize_sentence_trigger(
-                user_input
-            ):
-                # Process callbacks and get response
-                response_text = await self._handle_trigger_result(
-                    trigger_result, user_input
-                )
 
-                # Convert to conversation result
-                response = intent.IntentResponse(
-                    language=user_input.language or self.hass.config.language
-                )
-                response.response_type = intent.IntentResponseType.ACTION_DONE
-                response.async_set_speech(response_text)
-
-            if response is None:
-                # Match intents
-                intent_result = await self.async_recognize_intent(user_input)
-                response = await self._async_process_intent_result(
-                    intent_result, user_input
-                )
-
-            speech: str = response.speech.get("plain", {}).get("speech", "")
-            chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(
-                    agent_id=user_input.agent_id,
-                    content=speech,
-                )
+        # Check if a trigger matched
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
+            # Process callbacks and get response
+            response_text = await self._handle_trigger_result(
+                trigger_result, user_input
             )
 
-            return ConversationResult(
-                response=response, conversation_id=session.conversation_id
+            # Convert to conversation result
+            response = intent.IntentResponse(
+                language=user_input.language or self.hass.config.language
             )
+            response.response_type = intent.IntentResponseType.ACTION_DONE
+            response.async_set_speech(response_text)
+
+        if response is None:
+            # Match intents
+            intent_result = await self.async_recognize_intent(user_input)
+            response = await self._async_process_intent_result(
+                intent_result, user_input
+            )
+
+        speech: str = response.speech.get("plain", {}).get("speech", "")
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=speech,
+            )
+        )
+
+        return ConversationResult(
+            response=response, conversation_id=chat_log.conversation_id
+        )
 
     async def _async_process_intent_result(
         self,
@@ -654,7 +650,14 @@ class DefaultAgent(ConversationEntity):
 
                 if (
                     (maybe_result is None)  # first result
-                    or (num_matched_entities > best_num_matched_entities)
+                    or (
+                        # More literal text matched
+                        result.text_chunks_matched > maybe_result.text_chunks_matched
+                    )
+                    or (
+                        # More entities matched
+                        num_matched_entities > best_num_matched_entities
+                    )
                     or (
                         # Fewer unmatched entities
                         (num_matched_entities == best_num_matched_entities)
@@ -665,16 +668,6 @@ class DefaultAgent(ConversationEntity):
                         (num_matched_entities == best_num_matched_entities)
                         and (num_unmatched_entities == best_num_unmatched_entities)
                         and (num_unmatched_ranges > best_num_unmatched_ranges)
-                    )
-                    or (
-                        # More literal text matched
-                        (num_matched_entities == best_num_matched_entities)
-                        and (num_unmatched_entities == best_num_unmatched_entities)
-                        and (num_unmatched_ranges == best_num_unmatched_ranges)
-                        and (
-                            result.text_chunks_matched
-                            > maybe_result.text_chunks_matched
-                        )
                     )
                     or (
                         # Prefer match failures with entities

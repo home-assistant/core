@@ -5,6 +5,7 @@ from unittest.mock import call
 from aioesphomeapi import (
     APIClient,
     APIVersion,
+    ColorMode as ESPColorMode,
     LightColorCapability,
     LightInfo,
     LightState,
@@ -38,9 +39,15 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockGenericDeviceEntryType
+
+LIGHT_COLOR_CAPABILITY_UNKNOWN = 1 << 8  # 256
+
 
 async def test_light_on_off(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports on/off."""
     mock_client.api_version = APIVersion(1, 7)
@@ -52,7 +59,7 @@ async def test_light_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[LightColorCapability.ON_OFF],
+            supported_color_modes=[ESPColorMode.ON_OFF],
         )
     ]
     states = [LightState(key=1, state=True)]
@@ -63,24 +70,26 @@ async def test_light_on_off(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=True, color_mode=LightColorCapability.ON_OFF)]
+        [call(key=1, state=True, color_mode=LightColorCapability.ON_OFF, device_id=0)]
     )
     mock_client.light_command.reset_mock()
 
 
 async def test_light_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -103,25 +112,32 @@ async def test_light_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=True, color_mode=LightColorCapability.BRIGHTNESS)]
+        [
+            call(
+                key=1,
+                state=True,
+                color_mode=LightColorCapability.BRIGHTNESS,
+                device_id=0,
+            )
+        ]
     )
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -131,6 +147,7 @@ async def test_light_brightness(
                 state=True,
                 color_mode=LightColorCapability.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -139,29 +156,29 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_TRANSITION: 2},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=False, transition_length=2.0)]
+        [call(key=1, state=False, transition_length=2.0, device_id=0)]
     )
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_FLASH: FLASH_LONG},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_LONG},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=False, flash_length=10.0)]
+        [call(key=1, state=False, flash_length=10.0, device_id=0)]
     )
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_TRANSITION: 2},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -171,6 +188,7 @@ async def test_light_brightness(
                 state=True,
                 transition_length=2.0,
                 color_mode=LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -179,7 +197,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_FLASH: FLASH_SHORT},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_SHORT},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -189,6 +207,63 @@ async def test_light_brightness(
                 state=True,
                 flash_length=2.0,
                 color_mode=LightColorCapability.BRIGHTNESS,
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+
+async def test_light_legacy_brightness(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a generic light entity that only supports legacy brightness."""
+    mock_client.api_version = APIVersion(1, 7)
+    entity_info = [
+        LightInfo(
+            object_id="mylight",
+            key=1,
+            name="my light",
+            unique_id="my_light",
+            min_mireds=153,
+            max_mireds=400,
+            supported_color_modes=[LightColorCapability.BRIGHTNESS, 2],
+        )
+    ]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.LEGACY_BRIGHTNESS
+        )
+    ]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("light.test_my_light")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.BRIGHTNESS,
+    ]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light"},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                color_mode=LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -196,7 +271,9 @@ async def test_light_brightness(
 
 
 async def test_light_brightness_on_off(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -208,12 +285,14 @@ async def test_light_brightness_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS
-            ],
+            supported_color_modes=[ESPColorMode.ON_OFF, ESPColorMode.BRIGHTNESS],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -221,14 +300,18 @@ async def test_light_brightness_on_off(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.BRIGHTNESS,
+    ]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -236,8 +319,8 @@ async def test_light_brightness_on_off(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS.value,
+                device_id=0,
             )
         ]
     )
@@ -246,7 +329,7 @@ async def test_light_brightness_on_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -254,9 +337,9 @@ async def test_light_brightness_on_off(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS.value,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -264,7 +347,9 @@ async def test_light_brightness_on_off(
 
 
 async def test_light_legacy_white_converted_to_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports legacy white."""
     mock_client.api_version = APIVersion(1, 7)
@@ -291,14 +376,14 @@ async def test_light_legacy_white_converted_to_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -309,6 +394,7 @@ async def test_light_legacy_white_converted_to_brightness(
                 color_mode=LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS
                 | LightColorCapability.WHITE,
+                device_id=0,
             )
         ]
     )
@@ -316,7 +402,9 @@ async def test_light_legacy_white_converted_to_brightness(
 
 
 async def test_light_legacy_white_with_rgb(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with rgb and white."""
     mock_client.api_version = APIVersion(1, 7)
@@ -349,7 +437,7 @@ async def test_light_legacy_white_with_rgb(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
@@ -360,7 +448,7 @@ async def test_light_legacy_white_with_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_WHITE: 60},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_WHITE: 60},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -371,6 +459,7 @@ async def test_light_legacy_white_with_rgb(
                 brightness=pytest.approx(0.23529411764705882),
                 white=1.0,
                 color_mode=color_mode,
+                device_id=0,
             )
         ]
     )
@@ -378,7 +467,9 @@ async def test_light_legacy_white_with_rgb(
 
 
 async def test_light_brightness_on_off_with_unknown_color_mode(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness along with an unknown color mode."""
     mock_client.api_version = APIVersion(1, 7)
@@ -391,11 +482,18 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS | 1 << 8
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
+                LIGHT_COLOR_CAPABILITY_UNKNOWN,
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    entity_info[0].supported_color_modes.append(LIGHT_COLOR_CAPABILITY_UNKNOWN)
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=LIGHT_COLOR_CAPABILITY_UNKNOWN
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -403,14 +501,14 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -418,9 +516,8 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | 1 << 8,
+                color_mode=LIGHT_COLOR_CAPABILITY_UNKNOWN,
+                device_id=0,
             )
         ]
     )
@@ -429,7 +526,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -437,10 +534,9 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | 1 << 8,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -448,7 +544,9 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
 
 
 async def test_light_on_and_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that supports on and on and brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -474,34 +572,33 @@ async def test_light_on_and_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=True, color_mode=LightColorCapability.ON_OFF)]
+        [call(key=1, state=True, color_mode=LightColorCapability.ON_OFF, device_id=0)]
     )
     mock_client.light_command.reset_mock()
 
 
 async def test_rgb_color_temp_light(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light that supports color temp and RGB."""
     color_modes = [
-        LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
-        LightColorCapability.ON_OFF
-        | LightColorCapability.BRIGHTNESS
-        | LightColorCapability.COLOR_TEMPERATURE,
-        LightColorCapability.ON_OFF
-        | LightColorCapability.BRIGHTNESS
-        | LightColorCapability.RGB,
+        ESPColorMode.ON_OFF,
+        ESPColorMode.BRIGHTNESS,
+        ESPColorMode.COLOR_TEMPERATURE,
+        ESPColorMode.RGB,
     ]
 
     mock_client.api_version = APIVersion(1, 7)
@@ -516,7 +613,11 @@ async def test_rgb_color_temp_light(
             supported_color_modes=color_modes,
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -524,14 +625,14 @@ async def test_rgb_color_temp_light(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -539,8 +640,8 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -549,7 +650,7 @@ async def test_rgb_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -557,9 +658,9 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -568,7 +669,7 @@ async def test_rgb_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -576,10 +677,9 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | LightColorCapability.COLOR_TEMPERATURE,
+                color_mode=ESPColorMode.COLOR_TEMPERATURE,
                 color_temperature=400,
+                device_id=0,
             )
         ]
     )
@@ -587,7 +687,9 @@ async def test_rgb_color_temp_light(
 
 
 async def test_light_rgb(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGB light entity."""
     mock_client.api_version = APIVersion(1, 7)
@@ -612,14 +714,14 @@ async def test_light_rgb(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -630,6 +732,7 @@ async def test_light_rgb(
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -638,7 +741,7 @@ async def test_light_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -650,6 +753,7 @@ async def test_light_rgb(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -659,7 +763,7 @@ async def test_light_rgb(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -676,6 +780,7 @@ async def test_light_rgb(
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -684,7 +789,7 @@ async def test_light_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -697,6 +802,7 @@ async def test_light_rgb(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(1, 1, 1),
+                device_id=0,
             )
         ]
     )
@@ -704,7 +810,9 @@ async def test_light_rgb(
 
 
 async def test_light_rgbw(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBW light entity."""
     mock_client.api_version = APIVersion(1, 7)
@@ -744,7 +852,7 @@ async def test_light_rgbw(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
@@ -753,7 +861,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -765,6 +873,7 @@ async def test_light_rgbw(
                 | LightColorCapability.WHITE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -773,7 +882,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -786,6 +895,7 @@ async def test_light_rgbw(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -795,7 +905,7 @@ async def test_light_rgbw(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -814,6 +924,7 @@ async def test_light_rgbw(
                 white=0,
                 rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -822,7 +933,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -837,6 +948,7 @@ async def test_light_rgbw(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(0, 0, 0),
+                device_id=0,
             )
         ]
     )
@@ -845,7 +957,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -860,6 +972,7 @@ async def test_light_rgbw(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(1, 1, 1),
+                device_id=0,
             )
         ]
     )
@@ -867,7 +980,9 @@ async def test_light_rgbw(
 
 
 async def test_light_rgbww_with_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBWW light entity with cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -880,12 +995,14 @@ async def test_light_rgbww_with_cold_warm_white_support(
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
-                LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
+                ESPColorMode.RGB,
+                ESPColorMode.WHITE,
+                ESPColorMode.COLOR_TEMPERATURE,
+                ESPColorMode.COLD_WARM_WHITE,
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
+                ESPColorMode.RGB_COLD_WARM_WHITE,
+                ESPColorMode.RGB_WHITE,
             ],
         )
     ]
@@ -900,12 +1017,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
             blue=1,
             warm_white=1,
             cold_white=1,
-            color_mode=LightColorCapability.RGB
-            | LightColorCapability.WHITE
-            | LightColorCapability.COLOR_TEMPERATURE
-            | LightColorCapability.COLD_WARM_WHITE
-            | LightColorCapability.ON_OFF
-            | LightColorCapability.BRIGHTNESS,
+            color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
         )
     ]
     user_service = []
@@ -915,17 +1027,23 @@ async def test_light_rgbww_with_cold_warm_white_support(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGB,
+        ColorMode.RGBW,
+        ColorMode.RGBWW,
+        ColorMode.WHITE,
+    ]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 255, 255, 255, 255)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -933,12 +1051,8 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
+                device_id=0,
             )
         ]
     )
@@ -947,7 +1061,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -955,13 +1069,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -971,7 +1081,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -983,16 +1093,10 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=1.0,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                cold_white=0,
-                warm_white=0,
+                color_mode=ESPColorMode.RGB,
                 rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -1001,7 +1105,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1009,16 +1113,10 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                color_brightness=1.0,
+                color_mode=ESPColorMode.RGB,
+                rgb=(1.0, 1.0, 1.0),
+                device_id=0,
             )
         ]
     )
@@ -1027,7 +1125,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1035,16 +1133,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                color_brightness=1.0,
+                white=1,
+                color_mode=ESPColorMode.RGB_WHITE,
+                rgb=(1.0, 1.0, 1.0),
+                device_id=0,
             )
         ]
     )
@@ -1054,7 +1147,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
@@ -1067,13 +1160,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 color_brightness=1,
                 cold_white=1,
                 warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
                 rgb=(1, 1, 1),
+                device_id=0,
             )
         ]
     )
@@ -1082,7 +1171,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1090,16 +1179,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=0,
-                cold_white=0,
-                warm_white=100,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, 0, 0),
+                color_temperature=400.0,
+                color_mode=ESPColorMode.COLOR_TEMPERATURE,
+                device_id=0,
             )
         ]
     )
@@ -1107,7 +1189,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
 
 async def test_light_rgbww_without_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBWW light entity without cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1152,7 +1236,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
@@ -1162,7 +1246,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1175,6 +1259,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -1183,7 +1268,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1197,6 +1282,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -1206,7 +1292,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -1226,6 +1312,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 white=0,
                 rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -1235,7 +1322,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1252,6 +1339,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                device_id=0,
             )
         ]
     )
@@ -1260,7 +1348,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1277,6 +1365,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                device_id=0,
             )
         ]
     )
@@ -1286,7 +1375,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_mylight",
+            ATTR_ENTITY_ID: "light.test_my_light",
             ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
@@ -1305,6 +1394,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(1, 1, 1),
+                device_id=0,
             )
         ]
     )
@@ -1313,7 +1403,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1330,6 +1420,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 rgb=(0, 0, 0),
+                device_id=0,
             )
         ]
     )
@@ -1337,7 +1428,9 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
 
 async def test_light_color_temp(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that does supports color temp."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1372,7 +1465,7 @@ async def test_light_color_temp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1382,7 +1475,7 @@ async def test_light_color_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1393,6 +1486,7 @@ async def test_light_color_temp(
                 color_mode=LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -1401,15 +1495,17 @@ async def test_light_color_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
-    mock_client.light_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.light_command.reset_mock()
 
 
 async def test_light_color_temp_no_mireds_set(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic color temp with no mireds set uses the defaults."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1444,7 +1540,7 @@ async def test_light_color_temp_no_mireds_set(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1454,7 +1550,7 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1465,6 +1561,7 @@ async def test_light_color_temp_no_mireds_set(
                 color_mode=LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -1473,7 +1570,7 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 6000},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 6000},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1485,6 +1582,7 @@ async def test_light_color_temp_no_mireds_set(
                 color_mode=LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -1493,15 +1591,17 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
-    mock_client.light_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.light_command.reset_mock()
 
 
 async def test_light_color_temp_legacy(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a legacy light entity that does supports color temp."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1543,7 +1643,7 @@ async def test_light_color_temp_legacy(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1556,7 +1656,7 @@ async def test_light_color_temp_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1567,6 +1667,7 @@ async def test_light_color_temp_legacy(
                 color_mode=LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
+                device_id=0,
             )
         ]
     )
@@ -1575,15 +1676,17 @@ async def test_light_color_temp_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
-    mock_client.light_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.light_command.reset_mock()
 
 
 async def test_light_rgb_legacy(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a legacy light entity that supports rgb."""
     mock_client.api_version = APIVersion(1, 5)
@@ -1627,7 +1730,7 @@ async def test_light_rgb_legacy(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1637,7 +1740,7 @@ async def test_light_rgb_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1645,6 +1748,7 @@ async def test_light_rgb_legacy(
             call(
                 key=1,
                 state=True,
+                device_id=0,
             )
         ]
     )
@@ -1653,16 +1757,16 @@ async def test_light_rgb_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
-    mock_client.light_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1672,6 +1776,7 @@ async def test_light_rgb_legacy(
                 state=True,
                 rgb=(1.0, 1.0, 1.0),
                 color_brightness=1.0,
+                device_id=0,
             )
         ]
     )
@@ -1679,7 +1784,9 @@ async def test_light_rgb_legacy(
 
 
 async def test_light_effects(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that supports on and on and brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1693,11 +1800,16 @@ async def test_light_effects(
             max_mireds=400,
             effects=["effect1", "effect2"],
             supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -1705,7 +1817,7 @@ async def test_light_effects(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT_LIST] == ["effect1", "effect2"]
@@ -1713,7 +1825,7 @@ async def test_light_effects(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_EFFECT: "effect1"},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_EFFECT: "effect1"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1721,9 +1833,9 @@ async def test_light_effects(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 effect="effect1",
+                device_id=0,
             )
         ]
     )
@@ -1731,7 +1843,9 @@ async def test_light_effects(
 
 
 async def test_only_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with only cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1772,7 +1886,7 @@ async def test_only_cold_warm_white_support(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
@@ -1781,18 +1895,18 @@ async def test_only_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
-        [call(key=1, state=True, color_mode=color_modes)]
+        [call(key=1, state=True, color_mode=color_modes, device_id=0)]
     )
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1802,6 +1916,7 @@ async def test_only_cold_warm_white_support(
                 state=True,
                 color_mode=color_modes,
                 brightness=pytest.approx(0.4980392156862745),
+                device_id=0,
             )
         ]
     )
@@ -1810,7 +1925,7 @@ async def test_only_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1820,6 +1935,7 @@ async def test_only_cold_warm_white_support(
                 state=True,
                 color_mode=color_modes,
                 color_temperature=400.0,
+                device_id=0,
             )
         ]
     )
@@ -1827,7 +1943,9 @@ async def test_only_cold_warm_white_support(
 
 
 async def test_light_no_color_modes(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with no color modes."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1851,7 +1969,7 @@ async def test_light_no_color_modes(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_mylight")
+    state = hass.states.get("light.test_my_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
@@ -1859,8 +1977,10 @@ async def test_light_no_color_modes(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_mylight"},
+        {ATTR_ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
-    mock_client.light_command.assert_has_calls([call(key=1, state=True, color_mode=0)])
+    mock_client.light_command.assert_has_calls(
+        [call(key=1, state=True, color_mode=0, device_id=0)]
+    )
     mock_client.light_command.reset_mock()

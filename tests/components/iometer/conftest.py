@@ -54,4 +54,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="IOmeter-1ISK0000000000",
         data={CONF_HOST: "10.0.0.2"},
         unique_id="658c2b34-2017-45f2-a12b-731235f8bb97",
+        entry_id="01JQ6G5395176MAAWKAAPEZHV6",
     )

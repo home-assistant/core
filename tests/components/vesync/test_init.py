@@ -2,7 +2,6 @@
 
 from unittest.mock import Mock, patch
 
-import pytest
 from pyvesync import VeSync
 
 from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
@@ -19,25 +18,17 @@ async def test_async_setup_entry__not_login(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     manager: VeSync,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup does not create config entry when not logged in."""
     manager.login = Mock(return_value=False)
 
-    with (
-        patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock,
-        patch(
-            "homeassistant.components.vesync.async_generate_device_list"
-        ) as process_mock,
-    ):
-        assert not await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
-        assert setups_mock.call_count == 0
-        assert process_mock.call_count == 0
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert manager.login.call_count == 1
-    assert DOMAIN not in hass.data
-    assert "Unable to login to the VeSync server" in caplog.text
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hass.data.get(DOMAIN)
 
 
 async def test_async_setup_entry__no_devices(
@@ -172,11 +163,11 @@ async def test_migrate_config_entry(
     assert migrated_humidifer is not None
     assert migrated_humidifer.unique_id == "humidifer"
 
-    # Assert that only one entity exists in the switch domain
+    # Assert that entity exists in the switch domain
     switch_entities = [
         e for e in entity_registry.entities.values() if e.domain == "switch"
     ]
-    assert len(switch_entities) == 1
+    assert len(switch_entities) == 2
 
     humidifer_entities = [
         e for e in entity_registry.entities.values() if e.domain == "humidifer"

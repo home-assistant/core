@@ -2,7 +2,7 @@
 
 from logging import getLogger
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .util import async_migration_in_progress, get_instance
@@ -14,6 +14,8 @@ async def async_pre_backup(hass: HomeAssistant) -> None:
     """Perform operations before a backup starts."""
     _LOGGER.info("Backup start notification, locking database for writes")
     instance = get_instance(hass)
+    if hass.state is not CoreState.running:
+        raise HomeAssistantError("Home Assistant is not running")
     if async_migration_in_progress(hass):
         raise HomeAssistantError("Database migration in progress")
     await instance.lock_database()

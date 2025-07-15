@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-import itertools
 import logging
 from typing import Any, cast
 
@@ -14,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
@@ -24,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -41,7 +38,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResultInfo,
     async_track_template_result,
 )
-from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
@@ -61,6 +58,7 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
+from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,23 +74,43 @@ TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
     }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+)
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+)
 
 
-def make_template_entity_common_schema(default_name: str) -> vol.Schema:
+def make_template_entity_common_modern_schema(
+    default_name: str,
+) -> vol.Schema:
     """Return a schema with default name."""
     return vol.Schema(
         {
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
             vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         }
     ).extend(make_template_entity_base_schema(default_name).schema)
+
+
+def make_template_entity_common_modern_attributes_schema(
+    default_name: str,
+) -> vol.Schema:
+    """Return a schema with default name."""
+    return make_template_entity_common_modern_schema(default_name).extend(
+        TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema
+    )
 
 
 TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
@@ -115,42 +133,6 @@ TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY = vol.Schema(
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
-
-
-LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
-    CONF_FRIENDLY_NAME: CONF_NAME,
-}
-
-
-def rewrite_common_legacy_to_modern_conf(
-    hass: HomeAssistant,
-    entity_cfg: dict[str, Any],
-    extra_legacy_fields: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Rewrite legacy config."""
-    entity_cfg = {**entity_cfg}
-    if extra_legacy_fields is None:
-        extra_legacy_fields = {}
-
-    for from_key, to_key in itertools.chain(
-        LEGACY_FIELDS.items(), extra_legacy_fields.items()
-    ):
-        if from_key not in entity_cfg or to_key in entity_cfg:
-            continue
-
-        val = entity_cfg.pop(from_key)
-        if isinstance(val, str):
-            val = Template(val, hass)
-        entity_cfg[to_key] = val
-
-    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME], hass)
-
-    return entity_cfg
 
 
 class _TemplateAttribute:
@@ -248,7 +230,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class TemplateEntity(AbstractTemplateEntity):
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True
@@ -268,6 +250,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         unique_id: str | None = None,
     ) -> None:
         """Template Entity."""
+        AbstractTemplateEntity.__init__(self, hass)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -285,6 +268,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             ]
             | None
         ) = None
+        self._run_variables: ScriptVariables | dict
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -340,18 +324,6 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 )
 
     @callback
-    def _render_variables(self) -> dict:
-        if isinstance(self._run_variables, dict):
-            return self._run_variables
-
-        return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
-        )
-
-    @callback
     def _update_available(self, result: str | TemplateError) -> None:
         if isinstance(result, TemplateError):
             self._attr_available = True
@@ -386,6 +358,18 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         if self._blueprint_inputs is None:
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    def _render_script_variables(self) -> dict[str, Any]:
+        """Render configured variables."""
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
+        )
 
     def add_template_attribute(
         self,
@@ -488,7 +472,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
 
         variables = {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **self._render_variables(),
+            **self._render_script_variables(),
         }
 
         for template, attributes in self._template_attrs.items():
@@ -581,22 +565,3 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         """Call for forced update."""
         assert self._template_result_info
         self._template_result_info.async_refresh()
-
-    async def async_run_script(
-        self,
-        script: Script,
-        *,
-        run_variables: _VarsType | None = None,
-        context: Context | None = None,
-    ) -> None:
-        """Run an action script."""
-        if run_variables is None:
-            run_variables = {}
-        await script.async_run(
-            run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-                **self._render_variables(),
-                **run_variables,
-            },
-            context=context,
-        )

@@ -5,7 +5,6 @@ from typing import Any
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttOnOffState, StateType
 
-from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,6 +41,9 @@ async def async_setup_entry(
 class QbusSwitch(QbusEntity, SwitchEntity):
     """Representation of a Qbus switch entity."""
 
+    _state_cls = QbusMqttOnOffState
+
+    _attr_name = None
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
@@ -57,7 +59,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(True)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -65,13 +66,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(False)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = False
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
-        output = self._message_factory.parse_output_state(
-            QbusMqttOnOffState, msg.payload
-        )
-
-        if output is not None:
-            self._attr_is_on = output.read_value()
-            self.async_schedule_update_ha_state()
+    async def _handle_state_received(self, state: QbusMqttOnOffState) -> None:
+        self._attr_is_on = state.read_value()

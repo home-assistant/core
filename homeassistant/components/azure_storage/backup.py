@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any, Concatenate
 
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 
 from homeassistant.components.backup import (
@@ -80,6 +80,20 @@ def handle_backup_errors[_R, **P](
                 f"Error during backup operation in {func.__name__}:"
                 f" Status {err.status_code}, message: {err.message}"
             ) from err
+        except ServiceRequestError as err:
+            raise BackupAgentError(
+                f"Timeout during backup operation in {func.__name__}"
+            ) from err
+        except AzureError as err:
+            _LOGGER.debug(
+                "Error during backup in %s: %s",
+                func.__name__,
+                err,
+                exc_info=True,
+            )
+            raise BackupAgentError(
+                f"Error during backup operation in {func.__name__}: {err}"
+            ) from err
 
     return wrapper
 
@@ -141,7 +155,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            return
+            raise BackupNotFound(f"Backup {backup_id} not found")
         await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
@@ -163,11 +177,11 @@ class AzureStorageBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            return None
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         return AgentBackup.from_dict(json.loads(blob.metadata["backup_metadata"]))
 
@@ -175,7 +189,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Find a blob by backup id."""
         async for blob in self._client.list_blobs(include="metadata"):
             if (
-                backup_id == blob.metadata.get("backup_id", "")
+                blob.metadata is not None
+                and backup_id == blob.metadata.get("backup_id", "")
                 and blob.metadata.get("metadata_version") == METADATA_VERSION
             ):
                 return blob
