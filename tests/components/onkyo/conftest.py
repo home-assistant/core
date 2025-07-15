@@ -42,11 +42,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_connect() -> Generator[AsyncMock]:
     """Mock an Onkyo connect."""
-    with (
-        patch(
-            "homeassistant.components.onkyo.receiver.connect",
-        ) as connect,
-    ):
+    with patch(
+        "homeassistant.components.onkyo.receiver.connect",
+    ) as connect:
         yield connect.return_value.__aenter__
 
 
