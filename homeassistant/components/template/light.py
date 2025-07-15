@@ -51,12 +51,11 @@ from homeassistant.util import color as color_util
 from . import TriggerUpdateCoordinator
 from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
 
@@ -103,7 +102,7 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_COLOR_ACTION: CONF_HS_ACTION,
     CONF_COLOR_TEMPLATE: CONF_HS,
     CONF_EFFECT_LIST_TEMPLATE: CONF_EFFECT_LIST,
@@ -193,47 +192,6 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    lights = []
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        lights.append(entity_conf)
-
-    return lights
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the Template Lights."""
-    lights = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        lights.append(LightTemplate(hass, entity_conf, unique_id))
-
-    async_add_entities(lights)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -241,27 +199,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template lights."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_LIGHTS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerLightEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        LIGHT_DOMAIN,
+        config,
+        StateLightEntity,
+        TriggerLightEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_LIGHTS,
     )
 
 
@@ -934,7 +881,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
 
-class LightTemplate(TemplateEntity, AbstractTemplateLight):
+class StateLightEntity(TemplateEntity, AbstractTemplateLight):
     """Representation of a templated Light, including dimmable."""
 
     _attr_should_poll = False

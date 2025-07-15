@@ -1032,7 +1032,7 @@ httplib2==0.20.4
 huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
-huum==0.7.12
+huum==0.8.0
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
@@ -1951,7 +1951,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.0
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.7
+pysmartthings==3.2.8
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2088,6 +2088,9 @@ python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.5
+
+# homeassistant.components.uptime_kuma
+pythonkuma==0.3.0
 
 # homeassistant.components.tile
 pytile==2024.12.0
