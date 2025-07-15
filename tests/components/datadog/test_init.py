@@ -7,6 +7,7 @@ from homeassistant.components import datadog
 from homeassistant.components.datadog.config_flow import validate_datadog_connection
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from .common import MOCK_CONFIG, create_mock_state
@@ -250,3 +251,55 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": unknown_state})
         await hass.async_block_till_done()
         assert not mock_dogstatsd.gauge.called
+
+
+async def test_deprecate_yaml_issue_success(hass: HomeAssistant) -> None:
+    """Test successful YAML deprecation issue creation."""
+    entry = MockConfigEntry(domain=datadog.DOMAIN, options=MOCK_CONFIG)
+
+    with patch("homeassistant.components.datadog.async_create_issue") as mock_create:
+        await datadog.deprecate_yaml_issue(hass, import_success=True, entry=entry)
+
+        mock_create.assert_called_once_with(
+            hass,
+            datadog.DOMAIN,
+            f"deprecated_yaml_{datadog.DOMAIN}",
+            is_fixable=False,
+            issue_domain=datadog.DOMAIN,
+            breaks_in_ha_version="2026.2.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={"domain": datadog.DOMAIN},
+        )
+
+
+async def test_deprecate_yaml_issue_failure(hass: HomeAssistant) -> None:
+    """Test failed YAML import deprecation issue with log warning."""
+    entry = MockConfigEntry(domain=datadog.DOMAIN, options=MOCK_CONFIG)
+
+    with (
+        patch("homeassistant.components.datadog.async_create_issue") as mock_create,
+        patch("homeassistant.components.datadog._LOGGER.warning") as mock_warn,
+    ):
+        await datadog.deprecate_yaml_issue(hass, import_success=False, entry=entry)
+
+        mock_create.assert_called_once_with(
+            hass,
+            datadog.DOMAIN,
+            "deprecated_yaml_import_connection_error",
+            breaks_in_ha_version="2026.2.0",
+            is_fixable=False,
+            issue_domain=datadog.DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_connection_error",
+            translation_placeholders={
+                "domain": datadog.DOMAIN,
+                "url": "/config/integrations/dashboard/add?domain=datadog",
+            },
+        )
+
+        mock_warn.assert_called_once_with(
+            "Failed to import Datadog YAML config: could not connect to %s:%s",
+            MOCK_CONFIG["host"],
+            MOCK_CONFIG["port"],
+        )
