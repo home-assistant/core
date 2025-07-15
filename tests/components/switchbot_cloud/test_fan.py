@@ -97,7 +97,7 @@ async def test_turn_off(
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
-        {"power": "on", "mode": "direct", "fanSpeed": "0"},
+        {"power": "off", "mode": "direct", "fanSpeed": "0"},
         {"power": "off", "mode": "direct", "fanSpeed": "0"},
     ]
     entry = await configure_integration(hass)

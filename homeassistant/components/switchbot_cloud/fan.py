@@ -89,13 +89,13 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
                 parameters=str(self.percentage),
             )
         await asyncio.sleep(5)
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(5)
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -108,7 +108,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             parameters=str(percentage),
         )
         await asyncio.sleep(5)
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -117,4 +117,4 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             parameters=preset_mode,
         )
         await asyncio.sleep(5)
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
