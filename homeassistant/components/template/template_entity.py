@@ -240,17 +240,11 @@ class TemplateEntity(AbstractTemplateEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        availability_template: Template | None = None,
-        icon_template: Template | None = None,
-        entity_picture_template: Template | None = None,
-        attribute_templates: dict[str, Template] | None = None,
-        config: ConfigType | None = None,
-        fallback_name: str | None = None,
-        unique_id: str | None = None,
+        config: ConfigType,
+        unique_id: str | None,
     ) -> None:
         """Template Entity."""
-        AbstractTemplateEntity.__init__(self, hass)
+        AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -269,22 +263,13 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        if config is None:
-            self._attribute_templates = attribute_templates
-            self._availability_template = availability_template
-            self._icon_template = icon_template
-            self._entity_picture_template = entity_picture_template
-            self._friendly_name_template = None
-            self._run_variables = {}
-            self._blueprint_inputs = None
-        else:
-            self._attribute_templates = config.get(CONF_ATTRIBUTES)
-            self._availability_template = config.get(CONF_AVAILABILITY)
-            self._icon_template = config.get(CONF_ICON)
-            self._entity_picture_template = config.get(CONF_PICTURE)
-            self._friendly_name_template = config.get(CONF_NAME)
-            self._run_variables = config.get(CONF_VARIABLES, {})
-            self._blueprint_inputs = config.get("raw_blueprint_inputs")
+        self._attribute_templates = config.get(CONF_ATTRIBUTES)
+        self._availability_template = config.get(CONF_AVAILABILITY)
+        self._icon_template = config.get(CONF_ICON)
+        self._entity_picture_template = config.get(CONF_PICTURE)
+        self._friendly_name_template = config.get(CONF_NAME)
+        self._run_variables = config.get(CONF_VARIABLES, {})
+        self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -302,7 +287,7 @@ class TemplateEntity(AbstractTemplateEntity):
         variables = {"this": DummyState()}
 
         # Try to render the name as it can influence the entity ID
-        self._attr_name = fallback_name
+        self._attr_name = None
         if self._friendly_name_template:
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(
