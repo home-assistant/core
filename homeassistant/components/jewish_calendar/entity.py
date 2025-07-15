@@ -4,19 +4,19 @@ from abc import abstractmethod
 import datetime as dt
 
 from hdate import Zmanim
-from hdate.translator import set_language
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import JewishCalendarConfigEntry
+from .coordinator import JewishCalendarConfigEntry, JewishCalendarUpdateCoordinator
 
 
-class JewishCalendarEntity(Entity):
+class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
     """An HA implementation for Jewish Calendar entity."""
 
     _attr_has_entity_name = True
@@ -29,14 +29,13 @@ class JewishCalendarEntity(Entity):
         description: EntityDescription,
     ) -> None:
         """Initialize a Jewish Calendar entity."""
+        super().__init__(config_entry.runtime_data)
         self.entity_description = description
         self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
         )
-        self.coordinator = config_entry.runtime_data
-        set_language(self.coordinator.config_data.language)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
