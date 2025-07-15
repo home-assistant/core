@@ -61,17 +61,15 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         mode: str = self.coordinator.data["mode"]
         fan_speed: str = self.coordinator.data["fanSpeed"]
         self._attr_is_on = power == "on"
-        self.preset_mode = mode
-        self.percentage = int(fan_speed)
+        self._attr_preset_mode = mode
+        self._attr_percentage = int(fan_speed)
         self._attr_supported_features = (
             FanEntityFeature.PRESET_MODE
             | FanEntityFeature.TURN_OFF
             | FanEntityFeature.TURN_ON
         )
-        if self.is_on and mode == BatteryCirculatorFanMode.DIRECT.value:
-            self._attr_supported_features |= (
-                FanEntityFeature.SET_SPEED
-            )
+        if self.is_on and self.preset_mode == BatteryCirculatorFanMode.DIRECT.value:
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     async def async_turn_on(
         self,
@@ -90,19 +88,13 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
                 command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
                 parameters=str(self.percentage),
             )
-        await self.coordinator.async_refresh()
-        await asyncio.sleep(2)
-        self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.send_api_command(CommonCommands.OFF)
-        await self.coordinator.async_refresh()
-        await asyncio.sleep(2)
-        self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await self.coordinator.async_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -115,10 +107,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
             parameters=str(percentage),
         )
-        await self.coordinator.async_refresh()
-        await asyncio.sleep(2)
-        self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -127,8 +116,5 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             command=BatteryCirculatorFanCommands.SET_WIND_MODE,
             parameters=preset_mode,
         )
-        await self.coordinator.async_refresh()
-        await asyncio.sleep(2)
-        self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
         await self.coordinator.async_refresh()
