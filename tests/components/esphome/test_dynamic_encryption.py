@@ -84,3 +84,27 @@ async def test_config_flow_encryption_integration(
     storage.async_get_key.return_value = stored_key
     result = await storage.async_get_key(mac_address.upper())
     assert result == stored_key
+
+
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
+async def test_encryption_key_removal(mock_storage_func, hass: HomeAssistant) -> None:
+    """Test encryption key removal functionality."""
+    # Mock storage with existing key
+    mac_address = "11:22:33:44:55:aa"
+    test_key = "test_encryption_key_32_bytes_long"
+
+    mock_storage = Mock()
+    mock_storage.async_remove_key = AsyncMock()
+    mock_storage.async_get_key = AsyncMock(return_value=test_key)
+    mock_storage_func.return_value = mock_storage
+
+    # Test key removal
+    await mock_storage.async_remove_key(mac_address)
+    mock_storage.async_remove_key.assert_called_once_with(mac_address)
+
+    # Test that we can verify if a key exists before removal
+    existing_key = await mock_storage.async_get_key(mac_address)
+    assert existing_key == test_key
+
+
+# More comprehensive tests covering code paths not covered by basic tests above

@@ -19,6 +19,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.esphome import dashboard
+from homeassistant.components.esphome.config_flow import EsphomeFlowHandler
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -62,6 +63,139 @@ async def test_config_flow_encryption_key_storage(
     # Verify the key can be retrieved (simulating config flow behavior)
     retrieved_key = await mock_storage.async_get_key(mac_address)
     assert retrieved_key == stored_key
+
+
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_retrieve_encryption_key_from_storage_no_mac_address(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test _retrieve_encryption_key_from_storage with no MAC address."""
+
+    mock_storage = Mock()
+    mock_storage_func.return_value = mock_storage
+
+    flow = EsphomeFlowHandler()
+    flow.hass = hass
+    flow._device_mac = None
+    flow._reauth_entry = None
+
+    # Should return False when no MAC address is available
+    result = await flow._retrieve_encryption_key_from_storage()
+    assert result is False
+
+    # Storage should not be called
+    mock_storage_func.assert_not_called()
+
+
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_retrieve_encryption_key_from_storage_with_device_mac(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test _retrieve_encryption_key_from_storage using _device_mac."""
+
+    stored_key = "test_encryption_key_32_bytes_long"
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=stored_key)
+    mock_storage_func.return_value = mock_storage
+
+    flow = EsphomeFlowHandler()
+    flow.hass = hass
+    flow._device_mac = "11:22:33:44:55:aa"
+    flow._reauth_entry = None
+    flow._noise_psk = None
+
+    # Should return True and set noise_psk
+    result = await flow._retrieve_encryption_key_from_storage()
+    assert result is True
+    assert flow._noise_psk == stored_key
+
+    # Storage should be called with the device MAC
+    mock_storage.async_get_key.assert_called_once_with("11:22:33:44:55:aa")
+
+
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_retrieve_encryption_key_from_storage_with_reauth_entry(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test _retrieve_encryption_key_from_storage using reauth entry unique_id."""
+
+    stored_key = "test_encryption_key_32_bytes_long"
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=stored_key)
+    mock_storage_func.return_value = mock_storage
+
+    # Create a mock reauth entry
+    mock_entry = Mock()
+    mock_entry.unique_id = "aa:bb:cc:dd:ee:ff"
+
+    flow = EsphomeFlowHandler()
+    flow.hass = hass
+    flow._device_mac = None  # No device MAC
+    flow._reauth_entry = mock_entry
+    flow._noise_psk = None
+
+    # Should return True and set noise_psk using reauth entry
+    result = await flow._retrieve_encryption_key_from_storage()
+    assert result is True
+    assert flow._noise_psk == stored_key
+
+    # Storage should be called with the reauth entry unique_id
+    mock_storage.async_get_key.assert_called_once_with("aa:bb:cc:dd:ee:ff")
+
+
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_retrieve_encryption_key_from_storage_no_key_found(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test _retrieve_encryption_key_from_storage when no key is found."""
+
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=None)  # No key found
+    mock_storage_func.return_value = mock_storage
+
+    flow = EsphomeFlowHandler()
+    flow.hass = hass
+    flow._device_mac = "11:22:33:44:55:aa"
+    flow._reauth_entry = None
+    flow._noise_psk = None
+
+    # Should return False when no key is found
+    result = await flow._retrieve_encryption_key_from_storage()
+    assert result is False
+    assert flow._noise_psk is None
+
+    # Storage should be called but return None
+    mock_storage.async_get_key.assert_called_once_with("11:22:33:44:55:aa")
+
+
+@patch("homeassistant.components.esphome.config_flow.async_get_encryption_key_storage")
+async def test_retrieve_encryption_key_from_storage_device_mac_priority(
+    mock_storage_func, hass: HomeAssistant
+) -> None:
+    """Test _retrieve_encryption_key_from_storage prioritizes _device_mac over reauth."""
+
+    stored_key = "test_encryption_key_32_bytes_long"
+    mock_storage = Mock()
+    mock_storage.async_get_key = AsyncMock(return_value=stored_key)
+    mock_storage_func.return_value = mock_storage
+
+    # Create a mock reauth entry
+    mock_entry = Mock()
+    mock_entry.unique_id = "aa:bb:cc:dd:ee:ff"
+
+    flow = EsphomeFlowHandler()
+    flow.hass = hass
+    flow._device_mac = "11:22:33:44:55:aa"  # Has device MAC
+    flow._reauth_entry = mock_entry  # Also has reauth entry
+    flow._noise_psk = None
+
+    # Should use _device_mac (priority over reauth entry)
+    result = await flow._retrieve_encryption_key_from_storage()
+    assert result is True
+    assert flow._noise_psk == stored_key
+
+    # Storage should be called with the device MAC, not reauth entry
+    mock_storage.async_get_key.assert_called_once_with("11:22:33:44:55:aa")
 
 
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
