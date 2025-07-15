@@ -41,13 +41,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import CONF_OBJECT_ID, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
 
@@ -72,7 +71,7 @@ _VALID_STATES = [
     VacuumActivity.ERROR,
 ]
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
     CONF_FAN_SPEED_TEMPLATE: CONF_FAN_SPEED,
     CONF_VALUE_TEMPLATE: CONF_STATE,
@@ -125,82 +124,23 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    vacuums = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        vacuums.append(entity_conf)
-
-    return vacuums
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template switches."""
-    vacuums = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        vacuums.append(
-            TemplateVacuum(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(vacuums)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Template cover."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_VACUUMS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerVacuumEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    """Set up the Template vacuum."""
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        VACUUM_DOMAIN,
+        config,
+        TemplateStateVacuumEntity,
+        TriggerVacuumEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_VACUUMS,
     )
 
 
@@ -350,7 +290,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_fan_speed = None
 
 
-class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
+class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
     """A template vacuum component."""
 
     _attr_should_poll = False
