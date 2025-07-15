@@ -324,7 +324,6 @@ class ValveBase(HomeAccessory):
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        self.update_duration_chars()
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = self.on_service if value else self.off_service
@@ -333,8 +332,8 @@ class ValveBase(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = 1 if new_state.state in self.open_states else 0
         self.update_duration_chars()
+        current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
@@ -344,15 +343,9 @@ class ValveBase(HomeAccessory):
         """Update valve duration related properties if characteristics are available."""
         if CHAR_SET_DURATION in self.chars:
             duration = self.get_duration()
-            _LOGGER.debug("%s: Set set_duration state to %s", self.entity_id, duration)
             self.char_set_duration.set_value(duration)
         if CHAR_REMAINING_DURATION in self.chars:
             remaining_duration = self.get_remaining_duration()
-            _LOGGER.debug(
-                "%s: Set remaining_duration state to %s",
-                self.entity_id,
-                remaining_duration,
-            )
             self.char_remaining_duration.set_value(remaining_duration)
 
     def set_duration(self, value: int) -> None:
@@ -371,86 +364,45 @@ class ValveBase(HomeAccessory):
 
     def get_duration(self) -> int:
         """Get the default duration from Home Assistant."""
-        _LOGGER.debug("%s: Get default run time", self.entity_id)
-        if self.linked_duration_entity is None:
-            _LOGGER.warning(
-                "%s: Linked default run time entity is not configured", self.entity_id
-            )
-            return 0
-
-        default_duration_state = self.hass.states.get(self.linked_duration_entity)
-        if default_duration_state is None:
-            _LOGGER.warning(
-                "%s: Linked entity %s has no state",
-                self.entity_id,
-                self.linked_duration_entity,
+        duration_state = self._get_entity_state(self.linked_duration_entity)
+        if not duration_state:
+            _LOGGER.debug(
+                "%s: No linked duration entity state available", self.entity_id
             )
             return 0
 
         try:
-            default_duration = int(float(default_duration_state.state))
+            duration = float(duration_state)
+            return max(int(duration), 0)
         except ValueError:
-            _LOGGER.warning(
-                "%s: State of linked entity %s cannot be parsed",
-                self.entity_id,
-                self.linked_duration_entity,
-            )
+            _LOGGER.debug("%s: Cannot parse linked duration entity", self.entity_id)
             return 0
-
-        if default_duration < 0:
-            _LOGGER.debug(
-                "%s: State of linked entity %s is below 0",
-                self.entity_id,
-                self.linked_duration_entity,
-            )
-            return 0
-
-        _LOGGER.debug(
-            "%s: Default run time is set to %s", self.entity_id, default_duration
-        )
-        return default_duration
 
     def get_remaining_duration(self) -> int:
         """Calculate the remaining duration based on end time in Home Assistant."""
-        _LOGGER.debug("%s: Get remaining duration", self.entity_id)
-        if self.linked_end_time_entity is None:
-            _LOGGER.warning(
-                "%s: Linked end time entity is not configured", self.entity_id
+        end_time_state = self._get_entity_state(self.linked_end_time_entity)
+        if not end_time_state:
+            _LOGGER.debug(
+                "%s: No linked end time entity state available", self.entity_id
             )
-            return 0
+            return self.get_duration()
 
-        linked_end_time_state = self.hass.states.get(self.linked_end_time_entity)
-        if linked_end_time_state is None:
-            _LOGGER.warning(
-                "%s: Linked entity %s has no state",
-                self.entity_id,
-                self.linked_end_time_entity,
-            )
-            return 0
+        end_time = dt_util.parse_datetime(end_time_state)
+        if not end_time:
+            _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
+            return self.get_duration()
 
-        linked_end_time = dt_util.parse_datetime(linked_end_time_state.state)
-        if linked_end_time is None:
-            _LOGGER.warning(
-                "%s: State of linked entity %s cannot be parsed",
-                self.entity_id,
-                self.linked_end_time_entity,
-            )
-            return 0
+        remaining_time = (end_time - dt_util.utcnow()).total_seconds()
+        return max(int(remaining_time), 0)
 
-        time_now = dt_util.utcnow()
-        _LOGGER.debug(
-            "%s: Calculating remaining duration with end time %s and current time %s",
-            self.entity_id,
-            linked_end_time,
-            time_now,
-        )
-        remaining_time = (linked_end_time - time_now).total_seconds()
-        _LOGGER.debug(
-            "%s: Calculated remaining duration in seconds is %s",
-            self.entity_id,
-            remaining_time,
-        )
-        return int(max(remaining_time, 0))
+    def _get_entity_state(self, entity_id: str | None) -> str | None:
+        """Fetch the state of a linked entity."""
+        if entity_id is None:
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return None
+        return state.state
 
 
 @TYPES.register("ValveSwitch")
