@@ -36,7 +36,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hydrological_alert',
-    'unique_id': '123_alert',
+    'unique_id': '123_hydrological_alert',
     'unit_of_measurement': None,
   })
 # ---

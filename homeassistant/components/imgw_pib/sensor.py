@@ -32,14 +32,14 @@ PARALLEL_UPDATES = 0
 
 def gen_alert_attributes(data: HydrologicalData) -> dict[str, Any] | None:
     """Generate attributes for the alert entity."""
-    if data.alert.value == NO_ALERT:
+    if data.hydrological_alert.value == NO_ALERT:
         return None
 
     return {
-        "level": data.alert.level,
-        "probability": data.alert.probability,
-        "valid_from": data.alert.valid_from,
-        "valid_to": data.alert.valid_to,
+        "level": data.hydrological_alert.level,
+        "probability": data.hydrological_alert.probability,
+        "valid_from": data.hydrological_alert.valid_from,
+        "valid_to": data.hydrological_alert.valid_to,
     }
 
 
@@ -53,11 +53,11 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
     ImgwPibSensorEntityDescription(
-        key="alert",
+        key="hydrological_alert",
         translation_key="hydrological_alert",
         device_class=SensorDeviceClass.ENUM,
         options=list(HYDROLOGICAL_ALERTS_MAP.values()),
-        value=lambda data: data.alert.value,
+        value=lambda data: data.hydrological_alert.value,
         attrs=gen_alert_attributes,
     ),
     ImgwPibSensorEntityDescription(
