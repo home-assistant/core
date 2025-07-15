@@ -1,8 +1,6 @@
-"""Constants for the OpenAI Conversation integration."""
+"""Constants for the OpenRouter integration."""
 
 import logging
 
 DOMAIN = "open_router"
 LOGGER = logging.getLogger(__package__)
-
-CONF_PROMPT = "prompt"

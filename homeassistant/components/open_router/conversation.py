@@ -19,7 +19,7 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenRouterConfigEntry
-from .const import CONF_PROMPT, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 async def async_setup_entry(
@@ -54,7 +54,7 @@ def _convert_content_to_chat_message(
         return ChatCompletionAssistantMessageParam(
             role="assistant", content=content.content
         )
-    LOGGER.warning("Could not convert message to OpenAI API: %s", content)
+    LOGGER.warning("Could not convert message to Completions API: %s", content)
     return None
 
 
@@ -88,7 +88,7 @@ class OpenRouterConversationEntity(
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
-                options.get(CONF_PROMPT),
+                None,
                 user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
