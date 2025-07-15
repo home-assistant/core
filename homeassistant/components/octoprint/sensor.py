@@ -281,15 +281,16 @@ class OctoPrintFileNameSensor(OctoPrintSensorBase):
     def native_value(self) -> str | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job:
-            return None
 
         return job.job.file.name or None
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["job"]
+        if not self.coordinator.last_update_success:
+            return False
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        return job and job.job.file.name
 
 
 class OctoPrintFileSizeSensor(OctoPrintSensorBase):
@@ -297,6 +298,7 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
 
     _attr_device_class = SensorDeviceClass.DATA_SIZE
     _attr_native_unit_of_measurement = UnitOfInformation.BYTES
+    _attr_suggested_unit_of_measurement = UnitOfInformation.MEGABYTES
 
     def __init__(
         self,
@@ -310,12 +312,13 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
     def native_value(self) -> int | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job:
-            return None
 
         return job.job.file.size or None
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["job"]
+        if not self.coordinator.last_update_success:
+            return False
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        return job and job.job.file.size
