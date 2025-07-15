@@ -25,7 +25,7 @@ HYDROLOGICAL_DATA = HydrologicalData(
     water_temperature_measurement_date=datetime(2024, 4, 27, 10, 10, tzinfo=UTC),
     water_flow=SensorData(name="Water Flow", value=123.45),
     water_flow_measurement_date=datetime(2024, 4, 27, 10, 5, tzinfo=UTC),
-    alert=Alert(value=NO_ALERT),
+    hydrological_alert=Alert(value=NO_ALERT),
 )
 
 

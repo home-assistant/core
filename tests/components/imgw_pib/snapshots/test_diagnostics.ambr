@@ -22,13 +22,6 @@
       'version': 1,
     }),
     'hydrological_data': dict({
-      'alert': dict({
-        'level': None,
-        'probability': None,
-        'valid_from': None,
-        'valid_to': None,
-        'value': 'no_alert',
-      }),
       'flood_alarm': None,
       'flood_alarm_level': dict({
         'name': 'Flood Alarm Level',
@@ -40,6 +33,13 @@
         'name': 'Flood Warning Level',
         'unit': None,
         'value': None,
+      }),
+      'hydrological_alert': dict({
+        'level': None,
+        'probability': None,
+        'valid_from': None,
+        'valid_to': None,
+        'value': 'no_alert',
       }),
       'latitude': None,
       'longitude': None,
