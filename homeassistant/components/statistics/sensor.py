@@ -1073,6 +1073,20 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
         states.reverse()
         return states
 
+    async def _initialize_from_database(self) -> bool:
+        """Initialize the list of states from the database."""
+        if DATA_RECORDER not in self.hass.config.components:
+            return False
+        states = await get_instance(self.hass).async_add_executor_job(
+            self._fetch_states_from_database
+        )
+        if not states:
+            return False
+        for state in states:
+            self._add_state_to_queue(state)
+            self._calculate_state_attributes(state)
+        return True
+
     async def _initialize_from_restore_state(self) -> bool:
         """Initialize the list of states from the restore state."""
         if (last_state := await self.async_get_last_state()) is None:
@@ -1097,20 +1111,12 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
         return True
 
     async def _initialize_state(self) -> None:
-        """Initialize the list of states from the database/restore info."""
-        if await self._initialize_from_restore_state():
-            _LOGGER.debug("%s: restored %d states", self.entity_id, len(self.states))
-        elif (DATA_RECORDER in self.hass.config.components) and (
-            states := await get_instance(self.hass).async_add_executor_job(
-                self._fetch_states_from_database
-            )
+        """Initialize the sensor state from the database/restore info."""
+        if (
+            await self._initialize_from_restore_state()
+            or await self._initialize_from_database()
         ):
-            _LOGGER.debug(
-                "%s: fetched %d states from the database", self.entity_id, len(states)
-            )
-            for state in states:
-                self._add_state_to_queue(state)
-                self._calculate_state_attributes(state)
+            _LOGGER.debug("%s: restored %d states", self.entity_id, len(self.states))
 
         # Update the sensor based on the restored states.
         self._async_purge_update_and_schedule()
