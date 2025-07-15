@@ -44,7 +44,9 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: user may want to configure with a different URL than the discovery info
   discovery:
     status: done
     comment: hassio addon supports discovery, other installation methods are not discoverable
