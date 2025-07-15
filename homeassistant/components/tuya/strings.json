@@ -56,6 +56,15 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "tankfull": {
+        "name": "Tank full"
+      },
+      "defrost": {
+        "name": "Defrost"
+      },
+      "wet": {
+        "name": "Wet"
       }
     },
     "button": {
@@ -897,6 +906,12 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "arm_beep": {
+        "name": "Arm beep"
+      },
+      "siren": {
+        "name": "Siren"
       }
     }
   }
