@@ -365,7 +365,7 @@ class ValveBase(HomeAccessory):
     def get_duration(self) -> int:
         """Get the default duration from Home Assistant."""
         duration_state = self._get_entity_state(self.linked_duration_entity)
-        if not duration_state:
+        if duration_state is None:
             _LOGGER.debug(
                 "%s: No linked duration entity state available", self.entity_id
             )
@@ -381,14 +381,14 @@ class ValveBase(HomeAccessory):
     def get_remaining_duration(self) -> int:
         """Calculate the remaining duration based on end time in Home Assistant."""
         end_time_state = self._get_entity_state(self.linked_end_time_entity)
-        if not end_time_state:
+        if end_time_state is None:
             _LOGGER.debug(
                 "%s: No linked end time entity state available", self.entity_id
             )
             return self.get_duration()
 
         end_time = dt_util.parse_datetime(end_time_state)
-        if not end_time:
+        if end_time is None:
             _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
             return self.get_duration()
 
