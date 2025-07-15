@@ -209,13 +209,13 @@ async def async_setup_platform(
 @callback
 def async_create_preview_alarm_control_panel(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> AlarmControlPanelTemplate:
+) -> StateAlarmControlPanelEntity:
     """Create a preview sensor."""
     updated_config = rewrite_options_to_modern_conf(config)
     validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(
         updated_config | {CONF_NAME: name}
     )
-    return AlarmControlPanelTemplate(hass, validated_config, None)
+    return StateAlarmControlPanelEntity(hass, validated_config, None)
 
 
 class AbstractTemplateAlarmControlPanel(
