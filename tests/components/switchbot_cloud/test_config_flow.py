@@ -95,7 +95,7 @@ async def test_form_fails(
 
 
 async def test_options_flow_handle(hass: HomeAssistant) -> None:
-    """test_options_flow_init."""
+    """Test options flow handle."""
 
     entry = await configure_integration(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
@@ -112,7 +112,7 @@ async def test_options_flow_handle(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_handle_user_input_is_not_none(hass: HomeAssistant) -> None:
-    """test_options_flow_init."""
+    """Test options flow handle user input is not none."""
 
     entry = await configure_integration(hass)
     result = await hass.config_entries.options.async_init(

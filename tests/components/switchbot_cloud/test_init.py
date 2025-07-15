@@ -236,7 +236,7 @@ async def test_posting_wrong_data_to_webhook(
     mock_setup_webhook,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test handler webhook call."""
+    """Test posting wrong data to webhook."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
@@ -285,7 +285,7 @@ async def test_posting_wrong_device_mac_to_webhook(
     mock_setup_webhook,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test handler webhook call."""
+    """Test posting wrong device mac to webhook."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
@@ -334,7 +334,7 @@ async def test_posting_no_resuest_body_to_webhook(
     mock_setup_webhook,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test handler webhook call."""
+    """Test posting no resuest body to webhook."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
