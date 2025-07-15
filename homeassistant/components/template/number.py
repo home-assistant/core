@@ -134,6 +134,8 @@ def async_create_preview_number(
 class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     """Representation of a template number features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
@@ -169,7 +171,6 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
     """Representation of a template number."""
 
     _attr_should_poll = False
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -181,10 +182,11 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateNumber.__init__(self, config)
 
+        name = self._attr_name
         if TYPE_CHECKING:
-            assert self._attr_name is not None
+            assert name is not None
 
-        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -223,14 +225,7 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
 class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
     """Number entity based on trigger data."""
 
-    _entity_id_format = ENTITY_ID_FORMAT
     domain = NUMBER_DOMAIN
-    extra_template_keys = (
-        CONF_STATE,
-        CONF_STEP,
-        CONF_MIN,
-        CONF_MAX,
-    )
 
     def __init__(
         self,
@@ -242,8 +237,22 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateNumber.__init__(self, config)
 
-        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
+        for key in (
+            CONF_STATE,
+            CONF_STEP,
+            CONF_MIN,
+            CONF_MAX,
+        ):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+        self.add_script(
+            CONF_SET_VALUE,
+            config[CONF_SET_VALUE],
+            self._rendered.get(CONF_NAME, DEFAULT_NAME),
+            DOMAIN,
+        )
 
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -264,6 +273,7 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
         ):
             if (rendered := self._rendered.get(key)) is not None:
                 setattr(self, attr, vol.Any(vol.Coerce(float), None)(rendered))
+                write_ha_state = True
 
         if len(self._rendered) > 0:
             # In case any non optimistic template
