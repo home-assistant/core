@@ -35,7 +35,6 @@ from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -153,6 +152,7 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -161,9 +161,8 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template weather."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(hass, config, unique_id)
 
-        name = self._attr_name
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
         self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
         self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
@@ -190,8 +189,6 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
         self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
-
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
         self._condition = None
         self._temperature = None
@@ -486,6 +483,7 @@ class WeatherExtraStoredData(ExtraStoredData):
 class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = WEATHER_DOMAIN
     extra_template_keys = (
         CONF_CONDITION_TEMPLATE,
@@ -501,6 +499,7 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     ) -> None:
         """Initialize."""
         super().__init__(hass, coordinator, config)
+
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)

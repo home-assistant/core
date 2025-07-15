@@ -3,20 +3,38 @@
 from collections.abc import Sequence
 from typing import Any
 
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import TemplateStateFromEntityId
+from homeassistant.helpers.typing import ConfigType
+
+from .const import CONF_OBJECT_ID
 
 
 class AbstractTemplateEntity(Entity):
     """Actions linked to a template entity."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    _entity_id_format: str
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the entity."""
 
         self.hass = hass
         self._action_scripts: dict[str, Script] = {}
+
+        if self.hass:
+            if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+                self.entity_id = async_generate_entity_id(
+                    self._entity_id_format, object_id, hass=self.hass
+                )
+
+            self._attr_device_info = async_device_info_to_link_from_device_id(
+                self.hass,
+                config.get(CONF_DEVICE_ID),
+            )
 
     @property
     def referenced_blueprint(self) -> str | None:

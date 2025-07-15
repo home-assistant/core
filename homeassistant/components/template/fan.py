@@ -34,11 +34,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
@@ -153,6 +152,8 @@ async def async_setup_platform(
 
 class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     """Representation of a template fan features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -436,12 +437,8 @@ class StateFanEntity(TemplateEntity, AbstractTemplateFan):
         unique_id,
     ) -> None:
         """Initialize the fan."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateFan.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None

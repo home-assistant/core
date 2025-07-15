@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
+    ENTITY_ID_FORMAT,
     NumberEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -115,6 +115,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
     """Representation of a template number."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -123,8 +124,10 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        assert self._attr_name is not None
+        TemplateEntity.__init__(self, hass, config, unique_id)
+        if TYPE_CHECKING:
+            assert self._attr_name is not None
+
         self._value_template = config[CONF_STATE]
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
 
@@ -136,10 +139,6 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -188,6 +187,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
 class TriggerNumberEntity(TriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = NUMBER_DOMAIN
     extra_template_keys = (
         CONF_STATE,

@@ -32,8 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -42,7 +40,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
@@ -213,6 +211,8 @@ class AbstractTemplateAlarmControlPanel(
 ):
     """Representation of a templated Alarm Control Panel features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
@@ -363,12 +363,8 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         unique_id: str | None,
     ) -> None:
         """Initialize the panel."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -378,11 +374,6 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -433,11 +424,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
