@@ -8,7 +8,7 @@ from unittest.mock import patch
 import aiounifi
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import DOMAIN
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
@@ -49,7 +49,7 @@ async def test_hub_setup(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(UNIFI_DOMAIN, config_entry.unique_id)},
+        identifiers={(DOMAIN, config_entry.unique_id)},
     )
 
     assert device_entry.sw_version == "7.4.162"

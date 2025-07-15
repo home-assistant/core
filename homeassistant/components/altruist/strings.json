@@ -1,0 +1,51 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to start setup {model}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Altruist IP address or hostname in the local network"
+        },
+        "description": "Fill in Altruist IP address or hostname in your local network"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "no_device_found": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "humidity": {
+        "name": "{sensor_name} humidity"
+      },
+      "pressure": {
+        "name": "{sensor_name} pressure"
+      },
+      "temperature": {
+        "name": "{sensor_name} temperature"
+      },
+      "noise_max": {
+        "name": "Maximum noise"
+      },
+      "noise_avg": {
+        "name": "Average noise"
+      },
+      "co2": {
+        "name": "{sensor_name} CO2"
+      },
+      "radiation": {
+        "name": "Radiation level"
+      }
+    }
+  }
+}

@@ -22,10 +22,7 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: todo
-    comment: |
-      When fetch_appliances fails, ConfigEntryNotReady should be raised.
+  test-before-setup: done
   unique-config-entry: done
   # Silver
   action-exceptions:

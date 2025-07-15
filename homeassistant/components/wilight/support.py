@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import calendar
 import locale
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -26,7 +25,7 @@ def wilight_trigger(value: Any) -> str | None:
     if (step == 2) & isinstance(value, str):
         step = 3
         err_desc = "String should only contain 8 decimals character"
-        if re.search(r"^([0-9]{8})$", value) is not None:
+        if len(value) == 8 and value.isdigit():
             step = 4
             err_desc = "First 3 character should be less than 128"
             result_128 = int(value[0:3]) < 128

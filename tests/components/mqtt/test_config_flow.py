@@ -33,6 +33,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
+    MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
+    MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
+    MOCK_COVER_SUBENTRY_DATA_SINGLE,
+    MOCK_FAN_SUBENTRY_DATA_SINGLE,
+    MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -42,7 +47,7 @@ from .common import (
     MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
 )
 
-from tests.common import MockConfigEntry, MockMqttReasonCode
+from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ADD_ON_DISCOVERY_INFO = {
@@ -1453,19 +1458,6 @@ def get_default(schema: vol.Schema, key: str) -> Any | None:
     return None
 
 
-def get_suggested(schema: vol.Schema, key: str) -> Any | None:
-    """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:  # type:ignore[attr-defined]
-        if schema_key == key:
-            if (
-                schema_key.description is None
-                or "suggested_value" not in schema_key.description
-            ):
-                return None
-            return schema_key.description["suggested_value"]
-    return None
-
-
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
@@ -1520,7 +1512,7 @@ async def test_option_flow_default_suggested_values(
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
     for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
+        assert get_schema_suggested_value(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1556,7 +1548,7 @@ async def test_option_flow_default_suggested_values(
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
     for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
+        assert get_schema_suggested_value(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -2038,7 +2030,7 @@ async def test_try_connection_with_advanced_parameters(
     for k, v in defaults.items():
         assert get_default(result["data_schema"].schema, k) == v
     for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+        assert get_schema_suggested_value(result["data_schema"].schema, k) == v
 
     # test we can change username and password
     mock_try_connection_success.reset_mock()
@@ -2670,11 +2662,287 @@ async def test_migrate_of_incompatible_config_entry(
     ),
     [
         (
+            MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Hatch"},
+            {"device_class": "door"},
+            (),
+            {
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "advanced_settings": {"expire_after": 1200, "off_delay": 5},
+            },
+            (
+                (
+                    {"state_topic": "test-topic#invalid"},
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Hatch",
+        ),
+        (
+            MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Restart"},
+            {"device_class": "restart"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "payload_press": "PRESS",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+            ),
+            "Milk notifier Restart",
+        ),
+        (
+            MOCK_COVER_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Blind"},
+            {"device_class": "blind"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "cover_position_settings": {
+                    "position_template": "{{ value_json.position }}",
+                    "position_topic": "test-topic/position",
+                    "set_position_template": "{{ value }}",
+                    "set_position_topic": "test-topic/position-set",
+                },
+                "state_topic": "test-topic",
+                "retain": False,
+                "cover_tilt_settings": {
+                    "tilt_command_topic": "test-topic/tilt-set",
+                    "tilt_command_template": "{{ value }}",
+                    "tilt_status_topic": "test-topic/tilt",
+                    "tilt_status_template": "{{ value_json.position }}",
+                    "tilt_closed_value": 0,
+                    "tilt_opened_value": 100,
+                    "tilt_max": 100,
+                    "tilt_min": 0,
+                    "tilt_optimistic": False,
+                },
+            },
+            (
+                (
+                    {"value_template": "{{ json_value.state }}"},
+                    {
+                        "value_template": "cover_value_template_must_be_used_with_state_topic"
+                    },
+                ),
+                (
+                    {"cover_position_settings": {"set_position_topic": "test-topic"}},
+                    {
+                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                    },
+                ),
+                (
+                    {
+                        "cover_position_settings": {
+                            "set_position_template": "{{ value }}"
+                        }
+                    },
+                    {
+                        "cover_position_settings": "cover_set_position_template_must_be_used_with_set_position_topic"
+                    },
+                ),
+                (
+                    {
+                        "cover_position_settings": {
+                            "position_template": "{{ json_value.position }}"
+                        }
+                    },
+                    {
+                        "cover_position_settings": "cover_get_position_template_must_be_used_with_get_position_topic"
+                    },
+                ),
+                (
+                    {"cover_position_settings": {"set_position_topic": "{{ value }}"}},
+                    {
+                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                    },
+                ),
+                (
+                    {"cover_tilt_settings": {"tilt_command_template": "{{ value }}"}},
+                    {
+                        "cover_tilt_settings": "cover_tilt_command_template_must_be_used_with_tilt_command_topic"
+                    },
+                ),
+                (
+                    {
+                        "cover_tilt_settings": {
+                            "tilt_status_template": "{{ json_value.position }}"
+                        }
+                    },
+                    {
+                        "cover_tilt_settings": "cover_tilt_status_template_must_be_used_with_tilt_status_topic"
+                    },
+                ),
+            ),
+            "Milk notifier Blind",
+        ),
+        (
+            MOCK_FAN_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Breezer"},
+            {
+                "fan_feature_speed": True,
+                "fan_feature_preset_modes": True,
+                "fan_feature_oscillation": True,
+                "fan_feature_direction": True,
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "fan_speed_settings": {
+                    "percentage_command_template": "{{ value }}",
+                    "percentage_command_topic": "test-topic/pct",
+                    "percentage_state_topic": "test-topic/pct",
+                    "percentage_value_template": "{{ value_json.percentage }}",
+                    "speed_range_min": 1,
+                    "speed_range_max": 100,
+                    "payload_reset_percentage": "None",
+                },
+                "fan_preset_mode_settings": {
+                    "preset_modes": ["eco", "auto"],
+                    "preset_mode_command_template": "{{ value }}",
+                    "preset_mode_command_topic": "test-topic/prm",
+                    "preset_mode_state_topic": "test-topic/prm",
+                    "preset_mode_value_template": "{{ value_json.preset_mode }}",
+                    "payload_reset_preset_mode": "None",
+                },
+                "fan_oscillation_settings": {
+                    "oscillation_command_template": "{{ value }}",
+                    "oscillation_command_topic": "test-topic/osc",
+                    "oscillation_state_topic": "test-topic/osc",
+                    "oscillation_value_template": "{{ value_json.oscillation }}",
+                },
+                "fan_direction_settings": {
+                    "direction_command_template": "{{ value }}",
+                    "direction_command_topic": "test-topic/dir",
+                    "direction_state_topic": "test-topic/dir",
+                    "direction_value_template": "{{ value_json.direction }}",
+                },
+                "retain": False,
+                "optimistic": False,
+            },
+            (
+                (
+                    {
+                        "command_topic": "test-topic#invalid",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic#invalid",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic#invalid",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic#invalid",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic#invalid",
+                        },
+                    },
+                    {
+                        "command_topic": "invalid_publish_topic",
+                        "fan_preset_mode_settings": "invalid_publish_topic",
+                        "fan_speed_settings": "invalid_publish_topic",
+                        "fan_oscillation_settings": "invalid_publish_topic",
+                        "fan_direction_settings": "invalid_publish_topic",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                            "percentage_state_topic": "test-topic#invalid",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                            "preset_mode_state_topic": "test-topic#invalid",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                            "oscillation_state_topic": "test-topic#invalid",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                            "direction_state_topic": "test-topic#invalid",
+                        },
+                    },
+                    {
+                        "state_topic": "invalid_subscribe_topic",
+                        "fan_preset_mode_settings": "invalid_subscribe_topic",
+                        "fan_speed_settings": "invalid_subscribe_topic",
+                        "fan_oscillation_settings": "invalid_subscribe_topic",
+                        "fan_direction_settings": "invalid_subscribe_topic",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["None", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                        },
+                    },
+                    {
+                        "fan_preset_mode_settings": "fan_preset_mode_reset_in_preset_modes_list",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                            "speed_range_min": 100,
+                            "speed_range_max": 10,
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                        },
+                    },
+                    {
+                        "fan_speed_settings": "fan_speed_range_max_must_be_greater_than_speed_range_min",
+                    },
+                ),
+            ),
+            "Milk notifier Breezer",
+        ),
+        (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
-            None,
-            None,
+            {},
+            (),
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
@@ -2692,8 +2960,8 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {},
-            None,
-            None,
+            {},
+            (),
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
@@ -2709,7 +2977,7 @@ async def test_migrate_of_incompatible_config_entry(
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
-            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {"device_class": "enum", "options": ["low", "medium", "high"]},
             (
@@ -2761,25 +3029,33 @@ async def test_migrate_of_incompatible_config_entry(
                     {"state_topic": "invalid_subscribe_topic"},
                 ),
             ),
-            "Test sensor Energy",
+            "Milk notifier Energy",
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
-            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {
                 "state_class": "measurement",
             },
-            (),
+            (
+                (
+                    {
+                        "state_class": "measurement_angle",
+                        "unit_of_measurement": "deg",
+                    },
+                    {"unit_of_measurement": "invalid_uom_for_state_class"},
+                ),
+            ),
             {
                 "state_topic": "test-topic",
             },
             (),
-            "Test sensor Energy",
+            "Milk notifier Energy",
         ),
         (
             MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
-            {"name": "Test switch", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Outlet"},
             {"device_class": "outlet"},
             (),
@@ -2803,15 +3079,65 @@ async def test_migrate_of_incompatible_config_entry(
                     {"state_topic": "invalid_subscribe_topic"},
                 ),
             ),
-            "Test switch Outlet",
+            "Milk notifier Outlet",
+        ),
+        (
+            MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
+            {"name": "Basic light"},
+            {},
+            {},
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "state_value_template": "{{ value_json.value }}",
+                "optimistic": True,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "light_brightness_settings": {
+                            "brightness_command_topic": "test-topic#invalid"
+                        },
+                    },
+                    {"light_brightness_settings": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "advanced_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
+                    },
+                    {
+                        "advanced_settings": "max_below_min_kelvin",
+                    },
+                ),
+            ),
+            "Milk notifier Basic light",
         ),
     ],
     ids=[
+        "binary_sensor",
+        "button",
+        "cover",
+        "fan",
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",
         "sensor_total",
         "switch",
+        "light_basic_kelvin",
     ],
 )
 async def test_subentry_configflow(
@@ -2894,37 +3220,32 @@ async def test_subentry_configflow(
         "url": learn_more_url(component["platform"]),
     }
 
-    # Process extra step if the platform supports it
-    if mock_entity_details_user_input is not None:
-        # Extra entity details flow step
-        assert result["step_id"] == "entity_platform_config"
+    # Process entity details step
+    assert result["step_id"] == "entity_platform_config"
 
-        # First test validators if set of test
-        for failed_user_input, failed_errors in mock_entity_details_failed_user_input:
-            # Test an invalid entity details user input case
-            result = await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                user_input=failed_user_input,
-            )
-            assert result["type"] is FlowResultType.FORM
-            assert result["errors"] == failed_errors
-
-        # Now try again with valid data
+    # First test validators if set of test
+    for failed_user_input, failed_errors in mock_entity_details_failed_user_input:
+        # Test an invalid entity details user input case
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input=mock_entity_details_user_input,
+            user_input=failed_user_input,
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
-        assert result["description_placeholders"] == {
-            "mqtt_device": device_name,
-            "platform": component["platform"],
-            "entity": entity_name,
-            "url": learn_more_url(component["platform"]),
-        }
-    else:
-        # No details form step
-        assert result["step_id"] == "mqtt_platform_config"
+        assert result["errors"] == failed_errors
+
+    # Now try again with valid data
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=mock_entity_details_user_input,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["description_placeholders"] == {
+        "mqtt_device": device_name,
+        "platform": component["platform"],
+        "entity": entity_name,
+        "url": learn_more_url(component["platform"]),
+    }
 
     # Process mqtt platform config flow
     # Test an invalid mqtt user input case
@@ -2983,9 +3304,7 @@ async def test_subentry_reconfigure_remove_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3107,9 +3426,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
@@ -3179,6 +3496,16 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the platform specific entity data with changed entity_category
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "entity_category": "config",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data
@@ -3212,6 +3539,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "user_input_platform_config_validation",
         "user_input_platform_config",
         "user_input_mqtt",
+        "component_data",
         "removed_options",
     ),
     [
@@ -3224,7 +3552,12 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 ),
             ),
             (),
-            None,
+            {},
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "retain": True,
+            },
             {
                 "command_topic": "test-topic1-updated",
                 "command_template": "{{ value }}",
@@ -3266,10 +3599,38 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "state_topic": "test-topic1-updated",
                 "value_template": "{{ value_json.value }}",
             },
+            {
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value_json.value }}",
+            },
             {"options", "expire_after", "entity_picture"},
         ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (),
+            {},
+            {
+                "command_topic": "test-topic1-updated",
+                "state_topic": "test-topic1-updated",
+                "light_brightness_settings": {
+                    "brightness_command_template": "{{ value_json.value }}"
+                },
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "state_topic": "test-topic1-updated",
+                "brightness_command_template": "{{ value_json.value }}",
+            },
+            {"optimistic", "state_value_template", "entity_picture"},
+        ),
     ],
-    ids=["notify", "sensor"],
+    ids=["notify", "sensor", "light_basic"],
 )
 async def test_subentry_reconfigure_edit_entity_single_entity(
     hass: HomeAssistant,
@@ -3280,8 +3641,9 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         tuple[dict[str, Any], dict[str, str] | None], ...
     ]
     | None,
-    user_input_platform_config: dict[str, Any] | None,
+    user_input_platform_config: dict[str, Any],
     user_input_mqtt: dict[str, Any],
+    component_data: dict[str, Any],
     removed_options: tuple[str, ...],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with single entity."""
@@ -3290,9 +3652,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3339,28 +3699,25 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
 
-    if user_input_platform_config is None:
-        # Skip entity flow step
-        assert result["step_id"] == "mqtt_platform_config"
-    else:
-        # Additional entity flow step
-        assert result["step_id"] == "entity_platform_config"
-        for entity_validation_config, errors in user_input_platform_config_validation:
-            result = await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                user_input=entity_validation_config,
-            )
-            assert result["step_id"] == "entity_platform_config"
-            assert result.get("errors") == errors
-            assert result["type"] is FlowResultType.FORM
-
+    # entity platform config flow step
+    assert result["step_id"] == "entity_platform_config"
+    for entity_validation_config, errors in user_input_platform_config_validation:
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input=user_input_platform_config,
+            user_input=entity_validation_config,
         )
+        assert result["step_id"] == "entity_platform_config"
+        assert result.get("errors") == errors
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "mqtt_platform_config"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=user_input_platform_config,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data,
     result = await hass.config_entries.subentries.async_configure(
@@ -3386,7 +3743,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert "entity_picture" not in new_components[component_id]
 
     # Check the second component was updated
-    for key, value in user_input_mqtt.items():
+    for key, value in component_data.items():
         assert new_components[component_id][key] == value
 
     assert set(component) - set(new_components[component_id]) == removed_options
@@ -3434,9 +3791,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3527,7 +3882,12 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
 
 
 @pytest.mark.parametrize(
-    ("mqtt_config_subentries_data", "user_input_entity", "user_input_mqtt"),
+    (
+        "mqtt_config_subentries_data",
+        "user_input_entity",
+        "user_input_entity_platform_config",
+        "user_input_mqtt",
+    ),
     [
         (
             (
@@ -3542,6 +3902,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
                 "name": "The second notifier",
                 "entity_picture": "https://example.com",
             },
+            {"entity_category": "diagnostic"},
             {
                 "command_topic": "test-topic2",
             },
@@ -3555,6 +3916,7 @@ async def test_subentry_reconfigure_add_entity(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     user_input_entity: dict[str, Any],
+    user_input_entity_platform_config: dict[str, Any],
     user_input_mqtt: dict[str, Any],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure and add an entity."""
@@ -3563,9 +3925,7 @@ async def test_subentry_reconfigure_add_entity(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3607,6 +3967,14 @@ async def test_subentry_reconfigure_add_entity(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input=user_input_entity,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the new entity platform config
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=user_input_entity_platform_config,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mqtt_platform_config"
@@ -3662,9 +4030,7 @@ async def test_subentry_reconfigure_update_device_properties(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3707,10 +4073,11 @@ async def test_subentry_reconfigure_update_device_properties(
         result["flow_id"],
         user_input={
             "name": "Beer notifier",
-            "sw_version": "1.1",
+            "advanced_settings": {"sw_version": "1.1"},
             "model": "Beer bottle XL",
             "model_id": "bn003",
             "configuration_url": "https://example.com",
+            "mqtt_settings": {"qos": 1},
         },
     )
     assert result["type"] is FlowResultType.MENU
@@ -3724,12 +4091,15 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    # Check our device was updated
+    # Check our device and mqtt data was updated correctly
     device = deepcopy(dict(subentry.data))["device"]
     assert device["name"] == "Beer notifier"
     assert "hw_version" not in device
     assert device["model"] == "Beer bottle XL"
     assert device["model_id"] == "bn003"
+    assert device["sw_version"] == "1.1"
+    assert device["mqtt_settings"]["qos"] == 1
+    assert "qos" not in device
 
 
 @pytest.mark.parametrize(
@@ -3763,9 +4133,7 @@ async def test_subentry_reconfigure_availablity(
     }
     assert subentry.data.get("availability") == expected_availability
 
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
@@ -3813,9 +4181,7 @@ async def test_subentry_reconfigure_availablity(
     assert subentry.data.get("availability") == expected_availability
 
     # Assert we can reset the availability config
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
     result = await hass.config_entries.subentries.async_configure(
@@ -3846,3 +4212,52 @@ async def test_subentry_reconfigure_availablity(
         "payload_available": "1",
         "payload_not_available": "0",
     }
+
+
+async def test_subentry_configflow_section_feature(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the subentry ConfigFlow sections are hidden when they have no configurable options."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Bla", "mqtt_settings": {"qos": 1}},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"platform": "fan"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"] == {
+        "mqtt_device": "Bla",
+        "platform": "fan",
+        "entity": "Bla",
+        "url": learn_more_url("fan"),
+    }
+
+    # Process entity details step
+    assert result["step_id"] == "entity_platform_config"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"fan_feature_speed": True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "mqtt_platform_config"
+
+    # Check mqtt platform config flow sections from data schema
+    data_schema = result["data_schema"].schema
+    assert "fan_speed_settings" in data_schema
+    assert "fan_preset_mode_settings" not in data_schema

@@ -159,10 +159,10 @@
         "name": "Monitoring grid power flow"
       },
       "monitoring_self_consumption": {
-        "name": "Monitoring self consumption"
+        "name": "Monitoring self-consumption"
       },
       "monitoring_self_sufficiency": {
-        "name": "Monitoring self sufficiency"
+        "name": "Monitoring self-sufficiency"
       },
       "monitoring_solar_production": {
         "name": "Monitoring solar production"

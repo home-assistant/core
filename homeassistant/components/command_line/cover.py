@@ -20,7 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    ManualTriggerEntity,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -79,7 +82,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         command_close: str,
         command_stop: str,
         command_state: str | None,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         timeout: int,
         scan_interval: timedelta,
     ) -> None:
@@ -164,14 +167,20 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         """Update device state."""
         if self._command_state:
             payload = str(await self._async_query_state())
+
+            variables = self._template_variables_with_value(payload)
+            if not self._render_availability_template(variables):
+                self.async_write_ha_state()
+                return
+
             if self._value_template:
-                payload = self._value_template.async_render_with_possible_json_value(
-                    payload, None
+                payload = self._value_template.async_render_as_value_template(
+                    self.entity_id, variables, None
                 )
             self._state = None
             if payload:
                 self._state = int(payload)
-            self._process_manual_data(payload)
+            self._process_manual_data(variables)
             self.async_write_ha_state()
 
     async def async_update(self) -> None:

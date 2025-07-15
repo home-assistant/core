@@ -47,6 +47,8 @@ from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):

@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
-from renault_api.kamereon import models
+from renault_api.kamereon import models, schemas
 from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
@@ -43,7 +43,11 @@ def with_error_wrapping[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except RenaultException as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return wrapper
 
@@ -197,7 +201,18 @@ class RenaultVehicleProxy:
     @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
         """Get vehicle charging settings."""
-        return await self._vehicle.get_charging_settings()
+        full_endpoint = await self._vehicle.get_full_endpoint("charging-settings")
+        response = await self._vehicle.http_get(full_endpoint)
+        response_data = cast(
+            models.KamereonVehicleDataResponse,
+            schemas.KamereonVehicleDataResponseSchema.load(response.raw_data),
+        )
+        return cast(
+            models.KamereonVehicleChargingSettingsData,
+            response_data.get_attributes(
+                schemas.KamereonVehicleChargingSettingsDataSchema
+            ),
+        )
 
     @with_error_wrapping
     async def set_charge_schedules(
