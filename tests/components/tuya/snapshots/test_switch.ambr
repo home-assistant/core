@@ -48,6 +48,104 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][switch.dehumidifer_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dehumidifer_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account-lock',
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9child_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][switch.dehumidifer_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifer Child lock',
+      'icon': 'mdi:account-lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dehumidifer_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][switch.dehumidifer_ionizer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dehumidifer_ionizer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:atom',
+    'original_name': 'Ionizer',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ionizer',
+    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9anion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][switch.dehumidifer_ionizer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifer Ionizer',
+      'icon': 'mdi:atom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dehumidifer_ionizer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_filter_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -579,7 +677,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_arm_beep-entry]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -592,7 +690,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'entity_id': 'switch.multifunction_alarm_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -604,7 +702,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arm beep',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -614,20 +712,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_arm_beep-state]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Multifunction alarm Arm beep',
+      'friendly_name': 'Multifunction alarm None',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'entity_id': 'switch.multifunction_alarm_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-entry]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -640,7 +738,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.multifunction_alarm_siren',
+    'entity_id': 'switch.multifunction_alarm_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -652,7 +750,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Siren',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -662,13 +760,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-state]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Multifunction alarm Siren',
+      'friendly_name': 'Multifunction alarm None',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.multifunction_alarm_siren',
+    'entity_id': 'switch.multifunction_alarm_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
