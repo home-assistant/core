@@ -66,7 +66,7 @@ async def test_valve_entity(
         {ATTR_ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, position=0.0)])
+    mock_client.valve_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     await hass.services.async_call(
@@ -75,7 +75,7 @@ async def test_valve_entity(
         {ATTR_ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, position=1.0)])
+    mock_client.valve_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     await hass.services.async_call(
@@ -84,7 +84,7 @@ async def test_valve_entity(
         {ATTR_ENTITY_ID: "valve.test_my_valve", ATTR_POSITION: 50},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, position=0.5)])
+    mock_client.valve_command.assert_has_calls([call(key=1, position=0.5, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     await hass.services.async_call(
@@ -93,7 +93,7 @@ async def test_valve_entity(
         {ATTR_ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, stop=True)])
+    mock_client.valve_command.assert_has_calls([call(key=1, stop=True, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     mock_device.set_state(
@@ -164,7 +164,7 @@ async def test_valve_entity_without_position(
         {ATTR_ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, position=0.0)])
+    mock_client.valve_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     await hass.services.async_call(
@@ -173,7 +173,7 @@ async def test_valve_entity_without_position(
         {ATTR_ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
-    mock_client.valve_command.assert_has_calls([call(key=1, position=1.0)])
+    mock_client.valve_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
     mock_client.valve_command.reset_mock()
 
     mock_device.set_state(
