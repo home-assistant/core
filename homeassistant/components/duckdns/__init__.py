@@ -61,29 +61,6 @@ SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string
 type DuckDnsConfigEntry = ConfigEntry
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
-    """Set up Duck DNS from a config entry."""
-    domain = entry.data[CONF_DOMAIN]
-    token = entry.data[CONF_ACCESS_TOKEN]
-    session = async_get_clientsession(hass)
-
-    async def update_domain_interval(_now: datetime) -> bool:
-        """Update the DuckDNS entry."""
-        return await _update_duckdns(session, domain, token)
-
-    async_track_time_interval_backoff(hass, update_domain_interval, BACKOFF_INTERVALS)
-
-    async def update_domain_service(call: ServiceCall) -> None:
-        """Update the DuckDNS entry."""
-        await _update_duckdns(session, domain, token, txt=call.data[ATTR_TXT])
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_TXT, update_domain_service, schema=SERVICE_TXT_SCHEMA
-    )
-
-    return True
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the DuckDNS component."""
 
@@ -94,6 +71,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
         )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
+    """Set up Duck DNS from a config entry."""
+    domain = entry.data[CONF_DOMAIN]
+    token = entry.data[CONF_ACCESS_TOKEN]
+    session = async_get_clientsession(hass)
+
+    async def update_domain_interval(_now: datetime) -> bool:
+        """Update the DuckDNS entry."""
+        return await _update_duckdns(session, domain, token)
+
+    entry.async_on_unload(
+        async_track_time_interval_backoff(
+            hass, update_domain_interval, BACKOFF_INTERVALS
+        )
+    )
+
+    async def update_domain_service(call: ServiceCall) -> None:
+        """Update the DuckDNS entry."""
+        await _update_duckdns(session, domain, token, txt=call.data[ATTR_TXT])
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_TXT, update_domain_service, schema=SERVICE_TXT_SCHEMA
     )
 
     return True
