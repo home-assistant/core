@@ -12,7 +12,7 @@ DATA_BLUEPRINTS = "automation_blueprints"
 
 def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
     """Return True if any automation references the blueprint."""
-    from . import automations_with_blueprint  # pylint: disable=import-outside-toplevel
+    from . import automations_with_blueprint  # noqa: PLC0415
 
     return len(automations_with_blueprint(hass, blueprint_path)) > 0
 
@@ -28,8 +28,7 @@ async def _reload_blueprint_automations(
 @callback
 def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     """Get automation blueprints."""
-    # pylint: disable-next=import-outside-toplevel
-    from .config import AUTOMATION_BLUEPRINT_SCHEMA
+    from .config import AUTOMATION_BLUEPRINT_SCHEMA  # noqa: PLC0415
 
     return blueprint.DomainBlueprints(
         hass,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -18,7 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 
 
 @dataclass(frozen=True)
@@ -165,11 +167,11 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         return round(self._current_humidity.scale_value(current_humidity))
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
@@ -189,6 +191,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             ]
         )
 
-    def set_mode(self, mode):
+    def set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         self._send_command([{"code": DPCode.MODE, "value": mode}])

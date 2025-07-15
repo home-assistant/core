@@ -55,6 +55,7 @@ from homeassistant.util.unit_conversion import (
     EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
@@ -196,6 +197,9 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **dict.fromkeys(
         BloodGlucoseConcentrationConverter.VALID_UNITS,
         BloodGlucoseConcentrationConverter,
+    ),
+    **dict.fromkeys(
+        MassVolumeConcentrationConverter.VALID_UNITS, MassVolumeConcentrationConverter
     ),
     **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
     **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),
@@ -2851,7 +2855,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # to indicate we need to run again
                     return False
 
-    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
+    from .migration import _drop_index  # noqa: PLC0415
 
     for table in STATISTICS_TABLES:
         _drop_index(instance.get_session, table, f"ix_{table}_start")

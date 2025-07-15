@@ -35,6 +35,8 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    AddonErrorData,
+    AddonInfo,
     BackupManagerError,
     BackupManagerExceptionGroup,
     BackupManagerState,
@@ -123,7 +125,9 @@ async def test_create_backup_service(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -320,7 +324,9 @@ async def test_async_create_backup(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -648,7 +654,9 @@ async def test_initiate_backup(
         "database_included": include_database,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": expected_failed_agent_ids,
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
@@ -701,7 +709,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -721,7 +731,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -747,7 +759,9 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -852,7 +866,9 @@ async def test_initiate_backup_with_agent_error(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": ["test.remote"],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
@@ -885,7 +901,9 @@ async def test_initiate_backup_with_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
+            "failed_addons": [],
             "failed_agent_ids": ["test.remote"],
+            "failed_folders": [],
         }
     ]
 
@@ -962,6 +980,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
     (
         "automatic_agents",
         "create_backup_command",
+        "create_backup_addon_errors",
+        "create_backup_folder_errors",
         "create_backup_side_effect",
         "upload_side_effect",
         "create_backup_result",
@@ -972,6 +992,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             None,
             None,
             True,
@@ -980,6 +1002,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             None,
             True,
@@ -989,6 +1013,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate", "agent_ids": ["test.remote", "test.unknown"]},
+            {},
+            {},
             None,
             None,
             True,
@@ -1005,6 +1031,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             None,
             True,
@@ -1026,6 +1054,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             Exception("Boom!"),
             None,
             False,
@@ -1034,6 +1064,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             Exception("Boom!"),
             None,
             False,
@@ -1048,6 +1080,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             delayed_boom,
             None,
             True,
@@ -1056,6 +1090,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             delayed_boom,
             None,
             True,
@@ -1070,6 +1106,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             None,
             Exception("Boom!"),
             True,
@@ -1078,6 +1116,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             Exception("Boom!"),
             True,
@@ -1088,6 +1128,163 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 }
             },
         ),
+        # Add-ons can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_addons",
+                    "translation_placeholders": {"failed_addons": "Test Add-on"},
+                }
+            },
+        ),
+        # Folders can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_folders",
+                    "translation_placeholders": {"failed_folders": "media"},
+                }
+            },
+        ),
+        # Add-ons and folders can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_agents_addons_folders",
+                    "translation_placeholders": {
+                        "failed_addons": "Test Add-on",
+                        "failed_agents": "-",
+                        "failed_folders": "media",
+                    },
+                },
+            },
+        ),
+        # Add-ons and folders can't be backed up, one agent unavailable
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    errors=[("test_error", "Boom!")],
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_agents_addons_folders",
+                    "translation_placeholders": {
+                        "failed_addons": "Test Add-on",
+                        "failed_agents": "test.unknown",
+                        "failed_folders": "media",
+                    },
+                },
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_create_backup_failure_raises_issue(
@@ -1096,16 +1293,20 @@ async def test_create_backup_failure_raises_issue(
     create_backup: AsyncMock,
     automatic_agents: list[str],
     create_backup_command: dict[str, Any],
+    create_backup_addon_errors: dict[str, str],
+    create_backup_folder_errors: dict[Folder, str],
     create_backup_side_effect: Exception | None,
     upload_side_effect: Exception | None,
     create_backup_result: bool,
     issues_after_create_backup: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
-    """Test backup issue is cleared after backup is created."""
+    """Test issue is created when create backup has error."""
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
+    create_backup.return_value[1].result().addon_errors = create_backup_addon_errors
+    create_backup.return_value[1].result().folder_errors = create_backup_folder_errors
     create_backup.side_effect = create_backup_side_effect
 
     await ws_client.send_json_auto_id(
@@ -1665,7 +1866,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
         (
@@ -1673,7 +1874,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             BackupManagerExceptionGroup,
             (
                 "Multiple errors when creating backup: Error during pre-backup: Boom, "
-                "Error during post-backup: Test exception (2 sub-exceptions)"
+                "Error during post-backup: Test exception"
             ),
         ),
     ],
@@ -1857,7 +2058,9 @@ async def test_receive_backup_busy_manager(
     # finish the backup
     backup_task.set_result(
         WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         )
@@ -1896,7 +2099,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -1916,7 +2121,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -1942,7 +2149,9 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [
                 "media",
                 "share",
@@ -2072,7 +2281,9 @@ async def test_receive_backup_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
+            "failed_addons": [],
             "failed_agent_ids": ["test.remote"],
+            "failed_folders": [],
         }
     ]
 
@@ -3387,7 +3598,9 @@ async def test_initiate_backup_per_agent_encryption(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",

@@ -40,40 +40,31 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_PICTURE, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_OBJECT_ID, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
-    rewrite_common_legacy_to_modern_conf,
+    make_template_entity_common_modern_schema,
 )
 from .trigger_entity import TriggerEntity
 
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
 DEFAULT_NAME = "Template Switch"
 
 
-SWITCH_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_PICTURE): cv.template,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 LEGACY_SWITCH_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -104,27 +95,6 @@ SWITCH_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    switches = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        switches.append(entity_conf)
-
-    return switches
-
-
 def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, dict]:
     """Rewrite option configuration to modern configuration."""
     option_config = {**option_config}
@@ -135,33 +105,6 @@ def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, 
     return option_config
 
 
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template switches."""
-    switches = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        switches.append(
-            SwitchTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(switches)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -169,27 +112,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template switches."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_SWITCHES]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerSwitchEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        SWITCH_DOMAIN,
+        config,
+        StateSwitchEntity,
+        TriggerSwitchEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_SWITCHES,
     )
 
 
@@ -203,20 +135,22 @@ async def async_setup_entry(
     _options.pop("template_type")
     _options = rewrite_options_to_modern_conf(_options)
     validated_config = SWITCH_CONFIG_SCHEMA(_options)
-    async_add_entities([SwitchTemplate(hass, validated_config, config_entry.entry_id)])
+    async_add_entities(
+        [StateSwitchEntity(hass, validated_config, config_entry.entry_id)]
+    )
 
 
 @callback
 def async_create_preview_switch(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> SwitchTemplate:
+) -> StateSwitchEntity:
     """Create a preview switch."""
     updated_config = rewrite_options_to_modern_conf(config)
     validated_config = SWITCH_CONFIG_SCHEMA(updated_config | {CONF_NAME: name})
-    return SwitchTemplate(hass, validated_config, None)
+    return StateSwitchEntity(hass, validated_config, None)
 
 
-class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
+class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
     _attr_should_poll = False
@@ -228,7 +162,7 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass

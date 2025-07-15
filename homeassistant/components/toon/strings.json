@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "Choose your tenant to authenticate with"
+        "title": "Choose your tenant to authenticate with",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "agreement": {
         "title": "Select your agreement",
