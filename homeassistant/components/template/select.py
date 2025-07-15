@@ -140,11 +140,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
             assert name is not None
 
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(CONF_SELECT_OPTION, select_option, self._attr_name, DOMAIN)
-        self._options_template = config[ATTR_OPTIONS]
-        self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
-        self._attr_options = []
-        self._attr_current_option = None
+            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -178,8 +174,11 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateSelect.__init__(self, config)
+
+        if CONF_STATE in config:
+            self._to_render_simple.append(CONF_STATE)
 
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
