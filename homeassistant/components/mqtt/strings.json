@@ -661,7 +661,7 @@
         },
         "export_yaml": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the setup of the MQTT device was tried via YAML instead, and will offer a repair flow to clean up the redundant subentry.",
+          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the setup of the MQTT device was tried via YAML instead, and will offer a repair flow to clean up the redundant subentry. You can also choose to change the identifiers if you do not want to remove the subentry.",
           "data": {
             "yaml": "Copy the YAML configuration below:"
           },
@@ -671,7 +671,7 @@
         },
         "export_discovery": {
           "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
-          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the setup of the MQTT device was tried via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry.",
+          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the setup of the MQTT device was tried via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry. You can also choose to change the identifiers if you do not want to remove the subentry.",
           "data": {
             "discovery_topic": "Discovery topic",
             "discovery_payload": "Discovery payload:"

@@ -140,6 +140,8 @@ async def test_subentry_reconfigure_export_settings(
     assert device is not None
 
     # Assert a repair flow was created
+    # This happens when the exported device identifier was detected
+    # The subentry ID is used as device identifier
     assert len(events) == 1
     issue_id = events[0].data["issue_id"]
     issue_registry = ir.async_get(hass)
