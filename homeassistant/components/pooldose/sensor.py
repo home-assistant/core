@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 class PooldoseSensorEntityDescription(SensorEntityDescription):
     """Describe a Pooldose sensor entity."""
 
-    icon: str | None = None
     entity_category: EntityCategory | None = None
     enabled_by_default: bool = True
     value_fn: Callable[[Any], Any] = lambda data: data[0] if data else None
@@ -39,84 +38,84 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer",
+        translation_key="temperature",
     ),
     PooldoseSensorEntityDescription(
         key="ph",
-        icon="mdi:ph",
+        translation_key="ph",
     ),
     PooldoseSensorEntityDescription(
         key="orp",
-        icon="mdi:water-check",
+        translation_key="orp",
     ),
     PooldoseSensorEntityDescription(
         key="ph_type_dosing",
-        icon="mdi:flask",
+        translation_key="ph_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PooldoseSensorEntityDescription(
         key="peristaltic_ph_dosing",
-        icon="mdi:pump",
+        translation_key="peristaltic_ph_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ofa_ph_value",
-        icon="mdi:ph",
+        translation_key="ofa_ph_value",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_type_dosing",
-        icon="mdi:flask",
+        translation_key="orp_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="peristaltic_orp_dosing",
-        icon="mdi:pump",
+        translation_key="peristaltic_orp_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_value",
-        icon="mdi:water-check",
+        translation_key="ofa_orp_value",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_type",
-        icon="mdi:tune",
+        translation_key="ph_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_offset",
-        icon="mdi:tune",
+        translation_key="ph_calibration_offset",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_slope",
-        icon="mdi:tune",
+        translation_key="ph_calibration_slope",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_type",
-        icon="mdi:tune",
+        translation_key="orp_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_offset",
-        icon="mdi:tune",
+        translation_key="orp_calibration_offset",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_slope",
-        icon="mdi:tune",
+        translation_key="orp_calibration_slope",
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
     ),
@@ -180,7 +179,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         self.entity_description = description
         self._attr_device_class = description.device_class
         self._attr_entity_category = description.entity_category
-        self._attr_icon = description.icon
+        self._attr_translation_key = description.translation_key
         self._attr_entity_registry_enabled_default = description.enabled_by_default
 
     @property

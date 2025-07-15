@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ph": {
+        "default": "mdi:ph"
+      },
+      "orp": {
+        "default": "mdi:water-check"
+      },
+      "ph_type_dosing": {
+        "default": "mdi:flask"
+      },
+      "peristaltic_ph_dosing": {
+        "default": "mdi:pump"
+      },
+      "ofa_ph_value": {
+        "default": "mdi:ph"
+      },
+      "orp_type_dosing": {
+        "default": "mdi:flask"
+      },
+      "peristaltic_orp_dosing": {
+        "default": "mdi:pump"
+      },
+      "ofa_orp_value": {
+        "default": "mdi:water-check"
+      },
+      "ph_calibration_type": {
+        "default": "mdi:tune"
+      },
+      "ph_calibration_offset": {
+        "default": "mdi:tune"
+      },
+      "ph_calibration_slope": {
+        "default": "mdi:tune"
+      },
+      "orp_calibration_type": {
+        "default": "mdi:tune"
+      },
+      "orp_calibration_offset": {
+        "default": "mdi:tune"
+      },
+      "orp_calibration_slope": {
+        "default": "mdi:tune"
+      }
+    }
+  }
+}
