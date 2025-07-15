@@ -5,10 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 from pytuneblade import TuneBladeApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -34,15 +36,14 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = user_input["name"].strip()
-            host = user_input["host"]
-            port = user_input["port"]
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
 
             session = async_get_clientsession(self.hass)
             client = TuneBladeApiClient(host, port, session)
             try:
                 devices = await client.async_get_data()
-            except Exception:
+            except aiohttp.ClientError:
                 _LOGGER.exception("Failed to connect to TuneBlade")
                 errors["base"] = "cannot_connect"
             else:
@@ -50,24 +51,24 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
 
             if not errors:
-                unique_id = f"{name}_{host}_{port}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                    }
+                )
+
+                name = f"TuneBlade ({host})"
 
                 return self.async_create_entry(
                     title=name,
-                    data={
-                        "host": host,
-                        "port": port,
-                        "name": name,
-                    },
+                    data=user_input,
                 )
 
         data_schema = vol.Schema(
             {
                 vol.Required("host", default="localhost"): str,
                 vol.Required("port", default=54412): int,
-                vol.Optional("name", default="TuneBlade"): str,
             }
         )
         return self.async_show_form(
@@ -103,7 +104,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         if not devices:
-            return self.async_abort(reason="cannot_connect")
+            _LOGGER.info("TuneBlade connected but no devices found")
 
         self._title_placeholders = {"name": name}
 
