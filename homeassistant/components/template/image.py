@@ -17,7 +17,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, CONF_VERIFY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -107,10 +106,6 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         TemplateEntity.__init__(self, hass, config, unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @property
     def entity_picture(self) -> str | None:
