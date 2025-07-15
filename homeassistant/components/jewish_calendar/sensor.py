@@ -238,17 +238,15 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
             return []
         return [self.entity_description.next_update_fn(zmanim)]
 
-    def get_dateinfo(self, now: dt.datetime | None = None) -> HDateInfo:
+    def get_dateinfo(self) -> HDateInfo:
         """Get the next date info."""
-        if now is None:
-            now = dt_util.now()
-
-        today = now.date()
+        now = dt_util.now()
         update = None
+
         if self.entity_description.next_update_fn:
             update = self.entity_description.next_update_fn(self.coordinator.zmanim)
 
-        _LOGGER.debug("Today: %s, update: %s", today, update)
+        _LOGGER.debug("Today: %s, update: %s", now.date(), update)
         if update is not None and now >= update:
             return self.coordinator.dateinfo.next_day
         return self.coordinator.dateinfo
