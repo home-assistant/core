@@ -1,5 +1,6 @@
 """Template entity base class."""
 
+from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Any
 
@@ -25,26 +26,25 @@ class AbstractTemplateEntity(Entity):
         self.hass = hass
         self._action_scripts: dict[str, Script] = {}
 
-        if self.hass:
-            if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-                self.entity_id = async_generate_entity_id(
-                    self._entity_id_format, object_id, hass=self.hass
-                )
-
-            self._attr_device_info = async_device_info_to_link_from_device_id(
-                self.hass,
-                config.get(CONF_DEVICE_ID),
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                self._entity_id_format, object_id, hass=self.hass
             )
 
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            self.hass,
+            config.get(CONF_DEVICE_ID),
+        )
+
     @property
+    @abstractmethod
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
-        raise NotImplementedError
 
     @callback
+    @abstractmethod
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        raise NotImplementedError
 
     def add_script(
         self,
