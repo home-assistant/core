@@ -286,5 +286,4 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         result = await search_items(
             self.hass, self.coordinator.api_client, self.coordinator.user_id, query
         )
-        _LOGGER.warning(result)
         return SearchMedia(result=result)
