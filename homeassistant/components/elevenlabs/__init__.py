@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
