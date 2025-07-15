@@ -7,9 +7,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.hassio import async_get_clientsession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
