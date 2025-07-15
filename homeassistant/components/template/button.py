@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.components.button import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BUTTON_DOMAIN,
+    ENTITY_ID_FORMAT,
     ButtonEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -84,6 +86,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -92,8 +95,11 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        assert self._attr_name is not None
+        TemplateEntity.__init__(self, hass, config, unique_id)
+
+        if TYPE_CHECKING:
+            assert self._attr_name is not None
+
         # Scripts can be an empty list, therefore we need to check for None
         if (action := config.get(CONF_PRESS)) is not None:
             self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)

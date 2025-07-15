@@ -11,13 +11,13 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -93,6 +93,8 @@ async def async_setup_entry(
 class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
@@ -132,7 +134,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateSelect.__init__(self, config)
 
         name = self._attr_name
@@ -141,11 +143,6 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
 
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _async_setup_templates(self) -> None:
