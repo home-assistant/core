@@ -244,38 +244,34 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None
         }
 
-        if not self._areas_in_register:
-            entity_registry = er.async_get(self.hass)
-            self._areas_in_register = {}
+        entity_registry = er.async_get(self.hass)
 
-            for mower_id in self.data:
-                self._areas_in_register[mower_id] = set()
-                for entity_entry in er.async_entries_for_config_entry(
-                    entity_registry, self.config_entry.entry_id
-                ):
-                    if entity_entry.unique_id.startswith(
-                        mower_id
-                    ) and entity_entry.unique_id.endswith("work_area"):
-                        work_area_id = entity_entry.unique_id.removeprefix(
-                            f"{mower_id}_"
-                        ).split("_")[0]
-                        self._areas_in_register[mower_id].add(int(work_area_id))
+        registered_areas: dict[str, set[int]] = {}
+        for mower_id in self.data:
+            registered_areas[mower_id] = set()
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            ):
+                uid = entity_entry.unique_id
+                if uid.startswith(f"{mower_id}_") and uid.endswith("_work_area"):
+                    parts = uid.removeprefix(f"{mower_id}_").split("_")
+                    area_id_str = parts[0] if parts else None
+                    if area_id_str and area_id_str.isdigit():
+                        registered_areas[mower_id].add(int(area_id_str))
 
         for mower_id, current_ids in current_areas.items():
-            previous_ids = self._areas_in_register.get(mower_id, set())
-            new_areas = current_ids - previous_ids
-            removed_areas = previous_ids - current_ids
+            known_ids = registered_areas.get(mower_id, set())
+
+            new_areas = current_ids - known_ids
+            removed_areas = known_ids - current_ids
 
             if new_areas:
                 for area_callback in self.new_areas_callbacks:
                     area_callback(mower_id, new_areas)
 
-            entity_registry = er.async_get(self.hass)
             for entity_entry in er.async_entries_for_config_entry(
                 entity_registry, self.config_entry.entry_id
             ):
-                for area in removed_areas:
-                    if entity_entry.unique_id.startswith(f"{mower_id}_{area}_"):
+                for area_id in removed_areas:
+                    if entity_entry.unique_id.startswith(f"{mower_id}_{area_id}_"):
                         entity_registry.async_remove(entity_entry.entity_id)
-
-        self._areas_in_register = current_areas
