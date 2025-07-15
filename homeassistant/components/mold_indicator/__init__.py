@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(
         # We use async_handle_source_entity_changes to track changes to the humidity
-        # sensor, but not the temperature sensors because the generic_hygrostat links
+        # sensor, but not the temperature sensors because the mold_indicator links
         # to the humidity sensor's device.
         async_handle_source_entity_changes(
             hass,
