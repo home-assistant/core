@@ -109,11 +109,9 @@ class LutronKeypadComponent(LutronBaseEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(area_name, device_name, lutron_device, controller)
-        self._keypad_id = lutron_device.keypad.id
-        self._keypad_name = lutron_device.keypad.name
         self._component_number = lutron_device.component_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._keypad_id))},
+            identifiers={(DOMAIN, str(self._lutron_device.id))},
             manufacturer="Lutron",
             name=device_name,
             suggested_area=area_name,
@@ -126,6 +124,6 @@ class LutronKeypadComponent(LutronBaseEntity):
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Register the keypad component using also the component_number to get the updates for the components."""
         self._controller.subscribe(
-            self._keypad_id, self._component_number, self._update_callback
+            self._lutron_device.id, self._component_number, self._update_callback
         )
         await self._request_state()

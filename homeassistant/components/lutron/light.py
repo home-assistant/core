@@ -175,14 +175,20 @@ class LutronLedLight(LutronKeypadComponent, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._controller.device_turn_on(self._keypad_id, self._component_number)
+        await self._controller.device_turn_on(
+            self._lutron_device.id, self._component_number
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._controller.device_turn_off(self._keypad_id, self._component_number)
+        await self._controller.device_turn_off(
+            self._lutron_device.id, self._component_number
+        )
 
     async def _request_state(self):
-        await self._controller.device_get_state(self._keypad_id, self._component_number)
+        await self._controller.device_get_state(
+            self._lutron_device.id, self._component_number
+        )
 
     def _update_callback(self, value: int):
         """Handle device LED state update."""
@@ -193,6 +199,6 @@ class LutronLedLight(LutronKeypadComponent, LightEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
-            "keypad": self._keypad_name,
+            "keypad": self._lutron_device.keypad.name,
             "led": self._lutron_device.name,
         }

@@ -196,7 +196,7 @@ class LutronXmlDbParser:
         """Parse a button device that part of a keypad.
 
         'Name' is Button x, where x is incremental position in the list and not the actual position on the keypad.
-        We don't use it. We sue component_number instead
+        We don't use it. We use component_number instead
         """
         # we should read button - actions  - action to get available button actions
 
@@ -285,16 +285,20 @@ class LutronXmlDbParser:
 
         These are defined outside the areas in the XML.  Areas refer to these
         objects by ID.
+        OccupancyGroup gets the integration_id from the area
         """
         return OccupancyGroup(
             name="Occupancy Group",
-            integration_id=None,
+            integration_id=0,
             group_number=group_xml.get("OccupancyGroupNumber"),
             uuid=group_xml.get("UUID"),
         )
 
     def _parse_sysvar(self, integration_id):
-        """Create a Sysvar object."""
+        """Create a Sysvar object.
+
+        We only have the integration_id available here, so we use that.
+        """
         return Sysvar(
             name=f"variable {integration_id}", integration_id=integration_id, uuid=None
         )
@@ -354,8 +358,9 @@ class Output(Device):
 
 @dataclass
 class KeypadComponent(Device):
-    """Base class for a keypad component such as a button, or an LED.
+    """Base class for a keypad component such as a button, or a LED.
 
+    The integration_id is the keypad ID.
     The lutron component number is referenced in commands and
     events. This is different from KeypadComponent.number because this property
     is only used for interfacing with the controller.
@@ -367,7 +372,7 @@ class KeypadComponent(Device):
 
     def __post_init__(self):
         """Set the legacy UUID for keypad components."""
-        self.legacy_uuid = f"{self.keypad.integration_id}-{self.component_number}"
+        self.legacy_uuid = f"{self.integration_id}-{self.component_number}"
 
 
 @dataclass

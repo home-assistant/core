@@ -79,8 +79,8 @@ class LutronEventEntity(LutronKeypadComponent, EventEntity):
             LutronEventType.DOUBLE_TAP,
         ]
 
-        self._full_id = slugify(f"{area_name} {self._keypad_name}: {name}")
-        self._id = slugify(f"{self._keypad_name}: {name}")
+        self._full_id = slugify(f"{device_name}: {name}")
+        self._id = slugify(f"{button.keypad.name}: {name}")  # e.g. keypad_12_btn_3
 
     def _update_callback(self, value: int):
         """Trigger an event.
