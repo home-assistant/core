@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
-        'Breeze',
+        'breeze',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -47,7 +47,7 @@
       'percentage_step': 16.666666666666668,
       'preset_mode': None,
       'preset_modes': list([
-        'Breeze',
+        'breeze',
       ]),
       'supported_features': <FanEntityFeature: 61>,
     }),

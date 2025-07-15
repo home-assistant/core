@@ -25,7 +25,7 @@ from . import WizConfigEntry
 from .entity import WizEntity
 from .models import WizData
 
-PRESET_MODE_BREEZE = "Breeze"
+PRESET_MODE_BREEZE = "breeze"
 
 
 async def async_setup_entry(
@@ -91,7 +91,7 @@ class WizFanEntity(WizEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        # preset_mode == PRESET_MODE_BREEZE:
+        # preset_mode == PRESET_MODE_BREEZE
         await self._device.fan_set_state(mode=2)
         await self.coordinator.async_request_refresh()
 
