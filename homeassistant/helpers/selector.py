@@ -117,11 +117,8 @@ def _validate_supported_feature(supported_feature: str) -> int:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
-def _validate_supported_features(supported_features: int | list[str]) -> int:
-    """Validate a supported feature and resolve an enum string to its value."""
-
-    if isinstance(supported_features, int):
-        return supported_features
+def _validate_supported_features(supported_features: list[str]) -> int:
+    """Validate supported features and resolve enum strings to their value."""
 
     feature_mask = 0
 
