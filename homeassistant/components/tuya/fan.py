@@ -30,7 +30,12 @@ TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
-    "kj",  # Air Purifier
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj",
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks",
 }
 
 

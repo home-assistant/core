@@ -431,6 +431,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="ionizer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Alarm Host
     # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
     "mal": (
