@@ -170,3 +170,60 @@
     'state': '5.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9.9,
+      'min': -9.9,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_temperature_correction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature correction',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_correction',
+    'unique_id': 'tuya.bfb45cb8a9452fba66lexgtemp_correction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][number.wifi_smart_gas_boiler_thermostat_temperature_correction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Temperature correction',
+      'max': 9.9,
+      'min': -9.9,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_temperature_correction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-1.5',
+  })
+# ---

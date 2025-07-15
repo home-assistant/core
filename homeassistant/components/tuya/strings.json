@@ -225,6 +225,9 @@
       },
       "upper_temp": {
         "name": "Maximum temperature"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
       }
     },
     "select": {
