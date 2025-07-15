@@ -160,6 +160,10 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# Legacy entity selector config schema used directly under entity selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
 LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
@@ -195,6 +199,10 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# Legacy device selector config schema used directly under device selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
 LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
