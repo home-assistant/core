@@ -75,6 +75,14 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "qxj_temp_humidity_external_probe": [
+        # https://github.com/home-assistant/core/issues/136472
+        Platform.SENSOR,
+    ],
+    "qxj_weather_station": [
+        # https://github.com/orgs/home-assistant/discussions/318
+        Platform.SENSOR,
+    ],
     "rqbj_gas_sensor": [
         # https://github.com/orgs/home-assistant/discussions/100
         Platform.BINARY_SENSOR,
