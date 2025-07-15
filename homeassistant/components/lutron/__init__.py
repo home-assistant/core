@@ -22,6 +22,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+SUPPORTED_COVER_OUTPUT_TYPES = ("SYSTEM_SHADE", "MOTOR")
+
 _LOGGER = logging.getLogger(__name__)
 
 # Attribute on events that indicates what action was taken with the button.
