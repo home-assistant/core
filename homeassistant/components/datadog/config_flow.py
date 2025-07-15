@@ -44,7 +44,15 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=f"Datadog {user_input['host']}", data={}, options=user_input
+                    title=f"Datadog {user_input['host']}",
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                    options={
+                        CONF_PREFIX: user_input[CONF_PREFIX],
+                        CONF_RATE: user_input[CONF_RATE],
+                    },
                 )
 
         return self.async_show_form(
@@ -79,7 +87,15 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=f"Datadog {import_config[CONF_HOST]}", data={}, options=import_config
+            title=f"Datadog {import_config[CONF_HOST]}",
+            data={
+                CONF_HOST: import_config[CONF_HOST],
+                CONF_PORT: import_config[CONF_PORT],
+            },
+            options={
+                CONF_PREFIX: import_config[CONF_PREFIX],
+                CONF_RATE: import_config[CONF_RATE],
+            },
         )
 
     @staticmethod
@@ -97,6 +113,7 @@ class DatadogOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Datadog options."""
         errors: dict[str, str] = {}
+        data = {**self.config_entry.data, **self.config_entry.options}
         if user_input:
             success = await validate_datadog_connection(
                 self.hass,
@@ -105,9 +122,11 @@ class DatadogOptionsFlowHandler(OptionsFlow):
             if not success:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(data=user_input)
+                return self.async_create_entry(
+                    title=f"Datadog {user_input['host']}",
+                    data=user_input,
+                )
 
-        data = self.config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(

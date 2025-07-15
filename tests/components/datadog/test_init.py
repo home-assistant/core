@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.setup import async_setup_component
 
-from .common import MOCK_CONFIG, create_mock_state
+from .common import MOCK_CONFIG, MOCK_DATA, MOCK_OPTIONS, create_mock_state
 
 from tests.common import EVENT_STATE_CHANGED, MockConfigEntry, assert_setup_component
 
@@ -171,7 +171,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ):
         entry = MockConfigEntry(
             domain=datadog.DOMAIN,
-            options=MOCK_CONFIG,
+            data=MOCK_DATA,
+            options=MOCK_OPTIONS,
         )
         entry.add_to_hass(hass)
 
@@ -275,7 +276,11 @@ async def test_deprecate_yaml_issue_success(hass: HomeAssistant) -> None:
 
 async def test_deprecate_yaml_issue_failure(hass: HomeAssistant) -> None:
     """Test failed YAML import deprecation issue with log warning."""
-    entry = MockConfigEntry(domain=datadog.DOMAIN, options=MOCK_CONFIG)
+    entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
+    )
 
     with (
         patch("homeassistant.components.datadog.async_create_issue") as mock_create,

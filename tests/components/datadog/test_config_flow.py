@@ -7,7 +7,7 @@ from homeassistant.components.datadog.config_flow import DatadogConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .common import MOCK_CONFIG
+from .common import MOCK_CONFIG, MOCK_DATA, MOCK_OPTIONS
 
 from tests.common import MockConfigEntry
 
@@ -28,8 +28,8 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         )
         assert result2["title"] == f"Datadog {MOCK_CONFIG['host']}"
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {}
-        assert result2["options"] == MOCK_CONFIG
+        assert result2["data"] == MOCK_DATA
+        assert result2["options"] == MOCK_OPTIONS
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -54,18 +54,17 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_CONFIG
         )
-
         assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["data"] == {}
-        assert result3["options"] == MOCK_CONFIG
+        assert result3["data"] == MOCK_DATA
+        assert result3["options"] == MOCK_OPTIONS
 
 
 async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test that the options flow shows an error when connection fails."""
     mock_entry = MockConfigEntry(
         domain=datadog.DOMAIN,
-        data={},
-        options=MOCK_CONFIG,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
         unique_id="datadog_unique",
     )
     mock_entry.add_to_hass(hass)
@@ -98,16 +97,16 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"] == {}
-        assert result["options"] == MOCK_CONFIG
+        assert result["data"] == MOCK_DATA
+        assert result["options"] == MOCK_OPTIONS
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test updating options after setup."""
     mock_entry = MockConfigEntry(
         domain=datadog.DOMAIN,
-        data={},
-        options=MOCK_CONFIG,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
         unique_id="datadog_unique",
     )
     mock_entry.add_to_hass(hass)
@@ -160,8 +159,8 @@ async def test_import_flow_abort_already_configured(hass: HomeAssistant) -> None
     """Test that import flow aborts if config already exists."""
     mock_entry = MockConfigEntry(
         domain=datadog.DOMAIN,
-        data=MOCK_CONFIG,
-        options=MOCK_CONFIG,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
     )
     mock_entry.add_to_hass(hass)
 

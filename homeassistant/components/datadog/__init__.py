@@ -71,7 +71,7 @@ async def deprecate_yaml_issue(
     hass: HomeAssistant, import_success: bool, entry: DatadogConfigEntry
 ) -> None:
     """Create an issue to deprecate YAML config."""
-    options = entry.options
+    data = entry.data
     if import_success:
         async_create_issue(
             hass,
@@ -103,19 +103,20 @@ async def deprecate_yaml_issue(
         )
         _LOGGER.warning(
             "Failed to import Datadog YAML config: could not connect to %s:%s",
-            options[CONF_HOST],
-            options[CONF_PORT],
+            data[CONF_HOST],
+            data[CONF_PORT],
         )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
     """Set up Datadog from a config entry."""
 
-    conf = entry.options
-    host = conf[CONF_HOST]
-    port = conf[CONF_PORT]
-    prefix = conf[CONF_PREFIX]
-    sample_rate = conf[CONF_RATE]
+    data = entry.data
+    options = entry.options
+    host = data[CONF_HOST]
+    port = data[CONF_PORT]
+    prefix = options[CONF_PREFIX]
+    sample_rate = options[CONF_RATE]
 
     statsd_client = DogStatsd(host=host, port=port, namespace=prefix)
     entry.runtime_data = statsd_client

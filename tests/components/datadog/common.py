@@ -2,12 +2,19 @@
 
 from unittest import mock
 
-MOCK_CONFIG = {
+# tests/components/datadog/common.py
+
+MOCK_DATA = {
     "host": "localhost",
     "port": 8125,
-    "prefix": "ha",
+}
+
+MOCK_OPTIONS = {
+    "prefix": "hass",
     "rate": 1,
 }
+
+MOCK_CONFIG = {**MOCK_DATA, **MOCK_OPTIONS}
 
 CONNECTION_TEST_METRIC = "connection_test"
 
