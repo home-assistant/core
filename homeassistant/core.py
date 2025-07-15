@@ -384,7 +384,7 @@ def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutinefunction(check_target):
+    if inspect.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
@@ -532,7 +532,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        _LOGGER.info("Starting Home Assistant")
+        _LOGGER.info("Starting Home Assistant %s", __version__)
 
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
