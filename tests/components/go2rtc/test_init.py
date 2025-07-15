@@ -120,6 +120,7 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -138,6 +139,7 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -685,7 +687,7 @@ async def test_generic_workaround(
     rest_client.get_jpeg_snapshot.return_value = image_bytes
     camera.set_stream_source("https://my_stream_url.m3u8")
 
-    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+    with patch.object(camera.platform, "platform_name", "generic"):
         image = await async_get_image(hass, camera.entity_id)
         assert image.content == image_bytes
 
@@ -694,5 +696,6 @@ async def test_generic_workaround(
         [
             "ffmpeg:https://my_stream_url.m3u8",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
