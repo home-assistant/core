@@ -31,6 +31,7 @@ from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
 from .entity import (
     EsphomeEntity,
+    async_esphome_state_property,
     convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
@@ -270,7 +271,9 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     """A update implementation for esphome."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
 
     @callback
@@ -300,11 +303,12 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         """Return the latest version."""
         return self._state.latest_version
 
-    @property
-    @esphome_state_property
-    def release_summary(self) -> str:
-        """Return the release summary."""
-        return self._state.release_summary
+    @async_esphome_state_property
+    async def async_release_notes(self) -> str | None:
+        """Return the release notes."""
+        if self._state.release_summary:
+            return self._state.release_summary
+        return None
 
     @property
     @esphome_state_property
@@ -330,11 +334,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     async def async_update(self) -> None:
         """Command device to check for update."""
         if self.available:
-            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+            self._client.update_command(
+                key=self._key,
+                command=UpdateCommand.CHECK,
+                device_id=self._static_info.device_id,
+            )
 
     @convert_api_error_ha_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Command device to install update."""
-        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)
+        self._client.update_command(
+            key=self._key,
+            command=UpdateCommand.INSTALL,
+            device_id=self._static_info.device_id,
+        )

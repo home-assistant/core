@@ -3,7 +3,7 @@
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
@@ -34,7 +34,9 @@ async def init_integration(
     )
 
     aioclient_mock.get(
-        API_POINT_URL, text=load_fixture("valid_station.json", DOMAIN), headers=HEADERS
+        API_POINT_URL,
+        text=await async_load_fixture(hass, "valid_station.json", DOMAIN),
+        headers=HEADERS,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

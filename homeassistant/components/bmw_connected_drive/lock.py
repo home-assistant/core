@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
@@ -71,7 +71,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
             self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="remote_service_error",
                 translation_placeholders={"exception": str(ex)},
             ) from ex
@@ -95,7 +95,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
             self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="remote_service_error",
                 translation_placeholders={"exception": str(ex)},
             ) from ex

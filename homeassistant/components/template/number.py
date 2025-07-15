@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_STATE,
-    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -35,11 +34,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-)
+from .helpers import async_setup_template_platform
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,23 +45,17 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_STEP): cv.template,
-            vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-            vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+NUMBER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_STEP): cv.template,
+        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 NUMBER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
@@ -80,19 +70,6 @@ NUMBER_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateNumber]:
-    """Create the Template number."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateNumber(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -100,23 +77,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template number."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template number entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerNumberEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        NUMBER_DOMAIN,
+        config,
+        StateNumberEntity,
+        TriggerNumberEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
@@ -129,19 +97,21 @@ async def async_setup_entry(
     _options = dict(config_entry.options)
     _options.pop("template_type")
     validated_config = NUMBER_CONFIG_SCHEMA(_options)
-    async_add_entities([TemplateNumber(hass, validated_config, config_entry.entry_id)])
+    async_add_entities(
+        [StateNumberEntity(hass, validated_config, config_entry.entry_id)]
+    )
 
 
 @callback
 def async_create_preview_number(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> TemplateNumber:
+) -> StateNumberEntity:
     """Create a preview number."""
     validated_config = NUMBER_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return TemplateNumber(hass, validated_config, None)
+    return StateNumberEntity(hass, validated_config, None)
 
 
-class TemplateNumber(TemplateEntity, NumberEntity):
+class StateNumberEntity(TemplateEntity, NumberEntity):
     """Representation of a template number."""
 
     _attr_should_poll = False

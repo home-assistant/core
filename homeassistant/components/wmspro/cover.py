@@ -8,6 +8,7 @@ from typing import Any
 from wmspro.const import (
     WMS_WebControl_pro_API_actionDescription,
     WMS_WebControl_pro_API_actionType,
+    WMS_WebControl_pro_API_responseType,
 )
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
 
@@ -45,11 +46,14 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     """Base representation of a WMS based cover."""
 
     _drive_action_desc: WMS_WebControl_pro_API_actionDescription
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         action = self._dest.action(self._drive_action_desc)
+        if action is None or action["percentage"] is None:
+            return None
         return 100 - action["percentage"]
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -78,7 +82,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
             WMS_WebControl_pro_API_actionDescription.ManualCommand,
             WMS_WebControl_pro_API_actionType.Stop,
         )
-        await action()
+        await action(responseType=WMS_WebControl_pro_API_responseType.Detailed)
 
 
 class WebControlProAwning(WebControlProCover):
