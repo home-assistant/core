@@ -120,7 +120,6 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -139,7 +138,6 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -696,6 +694,5 @@ async def test_generic_workaround(
         [
             "ffmpeg:https://my_stream_url.m3u8",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
