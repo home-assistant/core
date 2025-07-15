@@ -30,6 +30,11 @@ class Callbacks:
     connect: list[Callable[[bool], Awaitable[None]]] = field(default_factory=list)
     update: list[Callable[[Status], Awaitable[None]]] = field(default_factory=list)
 
+    def clear(self) -> None:
+        """Clear all callbacks."""
+        self.connect.clear()
+        self.update.clear()
+
 
 class ReceiverManager:
     """Receiver manager."""
@@ -92,6 +97,10 @@ class ReceiverManager:
         """Write message to the receiver."""
         assert self.receiver is not None
         await self.receiver.write(message)
+
+    def close(self) -> None:
+        """Close the receiver manager."""
+        self.callbacks.clear()
 
 
 async def async_interview(host: str) -> ReceiverInfo | None:

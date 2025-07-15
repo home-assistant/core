@@ -91,8 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Unload Onkyo config entry."""
     del hass.data[DATA_MP_ENTITIES][entry.entry_id]
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # the connection will be automatically closed when the background task is cancelled
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    entry.runtime_data.manager.close()
+
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
