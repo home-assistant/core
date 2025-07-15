@@ -60,12 +60,7 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         today = now.date()
 
         self.data.dateinfo = HDateInfo(today, self.data.diaspora)
-        self.data.zmanim = Zmanim(
-            date=today,
-            location=self.data.location,
-            candle_lighting_offset=self.data.candle_lighting_offset,
-            havdalah_offset=self.data.havdalah_offset,
-        )
+        self.data.zmanim = self.make_zmanim(today)
         self.async_schedule_future_update()
         return self.data
 
