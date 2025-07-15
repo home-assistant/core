@@ -7,13 +7,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
+from homeassistant.components.image import (
+    DOMAIN as IMAGE_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ImageEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -91,6 +94,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
 
     _attr_should_poll = False
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -99,13 +103,9 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the image."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -135,6 +135,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
     """Image entity based on trigger data."""
 
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)

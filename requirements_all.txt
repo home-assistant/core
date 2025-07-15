@@ -1234,7 +1234,7 @@ ihcsdk==2.8.5
 imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.2.0
+imgw_pib==1.4.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -2526,7 +2526,7 @@ python-vlc==3.0.18122
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.3.0
+pythonkuma==0.3.1
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -3172,7 +3172,7 @@ yolink-api==0.5.7
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==1.1.5
+youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2025.06.09
