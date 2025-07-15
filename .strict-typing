@@ -535,6 +535,7 @@ homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*
 homeassistant.components.uptime.*
+homeassistant.components.uptime_kuma.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.uvc.*

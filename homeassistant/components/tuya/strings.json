@@ -906,6 +906,12 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "arm_beep": {
+        "name": "Arm beep"
+      },
+      "siren": {
+        "name": "Siren"
       }
     }
   }

@@ -77,7 +77,7 @@ async def test_fan_entity_with_all_features_old_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, speed=FanSpeed.LOW, state=True)]
+        [call(key=1, speed=FanSpeed.LOW, state=True, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -88,7 +88,7 @@ async def test_fan_entity_with_all_features_old_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, speed=FanSpeed.MEDIUM, state=True)]
+        [call(key=1, speed=FanSpeed.MEDIUM, state=True, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -99,7 +99,7 @@ async def test_fan_entity_with_all_features_old_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, speed=FanSpeed.LOW, state=True)]
+        [call(key=1, speed=FanSpeed.LOW, state=True, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -110,7 +110,7 @@ async def test_fan_entity_with_all_features_old_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, speed=FanSpeed.HIGH, state=True)]
+        [call(key=1, speed=FanSpeed.HIGH, state=True, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -120,7 +120,7 @@ async def test_fan_entity_with_all_features_old_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.fan_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -130,7 +130,7 @@ async def test_fan_entity_with_all_features_old_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, speed=FanSpeed.HIGH, state=True)]
+        [call(key=1, speed=FanSpeed.HIGH, state=True, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -182,7 +182,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PERCENTAGE: 20},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, speed_level=1, state=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, speed_level=1, state=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -191,7 +193,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, speed_level=2, state=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, speed_level=2, state=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -200,7 +204,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, speed_level=2, state=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, speed_level=2, state=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -209,7 +215,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, speed_level=4, state=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, speed_level=4, state=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -218,7 +226,7 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.fan_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -227,7 +235,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PERCENTAGE: 100},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, speed_level=4, state=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, speed_level=4, state=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -236,7 +246,7 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PERCENTAGE: 0},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.fan_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -245,7 +255,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_OSCILLATING: True},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, oscillating=True)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, oscillating=True, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -254,7 +266,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_OSCILLATING: False},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, oscillating=False)])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, oscillating=False, device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -264,7 +278,7 @@ async def test_fan_entity_with_all_features_new_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, direction=FanDirection.FORWARD)]
+        [call(key=1, direction=FanDirection.FORWARD, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -275,7 +289,7 @@ async def test_fan_entity_with_all_features_new_api(
         blocking=True,
     )
     mock_client.fan_command.assert_has_calls(
-        [call(key=1, direction=FanDirection.REVERSE)]
+        [call(key=1, direction=FanDirection.REVERSE, device_id=0)]
     )
     mock_client.fan_command.reset_mock()
 
@@ -285,7 +299,9 @@ async def test_fan_entity_with_all_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PRESET_MODE: "Preset1"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, preset_mode="Preset1")])
+    mock_client.fan_command.assert_has_calls(
+        [call(key=1, preset_mode="Preset1", device_id=0)]
+    )
     mock_client.fan_command.reset_mock()
 
 
@@ -326,7 +342,7 @@ async def test_fan_entity_with_no_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, state=True)])
+    mock_client.fan_command.assert_has_calls([call(key=1, state=True, device_id=0)])
     mock_client.fan_command.reset_mock()
 
     await hass.services.async_call(
@@ -335,5 +351,5 @@ async def test_fan_entity_with_no_features_new_api(
         {ATTR_ENTITY_ID: "fan.test_my_fan"},
         blocking=True,
     )
-    mock_client.fan_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.fan_command.assert_has_calls([call(key=1, state=False, device_id=0)])
     mock_client.fan_command.reset_mock()
