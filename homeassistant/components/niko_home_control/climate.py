@@ -84,7 +84,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
             NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP.get(hvac_mode)
         )
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn thermostat off."""
         await self._action.set_mode(NIKO_HOME_CONTROL_THERMOSTAT_MODES.OFF)
 
