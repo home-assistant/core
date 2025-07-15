@@ -5,12 +5,19 @@ from unittest.mock import patch
 
 from homeassistant.components import datadog
 from homeassistant.components.datadog import async_setup_entry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import MOCK_DATA, MOCK_OPTIONS, create_mock_state
+from .common import (
+    MOCK_DATA,
+    MOCK_OPTIONS,
+    MOCK_YAML_INVALID,
+    MOCK_YAML_VALID,
+    create_mock_state,
+)
 
 from tests.common import EVENT_STATE_CHANGED, MockConfigEntry, assert_setup_component
 
@@ -212,26 +219,44 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
 
 
 async def test_yaml_import_creates_deprecation_issue(hass: HomeAssistant) -> None:
-    """Test that importing from YAML creates a deprecation issue (success path)."""
-    await datadog.issues.deprecate_yaml_issue(hass, import_success=True)
+    """Test that importing deprecated YAML creates a deprecation issue."""
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            datadog.DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_YAML_VALID,
+        )
+        assert result["type"] == "create_entry"
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.issues.get(
-        (datadog.DOMAIN, f"deprecated_yaml_{datadog.DOMAIN}")
-    )
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml"
-    assert issue.severity == ir.IssueSeverity.WARNING
+        issue_registry = ir.async_get(hass)
+        issue = issue_registry.issues.get(
+            (datadog.DOMAIN, f"deprecated_yaml_{datadog.DOMAIN}")
+        )
+        assert issue is not None
+        assert issue.translation_key == "deprecated_yaml"
+        assert issue.severity == ir.IssueSeverity.WARNING
 
 
 async def test_yaml_import_connection_error_issue(hass: HomeAssistant) -> None:
-    """Test that import failure creates a connection error deprecation issue."""
-    await datadog.issues.deprecate_yaml_issue(hass, import_success=False)
+    """Test that importing invalid YAML creates a connection error deprecation issue."""
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd",
+        side_effect=OSError("connection refused"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            datadog.DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_YAML_INVALID,
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.issues.get(
-        (datadog.DOMAIN, "deprecated_yaml_import_connection_error")
-    )
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml_import_connection_error"
-    assert issue.severity == ir.IssueSeverity.WARNING
+        issue_registry = ir.async_get(hass)
+        issue = issue_registry.issues.get(
+            (datadog.DOMAIN, "deprecated_yaml_import_connection_error")
+        )
+        assert issue is not None
+        assert issue.translation_key == "deprecated_yaml_import_connection_error"
+        assert issue.severity == ir.IssueSeverity.WARNING
