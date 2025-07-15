@@ -5,7 +5,7 @@
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     },
     "subentry_migration_discovery": {
-      "title": "MQTT Device \"{name}\" subentry migration to MQTT discovery",
+      "title": "MQTT device \"{name}\" subentry migration to MQTT discovery",
       "fix_flow": {
         "step": {
           "confirm": {
@@ -16,7 +16,7 @@
       }
     },
     "subentry_migration_yaml": {
-      "title": "MQTT Device \"{name}\" subentry migration to YAML",
+      "title": "MQTT device \"{name}\" subentry migration to YAML",
       "fix_flow": {
         "step": {
           "confirm": {
@@ -129,10 +129,10 @@
   "config_subentries": {
     "device": {
       "initiate_flow": {
-        "user": "Add MQTT Device",
-        "reconfigure": "Reconfigure MQTT Device"
+        "user": "Add MQTT device",
+        "reconfigure": "Reconfigure MQTT device"
       },
-      "entry_type": "MQTT Device",
+      "entry_type": "MQTT device",
       "step": {
         "availability": {
           "title": "Availability options",
