@@ -27,6 +27,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
     "awesomeversion": "CalVer",
+    "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
@@ -221,11 +222,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
     },
-    "mystrom": {
-        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
-        # python-mystrom > setuptools
-        "python-mystrom": {"setuptools"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "nx584": {
@@ -246,7 +242,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
-    "pi_hole": {"hole": {"async-timeout"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -298,10 +293,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "bluetooth": {
-        # https://github.com/hbldh/bleak/pull/1718 (not yet released)
-        "homeassistant": {"bleak"}
-    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
@@ -502,17 +493,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (
-            (requires_python := metadata(package)["Requires-Python"])
-            and not all(
-                _is_dependency_version_range_valid(version_part, "SemVer")
-                for version_part in requires_python.split(",")
-            )
-            # "bleak" is a transient dependency of 53 integrations, and we don't
-            # want to add the whole list to PYTHON_VERSION_CHECK_EXCEPTIONS
-            # This extra check can be removed when bleak is updated
-            # https://github.com/hbldh/bleak/pull/1718
-            and (package in packages or package != "bleak")
+        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+            _is_dependency_version_range_valid(version_part, "SemVer")
+            for version_part in requires_python.split(",")
         ):
             needs_python_version_check_exception = True
             integration.add_warning_or_error(

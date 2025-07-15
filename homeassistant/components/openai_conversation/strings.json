@@ -68,6 +68,52 @@
       "error": {
         "model_not_supported": "This model is not supported, please select a different model"
       }
+    },
+    "ai_task_data": {
+      "initiate_flow": {
+        "user": "Add Generate data with AI service",
+        "reconfigure": "Reconfigure Generate data with AI service"
+      },
+      "entry_type": "Generate data with AI service",
+      "step": {
+        "init": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::recommended%]"
+          }
+        },
+        "advanced": {
+          "title": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::title%]",
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::temperature%]",
+            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::top_p%]"
+          }
+        },
+        "model": {
+          "title": "[%key:component::openai_conversation::config_subentries::conversation::step::model::title%]",
+          "data": {
+            "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
+            "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]",
+            "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
+            "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]"
+          },
+          "data_description": {
+            "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
+            "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]",
+            "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
+            "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]"
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
+      },
+      "error": {
+        "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]"
+      }
     }
   },
   "selector": {

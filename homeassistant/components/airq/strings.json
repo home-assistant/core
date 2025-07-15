@@ -93,9 +93,6 @@
       "health_index": {
         "name": "Health index"
       },
-      "absolute_humidity": {
-        "name": "Absolute humidity"
-      },
       "hydrogen": {
         "name": "Hydrogen"
       },

@@ -1,6 +1,7 @@
 """The tests for the REST sensor platform."""
 
 from http import HTTPStatus
+import logging
 import ssl
 from unittest.mock import patch
 
@@ -19,6 +20,14 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
+    CONF_FORCE_UPDATE,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PARAMS,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -160,6 +169,94 @@ async def test_setup_encoding(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.mysensor").state == "tack själv"
+
+
+async def test_setup_auto_encoding_from_content_type(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with encoding auto-detected from Content-Type header."""
+    # Test with ISO-8859-1 charset in Content-Type header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode("iso-8859-1"),
+        headers={"Content-Type": "text/plain; charset=iso-8859-1"},
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                # encoding defaults to UTF-8, but should be ignored when charset present
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
+
+
+async def test_setup_encoding_fallback_no_charset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that configured encoding is used when no charset in Content-Type."""
+    # No charset in Content-Type header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode("iso-8859-1"),
+        headers={"Content-Type": "text/plain"},  # No charset!
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",  # This will be used as fallback
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
+
+
+async def test_setup_charset_overrides_encoding_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that charset in Content-Type overrides configured encoding."""
+    # Server sends UTF-8 with correct charset header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode(),
+        headers={"Content-Type": "text/plain; charset=utf-8"},
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",  # Config says ISO-8859-1, but charset=utf-8 should win
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    # This should work because charset=utf-8 overrides the iso-8859-1 config
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
 
 
 @pytest.mark.parametrize(
@@ -976,6 +1073,124 @@ async def test_update_with_failed_get(
     assert state.state == STATE_UNKNOWN
     assert "REST xml result could not be parsed" in caplog.text
     assert "Empty reply" in caplog.text
+
+
+async def test_query_param_dict_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test dict values in query params are handled for backward compatibility."""
+    # Mock response
+    aioclient_mock.post(
+        "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
+        status=HTTPStatus.OK,
+        json={"Data": {"QueryResults": [{"POWER": 1500}]}},
+    )
+
+    # This test checks that when template_complex processes a string that looks like
+    # a dict/list, it converts it to an actual dict/list, which then needs to be
+    # handled by our backward compatibility code
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.rest.data"):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: [
+                    {
+                        CONF_RESOURCE: (
+                            "https://www.envertecportal.com/ApiInverters/"
+                            "QueryTerminalReal"
+                        ),
+                        CONF_METHOD: "POST",
+                        CONF_PARAMS: {
+                            "page": "1",
+                            "perPage": "20",
+                            "orderBy": "SN",
+                            # When processed by template.render_complex, certain
+                            # strings might be converted to dicts/lists if they
+                            # look like JSON
+                            "whereCondition": (
+                                "{{ {'STATIONID': 'A6327A17797C1234'} }}"
+                            ),  # Template that evaluates to dict
+                        },
+                        "sensor": [
+                            {
+                                CONF_NAME: "Solar MPPT1 Power",
+                                CONF_VALUE_TEMPLATE: (
+                                    "{{ value_json.Data.QueryResults[0].POWER }}"
+                                ),
+                                CONF_DEVICE_CLASS: "power",
+                                CONF_UNIT_OF_MEASUREMENT: "W",
+                                CONF_FORCE_UPDATE: True,
+                                "state_class": "measurement",
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    # The sensor should be created successfully with backward compatibility
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    state = hass.states.get("sensor.solar_mppt1_power")
+    assert state is not None
+    assert state.state == "1500"
+
+    # Check that a debug message was logged about the parameter conversion
+    assert "REST query parameter 'whereCondition' has type" in caplog.text
+    assert "converting to string" in caplog.text
+
+
+async def test_query_param_json_string_preserved(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that JSON strings in query params are preserved and not converted to dicts."""
+    # Mock response
+    aioclient_mock.get(
+        "https://api.example.com/data",
+        status=HTTPStatus.OK,
+        json={"value": 42},
+    )
+
+    # Config with JSON string (quoted) - should remain a string
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    CONF_RESOURCE: "https://api.example.com/data",
+                    CONF_METHOD: "GET",
+                    CONF_PARAMS: {
+                        "filter": '{"type": "sensor", "id": 123}',  # JSON string
+                        "normal": "value",
+                    },
+                    "sensor": [
+                        {
+                            CONF_NAME: "Test Sensor",
+                            CONF_VALUE_TEMPLATE: "{{ value_json.value }}",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Check the sensor was created
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "42"
+
+    # Verify the request was made with the JSON string intact
+    assert len(aioclient_mock.mock_calls) == 1
+    method, url, data, headers = aioclient_mock.mock_calls[0]
+    assert url.query["filter"] == '{"type": "sensor", "id": 123}'
+    assert url.query["normal"] == "value"
 
 
 async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
