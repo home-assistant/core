@@ -63,18 +63,14 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         self._attr_is_on = power == "on"
         self.preset_mode = mode
         self.percentage = int(fan_speed)
+        self._attr_supported_features = (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
         if self.is_on and mode == BatteryCirculatorFanMode.DIRECT.value:
-            self._attr_supported_features = (
+            self._attr_supported_features |= (
                 FanEntityFeature.SET_SPEED
-                | FanEntityFeature.PRESET_MODE
-                | FanEntityFeature.TURN_OFF
-                | FanEntityFeature.TURN_ON
-            )
-        else:
-            self._attr_supported_features = (
-                FanEntityFeature.PRESET_MODE
-                | FanEntityFeature.TURN_OFF
-                | FanEntityFeature.TURN_ON
             )
 
     async def async_turn_on(
