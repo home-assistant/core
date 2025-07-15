@@ -14,13 +14,7 @@ from homeassistant.components.select import (
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
@@ -33,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
@@ -65,19 +60,6 @@ SELECT_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateSelect]:
-    """Create the Template select."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateSelect(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -85,23 +67,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template select."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template select entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerSelectEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        SELECT_DOMAIN,
+        config,
+        TemplateSelect,
+        TriggerSelectEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
