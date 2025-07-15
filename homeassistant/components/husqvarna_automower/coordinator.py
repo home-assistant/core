@@ -61,14 +61,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_in_register: dict[str, set[int]] = {}
 
-    def _async_add_remove_devices_and_entities(self, data: MowerDictionary) -> None:
-        """Add/remove devices and dynamic entities, when amount of devices changed."""
-        self._async_add_remove_devices(data)
-        for mower_id in data:
-            if data[mower_id].capabilities.stay_out_zones:
-                self._async_add_remove_stay_out_zones(data)
-            if data[mower_id].capabilities.work_areas:
-                self._async_add_remove_work_areas(data)
+        self.async_add_listener(self._on_data_update)
 
     async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""
@@ -110,7 +103,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     _LOGGER.debug(
                         "New work area %s detected, refreshing data", work_area_id
                     )
-
                     await self.async_request_refresh()
                     return
 
@@ -215,7 +207,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         entity_registry = er.async_get(self.hass)
 
         registered_zones: dict[str, set[str]] = {}
-        for mower_id in data:
+        for mower_id in self.data:
             registered_zones[mower_id] = set()
             for entity_entry in er.async_entries_for_config_entry(
                 entity_registry, self.config_entry.entry_id
@@ -244,7 +236,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     if entity_entry.unique_id == f"{mower_id}_{zone_id}_stay_out_zones":
                         entity_registry.async_remove(entity_entry.entity_id)
 
-    def _async_add_remove_work_areas(self, data: MowerDictionary) -> None:
+    def _async_add_remove_work_areas(self) -> None:
         """Add new work areas, remove non-existing work areas."""
         current_areas = {
             mower_id: set(mower_data.work_areas)
@@ -275,7 +267,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             removed_areas = previous_ids - current_ids
 
             if new_areas:
-                self.data = data
                 for area_callback in self.new_areas_callbacks:
                     area_callback(mower_id, new_areas)
 
