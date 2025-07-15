@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from aioautomower.exceptions import (
@@ -13,7 +13,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import MowerDictionary
+from aioautomower.model import MowerDictionary, MowerStates
 from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
-
+PONG_TIMEOUT = timedelta(seconds=90)
+PING_INTERVAL = timedelta(seconds=10)
+PING_TIMEOUT = timedelta(seconds=5)
 type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
@@ -60,7 +62,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._devices_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
+        self.pong: datetime | None = None
+
         self.async_add_listener(self._on_data_update)
+        self.api.register_pong_callback(self._on_pong)
 
     async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""
@@ -68,6 +73,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             await self.api.connect()
             self.api.register_data_callback(self.handle_websocket_updates)
             self.ws_connected = True
+
+            def start_watchdog() -> None:
+                self.hass.create_task(self._pong_watchdog())
+
+            self.api.register_ws_ready_callback(start_watchdog)
         try:
             data = await self.api.get_status()
         except ApiError as err:
@@ -88,6 +98,14 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     self._async_add_remove_work_areas()
 
     @callback
+    def _on_pong(self, timestamp: datetime) -> None:
+        """Callback from aioautomower when a pong (empty message) is received."""
+        self.pong = timestamp
+        if not self._should_poll() and self.update_interval is not None:
+            _LOGGER.debug("All mowers inactive and websocket alive: stop polling")
+            self.update_interval = None
+
+    @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.hass.async_create_task(self._process_websocket_update(ws_data))
@@ -104,6 +122,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     )
                     await self.async_request_refresh()
                     return
+
+        if self.update_interval is None and self._should_poll():
+            _LOGGER.debug("Polling re-enabled via WebSocket: at least one mower active")
+            self.update_interval = SCAN_INTERVAL
 
         self.async_set_updated_data(ws_data)
 
@@ -153,6 +175,32 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 self.client_listen(hass, entry, automower_client),
                 "reconnect_task",
             )
+
+    def _should_poll(self) -> bool:
+        """Return True if at least one mower is connected or not OFF."""
+        return any(
+            mower.metadata.connected or mower.mower.state != MowerStates.OFF
+            for mower in self.data.values()
+        )
+
+    async def _pong_watchdog(self) -> None:
+        _LOGGER.debug("Watchdog started")
+        try:
+            while True:
+                _LOGGER.debug("Sending ping")
+                success = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", success)
+
+                await asyncio.sleep(60)
+
+                if self.pong is None or (datetime.now(tz=UTC) - self.pong) >= timedelta(
+                    seconds=90
+                ):
+                    _LOGGER.warning("No pong received → restart polling")
+                    if self.update_interval != SCAN_INTERVAL:
+                        self.update_interval = SCAN_INTERVAL
+        except asyncio.CancelledError:
+            _LOGGER.debug("Watchdog cancelled")
 
     def _async_add_remove_devices(self) -> None:
         """Add new device, remove non-existing device."""
