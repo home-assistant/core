@@ -241,3 +241,18 @@ async def test_temperature_sensor_registry_lookup(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "unknown"
+
+
+@pytest.mark.parametrize("load_device_file", ["vacuum_device.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_vacuum_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: None,
+) -> None:
+    """Test robot vacuum cleaner sensor state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
