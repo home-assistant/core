@@ -5,7 +5,7 @@ import datetime as dt
 import logging
 
 from hdate import HDateInfo, Location, Zmanim
-from hdate.translator import Language
+from hdate.translator import Language, set_language
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -47,32 +47,27 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         data: JewishCalendarData,
     ) -> None:
         """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            config_entry=config_entry,
-            update_method=self.async_update_data,
-        )
-        self.config_data = data
+        super().__init__(hass, _LOGGER, name=DOMAIN, config_entry=config_entry)
+        self.data = data
         self._unsub_update: CALLBACK_TYPE | None = None
+        set_language(data.language)
 
-    async def async_update_data(self) -> JewishCalendarData:
+    async def _async_update_data(self) -> JewishCalendarData:
         """Return HDate and Zmanim for today."""
         now = dt_util.now()
-        _LOGGER.debug("Now: %s Location: %r", now, self.config_data.location)
+        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
 
         today = now.date()
 
-        self.config_data.dateinfo = HDateInfo(today, self.config_data.diaspora)
-        self.config_data.zmanim = Zmanim(
+        self.data.dateinfo = HDateInfo(today, self.data.diaspora)
+        self.data.zmanim = Zmanim(
             date=today,
-            location=self.config_data.location,
-            candle_lighting_offset=self.config_data.candle_lighting_offset,
-            havdalah_offset=self.config_data.havdalah_offset,
+            location=self.data.location,
+            candle_lighting_offset=self.data.candle_lighting_offset,
+            havdalah_offset=self.data.havdalah_offset,
         )
         self.async_schedule_future_update()
-        return self.config_data
+        return self.data
 
     @callback
     def async_schedule_future_update(self) -> None:
@@ -96,7 +91,7 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
     def _handle_midnight_update(self, _now: dt.datetime) -> None:
         """Handle midnight update callback."""
         self._unsub_update = None
-        self.async_set_updated_data(self.config_data)
+        self.async_set_updated_data(self.data)
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled updates when the coordinator is shutting down."""
@@ -109,9 +104,9 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         """Create a Zmanim object."""
         return Zmanim(
             date=date,
-            location=self.config_data.location,
-            candle_lighting_offset=self.config_data.candle_lighting_offset,
-            havdalah_offset=self.config_data.havdalah_offset,
+            location=self.data.location,
+            candle_lighting_offset=self.data.candle_lighting_offset,
+            havdalah_offset=self.data.havdalah_offset,
         )
 
     @property
