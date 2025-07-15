@@ -2526,7 +2526,7 @@ python-vlc==3.0.18122
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.3.0
+pythonkuma==0.3.1
 
 # homeassistant.components.tile
 pytile==2024.12.0
