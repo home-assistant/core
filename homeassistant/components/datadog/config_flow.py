@@ -73,13 +73,21 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
+        # Check for duplicates
+        for entry in self._async_current_entries():
+            if (
+                entry.data.get(CONF_HOST) == import_config[CONF_HOST]
+                and entry.data.get(CONF_PORT) == import_config[CONF_PORT]
+            ):
+                return self.async_abort(reason="already_configured_service")
+
         result = await self.async_step_user(import_config)
+
         if errors := result.get("errors"):
             await deprecate_yaml_issue(self.hass, False)
             return self.async_abort(reason=errors["base"])
 
         await deprecate_yaml_issue(self.hass, True)
-
         return result
 
     @staticmethod

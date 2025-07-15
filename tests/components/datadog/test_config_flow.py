@@ -197,3 +197,24 @@ async def test_import_flow_abort_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_abort_already_configured_service(
+    hass: HomeAssistant,
+) -> None:
+    """Abort import if the same host/port is already configured."""
+    existing_entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        datadog.DOMAIN,
+        context={"source": "import"},
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured_service"
