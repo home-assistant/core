@@ -51,16 +51,18 @@ async def auto_setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_receiver: AsyncMock,
+    writes: list[Instruction],
 ) -> AsyncGenerator[None]:
     """Auto setup integration."""
     with (
-        patch.multiple(
-            "homeassistant.components.onkyo.media_player",
-            AUDIO_VIDEO_INFORMATION_UPDATE_WAIT_TIME=0,
+        patch(
+            "homeassistant.components.onkyo.media_player.AUDIO_VIDEO_INFORMATION_UPDATE_WAIT_TIME",
+            0,
         ),
         patch("homeassistant.components.onkyo.PLATFORMS", [Platform.MEDIA_PLAYER]),
     ):
         await setup_integration(hass, mock_config_entry)
+        writes.clear()
         yield
 
 
@@ -74,90 +76,49 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_turn_on(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test turn on."""
-    writes.clear()
+@pytest.mark.parametrize(
+    ("action", "action_data", "message"),
+    [
+        (SERVICE_TURN_ON, {}, command.Power(Zone.MAIN, command.Power.Param.ON)),
+        (SERVICE_TURN_OFF, {}, command.Power(Zone.MAIN, command.Power.Param.STANDBY)),
+        (
+            SERVICE_VOLUME_SET,
+            {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            command.Volume(Zone.MAIN, 40),
+        ),
+        (SERVICE_VOLUME_UP, {}, command.Volume(Zone.MAIN, command.Volume.Param.UP)),
+        (SERVICE_VOLUME_DOWN, {}, command.Volume(Zone.MAIN, command.Volume.Param.DOWN)),
+        (
+            SERVICE_VOLUME_MUTE,
+            {ATTR_MEDIA_VOLUME_MUTED: True},
+            command.Muting(Zone.MAIN, command.Muting.Param.ON),
+        ),
+        (
+            SERVICE_VOLUME_MUTE,
+            {ATTR_MEDIA_VOLUME_MUTED: False},
+            command.Muting(Zone.MAIN, command.Muting.Param.OFF),
+        ),
+    ],
+)
+async def test_actions(
+    hass: HomeAssistant,
+    writes: list[Instruction],
+    action: str,
+    action_data: dict,
+    message: Instruction,
+) -> None:
+    """Test actions."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        action,
+        {ATTR_ENTITY_ID: ENTITY_ID, **action_data},
         blocking=True,
     )
-    assert writes[0] == command.Power(Zone.MAIN, command.Power.Param.ON)
-
-
-async def test_turn_off(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test turn off."""
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert writes[0] == command.Power(Zone.MAIN, command.Power.Param.STANDBY)
-
-
-async def test_volume_set(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test volume set."""
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
-        blocking=True,
-    )
-    assert writes[0] == command.Volume(Zone.MAIN, 40)
-
-
-async def test_volume_up(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test volume up."""
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert writes[0] == command.Volume(Zone.MAIN, command.Volume.Param.UP)
-
-
-async def test_volume_down(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test volume down."""
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert writes[0] == command.Volume(Zone.MAIN, command.Volume.Param.DOWN)
-
-
-async def test_volume_mute(hass: HomeAssistant, writes: list[Instruction]) -> None:
-    """Test volume mute."""
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
-        blocking=True,
-    )
-    assert writes[0] == command.Muting(Zone.MAIN, command.Muting.Param.ON)
-
-    writes.clear()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
-        blocking=True,
-    )
-    assert writes[0] == command.Muting(Zone.MAIN, command.Muting.Param.OFF)
+    assert writes[0] == message
 
 
 async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> None:
     """Test select source."""
-    writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -181,7 +142,6 @@ async def test_select_sound_mode(
     hass: HomeAssistant, writes: list[Instruction]
 ) -> None:
     """Test select sound mode."""
-    writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOUND_MODE,
@@ -205,7 +165,6 @@ async def test_select_sound_mode(
 
 async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> None:
     """Test play media (radio preset)."""
-    writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -262,7 +221,6 @@ async def test_select_hdmi_output(
     hass: HomeAssistant, writes: list[Instruction]
 ) -> None:
     """Test select hdmi output."""
-    writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_HDMI_OUTPUT,

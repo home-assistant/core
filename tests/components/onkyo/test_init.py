@@ -54,10 +54,10 @@ async def test_initialization_failure(
 async def test_connection_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_receiver_class: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test connection failure."""
-    mock_receiver_class.open_connection.side_effect = OSError
+    mock_connect.side_effect = OSError
 
     await setup_integration(hass, mock_config_entry)
 
@@ -67,8 +67,8 @@ async def test_connection_failure(
 @pytest.mark.usefixtures("mock_receiver")
 async def test_reconnect(
     hass: HomeAssistant,
-    mock_receiver_class: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
     read_queue: asyncio.Queue[Status | None],
 ) -> None:
     """Test reconnect."""
@@ -76,14 +76,14 @@ async def test_reconnect(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_receiver_class.open_connection.reset_mock()
+    mock_connect.reset_mock()
 
-    assert mock_receiver_class.open_connection.call_count == 0
+    assert mock_connect.call_count == 0
 
     read_queue.put_nowait(None)  # Simulate a disconnect
     await asyncio.sleep(0)
 
-    assert mock_receiver_class.open_connection.call_count == 1
+    assert mock_connect.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_receiver")

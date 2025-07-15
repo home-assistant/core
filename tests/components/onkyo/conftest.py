@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aioonkyo import Code, Instruction, Kind, Status, Zone, status
+from aioonkyo import Code, Instruction, Kind, Receiver, Status, Zone, status
 import pytest
 
 from homeassistant.components.onkyo.const import DOMAIN
@@ -40,15 +40,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_receiver_class() -> Generator[AsyncMock]:
-    """Mock an Onkyo receiver class."""
+def mock_connect() -> Generator[AsyncMock]:
+    """Mock an Onkyo connect."""
     with (
         patch(
-            "aioonkyo.receiver.Receiver",
-            autospec=True,
-        ) as receiver_class,
+            "homeassistant.components.onkyo.receiver.connect",
+        ) as connect,
     ):
-        yield receiver_class
+        yield connect.return_value.__aenter__
 
 
 INITIAL_MESSAGES = [
@@ -139,13 +138,13 @@ def writes() -> list[Instruction]:
 
 @pytest.fixture
 def mock_receiver(
-    mock_receiver_class: AsyncMock,
+    mock_connect: AsyncMock,
     read_queue: asyncio.Queue[Status | None],
     writes: list[Instruction],
 ) -> AsyncMock:
     """Mock an Onkyo receiver."""
-    receiver = mock_receiver_class.return_value
-    mock_receiver_class.open_connection = AsyncMock(return_value=receiver)
+    receiver_class = AsyncMock(Receiver, auto_spec=True)
+    receiver = receiver_class.return_value
 
     for message in INITIAL_MESSAGES:
         read_queue.put_nowait(message)
@@ -158,6 +157,8 @@ def mock_receiver(
 
     receiver.read = read
     receiver.write = write
+
+    mock_connect.return_value = receiver
 
     return receiver
 
