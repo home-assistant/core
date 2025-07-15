@@ -680,6 +680,7 @@ FLOWS = {
         "upcloud",
         "upnp",
         "uptime",
+        "uptime_kuma",
         "uptimerobot",
         "v2c",
         "vallox",

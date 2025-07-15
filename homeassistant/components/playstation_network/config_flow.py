@@ -10,7 +10,6 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
 )
-from psnawp_api.models.user import User
 from psnawp_api.utils.misc import parse_npsso_token
 import voluptuous as vol
 
@@ -42,7 +41,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 psn = PlaystationNetwork(self.hass, npsso)
                 try:
-                    user: User = await psn.get_user()
+                    user = await psn.get_user()
                 except PSNAWPAuthenticationError:
                     errors["base"] = "invalid_auth"
                 except PSNAWPNotFoundError:
@@ -98,7 +97,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 npsso = parse_npsso_token(user_input[CONF_NPSSO])
                 psn = PlaystationNetwork(self.hass, npsso)
-                user: User = await psn.get_user()
+                user = await psn.get_user()
             except PSNAWPAuthenticationError:
                 errors["base"] = "invalid_auth"
             except (PSNAWPNotFoundError, PSNAWPInvalidTokenError):
