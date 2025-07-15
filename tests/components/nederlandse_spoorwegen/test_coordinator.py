@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 import re
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from ns_api import RequestParametersError
 import pytest
@@ -259,112 +259,6 @@ async def test_get_trips_for_route_exception(coordinator, mock_nsapi) -> None:
     assert result == []
 
 
-async def test_async_add_route(coordinator, mock_hass, mock_config_entry) -> None:
-    """Test adding a route via coordinator."""
-    mock_config_entry.options = {"routes": []}
-    coordinator.async_refresh = AsyncMock()
-
-    route = {"name": "New Route", "from": "AMS", "to": "UTR"}
-
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_add_route(route)
-
-        mock_update.assert_called_once_with(
-            mock_config_entry, options={"routes": [route]}
-        )
-        coordinator.async_refresh.assert_called_once()
-
-
-async def test_async_add_route_idempotent(
-    coordinator, mock_hass, mock_config_entry
-) -> None:
-    """Test adding the same route twice does not duplicate it (idempotent add)."""
-    route = {"name": "Dup Route", "from": "AMS", "to": "UTR"}
-    mock_config_entry.options = {"routes": []}
-    coordinator.async_refresh = AsyncMock()
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_add_route(route)
-        # Simulate config entry options being updated after first call
-        mock_config_entry.options = {"routes": [route]}
-        await coordinator.async_add_route(route)
-        # Should only call update once if idempotent
-        assert mock_update.call_count == 1
-        args, kwargs = mock_update.call_args
-        routes = kwargs.get("options", args[1] if len(args) > 1 else {}).get(
-            "routes", []
-        )
-        assert routes == [route]
-
-
-async def test_async_remove_route(coordinator, mock_hass, mock_config_entry) -> None:
-    """Test removing a route via coordinator."""
-    routes = [
-        {"name": "Route 1", "from": "AMS", "to": "UTR"},
-        {"name": "Route 2", "from": "RTD", "to": "GVC"},
-    ]
-    mock_config_entry.options = {"routes": routes}
-    coordinator.async_refresh = AsyncMock()
-
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_remove_route("Route 1")
-
-        mock_update.assert_called_once_with(
-            mock_config_entry, options={"routes": [routes[1]]}
-        )
-        coordinator.async_refresh.assert_called_once()
-
-
-async def test_async_remove_route_not_found(
-    coordinator, mock_hass, mock_config_entry
-) -> None:
-    """Test removing a route that doesn't exist."""
-    routes = [{"name": "Route 1", "from": "AMS", "to": "UTR"}]
-    mock_config_entry.options = {"routes": routes}
-    coordinator.async_refresh = AsyncMock()
-
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_remove_route("Nonexistent Route")
-
-        # Should still call update but routes list unchanged
-        mock_update.assert_called_once_with(
-            mock_config_entry, options={"routes": routes}
-        )
-
-
-async def test_async_remove_route_no_routes_flexible(
-    coordinator, mock_hass, mock_config_entry
-) -> None:
-    """Test removing a route when no routes are present (allow no call or empty list)."""
-    mock_config_entry.options = {}
-    coordinator.async_refresh = AsyncMock()
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_remove_route("Any Route")
-        # Accept either no call or a call with empty routes
-        if mock_update.called:
-            args, kwargs = mock_update.call_args
-            assert (
-                kwargs.get("options", args[1] if len(args) > 1 else {}).get(
-                    "routes", []
-                )
-                == []
-            )
-
-
-async def test_async_remove_route_from_data(
-    coordinator, mock_hass, mock_config_entry
-) -> None:
-    """Test removing route when routes are stored in data instead of options."""
-    routes = [{"name": "Route 1", "from": "AMS", "to": "UTR"}]
-    mock_config_entry.options = {}
-    mock_config_entry.data = {CONF_API_KEY: "test", "routes": routes}
-    coordinator.async_refresh = AsyncMock()
-
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_remove_route("Route 1")
-
-        mock_update.assert_called_once_with(mock_config_entry, options={"routes": []})
-
-
 async def test_test_connection_empty_stations(
     coordinator, mock_hass, mock_nsapi
 ) -> None:
@@ -372,17 +266,3 @@ async def test_test_connection_empty_stations(
     mock_hass.async_add_executor_job.return_value = []
     await coordinator.test_connection()
     mock_hass.async_add_executor_job.assert_called_once_with(mock_nsapi.get_stations)
-
-
-async def test_async_add_route_missing_routes_key(
-    coordinator, mock_hass, mock_config_entry
-) -> None:
-    """Test async_add_route when options/data has no routes key."""
-    mock_config_entry.options = {}
-    coordinator.async_refresh = AsyncMock()
-    route = {"name": "First Route", "from": "AMS", "to": "UTR"}
-    with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
-        await coordinator.async_add_route(route)
-        mock_update.assert_called_once_with(
-            mock_config_entry, options={"routes": [route]}
-        )

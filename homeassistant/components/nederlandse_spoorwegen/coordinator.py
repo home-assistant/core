@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 import importlib
+from json import JSONDecodeError
 import logging
 import re
-from types import MappingProxyType
 from typing import Any
 from zoneinfo import ZoneInfo
 
 import requests
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -111,14 +111,26 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     station_cache_expired = True
 
             if station_cache_expired:
-                stations = await self.hass.async_add_executor_job(
-                    self.client.get_stations  # type: ignore[attr-defined]
-                )
-                # Store full stations in runtime_data for UI dropdowns
-                if self.config_entry is not None:
-                    runtime_data = self.config_entry.runtime_data
-                    runtime_data.stations = stations
-                    runtime_data.stations_updated = now_utc.isoformat()
+                try:
+                    stations = await self.hass.async_add_executor_job(
+                        self.client.get_stations  # type: ignore[attr-defined]
+                    )
+                    # Store full stations in runtime_data for UI dropdowns
+                    if self.config_entry is not None:
+                        runtime_data = self.config_entry.runtime_data
+                        runtime_data.stations = stations
+                        runtime_data.stations_updated = now_utc.isoformat()
+                except (TypeError, JSONDecodeError) as exc:
+                    # Handle specific JSON parsing errors (None passed to json.loads)
+                    _LOGGER.warning(
+                        "Failed to parse stations response from NS API, using cached data: %s",
+                        exc,
+                    )
+                    # Keep using existing stations data if available
+                    if not stations:
+                        raise UpdateFailed(
+                            f"Failed to parse stations response: {exc}"
+                        ) from exc
 
             # Get routes from config entry options or data
             routes = self._get_routes()
@@ -206,35 +218,9 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if CONF_VIA in route:
             route[CONF_VIA] = via_station
         # Use the stored station codes from runtime_data for validation
-        valid_station_codes = set()
-        if (
-            self.config_entry is not None
-            and hasattr(self.config_entry, "runtime_data")
-            and self.config_entry.runtime_data
-            and self.config_entry.runtime_data.stations
-        ):
-            # Extract codes from stations
-            valid_station_codes = {
-                getattr(station, "code", None) or station.get("code", "")
-                for station in self.config_entry.runtime_data.stations
-                if hasattr(station, "code")
-                or (isinstance(station, dict) and "code" in station)
-            }
+        valid_station_codes = self.get_station_codes()
         # Store approved station codes in runtime_data for use in config flow
-        current_codes: list[str] = []
-        if (
-            self.config_entry is not None
-            and hasattr(self.config_entry, "runtime_data")
-            and self.config_entry.runtime_data
-            and self.config_entry.runtime_data.stations
-        ):
-            # Extract codes from stations
-            current_codes = [
-                getattr(station, "code", None) or station.get("code", "")
-                for station in self.config_entry.runtime_data.stations
-                if hasattr(station, "code")
-                or (isinstance(station, dict) and "code" in station)
-            ]
+        current_codes = list(self.get_station_codes())
         # Always sort both lists before comparing and storing
         sorted_valid_codes = sorted(valid_station_codes)
         sorted_current_codes = sorted(current_codes)
@@ -297,62 +283,59 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 future_trips.append(trip)
         return future_trips
 
-    async def async_add_route(self, route: dict[str, Any]) -> None:
-        """Add a new route as a subentry and trigger refresh."""
-        if self.config_entry is None:
-            return
+    def _build_station_mapping(self, stations: list) -> dict[str, str]:
+        """Build a mapping of station codes to names from fetched station data."""
+        station_mapping = {}
 
-        # Check if route already exists as subentry
-        for subentry in self.config_entry.subentries.values():
-            if subentry.subentry_type == "route" and dict(subentry.data) == route:
-                return  # Route already exists
+        for station in stations:
+            code = None
+            name = None
 
-        # Create route data for subentry
-        subentry_data = {
-            CONF_NAME: route[CONF_NAME],
-            CONF_FROM: route[CONF_FROM].upper(),
-            CONF_TO: route[CONF_TO].upper(),
-        }
+            if hasattr(station, "code") and hasattr(station, "name"):
+                # Standard format: separate code and name attributes
+                code = station.code
+                name = station.name
+            elif isinstance(station, dict):
+                # Dict format
+                code = station.get("code")
+                name = station.get("name")
+            else:
+                # Handle string format or object with __str__ method
+                station_str = str(station)
 
-        # Add optional fields if present
-        if route.get(CONF_VIA):
-            subentry_data[CONF_VIA] = route[CONF_VIA].upper()
-        if route.get(CONF_TIME):
-            subentry_data[CONF_TIME] = route[CONF_TIME]
+                # Remove class name wrapper if present (e.g., "<Station> AC Abcoude" -> "AC Abcoude")
+                if station_str.startswith("<") and "> " in station_str:
+                    station_str = station_str.split("> ", 1)[1]
 
-        # Create unique_id with uppercase station codes for consistency
-        unique_id_parts = [
-            route[CONF_FROM].upper(),
-            route[CONF_TO].upper(),
-            route.get(CONF_VIA, "").upper(),
-        ]
-        unique_id = "_".join(part for part in unique_id_parts if part)
+                # Try to parse "CODE Name" format
+                parts = station_str.strip().split(" ", 1)
+                if (
+                    len(parts) == 2 and len(parts[0]) <= 4 and parts[0].isupper()
+                ):  # Station codes are typically 2-4 uppercase chars
+                    code, name = parts
+                else:
+                    # If we can't parse it properly, skip this station
+                    _LOGGER.debug("Could not parse station format: %s", station_str)
+                    continue
 
-        # Create the subentry
-        subentry = ConfigSubentry(
-            data=MappingProxyType(subentry_data),
-            subentry_type="route",
-            title=route[CONF_NAME],
-            unique_id=unique_id,
-        )
+            # Only add if we have both code and name
+            if code and name:
+                station_mapping[code.upper()] = name.strip()
+            else:
+                _LOGGER.debug("Skipping station with missing code or name: %s", station)
 
-        # Add the subentry to the config entry
-        self.hass.config_entries.async_add_subentry(self.config_entry, subentry)
-        await self.async_refresh()
+        return station_mapping
 
-    async def async_remove_route(self, route_name: str) -> None:
-        """Remove a route subentry and trigger refresh."""
-        if self.config_entry is None:
-            return
-
-        # Find and remove the subentry with matching route name
-        for subentry_id, subentry in self.config_entry.subentries.items():
-            if (
-                subentry.subentry_type == "route"
-                and subentry.data.get(CONF_NAME) == route_name
-            ):
-                self.hass.config_entries.async_remove_subentry(
-                    self.config_entry, subentry_id
-                )
-                await self.async_refresh()
-                return
+    def get_station_codes(self) -> set[str]:
+        """Get valid station codes from runtime data."""
+        if (
+            self.config_entry is not None
+            and hasattr(self.config_entry, "runtime_data")
+            and self.config_entry.runtime_data
+            and self.config_entry.runtime_data.stations
+        ):
+            station_mapping = self._build_station_mapping(
+                self.config_entry.runtime_data.stations
+            )
+            return set(station_mapping.keys())
+        return set()

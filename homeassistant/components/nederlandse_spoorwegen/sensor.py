@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -36,13 +35,23 @@ async def async_setup_entry(
         "NS sensor setup: coordinator=%s, entry_id=%s", coordinator, entry.entry_id
     )
 
-    # Always create the service sensor
+    # Always create the service sensor for the main entry
     entities: list[SensorEntity] = [NSServiceSensor(coordinator, entry)]
 
-    # Create trip sensors for each route
+    # DO NOT create trip sensors for subentry routes - they should be handled separately
+    # Only create trip sensors for legacy routes (routes without route_id)
     if coordinator.data and "routes" in coordinator.data:
         for route_key, route_data in coordinator.data["routes"].items():
             route = route_data["route"]
+
+            # Skip routes that have a route_id - these are managed by subentries
+            if route.get("route_id"):
+                _LOGGER.debug(
+                    "Skipping subentry route %s, managed by subentry",
+                    route.get(CONF_NAME),
+                )
+                continue
+
             # Validate route has required fields before creating sensor
             if not all(key in route for key in (CONF_NAME, CONF_FROM, CONF_TO)):
                 _LOGGER.warning(
@@ -72,7 +81,7 @@ class NSServiceSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: NSDataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: NSConfigEntry,
     ) -> None:
         """Initialize the service sensor."""
         super().__init__(coordinator)
@@ -119,7 +128,7 @@ class NSTripSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: NSDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: NSConfigEntry,
         route: dict[str, Any],
         route_key: str,
     ) -> None:
@@ -136,6 +145,8 @@ class NSTripSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         self._attr_name = route[CONF_NAME]
         route_id = route.get("route_id", route_key)
         self._attr_unique_id = f"{entry.entry_id}_{route_id}"
+
+        # For legacy routes (no route_id), use the main integration device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
         )

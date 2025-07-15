@@ -9,12 +9,10 @@ from types import MappingProxyType
 from typing import Any
 
 from ns_api import NSAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -41,82 +39,9 @@ type NSConfigEntry = ConfigEntry[NSRuntimeData]
 
 PLATFORMS = [Platform.SENSOR]
 
-# Service schemas
-ADD_ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
-        vol.Required(CONF_FROM): str,
-        vol.Required(CONF_TO): str,
-        vol.Optional(CONF_VIA): str,
-        vol.Optional(CONF_TIME): str,
-    }
-)
-REMOVE_ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
-    }
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nederlandse Spoorwegen component."""
-
-    async def async_add_route(call: ServiceCall) -> None:
-        """Add a new route."""
-        # Find the NS integration config entry
-        entries = hass.config_entries.async_entries(DOMAIN)
-        if not entries:
-            raise ServiceValidationError("No Nederlandse Spoorwegen integration found")
-
-        entry = entries[0]  # Assume single integration
-        if entry.state.name != "LOADED":
-            raise ServiceValidationError(
-                "Nederlandse Spoorwegen integration not loaded"
-            )
-
-        coordinator = entry.runtime_data.coordinator
-
-        # Create route dict from service call data
-        route = {
-            CONF_NAME: call.data[CONF_NAME],
-            CONF_FROM: call.data[CONF_FROM].upper(),
-            CONF_TO: call.data[CONF_TO].upper(),
-        }
-        if call.data.get(CONF_VIA):
-            route[CONF_VIA] = call.data[CONF_VIA].upper()
-
-        if call.data.get(CONF_TIME):
-            route[CONF_TIME] = call.data[CONF_TIME]
-
-        # Add route via coordinator
-        await coordinator.async_add_route(route)
-
-    async def async_remove_route(call: ServiceCall) -> None:
-        """Remove a route."""
-        # Find the NS integration config entry
-        entries = hass.config_entries.async_entries(DOMAIN)
-        if not entries:
-            raise ServiceValidationError("No Nederlandse Spoorwegen integration found")
-
-        entry = entries[0]  # Assume single integration
-        if entry.state.name != "LOADED":
-            raise ServiceValidationError(
-                "Nederlandse Spoorwegen integration not loaded"
-            )
-
-        coordinator = entry.runtime_data.coordinator
-
-        # Remove route via coordinator
-        await coordinator.async_remove_route(call.data[CONF_NAME])
-
-    # Register services
-    hass.services.async_register(
-        DOMAIN, "add_route", async_add_route, schema=ADD_ROUTE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "remove_route", async_remove_route, schema=REMOVE_ROUTE_SCHEMA
-    )
-
     return True
 
 

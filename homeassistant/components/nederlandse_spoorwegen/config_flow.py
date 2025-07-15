@@ -11,6 +11,7 @@ from ns_api import NSAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -187,18 +188,20 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 elif user_input.get(CONF_FROM) == user_input.get(CONF_TO):
                     errors["base"] = "same_station"
                 else:
-                    # Validate stations exist
+                    # Validate stations exist (case-insensitive)
                     from_station = user_input.get(CONF_FROM)
                     to_station = user_input.get(CONF_TO)
                     via_station = user_input.get(CONF_VIA)
 
                     station_codes = [opt["value"] for opt in station_options]
+                    # Create case-insensitive lookup
+                    station_codes_upper = [code.upper() for code in station_codes]
 
-                    if from_station and from_station not in station_codes:
+                    if from_station and from_station.upper() not in station_codes_upper:
                         errors[CONF_FROM] = "invalid_station"
-                    if to_station and to_station not in station_codes:
+                    if to_station and to_station.upper() not in station_codes_upper:
                         errors[CONF_TO] = "invalid_station"
-                    if via_station and via_station not in station_codes:
+                    if via_station and via_station.upper() not in station_codes_upper:
                         errors[CONF_VIA] = "invalid_station"
 
                     if not errors:
@@ -213,6 +216,17 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                         if user_input.get(CONF_TIME):
                             route_config[CONF_TIME] = user_input[CONF_TIME]
 
+                        # Handle both creation and reconfiguration
+                        if self.source == SOURCE_RECONFIGURE:
+                            # For reconfiguration, update the existing subentry
+                            return self.async_update_and_abort(
+                                self._get_entry(),
+                                self._get_reconfigure_subentry(),
+                                data=route_config,
+                                title=user_input[CONF_NAME],
+                            )
+
+                        # For new routes, create a new entry
                         return self.async_create_entry(
                             title=user_input[CONF_NAME], data=route_config
                         )
@@ -313,6 +327,12 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 entry.runtime_data.stations_updated = datetime.now(UTC).isoformat()
             except (ValueError, ConnectionError, TimeoutError) as ex:
                 _LOGGER.warning("Failed to fetch stations for subentry flow: %s", ex)
+            except (
+                Exception  # noqa: BLE001  # Allowed in config flows for robustness
+            ) as ex:
+                _LOGGER.warning(
+                    "Unexpected error fetching stations for subentry flow: %s", ex
+                )
 
     async def _get_station_options(self) -> list[dict[str, str]]:
         """Get the list of station options for dropdowns, sorted by name."""
@@ -329,28 +349,57 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
         if not stations:
             return []
 
-        # Convert to dropdown options with station names as labels
-        station_options = []
-        for station in stations:
-            if hasattr(station, "code") and hasattr(station, "name"):
-                station_options.append(
-                    {"value": station.code, "label": f"{station.name} ({station.code})"}
-                )
-            else:
-                # Fallback for dict format
-                code = (
-                    station.get("code", "")
-                    if isinstance(station, dict)
-                    else str(station)
-                )
-                name = station.get("name", code) if isinstance(station, dict) else code
-                station_options.append(
-                    {
-                        "value": code,
-                        "label": f"{name} ({code})" if name != code else code,
-                    }
-                )
+        # Build station mapping from fetched data
+        station_mapping = self._build_station_mapping(stations)
+
+        # Convert to dropdown options with station names as labels and codes as values
+        station_options = [
+            {"value": code, "label": name} for code, name in station_mapping.items()
+        ]
 
         # Sort by label (station name)
         station_options.sort(key=lambda x: x["label"])
         return station_options
+
+    def _build_station_mapping(self, stations: list) -> dict[str, str]:
+        """Build a mapping of station codes to names from fetched station data."""
+        station_mapping = {}
+
+        for station in stations:
+            code = None
+            name = None
+
+            if hasattr(station, "code") and hasattr(station, "name"):
+                # Standard format: separate code and name attributes
+                code = station.code
+                name = station.name
+            elif isinstance(station, dict):
+                # Dict format
+                code = station.get("code")
+                name = station.get("name")
+            else:
+                # Handle string format or object with __str__ method
+                station_str = str(station)
+
+                # Remove class name wrapper if present (e.g., "<Station> AC Abcoude" -> "AC Abcoude")
+                if station_str.startswith("<") and "> " in station_str:
+                    station_str = station_str.split("> ", 1)[1]
+
+                # Try to parse "CODE Name" format
+                parts = station_str.strip().split(" ", 1)
+                if (
+                    len(parts) == 2 and len(parts[0]) <= 4 and parts[0].isupper()
+                ):  # Station codes are typically 2-4 uppercase chars
+                    code, name = parts
+                else:
+                    # If we can't parse it properly, skip this station
+                    _LOGGER.debug("Could not parse station format: %s", station_str)
+                    continue
+
+            # Only add if we have both code and name
+            if code and name:
+                station_mapping[code.upper()] = name.strip()
+            else:
+                _LOGGER.debug("Skipping station with missing code or name: %s", station)
+
+        return station_mapping

@@ -1,7 +1,7 @@
 """Test the Nederlandse Spoorwegen sensor logic."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,6 +16,9 @@ from homeassistant.components.nederlandse_spoorwegen.sensor import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -725,3 +728,116 @@ def test_trip_sensor_extra_state_attributes_all_strftime_paths(
     # The other fields should not be present
     assert "departure_time_actual" not in attrs
     assert "arrival_time_planned" not in attrs
+
+
+async def test_device_association_after_migration(hass: HomeAssistant) -> None:
+    """Test that only the service sensor appears under main integration after migration."""
+    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+        # Mock stations with required station codes
+        mock_station_asd = type(
+            "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
+        )()
+        mock_station_rtd = type(
+            "Station", (), {"code": "RTD", "name": "Rotterdam Centraal"}
+        )()
+
+        mock_nsapi.return_value.get_stations.return_value = [
+            mock_station_asd,
+            mock_station_rtd,
+        ]
+        mock_nsapi.return_value.get_trips.return_value = []
+
+        # Create config entry with legacy routes
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "api_key": "test_key",
+                "routes": [
+                    {
+                        "name": "Test Route",
+                        "from": "ASD",
+                        "to": "RTD",
+                    },
+                ],
+            },
+        )
+        config_entry.add_to_hass(hass)
+
+        # Setup the integration
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Get registries
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+
+        # Check that migration created subentries
+        assert len(config_entry.subentries) == 1
+        subentry = next(iter(config_entry.subentries.values()))
+
+        # Find all devices
+        devices = list(device_registry.devices.values())
+
+        main_devices = [
+            device
+            for device in devices
+            if (DOMAIN, config_entry.entry_id) in device.identifiers
+        ]
+
+        subentry_devices = [
+            device
+            for device in devices
+            if any(
+                identifier[0] == DOMAIN and identifier[1] == subentry.subentry_id
+                for identifier in device.identifiers
+            )
+        ]
+
+        # Should only have 1 main device (for the service sensor)
+        assert len(main_devices) == 1, (
+            f"Expected 1 main device, got {len(main_devices)}"
+        )
+
+        # Should have NO subentry devices (route sensors are not created in main setup)
+        assert len(subentry_devices) == 0, (
+            f"Expected 0 subentry devices, got {len(subentry_devices)}"
+        )
+
+        # Find all entities
+        entities = list(entity_registry.entities.values())
+
+        main_entities = [
+            entity
+            for entity in entities
+            if entity.config_entry_id == config_entry.entry_id
+        ]
+
+        subentry_entities = [
+            entity
+            for entity in entities
+            if entity.config_entry_id == subentry.subentry_id
+        ]
+
+        # Should have ONLY 1 main entity (service sensor) associated with main device
+        assert len(main_entities) == 1, (
+            f"Expected 1 main entity, got {len(main_entities)}"
+        )
+        assert main_entities[0].device_id == main_devices[0].id
+
+        # Should have NO subentry entities (they're not created in main setup)
+        assert len(subentry_entities) == 0, (
+            f"Expected 0 subentry entities, got {len(subentry_entities)}"
+        )
+
+        # Verify the main entity is the service sensor
+        service_entity = main_entities[0]
+        assert service_entity.entity_id == "sensor.nederlandse_spoorwegen_service"
+        assert service_entity.translation_key == "service"
+
+        # Verify the main device is the Nederlandse Spoorwegen device
+        main_device = main_devices[0]
+        assert main_device.name == "Nederlandse Spoorwegen"
+        assert main_device.manufacturer == "Nederlandse Spoorwegen"
+
+        # Unload entry
+        assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -553,6 +553,11 @@ async def test_subentry_flow_station_options_formatting(hass: HomeAssistant) -> 
             {"code": "UTR", "name": "Utrecht Centraal"},
             # Station with minimal data
             {"code": "GVC", "name": "Den Haag Centraal"},
+            # Station as string in "CODE Name" format (real API format)
+            "AC Abcoude",
+            "RTD Rotterdam Centraal",
+            # Station with __str__ that includes class name (the problematic format)
+            type("Station", (), {"__str__": lambda self: "<Station> ZL Zwolle"})(),
         ],
         stations_updated="2024-01-01T00:00:00Z",
     )
@@ -573,15 +578,36 @@ async def test_subentry_flow_station_options_formatting(hass: HomeAssistant) -> 
     station_options = await handler._get_station_options()
 
     # Verify options are properly formatted
-    assert len(station_options) == 3
+    assert len(station_options) == 6  # Updated count
+
+    # Check specific formats
+    expected_labels = [
+        "Abcoude",
+        "Amsterdam Centraal",
+        "Den Haag Centraal",
+        "Rotterdam Centraal",
+        "Utrecht Centraal",
+        "Zwolle",
+    ]
+
+    actual_labels = [opt["label"] for opt in station_options]
+
+    # Should be sorted by label
+    assert actual_labels == sorted(expected_labels)
+
+    # Values should correspond correctly
     for option in station_options:
         assert isinstance(option, dict)
         assert "value" in option
         assert "label" in option
-        # Verify options are sorted by label
-        if station_options.index(option) > 0:
-            prev_option = station_options[station_options.index(option) - 1]
-            assert option["label"].lower() >= prev_option["label"].lower()
+
+        # Specific format checks
+        if option["label"] == "Abcoude":
+            assert option["value"] == "AC"
+        elif option["label"] == "Rotterdam Centraal":
+            assert option["value"] == "RTD"
+        elif option["label"] == "Zwolle":
+            assert option["value"] == "ZL"
 
 
 async def test_subentry_flow_exception_handling(hass: HomeAssistant) -> None:

@@ -43,12 +43,10 @@ def mock_config_entry():
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test async_setup registers services."""
+    """Test async_setup completes successfully."""
     result = await async_setup(hass, {})
 
     assert result is True
-    assert hass.services.has_service(DOMAIN, "add_route")
-    assert hass.services.has_service(DOMAIN, "remove_route")
 
 
 async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
