@@ -9,7 +9,7 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,6 +30,8 @@ async def test_sensors(
     """Tests that the sensor entities with the legacy polling are correct."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Force the vehicle to use polling
     with patch("tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True):
@@ -117,7 +119,7 @@ async def test_energy_history_no_time_series(
 
     entity_id = "sensor.energy_site_battery_discharged"
     state = hass.states.get(entity_id)
-    assert state.state == "0.036"
+    assert state.state == STATE_UNKNOWN
 
     mock_energy_history.return_value = ENERGY_HISTORY_EMPTY
 
