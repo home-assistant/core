@@ -118,8 +118,6 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
-        self.initialize(config, ENTITY_ID_FORMAT)
-
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
@@ -286,7 +284,7 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
         unique_id: str | None,
     ) -> None:
         """Initialize the lock."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         AbstractTemplateLock.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -339,7 +337,7 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateLock.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)

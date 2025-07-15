@@ -26,11 +26,12 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
         config: dict,
+        entity_id_format: str,
     ) -> None:
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
-        AbstractTemplateEntity.__init__(self, hass)
+        AbstractTemplateEntity.__init__(self, hass, config, entity_id_format)
 
         self._state_render_error = False
 

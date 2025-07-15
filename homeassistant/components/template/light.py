@@ -251,8 +251,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._color_mode: ColorMode | None = None
         self._supported_color_modes: set[ColorMode] | None = None
 
-        self.initialize(config, ENTITY_ID_FORMAT)
-
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], ColorMode | None]]:
@@ -894,7 +892,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
         unique_id: str | None,
     ) -> None:
         """Initialize the light."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         AbstractTemplateLight.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -1083,7 +1081,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateLight.__init__(self, config, None)
 
         # Render the _attr_name before initializing TemplateLightEntity

@@ -123,8 +123,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         if TYPE_CHECKING:
             assert self._attr_name is not None
 
@@ -202,8 +201,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)

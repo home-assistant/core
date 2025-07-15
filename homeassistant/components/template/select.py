@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -133,9 +133,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
     ) -> None:
         """Initialize the select."""
         TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
-
-        if TYPE_CHECKING:
-            AbstractTemplateSelect.__init__(self, config)
+        AbstractTemplateSelect.__init__(self, config)
 
         name = self._attr_name
         if TYPE_CHECKING:
@@ -180,11 +178,8 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateSelect.__init__(self, config)
-
-        if CONF_STATE in config:
-            self._to_render_simple.append(CONF_STATE)
 
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:

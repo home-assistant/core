@@ -95,8 +95,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
 
         if TYPE_CHECKING:
             assert self._attr_name is not None

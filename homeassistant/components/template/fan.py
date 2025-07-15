@@ -181,8 +181,6 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         )
 
-        self.initialize(config, ENTITY_ID_FORMAT)
-
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], FanEntityFeature | int]]:
@@ -437,7 +435,7 @@ class StateFanEntity(TemplateEntity, AbstractTemplateFan):
         unique_id,
     ) -> None:
         """Initialize the fan."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         AbstractTemplateFan.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -513,7 +511,7 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateFan.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)

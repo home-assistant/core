@@ -168,8 +168,6 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if self._battery_level_template:
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
-        self.initialize(config, ENTITY_ID_FORMAT)
-
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], VacuumEntityFeature | int]]:
@@ -303,7 +301,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
         unique_id,
     ) -> None:
         """Initialize the vacuum."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         AbstractTemplateVacuum.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -364,7 +362,7 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         AbstractTemplateVacuum.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)

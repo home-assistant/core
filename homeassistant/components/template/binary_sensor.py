@@ -167,8 +167,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
@@ -259,8 +258,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
 
         for key in (CONF_STATE, CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):

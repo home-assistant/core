@@ -205,8 +205,7 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        super().__init__(hass, config, unique_id, ENTITY_ID_FORMAT)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
@@ -267,8 +266,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         config: ConfigType,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, coordinator, config)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
 
         self._parse_result.add(CONF_STATE)
         if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:

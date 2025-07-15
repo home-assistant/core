@@ -103,14 +103,13 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the image."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),
         )
-        self.initialize(config, ENTITY_ID_FORMAT)
 
     @property
     def entity_picture(self) -> str | None:
@@ -151,9 +150,8 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config)
+        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
-        self.initialize(config, ENTITY_ID_FORMAT)
 
     @property
     def entity_picture(self) -> str | None:

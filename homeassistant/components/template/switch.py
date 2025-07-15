@@ -160,9 +160,8 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(hass, config, unique_id, ENTITY_ID_FORMAT)
 
-        self.initialize(config, ENTITY_ID_FORMAT)
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -247,8 +246,8 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        self.initialize(config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self._template = config.get(CONF_STATE)
         if on_action := config.get(CONF_TURN_ON):
