@@ -12,6 +12,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.yolink.api import ConfigEntryAuth
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,16 +34,24 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="mock_auth_mgr")
-def mock_auth_mgr() -> MagicMock:
+@pytest.fixture(name="mock_auth_manager")
+def mock_auth_manager() -> Generator[MagicMock]:
     """Mock the authentication manager."""
-    return MagicMock()
+    with patch(
+        "homeassistant.components.yolink.api.ConfigEntryAuth", autospec=True
+    ) as mock_auth:
+        mock_auth.return_value = MagicMock(spec=ConfigEntryAuth)
+        yield mock_auth
 
 
 @pytest.fixture(name="mock_yolink_home")
-def mock_yolink_home() -> AsyncMock:
+def mock_yolink_home() -> Generator[AsyncMock]:
     """Mock YoLink home instance."""
-    return AsyncMock(spec=YoLinkHome)
+    with patch(
+        "homeassistant.components.yolink.YoLinkHome", autospec=True
+    ) as mock_home:
+        mock_home.return_value = AsyncMock(spec=YoLinkHome)
+        yield mock_home
 
 
 @pytest.fixture
@@ -66,20 +75,3 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
-
-
-@pytest.fixture
-def mock_setup_client(
-    mock_auth_mgr: MagicMock, mock_yolink_home: AsyncMock
-) -> Generator[None]:
-    """Mock the setup of the YoLink client."""
-    with (
-        patch(
-            "homeassistant.components.yolink.api.ConfigEntryAuth",
-            return_value=mock_auth_mgr,
-        ),
-        patch(
-            "homeassistant.components.yolink.YoLinkHome", return_value=mock_yolink_home
-        ),
-    ):
-        yield

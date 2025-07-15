@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("setup_credentials", "mock_setup_client")
+@pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")
 async def test_device_remove_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
