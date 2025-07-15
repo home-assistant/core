@@ -48,7 +48,7 @@ async def validate_connection(
     hass: HomeAssistant,
     url: URL | str,
     verify_ssl: bool,
-    api_key: str,
+    api_key: str | None,
 ) -> dict[str, str]:
     """Validate Uptime Kuma connectivity."""
     errors: dict[str, str] = {}
@@ -194,23 +194,16 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm Supervisor discovery."""
         assert self._hassio_discovery
         errors: dict[str, str] = {}
-        session = async_get_clientsession(self.hass)
         api_key = user_input[CONF_API_KEY] if user_input else None
 
-        uptime_kuma = UptimeKuma(
-            session, self._hassio_discovery.config[CONF_URL], api_key
-        )
-
-        try:
-            await uptime_kuma.metrics()
-        except UptimeKumaAuthenticationException:
-            errors["base"] = "invalid_auth"
-        except UptimeKumaException:
-            errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
+        if not (
+            errors := await validate_connection(
+                self.hass,
+                self._hassio_discovery.config[CONF_URL],
+                True,
+                api_key,
+            )
+        ):
             if user_input is None:
                 self._set_confirm_only()
                 return self.async_show_form(
