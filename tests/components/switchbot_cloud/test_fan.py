@@ -28,7 +28,7 @@ from . import configure_integration
 async def test_coordinator_data_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turning on the fan."""
+    """Test coordinator data is none."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -62,7 +62,8 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
     ]
     mock_get_status.side_effect = [
         {"power": "off", "mode": "direct", "fanSpeed": "0"},
-        {"power": "off", "mode": "direct", "fanSpeed": "0"},
+        {"power": "on", "mode": "direct", "fanSpeed": "0"},
+        {"power": "on", "mode": "direct", "fanSpeed": "0"},
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -84,7 +85,7 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
 async def test_turn_off(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turning on the fan."""
+    """Test turning off the fan."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -97,6 +98,7 @@ async def test_turn_off(
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
+        {"power": "off", "mode": "direct", "fanSpeed": "0"},
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -118,7 +120,7 @@ async def test_turn_off(
 async def test_set_percentage(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turning on the fan."""
+    """Test set percentage."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -130,7 +132,7 @@ async def test_set_percentage(
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
-        {"power": "on", "mode": "baby", "fanSpeed": "0"},
+        {"power": "on", "mode": "direct", "fanSpeed": "0"},
         {"power": "off", "mode": "direct", "fanSpeed": "5"},
     ]
     entry = await configure_integration(hass)
@@ -149,20 +151,11 @@ async def test_set_percentage(
         )
     mock_send_command.assert_called()
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 5},
-            blocking=True,
-        )
-    mock_send_command.assert_called()
-
 
 async def test_set_preset_mode(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turning on the fan."""
+    """Test set preset mode."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -175,6 +168,7 @@ async def test_set_preset_mode(
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
+        {"power": "on", "mode": "baby", "fanSpeed": "0"},
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
