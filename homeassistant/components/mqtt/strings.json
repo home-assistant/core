@@ -10,7 +10,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::mqtt::issues::subentry_migration_discovery::title%]",
-            "description": "Exported MQTT device \"{name}\" identified via MQTT discovery. Confirm that the MQTT device is migrated to the main MQTT configuration, the replaced subentry of the MQTT device is to be removed. Make sure that the discovery is retained at the MQTT broker, or is resent after the subentry is removed, so that the MQTT device will be set up correctly."
+            "description": "Exported MQTT device \"{name}\" identified via MQTT discovery. Submit to confirm that the MQTT device is to be migrated to the main MQTT configuration, and to remove the existing MQTT device subentry. Make sure that the discovery is retained at the MQTT broker, or is resent after the subentry is removed, so that the MQTT device will be set up correctly."
           }
         }
       }
@@ -21,7 +21,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::mqtt::issues::subentry_migration_yaml::title%]",
-            "description": "Exported MQTT device \"{name}\" identified in YAML configuration. Confirm to migrate the MQTT device to main MQTT config entry, and to remove the replaced MQTT device subentry."
+            "description": "Exported MQTT device \"{name}\" identified in YAML configuration. Submit to confirm that the MQTT device is to be migrated to main MQTT config entry, and to remove the existing MQTT device subentry."
           }
         }
       }
