@@ -16,6 +16,7 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -42,9 +43,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
 
 
-async def validate_connection(uptime_kuma: UptimeKuma) -> dict[str, str]:
+async def validate_connection(
+    hass: HomeAssistant,
+    url: URL | str,
+    verify_ssl: bool,
+    api_key: str,
+) -> dict[str, str]:
     """Validate Uptime Kuma connectivity."""
     errors: dict[str, str] = {}
+    session = async_get_clientsession(hass, verify_ssl)
+    uptime_kuma = UptimeKuma(session, url, api_key)
+
     try:
         await uptime_kuma.metrics()
     except UptimeKumaAuthenticationException:
@@ -69,10 +78,14 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             url = URL(user_input[CONF_URL])
             self._async_abort_entries_match({CONF_URL: url.human_repr()})
 
-            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
-            uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
-
-            if not (errors := await validate_connection(uptime_kuma)):
+            if not (
+                errors := await validate_connection(
+                    self.hass,
+                    url,
+                    user_input[CONF_VERIFY_SSL],
+                    user_input[CONF_API_KEY],
+                )
+            ):
                 return self.async_create_entry(
                     title=url.host or "",
                     data={**user_input, CONF_URL: url.human_repr()},
@@ -101,14 +114,14 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reauth_entry()
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass, entry.data[CONF_VERIFY_SSL])
-            uptime_kuma = UptimeKuma(
-                session,
-                entry.data[CONF_URL],
-                user_input[CONF_API_KEY],
-            )
-
-            if not (errors := await validate_connection(uptime_kuma)):
+            if not (
+                errors := await validate_connection(
+                    self.hass,
+                    entry.data[CONF_URL],
+                    entry.data[CONF_VERIFY_SSL],
+                    user_input[CONF_API_KEY],
+                )
+            ):
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates=user_input,
@@ -134,10 +147,14 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             url = URL(user_input[CONF_URL])
             self._async_abort_entries_match({CONF_URL: url.human_repr()})
 
-            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
-            uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
-
-            if not (errors := await validate_connection(uptime_kuma)):
+            if not (
+                errors := await validate_connection(
+                    self.hass,
+                    url,
+                    user_input[CONF_VERIFY_SSL],
+                    user_input[CONF_API_KEY],
+                )
+            ):
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates={**user_input, CONF_URL: url.human_repr()},
