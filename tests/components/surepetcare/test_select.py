@@ -1,4 +1,4 @@
-"""The tests for the Sure Petcare binary sensor platform."""
+"""The tests for the Sure Petcare select platform."""
 
 import pytest
 
