@@ -43,6 +43,8 @@ class WizFanEntity(WizEntity, FanEntity):
 
     _attr_name = None
 
+    # We want the implementation of is_on to be the same as in ToggleEntity,
+    # but it is being overridden in FanEntity, so we need to restore it here.
     is_on: ClassVar = ToggleEntity.is_on
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
