@@ -206,6 +206,7 @@ class DPCode(StrEnum):
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
+    FROST = "frost"
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
@@ -226,6 +227,7 @@ class DPCode(StrEnum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
+    LOWER_TEMP = "lower_temp"
     MASTER_MODE = "master_mode"  # alarm mode
     MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"

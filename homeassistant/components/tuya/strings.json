@@ -912,6 +912,9 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
       }
     }
   }

@@ -1066,6 +1066,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (*BATTERY_SENSORS,),
     # Two-way temperature and humidity switch
     # "MOES Temperature and Humidity Smart Switch Module MS-103"
     # Documentation not found

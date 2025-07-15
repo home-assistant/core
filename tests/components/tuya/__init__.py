@@ -92,6 +92,7 @@ DEVICE_MOCKS = {
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
+        Platform.SENSOR,
         Platform.SWITCH,
     ],
     "wsdcg_temperature_humidity": [
