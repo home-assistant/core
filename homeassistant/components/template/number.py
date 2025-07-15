@@ -254,8 +254,6 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
             DOMAIN,
         )
 
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
         self._process_data()
