@@ -99,13 +99,14 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 0)
 
     # Simulate temperature settings, no probe temperature
-    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         80.0
     )
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = 2150
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.5
+
+    freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -115,13 +116,14 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 1)
 
     # Simulate unsetting temperature
-    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         None
     )
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
+
+    freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -131,7 +133,6 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", None, 2)
 
     # Simulate temperature settings with probe temperature
-    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = 8000
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         80.0
@@ -144,6 +145,8 @@ async def test_oven_temperatures_scenario(
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = 21.83
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
+
+    freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -153,7 +156,6 @@ async def test_oven_temperatures_scenario(
     check_sensor_state(hass, "sensor.oven_core_target_temperature", "30.0", 3)
 
     # Simulate unsetting temperature
-    freezer.tick(timedelta(seconds=130))
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["targetTemperature"][0]["value_localized"] = (
         None
@@ -168,6 +170,8 @@ async def test_oven_temperatures_scenario(
     device_fixture["DummyOven"]["state"]["temperature"][0]["value_localized"] = None
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -32768
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
+
+    freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
