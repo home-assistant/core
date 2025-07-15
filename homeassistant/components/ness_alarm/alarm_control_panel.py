@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
+from . import CONF_SUPPORT_HOME, DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,8 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel")
+    support_home = discovery_info.get(CONF_SUPPORT_HOME, True)
+    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel", support_home)
     async_add_entities([device])
 
 
@@ -50,16 +51,25 @@ class NessAlarmPanel(AlarmControlPanelEntity):
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
 
-    def __init__(self, client: Client, name: str) -> None:
+    def __init__(self, client: Client, name: str, support_home: bool) -> None:
         """Initialize the alarm panel."""
         self._client = client
+        self._attr_unique_id = name
         self._attr_name = name
+        self._support_home = support_home
+        self._state: AlarmControlPanelState | None = None
+        if self._support_home:
+            self._attr_supported_features = (
+                AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.TRIGGER
+            )
+        else:
+            self._attr_supported_features = (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.TRIGGER
+            )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

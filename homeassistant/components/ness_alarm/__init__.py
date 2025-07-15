@@ -37,6 +37,7 @@ CONF_ZONES = "zones"
 CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
 CONF_ZONE_ID = "id"
+CONF_SUPPORT_HOME = "support_home_arm"
 ATTR_OUTPUT_ID = "output_id"
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEFAULT_INFER_ARMING_STATE = False
@@ -63,6 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_DEVICE_PORT): cv.port,
+                vol.Optional(CONF_SUPPORT_HOME, default=True): cv.boolean,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
@@ -100,6 +102,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     port = conf[CONF_DEVICE_PORT]
     scan_interval = conf[CONF_SCAN_INTERVAL]
     infer_arming_state = conf[CONF_INFER_ARMING_STATE]
+    support_home_arm = conf[CONF_SUPPORT_HOME]
 
     client = Client(
         host=host,
@@ -128,7 +131,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
     hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
+        async_load_platform(
+            hass,
+            Platform.ALARM_CONTROL_PANEL,
+            DOMAIN,
+            {CONF_SUPPORT_HOME: support_home_arm},
+            config,
+        )
     )
 
     def on_zone_change(zone_id: int, state: bool):
