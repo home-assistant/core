@@ -382,7 +382,7 @@ async def test_search_media(
             "media_content_id": "",
             "media_content_type": "",
             "search_query": "Fake Item 1",
-            "media_filter_classes": "movie",
+            "media_filter_classes": ["movie"],
         }
     )
     response = await client.receive_json()
