@@ -471,7 +471,7 @@ altruistclient==0.1.1
 amberelectric==2.0.12
 
 # homeassistant.components.amcrest
-amcrest==1.9.8
+amcrest==1.9.9
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.75
