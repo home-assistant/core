@@ -80,7 +80,7 @@ async def async_setup_entry(
         for output in area.outputs:
             platform = None
             _LOGGER.debug("Working on output %s", output.type)
-            if output.type in ("SYSTEM_SHADE", "MOTOR"):
+            if output.type in SUPPORTED_COVER_OUTPUT_TYPES:
                 entry_data.covers.append((area.name, output))
                 platform = Platform.COVER
             elif output.type == "CEILING_FAN_TYPE":
