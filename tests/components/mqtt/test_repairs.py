@@ -90,6 +90,7 @@ async def test_subentry_reconfigure_export_settings(
 
     # assert we have a device for the subentry
     device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
     assert device is not None
 
     # assert we entity for all subentry components
@@ -124,14 +125,19 @@ async def test_subentry_reconfigure_export_settings(
         "url": "https://www.home-assistant.io/integrations/mqtt/"
     }
 
-    # Copy the suggested values for an export
+    # Copy the exported config suggested values for an export
     suggested_values_from_schema = {
         field: field.description["suggested_value"]
         for field in result["data_schema"].schema
     }
-    #  Try to set up the exported config
+    #  Try to set up the exported config with a changed device name
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
     await setup_helper(hass, suggested_values_from_schema)
+
+    # Assert the subentry device was not effected by the exported configs
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    assert device is not None
 
     # Assert a repair flow was created
     assert len(events) == 1
@@ -151,3 +157,21 @@ async def test_subentry_reconfigure_export_settings(
 
     data = await process_repair_fix_flow(client, flow_id)
     assert data["type"] == "create_entry"
+
+    # Assert the subentry is removed and no other entity has linked the device
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is None
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(config_entry.subentries) == 0
+
+    #  Try to set up the exported config again
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    await setup_helper(hass, suggested_values_from_schema)
+    assert len(events) == 0
+
+    # The MQTT device was now set up from the new source
+    await hass.async_block_till_done(wait_background_tasks=True)
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device.config_entries_subentries[config_entry.entry_id] == {None}
+    assert device is not None
