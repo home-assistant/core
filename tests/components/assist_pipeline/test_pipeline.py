@@ -1550,9 +1550,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "?",
                 ],
             ),
-            # We are not streaming, so 0 chunks via streaming method
-            0,
-            "",
+            # We always stream when possible, so 1 chunk via streaming method
+            1,
+            "hello, how are you?",
         ),
         # Size above STREAM_RESPONSE_CHUNKS
         (
