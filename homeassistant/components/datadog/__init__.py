@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow as config_flow
@@ -55,7 +54,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    # Migrate YAML to config flow
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -65,47 +63,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-async def deprecate_yaml_issue(
-    hass: HomeAssistant, import_success: bool, entry: DatadogConfigEntry
-) -> None:
-    """Create an issue to deprecate YAML config."""
-    data = entry.data
-    if import_success:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            breaks_in_ha_version="2026.2.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-            },
-        )
-    else:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_connection_error",
-            breaks_in_ha_version="2026.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_connection_error",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "url": "/config/integrations/dashboard/add?domain=datadog",
-            },
-        )
-        _LOGGER.warning(
-            "Failed to import Datadog YAML config: could not connect to %s:%s",
-            data[CONF_HOST],
-            data[CONF_PORT],
-        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:

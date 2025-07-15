@@ -2,8 +2,6 @@
 
 from unittest import mock
 
-# tests/components/datadog/common.py
-
 MOCK_DATA = {
     "host": "localhost",
     "port": 8125,
@@ -15,6 +13,21 @@ MOCK_OPTIONS = {
 }
 
 MOCK_CONFIG = {**MOCK_DATA, **MOCK_OPTIONS}
+
+MOCK_YAML_VALID = {
+    "host": "localhost",
+    "port": 8125,
+    "prefix": "hass",
+    "rate": 1,
+}
+
+MOCK_YAML_INVALID = {
+    "host": "127.0.0.1",
+    "port": 65535,
+    "prefix": "failtest",
+    "rate": 1,
+}
+
 
 CONNECTION_TEST_METRIC = "connection_test"
 

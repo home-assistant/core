@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_RATE,
     DOMAIN,
 )
+from .issues import deprecate_yaml_issue
 
 
 class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,31 +73,14 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
+        result = await self.async_step_user(import_config)
+        if errors := result.get("errors"):
+            await deprecate_yaml_issue(self.hass, False)
+            return self.async_abort(reason=errors["base"])
 
-        # Check for duplicates
-        for entry in self._async_current_entries():
-            if (
-                entry.data.get(CONF_HOST) == import_config[CONF_HOST]
-                and entry.data.get(CONF_PORT) == import_config[CONF_PORT]
-            ):
-                return self.async_abort(reason="already_configured")
+        await deprecate_yaml_issue(self.hass, True)
 
-        # Validate connection
-        success = await validate_datadog_connection(self.hass, import_config)
-        if not success:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=f"Datadog {import_config[CONF_HOST]}",
-            data={
-                CONF_HOST: import_config[CONF_HOST],
-                CONF_PORT: import_config[CONF_PORT],
-            },
-            options={
-                CONF_PREFIX: import_config[CONF_PREFIX],
-                CONF_RATE: import_config[CONF_RATE],
-            },
-        )
+        return result
 
     @staticmethod
     @callback

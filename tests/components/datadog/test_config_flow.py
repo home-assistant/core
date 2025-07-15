@@ -111,27 +111,55 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
+    new_config = {
+        "host": "127.0.0.1",
+        "port": 8126,
+        "prefix": "updated",
+        "rate": 5,
+    }
+
+    # OSError Case
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd.increment",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=new_config
+        )
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+    # ValueError Case
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd.increment",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=new_config
+        )
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Success Case
     with patch(
         "homeassistant.components.datadog.config_flow.DogStatsd"
     ) as mock_dogstatsd:
-        mock_dogstatsd.return_value = MagicMock()
+        mock_instance = MagicMock()
+        mock_dogstatsd.return_value = mock_instance
 
         result = await hass.config_entries.options.async_init(mock_entry.entry_id)
         assert result["type"] == FlowResultType.FORM
-
-        new_config = {
-            "host": "127.0.0.1",
-            "port": 8126,
-            "prefix": "updated",
-            "rate": 5,
-        }
-
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input=new_config
         )
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
         assert result2["data"] == new_config
+        mock_instance.increment.assert_called_once_with("connection_test")
 
 
 async def test_async_step_user_connection_fail(hass: HomeAssistant) -> None:
@@ -153,25 +181,6 @@ async def test_async_step_user_connection_fail(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import_flow_abort_already_configured(hass: HomeAssistant) -> None:
-    """Test that import flow aborts if config already exists."""
-    mock_entry = MockConfigEntry(
-        domain=datadog.DOMAIN,
-        data=MOCK_DATA,
-        options=MOCK_OPTIONS,
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        datadog.DOMAIN,
-        context={"source": "import"},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_import_flow_abort_cannot_connect(hass: HomeAssistant) -> None:
