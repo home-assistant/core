@@ -69,22 +69,24 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         product_info = product_info if ret_product_info == 0 else {}
 
         ret_ir, infra_led_config = self.session.get_infra_led_config()
-        is_open_ir = int(infra_led_config["mode"]) if ret_ir == 0 else 0
+        is_open_ir = bool(int(infra_led_config["mode"])) if ret_ir == 0 else False
 
         ret_mf, mirror_flip_setting = self.session.get_mirror_and_flip_setting()
-        is_flip = int(mirror_flip_setting["isFlip"]) if ret_mf == 0 else 0
-        is_mirror = int(mirror_flip_setting["isMirror"]) if ret_mf == 0 else 0
+        is_flip = bool(int(mirror_flip_setting["isFlip"])) if ret_mf == 0 else False
+        is_mirror = bool(int(mirror_flip_setting["isMirror"])) if ret_mf == 0 else False
 
         ret_sleep, sleep_setting = self.session.is_asleep()
-        is_asleep = {"supported": ret_sleep == 0, "status": sleep_setting}
+        is_asleep = {"supported": ret_sleep == 0, "status": bool(int(sleep_setting))}
 
         ret_wl, is_open_white_light = self.session.getWhiteLightBrightness()
         is_open_white_light_val = (
-            int(is_open_white_light["enable"]) if ret_wl == 0 else 0
+            bool(int(is_open_white_light["enable"])) if ret_wl == 0 else False
         )
 
         ret_sc, is_siren_alarm = self.session.getSirenConfig()
-        is_siren_alarm_val = int(is_siren_alarm["sirenEnable"]) if ret_sc == 0 else 0
+        is_siren_alarm_val = (
+            bool(int(is_siren_alarm["sirenEnable"])) if ret_sc == 0 else False
+        )
 
         ret_vol, volume = self.session.getAudioVolume()
         volume_val = int(volume["volume"]) if ret_vol == 0 else 0
@@ -93,13 +95,13 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         speak_volume_val = int(speak_volume["SpeakVolume"]) if ret_sv == 0 else 0
 
         ret_ves, is_turn_off_volume = self.session.getVoiceEnableState()
-        is_turn_off_volume_val = (
-            0 if (ret_ves == 0 and int(is_turn_off_volume["isEnable"]) == 1) else 1
+        is_turn_off_volume_val = not (
+            ret_ves == 0 and bool(int(is_turn_off_volume["isEnable"]))
         )
 
         ret_les, is_turn_off_light = self.session.getLedEnableState()
-        is_turn_off_light_val = (
-            0 if (ret_les == 0 and int(is_turn_off_light["isEnable"]) == 1) else 1
+        is_turn_off_light_val = not (
+            ret_les == 0 and bool(int(is_turn_off_light["isEnable"]))
         )
 
         is_open_wdr = None
@@ -122,21 +124,21 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         return FoscamDeviceInfo(
             dev_info=dev_info,
             product_info=product_info,
-            is_open_ir=bool(is_open_ir),
-            is_flip=bool(is_flip),
-            is_mirror=bool(is_mirror),
+            is_open_ir=is_open_ir,
+            is_flip=is_flip,
+            is_mirror=is_mirror,
             is_asleep=is_asleep,
-            is_open_white_light=bool(is_open_white_light_val),
-            is_siren_alarm=bool(is_siren_alarm_val),
+            is_open_white_light=is_open_white_light_val,
+            is_siren_alarm=is_siren_alarm_val,
             volume=volume_val,
             speak_volume=speak_volume_val,
-            is_turn_off_volume=bool(is_turn_off_volume_val),
-            is_turn_off_light=bool(is_turn_off_light_val),
+            is_turn_off_volume=is_turn_off_volume_val,
+            is_turn_off_light=is_turn_off_light_val,
             is_open_wdr=is_open_wdr,
             is_open_hdr=is_open_hdr,
         )
 
     async def _async_update_data(self) -> FoscamDeviceInfo:
         """Fetch data from API endpoint."""
-        async with asyncio.timeout(15):
+        async with asyncio.timeout(1):
             return await self.hass.async_add_executor_job(self.gather_all_configs)

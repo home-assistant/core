@@ -16,10 +16,39 @@ from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
 
+def update_switch_status(description_key, coordinator_data) -> bool:
+    """Return the switch status based on the description key from coordinator data.
+
+    Handles special case for "is_asleep" by accessing the nested status field.
+    """
+    if description_key == "is_asleep":
+        return coordinator_data.is_asleep["status"]
+    return getattr(coordinator_data, description_key)
+
+
+def handle_ir_turn_on(hass, session):
+    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+
+    if hasattr(session, "set_infra_led_config"):
+        hass.async_add_executor_job(session.set_infra_led_config, 1)
+    hass.async_add_executor_job(session.open_infra_led)
+
+
+def handle_ir_turn_off(hass, session):
+    """Turn off IR LED: sets IR mode to manual (if supported), then turns open the IR LED."""
+
+    if hasattr(session, "set_infra_led_config"):
+        hass.async_add_executor_job(session.set_infra_led_config, 0)
+    hass.async_add_executor_job(session.close_infra_led)
+
+
 @dataclass(frozen=True, kw_only=True)
 class FoscamSwitchEntityDescription(SwitchEntityDescription):
     """A custom entity description that supports a turn_off function."""
 
+    native_value_fn: Callable[..., bool] | None = None
+    turn_on_handler: Callable[..., None] | None = None
+    turn_off_handler: Callable[..., None] | None = None
     turn_off_fn: Callable[[FoscamCamera], None]
     turn_on_fn: Callable[[FoscamCamera], None]
     set_ir_config_auto_close: Callable[[FoscamCamera], None] | None = None
@@ -30,21 +59,23 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
     FoscamSwitchEntityDescription(
         key="is_flip",
         translation_key="flip_switch",
-        icon="mdi:flip-vertical",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.flip_video(0),
         turn_on_fn=lambda session: session.flip_video(1),
     ),
     FoscamSwitchEntityDescription(
         key="is_mirror",
         translation_key="mirror_switch",
-        icon="mdi:mirror",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.mirror_video(0),
         turn_on_fn=lambda session: session.mirror_video(1),
     ),
     FoscamSwitchEntityDescription(
         key="is_open_ir",
         translation_key="ir_switch",
-        icon="mdi:theme-light-dark",
+        native_value_fn=update_switch_status,
+        turn_on_handler=handle_ir_turn_on,
+        turn_off_handler=handle_ir_turn_off,
         set_ir_config_auto_close=lambda session: session.set_infra_led_config(0),
         set_ir_config_auto=lambda session: session.set_infra_led_config(1),
         turn_off_fn=lambda session: session.close_infra_led(),
@@ -53,49 +84,49 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
     FoscamSwitchEntityDescription(
         key="is_asleep",
         translation_key="sleep_switch",
-        icon="mdi:sleep",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.wake_up(),
         turn_on_fn=lambda session: session.sleep(),
     ),
     FoscamSwitchEntityDescription(
         key="is_open_white_light",
         translation_key="white_light_switch",
-        icon="mdi:light-flood-down",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.closeWhiteLight(),
         turn_on_fn=lambda session: session.openWhiteLight(),
     ),
     FoscamSwitchEntityDescription(
         key="is_siren_alarm",
         translation_key="siren_alarm_switch",
-        icon="mdi:alarm-note",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.setSirenConfig(0, 100, 0),
         turn_on_fn=lambda session: session.setSirenConfig(1, 100, 0),
     ),
     FoscamSwitchEntityDescription(
         key="is_turn_off_volume",
         translation_key="turn_off_volume_switch",
-        icon="mdi:volume-off",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.setVoiceEnableState(1),
         turn_on_fn=lambda session: session.setVoiceEnableState(0),
     ),
     FoscamSwitchEntityDescription(
         key="is_turn_off_light",
         translation_key="turn_off_light_switch",
-        icon="mdi:lightbulb-fluorescent-tube",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.setLedEnableState(1),
         turn_on_fn=lambda session: session.setLedEnableState(0),
     ),
     FoscamSwitchEntityDescription(
         key="is_open_hdr",
         translation_key="hdr_switch",
-        icon="mdi:hdr",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.setHdrMode(0),
         turn_on_fn=lambda session: session.setHdrMode(1),
     ),
     FoscamSwitchEntityDescription(
         key="is_open_wdr",
         translation_key="wdr_switch",
-        icon="mdi:alpha-w-box",
+        native_value_fn=update_switch_status,
         turn_off_fn=lambda session: session.setWdrMode(0),
         turn_on_fn=lambda session: session.setWdrMode(1),
     ),
@@ -150,10 +181,10 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
-        if description.key == "is_asleep":
-            self._state = self.coordinator.data.is_asleep["status"]
-        else:
-            self._state = getattr(self.coordinator.data, self.entity_description.key)
+        if self.entity_description.native_value_fn:
+            self._state = self.entity_description.native_value_fn(
+                self.entity_description.key, self.coordinator.data
+            )
 
     @property
     def is_on(self) -> bool:
@@ -162,13 +193,11 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        if self.entity_description.key == "is_open_ir":
-            if self.entity_description.set_ir_config_auto_close:
-                self.hass.async_add_executor_job(
-                    self.entity_description.set_ir_config_auto_close,
-                    self.coordinator.session,
-                )
-        if self.entity_description.turn_off_fn is not None:
+        if self.entity_description.turn_off_handler is not None:
+            self.entity_description.turn_off_handler(
+                self.hass, self.coordinator.session
+            )
+        elif self.entity_description.turn_off_fn is not None:
             self.hass.async_add_executor_job(
                 self.entity_description.turn_off_fn, self.coordinator.session
             )
@@ -176,21 +205,19 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
-        if self.entity_description.key == "is_open_ir":
-            if self.entity_description.set_ir_config_auto:
-                self.hass.async_add_executor_job(
-                    self.entity_description.set_ir_config_auto, self.coordinator.session
-                )
-        self.hass.async_add_executor_job(
-            self.entity_description.turn_on_fn, self.coordinator.session
-        )
+        if self.entity_description.turn_on_handler is not None:
+            self.entity_description.turn_on_handler(self.hass, self.coordinator.session)
+        elif self.entity_description.turn_on_fn is not None:
+            self.hass.async_add_executor_job(
+                self.entity_description.turn_on_fn, self.coordinator.session
+            )
         await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.entity_description.key == "is_asleep":
-            self._state = self.coordinator.data.is_asleep["status"]
-        else:
-            self._state = getattr(self.coordinator.data, self.entity_description.key)
+        if self.entity_description.native_value_fn:
+            self._state = self.entity_description.native_value_fn(
+                self.entity_description.key, self.coordinator.data
+            )
         self.async_write_ha_state()
