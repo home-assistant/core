@@ -82,5 +82,20 @@
     "colors": [],
     "modes": [],
     "runOnTime": []
+  },
+  "DummyAppliance_12": {
+    "processAction": [],
+    "light": [2],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [],
+    "deviceName": true,
+    "powerOn": false,
+    "powerOff": true,
+    "colors": [],
+    "modes": [],
+    "runOnTime": []
   }
 }
