@@ -177,7 +177,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9defrost',
+    'unique_id': 'tuya.mock_device_iddefrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -226,7 +226,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9tankfull',
+    'unique_id': 'tuya.mock_device_idtankfull',
     'unit_of_measurement': None,
   })
 # ---

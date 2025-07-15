@@ -155,7 +155,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9countdown_set',
+    'unique_id': 'tuya.mock_device_idcountdown_set',
     'unit_of_measurement': None,
   })
 # ---

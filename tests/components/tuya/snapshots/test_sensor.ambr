@@ -85,7 +85,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf183ee21e5b3f58a3yhz9humidity_indoor',
+    'unique_id': 'tuya.mock_device_idhumidity_indoor',
     'unit_of_measurement': '%',
   })
 # ---
