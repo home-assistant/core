@@ -80,15 +80,14 @@ async def test_switch_turn_on_off(
     await hass.async_block_till_done()
     assert resp.status == 200
 
-    # Get the coordinator to access the mocked vegehub
-    coordinator = mocked_config_entry.runtime_data
-
     # Get switch entity IDs
     switch_entity_ids = hass.states.async_entity_ids("switch")
     assert len(switch_entity_ids) > 0, "No switch entities found"
 
     # Test turn_on method
-    with patch.object(coordinator.vegehub, "set_actuator") as mock_set_actuator:
+    with patch(
+        "homeassistant.components.vegehub.VegeHub.set_actuator"
+    ) as mock_set_actuator:
         await hass.services.async_call(
             "switch", "turn_on", {"entity_id": switch_entity_ids[0]}, blocking=True
         )
@@ -97,7 +96,9 @@ async def test_switch_turn_on_off(
         )  # on, index 0, duration 600
 
     # Test turn_off method
-    with patch.object(coordinator.vegehub, "set_actuator") as mock_set_actuator:
+    with patch(
+        "homeassistant.components.vegehub.VegeHub.set_actuator"
+    ) as mock_set_actuator:
         await hass.services.async_call(
             "switch", "turn_off", {"entity_id": switch_entity_ids[0]}, blocking=True
         )

@@ -30,7 +30,7 @@ async def async_setup_entry(
     """Set up VegeHub switches from a config entry."""
     coordinator = config_entry.runtime_data
 
-    switches = [
+    async_add_entities(
         VegeHubSwitch(
             index=i,
             duration=600,  # Default duration of 10 minutes
@@ -38,9 +38,7 @@ async def async_setup_entry(
             description=SWITCH_TYPES["switch"],
         )
         for i in range(coordinator.vegehub.num_actuators)
-    ]
-
-    async_add_entities(switches)
+    )
 
 
 class VegeHubSwitch(VegeHubEntity, SwitchEntity):
