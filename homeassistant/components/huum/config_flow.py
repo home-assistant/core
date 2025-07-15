@@ -37,12 +37,12 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                huum_handler = Huum(
+                huum = Huum(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                     session=async_get_clientsession(self.hass),
                 )
-                await huum_handler.status()
+                data = await huum.status()
             except (Forbidden, NotAuthenticated):
                 # Most likely Forbidden as that is what is returned from `.status()` with bad creds
                 _LOGGER.error("Could not log in to Huum with given credentials")
@@ -51,6 +51,9 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(data.sauna_name)
+                self._abort_if_unique_id_configured()
+
                 self._async_abort_entries_match(
                     {CONF_USERNAME: user_input[CONF_USERNAME]}
                 )

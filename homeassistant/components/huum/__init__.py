@@ -2,38 +2,28 @@
 
 from __future__ import annotations
 
-import logging
-
-from huum.exceptions import Forbidden, NotAuthenticated
-from huum.huum import Huum
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, PLATFORMS, UPDATE_INTERVAL
+from .coordinator import HuumDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huum from a config entry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
+    hass.data.setdefault(DOMAIN, {})
 
-    huum = Huum(username, password, session=async_get_clientsession(hass))
+    coordinator = HuumDataUpdateCoordinator(
+        hass,
+        config_entry=entry,
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+    )
 
-    try:
-        await huum.status()
-    except (Forbidden, NotAuthenticated) as err:
-        _LOGGER.error("Could not log in to Huum with given credentials")
-        raise ConfigEntryNotReady(
-            "Could not log in to Huum with given credentials"
-        ) from err
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = huum
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
