@@ -124,3 +124,42 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            url = URL(user_input[CONF_URL])
+            self._async_abort_entries_match({CONF_URL: url.human_repr()})
+
+            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
+            uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
+
+            try:
+                await uptime_kuma.metrics()
+            except UptimeKumaAuthenticationException:
+                errors["base"] = "invalid_auth"
+            except UptimeKumaException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={**user_input, CONF_URL: url.human_repr()},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input or entry.data,
+            ),
+            errors=errors,
+        )
