@@ -197,7 +197,7 @@ async def test_flow_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth flow."""
+    """Test reconfigure flow."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -239,7 +239,7 @@ async def test_flow_reconfigure_errors(
     raise_error: Exception,
     text_error: str,
 ) -> None:
-    """Test reauth flow errors and recover."""
+    """Test reconfigure flow errors and recover."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM

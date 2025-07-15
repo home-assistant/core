@@ -42,6 +42,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
 
 
+async def validate_connection(uptime_kuma: UptimeKuma) -> dict[str, str]:
+    """Validate Uptime Kuma connectivity."""
+    errors: dict[str, str] = {}
+    try:
+        await uptime_kuma.metrics()
+    except UptimeKumaAuthenticationException:
+        errors["base"] = "invalid_auth"
+    except UptimeKumaException:
+        errors["base"] = "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    return errors
+
+
 class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Uptime Kuma."""
 
@@ -57,16 +72,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
 
-            try:
-                await uptime_kuma.metrics()
-            except UptimeKumaAuthenticationException:
-                errors["base"] = "invalid_auth"
-            except UptimeKumaException:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await validate_connection(uptime_kuma)):
                 return self.async_create_entry(
                     title=url.host or "",
                     data={**user_input, CONF_URL: url.human_repr()},
@@ -102,16 +108,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_KEY],
             )
 
-            try:
-                await uptime_kuma.metrics()
-            except UptimeKumaAuthenticationException:
-                errors["base"] = "invalid_auth"
-            except UptimeKumaException:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await validate_connection(uptime_kuma)):
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates=user_input,
@@ -128,7 +125,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm reauthentication dialog."""
+        """Handle reconfigure flow."""
         errors: dict[str, str] = {}
 
         entry = self._get_reconfigure_entry()
@@ -140,16 +137,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
 
-            try:
-                await uptime_kuma.metrics()
-            except UptimeKumaAuthenticationException:
-                errors["base"] = "invalid_auth"
-            except UptimeKumaException:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await validate_connection(uptime_kuma)):
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates={**user_input, CONF_URL: url.human_repr()},
