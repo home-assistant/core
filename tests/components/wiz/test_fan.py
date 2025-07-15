@@ -1,6 +1,9 @@
 """Tests for fan platform."""
 
 from typing import Any
+from unittest.mock import patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -20,11 +23,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import FAKE_DIMMABLE_FAN, FAKE_MAC, async_push_update, async_setup_integration
+
+from tests.common import snapshot_platform
 
 ENTITY_ID = "fan.mock_title"
 
@@ -37,17 +43,13 @@ INITIAL_PARAMS = {
 }
 
 
-async def test_entity(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+@patch("homeassistant.components.wiz.PLATFORMS", [Platform.FAN])
+async def test_entity(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Test the fan entity."""
-    await async_setup_integration(hass, bulb_type=FAKE_DIMMABLE_FAN)
-
-    assert entity_registry.async_get(ENTITY_ID).unique_id == FAKE_MAC
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_PRESET_MODE) is None
-    assert state.attributes.get(ATTR_PERCENTAGE) == 16
-    assert state.attributes.get(ATTR_DIRECTION) == DIRECTION_FORWARD
+    entry = (await async_setup_integration(hass, bulb_type=FAKE_DIMMABLE_FAN))[1]
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 def _update_params(
