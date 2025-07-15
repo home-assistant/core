@@ -416,7 +416,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_current',
-    'unit_of_measurement': 'A',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_current-state]
@@ -425,7 +425,7 @@
       'device_class': 'current',
       'friendly_name': 'HVAC Meter Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'A',
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_current',
@@ -531,7 +531,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_voltage',
-    'unit_of_measurement': 'V',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_voltage-state]
@@ -540,7 +540,7 @@
       'device_class': 'voltage',
       'friendly_name': 'HVAC Meter Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'V',
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_voltage',
@@ -575,7 +575,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -590,7 +590,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': 'tuya.mocked_device_idcur_current',
-    'unit_of_measurement': 'mA',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_current-state]
@@ -599,14 +599,14 @@
       'device_class': 'current',
       'friendly_name': '一路带计量磁保持通断器 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mA',
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2198.0',
+    'state': '2.198',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power-entry]
@@ -705,7 +705,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'tuya.mocked_device_idcur_voltage',
-    'unit_of_measurement': 'V',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_voltage-state]
@@ -714,7 +714,7 @@
       'device_class': 'voltage',
       'friendly_name': '一路带计量磁保持通断器 Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'V',
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_voltage',
