@@ -44,8 +44,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -55,7 +53,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_OBJECT_ID
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
 from .helpers import async_setup_template_platform
 from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -199,6 +197,7 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -207,7 +206,7 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        super().__init__(hass, config, unique_id)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
@@ -215,14 +214,6 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
         self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
         )
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -266,6 +257,7 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
 class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
 
