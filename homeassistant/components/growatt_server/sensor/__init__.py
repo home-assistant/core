@@ -65,16 +65,14 @@ async def async_setup_entry(
             )
 
         entities.extend(
-            [
-                GrowattSensor(
-                    device_coordinator,
-                    name=device_sn,
-                    serial_id=device_sn,
-                    unique_id=f"{device_sn}-{description.key}",
-                    description=description,
-                )
-                for description in sensor_descriptions
-            ]
+            GrowattSensor(
+                device_coordinator,
+                name=device_sn,
+                serial_id=device_sn,
+                unique_id=f"{device_sn}-{description.key}",
+                description=description,
+            )
+            for description in sensor_descriptions
         )
 
     async_add_entities(entities)

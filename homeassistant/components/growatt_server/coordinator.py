@@ -20,7 +20,7 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 
-class GrowattCoordinator(DataUpdateCoordinator):
+class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to manage Growatt data fetching."""
 
     def __init__(
@@ -58,6 +58,7 @@ class GrowattCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN} ({device_id})",
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
 
     def _sync_update_data(self) -> dict[str, Any]:
