@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.components.ntfy.const import DOMAIN, SERVICE_PUBLISH
+from homeassistant.components.ntfy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -112,21 +112,12 @@ async def test_send_message(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    ("service", "domain"),
-    [
-        (SERVICE_SEND_MESSAGE, NOTIFY_DOMAIN),
-        (SERVICE_PUBLISH, DOMAIN),
-    ],
-)
 async def test_send_message_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
     exception: Exception,
     error_msg: str,
-    service: str,
-    domain: str,
 ) -> None:
     """Test publish message exceptions."""
 
@@ -140,8 +131,8 @@ async def test_send_message_exception(
 
     with pytest.raises(HomeAssistantError, match=error_msg):
         await hass.services.async_call(
-            domain,
-            service,
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
             {
                 ATTR_ENTITY_ID: "notify.mytopic",
                 ATTR_MESSAGE: "triggered",
@@ -155,19 +146,10 @@ async def test_send_message_exception(
     )
 
 
-@pytest.mark.parametrize(
-    ("service", "domain"),
-    [
-        (SERVICE_SEND_MESSAGE, NOTIFY_DOMAIN),
-        (SERVICE_PUBLISH, DOMAIN),
-    ],
-)
 async def test_send_message_reauth_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
-    service: str,
-    domain: str,
 ) -> None:
     """Test unauthorized exception initiates reauth flow."""
 
@@ -183,8 +165,8 @@ async def test_send_message_reauth_flow(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            domain,
-            service,
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
             {
                 ATTR_ENTITY_ID: "notify.mytopic",
                 ATTR_MESSAGE: "triggered",
