@@ -117,7 +117,6 @@ async def test_generate_data_service(
     for msg_attachment, attachment in zip(
         msg_attachments, task.attachments or [], strict=False
     ):
-        assert attachment.url == "http://example.com/media.mp4"
         assert attachment.mime_type == "video/mp4"
         assert attachment.media_content_id == msg_attachment["media_content_id"]
         assert attachment.path == Path("media.mp4")

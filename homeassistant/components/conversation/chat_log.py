@@ -147,9 +147,6 @@ class Attachment:
     media_content_id: str
     """Media content ID of the attachment."""
 
-    url: str
-    """URL of the attachment."""
-
     mime_type: str
     """MIME type of the attachment."""
 
