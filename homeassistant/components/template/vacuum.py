@@ -37,7 +37,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
@@ -145,6 +145,8 @@ async def async_setup_platform(
 
 class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     """Representation of a template vacuum features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -301,7 +303,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
         unique_id,
     ) -> None:
         """Initialize the vacuum."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateVacuum.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -362,7 +364,7 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateVacuum.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)

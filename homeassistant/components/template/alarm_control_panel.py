@@ -40,7 +40,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
@@ -211,6 +211,8 @@ class AbstractTemplateAlarmControlPanel(
 ):
     """Representation of a templated Alarm Control Panel features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
@@ -361,7 +363,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         unique_id: str | None,
     ) -> None:
         """Initialize the panel."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -408,7 +410,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)

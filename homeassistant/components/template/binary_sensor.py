@@ -49,7 +49,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY_TEMPLATE, CONF_OBJECT_ID
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .helpers import async_setup_template_platform
 from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -159,6 +159,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
     """A virtual binary sensor that triggers from another sensor."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -167,7 +168,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
@@ -248,6 +249,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
 class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = BINARY_SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
 
@@ -258,7 +260,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config)
 
         for key in (CONF_STATE, CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):

@@ -38,7 +38,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .helpers import async_setup_template_platform
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
@@ -152,6 +152,7 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -160,7 +161,7 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
-        super().__init__(hass, config, unique_id, ENTITY_ID_FORMAT)
+        super().__init__(hass, config, unique_id)
 
         name = self._attr_name
         if TYPE_CHECKING:
@@ -237,6 +238,7 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
 class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     """Switch entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = SWITCH_DOMAIN
 
     def __init__(
@@ -246,7 +248,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config)
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self._template = config.get(CONF_STATE)

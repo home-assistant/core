@@ -28,7 +28,7 @@ class TestEntity(trigger_entity.TriggerEntity):
 async def test_reference_blueprints_is_none(hass: HomeAssistant) -> None:
     """Test template entity requires hass to be set before accepting templates."""
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = trigger_entity.TriggerEntity(hass, coordinator, {}, "test.entity")
+    entity = trigger_entity.TriggerEntity(hass, coordinator, {})
 
     assert entity.referenced_blueprint is None
 
@@ -43,7 +43,7 @@ async def test_template_state(hass: HomeAssistant) -> None:
     }
 
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, config, "test.entity")
+    entity = TestEntity(hass, coordinator, config)
     entity.entity_id = "test.entity"
 
     coordinator._execute_update({"value": STATE_ON})
@@ -72,7 +72,7 @@ async def test_bad_template_state(hass: HomeAssistant) -> None:
         CONF_STATE: template.Template("{{ x - 1 }}", hass),
     }
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, config, "test.entity")
+    entity = TestEntity(hass, coordinator, config)
     entity.entity_id = "test.entity"
 
     coordinator._execute_update({"x": 1})
@@ -106,7 +106,7 @@ async def test_template_state_syntax_error(
     }
 
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, config, "test.entity")
+    entity = TestEntity(hass, coordinator, config)
     entity.entity_id = "test.entity"
 
     coordinator._execute_update({"value": STATE_ON})
@@ -123,7 +123,7 @@ async def test_template_state_syntax_error(
 async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
     """Test script variables."""
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, {}, "test.entity")
+    entity = TestEntity(hass, coordinator, {})
 
     assert entity._render_script_variables() == {}
 

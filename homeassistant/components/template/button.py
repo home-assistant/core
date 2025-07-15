@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -12,7 +12,6 @@ from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     ENTITY_ID_FORMAT,
     ButtonEntity,
-),
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
@@ -87,6 +86,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -95,7 +95,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
 
         if TYPE_CHECKING:
             assert self._attr_name is not None

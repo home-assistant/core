@@ -93,6 +93,8 @@ async def async_setup_entry(
 class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
@@ -132,7 +134,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateSelect.__init__(self, config)
 
         name = self._attr_name
@@ -174,7 +176,7 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSelect.__init__(self, config)
 
         if CONF_STATE in config:

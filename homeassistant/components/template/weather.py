@@ -152,6 +152,7 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -160,7 +161,7 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template weather."""
-        super().__init__(hass, config, unique_id, ENTITY_ID_FORMAT)
+        super().__init__(hass, config, unique_id)
 
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
         self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
@@ -482,6 +483,7 @@ class WeatherExtraStoredData(ExtraStoredData):
 class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = WEATHER_DOMAIN
     extra_template_keys = (
         CONF_CONDITION_TEMPLATE,
@@ -496,7 +498,7 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
         config: ConfigType,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config)
 
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)

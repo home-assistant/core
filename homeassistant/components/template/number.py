@@ -115,6 +115,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
     """Representation of a template number."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -123,7 +124,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         if TYPE_CHECKING:
             assert self._attr_name is not None
 
@@ -186,6 +187,7 @@ class StateNumberEntity(TemplateEntity, NumberEntity):
 class TriggerNumberEntity(TriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = NUMBER_DOMAIN
     extra_template_keys = (
         CONF_STATE,
@@ -201,7 +203,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config, ENTITY_ID_FORMAT)
+        super().__init__(hass, coordinator, config)
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)

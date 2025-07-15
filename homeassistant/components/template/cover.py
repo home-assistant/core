@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
 from .template_entity import (
@@ -160,6 +160,8 @@ async def async_setup_platform(
 
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     """Representation of a template cover features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -396,7 +398,7 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
         unique_id,
     ) -> None:
         """Initialize the Template cover."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateCover.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -455,7 +457,7 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateCover.__init__(self, config)
 
         # Render the _attr_name before initializing TriggerCoverEntity

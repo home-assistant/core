@@ -48,7 +48,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
 from .template_entity import (
@@ -213,6 +213,8 @@ async def async_setup_platform(
 
 class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -892,7 +894,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
         unique_id: str | None,
     ) -> None:
         """Initialize the light."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateLight.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
@@ -1081,7 +1083,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateLight.__init__(self, config, None)
 
         # Render the _attr_name before initializing TemplateLightEntity

@@ -242,10 +242,9 @@ class TemplateEntity(AbstractTemplateEntity):
         hass: HomeAssistant,
         config: ConfigType,
         unique_id: str | None,
-        entity_id_format: str,
     ) -> None:
         """Template Entity."""
-        AbstractTemplateEntity.__init__(self, hass, config, entity_id_format)
+        AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}

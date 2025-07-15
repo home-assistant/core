@@ -95,6 +95,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
 
     _attr_should_poll = False
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -103,7 +104,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the image."""
-        TemplateEntity.__init__(self, hass, config, unique_id, ENTITY_ID_FORMAT)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
         self._attr_device_info = async_device_info_to_link_from_device_id(
@@ -139,6 +140,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
     """Image entity based on trigger data."""
 
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)
@@ -150,7 +152,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        TriggerEntity.__init__(self, hass, coordinator, config, ENTITY_ID_FORMAT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
 
     @property

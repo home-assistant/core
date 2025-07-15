@@ -17,9 +17,9 @@ from .const import CONF_OBJECT_ID
 class AbstractTemplateEntity(Entity):
     """Actions linked to a template entity."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: ConfigType, entity_id_format: str
-    ) -> None:
+    _entity_id_format: str
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the entity."""
 
         self.hass = hass
@@ -28,7 +28,7 @@ class AbstractTemplateEntity(Entity):
         if self.hass:
             if (object_id := config.get(CONF_OBJECT_ID)) is not None:
                 self.entity_id = async_generate_entity_id(
-                    entity_id_format, object_id, hass=self.hass
+                    self._entity_id_format, object_id, hass=self.hass
                 )
 
             self._attr_device_info = async_device_info_to_link_from_device_id(
