@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -105,10 +104,6 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
             self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_press(self) -> None:
         """Press the button."""
