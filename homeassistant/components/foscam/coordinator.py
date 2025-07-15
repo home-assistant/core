@@ -108,10 +108,6 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         is_open_hdr = None
         reserve3 = product_info.get("reserve3")
         reserve3_int = int(reserve3) if reserve3 is not None else 0
-        # try:
-        #     reserve3_int = int(reserve3) if reserve3 is not None else 0
-        # except (TypeError, ValueError):
-        #     reserve3_int = 0
 
         if (reserve3_int & (1 << 8)) != 0:
             ret_wdr, is_open_wdr_data = self.session.getWdrMode()
