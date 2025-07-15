@@ -667,7 +667,7 @@ async def async_setup_entry(
     )
 
 
-# Using RestoreEntity instead of RestoreSensor because we need custom ExtraStoredData
+# Using RestoreEntity instead of RestoreSensor because we need custom ExtraStoredData type.
 # pylint: disable-next=hass-invalid-inheritance
 class StatisticsSensor(SensorEntity, RestoreEntity):
     """Representation of a Statistics sensor."""
@@ -781,7 +781,7 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
         This is needed to ensure that the buffer is properly sorted by time.
         """
         _LOGGER.debug("Startup for %s", self.entity_id)
-        await self._initialize_from_database()
+        await self._initialize_state()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -1038,7 +1038,11 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
             self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
-        """Fetch the states from the database."""
+        """Fetch the states from the database.
+
+        If MaxAge is provided then query will restrict to entries younger then
+        current datetime - MaxAge.
+        """
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         lower_entity_id = self._source_entity_id.lower()
         if (max_age := self._samples_max_age) is not None:
@@ -1055,7 +1059,10 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
         else:
             start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
             _LOGGER.debug("%s: retrieving all records", self.entity_id)
-        return history.state_changes_during_period(
+        # The query will get the list of states in DESCENDING order so that we
+        # can limit the result to self._sample_size. Afterwards reverse the
+        # list so that we get it in the right order again.
+        states = history.state_changes_during_period(
             self.hass,
             start_date,
             entity_id=lower_entity_id,
@@ -1063,6 +1070,8 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
             limit=self._samples_max_buffer_size,
             include_start_time_state=False,
         ).get(lower_entity_id, [])
+        states.reverse()
+        return states
 
     async def _initialize_from_restore_state(self) -> bool:
         """Initialize the list of states from the restore state."""
@@ -1087,16 +1096,8 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
         self._attr_state_class = last_state.attributes.get(ATTR_STATE_CLASS)
         return True
 
-    async def _initialize_from_database(self) -> None:
-        """Initialize the list of states from the database.
-
-        The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
-
-        If MaxAge is provided then query will restrict to entries younger then
-        current datetime - MaxAge.
-        """
+    async def _initialize_state(self) -> None:
+        """Initialize the list of states from the database/restore info."""
         if await self._initialize_from_restore_state():
             _LOGGER.debug("%s: restored %d states", self.entity_id, len(self.states))
         elif (DATA_RECORDER in self.hass.config.components) and (
@@ -1107,9 +1108,11 @@ class StatisticsSensor(SensorEntity, RestoreEntity):
             _LOGGER.debug(
                 "%s: fetched %d states from the database", self.entity_id, len(states)
             )
-            for state in reversed(states):
+            for state in states:
                 self._add_state_to_queue(state)
                 self._calculate_state_attributes(state)
+
+        # Update the sensor based on the restored states.
         self._async_purge_update_and_schedule()
 
         # only write state to the state machine if we are not in preview mode
