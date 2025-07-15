@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP
 from imgw_pib.model import HydrologicalData
 
 from homeassistant.components.sensor import (
@@ -36,6 +37,13 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
+    ImgwPibSensorEntityDescription(
+        key="alert",
+        translation_key="hydrological_alert",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(HYDROLOGICAL_ALERTS_MAP.values()),
+        value=lambda data: data.alert.value,
+    ),
     ImgwPibSensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
