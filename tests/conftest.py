@@ -1817,6 +1817,7 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
         patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
