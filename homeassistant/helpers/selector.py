@@ -1108,10 +1108,12 @@ class NumberSelectorMode(StrEnum):
 
 def validate_slider(data: Any) -> Any:
     """Validate configuration."""
-    if data["mode"] == "box":
-        return data
+    has_min_max = "min" in data and "max" in data
 
-    if "min" not in data or "max" not in data:
+    if "mode" not in data:
+        data["mode"] = "slider" if has_min_max else "box"
+
+    if data["mode"] == "slider" and not has_min_max:
         raise vol.Invalid("min and max are required in slider mode")
 
     return data
@@ -1134,7 +1136,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                vol.Optional(CONF_MODE): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
                 vol.Optional("translation_key"): str,

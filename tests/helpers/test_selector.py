@@ -427,6 +427,7 @@ def test_assist_pipeline_selector_schema(
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
         ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
+        ({}, (), ()),
     ],
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -434,10 +435,28 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("number", schema, valid_selections, invalid_selections)
 
 
+def test_number_selector_schema_default_mode() -> None:
+    """Test number selector default mode set on min/max."""
+    assert selector.selector({"number": {"min": 10, "max": 50}}).config == {
+        "mode": "slider",
+        "min": 10.0,
+        "max": 50.0,
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {}}).config == {
+        "mode": "box",
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {"min": "10"}}).config == {
+        "mode": "box",
+        "min": 10.0,
+        "step": 1.0,
+    }
+
+
 @pytest.mark.parametrize(
     "schema",
     [
-        {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
     ],
 )
