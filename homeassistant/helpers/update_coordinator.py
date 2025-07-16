@@ -87,10 +87,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             # late import to avoid circular imports
             from . import frame  # noqa: PLC0415
 
+            # It is not planned to enforce this for custom integrations.
+            # see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241
             frame.report_usage(
-                "relies on ContextVar, but should pass the config entry explicitly. "
-                "This will not be enforced for custom integrations - see "
-                "https://github.com/home-assistant/core/pull/138161#discussion_r1958184241",
+                "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
