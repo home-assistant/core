@@ -240,8 +240,8 @@
           "description": "Current weather condition code (WNUM)."
         },
         "pressure": {
-          "name": "Barametric pressure",
-          "description": "Current barametric pressure (kPa)."
+          "name": "Barometric pressure",
+          "description": "Current barometric pressure (kPa)."
         },
         "dewpoint": {
           "name": "Dew point",
