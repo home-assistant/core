@@ -1,6 +1,6 @@
 """Test for the Switchbot Light Entity."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from switchbot_api import Device, SwitchBotAPI
 
@@ -64,7 +64,10 @@ async def test_strip_light_turn_off(
     entity_id = "light.light_1_none"
     # state = hass.states.get(entity_id)
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -95,7 +98,10 @@ async def test_rgbww_light_turn_off(
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "light.light_1_none"
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -150,7 +156,10 @@ async def test_strip_light_turn_on(
     entity_id = "light.light_1_none"
     state = hass.states.get(entity_id)
     assert state.state is STATE_OFF
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -161,7 +170,10 @@ async def test_strip_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -172,7 +184,10 @@ async def test_strip_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -183,7 +198,10 @@ async def test_strip_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -253,7 +271,10 @@ async def test_rgbww_light_turn_on(
     entity_id = "light.light_1_none"
     state = hass.states.get(entity_id)
     assert state.state is STATE_OFF
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -264,7 +285,10 @@ async def test_rgbww_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -275,7 +299,10 @@ async def test_rgbww_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -286,7 +313,10 @@ async def test_rgbww_light_turn_on(
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
