@@ -38,6 +38,10 @@ from openai.types.responses import (
     WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.tool_param import (
+    CodeInterpreter,
+    CodeInterpreterContainerCodeInterpreterToolAuto,
+)
 from openai.types.responses.web_search_tool_param import UserLocation
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -52,6 +56,7 @@ from homeassistant.util import slugify
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
@@ -292,7 +297,7 @@ class OpenAIBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[ToolParam] | None = None
+        tools: list[ToolParam] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -314,9 +319,17 @@ class OpenAIBaseLLMEntity(Entity):
                     country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
                     timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 )
-            if tools is None:
-                tools = []
             tools.append(web_search)
+
+        if options.get(CONF_CODE_INTERPRETER):
+            tools.append(
+                CodeInterpreter(
+                    type="code_interpreter",
+                    container=CodeInterpreterContainerCodeInterpreterToolAuto(
+                        type="auto"
+                    ),
+                )
+            )
 
         model_args = {
             "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
