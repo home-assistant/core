@@ -23,6 +23,14 @@ DEVICE_MOCKS = {
         Platform.COVER,
         Platform.LIGHT,
     ],
+    "co2bj_air_detector": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.BINARY_SENSOR,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SIREN,
+    ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
         Platform.BINARY_SENSOR,
         Platform.FAN,
@@ -74,6 +82,10 @@ DEVICE_MOCKS = {
     "dlq_metering_3pn_wifi": [
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
+    ],
+    "gyd_night_light": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.LIGHT,
     ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
