@@ -8,6 +8,7 @@ from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -32,6 +33,7 @@ from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
+    LOGGER,
     TUYA_DISCOVERY_NEW,
     DPCode,
     DPType,
@@ -1438,6 +1440,9 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
+            # we do not need to check mappings if the API UOM is allowed
+            and self.native_unit_of_measurement
+            not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]
         ):
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
@@ -1445,6 +1450,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 self.native_unit_of_measurement is None
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
+                LOGGER.debug(
+                    "Device class %s ignored for incompatible unit %s in sensor entity %s",
+                    self.device_class,
+                    self.native_unit_of_measurement,
+                    self.unique_id,
+                )
                 self._attr_device_class = None
                 return
 
