@@ -186,22 +186,8 @@ async def search_items(
     for item in items:
         title = item["Name"]
         thumbnail = get_artwork_url(client, item)
-        media: list[dict[str, Any]] | None = None
-        children: list[BrowseMedia] | None = None
-
-        if is_folder := item.get("IsFolder", False):
-            media = await hass.async_add_executor_job(
-                fetch_items, client, {"parentId": item["Id"], "fields": "childCount"}
-            )
-            media = media or []
-            children = await asyncio.gather(
-                *(
-                    item_payload(hass, client, user_id, media_item)
-                    for media_item in media
-                )
-            )
-
         content_type: str = item["MediaType"]
+
         response = BrowseMedia(
             media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
                 content_type, MediaClass.DIRECTORY
@@ -210,13 +196,12 @@ async def search_items(
             media_content_type=content_type,
             title=title,
             can_play=bool(content_type in PLAYABLE_MEDIA_TYPES),
-            can_expand=is_folder,
-            children=children,
+            can_expand=item.get("IsFolder", False),
+            children=None,
             thumbnail=thumbnail,
         )
-        if children:
-            response.calculate_children_class()
         search_result.append(response)
+
     return search_result
 
 

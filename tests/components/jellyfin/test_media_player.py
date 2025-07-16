@@ -393,25 +393,13 @@ async def test_search_media(
             "media_class": MediaClass.DIRECTORY.value,
             "media_content_type": "string",
             "media_content_id": "FOLDER-UUID",
-            "children_media_class": MediaClass.EPISODE.value,
+            "children_media_class": None,
             "can_play": False,
             "can_expand": True,
             "can_search": False,
             "not_shown": 0,
             "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
-            "children": [
-                {
-                    "title": "EPISODE",
-                    "media_class": MediaClass.EPISODE.value,
-                    "media_content_type": MediaClass.EPISODE.value,
-                    "media_content_id": "EPISODE-UUID",
-                    "children_media_class": None,
-                    "can_play": True,
-                    "can_expand": False,
-                    "can_search": False,
-                    "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
-                }
-            ],
+            "children": [],
         }
     ]
 
