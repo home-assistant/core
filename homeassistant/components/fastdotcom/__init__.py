@@ -31,7 +31,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> bool:
     """Unload Fast.com config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
