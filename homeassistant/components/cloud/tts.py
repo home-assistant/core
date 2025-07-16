@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import AsyncGenerator
+import io
 import logging
-from typing import Any
+from typing import Any, cast
+import wave
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
+from sentence_stream import SentenceBoundaryDetector
 import voluptuous as vol
 
 from homeassistant.components.tts import (
@@ -17,6 +22,8 @@ from homeassistant.components.tts import (
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
@@ -305,7 +312,7 @@ async def async_setup_entry(
     tts_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
     tts_platform_loaded.set()
     cloud = hass.data[DATA_CLOUD]
-    async_add_entities([CloudTTSEntity(cloud)])
+    async_add_entities([CloudTTSEntity(cloud, config_entry)])
 
 
 class CloudTTSEntity(TextToSpeechEntity):
@@ -314,9 +321,10 @@ class CloudTTSEntity(TextToSpeechEntity):
     _attr_name = "Home Assistant Cloud"
     _attr_unique_id = TTS_ENTITY_UNIQUE_ID
 
-    def __init__(self, cloud: Cloud[CloudClient]) -> None:
+    def __init__(self, cloud: Cloud[CloudClient], config_entry: ConfigEntry) -> None:
         """Initialize cloud text-to-speech entity."""
         self.cloud = cloud
+        self.config_entry = config_entry
         self._language, self._voice = cloud.client.prefs.tts_default_voice
 
     async def _sync_prefs(self, prefs: CloudPreferences) -> None:
@@ -326,13 +334,13 @@ class CloudTTSEntity(TextToSpeechEntity):
     @property
     def default_language(self) -> str:
         """Return the default language."""
-        return self._language
+        return cast(str, self._language)
 
     @property
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     @property
@@ -433,6 +441,86 @@ class CloudTTSEntity(TextToSpeechEntity):
 
         return (options[ATTR_AUDIO_OUTPUT], data)
 
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message."""
+        options = {**request.options, ATTR_AUDIO_OUTPUT: AudioOutput.WAV.value}
+        text_queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+        async def sentence_gen() -> None:
+            try:
+                boundary_detector = SentenceBoundaryDetector()
+                async for text_chunk in request.message_gen:
+                    if not text_chunk:
+                        continue
+
+                    new_sentences = list(boundary_detector.add_chunk(text_chunk))
+                    if not new_sentences:
+                        continue
+
+                    # Combine all new sentences completed from this chunk
+                    text = " ".join(new_sentences)
+                    text_queue.put_nowait(text)
+
+                if text := boundary_detector.finish():
+                    # Final sentence
+                    text_queue.put_nowait(text)
+            finally:
+                # End of text
+                text_queue.put_nowait(None)
+
+        self.config_entry.async_create_background_task(
+            self.hass, sentence_gen(), "cloud tts sentences"
+        )
+
+        async def data_gen() -> AsyncGenerator[bytes]:
+            wav_header_sent = False
+            while True:
+                text = await text_queue.get()
+                if text is None:
+                    # End of text
+                    break
+
+                _extension, audio_data = await self.async_get_tts_audio(
+                    text, request.language, options
+                )
+                if not audio_data:
+                    continue
+
+                with io.BytesIO(audio_data) as wav_io:
+                    wav_reader: wave.Wave_read = wave.open(wav_io, "rb")
+                    with wav_reader:
+                        if not wav_header_sent:
+                            # Send WAV header with nframes = 0 for streaming
+                            yield _make_wav_header(
+                                rate=wav_reader.getframerate(),
+                                width=wav_reader.getsampwidth(),
+                                channels=wav_reader.getnchannels(),
+                            )
+                            wav_header_sent = True
+
+                        yield wav_reader.readframes(wav_reader.getnframes())
+
+            if not wav_header_sent:
+                # Send empty WAV header if no audio data was received.
+                # Without this, downstream ffmpeg conversion will fail.
+                yield _make_wav_header()
+
+        return TTSAudioResponse(AudioOutput.WAV.value, data_gen())
+
+
+def _make_wav_header(rate: int = 24000, width: int = 2, channels: int = 1) -> bytes:
+    with io.BytesIO() as wav_io:
+        wav_writer: wave.Wave_write = wave.open(wav_io, "wb")
+        with wav_writer:
+            wav_writer.setframerate(rate)
+            wav_writer.setsampwidth(width)
+            wav_writer.setnchannels(channels)
+
+        wav_io.seek(0)
+        return wav_io.getvalue()
+
 
 class CloudProvider(Provider):
     """Home Assistant Cloud speech API provider."""
@@ -453,7 +541,7 @@ class CloudProvider(Provider):
     @property
     def default_language(self) -> str | None:
         """Return the default language."""
-        return self._language
+        return cast(str, self._language)
 
     @property
     def supported_languages(self) -> list[str]:
@@ -526,9 +614,11 @@ class CloudProvider(Provider):
                     language=language,
                     voice=options.get(
                         ATTR_VOICE,
-                        self._voice
-                        if language == self._language
-                        else DEFAULT_VOICES[language],
+                        (
+                            self._voice
+                            if language == self._language
+                            else DEFAULT_VOICES[language]
+                        ),
                     ),
                     gender=options.get(ATTR_GENDER),
                 ),

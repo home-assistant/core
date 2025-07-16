@@ -2278,6 +2278,9 @@ sensorpush-ha==1.3.2
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
 
+# homeassistant.components.cloud
+sentence-stream==1.0.0
+
 # homeassistant.components.sentry
 sentry-sdk==1.45.1
 

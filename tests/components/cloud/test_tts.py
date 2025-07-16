@@ -262,13 +262,20 @@ async def test_get_tts_audio(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
     assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if data.get("engine_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
 @pytest.mark.parametrize(
@@ -372,13 +379,16 @@ async def test_tts_entity(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
     assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
 
     state = hass.states.get(entity_id)
     assert state
@@ -509,13 +519,21 @@ async def test_deprecated_voice(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["gender"] is None
     assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if data.get("engine_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue(
         "cloud", f"deprecated_voice_{replacement_voice}"
     )
@@ -538,6 +556,9 @@ async def test_deprecated_voice(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     issue_id = f"deprecated_voice_{deprecated_voice}"
 
     assert mock_process_tts.call_count == 1
@@ -546,7 +567,12 @@ async def test_deprecated_voice(
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["gender"] is None
     assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if data.get("engine_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.8.0"
@@ -649,12 +675,20 @@ async def test_deprecated_gender(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if data.get("engine_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
     assert issue is None
     mock_process_tts.reset_mock()
@@ -675,6 +709,9 @@ async def test_deprecated_gender(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     issue_id = "deprecated_gender"
 
     assert mock_process_tts.call_count == 1
@@ -683,7 +720,12 @@ async def test_deprecated_gender(
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["gender"] == gender_option
     assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if data.get("engine_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.10.0"
@@ -798,4 +840,8 @@ async def test_tts_services(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == service_data[ATTR_LANGUAGE]
     assert mock_process_tts.call_args.kwargs["voice"] == "GadisNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    if service_data.get("entity_id", "").startswith("tts."):
+        assert mock_process_tts.call_args.kwargs["output"] == "wav"  # streaming
+    else:
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
