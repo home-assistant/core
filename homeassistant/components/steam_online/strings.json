@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Use {account_id_url} to find your Steam account ID",
+        "description": "You can find your Steam account ID in your Steam account details, profile URL, or use {account_id_url}. See the documentation for more details.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "account": "Steam account ID"
