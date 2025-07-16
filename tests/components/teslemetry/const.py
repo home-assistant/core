@@ -96,9 +96,9 @@ METADATA_NOSCOPE = {
         "LRW3F7EK4NC700000": {
             "proxy": False,
             "access": True,
-            "polling": False,
-            "firmware": "2024.44.25",
-            "discounted": False,
+            "polling": True,
+            "firmware": "2026.0.0",
+            "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
         }

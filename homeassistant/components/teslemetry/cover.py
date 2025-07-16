@@ -82,7 +82,8 @@ async def async_setup_entry(
             (
                 TeslemetrySunroofEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
-                if vehicle.coordinator.data.get("vehicle_config_sun_roof_installed")
+                if vehicle.poll
+                and vehicle.coordinator.data.get("vehicle_config_sun_roof_installed")
             ),
         )
     )
