@@ -20,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import HuumDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Huum sauna with config flow."""
-    async_add_entities([HuumDevice(hass.data[DOMAIN][entry.entry_id])], True)
+    async_add_entities([HuumDevice(entry.runtime_data)])
 
 
 class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
@@ -46,31 +45,22 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_max_temp = 110
+    _attr_min_temp = 40
     _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
         """Initialize the heater."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
 
         self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = coordinator.device_info
-        self._coordinator: HuumDataUpdateCoordinator = coordinator
-
-    @property
-    def min_temp(self) -> int:
-        """Return configured minimal temperature."""
-        return self._coordinator.data.sauna_config.min_temp
-
-    @property
-    def max_temp(self) -> int:
-        """Return configured maximum temperature."""
-        return self._coordinator.data.sauna_config.max_temp
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self._coordinator.data.status == SaunaStatus.ONLINE_HEATING:
+        if self.coordinator.data.status == SaunaStatus.ONLINE_HEATING:
             return HVACMode.HEAT
         return HVACMode.OFF
 
@@ -84,19 +74,19 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     @property
     def current_temperature(self) -> int | None:
         """Return the current temperature."""
-        return self._coordinator.data.temperature
+        return self.coordinator.data.temperature
 
     @property
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
-        return self._coordinator.data.target_temperature or int(self.min_temp)
+        return self.coordinator.data.target_temperature or int(self.min_temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             await self._turn_on(self.target_temperature)
         elif hvac_mode == HVACMode.OFF:
-            await self._coordinator.huum.turn_off()
+            await self.coordinator.huum.turn_off()
         await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -110,7 +100,7 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
 
     async def _turn_on(self, temperature: int) -> None:
         try:
-            await self._coordinator.huum.turn_on(temperature)
+            await self.coordinator.huum.turn_on(temperature)
         except (ValueError, SafetyException) as err:
             _LOGGER.error(str(err))
             raise HomeAssistantError(f"Unable to turn on sauna: {err}") from err

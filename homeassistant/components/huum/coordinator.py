@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 import logging
 
 from huum.exceptions import Forbidden, NotAuthenticated
@@ -12,14 +12,14 @@ from huum.schemas import HuumStatusResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+UPDATE_INTERVAL = 30
 
 
 class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
@@ -29,14 +29,13 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
         self.huum = Huum(
@@ -61,12 +60,6 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
             return await self.huum.status()
         except (Forbidden, NotAuthenticated) as err:
             _LOGGER.error("Could not log in to Huum with given credentials")
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 "Could not log in to Huum with given credentials"
             ) from err
-
-    def convert_timestamp(self, timestamp: int | None) -> datetime | None:
-        """Convert numeric timestamp to datetime object."""
-        if timestamp:
-            return datetime.fromtimestamp(timestamp, tz=UTC)
-        return None
