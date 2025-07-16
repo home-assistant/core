@@ -32,10 +32,13 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
-        if dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive):
+        if dest.action(
+            WMS_WebControl_pro_API_actionDescription.AwningDrive, warnMissing=False
+        ):
             entities.append(WebControlProAwning(config_entry.entry_id, dest))
         elif dest.action(
-            WMS_WebControl_pro_API_actionDescription.RollerShutterBlindDrive
+            WMS_WebControl_pro_API_actionDescription.RollerShutterBlindDrive,
+            warnMissing=False,
         ):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
 

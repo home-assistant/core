@@ -23,7 +23,9 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = [
         WebControlProIdentifyButton(config_entry.entry_id, dest)
         for dest in hub.dests.values()
-        if dest.action(WMS_WebControl_pro_API_actionDescription.Identify)
+        if dest.action(
+            WMS_WebControl_pro_API_actionDescription.Identify, warnMissing=False
+        )
     ]
 
     async_add_entities(entities)
