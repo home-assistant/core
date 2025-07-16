@@ -57,6 +57,13 @@
         },
         "title": "Template image"
       },
+      "notify": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "send_message": "Actions on send message"
+        }
+      },
       "number": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -107,6 +114,7 @@
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
           "image": "Template an image",
+          "notify": "Template a notify",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
@@ -181,6 +189,13 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "notify": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "send_message": "[%key:component::template::config::step::notify::data::send_message%]"
+        }
       },
       "number": {
         "data": {
