@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from nhc.const import THERMOSTAT_MODES
+from nhc.const import THERMOSTAT_MODES, THERMOSTAT_MODES_REVERSE
 from nhc.thermostat import NHCThermostat
 
 from homeassistant.components.climate import (
@@ -65,9 +65,8 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     def _get_niko_mode(self, mode: str) -> int:
         """Return the Niko mode."""
-        for key, value in THERMOSTAT_MODES.items():
-            if value == mode:
-                return key
+        if THERMOSTAT_MODES_REVERSE[mode]:
+            return THERMOSTAT_MODES_REVERSE[mode]
         return NIKO_HOME_CONTROL_THERMOSTAT_MODES.OFF
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
