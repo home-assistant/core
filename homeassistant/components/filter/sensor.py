@@ -61,6 +61,7 @@ from .const import (
     CONF_FILTER_PRECISION,
     CONF_FILTER_RADIUS,
     CONF_FILTER_TIME_CONSTANT,
+    CONF_FILTER_UPDATE_BY_TIME,
     CONF_FILTER_UPPER_BOUND,
     CONF_FILTER_WINDOW_SIZE,
     CONF_FILTERS,
@@ -131,6 +132,7 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
         vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_FILTER_UPDATE_BY_TIME, default=False): cv.boolean,
     }
 )
 
@@ -251,6 +253,12 @@ class SensorFilter(SensorEntity):
         self._attr_state_class = None
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
 
+        self._attr_should_poll = False
+        for filt in filters:
+            if getattr(filt, "update_by_time", False):
+                self._attr_should_poll = True
+                break
+
     @callback
     def _update_filter_sensor_state_event(
         self, event: Event[EventStateChangedData]
@@ -259,9 +267,19 @@ class SensorFilter(SensorEntity):
         _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data["new_state"])
 
+    def update(self) -> None:
+        """Time-based update of the filter without an input state change."""
+        state = copy(self.hass.states.get(self.entity_id))
+        if state is not None:
+            state.last_updated = dt_util.utcnow()
+        self._update_filter_sensor_state(state, update_ha=False, timed_update=True)
+
     @callback
     def _update_filter_sensor_state(
-        self, new_state: State | None, update_ha: bool = True
+        self,
+        new_state: State | None,
+        update_ha: bool = True,
+        timed_update: bool = False,
     ) -> None:
         """Process device state changes."""
         if new_state is None:
@@ -288,7 +306,7 @@ class SensorFilter(SensorEntity):
 
         try:
             for filt in self._filters:
-                filtered_state = filt.filter_state(copy(temp_state))
+                filtered_state = filt.filter_state(copy(temp_state), timed_update)
                 _LOGGER.debug(
                     "%s(%s=%s) -> %s",
                     filt.name,
@@ -414,9 +432,10 @@ class FilterState:
 
     state: str | float | int
 
-    def __init__(self, state: _State) -> None:
+    def __init__(self, state: _State, timed_update: bool = False) -> None:
         """Initialize with HA State object."""
         self.timestamp = state.last_updated
+        self.timed_update = timed_update
         try:
             self.state = float(state.state)
         except ValueError:
@@ -502,9 +521,9 @@ class Filter:
         """Implement filter."""
         raise NotImplementedError
 
-    def filter_state(self, new_state: _State) -> _State:
+    def filter_state(self, new_state: _State, timed_update: bool = False) -> _State:
         """Implement a common interface for filters."""
-        fstate = FilterState(new_state)
+        fstate = FilterState(new_state, timed_update)
         if self._only_numbers and not isinstance(fstate.state, Number):
             raise ValueError(f"State <{fstate.state}> is not a Number")
 
@@ -512,7 +531,7 @@ class Filter:
         filtered.set_precision(self.filter_precision)
 
         if self._store_raw:
-            self.states.append(copy(FilterState(new_state)))
+            self.states.append(copy(FilterState(new_state, timed_update)))
         else:
             self.states.append(copy(filtered))
         new_state.state = filtered.state
@@ -520,7 +539,7 @@ class Filter:
 
 
 @FILTERS.register(FILTER_NAME_RANGE)
-class RangeFilter(Filter, SensorEntity):
+class RangeFilter(Filter):
     """Range filter.
 
     Determines if new state is in the range of upper_bound and lower_bound.
@@ -579,7 +598,7 @@ class RangeFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
-class OutlierFilter(Filter, SensorEntity):
+class OutlierFilter(Filter):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
@@ -629,7 +648,7 @@ class OutlierFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
-class LowPassFilter(Filter, SensorEntity):
+class LowPassFilter(Filter):
     """BASIC Low Pass Filter."""
 
     def __init__(
@@ -663,7 +682,7 @@ class LowPassFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
-class TimeSMAFilter(Filter, SensorEntity):
+class TimeSMAFilter(Filter):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
@@ -676,6 +695,7 @@ class TimeSMAFilter(Filter, SensorEntity):
         entity: str,
         type: str,  # pylint: disable=redefined-builtin
         precision: int = DEFAULT_PRECISION,
+        update_by_time: bool = False,
     ) -> None:
         """Initialize Filter.
 
@@ -685,11 +705,13 @@ class TimeSMAFilter(Filter, SensorEntity):
             FILTER_NAME_TIME_SMA, window_size, precision=precision, entity=entity
         )
         self._time_window = window_size
+        self.update_by_time = update_by_time
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
 
     def _leak(self, left_boundary: datetime) -> None:
         """Remove timeouted elements."""
+        _LOGGER.debug("Leaking %s", self.queue)
         while self.queue:
             if self.queue[0].timestamp + self._time_window <= left_boundary:
                 self.last_leak = self.queue.popleft()
@@ -700,7 +722,9 @@ class TimeSMAFilter(Filter, SensorEntity):
         """Implement the Simple Moving Average filter."""
 
         self._leak(new_state.timestamp)
-        self.queue.append(copy(new_state))
+        if new_state.timed_update is False:
+            self.queue.append(copy(new_state))
+        _LOGGER.debug("Current queue: %s", self.queue)
 
         moving_sum: float = 0
         start = new_state.timestamp - self._time_window
@@ -718,7 +742,7 @@ class TimeSMAFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
-class ThrottleFilter(Filter, SensorEntity):
+class ThrottleFilter(Filter):
     """Throttle Filter.
 
     One sample per window.
@@ -745,7 +769,7 @@ class ThrottleFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
-class TimeThrottleFilter(Filter, SensorEntity):
+class TimeThrottleFilter(Filter):
     """Time Throttle Filter.
 
     One sample per time period.
