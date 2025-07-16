@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Message, MessageData, MowerAttributes, WorkArea
+from aioautomower.model import Calendar, Message, MessageData, MowerAttributes, WorkArea
 from aioautomower.model.model_message import MessageAttributes, Severity
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -113,7 +113,7 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception_get_status", "exception_async_get_message", "entry_state"),
+    ("exception_get_status", "exception_async_get_messages", "entry_state"),
     [
         (ApiError("Test error"), None, ConfigEntryState.SETUP_RETRY),
         (AuthError("Test error"), None, ConfigEntryState.SETUP_ERROR),
@@ -127,13 +127,13 @@ async def test_update_failed(
     mock_config_entry: MockConfigEntry,
     values: dict[str, MowerAttributes],
     exception_get_status: Exception | None,
-    exception_async_get_message: Exception | None,
+    exception_async_get_messages: Exception | None,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
     mock_automower_client.get_status.side_effect = exception_get_status or None
     mock_automower_client.get_status.return_value = values
-    mock_automower_client.async_get_message.side_effect = exception_async_get_message
+    mock_automower_client.async_get_messages.side_effect = exception_async_get_messages
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is entry_state
@@ -323,7 +323,7 @@ async def test_coordinator_automatic_registry_cleanup(
     mower2 = values.pop("1234")
     mower2_messages = messages.pop("1234")
     mock_automower_client.get_status.return_value = values
-    mock_automower_client.async_get_message.return_value = mower2_messages
+    mock_automower_client.async_get_messages.return_value = mower2_messages
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -340,7 +340,7 @@ async def test_coordinator_automatic_registry_cleanup(
     values["1234"] = mower2
     messages["1234"] = mower2_messages
     mock_automower_client.get_status.return_value = values
-    mock_automower_client.async_get_message.return_value = messages
+    mock_automower_client.async_get_messages.return_value = messages
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -357,7 +357,7 @@ async def test_coordinator_automatic_registry_cleanup(
     mower1 = values.pop(TEST_MOWER_ID)
     mower1_messages = messages.pop(TEST_MOWER_ID)
     mock_automower_client.get_status.return_value = values
-    mock_automower_client.async_get_message.return_value = messages
+    mock_automower_client.async_get_messages.return_value = messages
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -395,7 +395,7 @@ async def test_coordinator_automatic_registry_cleanup(
             ),
         )
 
-    mock_automower_client.async_get_message = AsyncMock(
+    mock_automower_client.async_get_messages = AsyncMock(
         side_effect=get_message_side_effect
     )
 

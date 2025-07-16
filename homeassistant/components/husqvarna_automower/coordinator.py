@@ -327,7 +327,7 @@ class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
     async def _async_update_data(self) -> MessageData:
         """Poll data from the API."""
         try:
-            data = await self.api.async_get_message(self.mower_id)
+            data = await self.api.async_get_messages(self.mower_id)
         except ApiError as err:
             raise UpdateFailed(err) from err
         except AuthError as err:

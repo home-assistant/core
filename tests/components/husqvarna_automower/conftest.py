@@ -151,7 +151,9 @@ def mock_automower_client(
         mock_instance = mock.return_value
         mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
         mock_instance.get_status = AsyncMock(return_value=values)
-        mock_instance.async_get_message = AsyncMock(side_effect=get_message_side_effect)
+        mock_instance.async_get_messages = AsyncMock(
+            side_effect=get_message_side_effect
+        )
         mock_instance.start_listening = AsyncMock(side_effect=listen)
         mock_instance.commands = create_autospec(
             MowerCommands, instance=True, spec_set=True

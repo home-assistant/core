@@ -8,8 +8,8 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
-    MessageData,
     InactiveReasons,
+    MessageData,
     MowerAttributes,
     MowerModes,
     RestrictedReasons,
