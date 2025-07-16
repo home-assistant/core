@@ -29,6 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
@@ -151,6 +152,7 @@ class NmapDeviceScanner:
         self._hosts = None
         self._options = None
         self._exclude = None
+        self._mac_exclude = None
         self._scan_interval = None
 
         self._known_mac_addresses: dict[str, str] = {}
@@ -167,6 +169,13 @@ class NmapDeviceScanner:
         self._hosts = [host for host in hosts_list if host != ""]
         excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
         self._exclude = [exclude for exclude in excludes_list if exclude != ""]
+        if CONF_MAC_EXCLUDE in config:
+            mac_excludes_list = cv.ensure_list_csv(config[CONF_MAC_EXCLUDE])
+        else:
+            mac_excludes_list = []
+        self._mac_exclude = [
+            mac_exclude for mac_exclude in mac_excludes_list if mac_exclude != ""
+        ]
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
@@ -383,6 +392,11 @@ class NmapDeviceScanner:
                 continue
 
             formatted_mac = format_mac(mac)
+
+            if formatted_mac in self._mac_exclude:
+                _LOGGER.debug("MAC address %s is excluded from tracking", formatted_mac)
+                continue
+
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
                 != entry_id
