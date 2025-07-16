@@ -41,6 +41,9 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 user_input,
             )
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             if not success:
                 errors["base"] = "cannot_connect"
             else:
