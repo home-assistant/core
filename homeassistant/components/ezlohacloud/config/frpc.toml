@@ -1,0 +1,8 @@
+serverAddr = "testtunnelezlo.info"
+serverPort = 7000
+
+[[proxies]]
+name = "test-tcp"
+type = "http"
+localPort = 8123
+subdomain = "frptest1"
