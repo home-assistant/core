@@ -21,7 +21,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured_service": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "options": {
@@ -47,10 +47,6 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "{domain} YAML configuration is deprecated",
-      "description": "Configuring {domain} using YAML is being removed. Please remove the {domain} YAML configuration from your configuration.yaml file and continue to set up the integration manually."
-    },
     "deprecated_yaml_import_connection_error": {
       "title": "{domain} YAML configuration import failed",
       "description": "There was an error connecting to the Datadog Agent when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."

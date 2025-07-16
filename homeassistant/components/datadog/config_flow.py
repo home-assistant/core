@@ -12,7 +12,8 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_RATE,
@@ -22,7 +23,6 @@ from .const import (
     DEFAULT_RATE,
     DOMAIN,
 )
-from .issues import deprecate_yaml_issue
 
 
 class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,19 +69,14 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         # Check for duplicates
-        for entry in self._async_current_entries():
-            if (
-                entry.data.get(CONF_HOST) == import_config[CONF_HOST]
-                and entry.data.get(CONF_PORT) == import_config[CONF_PORT]
-            ):
-                return self.async_abort(reason="already_configured_service")
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
 
-        result = await self.async_step_user(import_config)
+        result = await self.async_step_user(user_input)
 
         if errors := result.get("errors"):
             await deprecate_yaml_issue(self.hass, False)
@@ -105,28 +100,38 @@ class DatadogOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Datadog options."""
         errors: dict[str, str] = {}
-        data = {**self.config_entry.data, **self.config_entry.options}
-        if user_input:
-            success = await validate_datadog_connection(
-                self.hass,
-                user_input,
-            )
-            if not success:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_create_entry(
-                    title=f"Datadog {user_input['host']}",
-                    data=user_input,
-                )
+        data = self.config_entry.data
+        options = self.config_entry.options
 
+        if user_input is None:
+            user_input = {}
+
+        connection_data = {
+            CONF_HOST: data[CONF_HOST],
+            CONF_PORT: data[CONF_PORT],
+            CONF_PREFIX: user_input.get(CONF_PREFIX, options[CONF_PREFIX]),
+            CONF_RATE: user_input.get(CONF_RATE, options[CONF_RATE]),
+        }
+
+        success = await validate_datadog_connection(
+            self.hass,
+            connection_data,
+        )
+        if success:
+            return self.async_create_entry(
+                data={
+                    CONF_PREFIX: connection_data[CONF_PREFIX],
+                    CONF_RATE: connection_data[CONF_RATE],
+                }
+            )
+
+        errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=data["host"]): str,
-                    vol.Required(CONF_PORT, default=data["port"]): int,
-                    vol.Required(CONF_PREFIX, default=data["prefix"]): str,
-                    vol.Required(CONF_RATE, default=data["rate"]): int,
+                    vol.Required(CONF_PREFIX, default=options[CONF_PREFIX]): str,
+                    vol.Required(CONF_RATE, default=options[CONF_RATE]): int,
                 }
             ),
             errors=errors,
@@ -138,11 +143,47 @@ async def validate_datadog_connection(
 ) -> bool:
     """Attempt to send a test metric to the Datadog agent."""
     try:
-        client = DogStatsd(
-            user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_PREFIX]
-        )
+        client = DogStatsd(user_input[CONF_HOST], user_input[CONF_PORT])
         hass.async_add_executor_job(client.increment, "connection_test")
     except (OSError, ValueError):
         return False
     else:
         return True
+
+
+async def deprecate_yaml_issue(
+    hass: HomeAssistant,
+    import_success: bool,
+) -> None:
+    """Create an issue to deprecate YAML config."""
+    if import_success:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2026.2.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Datadog",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_connection_error",
+            breaks_in_ha_version="2026.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_connection_error",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Datadog",
+                "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
+            },
+        )
