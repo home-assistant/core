@@ -80,7 +80,7 @@ SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FastdotcomConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fast.com sensors from a config entry."""
     coordinator = entry.runtime_data
