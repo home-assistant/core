@@ -774,7 +774,7 @@ async def test_hmip_absolute_humidity_sensor(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
-    assert ha_state.state == "6098"
+    assert ha_state.state == "6099.0"
 
 
 async def test_hmip_absolute_humidity_sensor_invalid_value(

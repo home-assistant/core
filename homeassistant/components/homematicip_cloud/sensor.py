@@ -45,6 +45,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     DEGREE,
     LIGHT_LUX,
@@ -459,7 +460,9 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP absolute humidity sensor."""
 
-    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
+    _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -467,7 +470,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Absolute Humidity")
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> float | None:
         """Return the state."""
         if self.functional_channel is None:
             return None
@@ -481,8 +484,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         ):
             return None
 
-        # Convert from g/m³ to mg/m³
-        return int(float(value) * 1000)
+        return round(value, 3)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
