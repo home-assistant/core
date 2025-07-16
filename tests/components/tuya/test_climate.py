@@ -18,6 +18,9 @@ from . import DEVICE_MOCKS, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+WINDSPEED_LOW = 1
+WINDSPEED_HIGH = 2
+
 
 @pytest.mark.parametrize(
     "mock_device_code",
@@ -73,19 +76,19 @@ async def test_fan_mode_windspeed(
 
     state = hass.states.get("climate.air_conditioner")
     assert state is not None, "climate.air_conditioner does not exist"
-    assert state.attributes["fan_mode"] == DEFAULT_FAN_MODE
+    assert state.attributes["fan_mode"] == WINDSPEED_LOW
     await hass.services.async_call(
         Platform.CLIMATE,
         "set_fan_mode",
         {
             "entity_id": "climate.air_conditioner",
-            "fan_mode": 2,
+            "fan_mode": WINDSPEED_HIGH,
         },
     )
     await hass.async_block_till_done()
 
     # Simulate the device reporting the new windspeed
-    mock_device.status["windspeed"] = 2
+    mock_device.status["windspeed"] = WINDSPEED_HIGH
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
@@ -97,7 +100,7 @@ async def test_fan_mode_windspeed(
     assert state is not None, (
         "climate.air_conditioner does not exist after service call"
     )
-    assert state.attributes["fan_mode"] == 2
+    assert state.attributes["fan_mode"] == WINDSPEED_HIGH
 
 
 @pytest.mark.parametrize(
@@ -127,7 +130,7 @@ async def test_fan_mode_no_valid_code(
             "set_fan_mode",
             {
                 "entity_id": "climate.air_conditioner",
-                "fan_mode": 2,
+                "fan_mode": WINDSPEED_HIGH,
             },
             blocking=True,
         )
