@@ -64,6 +64,7 @@
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
       ]),
     }),
     'config_entry_id': <ANY>,
