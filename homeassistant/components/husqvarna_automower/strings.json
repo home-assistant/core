@@ -213,6 +213,14 @@
           "zone_generator_problem": "Zone generator problem"
         }
       },
+      "inactive_reason": {
+        "name": "Inactive reason",
+        "state": {
+          "none": "No inactivity",
+          "planning": "Planning",
+          "searching_for_satellites": "Searching for satellites"
+        }
+      },
       "last_error": {
         "name": "Last error",
         "state": {
