@@ -63,7 +63,7 @@
       "heating_circuit": {
         "name": "Heating circuit",
         "state": {
-          "no_heating_circuit": "No heating circuit"
+          "no_heating_circuit": "No circuit"
         }
       }
     },
