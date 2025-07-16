@@ -164,21 +164,15 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     return vol.Schema(schema_dict)
 
 
-CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = _service_schema(False, False)
-CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = _service_schema(False, True)
-CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA = _service_schema(True, False)
-CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA = _service_schema(True, True)
-
-
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA,
-    CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA,
+    _service_schema(targeted=True, custom=False),
+    _service_schema(targeted=False, custom=False),
     None,
 )
 
 CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA,
-    CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA,
+    _service_schema(targeted=True, custom=True),
+    _service_schema(targeted=False, custom=True),
     None,
 )
 
