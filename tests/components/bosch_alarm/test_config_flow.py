@@ -309,6 +309,55 @@ async def test_dhcp_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
 
 
+@pytest.mark.parametrize("serial_number", ["12345678"])
+async def test_dhcp_discovery_if_panel_setup_config_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    serial_number: str,
+    model_name: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    # change out the serial number so we can test discovery for a different panel
+    mock_panel.serial_number = "789101112"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="4.5.6.7",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_flow_data,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Bosch {model_name}"
+    assert result["data"] == {
+        CONF_HOST: "4.5.6.7",
+        CONF_MAC: "34:ea:34:b4:3b:5a",
+        CONF_PORT: 7700,
+        CONF_MODEL: model_name,
+        **config_flow_data,
+    }
+    assert mock_config_entry.unique_id == serial_number
+    assert result["result"].unique_id == "789101112"
+
+
 @pytest.mark.parametrize("model", ["solution_3000", "amax_3000"])
 async def test_dhcp_abort_ongoing_flow(
     hass: HomeAssistant,
@@ -339,6 +388,35 @@ async def test_dhcp_abort_ongoing_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_dhcp_updates_mac(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test DHCP discovery flow updates mac if the previous entry did not have a mac address."""
+    await setup_integration(hass, mock_config_entry)
+    assert CONF_MAC not in mock_config_entry.data
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="0.0.0.0",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_MAC] == "34:ea:34:b4:3b:5a"
 
 
 async def test_reauth_flow_success(

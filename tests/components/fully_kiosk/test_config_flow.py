@@ -20,7 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_user_flow(
@@ -220,7 +220,7 @@ async def test_mqtt_discovery_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test MQTT discovery configuration flow."""
-    payload = load_fixture("mqtt-discovery-deviceinfo.json", DOMAIN)
+    payload = await async_load_fixture(hass, "mqtt-discovery-deviceinfo.json", DOMAIN)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

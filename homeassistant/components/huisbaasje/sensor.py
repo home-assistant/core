@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
     UnitOfEnergy,
@@ -33,7 +32,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DATA_COORDINATOR,
     DOMAIN,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
@@ -41,7 +39,7 @@ from .const import (
     SENSOR_TYPE_THIS_WEEK,
     SENSOR_TYPE_THIS_YEAR,
 )
-from .coordinator import EnergyFlipUpdateCoordinator
+from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,13 +213,11 @@ SENSORS_INFO = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnergyFlipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator: EnergyFlipUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = config_entry.runtime_data
     user_id = config_entry.data[CONF_ID]
 
     async_add_entities(

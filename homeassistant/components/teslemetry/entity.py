@@ -262,8 +262,3 @@ class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
         self._attr_translation_key = key
         self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.stream.connected

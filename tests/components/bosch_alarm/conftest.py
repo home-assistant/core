@@ -201,15 +201,16 @@ def mock_config_entry(
     mac_address: str | None,
 ) -> MockConfigEntry:
     """Mock config entry for bosch alarm."""
+    data = {
+        CONF_HOST: "0.0.0.0",
+        CONF_PORT: 7700,
+        CONF_MODEL: "bosch_alarm_test_data.model",
+    }
+    if mac_address:
+        data[CONF_MAC] = format_mac(mac_address)
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=serial_number,
         entry_id="01JQ917ACKQ33HHM7YCFXYZX51",
-        data={
-            CONF_HOST: "0.0.0.0",
-            CONF_PORT: 7700,
-            CONF_MODEL: "bosch_alarm_test_data.model",
-            CONF_MAC: mac_address and format_mac(mac_address),
-        }
-        | extra_config_entry_data,
+        data=data | extra_config_entry_data,
     )
