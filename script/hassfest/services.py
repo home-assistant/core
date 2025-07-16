@@ -92,25 +92,28 @@ CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA = (
 )
 
 
+def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the field schema."""
+    match targeted, custom:
+        case False, False:
+            return CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+        case False, True:
+            return CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+        case True, False:
+            return CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
+        case True, True:
+            return CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
+
+
 def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
     """Return the section schema."""
     schema_dict = {
         vol.Optional("collapsed"): bool,
     }
 
-    match targeted, custom:
-        case False, False:
-            field_schema = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-        case False, True:
-            field_schema = CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-        case True, False:
-            field_schema = CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
-        case True, True:
-            field_schema = CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
-
     schema_dict[vol.Required("fields")] = vol.Schema(
         {
-            str: field_schema,
+            str: _field_schema(targeted, custom),
         }
     )
 
@@ -118,12 +121,6 @@ def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
         schema_dict.update(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
 
     return vol.Schema(schema_dict)
-
-
-CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = _section_schema(False, False)
-CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = _section_schema(False, True)
-CORE_INTEGRATION_TARGETED_SECTION_SCHEMA = _section_schema(True, False)
-CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA = _section_schema(True, True)
 
 
 def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
@@ -135,24 +132,13 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     else:
         schema_dict = {}
 
-    match targeted, custom:
-        case False, False:
-            field_schema = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-            section_schema = CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA
-        case False, True:
-            field_schema = CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-            section_schema = CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA
-        case True, False:
-            field_schema = CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
-            section_schema = CORE_INTEGRATION_TARGETED_SECTION_SCHEMA
-        case True, True:
-            field_schema = CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
-            section_schema = CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA
-
     schema_dict[vol.Optional("fields")] = vol.All(
         vol.Schema(
             {
-                str: vol.Any(field_schema, section_schema),
+                str: vol.Any(
+                    _field_schema(targeted, custom),
+                    _section_schema(targeted, custom),
+                ),
             }
         ),
         unique_field_validator,
