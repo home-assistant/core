@@ -72,12 +72,16 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       The integration does not provide any additional icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      No configuration besides credentials.
+      New credentials will create a new config entry.
   repair-issues:
     status: exempt
     comment: |
