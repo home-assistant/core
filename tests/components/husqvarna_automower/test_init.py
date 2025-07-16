@@ -312,8 +312,9 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
     # Remove mower 2 and check if it worked
-    mower2 = values.pop("1234")
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    mower2 = values_copy.pop("1234")
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -327,8 +328,9 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 2 and check if it worked
-    values["1234"] = mower2
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    values_copy["1234"] = mower2
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -342,8 +344,9 @@ async def test_coordinator_automatic_registry_cleanup(
     )
 
     # Remove mower 1 and check if it worked
-    mower1 = values.pop(TEST_MOWER_ID)
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    mower1 = values_copy.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -357,11 +360,9 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 1 and check if it worked
-    values[TEST_MOWER_ID] = mower1
-    mock_automower_client.get_status.return_value = values
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    values_copy = deepcopy(values)
+    values_copy[TEST_MOWER_ID] = mower1
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
