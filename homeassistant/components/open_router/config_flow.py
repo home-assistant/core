@@ -103,7 +103,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             api_key=entry.data[CONF_API_KEY],
             http_client=get_async_client(self.hass),
         )
-        data = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -111,10 +110,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if (suggested_llm_apis := data.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            data[CONF_LLM_HASS_API] = [suggested_llm_apis]
         options = []
         async for model in client.with_options(timeout=10.0).models.list():
             options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
@@ -131,7 +126,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                     vol.Optional(
                         CONF_PROMPT,
                         description={
-                            "suggested_value": data.get(
+                            "suggested_value": RECOMMENDED_CONVERSATION_OPTIONS.get(
                                 CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                             )
                         },

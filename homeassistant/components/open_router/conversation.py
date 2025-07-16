@@ -70,8 +70,6 @@ def _convert_content_to_chat_message(
     LOGGER.debug("_convert_content_to_chat_message=%s", content)
     if isinstance(content, conversation.ToolResultContent):
         return ChatCompletionToolMessageParam(
-            # Note: The functionary 'tool' role expects a name which is
-            # not supported in llama cpp python and the openai protos.
             role="tool",
             tool_call_id=content.tool_call_id,
             content=json.dumps(content.tool_result),
