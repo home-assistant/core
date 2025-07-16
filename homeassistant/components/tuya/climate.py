@@ -20,7 +20,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -308,7 +307,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not self._fan_dp_code:
-            raise HomeAssistantError("No valid fan DPCode set for this device.")
+            raise RuntimeError("No valid fan DPCode set for this device.")
 
         self._send_command([{"code": self._fan_dp_code, "value": fan_mode}])
 
