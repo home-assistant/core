@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -306,8 +306,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not self._fan_mode_dp_code:
-            raise RuntimeError("No valid fan DPCode set for this device.")
+        if TYPE_CHECKING:
+            assert self._fan_mode_dp_code is not None
 
         self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
 
