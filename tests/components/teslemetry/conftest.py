@@ -120,7 +120,7 @@ def mock_energy_history():
 
 @pytest.fixture(autouse=True)
 def mock_stream_listen():
-    """Mock Teslemetry Energy Specific site_info method."""
+    """Mock Teslemetry Stream listen method."""
     with patch(
         "teslemetry_stream.TeslemetryStream.listen",
     ) as mock_stream_listen:
@@ -129,7 +129,7 @@ def mock_stream_listen():
 
 @pytest.fixture(autouse=True)
 def mock_add_listener():
-    """Mock Teslemetry Stream listen method."""
+    """Mock Teslemetry Stream add listener method."""
     with patch(
         "teslemetry_stream.TeslemetryStream.async_add_listener",
     ) as mock_add_listener:
