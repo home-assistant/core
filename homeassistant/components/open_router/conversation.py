@@ -58,9 +58,7 @@ def _convert_content_to_chat_message(
     return None
 
 
-class OpenRouterConversationEntity(
-    conversation.ConversationEntity, conversation.AbstractConversationAgent
-):
+class OpenRouterConversationEntity(conversation.ConversationEntity):
     """OpenRouter conversation agent."""
 
     def __init__(self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry) -> None:
