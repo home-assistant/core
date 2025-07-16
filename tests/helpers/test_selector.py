@@ -88,7 +88,6 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
-        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -128,6 +127,7 @@ def _test_selector(
                     "integration": "zha",
                     "manufacturer": "mock-manuf",
                     "model": "mock-model",
+                    "model_id": "mock-model_id",
                 }
             },
             ("abc123",),
@@ -140,11 +140,13 @@ def _test_selector(
                         "integration": "zha",
                         "manufacturer": "mock-manuf",
                         "model": "mock-model",
+                        "model_id": "mock-model_id",
                     },
                     {
                         "integration": "matter",
                         "manufacturer": "other-mock-manuf",
                         "model": "other-mock-model",
+                        "model_id": "other-mock-model_id",
                     },
                 ]
             },
@@ -156,6 +158,19 @@ def _test_selector(
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test device selector."""
     _test_selector("device", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # model_id should be used under the filter key
+        {"model_id": "mock-model_id"},
+    ],
+)
+def test_device_selector_schema_error(schema) -> None:
+    """Test device selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"device": schema})
 
 
 @pytest.mark.parametrize(
@@ -290,10 +305,12 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
+        # supported_features should be used under the filter key
+        {"supported_features": ["light.LightEntityFeature.EFFECT"]},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
-    """Test number selector."""
+    """Test entity selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"entity": schema})
 

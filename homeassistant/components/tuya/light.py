@@ -25,7 +25,8 @@ from homeassistant.util import color as color_util
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 from .util import remap_value
 
 
@@ -135,6 +136,22 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            translation_key="light_2",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+    ),
     # Ceiling Fan Light
     # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
     "fsd": (
@@ -176,6 +193,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            translation_key="light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+    ),
     # Humidifier Light
     # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
     "jsq": (
@@ -208,6 +236,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks": (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",
@@ -316,17 +353,6 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
-    # Wake Up Light II
-    # Not documented
-    "hxd": (
-        TuyaLightEntityDescription(
-            key=DPCode.SWITCH_LED,
-            translation_key="light",
-            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
-            brightness_max=DPCode.BRIGHTNESS_MAX_1,
-            brightness_min=DPCode.BRIGHTNESS_MIN_1,
-        ),
-    ),
     # Outdoor Flood Light
     # Not documented
     "tyd": (
@@ -376,22 +402,6 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_CONTROLLER,
             color_temp=DPCode.TEMP_CONTROLLER,
-        ),
-    ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
-        TuyaLightEntityDescription(
-            key=DPCode.LIGHT,
-            name=None,
-            color_mode=DPCode.WORK_MODE,
-            brightness=DPCode.BRIGHT_VALUE,
-            color_temp=DPCode.TEMP_VALUE,
-        ),
-        TuyaLightEntityDescription(
-            key=DPCode.SWITCH_LED,
-            translation_key="light_2",
-            brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
 }

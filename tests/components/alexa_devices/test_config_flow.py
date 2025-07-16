@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect, WrongCountry
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    WrongCountry,
+)
 import pytest
 
 from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
@@ -57,6 +62,7 @@ async def test_full_flow(
     [
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
+        (CannotRetrieveData, "cannot_retrieve_data"),
         (WrongCountry, "wrong_country"),
     ],
 )
@@ -165,6 +171,7 @@ async def test_reauth_successful(
     [
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
+        (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
 async def test_reauth_not_successful(

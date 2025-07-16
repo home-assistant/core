@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -82,6 +81,7 @@ class WorkMode(StrEnum):
 class DPType(StrEnum):
     """Data point types."""
 
+    BITMAP = "Bitmap"
     BOOLEAN = "Boolean"
     ENUM = "Enum"
     INTEGER = "Integer"
@@ -314,6 +314,8 @@ class DPCode(StrEnum):
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
+    SWITCH_ALARM_LIGHT = "switch_alarm_light"
+    SWITCH_ALARM_SOUND = "switch_alarm_sound"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
@@ -414,8 +416,6 @@ class UnitOfMeasurement:
     device_classes: set[str]
 
     aliases: set[str] = field(default_factory=set)
-    conversion_unit: str | None = None
-    conversion_fn: Callable[[float], float] | None = None
 
 
 # A tuple of available units of measurements we can work with.
@@ -455,8 +455,6 @@ UNITS = (
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
         },
-        conversion_unit=CONCENTRATION_PARTS_PER_MILLION,
-        conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfElectricCurrent.AMPERE,
@@ -467,8 +465,6 @@ UNITS = (
         unit=UnitOfElectricCurrent.MILLIAMPERE,
         aliases={"ma", "milliampere"},
         device_classes={SensorDeviceClass.CURRENT},
-        conversion_unit=UnitOfElectricCurrent.AMPERE,
-        conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfEnergy.WATT_HOUR,
@@ -524,8 +520,6 @@ UNITS = (
             SensorDeviceClass.SULPHUR_DIOXIDE,
             SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         },
-        conversion_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        conversion_fn=lambda x: x * 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfPower.WATT,
@@ -593,8 +587,6 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
-        conversion_unit=UnitOfElectricPotential.VOLT,
-        conversion_fn=lambda x: x / 1000,
     ),
 )
 
