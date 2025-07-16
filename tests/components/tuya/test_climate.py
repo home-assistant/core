@@ -73,7 +73,7 @@ async def test_fan_mode_windspeed(
 
     state = hass.states.get("climate.air_conditioner")
     assert state is not None, "climate.air_conditioner does not exist"
-    assert state.attributes["fan_mode"] == DEFAULT_FAN_MODE
+    assert state.attributes["fan_mode"] == 1
     await hass.services.async_call(
         Platform.CLIMATE,
         "set_fan_mode",
