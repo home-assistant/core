@@ -11,19 +11,13 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -33,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
@@ -65,19 +60,6 @@ SELECT_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateSelect]:
-    """Create the Template select."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateSelect(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -85,23 +67,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template select."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template select entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerSelectEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        SELECT_DOMAIN,
+        config,
+        TemplateSelect,
+        TriggerSelectEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
@@ -119,6 +92,8 @@ async def async_setup_entry(
 
 class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -159,7 +134,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateSelect.__init__(self, config)
 
         name = self._attr_name
@@ -168,11 +143,6 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
 
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _async_setup_templates(self) -> None:

@@ -32,8 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -42,15 +40,11 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TemplateEntity,
-    make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
-)
+from .helpers import async_setup_template_platform
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +82,7 @@ class TemplateCodeFormat(Enum):
     text = CodeFormat.TEXT
 
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
@@ -161,54 +155,6 @@ ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy alarm control panel configuration definitions to modern ones."""
-    alarm_control_panels = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        alarm_control_panels.append(entity_conf)
-
-    return alarm_control_panels
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template alarm control panels."""
-    alarm_control_panels = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        alarm_control_panels.append(
-            AlarmControlPanelTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(alarm_control_panels)
-
-
 def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, dict]:
     """Rewrite option configuration to modern configuration."""
     option_config = {**option_config}
@@ -231,7 +177,7 @@ async def async_setup_entry(
     validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
     async_add_entities(
         [
-            AlarmControlPanelTemplate(
+            StateAlarmControlPanelEntity(
                 hass,
                 validated_config,
                 config_entry.entry_id,
@@ -247,27 +193,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template cover."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_ALARM_CONTROL_PANELS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerAlarmControlPanelEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        ALARM_CONTROL_PANEL_DOMAIN,
+        config,
+        StateAlarmControlPanelEntity,
+        TriggerAlarmControlPanelEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_ALARM_CONTROL_PANELS,
     )
 
 
@@ -275,6 +210,8 @@ class AbstractTemplateAlarmControlPanel(
     AbstractTemplateEntity, AlarmControlPanelEntity, RestoreEntity
 ):
     """Representation of a templated Alarm Control Panel features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -414,7 +351,7 @@ class AbstractTemplateAlarmControlPanel(
         )
 
 
-class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPanel):
+class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlPanel):
     """Representation of a templated Alarm Control Panel."""
 
     _attr_should_poll = False
@@ -426,12 +363,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
         unique_id: str | None,
     ) -> None:
         """Initialize the panel."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -441,11 +374,6 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -496,11 +424,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

@@ -31,6 +31,20 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_emma_dehumidifier": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.BINARY_SENSOR,
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_smart_dry_plus": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
     "cwwsq_cleverio_pf100": [
         # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,
@@ -65,6 +79,12 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "ks_tower_fan": [
+        # https://github.com/orgs/home-assistant/discussions/329
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SWITCH,
+    ],
     "mal_alarm_host": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
@@ -73,6 +93,14 @@ DEVICE_MOCKS = {
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "qxj_temp_humidity_external_probe": [
+        # https://github.com/home-assistant/core/issues/136472
+        Platform.SENSOR,
+    ],
+    "qxj_weather_station": [
+        # https://github.com/orgs/home-assistant/discussions/318
         Platform.SENSOR,
     ],
     "rqbj_gas_sensor": [

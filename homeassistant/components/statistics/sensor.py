@@ -46,7 +46,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -659,6 +659,7 @@ class StatisticsSensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         source_entity_id: str,
         name: str,
         unique_id: str | None,
@@ -673,10 +674,11 @@ class StatisticsSensor(SensorEntity):
         self._attr_name: str = name
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
-        self._attr_device_info = async_device_info_to_link_from_entity(
-            hass,
-            source_entity_id,
-        )
+        if source_entity_id:  # Guard against empty source_entity_id in preview mode
+            self.device_entry = async_entity_id_to_device(
+                hass,
+                source_entity_id,
+            )
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
