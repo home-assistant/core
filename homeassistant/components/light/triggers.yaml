@@ -1,11 +1,8 @@
 state:
+  target:
+    entity:
+      domain: light
   fields:
-    target:
-      required: true
-      selector:
-        target:
-          entity:
-            domain: light
     state:
       required: true
       selector:

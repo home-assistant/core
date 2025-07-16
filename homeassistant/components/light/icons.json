@@ -22,5 +22,10 @@
     "turn_on": {
       "service": "mdi:lightbulb-on"
     }
+  },
+  "triggers": {
+    "state": {
+      "trigger": "mdi:state-machine"
+    }
   }
 }
