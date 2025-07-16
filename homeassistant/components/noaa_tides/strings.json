@@ -1,0 +1,50 @@
+{
+  "common": {
+    "unit_system": "Unit system",
+    "time_zone": "Time zone"
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Search [NOAA Tide Predictions](https://tidesandcurrents.noaa.gov/tide_predictions.html) to find a station ID.",
+        "data": {
+          "station_id": "Station ID",
+          "unit_system": "[%key:component::noaa_tides::common::unit_system%]",
+          "time_zone": "[%key:component::noaa_tides::common::time_zone%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "station_not_found": "Station not found"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "unit_system": "[%key:component::noaa_tides::common::unit_system%]",
+          "time_zone": "[%key:component::noaa_tides::common::time_zone%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "timezones": {
+      "options": {
+        "gmt": "GMT",
+        "lst": "Local Standard Time",
+        "lst_ldt": "Local Standard Time / Local Daylight Time"
+      }
+    },
+    "unit_systems": {
+      "options": {
+        "metric": "Metric",
+        "english": "English"
+      }
+    }
+  }
+}
