@@ -65,14 +65,12 @@ def mock_discovered_config_entry() -> MockConfigEntry:
 
 # fixtures for the binary sensor tests
 @pytest.fixture
-def mock_window() -> MagicMock:
+def mock_window() -> AsyncMock:
     """Create a mock Velux window with a rain sensor."""
-    window = MagicMock(spec=Window)
+    window = AsyncMock(spec=Window, autospec=True)
     window.name = "Test Window"
     window.rain_sensor = True
-    window.position = MagicMock()
     window.serial_number = "123456789"
-    window.get_limitation = AsyncMock()
     return window
 
 
@@ -88,13 +86,17 @@ def mock_pyvlx(mock_window: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
-def mock_module(mock_pyvlx: MagicMock) -> MagicMock:
+def mock_module(mock_pyvlx: MagicMock) -> Generator[AsyncMock]:
     """Create the Velux module mock."""
-    module = MagicMock()
-    module.pyvlx = mock_pyvlx
-    module.async_start = AsyncMock()
-    module.setup = MagicMock()
-    return module
+    with (
+        patch(
+            "homeassistant.components.velux.VeluxModule",
+            autospec=True,
+        ) as mock_velux,
+    ):
+        module = mock_velux.return_value
+        module.pyvlx = mock_pyvlx
+        yield module
 
 
 @pytest.fixture
