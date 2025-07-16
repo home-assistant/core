@@ -25,7 +25,7 @@ from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
 class FastdotcomSensorEntityDescription(SensorEntityDescription):
     """Describes Fast.com sensor entities."""
 
-    value: Callable[[float], float] = lambda val: round(val, 2)
+    value: Callable[[float], float] = lambda val: val
 
 
 SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
@@ -36,6 +36,7 @@ SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     FastdotcomSensorEntityDescription(
         key="upload_speed",
@@ -44,6 +45,7 @@ SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     FastdotcomSensorEntityDescription(
         key="unloaded_ping",
@@ -52,6 +54,7 @@ SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     FastdotcomSensorEntityDescription(
         key="loaded_ping",
@@ -60,6 +63,7 @@ SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     FastdotcomSensorEntityDescription(
         key="success",
