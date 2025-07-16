@@ -60,8 +60,6 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
-    KNOWN_PLAYERS,
-    KNOWN_SERVERS,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
     SERVER_MODEL_ID,
@@ -289,7 +287,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def browse_limit(self) -> int:
         """Return the step to be used for volume up down."""
-        return self.coordinator.config_entry.options.get(
+        return self.coordinator.config_entry.options.get(  # type: ignore[no-any-return]
             CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
         )
 
@@ -316,9 +314,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
-        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
-        known_players.remove(self.coordinator.player.player_id)
+        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+            self.coordinator.player.player_id
+        )
 
     @property
     def volume_level(self) -> float | None:

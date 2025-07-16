@@ -384,7 +384,7 @@ def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutinefunction(check_target):
+    if inspect.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback

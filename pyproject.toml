@@ -28,7 +28,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.1",
-  "aiohttp==3.12.13",
+  "aiohttp==3.12.14",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -61,7 +61,7 @@ dependencies = [
   "Pillow==11.3.0",
   "propcache==0.3.2",
   "pyOpenSSL==25.1.0",
-  "orjson==3.10.18",
+  "orjson==3.11.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -568,8 +568,6 @@ filterwarnings = [
   "ignore:pkg_resources is deprecated as an API:UserWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.28 - 2025-06-11
   "ignore:pkg_resources is deprecated as an API:UserWarning:pybotvac.version",
-  # https://github.com/home-assistant-ecosystem/python-mystrom/blob/2.2.0/pymystrom/__init__.py#L10 - v2.2.0 - 2023-05-21
-  "ignore:pkg_resources is deprecated as an API:UserWarning:pymystrom",
   # - SyntaxWarning - is with literal
   # https://github.com/majuss/lupupy/pull/15 - >0.3.2
   # https://pypi.org/project/opuslib/ - v3.0.1 - 2018-01-16
