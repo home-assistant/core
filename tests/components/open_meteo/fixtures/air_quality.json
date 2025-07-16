@@ -1,0 +1,21 @@
+{
+  "latitude": 52.5,
+  "longitude": 13.400002,
+  "generationtime_ms": 0.133514404296875,
+  "utc_offset_seconds": 0,
+  "timezone": "GMT",
+  "timezone_abbreviation": "GMT",
+  "elevation": 40.0,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "uv_index": "",
+    "ozone": "μg/m³"
+  },
+  "current": {
+    "time": "2021-11-24T23:00",
+    "interval": 3600,
+    "uv_index": 1.85,
+    "ozone": 82.0
+  }
+}

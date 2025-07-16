@@ -1068,3 +1068,27 @@
     }),
   })
 # ---
+# name: test_state[states]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home',
+      'ozone': 82.0,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 3>,
+      'temperature': 5.5,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'uv_index': 1.85,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 168,
+      'wind_speed': 5.3,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
