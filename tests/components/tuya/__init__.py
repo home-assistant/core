@@ -31,6 +31,20 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_emma_dehumidifier": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.BINARY_SENSOR,
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_smart_dry_plus": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
     "cwwsq_cleverio_pf100": [
         # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,
