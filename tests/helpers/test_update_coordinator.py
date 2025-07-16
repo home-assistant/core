@@ -866,51 +866,136 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     assert len(last_update_success_times) == 1
 
 
-async def test_config_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["homeassistant/components/my_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_config_entry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test behavior of coordinator.entry."""
     entry = MockConfigEntry()
 
     # Explicit None is OK
+    caplog.clear()
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=None
     )
     assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
 
     # Explicit entry is OK
+    caplog.clear()
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=entry
     )
     assert crd.config_entry is entry
-
-    # Default without context should raise
-    with pytest.raises(
-        RuntimeError,
-        match="Detected code that rely on the ContextVar, "
-        "but should passing the config entry explicitly - "
-        "see https://developers.home-assistant.io/blog/xxxxxxx. "
-        "Please report this issue",
-    ):
-        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-
-    # set ContextVar
-    config_entries.current_entry.set(entry)
-
-    # Default with ContextVar should raise
-    with pytest.raises(
-        RuntimeError,
-        match="Detected code that rely on the ContextVar, "
-        "but should passing the config entry explicitly - "
-        "see https://developers.home-assistant.io/blog/xxxxxxx. "
-        "Please report this issue",
-    ):
-        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
 
     # Explicit entry different from ContextVar not recommended, but should work
     another_entry = MockConfigEntry()
+    caplog.clear()
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["homeassistant/components/my_integration"]
+)
+@pytest.mark.parametrize("set_context", [True, False])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_non_explicit_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, set_context: bool
+) -> None:
+    """Test behavior of coordinator.entry in ContextVar."""
+    entry = MockConfigEntry()
+    if set_context:
+        config_entries.current_entry.set(entry)
+
+    update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar, "
+        "but should pass the config entry explicitly. "
+        "This will not be enforced for custom integrations - "
+        "see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_config_entry_custom_integration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test behavior of coordinator.entry for custom integrations."""
+    entry = MockConfigEntry(domain="custom_integration")
+
+    # Default without context should be None
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit None is OK
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=None
+    )
+    assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit entry is OK
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=entry
+    )
+    assert crd.config_entry is entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # set ContextVar
+    config_entries.current_entry.set(entry)
+
+    # Default with ContextVar should match the ContextVar
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit entry different from ContextVar not recommended, but should work
+    another_entry = MockConfigEntry()
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=another_entry
+    )
+    assert crd.config_entry is another_entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
 
 
 async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) -> None:
