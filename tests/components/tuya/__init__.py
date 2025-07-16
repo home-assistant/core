@@ -68,6 +68,7 @@ DEVICE_MOCKS = {
     "ks_tower_fan": [
         # https://github.com/orgs/home-assistant/discussions/329
         Platform.FAN,
+        Platform.LIGHT,
         Platform.SWITCH,
     ],
     "mal_alarm_host": [
