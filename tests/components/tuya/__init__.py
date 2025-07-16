@@ -113,6 +113,10 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "qccdz_ac_charging_control": [
+        # https://github.com/home-assistant/core/issues/136207
+        Platform.SWITCH,
+    ],
     "qxj_temp_humidity_external_probe": [
         # https://github.com/home-assistant/core/issues/136472
         Platform.SENSOR,
