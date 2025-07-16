@@ -181,8 +181,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Filter duration',
     'platform': 'tuya',
@@ -197,6 +200,7 @@
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_filter_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Filter duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'min',
@@ -233,8 +237,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'UV runtime',
     'platform': 'tuya',
@@ -249,6 +256,7 @@
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_uv_runtime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain UV runtime',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 's',
@@ -333,8 +341,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Water pump duration',
     'platform': 'tuya',
@@ -349,6 +360,7 @@
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_pump_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water pump duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'min',
@@ -385,8 +397,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Water usage duration',
     'platform': 'tuya',
@@ -401,6 +416,7 @@
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_usage_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'PIXI Smart Drinking Fountain Water usage duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'min',
@@ -509,7 +525,7 @@
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_platform_setup_and_discovery[cz_dual_channel_metering][sensor.hvac_meter_power-state]
@@ -518,7 +534,7 @@
       'device_class': 'power',
       'friendly_name': 'HVAC Meter Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hvac_meter_power',
@@ -683,7 +699,7 @@
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'tuya.mocked_device_idcur_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power-state]
@@ -692,7 +708,7 @@
       'device_class': 'power',
       'friendly_name': '一路带计量磁保持通断器 Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_power',
