@@ -1,14 +1,25 @@
 """Common fixtures for the Grid connect tests."""
 
+import asyncio
 from collections.abc import Generator
 from contextlib import ExitStack
 import importlib
 import socket
+import sys
 import types
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create a Windows-compatible event loop per session."""
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 # Patch socket.socket and socket.socketpair at import time to prevent real socket usage before any test or fixture runs.
 class DummySocket:

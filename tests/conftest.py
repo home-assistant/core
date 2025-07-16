@@ -1288,7 +1288,7 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+@pytest_asyncio.fixture(autouse=True, scope="session")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     resolver = AsyncResolver()
