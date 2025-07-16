@@ -117,11 +117,8 @@ def _validate_supported_feature(supported_feature: str) -> int:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
-def _validate_supported_features(supported_features: int | list[str]) -> int:
-    """Validate a supported feature and resolve an enum string to its value."""
-
-    if isinstance(supported_features, int):
-        return supported_features
+def _validate_supported_features(supported_features: list[str]) -> int:
+    """Validate supported features and resolve enum strings to their value."""
 
     feature_mask = 0
 
@@ -160,6 +157,22 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# Legacy entity selector config schema used directly under entity selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
+LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration that provided the entity
+        vol.Optional("integration"): str,
+        # Domain the entity belongs to
+        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+        # Device class of the entity
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+    }
+)
+
+
 class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
@@ -179,10 +192,22 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("model"): str,
         # Model ID of device
         vol.Optional("model_id"): str,
-        # Device has to contain entities matching this selector
-        vol.Optional("entity"): vol.All(
-            cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
-        ),
+    }
+)
+
+
+# Legacy device selector config schema used directly under device selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
+LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration linked to it with a config entry
+        vol.Optional("integration"): str,
+        # Manufacturer of device
+        vol.Optional("manufacturer"): str,
+        # Model of device
+        vol.Optional("model"): str,
     }
 )
 
@@ -714,9 +739,13 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     selector_type = "device"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+        LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA.schema
     ).extend(
         {
+            # Device has to contain entities matching this selector
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+            ),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
                 cv.ensure_list,
@@ -794,7 +823,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
     selector_type = "entity"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+        LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA.schema
     ).extend(
         {
             vol.Optional("exclude_entities"): [str],
@@ -1045,16 +1074,17 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, str]:
         """Validate the passed selection."""
-        schema = self.DATA_SCHEMA.schema.copy()
+        schema = {
+            key: value
+            for key, value in self.DATA_SCHEMA.schema.items()
+            if key != "entity_id"
+        }
 
-        if "accept" in self.config:
-            # If accept is set, the entity_id field will not be present
-            schema.pop("entity_id", None)
-        else:
+        if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
             schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
-        media: dict[str, str] = self.DATA_SCHEMA(data)
+        media: dict[str, str] = vol.Schema(schema)(data)
         return media
 
 
@@ -1066,6 +1096,7 @@ class NumberSelectorConfig(BaseSelectorConfig, total=False):
     step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
+    translation_key: str
 
 
 class NumberSelectorMode(StrEnum):
@@ -1077,10 +1108,12 @@ class NumberSelectorMode(StrEnum):
 
 def validate_slider(data: Any) -> Any:
     """Validate configuration."""
-    if data["mode"] == "box":
-        return data
+    has_min_max = "min" in data and "max" in data
 
-    if "min" not in data or "max" not in data:
+    if "mode" not in data:
+        data["mode"] = "slider" if has_min_max else "box"
+
+    if data["mode"] == "slider" and not has_min_max:
         raise vol.Invalid("min and max are required in slider mode")
 
     return data
@@ -1103,9 +1136,10 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                vol.Optional(CONF_MODE): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
+                vol.Optional("translation_key"): str,
             }
         ),
         validate_slider,

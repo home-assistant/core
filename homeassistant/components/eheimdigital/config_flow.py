@@ -10,7 +10,12 @@ from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -123,6 +128,55 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
         return self.async_show_form(
             step_id=SOURCE_USER,
+            data_schema=CONFIG_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the config entry."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id=SOURCE_RECONFIGURE, data_schema=CONFIG_SCHEMA
+            )
+
+        self._async_abort_entries_match(user_input)
+        errors: dict[str, str] = {}
+        hub = EheimDigitalHub(
+            host=user_input[CONF_HOST],
+            session=async_get_clientsession(self.hass),
+            loop=self.hass.loop,
+            main_device_added_event=self.main_device_added_event,
+        )
+
+        try:
+            await hub.connect()
+
+            async with asyncio.timeout(2):
+                # This event gets triggered when the first message is received from
+                # the device, it contains the data necessary to create the main device.
+                # This removes the race condition where the main device is accessed
+                # before the response from the device is parsed.
+                await self.main_device_added_event.wait()
+                if TYPE_CHECKING:
+                    # At this point the main device is always set
+                    assert isinstance(hub.main, EheimDigitalDevice)
+                await self.async_set_unique_id(hub.main.mac_address)
+                await hub.close()
+        except (ClientError, TimeoutError):
+            errors["base"] = "cannot_connect"
+        except Exception:  # noqa: BLE001
+            errors["base"] = "unknown"
+            LOGGER.exception("Unknown exception occurred")
+        else:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id=SOURCE_RECONFIGURE,
             data_schema=CONFIG_SCHEMA,
             errors=errors,
         )

@@ -1103,8 +1103,20 @@ class EntityRegistry(BaseRegistry):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
+            removed_device = event.data["device"]
             for entity in entities:
-                self.async_remove(entity.entity_id)
+                config_entry_id = entity.config_entry_id
+                if (
+                    config_entry_id in removed_device.config_entries
+                    and entity.config_subentry_id
+                    in removed_device.config_entries_subentries[config_entry_id]
+                ):
+                    self.async_remove(entity.entity_id)
+                else:
+                    if entity.entity_id not in self.entities:
+                        # Entity has been removed already, skip it
+                        continue
+                    self.async_update_entity(entity.entity_id, device_id=None)
             return
 
         if event.data["action"] != "update":
@@ -1121,29 +1133,38 @@ class EntityRegistry(BaseRegistry):
 
         # Remove entities which belong to config entries no longer associated with the
         # device
-        entities = async_entries_for_device(
-            self, event.data["device_id"], include_disabled_entities=True
-        )
-        for entity in entities:
-            if (
-                entity.config_entry_id is not None
-                and entity.config_entry_id not in device.config_entries
-            ):
-                self.async_remove(entity.entity_id)
+        if old_config_entries := event.data["changes"].get("config_entries"):
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                config_entry_id = entity.config_entry_id
+                if (
+                    entity.config_entry_id in old_config_entries
+                    and entity.config_entry_id not in device.config_entries
+                ):
+                    self.async_remove(entity.entity_id)
 
         # Remove entities which belong to config subentries no longer associated with the
         # device
-        entities = async_entries_for_device(
-            self, event.data["device_id"], include_disabled_entities=True
-        )
-        for entity in entities:
-            if (
-                (config_entry_id := entity.config_entry_id) is not None
-                and config_entry_id in device.config_entries
-                and entity.config_subentry_id
-                not in device.config_entries_subentries[config_entry_id]
-            ):
-                self.async_remove(entity.entity_id)
+        if old_config_entries_subentries := event.data["changes"].get(
+            "config_entries_subentries"
+        ):
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                config_entry_id = entity.config_entry_id
+                config_subentry_id = entity.config_subentry_id
+                if (
+                    config_entry_id in device.config_entries
+                    and config_entry_id in old_config_entries_subentries
+                    and config_subentry_id
+                    in old_config_entries_subentries[config_entry_id]
+                    and config_subentry_id
+                    not in device.config_entries_subentries[config_entry_id]
+                ):
+                    self.async_remove(entity.entity_id)
 
         # Re-enable disabled entities if the device is no longer disabled
         if not device.disabled:

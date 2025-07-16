@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
     ExternalReasons,
+    InactiveReasons,
     MowerAttributes,
     MowerModes,
     RestrictedReasons,
@@ -171,6 +172,13 @@ ERROR_KEYS = [
 ERROR_KEY_LIST = list(
     dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
 )
+
+INACTIVE_REASONS: list = [
+    InactiveReasons.NONE,
+    InactiveReasons.PLANNING,
+    InactiveReasons.SEARCHING_FOR_SATELLITES,
+]
+
 
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
@@ -420,6 +428,14 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
         value_fn=_get_restricted_reason,
+    ),
+    AutomowerSensorEntityDescription(
+        key="inactive_reason",
+        translation_key="inactive_reason",
+        exists_fn=lambda data: data.capabilities.work_areas,
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: INACTIVE_REASONS,
+        value_fn=attrgetter("mower.inactive_reason"),
     ),
     AutomowerSensorEntityDescription(
         key="work_area",

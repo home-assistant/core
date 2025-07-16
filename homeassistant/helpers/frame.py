@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import enum
 import functools
+import inspect
 import linecache
 import logging
 import sys
@@ -397,7 +397,7 @@ def _report_usage_no_integration(
 
 def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         @functools.wraps(func)
         async def report_use(*args: Any, **kwargs: Any) -> None:
