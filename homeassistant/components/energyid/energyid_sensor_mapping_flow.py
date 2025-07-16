@@ -15,11 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
-    TextSelector,
-)
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DATA_CLIENT, DOMAIN
 
@@ -106,17 +102,12 @@ def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
 @callback
 def _validate_mapping_input(
     ha_entity_id: str | None,
-    energyid_key: str,
     current_mappings: dict[str, Any],
 ) -> dict[str, str]:
     """Validate mapping input and return errors if any."""
     errors: dict[str, str] = {}
     if not ha_entity_id:
         errors[CONF_HA_ENTITY_ID] = "entity_required"
-    elif not energyid_key:
-        errors[CONF_ENERGYID_KEY] = "invalid_key_empty"
-    elif " " in energyid_key:
-        errors[CONF_ENERGYID_KEY] = "invalid_key_spaces"
     elif ha_entity_id in current_mappings:
         errors[CONF_HA_ENTITY_ID] = "entity_already_mapped"
     return errors
@@ -190,11 +181,13 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             ha_entity_id = user_input.get(CONF_HA_ENTITY_ID)
-            energyid_key = user_input.get(CONF_ENERGYID_KEY, "").strip()
 
-            errors = _validate_mapping_input(ha_entity_id, energyid_key, {})
+            errors = _validate_mapping_input(ha_entity_id, current_mappings={})
 
             if not errors and ha_entity_id:
+                # Derive energyid_key automatically from ha_entity_id
+                energyid_key = ha_entity_id.split(".", 1)[-1]
+
                 subentry_data = {
                     CONF_HA_ENTITY_ID: ha_entity_id,
                     CONF_ENERGYID_KEY: energyid_key,
@@ -213,7 +206,6 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
                 vol.Required(CONF_HA_ENTITY_ID): EntitySelector(
                     EntitySelectorConfig(include_entities=suggested_entities)
                 ),
-                vol.Required(CONF_ENERGYID_KEY): TextSelector(),
             }
         )
 
