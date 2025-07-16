@@ -11,7 +11,7 @@ from tuya_sharing import CustomerDevice
 from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 
 from . import DEVICE_MOCKS, initialize_entry
@@ -111,12 +111,17 @@ async def test_fan_mode_no_valid_code(
     mock_device: CustomerDevice,
 ) -> None:
     """Test fan mode with no valid code."""
+    # Remove windspeed DPCode to simulate a device with no valid fan mode
+    mock_device.function.pop("windspeed", None)
+    mock_device.status_range.pop("windspeed", None)
+    mock_device.status.pop("windspeed", None)
+
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get("climate.air_conditioner")
     assert state is not None, "climate.air_conditioner does not exist"
-    assert state.attributes["fan_mode"] == 1
-    with pytest.raises(HomeAssistantError):
+    assert state.attributes.get("fan_mode") is None
+    with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             Platform.CLIMATE,
             "set_fan_mode",
@@ -124,4 +129,5 @@ async def test_fan_mode_no_valid_code(
                 "entity_id": "climate.air_conditioner",
                 "fan_mode": 2,
             },
+            blocking=True,
         )
