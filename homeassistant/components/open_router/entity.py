@@ -22,9 +22,6 @@ from homeassistant.helpers.entity import Entity
 from . import OpenRouterConfigEntry
 from .const import DOMAIN, LOGGER
 
-# Max number of back and forth with the LLM to generate a response
-MAX_TOOL_ITERATIONS = 10
-
 
 def _convert_content_to_chat_message(
     content: conversation.Content,
@@ -50,7 +47,7 @@ def _convert_content_to_chat_message(
 
 
 class OpenRouterEntity(Entity):
-    """OpenAI conversation agent."""
+    """Base entity for Open Router."""
 
     _attr_has_entity_name = True
 
