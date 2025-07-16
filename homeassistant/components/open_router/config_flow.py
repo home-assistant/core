@@ -81,7 +81,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.options: dict[str, Model] = {}
+        self.models: dict[str, Model] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -89,14 +89,14 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         """User flow to create a sensor subentry."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.options[user_input[CONF_MODEL]].name, data=user_input
+                title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
         entry = self._get_entry()
         client = OpenRouterClient(
             entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
         )
         models = await client.get_models()
-        self.options = {model.id: model for model in models}
+        self.models = {model.id: model for model in models}
         options = [
             SelectOptionDict(value=model.id, label=model.name) for model in models
         ]
