@@ -100,25 +100,16 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 138,
-      'color_mode': <ColorMode.HS: 'hs'>,
+      'color_mode': <ColorMode.WHITE: 'white'>,
       'friendly_name': 'Garage light',
-      'hs_color': tuple(
-        243.0,
-        86.0,
-      ),
-      'rgb_color': tuple(
-        47,
-        36,
-        255,
-      ),
+      'hs_color': None,
+      'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.148,
-        0.055,
-      ),
+      'xy_color': None,
     }),
     'context': <ANY>,
     'entity_id': 'light.garage_light',
