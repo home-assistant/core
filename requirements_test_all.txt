@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.44.0
+PyViCare==2.50.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.12
+aioairzone-cloud==0.6.14
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -604,7 +604,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==4.3.1
+brother==5.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -736,7 +736,7 @@ eheimdigital==1.3.0
 electrickiwi-api==0.9.14
 
 # homeassistant.components.elevenlabs
-elevenlabs==1.9.0
+elevenlabs==2.3.0
 
 # homeassistant.components.elgato
 elgato==5.1.2
@@ -1023,7 +1023,7 @@ home-assistant-frontend==20250702.2
 home-assistant-intents==2025.6.23
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.6
+homematicip==2.0.7
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1032,7 +1032,7 @@ httplib2==0.20.4
 huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
-huum==0.7.12
+huum==0.8.0
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
@@ -1068,7 +1068,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.2.0
+imgw_pib==1.4.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1951,7 +1951,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.0
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.7
+pysmartthings==3.2.8
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1966,7 +1966,7 @@ pysml==0.1.5
 pysmlight==0.2.7
 
 # homeassistant.components.snmp
-pysnmp==6.2.6
+pysnmp==7.1.21
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
@@ -2047,7 +2047,7 @@ python-miio==0.5.12
 python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
-python-mystrom==2.2.0
+python-mystrom==2.4.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
@@ -2089,6 +2089,9 @@ python-technove==2.0.0
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.5
 
+# homeassistant.components.uptime_kuma
+pythonkuma==0.3.1
+
 # homeassistant.components.tile
 pytile==2024.12.0
 
@@ -2096,7 +2099,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.3.0
+pytouchlinesl==0.4.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2390,7 +2393,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.2.0
+tesla-fleet-api==1.2.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2616,7 +2619,7 @@ yolink-api==0.5.7
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==1.1.5
+youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2025.06.09

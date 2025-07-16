@@ -13,6 +13,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.SELECT,
+        Platform.COVER,
+    ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
@@ -68,6 +73,14 @@ DEVICE_MOCKS = {
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "qxj_temp_humidity_external_probe": [
+        # https://github.com/home-assistant/core/issues/136472
+        Platform.SENSOR,
+    ],
+    "qxj_weather_station": [
+        # https://github.com/orgs/home-assistant/discussions/318
         Platform.SENSOR,
     ],
     "rqbj_gas_sensor": [

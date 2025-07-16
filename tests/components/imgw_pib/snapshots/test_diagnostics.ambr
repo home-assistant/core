@@ -34,6 +34,13 @@
         'unit': None,
         'value': None,
       }),
+      'hydrological_alert': dict({
+        'level': None,
+        'probability': None,
+        'valid_from': None,
+        'valid_to': None,
+        'value': 'no_alert',
+      }),
       'latitude': None,
       'longitude': None,
       'river': 'River Name',

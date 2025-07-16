@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -20,6 +21,8 @@ from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -177,10 +180,15 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         commands: list[str] = self.capabilities.get("SupportedCommands", [])
-        controllable = self.capabilities.get("SupportsMediaControl", False)
+        _LOGGER.debug(
+            "Supported commands for device %s, client %s, %s",
+            self.device_name,
+            self.client_name,
+            commands,
+        )
         features = MediaPlayerEntityFeature(0)
 
-        if controllable:
+        if "PlayMediaSource" in commands:
             features |= (
                 MediaPlayerEntityFeature.BROWSE_MEDIA
                 | MediaPlayerEntityFeature.PLAY_MEDIA
