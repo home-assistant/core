@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 
-type FastdotcomConfigEntry = ConfigEntry["FastdotcomDataUpdateCoordinator"]
+type FastdotcomConfigEntry = ConfigEntry[FastdotcomDataUpdateCoordinator]
 
 
 class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
