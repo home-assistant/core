@@ -86,6 +86,9 @@ async def test_fan_mode_windspeed(
         },
     )
     await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "windspeed", "value": "2"}]
+    )
 
     # Simulate the device reporting the new windspeed
     mock_device.status["windspeed"] = WINDSPEED_HIGH
