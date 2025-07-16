@@ -72,6 +72,7 @@ async def test_default_prompt(
     }
 
 
+@pytest.mark.parametrize("enable_assist", [True])
 async def test_function_call(
     hass: HomeAssistant,
     mock_chat_log: MockChatLog,  # noqa: F811

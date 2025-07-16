@@ -118,7 +118,7 @@
     }),
   ])
 # ---
-# name: test_function_call
+# name: test_function_call[True]
   list([
     dict({
       'attachments': None,
