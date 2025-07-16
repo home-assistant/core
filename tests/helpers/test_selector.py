@@ -418,6 +418,25 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("number", schema, valid_selections, invalid_selections)
 
 
+def test_number_selector_schema_default_mode() -> None:
+    """Test number selector default mode set on min/max."""
+    assert selector.selector({"number": {"min": 10, "max": 50}}).config == {
+        "mode": "slider",
+        "min": 10.0,
+        "max": 50.0,
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {}}).config == {
+        "mode": "box",
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {"min": "10"}}).config == {
+        "mode": "box",
+        "min": 10.0,
+        "step": 1.0,
+    }
+
+
 @pytest.mark.parametrize(
     "schema",
     [
