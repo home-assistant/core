@@ -43,93 +43,183 @@ def unique_field_validator(fields: Any) -> Any:
     return fields
 
 
-CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
+CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
-        vol.Optional("filter"): {
-            vol.Exclusive("attribute", "field_filter"): {
-                vol.Required(str): [vol.All(str, service.validate_attribute_option)],
-            },
-            vol.Exclusive("supported_features", "field_filter"): [
-                vol.All(str, service.validate_supported_feature)
-            ],
-        },
     }
 )
 
-CORE_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = (
+    CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA.extend(
+        {
+            vol.Optional("description"): str,
+            vol.Optional("name"): str,
+        }
+    )
+)
+
+
+# Filters are only allowed for targeted services because they rely on the presence
+# of a `target` field to determine the scope of the service call. Non-targeted
+# services do not have a `target` field, making filters inapplicable.
+
+CORE_INTEGRATION_TARGETED_FIELD_SCHEMA = (
+    CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA.extend(
+        {
+            vol.Optional("filter"): {
+                vol.Exclusive("attribute", "field_filter"): {
+                    vol.Required(str): [
+                        vol.All(str, service.validate_attribute_option)
+                    ],
+                },
+                vol.Exclusive("supported_features", "field_filter"): [
+                    vol.All(str, service.validate_supported_feature)
+                ],
+            }
+        }
+    )
+)
+
+CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA = (
+    CORE_INTEGRATION_TARGETED_FIELD_SCHEMA.extend(
+        {
+            vol.Optional("description"): str,
+            vol.Optional("name"): str,
+        }
+    )
+)
+
+
+CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema(
+            {str: CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA}
+        ),
     }
 )
 
-CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
+CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional("description"): str,
         vol.Optional("name"): str,
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema(
+            {str: CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA}
+        ),
     }
 )
 
-CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+
+CORE_INTEGRATION_TARGETED_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema(
+            {str: CORE_INTEGRATION_TARGETED_FIELD_SCHEMA}
+        ),
+    }
+)
+
+CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional("description"): str,
         vol.Optional("name"): str,
         vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema(
+            {str: CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA}
+        ),
+    }
+)
+
+
+CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA,
+                        CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA,
+                    )
+                }
+            ),
+            unique_field_validator,
+        ),
+    }
+)
+
+CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA,
+                        CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA,
+                    )
+                }
+            ),
+            unique_field_validator,
+        ),
+    }
+)
+
+
+CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        CORE_INTEGRATION_TARGETED_FIELD_SCHEMA,
+                        CORE_INTEGRATION_TARGETED_SECTION_SCHEMA,
+                    )
+                }
+            ),
+            unique_field_validator,
+        ),
+    }
+)
+
+CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA,
+                        CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA,
+                    )
+                }
+            ),
+            unique_field_validator,
+        ),
     }
 )
 
 
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("target"): vol.Any(
-                selector.TargetSelector.CONFIG_SCHEMA, None
-            ),
-            vol.Optional("fields"): vol.All(
-                vol.Schema(
-                    {
-                        str: vol.Any(
-                            CORE_INTEGRATION_FIELD_SCHEMA,
-                            CORE_INTEGRATION_SECTION_SCHEMA,
-                        )
-                    }
-                ),
-                unique_field_validator,
-            ),
-        }
-    ),
+    CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA,
+    CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA,
     None,
 )
 
 CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("description"): str,
-            vol.Optional("name"): str,
-            vol.Optional("target"): vol.Any(
-                selector.TargetSelector.CONFIG_SCHEMA, None
-            ),
-            vol.Optional("fields"): vol.All(
-                vol.Schema(
-                    {
-                        str: vol.Any(
-                            CUSTOM_INTEGRATION_FIELD_SCHEMA,
-                            CUSTOM_INTEGRATION_SECTION_SCHEMA,
-                        )
-                    }
-                ),
-                unique_field_validator,
-            ),
-        }
-    ),
+    CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA,
+    CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA,
     None,
 )
+
 
 CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {
@@ -137,9 +227,11 @@ CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
         cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA,
     }
 )
+
 CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
 )
+
 
 VALIDATE_AS_CUSTOM_INTEGRATION = {
     # Adding translations would be a breaking change
