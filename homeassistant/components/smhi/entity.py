@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,6 +35,12 @@ class SmhiWeatherBaseEntity(CoordinatorEntity[SMHIDataUpdateCoordinator]):
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
         self.update_entity_data()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_entity_data()
+        super()._handle_coordinator_update()
 
     @abstractmethod
     def update_entity_data(self) -> None:
