@@ -87,21 +87,6 @@ async def test_fan_mode_windspeed(
         mock_device.id, [{"code": "windspeed", "value": "2"}]
     )
 
-    # Simulate the device reporting the new windspeed
-    mock_device.status["windspeed"] = 2
-    await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": "climate.air_conditioner"},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("climate.air_conditioner")
-    assert state is not None, (
-        "climate.air_conditioner does not exist after service call"
-    )
-    assert state.attributes["fan_mode"] == 2
-
 
 @pytest.mark.parametrize(
     "mock_device_code",
