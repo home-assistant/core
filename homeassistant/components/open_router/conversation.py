@@ -26,10 +26,11 @@ from homeassistant.const import CONF_LLM_HASS_API, CONF_MODEL, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenRouterConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import CONF_PROMPT, DOMAIN, LOGGER
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -136,13 +137,20 @@ async def _transform_response(
 class OpenRouterConversationEntity(conversation.ConversationEntity):
     """OpenRouter conversation agent."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
         self.model = subentry.data[CONF_MODEL]
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
         if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
@@ -165,7 +173,7 @@ class OpenRouterConversationEntity(conversation.ConversationEntity):
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
-                None,
+                options.get(CONF_PROMPT),
                 user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:

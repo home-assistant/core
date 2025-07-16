@@ -16,11 +16,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import entity_registry as er, intent
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 
@@ -29,6 +29,20 @@ def freeze_the_time():
     """Freeze the time."""
     with freeze_time("2024-05-24 12:00:00", tz_offset=0):
         yield
+
+
+@pytest.mark.parametrize("enable_assist", [True, False], ids=["assist", "no_assist"])
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_default_prompt(
