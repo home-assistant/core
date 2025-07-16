@@ -95,7 +95,7 @@
     'supported_features': 0,
     'translation_key': 'feed',
     'unique_id': 'tuya.bfd0273e59494eb34esvrxmanual_feed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwwsq_cleverio_pf100][number.cleverio_pf100_feed-state]
@@ -152,7 +152,7 @@
     'supported_features': 0,
     'translation_key': 'temp_correction',
     'unique_id': 'tuya.bfb45cb8a9452fba66lexgtemp_correction',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '℃',
   })
 # ---
 # name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][number.wifi_smart_gas_boiler_thermostat_temperature_correction-state]
