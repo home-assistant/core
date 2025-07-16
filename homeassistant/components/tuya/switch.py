@@ -437,7 +437,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
-            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Alarm Host
