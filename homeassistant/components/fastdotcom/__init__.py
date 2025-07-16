@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
@@ -19,7 +20,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.loop.create_task(coordinator.async_refresh())
+    async def _async_finish_startup(hass: HomeAssistant) -> None:
+        """Run after Home Assistant startup is complete."""
+        await coordinator.async_refresh()
+
+    async_at_started(hass, _async_finish_startup)
 
     return True
 
