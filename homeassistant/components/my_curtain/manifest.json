@@ -1,0 +1,22 @@
+{
+  "domain": "my_curtain",
+  "name": "My Curtain",
+  "version": "0.0.1",
+  "documentation": "https://example.com/my_curtain",
+  "issue_tracker": "https://example.com/my_curtain/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@yourusername"],
+  "homeassistant": "2023.5.0",
+  "iot_class": "local_polling",
+  "loggers": ["custom_components.my_curtain"],
+  "config_flow": true,
+  "integration_type": "device",
+  "is_built_in": false,
+  "release_notes": "Initial release of My Curtain integration",
+  "title": "My Curtain",
+  "description": "Control your My Curtain smart curtains",
+  "homekit": {
+    "models": ["my_curtain"]
+  }
+}
