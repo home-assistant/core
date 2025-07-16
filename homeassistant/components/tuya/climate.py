@@ -250,7 +250,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         )
 
         # Determine fan modes
-        self._fan_dp_code = None
+        self._fan_dp_code: str | None = None
         if enum_type := self.find_dpcode(
             (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
@@ -465,10 +465,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        if not self._fan_dp_code:
-            return None
-
-        return self.device.status.get(self._fan_dp_code)
+        return self.device.status.get(self._fan_dp_code) if self._fan_dp_code else None
 
     @property
     def swing_mode(self) -> str:
