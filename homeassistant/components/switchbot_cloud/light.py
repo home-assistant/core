@@ -1,12 +1,20 @@
 """Support for the Switchbot Light."""
 
+import asyncio
 from typing import Any
 
-from switchbot_api import CommonCommands, Device, RGBWWLightCommands, SwitchBotAPI
+from switchbot_api import (
+    CommonCommands,
+    Device,
+    Remote,
+    RGBWLightCommands,
+    RGBWWLightCommands,
+    SwitchBotAPI,
+)
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
@@ -27,89 +35,118 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        SwitchBotCloudLight(data.api, device, coordinator)
+        _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.lights
     )
 
 
 class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
-    """Representation of a SwitchBot Battery Circulator Fan."""
-
-    _attr_max_color_temp_kelvin = 6500
-    _attr_min_color_temp_kelvin = 2700
+    """Base Class for SwitchBot Light."""
 
     _attr_is_on: bool | None = None
 
-    def __init__(
-        self,
-        api: SwitchBotAPI,
-        device: Device,
-        coordinator: SwitchBotCoordinator,
-    ) -> None:
-        """Entity init."""
-        super().__init__(api, device, coordinator)
-        if device.device_type not in "Strip Light":
-            self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
-        else:
-            self._attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.UNKNOWN
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        response: dict = self.coordinator.data
-        if self._attr_is_on is None:
-            self._attr_color_mode = ColorMode.RGB
-            power: str | None = response.get("power")
-            self._attr_is_on = "on" in power if power else False
-            self._attr_brightness: int | None = response.get("brightness")
-            attr_rgb_color: str | None = response.get("color")
 
-            self._attr_rgb_color: tuple | None = (
-                tuple(int(i) for i in attr_rgb_color.split(":"))
-                if attr_rgb_color
-                else None
-            )
-            self._attr_color_temp_kelvin: int | None = response.get("colorTemperature")
+        power: str | None = self.coordinator.data.get("power")
+        brightness: int | None = self.coordinator.data.get("brightness")
+        color: str | None = self.coordinator.data.get("color")
+        color_temperature: int | None = self.coordinator.data.get("colorTemperature")
+        self._attr_is_on = power == "on" if power else None
+        self._attr_brightness: int | None = brightness if brightness else None
+        self._attr_rgb_color: tuple | None = (
+            (tuple(int(i) for i in color.split(":"))) if color else None
+        )
+        self._attr_color_temp_kelvin: int | None = (
+            color_temperature if color_temperature else None
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        response = await self._api.get_status(self.unique_id)
-        power: str | None = response.get("power")
-        if power is None or "on" in power:
-            await self.send_api_command(CommonCommands.OFF)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        """Turn the light off."""
+        await self.send_api_command(CommonCommands.OFF)
+        await asyncio.sleep(5)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
+        """Turn the light on."""
         brightness: int | None = kwargs.get("brightness")
         rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
         color_temp_kelvin: int | None = kwargs.get("color_temp_kelvin")
         if brightness is not None:
             self._attr_color_mode = ColorMode.RGB
-            await self.send_api_command(
-                RGBWWLightCommands.SET_BRIGHTNESS,
-                parameters=str(value_map_brightness(brightness)),
-            )
-            self._attr_brightness = brightness
-        if rgb_color is not None:
+            await self._send_brightness_command(brightness)
+        elif rgb_color is not None:
             self._attr_color_mode = ColorMode.RGB
-            await self.send_api_command(
-                RGBWWLightCommands.SET_COLOR,
-                parameters=":".join([str(i) for i in rgb_color]),
-            )
-            self._attr_rgb_color = rgb_color
-        if color_temp_kelvin is not None:
+            await self._send_rgb_color_command(rgb_color)
+        elif color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
-            await self.send_api_command(
-                RGBWWLightCommands.SET_COLOR_TEMPERATURE,
-                parameters=str(color_temp_kelvin),
-            )
-            self._attr_color_temp_kelvin = color_temp_kelvin
-            self._attr_rgb_color = (0, 0, 0)
+            await self._send_color_temperature_command(color_temp_kelvin)
         else:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(CommonCommands.ON)
-        self._attr_is_on = True
-        self.async_write_ha_state()
+        await asyncio.sleep(5)
+        await self.coordinator.async_request_refresh()
+
+    async def _send_brightness_command(self, brightness: int) -> None:
+        """Send a brightness command."""
+        await self.send_api_command(
+            RGBWLightCommands.SET_BRIGHTNESS,
+            parameters=str(value_map_brightness(brightness)),
+        )
+
+    async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
+        """Send an RGB command."""
+        await self.send_api_command(
+            RGBWLightCommands.SET_COLOR,
+            parameters=f"{rgb_color[2]}:{rgb_color[1]}:{rgb_color[0]}",
+        )
+
+    async def _send_color_temperature_command(self, color_temp_kelvin: int) -> None:
+        """Send a color temperature command."""
+        await self.send_api_command(
+            RGBWWLightCommands.SET_COLOR_TEMPERATURE,
+            parameters=str(color_temp_kelvin),
+        )
+
+
+class SwitchBotCloudStripLight(SwitchBotCloudLight):
+    """Representation of a SwitchBot Strip Light."""
+
+    _attr_supported_color_modes = {ColorMode.RGB}
+
+
+class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
+    """Representation of SwitchBot |Strip Light|Floor Lamp|Color Bulb."""
+
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2700
+
+    _attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+
+    async def _send_brightness_command(self, brightness: int) -> None:
+        """Send a brightness command."""
+        await self.send_api_command(
+            RGBWWLightCommands.SET_BRIGHTNESS,
+            parameters=str(value_map_brightness(brightness)),
+        )
+
+    async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
+        """Send an RGB command."""
+        await self.send_api_command(
+            RGBWWLightCommands.SET_COLOR,
+            parameters=f"{rgb_color[0]}:{rgb_color[1]}:{rgb_color[2]}",
+        )
+
+
+@callback
+def _async_make_entity(
+    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
+) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight:
+    """Make a SwitchBotCloudLight."""
+    if device.device_type == "Strip Light":
+        return SwitchBotCloudStripLight(api, device, coordinator)
+    return SwitchBotCloudRGBWWLight(api, device, coordinator)
