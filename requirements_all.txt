@@ -2478,7 +2478,7 @@ python-mpd2==3.1.1
 python-mystrom==2.4.0
 
 # homeassistant.components.open_router
-python-open-router==0.2.0
+python-open-router==0.3.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
