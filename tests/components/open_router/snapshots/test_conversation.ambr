@@ -14,3 +14,39 @@
     }),
   ])
 # ---
+# name: test_function_call
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': 'I have successfully called the function',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
