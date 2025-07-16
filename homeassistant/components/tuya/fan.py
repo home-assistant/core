@@ -26,10 +26,17 @@ from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
 
 TUYA_SUPPORT_TYPE = {
-    "cs",  # Dehumidifier
-    "fs",  # Fan
-    "fsd",  # Fan with Light
-    "fskg",  # Fan wall switch
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs",
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs",
+    # Ceiling Fan Light
+    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
+    "fsd",
+    # Fan wall switch
+    "fskg",
     # Air Purifier
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
     "kj",
