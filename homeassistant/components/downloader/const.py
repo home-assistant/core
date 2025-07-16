@@ -6,11 +6,13 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "downloader"
 DEFAULT_NAME = "Downloader"
-CONF_DOWNLOAD_DIR = "download_dir"
+ATTR_AUTH_PASSWORD = "auth_password"
+ATTR_AUTH_TYPE = "auth_type"
+ATTR_AUTH_USERNAME = "auth_username"
 ATTR_FILENAME = "filename"
+ATTR_OVERWRITE = "overwrite"
 ATTR_SUBDIR = "subdir"
 ATTR_URL = "url"
-ATTR_OVERWRITE = "overwrite"
 
 CONF_DOWNLOAD_DIR = "download_dir"
 
