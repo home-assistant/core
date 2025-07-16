@@ -117,7 +117,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
-        if not self.coordinator.data:
+        if self.coordinator.data is None:
             return
 
         self._attr_battery_level = self.coordinator.data.get("battery")

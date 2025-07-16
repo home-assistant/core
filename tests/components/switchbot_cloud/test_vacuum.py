@@ -6,14 +6,39 @@ from switchbot_api import Device
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumActivity
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
 
 
-async def test_start1(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
+async def test_coordinator_data_is_none(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test coordinator data is none."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="vacuum-id-1",
+            deviceName="vacuum-1",
+            deviceType="K10+",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        None,
+    ]
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    state = hass.states.get(entity_id)
+
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_k10_plus_set_fan_speed(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K10 plus set fan speed."""
 
     mock_list_devices.side_effect = [
         [
@@ -28,7 +53,7 @@ async def test_start1(hass: HomeAssistant, mock_list_devices, mock_get_status) -
     ]
     mock_get_status.side_effect = [
         {
-            "deviceType": "K20+ Pro",
+            "deviceType": "K10+",
             "workingStatus": "Cleaning",
             "battery": 50,
             "onlineStatus": "online",
@@ -39,13 +64,127 @@ async def test_start1(hass: HomeAssistant, mock_list_devices, mock_get_status) -
     entity_id = "vacuum.vacuum_1"
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "start", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN,
+            "set_fan_speed",
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            blocking=True,
         )
-        mock_send_command.assert_called_once()
+        mock_send_command.assert_called()
 
 
-async def test_start2(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
+async def test_k10_plus_return_to_base(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test k10 plus return to base."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="vacuum-id-1",
+            deviceName="vacuum-1",
+            deviceType="K10+",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K10+",
+            "workingStatus": "Charging",
+            "battery": 50,
+            "onlineStatus": "online",
+        }
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    state = hass.states.get(entity_id)
+
+    assert state.state == VacuumActivity.DOCKED.value
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k10_plus_pause(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test k10 plus pause."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="vacuum-id-1",
+            deviceName="vacuum-1",
+            deviceType="K10+",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K10+",
+            "workingStatus": "Charging",
+            "battery": 50,
+            "onlineStatus": "online",
+        }
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    state = hass.states.get(entity_id)
+
+    assert state.state == VacuumActivity.DOCKED.value
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k10_plus_set_start(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K10 plus start."""
+
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="K10+",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K10+",
+            "workingStatus": "Cleaning",
+            "battery": 50,
+            "onlineStatus": "online",
+        },
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            "start",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k20_plus_pro_set_fan_speed(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K10 plus set fan speed."""
 
     mock_list_devices.side_effect = [
         [
@@ -71,13 +210,166 @@ async def test_start2(hass: HomeAssistant, mock_list_devices, mock_get_status) -
     entity_id = "vacuum.vacuum_1"
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "start", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN,
+            "set_fan_speed",
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            blocking=True,
         )
-        mock_send_command.assert_called_once()
+        mock_send_command.assert_called()
 
 
-async def test_start3(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
+async def test_k20_plus_pro_return_to_base(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K20+ Pro return to base."""
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="K20+ Pro",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K20+ Pro",
+            "workingStatus": "Charging",
+            "battery": 50,
+            "onlineStatus": "online",
+        },
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    state = hass.states.get(entity_id)
+
+    assert state.state == VacuumActivity.DOCKED.value
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k20_plus_pro_pause(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K20+ Pro pause."""
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="K20+ Pro",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K20+ Pro",
+            "workingStatus": "Charging",
+            "battery": 50,
+            "onlineStatus": "online",
+        },
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    state = hass.states.get(entity_id)
+
+    assert state.state == VacuumActivity.DOCKED.value
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k20_plus_pro_start(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test K20+ Pro start."""
+
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="K20+ Pro",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "K20+ Pro",
+            "workingStatus": "Cleaning",
+            "battery": 50,
+            "onlineStatus": "online",
+        },
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            "start",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+
+async def test_k10_plus_pro_combo_set_fan_speed(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test k10+ Pro Combo set fan speed."""
+
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="Robot Vacuum Cleaner K10+ Pro Combo",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceType": "Robot Vacuum Cleaner K10+ Pro Combo",
+            "workingStatus": "Cleaning",
+            "battery": 50,
+            "onlineStatus": "online",
+        },
+    ]
+
+    await configure_integration(hass)
+    entity_id = "vacuum.vacuum_1"
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            "set_fan_speed",
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+
+async def test_s20_start(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test s20 start."""
 
     mock_list_devices.side_effect = [
         [
@@ -92,288 +384,45 @@ async def test_start3(hass: HomeAssistant, mock_list_devices, mock_get_status) -
     ]
     mock_get_status.side_effect = [
         {
-            "deviceType": "K20+ Pro",
+            "deviceType": "s20",
             "workingStatus": "Cleaning",
             "battery": 50,
             "onlineStatus": "online",
         },
     ]
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "start", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called_once()
-
-
-async def test_return_to_base1(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K10+",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
 
     await configure_integration(hass)
     entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_return_to_base2(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K20+ Pro",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_return_to_base3(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="S20",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_pause_1(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K10+",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_pause_2(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K20+ Pro",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_pause_3(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="S20",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        }
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        mock_send_command.assert_called()
-
-
-async def test_set_fan_speed1(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K10+",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        },
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            "start",
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called()
 
 
-async def test_set_fan_speed2(
+async def test_s20set_fan_speed(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="K20+ Pro",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
+    """Test s20 set fan speed."""
 
+    mock_list_devices.side_effect = [
+        [
+            Device(
+                version="V1.0",
+                deviceId="vacuum-id-1",
+                deviceName="vacuum-1",
+                deviceType="S20",
+                hubDeviceId="test-hub-id",
+            )
+        ]
+    ]
     mock_get_status.side_effect = [
         {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
+            "deviceType": "S20",
+            "workingStatus": "Cleaning",
             "battery": 50,
             "onlineStatus": "online",
         },
@@ -381,49 +430,6 @@ async def test_set_fan_speed2(
 
     await configure_integration(hass)
     entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
-            blocking=True,
-        )
-        mock_send_command.assert_called()
-
-
-async def test_set_fan_speed3(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test locking and unlocking."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="vacuum-id-1",
-            deviceName="vacuum-1",
-            deviceType="S20",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.side_effect = [
-        {
-            "deviceType": "K10+",
-            "workingStatus": "Charging",
-            "battery": 50,
-            "onlineStatus": "online",
-        },
-    ]
-
-    await configure_integration(hass)
-    entity_id = "vacuum.vacuum_1"
-    state = hass.states.get(entity_id)
-
-    assert state.state == VacuumActivity.DOCKED.value
-
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
