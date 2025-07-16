@@ -74,6 +74,10 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "dj_smart_light_bulb": [
+        # https://github.com/home-assistant/core/pull/126242
+        Platform.LIGHT
+    ],
     "dlq_earu_electric_eawcpt": [
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
