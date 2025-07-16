@@ -30,13 +30,11 @@ async def async_setup_entry(
     """Set up rain sensor(s) for Velux platform."""
     module = hass.data[DOMAIN][config.entry_id]
 
-    entities = [
+    async_add_entities(
         VeluxRainSensor(node, config.entry_id)
         for node in module.pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
