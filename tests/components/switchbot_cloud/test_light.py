@@ -36,7 +36,7 @@ async def test_coordinator_data_is_none(
     mock_get_status.side_effect = [None]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1_none"
+    entity_id = "light.light_1"
     state = hass.states.get(entity_id)
     assert state.state is STATE_UNKNOWN
 
@@ -61,7 +61,7 @@ async def test_strip_light_turn_off(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1_none"
+    entity_id = "light.light_1"
     # state = hass.states.get(entity_id)
 
     with (
@@ -96,7 +96,7 @@ async def test_rgbww_light_turn_off(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1_none"
+    entity_id = "light.light_1"
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
@@ -153,7 +153,7 @@ async def test_strip_light_turn_on(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1_none"
+    entity_id = "light.light_1"
     state = hass.states.get(entity_id)
     assert state.state is STATE_OFF
     with (
@@ -268,7 +268,7 @@ async def test_rgbww_light_turn_on(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1_none"
+    entity_id = "light.light_1"
     state = hass.states.get(entity_id)
     assert state.state is STATE_OFF
     with (

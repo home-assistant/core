@@ -44,6 +44,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
     """Base Class for SwitchBot Light."""
 
     _attr_is_on: bool | None = None
+    _attr_name: str | None = None
 
     _attr_color_mode = ColorMode.UNKNOWN
 
