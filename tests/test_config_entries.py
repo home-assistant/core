@@ -8003,7 +8003,10 @@ async def test_get_reconfigure_entry(
 async def test_subentry_get_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test subentry _get_entry and _get_reconfigure_subentry behavior."""
+    """Test subentry _get_entry and _get_reconfigure_subentry behavior.
+
+    Also tests related helpers _entry_id, _subentry_type, _reconfigure_subentry_id
+    """
     subentry_id = "mock_subentry_id"
     entry = MockConfigEntry(
         data={},
@@ -8039,18 +8042,9 @@ async def test_subentry_get_entry(
 
             async def _async_step_confirm(self):
                 """Confirm input."""
-                try:
-                    entry = self._get_entry()
-                except ValueError as err:
-                    reason = str(err)
-                else:
-                    reason = f"Found entry {entry.title}"
-                try:
-                    entry_id = self._entry_id
-                except ValueError:
-                    reason = f"{reason}: -"
-                else:
-                    reason = f"{reason}: {entry_id}"
+                reason = f"Found entry {self._get_entry().title}"
+                reason = f"{reason},subentry_type={self._subentry_type}"
+                reason = f"{reason}: {self._entry_id}"
 
                 try:
                     subentry = self._get_reconfigure_subentry()
@@ -8078,9 +8072,9 @@ async def test_subentry_get_entry(
     # A reconfigure flow finds the config entry and subentry
     with mock_config_flow("test", TestFlow):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
+        assert result["reason"] == (
+            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Found subentry Test: mock_subentry_id"
         )
 
     # The subentry_id does not exist
@@ -8092,9 +8086,9 @@ async def test_subentry_get_entry(
                 "subentry_id": "01JRemoved",
             },
         )
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Subentry not found: 01JRemoved"
+        assert result["reason"] == (
+            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Subentry not found: 01JRemoved"
         )
 
     # A user flow finds the config entry but not the subentry
@@ -8102,9 +8096,9 @@ async def test_subentry_get_entry(
         result = await manager.subentries.async_init(
             (entry.entry_id, "test"), context={"source": config_entries.SOURCE_USER}
         )
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Source is user, expected reconfigure: -"
+        assert result["reason"] == (
+            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Source is user, expected reconfigure: -"
         )
 
 
