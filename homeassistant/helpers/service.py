@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
     CONF_ENTITY_ID,
+    CONF_SELECTOR,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -54,6 +55,7 @@ from . import (
     config_validation as cv,
     device_registry,
     entity_registry,
+    selector,
     target as target_helpers,
     template,
     translation,
@@ -166,6 +168,7 @@ def validate_supported_feature(supported_feature: str) -> Any:
 # to their values. Full validation is done by hassfest.services
 _FIELD_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
         vol.Optional("filter"): {
             vol.Optional("attribute"): {
                 vol.Required(str): [vol.All(str, validate_attribute_option)],
