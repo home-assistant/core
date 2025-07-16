@@ -35,8 +35,6 @@ ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX = "homeassistant_eid_"
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the EnergyID integration."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._flow_data: dict[str, Any] = {}
