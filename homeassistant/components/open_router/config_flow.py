@@ -126,12 +126,15 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                     vol.Optional(
                         CONF_PROMPT,
                         description={
-                            "suggested_value": RECOMMENDED_CONVERSATION_OPTIONS.get(
-                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                            )
+                            "suggested_value": RECOMMENDED_CONVERSATION_OPTIONS[
+                                CONF_PROMPT
+                            ]
                         },
                     ): TemplateSelector(),
-                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                    vol.Optional(
+                        CONF_LLM_HASS_API,
+                        default=RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                    ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
                 }
