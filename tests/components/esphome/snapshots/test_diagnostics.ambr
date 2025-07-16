@@ -82,9 +82,18 @@
         'minor': 99,
       }),
       'device_info': dict({
+        'api_encryption_supported': False,
+        'area': dict({
+          'area_id': 0,
+          'name': '',
+        }),
+        'areas': list([
+        ]),
         'bluetooth_mac_address': '',
         'bluetooth_proxy_feature_flags': 0,
         'compilation_time': '',
+        'devices': list([
+        ]),
         'esphome_version': '1.0.0',
         'friendly_name': 'Test',
         'has_deep_sleep': False,

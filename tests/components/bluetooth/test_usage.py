@@ -17,9 +17,7 @@ from . import generate_ble_device
 MOCK_BLE_DEVICE = generate_ble_device(
     "00:00:00:00:00:00",
     "any",
-    delegate="",
     details={"path": "/dev/hci0/device"},
-    rssi=-127,
 )
 
 

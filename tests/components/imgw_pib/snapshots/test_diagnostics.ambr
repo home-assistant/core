@@ -22,6 +22,13 @@
       'version': 1,
     }),
     'hydrological_data': dict({
+      'alert': dict({
+        'level': None,
+        'probability': None,
+        'valid_from': None,
+        'valid_to': None,
+        'value': 'no_alert',
+      }),
       'flood_alarm': None,
       'flood_alarm_level': dict({
         'name': 'Flood Alarm Level',
@@ -34,9 +41,17 @@
         'unit': None,
         'value': None,
       }),
+      'latitude': None,
+      'longitude': None,
       'river': 'River Name',
       'station': 'Station Name',
       'station_id': '123',
+      'water_flow': dict({
+        'name': 'Water Flow',
+        'unit': None,
+        'value': 123.45,
+      }),
+      'water_flow_measurement_date': '2024-04-27T10:05:00+00:00',
       'water_level': dict({
         'name': 'Water Level',
         'unit': None,

@@ -192,6 +192,17 @@
       'thumbnail': None,
       'title': 'Playlists',
     }),
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'directory',
+      'media_content_id': 'S:',
+      'media_content_type': 'directory',
+      'thumbnail': None,
+      'title': 'Folders',
+    }),
   ])
 # ---
 # name: test_browse_media_library_albums
@@ -241,6 +252,71 @@
       'title': "Special Characters,'()+",
     }),
   ])
+# ---
+# name: test_browse_media_library_folders[S://192.168.1.1/music]
+  dict({
+    'can_expand': False,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': True,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'S://192.168.1.1/music/beatles',
+        'media_content_type': 'directory',
+        'thumbnail': None,
+        'title': 'beatles',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'S://192.168.1.1/music/elton%20john',
+        'media_content_type': 'directory',
+        'thumbnail': None,
+        'title': 'elton john',
+      }),
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'S://192.168.1.1/music',
+    'media_content_type': 'directory',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'music',
+  })
+# ---
+# name: test_browse_media_library_folders[S:]
+  dict({
+    'can_expand': False,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'S://192.168.1.1/music',
+        'media_content_type': 'directory',
+        'thumbnail': None,
+        'title': 'music',
+      }),
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'S:',
+    'media_content_type': 'directory',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Folders',
+  })
 # ---
 # name: test_browse_media_root
   list([

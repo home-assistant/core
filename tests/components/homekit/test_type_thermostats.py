@@ -56,6 +56,9 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_thermostats import (
+    FAN_STATE_ACTIVE,
+    FAN_STATE_IDLE,
+    FAN_STATE_INACTIVE,
     HC_HEAT_COOL_AUTO,
     HC_HEAT_COOL_COOL,
     HC_HEAT_COOL_HEAT,
@@ -2491,6 +2494,98 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
 
     assert acc.ordered_fan_speeds == []
     assert not acc.fan_chars
+
+
+async def test_thermostat_fan_state_with_preheating_and_defrosting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test thermostat fan state mappings for preheating and defrosting actions."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify fan state characteristics are available
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert hasattr(acc, "char_current_fan_state")
+
+    # Test PREHEATING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.PREHEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test DEFROSTING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.DEFROSTING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test other actions for comparison
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.OFF,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_INACTIVE
 
 
 async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) -> None:

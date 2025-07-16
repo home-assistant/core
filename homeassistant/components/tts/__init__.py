@@ -25,6 +25,9 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_source import (
+    generate_media_source_id as ms_generate_media_source_id,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
@@ -58,6 +61,7 @@ from .const import (
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
+    MEDIA_SOURCE_STREAM_PATH,
     TtsAudioType,
 )
 from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
@@ -273,9 +277,17 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
+    manager = hass.data[DATA_TTS_MANAGER]
     parsed = parse_media_source_id(media_source_id)
-    stream = hass.data[DATA_TTS_MANAGER].async_create_result_stream(**parsed["options"])
-    stream.async_set_message(parsed["message"])
+    if "stream" in parsed:
+        stream = manager.async_get_result_stream(
+            parsed["stream"]  # type: ignore[typeddict-item]
+        )
+        if stream is None:
+            raise ValueError("Stream not found")
+    else:
+        stream = manager.async_create_result_stream(**parsed["options"])
+        stream.async_set_message(parsed["message"])
     data = b"".join([chunk async for chunk in stream.async_stream_result()])
     return stream.extension, data
 
@@ -370,7 +382,7 @@ async def _async_convert_audio(
             assert process.stderr
             stderr_data = await process.stderr.read()
             _LOGGER.error(stderr_data.decode())
-            raise RuntimeError(
+            raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
@@ -477,6 +489,14 @@ class ResultStream:
     def url(self) -> str:
         """Get the URL to stream the result."""
         return f"/api/tts_proxy/{self.token}"
+
+    @cached_property
+    def media_source_id(self) -> str:
+        """Get the media source ID of this stream."""
+        return ms_generate_media_source_id(
+            DOMAIN,
+            f"{MEDIA_SOURCE_STREAM_PATH}/{self.token}",
+        )
 
     @cached_property
     def _result_cache(self) -> asyncio.Future[TTSCache]:
@@ -832,12 +852,9 @@ class SpeechManager:
         else:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
-            async def message_stream() -> AsyncGenerator[str]:
-                yield message
-
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
             data_gen = self._async_generate_tts_audio(
-                engine_instance, message_stream(), language, options
+                engine_instance, message, language, options
             )
 
         cache = TTSCache(
@@ -911,7 +928,7 @@ class SpeechManager:
     async def _async_generate_tts_audio(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        message_stream: AsyncGenerator[str],
+        message_or_stream: str | AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
     ) -> AsyncGenerator[bytes]:
@@ -960,8 +977,11 @@ class SpeechManager:
             raise HomeAssistantError("TTS engine name is not set.")
 
         if isinstance(engine_instance, Provider):
-            message = "".join([chunk async for chunk in message_stream])
-            extension, data = await engine_instance.async_get_tts_audio(
+            if isinstance(message_or_stream, str):
+                message = message_or_stream
+            else:
+                message = "".join([chunk async for chunk in message_or_stream])
+            extension, data = await engine_instance.async_internal_get_tts_audio(
                 message, language, options
             )
 
@@ -976,8 +996,18 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
+            if isinstance(message_or_stream, str):
+
+                async def gen_stream() -> AsyncGenerator[str]:
+                    yield message_or_stream
+
+                stream = gen_stream()
+
+            else:
+                stream = message_or_stream
+
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, message_stream)
+                TTSAudioRequest(language, options, stream)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
@@ -1164,6 +1194,21 @@ class TextToSpeechView(HomeAssistantView):
     def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
         self.manager = manager
+
+    async def head(self, request: web.Request, token: str) -> web.StreamResponse:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the token (file) exists and return its content type.
+        """
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        return web.Response(content_type=stream.content_type)
 
     async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""

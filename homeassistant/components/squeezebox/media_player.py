@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -23,6 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
@@ -31,11 +33,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     discovery_flow,
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -57,8 +60,9 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
-    KNOWN_PLAYERS,
-    KNOWN_SERVERS,
+    SERVER_MANUFACTURER,
+    SERVER_MODEL,
+    SERVER_MODEL_ID,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -123,9 +127,52 @@ async def async_setup_entry(
     """Set up the Squeezebox media_player platform from a server config entry."""
 
     # Add media player entities when discovered
-    async def _player_discovered(player: SqueezeBoxPlayerUpdateCoordinator) -> None:
-        _LOGGER.debug("Setting up media_player entity for player %s", player)
-        async_add_entities([SqueezeBoxMediaPlayerEntity(player)])
+    async def _player_discovered(
+        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+    ) -> None:
+        player = coordinator.player
+        _LOGGER.debug("Setting up media_player device and entity for player %s", player)
+        device_registry = dr.async_get(hass)
+        server_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, coordinator.server_uuid)},
+        )
+
+        name = player.name
+        model = player.model
+        manufacturer = player.creator
+        model_id = player.model_type
+        sw_version = ""
+        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        if (
+            server_device
+            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
+            in server_device.connections
+        ):
+            _LOGGER.debug("Shared server & player device %s", server_device)
+            name = server_device.name
+            sw_version = server_device.sw_version or sw_version
+            model = SERVER_MODEL + "/" + model if model else SERVER_MODEL
+            manufacturer = (
+                SERVER_MANUFACTURER + " / " + manufacturer
+                if manufacturer
+                else SERVER_MANUFACTURER
+            )
+            model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
+
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, player.player_id)},
+            connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+            name=name,
+            model=model,
+            manufacturer=manufacturer,
+            model_id=model_id,
+            hw_version=player.firmware,
+            sw_version=sw_version,
+            via_device=(DOMAIN, coordinator.server_uuid),
+        )
+        _LOGGER.debug("Creating / Updating player device %s", device)
+        async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
@@ -204,6 +251,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -244,11 +292,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.available and super().available
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device-specific attributes."""
         return {
@@ -271,9 +314,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
-        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
-        known_players.remove(self.coordinator.player.player_id)
+        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+            self.coordinator.player.player_id
+        )
 
     @property
     def volume_level(self) -> float | None:
@@ -330,22 +373,22 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return str(self._player.title)
+        return cast(str | None, self._player.title)
 
     @property
     def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
-        return str(self._player.remote_title)
+        return cast(str | None, self._player.remote_title)
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        return str(self._player.artist)
+        return cast(str | None, self._player.artist)
 
     @property
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        return str(self._player.album)
+        return cast(str | None, self._player.album)
 
     @property
     def repeat(self) -> RepeatMode:
@@ -544,6 +587,74 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if index is not None:
             await self._player.async_index(index)
         await self.coordinator.async_refresh()
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        _valid_type_list = [
+            key
+            for key in self._browse_data.content_type_media_class
+            if key not in ["apps", "app", "radios", "radio"]
+        ]
+
+        _media_content_type_list = (
+            query.media_content_type.lower().replace(", ", ",").split(",")
+            if query.media_content_type
+            else ["albums", "tracks", "artists", "genres"]
+        )
+
+        if query.media_content_type and set(_media_content_type_list).difference(
+            _valid_type_list
+        ):
+            _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_search_media_content_type",
+                translation_placeholders={
+                    "media_content_type": ", ".join(_valid_type_list)
+                },
+            )
+
+        search_response_list: list[BrowseMedia] = []
+
+        for _content_type in _media_content_type_list:
+            payload = {
+                "search_type": _content_type,
+                "search_id": query.media_content_id,
+                "search_query": query.search_query,
+            }
+
+            try:
+                search_response_list.append(
+                    await build_item_response(
+                        self,
+                        self._player,
+                        payload,
+                        self.browse_limit,
+                        self._browse_data,
+                    )
+                )
+            except BrowseError:
+                _LOGGER.debug("Search Failure: Payload %s", payload)
+
+        result: list[BrowseMedia] = []
+
+        for search_response in search_response_list:
+            # Apply the media_filter_classes to the result if specified
+            if query.media_filter_classes and search_response.children:
+                search_response.children = [
+                    child
+                    for child in search_response.children
+                    if child.media_content_type in query.media_filter_classes
+                ]
+            if search_response.children:
+                result.extend(list(search_response.children))
+
+        return SearchMedia(result=result)
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""

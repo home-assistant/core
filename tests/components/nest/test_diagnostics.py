@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from google_nest_sdm.exceptions import SubscriberException
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

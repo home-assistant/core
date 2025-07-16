@@ -10,6 +10,9 @@ from homeassistant.components.water_heater import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
@@ -24,9 +27,9 @@ from .entity import SmartThingsEntity
 
 OPERATION_MAP_TO_HA: dict[str, str] = {
     "eco": STATE_ECO,
-    "std": "standard",
-    "force": "force",
-    "power": "power",
+    "std": STATE_HEAT_PUMP,
+    "force": STATE_HIGH_DEMAND,
+    "power": STATE_PERFORMANCE,
 }
 
 HA_TO_OPERATION_MAP = {v: k for k, v in OPERATION_MAP_TO_HA.items()}
@@ -54,6 +57,10 @@ async def async_setup_entry(
                 Capability.CUSTOM_OUTING_MODE,
             )
         )
+        and device.status[MAIN][Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].value
+        is not None
     )
 
 

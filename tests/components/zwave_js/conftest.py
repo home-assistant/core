@@ -199,6 +199,12 @@ def climate_heatit_z_trm3_no_value_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm3_no_value_state.json", DOMAIN)
 
 
+@pytest.fixture(name="ring_keypad_state", scope="package")
+def ring_keypad_state_fixture() -> dict[str, Any]:
+    """Load the Ring keypad state fixture data."""
+    return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture() -> dict[str, Any]:
     """Load the nortek thermostat node state fixture data."""
@@ -295,6 +301,12 @@ def shelly_europe_ltd_qnsh_001p10_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("shelly_europe_ltd_qnsh_001p10_state.json", DOMAIN)
 
 
+@pytest.fixture(name="touchwand_glass9_state", scope="package")
+def touchwand_glass9_state_fixture() -> dict[str, Any]:
+    """Load the Touchwand Glass 9 shutter node state fixture data."""
+    return load_json_object_fixture("touchwand_glass9_state.json", DOMAIN)
+
+
 @pytest.fixture(name="merten_507801_state", scope="package")
 def merten_507801_state_fixture() -> dict[str, Any]:
     """Load the Merten 507801 Shutter node state fixture data."""
@@ -311,6 +323,12 @@ def aeon_smart_switch_6_state_fixture() -> dict[str, Any]:
 def ge_12730_state_fixture() -> dict[str, Any]:
     """Load the GE 12730 node state fixture data."""
     return load_json_object_fixture("fan_ge_12730_state.json", DOMAIN)
+
+
+@pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
+def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
+    return load_json_object_fixture("enbrighten_58446_zwa4013_state.json", DOMAIN)
 
 
 @pytest.fixture(name="aeotec_radiator_thermostat_state", scope="package")
@@ -876,6 +894,14 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
     return Event("node removed", event_data)
 
 
+@pytest.fixture(name="ring_keypad")
+def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> Node:
+    """Mock a Ring keypad node."""
+    node = Node(client, copy.deepcopy(ring_keypad_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -1026,6 +1052,14 @@ def shelly_qnsh_001P10_cover_shutter_fixture(
     return node
 
 
+@pytest.fixture(name="touchwand_glass9")
+def touchwand_glass9_fixture(client, touchwand_glass9_state) -> Node:
+    """Mock a Touchwand glass9 node."""
+    node = Node(client, copy.deepcopy(touchwand_glass9_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="merten_507801")
 def merten_507801_cover_fixture(client, merten_507801_state) -> Node:
     """Mock a Merten 507801 Shutter node."""
@@ -1046,6 +1080,14 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state) -> Node:
 def ge_12730_fixture(client, ge_12730_state) -> Node:
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="enbrighten_58446_zwa4013")
+def enbrighten_58446_zwa4013_fixture(client, enbrighten_58446_zwa4013_state) -> Node:
+    """Mock a Enbrighten_58446/zwa4013 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_58446_zwa4013_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
