@@ -46,9 +46,10 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientError:
                 _LOGGER.exception("Failed to connect to TuneBlade")
                 errors["base"] = "cannot_connect"
-            else:
-                if not devices:
-                    errors["base"] = "cannot_connect"
+                devices = None
+
+            if not devices:
+                _LOGGER.info("TuneBlade connected but no devices found")
 
             if not errors:
                 self._async_abort_entries_match(
@@ -81,7 +82,7 @@ class TuneBladeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         _LOGGER.debug("Discovered TuneBlade via Zeroconf: %s", discovery_info)
 
-        host = discovery_info.host
+        host = discovery_info.ip_address
         port = discovery_info.port
         name = discovery_info.name.split("@")[0].strip()
 

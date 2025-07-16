@@ -38,9 +38,9 @@ class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
         try:
             devices_data = await self.client.async_get_data()
             if not devices_data:
-                raise UpdateFailed("No device data returned from TuneBlade hub.")
+                _LOGGER.warning("No device data returned from TuneBlade hub")
         except ClientError as err:
-            _LOGGER.warning("Error fetching data from TuneBlade hub")
+            _LOGGER.warning("No data available fetching data from TuneBlade hub")
             raise UpdateFailed(
                 f"Error communicating with TuneBlade hub: {err}"
             ) from err

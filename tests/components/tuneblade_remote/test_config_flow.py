@@ -1,125 +1,190 @@
-"""Test the TuneBlade Remote config flow."""
-
-from __future__ import annotations
+"""Tests for the TuneBlade Remote config flow."""
 
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.tuneblade_remote.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
-async def test_user_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful user config flow."""
-    mock_devices: dict[str, Any] = {"MASTER": {"name": "Master"}}
+async def test_user_flow_success(hass: HomeAssistant, mock_tuneblade_api: Any) -> None:
+    """Test successful user setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] == "form"
 
     with patch(
-        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient.async_get_data",
-        new_callable=AsyncMock,
-        return_value=mock_devices,
+        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeConfigFlow._async_abort_entries_match",
+        return_value=None,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-        )
-        assert result["type"] == FlowResultType.FORM
-
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "localhost", CONF_PORT: 54412},
+            user_input={CONF_HOST: "localhost", CONF_PORT: 54412},
         )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {CONF_HOST: "localhost", CONF_PORT: 54412}
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "TuneBlade (localhost)"
+    assert result["data"] == {CONF_HOST: "localhost", CONF_PORT: 54412}
 
 
 @pytest.mark.asyncio
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user flow with connection failure."""
+    """Test user setup with connection error."""
     with patch(
-        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient.async_get_data",
-        new_callable=AsyncMock,
-        side_effect=Exception,
-    ):
+        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient",
+    ) as mock_client:
+        instance = mock_client.return_value
+        instance.async_get_data.side_effect = aiohttp.ClientError()
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "user"},
+            context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == "form"
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "localhost", CONF_PORT: 54412},
+            user_input={CONF_HOST: "localhost", CONF_PORT: 54412},
         )
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": "cannot_connect"}
+
+        assert result["type"] == "form"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.asyncio
-async def test_zeroconf_success(hass: HomeAssistant) -> None:
-    """Test a successful zeroconf discovery flow."""
-    discovery_info = ZeroconfServiceInfo(
-        name="Master@tuneblade._http._tcp.local.",
-        type_="_http._tcp.local.",
-        properties={},
-        address="192.168.1.10",
-        port=54412,
-        hostname="Master.local.",
+async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test user flow aborts if already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TuneBlade (localhost)",
+        data={CONF_HOST: "localhost", CONF_PORT: 54412},
+        unique_id="TuneBlade_localhost_54412",
     )
-
-    mock_devices: dict[str, Any] = {"MASTER": {"name": "Master"}}
+    entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient.async_get_data",
-        new_callable=AsyncMock,
-        return_value=mock_devices,
-    ):
+        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient",
+    ) as mock_client:
+        mock_client.return_value.async_get_data = AsyncMock(
+            return_value={"some": "data"}
+        )
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "zeroconf"},
-            data=discovery_info,
+            context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "confirm"
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={},
+            user_input={CONF_HOST: "localhost", CONF_PORT: 54412},
         )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {
-            "host": discovery_info.address,
-            "port": discovery_info.port,
-            "name": "Master",
-        }
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
+
+
+@pytest.mark.asyncio
+async def test_zeroconf_success(hass: HomeAssistant, mock_tuneblade_api: Any) -> None:
+    """Test successful zeroconf discovery flow."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="127.0.0.1",
+        ip_addresses=["127.0.0.1"],
+        port=54412,
+        hostname="tuneblade.local.",
+        name="TuneBlade@localhost",
+        type="_tuneblade._tcp.local.",
+        properties={},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "TuneBlade"
+    assert result2["data"] == {
+        "host": "127.0.0.1",
+        "port": 54412,
+        "name": "TuneBlade",
+    }
 
 
 @pytest.mark.asyncio
 async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery fails to connect."""
-    discovery_info = ZeroconfServiceInfo(
-        name="Master@tuneblade._http._tcp.local.",
-        type_="_http._tcp.local.",
-        properties={},
-        address="192.168.1.10",
-        port=54412,
-        hostname="Master.local.",
-    )
-
+    """Test zeroconf discovery with connection failure."""
     with patch(
-        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient.async_get_data",
-        new_callable=AsyncMock,
-        side_effect=Exception,
-    ):
+        "homeassistant.components.tuneblade_remote.config_flow.TuneBladeApiClient",
+    ) as mock_client:
+        instance = mock_client.return_value
+        instance.async_get_data.side_effect = Exception("Connection failed")
+
+        discovery_info = ZeroconfServiceInfo(
+            ip_address="127.0.0.1",
+            ip_addresses=["127.0.0.1"],
+            port=54412,
+            hostname="tuneblade.local.",
+            name="TuneBlade@localhost",
+            type="_tuneblade._tcp.local.",
+            properties={},
+        )
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "zeroconf"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
             data=discovery_info,
         )
-        assert result["type"] == FlowResultType.ABORT
+
+        assert result["type"] == "abort"
         assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf aborts if unique ID is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TuneBlade",
+        data={"host": "127.0.0.1", "port": 54412, "name": "TuneBlade"},
+        unique_id="TuneBlade_127.0.0.1_54412",
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="127.0.0.1",
+        ip_addresses=["127.0.0.1"],
+        port=54412,
+        hostname="tuneblade.local.",
+        name="TuneBlade@localhost",
+        type="_tuneblade._tcp.local.",
+        properties={},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
