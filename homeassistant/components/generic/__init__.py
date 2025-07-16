@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_AUTHENTICATION, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
+from .const import CONF_FRAMERATE, CONF_LIMIT_REFETCH_TO_URL_CHANGE, SECTION_ADVANCED
+
 DOMAIN = "generic"
 PLATFORMS = [Platform.CAMERA]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -47,3 +55,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        # Migrate to advanced section
+        new_options = {**entry.options}
+        advanced = new_options[SECTION_ADVANCED] = {
+            CONF_FRAMERATE: new_options.pop(CONF_FRAMERATE),
+            CONF_VERIFY_SSL: new_options.pop(CONF_VERIFY_SSL),
+        }
+
+        # migrate optional fields
+        for key in (
+            CONF_RTSP_TRANSPORT,
+            CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+            CONF_AUTHENTICATION,
+            CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+        ):
+            if key in new_options:
+                advanced[key] = new_options.pop(key)
+
+        hass.config_entries.async_update_entry(entry, options=new_options, version=2)
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True
