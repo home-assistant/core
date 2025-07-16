@@ -700,7 +700,7 @@ async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
     assert mass_non_stabilized_sensor.state == "86.55"
     assert (
         mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Smart Scale (B5DC) Weight non stabilized"
+        == "Mi Smart Scale (B5DC) Weight non-stabilized"
     )
     assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
@@ -742,7 +742,7 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     assert mass_non_stabilized_sensor.state == "85.15"
     assert (
         mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Body Composition Scale (B5DC) Weight non stabilized"
+        == "Mi Body Composition Scale (B5DC) Weight non-stabilized"
     )
     assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"

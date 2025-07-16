@@ -12,6 +12,7 @@
       'role': 'system',
     }),
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),

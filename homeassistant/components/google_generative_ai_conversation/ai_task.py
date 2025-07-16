@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from json import JSONDecodeError
+
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import json_loads
 
 from .const import LOGGER
 from .entity import ERROR_GETTING_RESPONSE, GoogleGenerativeAILLMBaseEntity
@@ -34,7 +37,10 @@ class GoogleGenerativeAITaskEntity(
 ):
     """Google Generative AI AI Task entity."""
 
-    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
+    _attr_supported_features = (
+        ai_task.AITaskEntityFeature.GENERATE_DATA
+        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+    )
 
     async def _async_generate_data(
         self,
@@ -42,7 +48,7 @@ class GoogleGenerativeAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(chat_log)
+        await self._async_handle_chat_log(chat_log, task.structure)
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             LOGGER.error(
@@ -51,7 +57,25 @@ class GoogleGenerativeAITaskEntity(
             )
             raise HomeAssistantError(ERROR_GETTING_RESPONSE)
 
+        text = chat_log.content[-1].content or ""
+
+        if not task.structure:
+            return ai_task.GenDataTaskResult(
+                conversation_id=chat_log.conversation_id,
+                data=text,
+            )
+
+        try:
+            data = json_loads(text)
+        except JSONDecodeError as err:
+            LOGGER.error(
+                "Failed to parse JSON response: %s. Response: %s",
+                err,
+                text,
+            )
+            raise HomeAssistantError(ERROR_GETTING_RESPONSE) from err
+
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
-            data=chat_log.content[-1].content or "",
+            data=data,
         )
