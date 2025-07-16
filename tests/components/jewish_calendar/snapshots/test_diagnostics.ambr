@@ -18,25 +18,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,
@@ -92,25 +74,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': True,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': True,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,
@@ -166,25 +130,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,

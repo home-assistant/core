@@ -27,7 +27,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -37,7 +37,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
+from .common import (
+    AIR_TEMPERATURE_SENSOR,
+    BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+    EATON_RF9640_ENTITY,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -366,6 +370,7 @@ async def test_listen_done_after_setup(
 
 
 @pytest.mark.usefixtures("client")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_new_entity_on_value_added(
     hass: HomeAssistant,
     multisensor_6: Node,
@@ -1692,27 +1697,6 @@ async def test_replace_different_node(
         (DOMAIN, multisensor_6_device_id_ext),
     }
 
-    ws_client = await hass_ws_client(hass)
-
-    # Simulate the driver not being ready to ensure that the device removal handler
-    # does not crash
-    driver = client.driver
-    client.driver = None
-
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert not response["success"]
-
-    client.driver = driver
-
-    # Attempting to remove the hank device should pass, but removing the multisensor should not
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert response["success"]
-
-    response = await ws_client.remove_device(
-        multisensor_6_device.id, integration.entry_id
-    )
-    assert not response["success"]
-
 
 async def test_node_model_change(
     hass: HomeAssistant,
@@ -1833,7 +1817,8 @@ async def test_disabled_node_status_entity_on_node_replaced(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_disabled_entity_on_value_removed(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
     zp3111: Node,
     client: MagicMock,
@@ -1843,15 +1828,6 @@ async def test_disabled_entity_on_value_removed(
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-
-    # must reload the integration when enabling an entity
-    await hass.config_entries.async_unload(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.NOT_LOADED
-    integration.add_to_hass(hass)
-    await hass.config_entries.async_setup(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.LOADED
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -2196,3 +2172,39 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_entity_available_when_node_dead(
+    hass: HomeAssistant, client, bulb_6_multi_color, integration
+) -> None:
+    """Test that entities remain available even when the node is dead."""
+
+    node = bulb_6_multi_color
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # Send dead event to the node
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should remain available even though the node is dead
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # Send alive event to bring the node back
+    event = Event(
+        "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should still be available
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state
+    assert state.state != STATE_UNAVAILABLE

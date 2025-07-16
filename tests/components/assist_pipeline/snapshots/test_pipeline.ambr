@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_chat_log_tts_streaming[to_stream_deltas0-0-]
+# name: test_chat_log_tts_streaming[to_stream_deltas0-1-hello, how are you?]
   list([
     dict({
       'data': dict({
@@ -311,6 +311,12 @@
     }),
     dict({
       'data': dict({
+        'tts_start_streaming': True,
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
         'chat_log_delta': dict({
           'content': '?',
         }),
@@ -468,6 +474,12 @@
             }),
           ]),
         }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_start_streaming': True,
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),

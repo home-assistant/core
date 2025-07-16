@@ -23,17 +23,17 @@ DHCP_SERVICE_INFO = [
     DhcpServiceInfo(
         hostname="airthings-view",
         ip="192.168.1.100",
-        macaddress="00:00:00:00:00:00",
+        macaddress="000000000000",
     ),
     DhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.101",
-        macaddress="D0:14:11:90:00:00",
+        macaddress="d01411900000",
     ),
     DhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.102",
-        macaddress="70:B3:D5:2A:00:00",
+        macaddress="70b3d52a0000",
     ),
 ]
 
