@@ -35,7 +35,7 @@ from tests.typing import WebSocketGenerator
 
 RELEASE_SUMMARY = "This is a release summary"
 RELEASE_URL = "https://esphome.io/changelog"
-ENTITY_ID = "update.test_myupdate"
+ENTITY_ID = "update.test_my_update"
 
 
 @pytest.fixture(autouse=True)
@@ -544,7 +544,9 @@ async def test_generic_device_update_entity_has_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    mock_client.update_command.assert_called_with(key=1, command=UpdateCommand.CHECK)
+    mock_client.update_command.assert_called_with(
+        key=1, command=UpdateCommand.CHECK, device_id=0
+    )
 
 
 async def test_update_entity_release_notes(

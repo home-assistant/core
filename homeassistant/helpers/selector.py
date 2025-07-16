@@ -117,11 +117,8 @@ def _validate_supported_feature(supported_feature: str) -> int:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
-def _validate_supported_features(supported_features: int | list[str]) -> int:
-    """Validate a supported feature and resolve an enum string to its value."""
-
-    if isinstance(supported_features, int):
-        return supported_features
+def _validate_supported_features(supported_features: list[str]) -> int:
+    """Validate supported features and resolve enum strings to their value."""
 
     feature_mask = 0
 
@@ -160,6 +157,22 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# Legacy entity selector config schema used directly under entity selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
+LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration that provided the entity
+        vol.Optional("integration"): str,
+        # Domain the entity belongs to
+        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+        # Device class of the entity
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+    }
+)
+
+
 class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
@@ -179,10 +192,22 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("model"): str,
         # Model ID of device
         vol.Optional("model_id"): str,
-        # Device has to contain entities matching this selector
-        vol.Optional("entity"): vol.All(
-            cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
-        ),
+    }
+)
+
+
+# Legacy device selector config schema used directly under device selectors
+# is provided for backwards compatibility and remains feature frozen.
+# New filtering features should be added under the `filter` key instead.
+# https://github.com/home-assistant/frontend/pull/15302
+LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        # Integration linked to it with a config entry
+        vol.Optional("integration"): str,
+        # Manufacturer of device
+        vol.Optional("manufacturer"): str,
+        # Model of device
+        vol.Optional("model"): str,
     }
 )
 
@@ -714,9 +739,13 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     selector_type = "device"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+        LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA.schema
     ).extend(
         {
+            # Device has to contain entities matching this selector
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+            ),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
                 cv.ensure_list,
@@ -794,7 +823,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
     selector_type = "entity"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+        LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA.schema
     ).extend(
         {
             vol.Optional("exclude_entities"): [str],
@@ -1010,8 +1039,10 @@ class LocationSelector(Selector[LocationSelectorConfig]):
         return location
 
 
-class MediaSelectorConfig(BaseSelectorConfig):
+class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
+
+    accept: list[str]
 
 
 @SELECTORS.register("media")
@@ -1020,11 +1051,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("accept"): [str],
+        }
+    )
     DATA_SCHEMA = vol.Schema(
         {
-            # Although marked as optional in frontend, this field is required
-            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # If accept is set, the entity_id field will not be present
+            vol.Optional("entity_id"): cv.entity_id_or_uuid,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
@@ -1037,9 +1072,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, float]:
+    def __call__(self, data: Any) -> dict[str, str]:
         """Validate the passed selection."""
-        media: dict[str, float] = self.DATA_SCHEMA(data)
+        schema = {
+            key: value
+            for key, value in self.DATA_SCHEMA.schema.items()
+            if key != "entity_id"
+        }
+
+        if "accept" not in self.config:
+            # If accept is not set, the entity_id field is required
+            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+
+        media: dict[str, str] = vol.Schema(schema)(data)
         return media
 
 
@@ -1051,6 +1096,7 @@ class NumberSelectorConfig(BaseSelectorConfig, total=False):
     step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
+    translation_key: str
 
 
 class NumberSelectorMode(StrEnum):
@@ -1091,6 +1137,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
+                vol.Optional("translation_key"): str,
             }
         ),
         validate_slider,
@@ -1113,8 +1160,22 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class ObjectSelectorField(TypedDict):
+    """Class to represent an object selector fields dict."""
+
+    label: str
+    required: bool
+    selector: dict[str, Any]
+
+
 class ObjectSelectorConfig(BaseSelectorConfig):
     """Class to represent an object selector config."""
+
+    fields: dict[str, ObjectSelectorField]
+    multiple: bool
+    label_field: str
+    description_field: bool
+    translation_key: str
 
 
 @SELECTORS.register("object")
@@ -1123,7 +1184,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("fields"): {
+                str: {
+                    vol.Required("selector"): dict,
+                    vol.Optional("required"): bool,
+                    vol.Optional("label"): str,
+                }
+            },
+            vol.Optional("multiple", default=False): bool,
+            vol.Optional("label_field"): str,
+            vol.Optional("description_field"): str,
+            vol.Optional("translation_key"): str,
+        }
+    )
 
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1214,6 +1289,39 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [parent_schema(vol.Schema(str)(val)) for val in data]
+
+
+class StatisticSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a statistic selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("statistic")
+class StatisticSelector(Selector[StatisticSelectorConfig]):
+    """Selector of a single or list of statistics."""
+
+    selector_type = "statistic"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: StatisticSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+
+        if not self.config["multiple"]:
+            stat: str = vol.Schema(str)(data)
+            return stat
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class TargetSelectorConfig(BaseSelectorConfig, total=False):
