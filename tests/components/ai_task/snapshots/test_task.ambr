@@ -9,6 +9,7 @@
       'role': 'system',
     }),
     dict({
+      'attachments': None,
       'content': 'Test prompt',
       'role': 'user',
     }),

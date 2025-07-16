@@ -60,7 +60,7 @@ async def test_generic_number_entity(
         {ATTR_ENTITY_ID: "number.test_my_number", ATTR_VALUE: 50},
         blocking=True,
     )
-    mock_client.number_command.assert_has_calls([call(1, 50)])
+    mock_client.number_command.assert_has_calls([call(1, 50, device_id=0)])
     mock_client.number_command.reset_mock()
 
 

@@ -16,6 +16,11 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
+    @staticmethod
+    def get_unique_id(device_id: str, description: EntityDescription) -> str:
+        """Generate a unique ID for the entity."""
+        return f"{device_id}-{description.key}"
+
     def __init__(
         self,
         coordinator: MieleDataUpdateCoordinator,
@@ -26,7 +31,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_unique_id = MieleEntity.get_unique_id(device_id, description)
 
         device = self.device
         appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))

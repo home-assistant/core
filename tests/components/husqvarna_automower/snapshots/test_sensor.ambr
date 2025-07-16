@@ -585,6 +585,66 @@
     'state': '40',
   })
 # ---
+# name: test_sensor_snapshot[sensor.test_mower_1_inactive_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <InactiveReasons.NONE: 'none'>,
+        <InactiveReasons.PLANNING: 'planning'>,
+        <InactiveReasons.SEARCHING_FOR_SATELLITES: 'searching_for_satellites'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_inactive_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Inactive reason',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inactive_reason',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_inactive_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_inactive_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Inactive reason',
+      'options': list([
+        <InactiveReasons.NONE: 'none'>,
+        <InactiveReasons.PLANNING: 'planning'>,
+        <InactiveReasons.SEARCHING_FOR_SATELLITES: 'searching_for_satellites'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_inactive_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

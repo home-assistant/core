@@ -47,7 +47,7 @@ async def test_generic_date_entity(
         {ATTR_ENTITY_ID: "date.test_my_date", ATTR_DATE: "1999-01-01"},
         blocking=True,
     )
-    mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1)])
+    mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1, device_id=0)])
     mock_client.date_command.reset_mock()
 
 

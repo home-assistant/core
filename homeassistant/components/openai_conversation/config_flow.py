@@ -55,9 +55,12 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -77,12 +80,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-RECOMMENDED_OPTIONS = {
-    CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
-    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
-}
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
@@ -99,7 +96,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -129,10 +126,16 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries=[
                     {
                         "subentry_type": "conversation",
-                        "data": RECOMMENDED_OPTIONS,
+                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
                         "title": DEFAULT_CONVERSATION_NAME,
                         "unique_id": None,
-                    }
+                    },
+                    {
+                        "subentry_type": "ai_task_data",
+                        "data": RECOMMENDED_AI_TASK_OPTIONS,
+                        "title": DEFAULT_AI_TASK_NAME,
+                        "unique_id": None,
+                    },
                 ],
             )
 
@@ -146,11 +149,14 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"conversation": ConversationSubentryFlowHandler}
+        return {
+            "conversation": OpenAISubentryFlowHandler,
+            "ai_task_data": OpenAISubentryFlowHandler,
+        }
 
 
-class ConversationSubentryFlowHandler(ConfigSubentryFlow):
-    """Flow for managing conversation subentries."""
+class OpenAISubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing OpenAI subentries."""
 
     last_rendered_recommended = False
     options: dict[str, Any]
@@ -164,7 +170,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a subentry."""
-        self.options = RECOMMENDED_OPTIONS.copy()
+        if self._subentry_type == "ai_task_data":
+            self.options = RECOMMENDED_AI_TASK_OPTIONS.copy()
+        else:
+            self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -181,6 +190,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         # abort if entry is not loaded
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
+
         options = self.options
 
         hass_apis: list[SelectOptionDict] = [
@@ -198,28 +208,32 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {}
 
         if self._is_new:
-            step_schema[vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME)] = (
-                str
+            if self._subentry_type == "ai_task_data":
+                default_name = DEFAULT_AI_TASK_NAME
+            else:
+                default_name = DEFAULT_CONVERSATION_NAME
+            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+
+        if self._subentry_type == "conversation":
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": options.get(
+                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                            )
+                        },
+                    ): TemplateSelector(),
+                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
             )
 
-        step_schema.update(
-            {
-                vol.Optional(
-                    CONF_PROMPT,
-                    description={
-                        "suggested_value": options.get(
-                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                        )
-                    },
-                ): TemplateSelector(),
-                vol.Optional(CONF_LLM_HASS_API): SelectSelector(
-                    SelectSelectorConfig(options=hass_apis, multiple=True)
-                ),
-                vol.Required(
-                    CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-                ): bool,
-            }
-        )
+        step_schema[
+            vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
+        ] = bool
 
         if user_input is not None:
             if not user_input.get(CONF_LLM_HASS_API):
@@ -320,7 +334,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
+        if self._subentry_type == "conversation" and not model.startswith(
+            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
+        ):
             step_schema.update(
                 {
                     vol.Optional(
@@ -362,7 +378,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if not step_schema:
             if self._is_new:
                 return self.async_create_entry(
-                    title=options.pop(CONF_NAME, DEFAULT_CONVERSATION_NAME),
+                    title=options.pop(CONF_NAME),
                     data=options,
                 )
             return self.async_update_and_abort(
@@ -384,7 +400,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             options.update(user_input)
             if self._is_new:
                 return self.async_create_entry(
-                    title=options.pop(CONF_NAME, DEFAULT_CONVERSATION_NAME),
+                    title=options.pop(CONF_NAME),
                     data=options,
                 )
             return self.async_update_and_abort(

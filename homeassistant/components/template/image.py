@@ -7,19 +7,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    CONF_URL,
-    CONF_VERIFY_SSL,
+from homeassistant.components.image import (
+    DOMAIN as IMAGE_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ImageEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -29,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
+from .helpers import async_setup_template_platform
 from .template_entity import (
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
@@ -59,19 +57,6 @@ IMAGE_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[StateImageEntity]:
-    """Create the template image."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(StateImageEntity(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -79,23 +64,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template image."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template image entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerImageEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        IMAGE_DOMAIN,
+        config,
+        StateImageEntity,
+        TriggerImageEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
@@ -118,6 +94,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
 
     _attr_should_poll = False
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -126,13 +103,9 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the image."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -162,6 +135,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
     """Image entity based on trigger data."""
 
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)

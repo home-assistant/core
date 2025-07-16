@@ -339,4 +339,36 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.MaxTemperature,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="InovelliLEDIndicatorIntensityOff",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator_intensity_off",
+            native_max_value=75,
+            native_min_value=0,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOff,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="InovelliLEDIndicatorIntensityOn",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator_intensity_on",
+            native_max_value=75,
+            native_min_value=0,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
+        ),
+    ),
 ]

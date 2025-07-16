@@ -47,7 +47,7 @@ async def test_generic_time_entity(
         {ATTR_ENTITY_ID: "time.test_my_time", ATTR_TIME: "01:23:45"},
         blocking=True,
     )
-    mock_client.time_command.assert_has_calls([call(1, 1, 23, 45)])
+    mock_client.time_command.assert_has_calls([call(1, 1, 23, 45, device_id=0)])
     mock_client.time_command.reset_mock()
 
 

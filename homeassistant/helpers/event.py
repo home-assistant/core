@@ -316,6 +316,10 @@ def async_track_state_change_event(
     Unlike async_track_state_change, async_track_state_change_event
     passes the full event to the callback.
 
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
+
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
     for each one, we keep a dict of entity ids that
@@ -866,6 +870,10 @@ def async_track_state_change_filtered(
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
 
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
+
     Args:
         hass:
             Home assistant object.
@@ -1348,8 +1356,12 @@ def async_track_template_result(
     then whenever the output from the template changes. The template will
     be reevaluated if any states referenced in the last run of the
     template change, or if manually triggered. If the result of the
-    evaluation is different from the previous run, the listener is passed
+    evaluation is different from the previous run, the action is passed
     the result.
+
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
 
     If the template results in an TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.

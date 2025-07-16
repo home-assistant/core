@@ -106,6 +106,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
         key="CO2_PPM",
@@ -191,12 +192,14 @@ ECOWITT_SENSORS_MAPPING: Final = {
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.SPEED_MPH: SensorEntityDescription(
         key="SPEED_MPH",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.PRESSURE_HPA: SensorEntityDescription(
         key="PRESSURE_HPA",

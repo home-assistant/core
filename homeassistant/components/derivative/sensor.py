@@ -34,8 +34,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -118,30 +117,21 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        source_entity_id,
-    )
-
-    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
-        unit_prefix = None
-
     if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
         max_sub_interval = cv.time_period(max_sub_interval_dict)
     else:
         max_sub_interval = None
 
     derivative_sensor = DerivativeSensor(
+        hass,
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=unit_prefix,
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
-        device_info=device_info,
         max_sub_interval=max_sub_interval,
     )
 
@@ -156,6 +146,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
+        hass,
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
@@ -178,6 +169,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         *,
         name: str | None,
         round_digits: int,
@@ -188,11 +180,13 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
         unique_id: str | None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            source_entity,
+        )
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._attr_native_value = round(Decimal(0), round_digits)

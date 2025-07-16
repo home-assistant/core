@@ -74,7 +74,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, position=0.0)])
+    mock_client.cover_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -83,7 +83,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, position=1.0)])
+    mock_client.cover_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -92,7 +92,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_POSITION: 50},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, position=0.5)])
+    mock_client.cover_command.assert_has_calls([call(key=1, position=0.5, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -101,7 +101,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, stop=True)])
+    mock_client.cover_command.assert_has_calls([call(key=1, stop=True, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -110,7 +110,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, tilt=1.0)])
+    mock_client.cover_command.assert_has_calls([call(key=1, tilt=1.0, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -119,7 +119,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.0)])
+    mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.0, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -128,7 +128,7 @@ async def test_cover_entity(
         {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_TILT_POSITION: 50},
         blocking=True,
     )
-    mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5)])
+    mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5, device_id=0)])
     mock_client.cover_command.reset_mock()
 
     mock_device.set_state(

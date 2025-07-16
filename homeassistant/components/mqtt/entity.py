@@ -389,16 +389,6 @@ def async_setup_entity_entry_helper(
     _async_setup_entities()
 
 
-def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
-) -> None:
-    """Set entity_id from object_id if defined in config."""
-    if CONF_OBJECT_ID in config:
-        entity.entity_id = async_generate_entity_id(
-            entity_id_format, config[CONF_OBJECT_ID], None, hass
-        )
-
-
 class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
@@ -1312,6 +1302,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _update_registry_entity_id: str | None = None
 
     def __init__(
         self,
@@ -1346,13 +1337,33 @@ class MqttEntity(
 
     def _init_entity_id(self) -> None:
         """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
+        if CONF_OBJECT_ID not in self._config:
+            return
+        self.entity_id = async_generate_entity_id(
+            self._entity_id_format, self._config[CONF_OBJECT_ID], None, self.hass
         )
+        if self.unique_id is None:
+            return
+        # Check for previous deleted entities
+        entity_registry = er.async_get(self.hass)
+        entity_platform = self._entity_id_format.split(".")[0]
+        if (
+            deleted_entry := entity_registry.deleted_entities.get(
+                (entity_platform, DOMAIN, self.unique_id)
+            )
+        ) and deleted_entry.entity_id != self.entity_id:
+            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            self._update_registry_entity_id = self.entity_id
 
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        if self._update_registry_entity_id is not None:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.entity_id, new_entity_id=self._update_registry_entity_id
+            )
+
         await super().async_added_to_hass()
         self._subscriptions = {}
         self._prepare_subscribe_topics()

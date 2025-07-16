@@ -64,7 +64,7 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         """Initialize bans when app starts up."""
         await app[KEY_BAN_MANAGER].async_load()
 
-    app.on_startup.append(ban_startup)  # type: ignore[arg-type]
+    app.on_startup.append(ban_startup)
 
 
 @middleware

@@ -1,7 +1,7 @@
 """The Squeezebox integration."""
 
 from asyncio import timeout
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -37,8 +37,6 @@ from .const import (
     DISCOVERY_INTERVAL,
     DISCOVERY_TASK,
     DOMAIN,
-    KNOWN_PLAYERS,
-    KNOWN_SERVERS,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
     SERVER_MODEL_ID,
@@ -73,6 +71,7 @@ class SqueezeboxData:
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
+    known_player_ids: set[str] = field(default_factory=set)
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -187,16 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
-    # set up player discovery
-    known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
-    known_players = known_servers.setdefault(lms.uuid, {}).setdefault(KNOWN_PLAYERS, [])
-
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
-            if player.player_id in known_players:
+            if player.player_id in entry.runtime_data.known_player_ids:
                 await player.async_update()
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
@@ -207,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                     hass, entry, player, lms.uuid
                 )
                 await player_coordinator.async_refresh()
-                known_players.append(player.player_id)
+                entry.runtime_data.known_player_ids.add(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
                 )

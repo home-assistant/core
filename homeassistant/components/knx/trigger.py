@@ -1,4 +1,4 @@
-"""Offer knx telegram automation triggers."""
+"""Provide KNX automation triggers."""
 
 from typing import Final
 

@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_default_prompt
+  list([
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': 'Hello, how can I help you?',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---

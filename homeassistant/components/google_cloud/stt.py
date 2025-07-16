@@ -127,7 +127,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
-                timeout=10,
+                timeout=30,
                 retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
             )
 

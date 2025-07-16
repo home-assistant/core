@@ -93,7 +93,9 @@ async def test_climate_entity(
         {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
         blocking=True,
     )
-    mock_client.climate_command.assert_has_calls([call(key=1, target_temperature=25.0)])
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, target_temperature=25.0, device_id=0)]
+    )
     mock_client.climate_command.reset_mock()
 
 
@@ -167,6 +169,7 @@ async def test_climate_entity_with_step_and_two_point(
                 mode=ClimateMode.AUTO,
                 target_temperature_low=20.0,
                 target_temperature_high=30.0,
+                device_id=0,
             )
         ]
     )
@@ -232,7 +235,7 @@ async def test_climate_entity_with_step_and_target_temp(
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
-        [call(key=1, mode=ClimateMode.AUTO, target_temperature=25.0)]
+        [call(key=1, mode=ClimateMode.AUTO, target_temperature=25.0, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
 
@@ -263,6 +266,7 @@ async def test_climate_entity_with_step_and_target_temp(
             call(
                 key=1,
                 mode=ClimateMode.HEAT,
+                device_id=0,
             )
         ]
     )
@@ -279,6 +283,7 @@ async def test_climate_entity_with_step_and_target_temp(
             call(
                 key=1,
                 preset=ClimatePreset.AWAY,
+                device_id=0,
             )
         ]
     )
@@ -290,7 +295,9 @@ async def test_climate_entity_with_step_and_target_temp(
         {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_PRESET_MODE: "preset1"},
         blocking=True,
     )
-    mock_client.climate_command.assert_has_calls([call(key=1, custom_preset="preset1")])
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, custom_preset="preset1", device_id=0)]
+    )
     mock_client.climate_command.reset_mock()
 
     await hass.services.async_call(
@@ -300,7 +307,7 @@ async def test_climate_entity_with_step_and_target_temp(
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
-        [call(key=1, fan_mode=ClimateFanMode.HIGH)]
+        [call(key=1, fan_mode=ClimateFanMode.HIGH, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
 
@@ -310,7 +317,9 @@ async def test_climate_entity_with_step_and_target_temp(
         {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_FAN_MODE: "fan2"},
         blocking=True,
     )
-    mock_client.climate_command.assert_has_calls([call(key=1, custom_fan_mode="fan2")])
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, custom_fan_mode="fan2", device_id=0)]
+    )
     mock_client.climate_command.reset_mock()
 
     await hass.services.async_call(
@@ -320,7 +329,7 @@ async def test_climate_entity_with_step_and_target_temp(
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
-        [call(key=1, swing_mode=ClimateSwingMode.BOTH)]
+        [call(key=1, swing_mode=ClimateSwingMode.BOTH, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
 
@@ -383,7 +392,9 @@ async def test_climate_entity_with_humidity(
         {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_HUMIDITY: 23},
         blocking=True,
     )
-    mock_client.climate_command.assert_has_calls([call(key=1, target_humidity=23)])
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, target_humidity=23, device_id=0)]
+    )
     mock_client.climate_command.reset_mock()
 
 

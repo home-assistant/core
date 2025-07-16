@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import abc
-import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
+import inspect
 import logging
 import re
 import sys
@@ -359,7 +359,7 @@ async def async_from_config(
     while isinstance(check_factory, ft.partial):
         check_factory = check_factory.func
 
-    if asyncio.iscoroutinefunction(check_factory):
+    if inspect.iscoroutinefunction(check_factory):
         return cast(ConditionCheckerType, await factory(hass, config))
     return cast(ConditionCheckerType, factory(config))
 

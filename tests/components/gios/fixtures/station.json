@@ -24,12 +24,28 @@
     "Id wskaźnika": 8
   },
   {
+    "Identyfikator stanowiska": 664,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenek azotu",
+    "Wskaźnik - wzór": "NO",
+    "Wskaźnik - kod": "NO",
+    "Id wskaźnika": 16
+  },
+  {
     "Identyfikator stanowiska": 665,
     "Identyfikator stacji": 117,
     "Wskaźnik": "dwutlenek azotu",
     "Wskaźnik - wzór": "NO2",
     "Wskaźnik - kod": "NO2",
     "Id wskaźnika": 6
+  },
+  {
+    "Identyfikator stanowiska": 666,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenki azotu",
+    "Wskaźnik - wzór": "NOx",
+    "Wskaźnik - kod": "NOx",
+    "Id wskaźnika": 7
   },
   {
     "Identyfikator stanowiska": 667,

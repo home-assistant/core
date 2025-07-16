@@ -132,7 +132,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._source.song_name
+        return self._source.song_name or self._source.channel
 
     @property
     def media_artist(self) -> str | None:

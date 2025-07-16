@@ -32,19 +32,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
 
@@ -85,7 +83,7 @@ TILT_FEATURES = (
     | CoverEntityFeature.SET_TILT_POSITION
 )
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
     CONF_POSITION_TEMPLATE: CONF_POSITION,
     CONF_TILT_TEMPLATE: CONF_TILT,
@@ -140,54 +138,6 @@ PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
 )
 
 
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    covers = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        covers.append(entity_conf)
-
-    return covers
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template switches."""
-    covers = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        covers.append(
-            CoverTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(covers)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -195,32 +145,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template cover."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_COVERS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerCoverEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        COVER_DOMAIN,
+        config,
+        StateCoverEntity,
+        TriggerCoverEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_COVERS,
     )
 
 
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     """Representation of a template cover features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -445,7 +386,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             self.async_write_ha_state()
 
 
-class CoverTemplate(TemplateEntity, AbstractTemplateCover):
+class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
     """Representation of a Template cover."""
 
     _attr_should_poll = False
@@ -457,12 +398,8 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
         unique_id,
     ) -> None:
         """Initialize the Template cover."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateCover.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None

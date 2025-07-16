@@ -13,7 +13,7 @@ from homeassistant.components.conversation import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import llm
-from homeassistant.helpers.chat_session import async_get_chat_session
+from homeassistant.helpers.chat_session import ChatSession
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -56,12 +56,12 @@ class AITaskEntity(RestoreEntity):
     @contextlib.asynccontextmanager
     async def _async_get_ai_task_chat_log(
         self,
+        session: ChatSession,
         task: GenDataTask,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
         # pylint: disable-next=contextmanager-generator-missing-cleanup
         with (
-            async_get_chat_session(self.hass) as session,
             async_get_chat_log(
                 self.hass,
                 session,
@@ -79,19 +79,22 @@ class AITaskEntity(RestoreEntity):
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
             )
 
-            chat_log.async_add_user_content(UserContent(task.instructions))
+            chat_log.async_add_user_content(
+                UserContent(task.instructions, attachments=task.attachments)
+            )
 
             yield chat_log
 
     @final
     async def internal_async_generate_data(
         self,
+        session: ChatSession,
         task: GenDataTask,
     ) -> GenDataTaskResult:
         """Run a gen data task."""
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async with self._async_get_ai_task_chat_log(task) as chat_log:
+        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
             return await self._async_generate_data(task, chat_log)
 
     async def _async_generate_data(

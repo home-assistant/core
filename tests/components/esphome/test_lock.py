@@ -57,7 +57,7 @@ async def test_lock_entity_no_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
     mock_client.lock_command.reset_mock()
 
 
@@ -122,7 +122,7 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
     mock_client.lock_command.reset_mock()
 
     await hass.services.async_call(
@@ -131,7 +131,9 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.UNLOCK, None)])
+    mock_client.lock_command.assert_has_calls(
+        [call(1, LockCommand.UNLOCK, None, device_id=0)]
+    )
 
     mock_client.lock_command.reset_mock()
     await hass.services.async_call(
@@ -140,4 +142,4 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN, device_id=0)])

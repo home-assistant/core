@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import functools
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
@@ -407,7 +408,7 @@ def _trigger_action_wrapper(
         check_func = check_func.func
 
     wrapper_func: Callable[..., Any] | Callable[..., Coroutine[Any, Any, Any]]
-    if asyncio.iscoroutinefunction(check_func):
+    if inspect.iscoroutinefunction(check_func):
         async_action = cast(Callable[..., Coroutine[Any, Any, Any]], action)
 
         @functools.wraps(async_action)

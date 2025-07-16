@@ -112,16 +112,8 @@ class HuumDevice(ClimateEntity):
             await self._turn_on(temperature)
 
     async def async_update(self) -> None:
-        """Get the latest status data.
-
-        We get the latest status first from the status endpoints of the sauna.
-        If that data does not include the temperature, that means that the sauna
-        is off, we then call the off command which will in turn return the temperature.
-        This is a workaround for getting the temperature as the Huum API does not
-        return the target temperature of a sauna that is off, even if it can have
-        a target temperature at that time.
-        """
-        self._status = await self._huum_handler.status_from_status_or_stop()
+        """Get the latest status data."""
+        self._status = await self._huum_handler.status()
         if self._target_temperature is None or self.hvac_mode == HVACMode.HEAT:
             self._target_temperature = self._status.target_temperature
 

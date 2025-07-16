@@ -19,6 +19,7 @@ from aioairzone_cloud.const import (
     API_AZ_ACS,
     API_AZ_AIDOO,
     API_AZ_AIDOO_PRO,
+    API_AZ_AIRQSENSOR,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
     API_CELSIUS,
@@ -168,6 +169,17 @@ GET_INSTALLATION_MOCK = {
                         API_SYSTEM_NUMBER: 1,
                         API_ZONE_NUMBER: 2,
                     },
+                    API_WS_ID: WS_ID,
+                },
+                {
+                    API_CONFIG: {
+                        API_SYSTEM_NUMBER: 1,
+                        API_ZONE_NUMBER: 1,
+                    },
+                    API_DEVICE_ID: "airqsensor1",
+                    API_NAME: "CapteurQ",
+                    API_TYPE: API_AZ_AIRQSENSOR,
+                    API_META: {},
                     API_WS_ID: WS_ID,
                 },
             ],
@@ -394,11 +406,6 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "system1":
         return {
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
-            API_AQ_PM_1: 3,
-            API_AQ_PM_2P5: 4,
-            API_AQ_PM_10: 3,
-            API_AQ_PRESENT: True,
-            API_AQ_QUALITY: "good",
             API_ERRORS: [
                 {
                     API_OLD_ID: "error-id",
@@ -419,14 +426,8 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         return {
             API_ACTIVE: True,
             API_AIR_ACTIVE: True,
-            API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
-            API_AQ_PM_1: 3,
-            API_AQ_PM_2P5: 4,
-            API_AQ_PM_10: 3,
-            API_AQ_PRESENT: True,
-            API_AQ_QUALITY: "good",
             API_DOUBLE_SET_POINT: False,
             API_HUMIDITY: 30,
             API_MODE: OperationMode.COOLING.value,
@@ -466,14 +467,8 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         return {
             API_ACTIVE: False,
             API_AIR_ACTIVE: False,
-            API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
-            API_AQ_PM_1: 3,
-            API_AQ_PM_2P5: 4,
-            API_AQ_PM_10: 3,
-            API_AQ_PRESENT: True,
-            API_AQ_QUALITY: "good",
             API_DOUBLE_SET_POINT: False,
             API_HUMIDITY: 24,
             API_MODE: OperationMode.COOLING.value,
@@ -503,6 +498,19 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {API_FAH: 77, API_CELSIUS: 25},
             API_WARNINGS: [],
+        }
+    if device.get_id() == "airqsensor1":
+        return {
+            API_AQ_ACTIVE: False,
+            API_AQ_MODE_CONF: "auto",
+            API_AQ_MODE_VALUES: ["off", "on", "auto"],
+            API_AQ_PM_1: 3,
+            API_AQ_PM_2P5: 4,
+            API_AQ_PM_10: 3,
+            API_AQ_PRESENT: True,
+            API_AQ_QUALITY: "good",
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
         }
     return {}
 

@@ -1161,6 +1161,7 @@ async def test_selector_serializer(
             "name": {"type": "string"},
             "percentage": {"type": "number", "minimum": 30, "maximum": 100},
         },
+        "required": ["name"],
     }
     assert selector_serializer(
         selector.ObjectSelector(
@@ -1190,6 +1191,7 @@ async def test_selector_serializer(
                     "maximum": 100,
                 },
             },
+            "required": ["name"],
         },
     }
     assert selector_serializer(

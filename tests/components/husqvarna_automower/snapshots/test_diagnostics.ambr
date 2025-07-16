@@ -63,7 +63,8 @@
       'stay_out_zones': True,
       'work_areas': True,
     }),
-    'messages': None,
+    'messages': list([
+    ]),
     'metadata': dict({
       'connected': True,
       'status_dateteime': '2023-06-05T00:00:00+00:00',

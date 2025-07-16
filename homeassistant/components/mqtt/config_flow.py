@@ -2114,6 +2114,9 @@ def data_schema_from_fields(
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
+        if not data_schema_element:
+            # Do not show empty sections
+            continue
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED

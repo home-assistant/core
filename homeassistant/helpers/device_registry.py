@@ -144,11 +144,19 @@ DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
 LOW_PRIO_CONFIG_ENTRY_DOMAINS = {"homekit_controller", "matter", "mqtt", "upnp"}
 
 
-class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
-    """EventDeviceRegistryUpdated data for action type 'create' and 'remove'."""
+class _EventDeviceRegistryUpdatedData_Create(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'create'."""
 
-    action: Literal["create", "remove"]
+    action: Literal["create"]
     device_id: str
+
+
+class _EventDeviceRegistryUpdatedData_Remove(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'remove'."""
+
+    action: Literal["remove"]
+    device_id: str
+    device: DeviceEntry
 
 
 class _EventDeviceRegistryUpdatedData_Update(TypedDict):
@@ -160,7 +168,8 @@ class _EventDeviceRegistryUpdatedData_Update(TypedDict):
 
 
 type EventDeviceRegistryUpdatedData = (
-    _EventDeviceRegistryUpdatedData_CreateRemove
+    _EventDeviceRegistryUpdatedData_Create
+    | _EventDeviceRegistryUpdatedData_Remove
     | _EventDeviceRegistryUpdatedData_Update
 )
 
@@ -1309,8 +1318,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 self.async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
-            _EventDeviceRegistryUpdatedData_CreateRemove(
-                action="remove", device_id=device_id
+            _EventDeviceRegistryUpdatedData_Remove(
+                action="remove", device_id=device_id, device=device
             ),
         )
         self.async_schedule_save()

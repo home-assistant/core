@@ -24,6 +24,9 @@
       "error": {
         "default": "mdi:alert-circle-outline"
       },
+      "inactive_reason": {
+        "default": "mdi:sleep"
+      },
       "my_lawn_last_time_completed": {
         "default": "mdi:clock-outline"
       },

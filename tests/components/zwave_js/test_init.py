@@ -37,7 +37,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
+from .common import (
+    AIR_TEMPERATURE_SENSOR,
+    BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+    EATON_RF9640_ENTITY,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -2168,3 +2172,39 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_entity_available_when_node_dead(
+    hass: HomeAssistant, client, bulb_6_multi_color, integration
+) -> None:
+    """Test that entities remain available even when the node is dead."""
+
+    node = bulb_6_multi_color
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # Send dead event to the node
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should remain available even though the node is dead
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # Send alive event to bring the node back
+    event = Event(
+        "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should still be available
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state
+    assert state.state != STATE_UNAVAILABLE

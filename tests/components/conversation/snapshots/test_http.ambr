@@ -327,37 +327,6 @@
     }),
   })
 # ---
-# name: test_http_processing_intent[homeassistant]
-  dict({
-    'continue_conversation': False,
-    'conversation_id': <ANY>,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': 'entity',
-          }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
 # name: test_ws_api[payload0]
   dict({
     'continue_conversation': False,

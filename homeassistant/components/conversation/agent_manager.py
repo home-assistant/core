@@ -12,12 +12,7 @@ from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import (
-    DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
-    HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
-)
+from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY, HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -54,7 +49,7 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
-    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
+    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
         return hass.data[DATA_DEFAULT_ENTITY]
 
     if "." in agent_id:
