@@ -103,7 +103,7 @@ async def test_light_state_trigger(
     entity_id: str,
     state: str,
 ) -> None:
-    """Test that the light state trigger fires when light state changes."""
+    """Test that the light state trigger fires when light state changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
     reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
@@ -135,3 +135,56 @@ async def test_light_state_trigger(
     hass.states.async_set(entity_id, reverse_state)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
+
+
+@pytest.mark.usefixtures("target_lights")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id"),
+    [
+        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.label_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.area_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.device_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.device_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light"),
+        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
+    ],
+)
+async def test_light_state_trigger_any_state(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_target_config: dict,
+    entity_id: str,
+) -> None:
+    """Test that the light state trigger fires when light state changes to any state."""
+    await async_setup_component(hass, "light", {})
+
+    hass.states.async_set(entity_id, STATE_OFF)
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "light.state",
+                    **trigger_target_config,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                },
+            }
+        },
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+    assert service_calls[1].data[CONF_ENTITY_ID] == entity_id
