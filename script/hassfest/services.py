@@ -43,6 +43,12 @@ def unique_field_validator(fields: Any) -> Any:
     return fields
 
 
+CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT = {
+    vol.Optional("description"): str,
+    vol.Optional("name"): str,
+}
+
+
 CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
@@ -55,10 +61,7 @@ CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = vol.Schema(
 
 CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = (
     CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA.extend(
-        {
-            vol.Optional("description"): str,
-            vol.Optional("name"): str,
-        }
+        CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
     )
 )
 
@@ -85,127 +88,86 @@ CORE_INTEGRATION_TARGETED_FIELD_SCHEMA = (
 )
 
 CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA = (
-    CORE_INTEGRATION_TARGETED_FIELD_SCHEMA.extend(
+    CORE_INTEGRATION_TARGETED_FIELD_SCHEMA.extend(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
+)
+
+
+def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the section schema."""
+    schema_dict = {
+        vol.Optional("collapsed"): bool,
+    }
+
+    match targeted, custom:
+        case False, False:
+            field_schema = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+        case False, True:
+            field_schema = CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+        case True, False:
+            field_schema = CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
+        case True, True:
+            field_schema = CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
+
+    schema_dict[vol.Required("fields")] = vol.Schema(
         {
-            vol.Optional("description"): str,
-            vol.Optional("name"): str,
+            str: field_schema,
         }
     )
-)
+
+    if custom:
+        schema_dict.update(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
+
+    return vol.Schema(schema_dict)
 
 
-CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema(
-            {str: CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA}
+CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = _section_schema(False, False)
+CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = _section_schema(False, True)
+CORE_INTEGRATION_TARGETED_SECTION_SCHEMA = _section_schema(True, False)
+CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA = _section_schema(True, True)
+
+
+def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the service schema."""
+    if targeted:
+        schema_dict = {
+            vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None)
+        }
+    else:
+        schema_dict = {}
+
+    match targeted, custom:
+        case False, False:
+            field_schema = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+            section_schema = CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA
+        case False, True:
+            field_schema = CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
+            section_schema = CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA
+        case True, False:
+            field_schema = CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
+            section_schema = CORE_INTEGRATION_TARGETED_SECTION_SCHEMA
+        case True, True:
+            field_schema = CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
+            section_schema = CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA
+
+    schema_dict[vol.Optional("fields")] = vol.All(
+        vol.Schema(
+            {
+                str: vol.Any(field_schema, section_schema),
+            }
         ),
-    }
-)
+        unique_field_validator,
+    )
 
-CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema(
-            {str: CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA}
-        ),
-    }
-)
+    if custom:
+        schema_dict.update(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
+
+    return vol.Schema(schema_dict)
 
 
-CORE_INTEGRATION_TARGETED_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema(
-            {str: CORE_INTEGRATION_TARGETED_FIELD_SCHEMA}
-        ),
-    }
-)
-
-CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema(
-            {str: CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA}
-        ),
-    }
-)
-
-
-CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("fields"): vol.All(
-            vol.Schema(
-                {
-                    str: vol.Any(
-                        CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA,
-                        CORE_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA,
-                    )
-                }
-            ),
-            unique_field_validator,
-        ),
-    }
-)
-
-CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("fields"): vol.All(
-            vol.Schema(
-                {
-                    str: vol.Any(
-                        CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA,
-                        CUSTOM_INTEGRATION_NOT_TARGETED_SECTION_SCHEMA,
-                    )
-                }
-            ),
-            unique_field_validator,
-        ),
-    }
-)
-
-
-CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.All(
-            vol.Schema(
-                {
-                    str: vol.Any(
-                        CORE_INTEGRATION_TARGETED_FIELD_SCHEMA,
-                        CORE_INTEGRATION_TARGETED_SECTION_SCHEMA,
-                    )
-                }
-            ),
-            unique_field_validator,
-        ),
-    }
-)
-
-CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("fields"): vol.All(
-            vol.Schema(
-                {
-                    str: vol.Any(
-                        CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA,
-                        CUSTOM_INTEGRATION_TARGETED_SECTION_SCHEMA,
-                    )
-                }
-            ),
-            unique_field_validator,
-        ),
-    }
-)
+CORE_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = _service_schema(False, False)
+CUSTOM_INTEGRATION_NOT_TARGETED_SERVICE_SCHEMA = _service_schema(False, True)
+CORE_INTEGRATION_TARGETED_SERVICE_SCHEMA = _service_schema(True, False)
+CUSTOM_INTEGRATION_TARGETED_SERVICE_SCHEMA = _service_schema(True, True)
 
 
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
