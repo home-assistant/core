@@ -890,7 +890,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.1.1
+gios==6.1.2
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -1364,6 +1364,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==1.93.3
 
@@ -1637,7 +1638,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.1
+pyenphase==2.2.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2048,6 +2049,9 @@ python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.4.0
+
+# homeassistant.components.open_router
+python-open-router==0.3.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
