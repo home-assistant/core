@@ -7,7 +7,7 @@ import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
