@@ -73,14 +73,14 @@ def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
     """Return the field schema."""
     schema_dict = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT.copy()
 
-    if custom:
-        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
-
     # Filters are only allowed for targeted services because they rely on the presence
     # of a `target` field to determine the scope of the service call. Non-targeted
     # services do not have a `target` field, making filters inapplicable.
     if targeted:
         schema_dict |= FIELD_FILTER_SCHEMA_DICT
+
+    if custom:
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
     return vol.Schema(schema_dict)
 
@@ -89,13 +89,12 @@ def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
     """Return the section schema."""
     schema_dict = {
         vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema(
+            {
+                str: _field_schema(targeted, custom),
+            }
+        ),
     }
-
-    schema_dict[vol.Required("fields")] = vol.Schema(
-        {
-            str: _field_schema(targeted, custom),
-        }
-    )
 
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
@@ -105,24 +104,24 @@ def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
 
 def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     """Return the service schema."""
-    if targeted:
-        schema_dict = {
-            vol.Required("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None)
-        }
-    else:
-        schema_dict = {}
+    schema_dict = {
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        _field_schema(targeted, custom),
+                        _section_schema(targeted, custom),
+                    ),
+                }
+            ),
+            unique_field_validator,
+        )
+    }
 
-    schema_dict[vol.Optional("fields")] = vol.All(
-        vol.Schema(
-            {
-                str: vol.Any(
-                    _field_schema(targeted, custom),
-                    _section_schema(targeted, custom),
-                ),
-            }
-        ),
-        unique_field_validator,
-    )
+    if targeted:
+        schema_dict[vol.Required("target")] = vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None
+        )
 
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
