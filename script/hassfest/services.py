@@ -49,60 +49,40 @@ CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT = {
 }
 
 
-CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = vol.Schema(
-    {
-        vol.Optional("example"): exists,
-        vol.Optional("default"): exists,
-        vol.Optional("required"): bool,
-        vol.Optional("advanced"): bool,
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT = {
+    vol.Optional("example"): exists,
+    vol.Optional("default"): exists,
+    vol.Optional("required"): bool,
+    vol.Optional("advanced"): bool,
+    vol.Optional(CONF_SELECTOR): selector.validate_selector,
+}
+
+FIELD_FILTER_SCHEMA_DICT = {
+    vol.Optional("filter"): {
+        vol.Exclusive("attribute", "field_filter"): {
+            vol.Required(str): [vol.All(str, service.validate_attribute_option)],
+        },
+        vol.Exclusive("supported_features", "field_filter"): [
+            vol.All(str, service.validate_supported_feature)
+        ],
     }
-)
-
-CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA = (
-    CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA.extend(
-        CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
-    )
-)
-
-
-# Filters are only allowed for targeted services because they rely on the presence
-# of a `target` field to determine the scope of the service call. Non-targeted
-# services do not have a `target` field, making filters inapplicable.
-
-CORE_INTEGRATION_TARGETED_FIELD_SCHEMA = (
-    CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA.extend(
-        {
-            vol.Optional("filter"): {
-                vol.Exclusive("attribute", "field_filter"): {
-                    vol.Required(str): [
-                        vol.All(str, service.validate_attribute_option)
-                    ],
-                },
-                vol.Exclusive("supported_features", "field_filter"): [
-                    vol.All(str, service.validate_supported_feature)
-                ],
-            }
-        }
-    )
-)
-
-CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA = (
-    CORE_INTEGRATION_TARGETED_FIELD_SCHEMA.extend(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
-)
+}
 
 
 def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
     """Return the field schema."""
-    match targeted, custom:
-        case False, False:
-            return CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-        case False, True:
-            return CUSTOM_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA
-        case True, False:
-            return CORE_INTEGRATION_TARGETED_FIELD_SCHEMA
-        case True, True:
-            return CUSTOM_INTEGRATION_TARGETED_FIELD_SCHEMA
+    schema_dict = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT.copy()
+
+    if custom:
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
+
+    # Filters are only allowed for targeted services because they rely on the presence
+    # of a `target` field to determine the scope of the service call. Non-targeted
+    # services do not have a `target` field, making filters inapplicable.
+    if targeted:
+        schema_dict |= FIELD_FILTER_SCHEMA_DICT
+
+    return vol.Schema(schema_dict)
 
 
 def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
@@ -118,7 +98,7 @@ def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
     )
 
     if custom:
-        schema_dict.update(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
     return vol.Schema(schema_dict)
 
@@ -145,7 +125,7 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     )
 
     if custom:
-        schema_dict.update(CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT)
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
     return vol.Schema(schema_dict)
 
