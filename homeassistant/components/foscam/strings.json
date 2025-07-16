@@ -49,13 +49,13 @@
         "name": "Volume muted"
       },
       "turn_off_light_switch": {
-        "name": "Light off"
+        "name": "Light"
       },
       "hdr_switch": {
-        "name": "Hdr"
+        "name": "HDR"
       },
       "wdr_switch": {
-        "name": "Wdr"
+        "name": "WDR"
       }
     }
   },
