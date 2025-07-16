@@ -184,8 +184,6 @@ async def search_items(
         items.extend(items_dict.get("Items", []))
 
     for item in items:
-        title = item["Name"]
-        thumbnail = get_artwork_url(client, item)
         content_type: str = item["MediaType"]
 
         response = BrowseMedia(
@@ -194,11 +192,11 @@ async def search_items(
             ),
             media_content_id=item["Id"],
             media_content_type=content_type,
-            title=title,
+            title=item["Name"],
+            thumbnail=get_artwork_url(client, item),
             can_play=bool(content_type in PLAYABLE_MEDIA_TYPES),
             can_expand=item.get("IsFolder", False),
             children=None,
-            thumbnail=thumbnail,
         )
         search_result.append(response)
 
