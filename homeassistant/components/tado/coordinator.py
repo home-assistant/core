@@ -184,11 +184,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
         mapped_zones: dict[int, dict] = {}
-        for zone in zone_states:
-            mapped_zones[int(zone)] = await self._update_zone(int(zone))
-
         mapped_zone_controls: dict[int, dict] = {}
         for zone in zone_states:
+            mapped_zones[int(zone)] = await self._update_zone(int(zone))
             mapped_zone_controls[int(zone)] = await self._update_zone_control(int(zone))
 
         return mapped_zones, mapped_zone_controls

@@ -12,7 +12,7 @@ from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-TRANSLATABLE_NO_HEATING_CIRCUIT = "no_heating_circuit"
+NO_HEATING_CIRCUIT_OPTION = "no_heating_circuit"
 
 
 async def async_setup_entry(
@@ -24,7 +24,6 @@ async def async_setup_entry(
 
     tado = entry.runtime_data.coordinator
     entities: list[SelectEntity] = [
-        # Add heating circuit select
         TadoHeatingCircuitSelectEntity(tado, zone["name"], zone["id"])
         for zone in tado.zones
         if zone["type"] == "HEATING"
@@ -59,7 +58,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
         """Update the selected heating circuit."""
         heating_circuit_id = (
             None
-            if option == TRANSLATABLE_NO_HEATING_CIRCUIT
+            if option == NO_HEATING_CIRCUIT_OPTION
             else self.coordinator.data["heating_circuits"].get(option, {}).get("number")
         )
         await self.coordinator.set_heating_circuit(self.zone_id, heating_circuit_id)
@@ -77,7 +76,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
         try:
             # Heating circuits list
             heating_circuits = self.coordinator.data["heating_circuits"].values()
-            self._attr_options = [TRANSLATABLE_NO_HEATING_CIRCUIT]
+            self._attr_options = [NO_HEATING_CIRCUIT_OPTION]
             self._attr_options.extend(
                 hc["driverShortSerialNo"] for hc in heating_circuits
             )
@@ -87,9 +86,9 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
             if zone_control and "heatingCircuit" in zone_control:
                 heating_circuit_number = zone_control["heatingCircuit"]
                 if heating_circuit_number is None:
-                    self._attr_current_option = TRANSLATABLE_NO_HEATING_CIRCUIT
+                    self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
                 else:
-                    # Find heating circuit by driverShortSerialNo
+                    # Find heating circuit by number
                     heating_circuit = next(
                         (
                             hc
@@ -105,7 +104,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
                             heating_circuit_number,
                             self.zone_name,
                         )
-                        self._attr_current_option = TRANSLATABLE_NO_HEATING_CIRCUIT
+                        self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
                     else:
                         self._attr_current_option = heating_circuit.get(
                             "driverShortSerialNo"
