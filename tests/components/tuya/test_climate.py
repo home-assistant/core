@@ -67,34 +67,6 @@ def make_climate_entity(function, status):
     )
 
 
-def test_fan_mode_windspeed() -> None:
-    """Test fan mode with windspeed."""
-    entity = make_climate_entity(
-        {"windspeed": DummyFunction("Enum", '{"range": ["1", "2"]}')},
-        {"windspeed": "2"},
-    )
-    assert entity.fan_mode == "2"
-    entity.set_fan_mode("1")
-
-
-def test_fan_mode_fan_speed_enum() -> None:
-    """Test fan mode with fan speed enum."""
-    entity = make_climate_entity(
-        {DPCode.FAN_SPEED_ENUM: DummyFunction("Enum", '{"range": ["1", "2"]}')},
-        {DPCode.FAN_SPEED_ENUM: "1"},
-    )
-    assert entity.fan_mode == "1"
-    entity.set_fan_mode("2")
-
-
-def test_fan_mode_no_valid_code() -> None:
-    """Test fan mode with no valid code."""
-    entity = make_climate_entity({}, {})
-    assert entity.fan_mode is None
-    with pytest.raises(HomeAssistantError):
-        entity.set_fan_mode("1")
-
-
 @pytest.mark.parametrize(
     "mock_device_code",
     [k for k, v in DEVICE_MOCKS.items() if Platform.CLIMATE in v],
@@ -132,3 +104,31 @@ async def test_platform_setup_no_discovery(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
+
+def test_fan_mode_windspeed() -> None:
+    """Test fan mode with windspeed."""
+    entity = make_climate_entity(
+        {"windspeed": DummyFunction("Enum", '{"range": ["1", "2"]}')},
+        {"windspeed": "2"},
+    )
+    assert entity.fan_mode == "2"
+    entity.set_fan_mode("1")
+
+
+def test_fan_mode_fan_speed_enum() -> None:
+    """Test fan mode with fan speed enum."""
+    entity = make_climate_entity(
+        {DPCode.FAN_SPEED_ENUM: DummyFunction("Enum", '{"range": ["1", "2"]}')},
+        {DPCode.FAN_SPEED_ENUM: "1"},
+    )
+    assert entity.fan_mode == "1"
+    entity.set_fan_mode("2")
+
+
+def test_fan_mode_no_valid_code() -> None:
+    """Test fan mode with no valid code."""
+    entity = make_climate_entity({}, {})
+    assert entity.fan_mode is None
+    with pytest.raises(HomeAssistantError):
+        entity.set_fan_mode("1")
