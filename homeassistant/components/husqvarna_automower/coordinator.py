@@ -58,8 +58,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
         self._devices_last_update: set[str] = set()
-        self._zones_last_update: dict[str, set[str]] = {}
-        self._areas_in_register: dict[str, set[int]] = {}
 
         self.async_add_listener(self._on_data_update)
 
