@@ -19,6 +19,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.totalconnect.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
+    SERVICE_ALARM_BYPASS_ALL,
 )
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.components.totalconnect.coordinator import SCAN_INTERVAL
@@ -52,6 +53,8 @@ from .common import (
     RESPONSE_SUCCESS,
     RESPONSE_UNKNOWN,
     RESPONSE_USER_CODE_INVALID,
+    RESPONSE_ZONE_BYPASS_FAILURE,
+    RESPONSE_ZONE_BYPASS_SUCCESS,
     TOTALCONNECT_REQUEST,
     USERCODES,
     setup_platform,
@@ -611,3 +614,64 @@ async def test_authentication_error(hass: HomeAssistant) -> None:
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_bypass_all_success(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test bypass all zones method success."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ZONE_BYPASS_SUCCESS, RESPONSE_DISARMED]
+    await setup_platform(hass, ALARM_DOMAIN)
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await async_update_entity(hass, ENTITY_ID)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+        assert mock_request.call_count == 1
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ALARM_BYPASS_ALL, DATA, blocking=True
+        )
+        assert mock_request.call_count == 2
+
+        freezer.tick(DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 3
+
+
+async def test_bypass_all_failure(hass: HomeAssistant) -> None:
+    """Test bypass all zones method failure."""
+    responses = [
+        RESPONSE_DISARMED,
+        RESPONSE_ZONE_BYPASS_FAILURE,
+        RESPONSE_USER_CODE_INVALID,
+    ]
+    await setup_platform(hass, ALARM_DOMAIN)
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+        await async_update_entity(hass, ENTITY_ID)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+        assert mock_request.call_count == 1
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_ALARM_BYPASS_ALL, DATA, blocking=True
+            )
+        await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to bypass zones for None."
+        assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+        assert mock_request.call_count == 2
+
+        # usercode is invalid
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_ALARM_BYPASS_ALL, DATA, blocking=True
+            )
+        await hass.async_block_till_done()
+        assert (
+            f"{err.value}" == "TotalConnect usercode is invalid. Did not bypass zones"
+        )
+        assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+        # should have started a re-auth flow
+        assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+        assert mock_request.call_count == 3
