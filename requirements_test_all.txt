@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.13
+aioairzone-cloud==0.6.14
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -1068,7 +1068,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.4.0
+imgw_pib==1.4.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1364,6 +1364,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==1.93.3
 
@@ -1637,7 +1638,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.1
+pyenphase==2.2.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2048,6 +2049,9 @@ python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.4.0
+
+# homeassistant.components.open_router
+python-open-router==0.2.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0

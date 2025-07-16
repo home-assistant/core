@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import TemplateStateFromEntityId
@@ -31,10 +31,9 @@ class AbstractTemplateEntity(Entity):
                 self._entity_id_format, object_id, hass=self.hass
             )
 
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            self.hass,
-            config.get(CONF_DEVICE_ID),
-        )
+        device_registry = dr.async_get(hass)
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+            self.device_entry = device_registry.async_get(device_id)
 
     @property
     @abstractmethod

@@ -5,6 +5,7 @@ from __future__ import annotations
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -15,7 +16,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN,
+    LOGGER,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+    DPType,
+)
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -287,6 +295,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_CORRECTION,
+            translation_key="temp_correction",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (
@@ -371,6 +388,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
+            # we do not need to check mappings if the API UOM is allowed
+            and self.native_unit_of_measurement
+            not in NUMBER_DEVICE_CLASS_UNITS[self.device_class]
         ):
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
@@ -378,6 +398,12 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 self.native_unit_of_measurement is None
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
+                LOGGER.debug(
+                    "Device class %s ignored for incompatible unit %s in number entity %s",
+                    self.device_class,
+                    self.native_unit_of_measurement,
+                    self.unique_id,
+                )
                 self._attr_device_class = None
                 return
 

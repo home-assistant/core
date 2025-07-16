@@ -23,10 +23,38 @@ DEVICE_MOCKS = {
         Platform.COVER,
         Platform.LIGHT,
     ],
+    "co2bj_air_detector": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.BINARY_SENSOR,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SIREN,
+    ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
         Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_emma_dehumidifier": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.BINARY_SENSOR,
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_smart_dry_plus": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
+    "cwjwq_smart_odor_eliminator": [
+        # https://github.com/orgs/home-assistant/discussions/79
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
@@ -55,6 +83,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
+    "gyd_night_light": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.LIGHT,
+    ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
@@ -63,6 +95,12 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
         Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "ks_tower_fan": [
+        # https://github.com/orgs/home-assistant/discussions/329
+        Platform.FAN,
+        Platform.LIGHT,
         Platform.SWITCH,
     ],
     "mal_alarm_host": [
@@ -74,6 +112,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+    ],
+    "qccdz_ac_charging_control": [
+        # https://github.com/home-assistant/core/issues/136207
+        Platform.SWITCH,
     ],
     "qxj_temp_humidity_external_probe": [
         # https://github.com/home-assistant/core/issues/136472
@@ -100,6 +142,8 @@ DEVICE_MOCKS = {
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
+        Platform.NUMBER,
+        Platform.SENSOR,
         Platform.SWITCH,
     ],
     "wsdcg_temperature_humidity": [
