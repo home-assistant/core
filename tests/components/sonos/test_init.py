@@ -94,6 +94,7 @@ async def test_async_poll_manual_hosts_warnings(
     """Test that host warnings are not logged repeatedly."""
 
     soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+    soco.mock_include_in_all_zones = False
     with (
         caplog.at_level(logging.DEBUG),
         patch.object(
@@ -101,7 +102,7 @@ async def test_async_poll_manual_hosts_warnings(
         ) as mock_visible_zones,
     ):
         # First call fails, it should be logged as a WARNING message
-        mock_visible_zones.side_effect = OSError()
+        soco.visible_zones.side_effect = OSError()
         caplog.clear()
         await _setup_hass(hass)
         assert [

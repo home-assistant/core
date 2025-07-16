@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
@@ -27,9 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent, SonosMockService
+from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent, SonosMockService
 
 from tests.common import async_fire_time_changed
 
@@ -222,7 +224,7 @@ async def test_alarm_change_device(
     alarm_event: SonosMockEvent,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    sonos_setup_two_speakers: list[MockSoCo],
+    soco_factory: SoCoMockFactory,
 ) -> None:
     """Test Sonos Alarm being moved to a different speaker.
 
@@ -230,26 +232,47 @@ async def test_alarm_change_device(
     and then moved to another speaker. It checks that the entity is correctly
     created on the new speaker and removed from the old one.
     """
+
+    # Create the alarm on the soco_lr speaker
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    alarm_dict = copy(alarm_clock.ListAlarms.return_value)
+    alarm_dict["CurrentAlarmList"] = alarm_dict["CurrentAlarmList"].replace(
+        "RINCON_test", f"{soco_lr.uid}"
+    )
+    alarm_dict["CurrentAlarmListVersion"] = f"{soco_lr.uid}:900"
+    soco_lr.alarmClock.ListAlarms.return_value = alarm_dict
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
     entity_id = "switch.sonos_alarm_14"
-    soco_lr = sonos_setup_two_speakers[0]
 
-    await async_setup_sonos()
-
-    # Initially, the alarm is created on the soco mock
+    # Verify the alarm is created on the soco_lr speaker
     assert entity_id in entity_registry.entities
     entity = entity_registry.async_get(entity_id)
     device = device_registry.async_get(entity.device_id)
-    assert device.name == soco.get_speaker_info()["zone_name"]
+    assert device.name == soco_lr.get_speaker_info()["zone_name"]
 
-    # Simulate the alarm being moved to the soco_lr speaker
+    # Simulate the alarm being moved to the soco_br speaker
     alarm_update = copy(alarm_clock_extended.ListAlarms.return_value)
     alarm_update["CurrentAlarmList"] = alarm_update["CurrentAlarmList"].replace(
-        "RINCON_test", f"{soco_lr.uid}"
+        "RINCON_test", f"{soco_br.uid}"
     )
     alarm_clock.ListAlarms.return_value = alarm_update
 
     # Update the alarm_list_version so it gets processed.
-    alarm_event.variables["alarm_list_version"] = f"{soco_lr.uid}:1000"
+    alarm_event.variables["alarm_list_version"] = f"{soco_br.uid}:1000"
     alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
     )
@@ -260,4 +283,4 @@ async def test_alarm_change_device(
     assert entity_id in entity_registry.entities
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
-    assert device.name == soco_lr.get_speaker_info()["zone_name"]
+    assert device.name == soco_br.get_speaker_info()["zone_name"]
