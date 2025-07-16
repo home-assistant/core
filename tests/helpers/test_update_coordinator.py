@@ -19,7 +19,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -878,7 +878,6 @@ async def test_config_entry(
     entry = MockConfigEntry()
 
     # Explicit None is OK
-    caplog.clear()
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=None
     )
@@ -911,27 +910,25 @@ async def test_config_entry(
         not in caplog.text
     )
 
-
-@pytest.mark.parametrize(
-    "integration_frame_path", ["homeassistant/components/my_integration"]
-)
-@pytest.mark.parametrize("set_context", [True, False])
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_non_explicit_config_entry(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, set_context: bool
-) -> None:
-    """Test behavior of coordinator.entry in ContextVar."""
-    entry = MockConfigEntry()
-    if set_context:
-        config_entries.current_entry.set(entry)
-
-    update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    # Default without context should log a warning
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is None
     assert (
         "Detected that integration 'my_integration' relies on ContextVar, "
-        "but should pass the config entry explicitly. "
-        "This will not be enforced for custom integrations - "
-        "see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241"
+        "but should pass the config entry explicitly."
     ) in caplog.text
+
+    # Default with context should log a warning
+    caplog.clear()
+    frame._REPORTED_INTEGRATIONS.clear()
+    config_entries.current_entry.set(entry)
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar, "
+        "but should pass the config entry explicitly."
+    ) in caplog.text
+    assert crd.config_entry is entry
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
