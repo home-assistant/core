@@ -94,7 +94,7 @@ def mock_bluetooth():
     # Patch habluetooth if available
     habluetooth_spec = importlib.util.find_spec("habluetooth")
     if habluetooth_spec is not None:
-        patches.append(patch("habluetooth.BluetoothClient", AsyncMock))
+        patches.append(patch("habluetooth.BluetoothClient", AsyncMock, create=True))
     # Use a single with statement for all patches
     context_managers = patches if patches else [patch("builtins.object", lambda: None)]
     with ExitStack() as stack:
