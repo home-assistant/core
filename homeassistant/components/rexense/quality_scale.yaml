@@ -1,0 +1,126 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
+  appropriate-polling:
+    status: done
+  brands:
+    status: done
+  common-modules:
+    status: done
+  config-flow-test-coverage:
+    status: done
+  config-flow:
+    status: done
+  dependency-transparency:
+    status: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No service actions available.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup:
+    status: done
+  entity-unique-id:
+    status: done
+  has-entity-name:
+    status: done
+  runtime-data:
+    status: done
+  test-before-configure:
+    status: done
+  test-before-setup:
+    status: done
+  unique-config-entry:
+    status: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+  config-entry-unloading:
+    status: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options to configure.
+  docs-installation-parameters:
+    status: todo
+  entity-unavailable:
+    status: done
+  integration-owner:
+    status: done
+  log-when-unavailable:
+    status: todo
+  parallel-updates:
+    status: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      No authentication required.
+  test-coverage:
+    status: todo
+
+  # Gold
+  devices:
+    status: done
+  diagnostics:
+    status: todo
+  discovery-update-info:
+    status: todo
+  discovery:
+    status: done
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Integration only manages a single device.
+  entity-category:
+    status: todo
+  entity-device-class:
+    status: done
+  entity-disabled-by-default:
+    status: todo
+  entity-translations:
+    status: todo
+  exception-translations:
+    status: todo
+  icon-translations:
+    status: todo
+  reconfiguration-flow:
+    status: done
+  repair-issues:
+    status: exempt
+    comment: |
+      No repair flows needed.
+  stale-devices:
+    status: exempt
+    comment: |
+      Single fixed device integration.
+
+  # Platinum
+  async-dependency:
+    status: done
+  inject-websession:
+    status: done
+  strict-typing:
+    status: done
