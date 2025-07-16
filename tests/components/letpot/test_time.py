@@ -74,7 +74,6 @@ async def test_time_error(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     mock_device_client: MagicMock,
-    device_type: str,
     exception: Exception,
     user_error: str,
 ) -> None:
