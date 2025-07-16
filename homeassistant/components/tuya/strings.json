@@ -219,6 +219,9 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
       }
     },
     "select": {
