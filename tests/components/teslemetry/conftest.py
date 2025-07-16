@@ -118,6 +118,15 @@ def mock_energy_history():
         yield mock_live_status
 
 
+@pytest.fixture(autouse=False)
+def mock_stream_listen():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStream.listen",
+    ) as mock_stream_listen:
+        yield mock_stream_listen
+
+
 @pytest.fixture(autouse=True)
 def mock_add_listener():
     """Mock Teslemetry Stream listen method."""
