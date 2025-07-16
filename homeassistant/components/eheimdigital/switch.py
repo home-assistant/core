@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.professionel5e import EheimDigitalProfessionel5e
 from eheimdigital.device import EheimDigitalDevice
 
 from homeassistant.components.switch import SwitchEntity
@@ -32,6 +33,8 @@ async def async_setup_entry(
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
                 entities.append(EheimDigitalClassicVarioSwitch(coordinator, device))  # noqa: PERF401
+            elif isinstance(device, EheimDigitalProfessionel5e):
+                entities.append(EheimDigitalProfessionel5eSwitch(coordinator, device))  # noqa: PERF401
 
         async_add_entities(entities)
 
@@ -53,6 +56,38 @@ class EheimDigitalClassicVarioSwitch(
         device: EheimDigitalClassicVario,
     ) -> None:
         """Initialize an EHEIM Digital classicVARIO switch entity."""
+        super().__init__(coordinator, device)
+        self._attr_unique_id = device.mac_address
+        self._async_update_attrs()
+
+    @override
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._device.set_active(active=False)
+
+    @override
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._device.set_active(active=True)
+
+    @override
+    def _async_update_attrs(self) -> None:
+        self._attr_is_on = self._device.is_active
+
+
+class EheimDigitalProfessionel5eSwitch(
+    EheimDigitalEntity[EheimDigitalProfessionel5e], SwitchEntity
+):
+    """Represent an EHEIM Digital Proffesionel5e switch entity."""
+
+    _attr_translation_key = "filter_active"
+
+    def __init__(
+        self,
+        coordinator: EheimDigitalUpdateCoordinator,
+        device: EheimDigitalProfessionel5e,
+    ) -> None:
+        """Initialize an EHEIM Digital Proffesionel5e switch entity."""
         super().__init__(coordinator, device)
         self._attr_unique_id = device.mac_address
         self._async_update_attrs()
