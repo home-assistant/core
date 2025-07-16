@@ -124,19 +124,20 @@ async def test_create_conversation_agent(
     assert result["step_id"] == "user"
 
     assert result["data_schema"].schema["model"].config["options"] == [
-        {"value": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo"},
+        {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
+        {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
     ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-3.5-turbo"},
+        {CONF_MODEL: "openai/gpt-3.5-turbo"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(mock_config_entry.subentries)[0]
     assert (
         ConfigSubentry(
-            data={CONF_MODEL: "gpt-3.5-turbo"},
+            data={CONF_MODEL: "openai/gpt-3.5-turbo"},
             subentry_id=subentry_id,
             subentry_type="conversation",
             title="GPT-3.5 Turbo",

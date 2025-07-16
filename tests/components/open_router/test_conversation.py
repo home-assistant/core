@@ -45,7 +45,7 @@ async def test_default_prompt(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
-    assert call["model"] == "gpt-3.5-turbo"
+    assert call["model"] == "openai/gpt-3.5-turbo"
     assert call["extra_headers"] == {
         "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
         "X-Title": "Home Assistant",
