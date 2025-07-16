@@ -79,6 +79,12 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "ks_tower_fan": [
+        # https://github.com/orgs/home-assistant/discussions/329
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SWITCH,
+    ],
     "mal_alarm_host": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
