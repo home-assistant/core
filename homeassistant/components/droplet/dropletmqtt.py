@@ -9,6 +9,26 @@ import ssl
 import aiohttp
 
 
+class DropletConnection:
+    """Connection to Droplet device."""
+
+    DEFAULT_PORT = 443
+
+    @staticmethod
+    async def get_client(
+        session: aiohttp.client.ClientSession, host: str, port: int | None, token: str
+    ) -> aiohttp.ClientWebSocketResponse:
+        """Create connection to Droplet device."""
+        url = f"wss://{host}:{port if port else DropletConnection.DEFAULT_PORT}/ws"
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        headers = {"Authorization": token}
+        return await session.ws_connect(
+            url=url, ssl_context=ssl_context, headers=headers
+        )
+
+
 class DropletDiscovery:
     """Store Droplet discovery information."""
 
@@ -36,6 +56,32 @@ class DropletDiscovery:
             return False
         return True
 
+    async def try_connect(
+        self, session: aiohttp.client.ClientSession, pairing_code: str
+    ) -> bool:
+        """Try to connect to Droplet with provided credentials."""
+        client = None
+        try:
+            client = await DropletConnection.get_client(
+                session, self.host, self.port, pairing_code
+            )
+            res = await client.receive(timeout=1)
+            if not res or res.type in [
+                aiohttp.WSMsgType.CLOSE,
+                aiohttp.WSMsgType.CLOSED,
+            ]:
+                return False
+        except (
+            aiohttp.WSServerHandshakeError,
+            aiohttp.ClientConnectionError,
+            socket.gaierror,
+        ):
+            return False
+        finally:
+            if client:
+                await client.close()
+        return True
+
 
 @dataclass
 class Droplet:
@@ -43,6 +89,7 @@ class Droplet:
 
     host: str
     session: aiohttp.client.ClientSession
+    token: str
     port: int = 80
     logger: logging.Logger | None = None
 
@@ -61,20 +108,16 @@ class Droplet:
 
     async def connect(self) -> bool:
         """Connect to Droplet."""
-        self._log(logging.ERROR, "Connect")
+        self._log(logging.ERROR, "Connecting")
         if self._connected:
             return True
 
         if not self.session:
             return False
 
-        url = f"wss://{self.host}:{self.port}/ws"
         try:
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            self._client = await self.session.ws_connect(
-                url=url, heartbeat=10, ssl_context=ssl_context
+            self._client = await DropletConnection.get_client(
+                self.session, self.host, self.port, self.token
             )
         except (
             aiohttp.WSServerHandshakeError,
@@ -154,7 +197,6 @@ class Droplet:
         """Get Droplet's server status."""
         return self._server_status
 
-    # Implement this with keepalive...?
     def get_availability(self):
         """Return true if Droplet device is available."""
         return self._available

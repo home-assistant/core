@@ -3,7 +3,7 @@
     "step": {
       "confirm": {
         "title": "Confirm association",
-        "description": "Do you want to connect {device_name}?"
+        "description": "Enter pairing code to connect to {device_name}."
       },
       "user": {
         "title": "Configure Droplet",
@@ -11,7 +11,8 @@
       }
     },
     "abort": {
-      "not_supported": "Droplet uses auto-discovery. See Droplet app for setup instructions."
+      "not_supported": "Droplet uses auto-discovery. See Droplet app for setup instructions.",
+      "failed_connect": "Failed to connect to Droplet!"
     }
   },
   "entity": {

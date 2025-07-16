@@ -12,7 +12,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_HOST, CONF_PORT, DOMAIN, RECONNECT_DELAY
+from .const import CONF_HOST, CONF_PAIRING_CODE, CONF_PORT, DOMAIN, RECONNECT_DELAY
 from .dropletmqtt import Droplet
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         self.droplet = Droplet(
             host=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
+            token=entry.data[CONF_PAIRING_CODE],
             session=async_get_clientsession(self.hass),
             logger=_LOGGER,
         )

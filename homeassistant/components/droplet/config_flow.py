@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -14,6 +17,7 @@ from .const import (
     CONF_HOST,
     CONF_MANUFACTURER,
     CONF_MODEL,
+    CONF_PAIRING_CODE,
     CONF_PORT,
     CONF_SERIAL,
     CONF_SW,
@@ -55,6 +59,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
+        errors = {}
         if self._droplet_discovery is None:
             return self.async_abort(reason="device_not_found")
         if self._droplet_discovery.device_id is None:
@@ -71,18 +76,34 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
                 CONF_SERIAL: self._droplet_discovery.properties.get(CONF_SERIAL),
                 CONF_SW: self._droplet_discovery.properties.get(CONF_SW),
+                CONF_PAIRING_CODE: user_input[CONF_PAIRING_CODE],
             }
 
-            return self.async_create_entry(
-                title=self._droplet_discovery.device_id,
-                data=device_data,
-            )
-
+            # Test if we can connect before returning
+            session = async_get_clientsession(self.hass)
+            if await self._droplet_discovery.try_connect(
+                session, user_input[CONF_PAIRING_CODE]
+            ):
+                return self.async_create_entry(
+                    title=self._droplet_discovery.device_id,
+                    data=device_data,
+                )
+            errors["base"] = "failed_connect"
+        #            else:
+        #                # Abort reason not working? Not using translated string...?
+        #                # Also: How to let user try again?
+        #                return self.async_abort(reason="failed_connect")
         return self.async_show_form(
             step_id="confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PAIRING_CODE): str,
+                }
+            ),
             description_placeholders={
                 "device_name": self._droplet_discovery.device_id,
             },
+            errors=errors,
         )
 
     async def async_step_user(

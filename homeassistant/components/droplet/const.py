@@ -9,6 +9,7 @@ CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_SW = "sw"
 CONF_SERIAL = "sn"
+CONF_PAIRING_CODE = "Pairing code"
 
 RECONNECT_DELAY = 5
 
