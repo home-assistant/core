@@ -1,6 +1,7 @@
 """The tests for the Season integration."""
 
-from datetime import datetime
+from datetime import UTC, datetime
+import zoneinfo
 
 from freezegun import freeze_time
 import pytest
@@ -43,26 +44,190 @@ HEMISPHERE_EMPTY = {
     "sensor": {"platform": "season", "type": "meteorological"},
 }
 
+# Representative Northern and Southern time zones to test meteorological seasons
+tz_northern = zoneinfo.ZoneInfo("America/New_York")
+tz_southern = zoneinfo.ZoneInfo("Australia/Perth")
+
 NORTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_SPRING),
+    # Astronomical - Vernal Equinox 2017 March 20th at 10:28 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 3, 20, 10, 27, tzinfo=UTC),
+        STATE_WINTER,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 3, 20, 10, 29, tzinfo=UTC),
+        STATE_SPRING,
+    ),
+    # Astronomical - Summer Solstice 2017 June 21st at 04:24 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 6, 21, 4, 23, tzinfo=UTC),
+        STATE_SPRING,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 6, 21, 4, 25, tzinfo=UTC),
+        STATE_SUMMER,
+    ),
+    # Astronomical - Autumnal Equinox 2017 September 22nd at 20:02 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 9, 22, 20, 1, tzinfo=UTC),
+        STATE_SUMMER,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 9, 22, 20, 3, tzinfo=UTC),
+        STATE_AUTUMN,
+    ),
+    # Astronomical - Winter Solstice 2017 December 21st at 16:28 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 12, 21, 16, 27, tzinfo=UTC),
+        STATE_AUTUMN,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 12, 21, 16, 29, tzinfo=UTC),
+        STATE_WINTER,
+    ),
+    # Meteorological - Winter to Spring
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 2, 28, 12, 59, tzinfo=tz_northern),
+        STATE_WINTER,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 3, 1, 0, 1, tzinfo=tz_northern),
+        STATE_SPRING,
+    ),
+    # Meteorological - Spring to Summer
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 5, 31, 12, 59, tzinfo=tz_northern),
+        STATE_SPRING,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 6, 1, 0, 1, tzinfo=tz_northern),
+        STATE_SUMMER,
+    ),
+    # Meteorological - Summer to Autumn
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 8, 31, 12, 59, tzinfo=tz_northern),
+        STATE_SUMMER,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 9, 1, 0, 1, tzinfo=tz_northern),
+        STATE_AUTUMN,
+    ),
+    # Meteorological - Autumn to Winter
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 11, 30, 12, 59, tzinfo=tz_northern),
+        STATE_AUTUMN,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 12, 1, 0, 1, tzinfo=tz_northern),
+        STATE_WINTER,
+    ),
 ]
 
 SOUTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_SPRING),
+    # Astronomical - Autumnal Equinox 2017 March 20th at 10:28 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 3, 20, 10, 27, tzinfo=UTC),
+        STATE_SUMMER,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 3, 20, 10, 29, tzinfo=UTC),
+        STATE_AUTUMN,
+    ),
+    # Astronomical - Winter Solstice 2017 June 21st at 04:24 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 6, 21, 4, 23, tzinfo=UTC),
+        STATE_AUTUMN,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 6, 21, 4, 25, tzinfo=UTC),
+        STATE_WINTER,
+    ),
+    # Astronomical - Vernal Equinox 2017 September 22nd at 20:02 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 9, 22, 20, 1, tzinfo=UTC),
+        STATE_WINTER,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 9, 22, 20, 3, tzinfo=UTC),
+        STATE_SPRING,
+    ),
+    # Astronomical - Summer Solstice 2017 December 21st at 16:28 UTC
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 12, 21, 16, 27, tzinfo=UTC),
+        STATE_SPRING,
+    ),
+    (
+        TYPE_ASTRONOMICAL,
+        datetime(2017, 12, 21, 16, 29, tzinfo=UTC),
+        STATE_SUMMER,
+    ),
+    # Meteorological - Summer to Autumn
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 2, 28, 12, 59, tzinfo=tz_southern),
+        STATE_SUMMER,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 3, 1, 0, 1, tzinfo=tz_southern),
+        STATE_AUTUMN,
+    ),
+    # Meteorological - Autumn to Winter
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 5, 31, 12, 59, tzinfo=tz_southern),
+        STATE_AUTUMN,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 6, 1, 0, 1, tzinfo=tz_southern),
+        STATE_WINTER,
+    ),
+    # Meteorological - Winter to Spring
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 8, 31, 12, 59, tzinfo=tz_southern),
+        STATE_WINTER,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 9, 1, 0, 1, tzinfo=tz_southern),
+        STATE_SPRING,
+    ),
+    # Meteorological - Spring to Summer
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 11, 30, 12, 59, tzinfo=tz_southern),
+        STATE_SPRING,
+    ),
+    (
+        TYPE_METEOROLOGICAL,
+        datetime(2017, 12, 1, 0, 1, tzinfo=tz_southern),
+        STATE_SUMMER,
+    ),
 ]
 
 
@@ -84,6 +249,7 @@ async def test_season_northern_hemisphere(
 ) -> None:
     """Test that season should be summer."""
     hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
+    await hass.config.async_set_time_zone(tz_northern.key)
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=type, data={CONF_TYPE: type}
@@ -117,6 +283,7 @@ async def test_season_southern_hemisphere(
 ) -> None:
     """Test that season should be summer."""
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
+    await hass.config.async_set_time_zone(tz_southern.key)
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=type, data={CONF_TYPE: type}
