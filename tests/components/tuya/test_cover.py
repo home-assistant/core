@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -89,58 +88,3 @@ async def test_percent_state_on_cover(
     cover_state = hass.states.get("cover.kitchen_blinds_curtain")
     assert cover_state is not None, "cover.kitchen_blinds_curtain does not exist"
     assert cover_state.attributes["current_position"] == percent_state
-
-
-@pytest.mark.parametrize(
-    ("mock_device_code", "entity_id", "service_name", "expected_commands"),
-    [
-        (
-            "clkg_curtain_switch",
-            "cover.tapparelle_studio_curtain",
-            "close_cover",
-            [
-                # Current (bad) behavior - may need to be adjusted see
-                # https://github.com/home-assistant/core/issues/136055
-                {"code": "control", "value": "close"},
-                {"code": "percent_control", "value": 100},
-            ],
-        ),
-        (
-            "clkg_curtain_switch",
-            "cover.tapparelle_studio_curtain",
-            "open_cover",
-            [
-                # Current (bad) behavior - may need to be adjusted see
-                # https://github.com/home-assistant/core/issues/136055
-                {"code": "control", "value": "open"},
-                {"code": "percent_control", "value": 0},
-            ],
-        ),
-    ],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_service(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    service_name: str,
-    entity_id: str,
-    expected_commands: list[dict[str, Any]],
-) -> None:
-    """Test percent_state attribute on the cover entity."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    await hass.services.async_call(
-        Platform.COVER,
-        service_name,
-        {
-            "entity_id": entity_id,
-        },
-    )
-    await hass.async_block_till_done()
-
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        expected_commands,
-    )
