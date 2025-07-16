@@ -142,3 +142,43 @@ async def test_create_conversation_agent(
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: ["assist"],
     }
+
+
+async def test_create_conversation_agent_no_control(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation agent without control over the LLM API."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    assert result["data_schema"].schema["model"].config["options"] == [
+        {"value": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo"},
+    ]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-3.5-turbo",
+            CONF_PROMPT: "you are an assistant",
+            CONF_LLM_HASS_API: [],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_PROMPT: "you are an assistant",
+    }
