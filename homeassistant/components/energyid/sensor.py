@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import EnergyIDConfigEntry
 from .const import (
     CONF_DEVICE_ID,
     CONF_ENERGYID_KEY,
@@ -21,7 +22,6 @@ from .const import (
     DOMAIN,
     SIGNAL_CONFIG_ENTRY_CHANGED,
 )
-from .energyid import EnergyIDConfigEntry
 
 PARALLEL_UPDATES = 1
 
