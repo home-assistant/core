@@ -109,22 +109,15 @@ class DatadogOptionsFlowHandler(OptionsFlow):
         if user_input is None:
             user_input = {}
 
-        connection_data = {
-            CONF_HOST: data[CONF_HOST],
-            CONF_PORT: data[CONF_PORT],
-            CONF_PREFIX: user_input.get(CONF_PREFIX, options[CONF_PREFIX]),
-            CONF_RATE: user_input.get(CONF_RATE, options[CONF_RATE]),
-        }
-
         success = await validate_datadog_connection(
             self.hass,
-            connection_data,
+            {**data, **user_input},
         )
         if success:
             return self.async_create_entry(
                 data={
-                    CONF_PREFIX: connection_data[CONF_PREFIX],
-                    CONF_RATE: connection_data[CONF_RATE],
+                    CONF_PREFIX: user_input[CONF_PREFIX],
+                    CONF_RATE: user_input[CONF_RATE],
                 }
             )
 
