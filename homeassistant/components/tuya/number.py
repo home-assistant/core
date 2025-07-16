@@ -291,16 +291,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": (
         NumberEntityDescription(
-            key=DPCode.LOWER_TEMP,
-            translation_key="lower_temp",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        NumberEntityDescription(
-            key=DPCode.UPPER_TEMP,
-            translation_key="upper_temp",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
             translation_key="temp_correction",
             entity_category=EntityCategory.CONFIG,

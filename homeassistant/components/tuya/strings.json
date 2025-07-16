@@ -220,12 +220,6 @@
       "down_delay": {
         "name": "Down delay"
       },
-      "lower_temp": {
-        "name": "Minimum temperature"
-      },
-      "upper_temp": {
-        "name": "Maximum temperature"
-      },
       "temp_correction": {
         "name": "Temperature correction"
       }
