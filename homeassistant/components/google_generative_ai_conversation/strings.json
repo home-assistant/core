@@ -34,7 +34,7 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "recommended": "Recommended model settings",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
             "temperature": "Temperature",
             "top_p": "Top P",
@@ -72,7 +72,7 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
             "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
             "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]",
