@@ -24,7 +24,14 @@
         "user": {
           "description": "Configure the new conversation agent",
           "data": {
-            "model": "Model"
+            "model": "Model",
+            "prompt": "Instructions",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
+          },
+          "data_description": {
+            "model": "The model to use for the conversation agent",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "llm_hass_api": "Use the LLM Hass API to access the model"
           }
         }
       },

@@ -1,4 +1,108 @@
 # serializer version: 1
+# name: test_all_entities[assist][conversation.gpt_3_5_turbo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'conversation',
+    'entity_category': None,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'GPT-3.5 Turbo',
+    'platform': 'open_router',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ConversationEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'ABCDEF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[assist][conversation.gpt_3_5_turbo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GPT-3.5 Turbo',
+      'supported_features': <ConversationEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[no_assist][conversation.gpt_3_5_turbo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'conversation',
+    'entity_category': None,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'GPT-3.5 Turbo',
+    'platform': 'open_router',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ABCDEF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[no_assist][conversation.gpt_3_5_turbo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GPT-3.5 Turbo',
+      'supported_features': <ConversationEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_default_prompt
   list([
     dict({

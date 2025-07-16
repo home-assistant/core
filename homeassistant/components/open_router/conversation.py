@@ -19,7 +19,7 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenRouterConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import CONF_PROMPT, DOMAIN, LOGGER
 
 
 async def async_setup_entry(
@@ -68,6 +68,10 @@ class OpenRouterConversationEntity(conversation.ConversationEntity):
         self.model = subentry.data[CONF_MODEL]
         self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
+        if self.subentry.data.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -86,7 +90,7 @@ class OpenRouterConversationEntity(conversation.ConversationEntity):
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
-                None,
+                options.get(CONF_PROMPT),
                 user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:

@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock
 import pytest
 from python_open_router import OpenRouterError
 
-from homeassistant.components.open_router.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, CONF_MODEL
+from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -129,18 +129,16 @@ async def test_create_conversation_agent(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-3.5-turbo"},
+        {
+            CONF_MODEL: "gpt-3.5-turbo",
+            CONF_PROMPT: "you are an assistant",
+            CONF_LLM_HASS_API: ["assist"],
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentry_id = list(mock_config_entry.subentries)[0]
-    assert (
-        ConfigSubentry(
-            data={CONF_MODEL: "gpt-3.5-turbo"},
-            subentry_id=subentry_id,
-            subentry_type="conversation",
-            title="GPT-3.5 Turbo",
-            unique_id=None,
-        )
-        in mock_config_entry.subentries.values()
-    )
+    assert result["data"] == {
+        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: ["assist"],
+    }
