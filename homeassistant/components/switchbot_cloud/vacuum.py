@@ -129,25 +129,20 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
             self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
 
 
-class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
-    """Representation of a SwitchBot vacuum."""
-
-    # "K20+ Pro"
-    # "Robot Vacuum Cleaner K10+ Pro Combo"
+class SwitchBotCloudVacuumK20PlusPro(SwitchBotCloudVacuum):
+    """Representation of a SwitchBot K20+ Pro."""
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
-        if fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED:
-            await self.send_api_command(
-                VacuumCleanerV2Commands.CHANGE_PARAM,
-                parameters={
-                    "fanLevel": int(VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed])
-                    + 1,
-                    "waterLevel": 1,
-                    "times": 1,
-                },
-            )
+        await self.send_api_command(
+            VacuumCleanerV2Commands.CHANGE_PARAM,
+            parameters={
+                "fanLevel": int(VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed]) + 1,
+                "waterLevel": 1,
+                "times": 1,
+            },
+        )
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
@@ -181,11 +176,26 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
         self.async_write_ha_state()
 
 
-class SwitchBotCloudVacuumV3(SwitchBotCloudVacuum):
-    """Representation of a SwitchBot vacuum."""
+class SwitchBotCloudVacuumK10PlusProCombo(SwitchBotCloudVacuumK20PlusPro):
+    """Representation of a SwitchBot vacuum K10+ Pro Combo."""
 
-    # "Robot Vacuum Cleaner S10",
-    # "S20"
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set fan speed."""
+        self._attr_fan_speed = fan_speed
+        if fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED:
+            await self.send_api_command(
+                VacuumCleanerV2Commands.CHANGE_PARAM,
+                parameters={
+                    "fanLevel": int(VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed])
+                    + 1,
+                    "times": 1,
+                },
+            )
+        self.async_write_ha_state()
+
+
+class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumK20PlusPro):
+    """Representation of a SwitchBot vacuum Robot Vacuum Cleaner S10 & S20."""
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
@@ -198,16 +208,6 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuum):
                 "times": 1,
             },
         )
-        self.async_write_ha_state()
-
-    async def async_pause(self) -> None:
-        """Pause the cleaning task."""
-        await self.send_api_command(VacuumCleanerV3Commands.PAUSE)
-        self.async_write_ha_state()
-
-    async def async_return_to_base(self, **kwargs: Any) -> None:
-        """Set the vacuum cleaner to return to the dock."""
-        await self.send_api_command(VacuumCleanerV3Commands.DOCK)
         self.async_write_ha_state()
 
     async def async_start(self) -> None:
@@ -234,10 +234,18 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuum):
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudVacuum | SwitchBotCloudVacuumV2 | SwitchBotCloudVacuumV3:
+) -> (
+    SwitchBotCloudVacuum
+    | SwitchBotCloudVacuumK20PlusPro
+    | SwitchBotCloudVacuumV3
+    | SwitchBotCloudVacuumK10PlusProCombo
+):
     """Make a SwitchBotCloudVacuum."""
     if device.device_type in VacuumCleanerV2Commands.get_supported_devices():
-        return SwitchBotCloudVacuumV2(api, device, coordinator)
+        if device.device_type == "K20+ Pro":
+            return SwitchBotCloudVacuumK20PlusPro(api, device, coordinator)
+        return SwitchBotCloudVacuumK10PlusProCombo(api, device, coordinator)
+
     if device.device_type in VacuumCleanerV3Commands.get_supported_devices():
         return SwitchBotCloudVacuumV3(api, device, coordinator)
     return SwitchBotCloudVacuum(api, device, coordinator)
