@@ -97,15 +97,15 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
-    "kt_serenelife_slpac905wuk_air_conditioner": [
-        # https://github.com/home-assistant/core/pull/148646
-        Platform.CLIMATE,
-    ],
     "ks_tower_fan": [
         # https://github.com/orgs/home-assistant/discussions/329
         Platform.FAN,
         Platform.LIGHT,
         Platform.SWITCH,
+    ],
+    "kt_serenelife_slpac905wuk_air_conditioner": [
+        # https://github.com/home-assistant/core/pull/148646
+        Platform.CLIMATE,
     ],
     "mal_alarm_host": [
         # Alarm Host support
