@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -264,6 +265,7 @@ class DROPSensor(DROPEntity, SensorEntity):
     """Representation of a DROP sensor."""
 
     entity_description: DROPSensorEntityDescription
+    _last_valid_used_today: float | None = None
 
     def __init__(
         self,
@@ -273,8 +275,27 @@ class DROPSensor(DROPEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(entity_description.key, coordinator)
         self.entity_description = entity_description
+        self._last_valid_used_today: float | None = None  # for filtering glitch values
 
     @property
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
+        value = self.entity_description.value_fn(self.coordinator)
+
+        # Filter for 'water_used_today' to avoid random 0 values during the day
+        if self.entity_description.key == WATER_USED_TODAY:
+            now = dt_util.now()
+            midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            seconds_since_midnight = (now - midnight).total_seconds()
+
+            # Only allow zero resets in the first 10 minutes of the day
+            if (
+                value == 0
+                and seconds_since_midnight > 600
+                and self._last_valid_used_today is not None
+            ):
+                return self._last_valid_used_today
+
+            self._last_valid_used_today = value
+
+        return value
