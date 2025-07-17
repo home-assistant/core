@@ -483,7 +483,7 @@ apsystems-ez1==2.7.0
 aranet4==2.5.1
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.1
+arcam-fmj==1.8.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.106.0
+hass-nabucasa==0.107.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -2644,7 +2644,7 @@ zeversolar==0.3.2
 zha==0.0.62
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.65.0
+zwave-js-server-python==0.66.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
