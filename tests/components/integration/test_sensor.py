@@ -388,7 +388,7 @@ async def test_trapezoidal(
 )
 async def test_left(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
     extra_config: dict[str, Any],
 ) -> None:
@@ -458,7 +458,7 @@ async def test_left(
 )
 async def test_right(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
     extra_config: dict[str, Any],
 ) -> None:
