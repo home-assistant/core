@@ -462,7 +462,13 @@ async def test_add_and_remove_work_area(
     poll_values[TEST_MOWER_ID].work_area_names.remove("Front lawn")
     del poll_values[TEST_MOWER_ID].work_area_dict[123456]
     del poll_values[TEST_MOWER_ID].work_areas[123456]
-    del poll_values[TEST_MOWER_ID].calendar.tasks[:2]
+
+    poll_values[TEST_MOWER_ID].calendar.tasks = [
+        task
+        for task in poll_values[TEST_MOWER_ID].calendar.tasks
+        if task.work_area_id not in [1, 123456]
+    ]
+
     poll_values[TEST_MOWER_ID].mower.work_area_id = 654321
     mock_automower_client.get_status.return_value = poll_values
     freezer.tick(SCAN_INTERVAL)
