@@ -106,9 +106,14 @@ def _convert_content(
             ],
         )
     if isinstance(chat_content, conversation.UserContent):
+        images = [
+            ollama.Image(value=attachment.path)
+            for attachment in chat_content.attachments or ()
+        ]
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
+            images=images or None,
         )
     if isinstance(chat_content, conversation.SystemContent):
         return ollama.Message(
