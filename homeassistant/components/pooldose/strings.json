@@ -80,14 +80,8 @@
       "wifi_ssid": {
         "name": "WiFi SSID"
       },
-      "wifi_key": {
-        "name": "WiFi Key"
-      },
       "ap_ssid": {
         "name": "AP SSID"
-      },
-      "ap_key": {
-        "name": "AP KEY"
       },
       "temperature": {
         "name": "Temperature"
@@ -115,7 +109,7 @@
         }
       },
       "ofa_ph_value": {
-        "name": "OFA pH Value"
+        "name": "OFA pH Time Value"
       },
       "orp_type_dosing": {
         "name": "ORP Type Dosing",
@@ -134,7 +128,7 @@
         }
       },
       "ofa_orp_value": {
-        "name": "OFA ORP Value"
+        "name": "OFA ORP Time Value"
       },
       "ph_calibration_type": {
         "name": "pH Calibration Type",
@@ -146,16 +140,10 @@
         }
       },
       "ph_calibration_offset": {
-        "name": "pH Calibration Offset",
-        "state": {
-          "8_00_mv": "8.00 mV"
-        }
+        "name": "pH Calibration Offset"
       },
       "ph_calibration_slope": {
-        "name": "pH Calibration Slope",
-        "state": {
-          "57_34_mv": "57.34 mV"
-        }
+        "name": "pH Calibration Slope"
       },
       "orp_calibration_type": {
         "name": "ORP Calibration Type",
@@ -166,16 +154,10 @@
         }
       },
       "orp_calibration_offset": {
-        "name": "ORP Calibration Offset",
-        "state": {
-          "0_00_mv": "0.00 mV"
-        }
+        "name": "ORP Calibration Offset"
       },
       "orp_calibration_slope": {
-        "name": "ORP Calibration Slope",
-        "state": {
-          "0_96_mv": "0.96 mV"
-        }
+        "name": "ORP Calibration Slope"
       },
       "peristaltic_ph_dosing_alt": {
         "name": "Peristaltic pH Dosing",

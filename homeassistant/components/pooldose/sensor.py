@@ -18,7 +18,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
+from . import PooldoseConfigEntry, PooldoseCoordinator
 from .const import device_info
 from .entity import PooldoseEntity
 
@@ -30,23 +30,24 @@ class PooldoseSensorEntityDescription(SensorEntityDescription):
     """Describe a Pooldose sensor entity."""
 
     entity_category: EntityCategory | None = None
-    enabled_by_default: bool = True
     value_fn: Callable[[Any], Any] = lambda data: data[0] if data else None
 
 
 SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
         translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     PooldoseSensorEntityDescription(
         key="ph",
         translation_key="ph",
+        device_class=SensorDeviceClass.PH,
     ),
     PooldoseSensorEntityDescription(
         key="orp",
         translation_key="orp",
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     PooldoseSensorEntityDescription(
         key="ph_type_dosing",
@@ -57,67 +58,77 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="peristaltic_ph_dosing",
         translation_key="peristaltic_ph_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ofa_ph_value",
         translation_key="ofa_ph_value",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_type_dosing",
         translation_key="orp_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="peristaltic_orp_dosing",
         translation_key="peristaltic_orp_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_value",
         translation_key="ofa_orp_value",
+        device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_type",
         translation_key="ph_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_offset",
         translation_key="ph_calibration_offset",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_slope",
         translation_key="ph_calibration_slope",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_type",
         translation_key="orp_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_offset",
         translation_key="orp_calibration_offset",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_slope",
         translation_key="orp_calibration_slope",
         entity_category=EntityCategory.DIAGNOSTIC,
-        enabled_by_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -130,7 +141,7 @@ async def async_setup_entry(
     """Set up Pooldose sensor entities from a config entry."""
     coordinator = entry.runtime_data.coordinator
     client = entry.runtime_data.client
-    serialnumber = entry.data["serialnumber"]
+    serial_number = entry.data["serialnumber"]
     device_info_dict = entry.runtime_data.device_info
 
     available = client.available_sensors()
@@ -142,9 +153,8 @@ async def async_setup_entry(
         entities.append(
             PooldoseSensor(
                 coordinator,
-                client,
                 description,
-                serialnumber,
+                serial_number,
                 device_info_dict,
             )
         )
@@ -156,31 +166,21 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     """Sensor entity for the Seko Pooldose API."""
 
     entity_description: PooldoseSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator,
-        client: Any,
+        coordinator: PooldoseCoordinator,
         description: PooldoseSensorEntityDescription,
         serialnumber: str,
         device_info_dict: dict[str, Any],
     ) -> None:
         """Initialize a Pooldose sensor entity."""
+        self.entity_description = description
         super().__init__(
             coordinator,
-            client,
-            description.key,
-            description.key,
             serialnumber,
             device_info(device_info_dict),
-            description.enabled_by_default,
         )
-        self.entity_description = description
-        self._attr_device_class = description.device_class
-        self._attr_entity_category = description.entity_category
-        self._attr_translation_key = description.translation_key
-        self._attr_entity_registry_enabled_default = description.enabled_by_default
 
     @property
     def native_value(self) -> float | int | str | None:
@@ -195,7 +195,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             )
             return None
 
-        sensor_data = data.get(self._key)
+        sensor_data = data.get(self.entity_description.key)
         if not sensor_data:
             return None
 
@@ -207,11 +207,11 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        status, data = self.coordinator.data
-        sensor_data = data.get(self._key)
+        _, data = self.coordinator.data
+        sensor_data = data.get(self.entity_description.key)
         if sensor_data and len(sensor_data) > 1:
             unit = sensor_data[1]
-            if unit and unit != "UNDEFINED":
+            if unit and unit.lower() != "ph":  # Avoid None or "ph" as unit
                 return unit
 
         return None

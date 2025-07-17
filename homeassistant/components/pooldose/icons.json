@@ -17,7 +17,7 @@
         "default": "mdi:pump"
       },
       "ofa_ph_value": {
-        "default": "mdi:ph"
+        "default": "mdi:clock"
       },
       "orp_type_dosing": {
         "default": "mdi:flask"
@@ -26,25 +26,25 @@
         "default": "mdi:pump"
       },
       "ofa_orp_value": {
-        "default": "mdi:water-check"
+        "default": "mdi:clock"
       },
       "ph_calibration_type": {
-        "default": "mdi:tune"
+        "default": "mdi:form-select"
       },
       "ph_calibration_offset": {
         "default": "mdi:tune"
       },
       "ph_calibration_slope": {
-        "default": "mdi:tune"
+        "default": "mdi:slope-downhill"
       },
       "orp_calibration_type": {
-        "default": "mdi:tune"
+        "default": "mdi:form-select"
       },
       "orp_calibration_offset": {
         "default": "mdi:tune"
       },
       "orp_calibration_slope": {
-        "default": "mdi:tune"
+        "default": "mdi:slope-downhill"
       }
     }
   }

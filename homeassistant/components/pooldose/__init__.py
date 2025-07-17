@@ -14,7 +14,6 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import SCAN_INTERVAL
 from .coordinator import PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
         _LOGGER.error("Failed to create PoolDose client: %s", client_status)
         raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")
 
-    coordinator = PooldoseCoordinator(
-        hass, client, timedelta(seconds=SCAN_INTERVAL), entry
-    )
+    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=600), entry)
     await coordinator.async_config_entry_first_refresh()
 
     # Update device info on every reload
