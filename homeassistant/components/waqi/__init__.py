@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_STATION_NUMBER, DOMAIN
-from .coordinator import WAQIDataUpdateCoordinator
+from .coordinator import WAQIConfigEntry, WAQIDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -31,13 +31,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
     """Set up World Air Quality Index (WAQI) from a config entry."""
 
     client = WAQIClient(session=async_get_clientsession(hass))
     client.authenticate(entry.data[CONF_API_KEY])
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    entry.runtime_data = {}
 
     for subentry in entry.subentries.values():
         if subentry.subentry_type != "station":
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Create a coordinator for each station subentry
         coordinator = WAQIDataUpdateCoordinator(hass, entry, subentry, client)
         await coordinator.async_config_entry_first_refresh()
-        hass.data[DOMAIN][entry.entry_id][subentry.subentry_id] = coordinator
+        entry.runtime_data[subentry.subentry_id] = coordinator
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
@@ -60,12 +60,9 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:

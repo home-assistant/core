@@ -12,16 +12,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_STATION_NUMBER, LOGGER
 
+type WAQIConfigEntry = ConfigEntry[dict[str, WAQIDataUpdateCoordinator]]
+
 
 class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
     """The WAQI Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WAQIConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WAQIConfigEntry,
         subentry: ConfigSubentry,
         client: WAQIClient,
     ) -> None:
