@@ -179,7 +179,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.13
+aioairzone-cloud==0.6.14
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -204,7 +204,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==1.2.2
+aioautomower==2.0.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -1020,7 +1020,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.1.1
+gios==6.1.2
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1234,7 +1234,7 @@ ihcsdk==2.8.5
 imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.2.0
+imgw_pib==1.4.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1334,7 +1334,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.4.0
+letpot==0.5.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.6
@@ -1596,6 +1596,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==1.93.3
 
@@ -1962,7 +1963,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.1
+pyenphase==2.2.2
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2476,6 +2477,9 @@ python-mpd2==3.1.1
 # homeassistant.components.mystrom
 python-mystrom==2.4.0
 
+# homeassistant.components.open_router
+python-open-router==0.3.0
+
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
 
@@ -2526,7 +2530,7 @@ python-vlc==3.0.18122
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.3.0
+pythonkuma==0.3.1
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -3172,7 +3176,7 @@ yolink-api==0.5.7
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==1.1.5
+youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2025.06.09
