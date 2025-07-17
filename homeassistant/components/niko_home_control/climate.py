@@ -69,7 +69,8 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE, 20))
+        if ATTR_TEMPERATURE in kwargs:
+            await self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
