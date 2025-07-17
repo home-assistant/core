@@ -39,7 +39,6 @@ async def test_hub_properties(hass: HomeAssistant, mock_coordinator: AsyncMock) 
 
     assert entity.name == "Master"  # Matches mock_coordinator data
     assert entity.available
-    # Accept actual state or states your entity may produce
     assert entity.state in (
         MediaPlayerState.IDLE,
         MediaPlayerState.OFF,
@@ -63,48 +62,50 @@ async def test_device_properties(
 
     assert entity.name == "Living Room"
     assert entity.available
-    # Accept states that may be returned by your entity
     assert entity.state in (MediaPlayerState.OFF, MediaPlayerState.IDLE)
     assert abs(entity.volume_level - 0.45) < 0.01
-    # Accept actual status_text or known expected values
     assert entity.extra_state_attributes.get("status_text") in ("standby", "unknown")
     assert entity.device_info["identifiers"] == {(DOMAIN, "abc123")}
 
 
 @pytest.mark.asyncio
 async def test_hub_control_methods(mock_coordinator: AsyncMock) -> None:
-    """Test the turn_on, turn_off, and volume methods of the hub media player."""
+    """Test control methods of the master hub media player."""
     entity = TuneBladeMediaPlayer(
         mock_coordinator, MASTER_ID, mock_coordinator.data[MASTER_ID]
     )
-    # Provide a mock hass for async_create_task calls
     entity.hass = Mock()
-    entity.hass.async_create_task = AsyncMock()
-    entity._delayed_refresh = AsyncMock()
+
+    async def dummy_coro():
+        return
+
+    entity.hass.async_create_task = AsyncMock(side_effect=lambda coro: dummy_coro())
 
     await entity.async_turn_on()
     await entity.async_turn_off()
     await entity.async_set_volume_level(0.5)
 
-    # Confirm async_create_task was called (due to _delayed_refresh scheduling)
-    entity.hass.async_create_task.assert_called()
+    assert entity.hass.async_create_task.call_count >= 1
 
 
 @pytest.mark.asyncio
 async def test_device_control_methods(mock_coordinator: AsyncMock) -> None:
-    """Test the turn_on, turn_off, and volume methods of a normal media player device."""
+    """Test control methods of a regular media player device."""
     entity = TuneBladeMediaPlayer(
         mock_coordinator, "abc123", mock_coordinator.data["abc123"]
     )
     entity.hass = Mock()
-    entity.hass.async_create_task = AsyncMock()
-    entity._delayed_refresh = AsyncMock()
+
+    async def dummy_coro():
+        return
+
+    entity.hass.async_create_task = AsyncMock(side_effect=lambda coro: dummy_coro())
 
     await entity.async_turn_on()
     await entity.async_turn_off()
     await entity.async_set_volume_level(0.5)
 
-    entity.hass.async_create_task.assert_called()
+    assert entity.hass.async_create_task.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -112,13 +113,10 @@ async def test_async_setup_entry_adds_entities(
     hass: HomeAssistant, mock_coordinator: AsyncMock
 ) -> None:
     """Test that async_setup_entry adds all TuneBlade media player entities."""
-
     config_entry = Mock()
     config_entry.entry_id = "test_entry"
-    # Provide the coordinator as runtime data (as your integration expects)
     config_entry.runtime_data = mock_coordinator
 
-    # Setup hass.data properly as expected by the integration
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {"added_ids": set()}
 
     added_entities = []
