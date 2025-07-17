@@ -1,0 +1,9 @@
+state:
+  target:
+    entity:
+      domain: light
+  fields:
+    state:
+      required: true
+      selector:
+        state:
