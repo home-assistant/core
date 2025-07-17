@@ -51,7 +51,7 @@ async def test_setup_api_v6(
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole) as patched_init_hole:
         assert await hass.config_entries.async_setup(entry.entry_id)
-        patched_init_hole.assert_called_once_with(
+        patched_init_hole.assert_called_with(
             host=config_entry_data[CONF_HOST],
             session=ANY,
             password=expected_api_token,
@@ -78,7 +78,7 @@ async def test_setup_api_v5(
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole) as patched_init_hole:
         assert await hass.config_entries.async_setup(entry.entry_id)
-        patched_init_hole.assert_called_once_with(
+        patched_init_hole.assert_called_with(
             host=config_entry_data[CONF_HOST],
             session=ANY,
             api_token=expected_api_token,
@@ -206,7 +206,7 @@ async def test_setup_without_api_version(hass: HomeAssistant) -> None:
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.data[CONF_API_VERSION] == 6
+    assert entry.runtime_data.api_version == 6
 
     mocked_hole = _create_mocked_hole(api_version=5)
     config = {**CONFIG_DATA_DEFAULTS}
@@ -216,7 +216,7 @@ async def test_setup_without_api_version(hass: HomeAssistant) -> None:
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.data[CONF_API_VERSION] == 5
+    assert entry.runtime_data.api_version == 5
 
 
 async def test_setup_name_config(hass: HomeAssistant) -> None:

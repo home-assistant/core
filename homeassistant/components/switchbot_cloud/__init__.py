@@ -30,6 +30,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -53,6 +54,7 @@ class SwitchbotDevices:
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -98,7 +100,6 @@ async def make_switchbot_devices(
             for device in devices
         ]
     )
-
     return devices_data
 
 
@@ -180,6 +181,15 @@ async def make_device_data(
                 devices_data.switches.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
+        "Battery Circulator Fan",
+        "Circulator Fan",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",
         "Roller Shade",
@@ -190,7 +200,9 @@ async def make_device_data(
         )
         devices_data.covers.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator)) 
+
+
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

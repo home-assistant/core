@@ -40,6 +40,17 @@
       "timesync": {
         "name": "Sync time"
       }
+    },
+    "select": {
+      "audio_output_hardware_mode": {
+        "name": "Audio output hardware mode",
+        "state": {
+          "optical": "Optical",
+          "line_out": "Line out",
+          "coaxial": "Coaxial",
+          "headphones": "Headphones"
+        }
+      }
     }
   },
   "exceptions": {
