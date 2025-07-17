@@ -146,54 +146,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][switch.smart_odor_eliminator_pro_switch-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Switch',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch',
-    'unique_id': 'tuya.bf6574iutyikgwkxswitch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][switch.smart_odor_eliminator_pro_switch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Odor Eliminator-Pro Switch',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
 # name: test_platform_setup_and_discovery[cs_pro_breeze_30l_dehumidifier][switch.pro_breeze_30l_compressor_dehumidifier_ionizer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -241,6 +193,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][switch.smart_odor_eliminator_pro_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'tuya.bf6574iutyikgwkxswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][switch.smart_odor_eliminator_pro_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart Odor Eliminator-Pro Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_filter_reset-entry]
@@ -822,7 +822,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_arm_beep-entry]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -835,7 +835,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'entity_id': 'switch.multifunction_alarm_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -847,7 +847,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arm beep',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -857,20 +857,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_arm_beep-state]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Multifunction alarm Arm beep',
+      'friendly_name': 'Multifunction alarm None',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'entity_id': 'switch.multifunction_alarm_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-entry]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -883,7 +883,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.multifunction_alarm_siren',
+    'entity_id': 'switch.multifunction_alarm_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -895,7 +895,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Siren',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -905,13 +905,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_siren-state]
+# name: test_platform_setup_and_discovery[mal_alarm_host][switch.multifunction_alarm_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Multifunction alarm Siren',
+      'friendly_name': 'Multifunction alarm None',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.multifunction_alarm_siren',
+    'entity_id': 'switch.multifunction_alarm_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

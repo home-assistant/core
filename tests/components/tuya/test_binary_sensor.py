@@ -88,6 +88,6 @@ async def test_bitmap(
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
-    assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
-    assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+    assert hass.states.get("binary_sensor.dehumidifier_problem").state == tankfull
+    assert hass.states.get("binary_sensor.dehumidifier_problem_2").state == defrost
+    assert hass.states.get("binary_sensor.dehumidifier_problem_3").state == wet

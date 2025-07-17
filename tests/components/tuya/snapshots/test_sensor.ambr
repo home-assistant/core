@@ -425,7 +425,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][sensor.smart_odor_eliminator_pro_status-entry]
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][sensor.smart_odor_eliminator_pro_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -438,7 +438,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_odor_eliminator_pro_status',
+    'entity_id': 'sensor.smart_odor_eliminator_pro_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -450,7 +450,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -460,13 +460,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][sensor.smart_odor_eliminator_pro_status-state]
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][sensor.smart_odor_eliminator_pro_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Odor Eliminator-Pro Status',
+      'friendly_name': 'Smart Odor Eliminator-Pro None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_odor_eliminator_pro_status',
+    'entity_id': 'sensor.smart_odor_eliminator_pro_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -581,6 +581,54 @@
     'state': '18965.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pixi_smart_drinking_fountain_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_level_state',
+    'unique_id': 'tuya.23536058083a8dc57d96water_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PIXI Smart Drinking Fountain None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pixi_smart_drinking_fountain_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'level_3',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_uv_runtime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -635,54 +683,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pixi_smart_drinking_fountain_water_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Water level',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_level_state',
-    'unique_id': 'tuya.23536058083a8dc57d96water_level',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'PIXI Smart Drinking Fountain Water level',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pixi_smart_drinking_fountain_water_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'level_3',
   })
 # ---
 # name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][sensor.pixi_smart_drinking_fountain_water_pump_duration-entry]

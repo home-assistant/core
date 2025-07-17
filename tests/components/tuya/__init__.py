@@ -50,8 +50,8 @@ DEVICE_MOCKS = {
     ],
     "cs_smart_dry_plus": [
         # https://github.com/home-assistant/core/issues/119865
+        # Device has no function codes - no humidifier support
         Platform.FAN,
-        Platform.HUMIDIFIER,
     ],
     "cwjwq_smart_odor_eliminator": [
         # https://github.com/orgs/home-assistant/discussions/79
