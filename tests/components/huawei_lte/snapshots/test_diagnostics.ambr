@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'entry': dict({
+      'mac': '**REDACTED**',
+      'url': 'http://huawei-lte.example.com',
+    }),
+    'router': dict({
+      'device_information': dict({
+        'DeviceName': 'Test Router',
+        'HardwareVersion': '1.0.0',
+        'SerialNumber': '**REDACTED**',
+        'SoftwareVersion': '2.0.0',
+      }),
+      'device_signal': dict({
+        'rsrp': '-100',
+        'rsrq': '-10',
+        'rssi': '-70',
+        'sinr': '10',
+      }),
+      'dialup_mobile_dataswitch': dict({
+        'dataswitch': '1',
+      }),
+      'lan_host_info': '**REDACTED**',
+      'monitoring_check_notifications': dict({
+        'SmsStorageFull': 0,
+      }),
+      'monitoring_month_statistics': dict({
+        'CurrentMonthDownload': '1000000000',
+        'CurrentMonthUpload': '500000000',
+        'MonthDuration': '720000',
+      }),
+      'monitoring_status': dict({
+        'ConnectionStatus': '901',
+      }),
+      'monitoring_traffic_statistics': dict({
+        'CurrentDownload': '5000000000',
+        'CurrentUpload': '2000000000',
+        'TotalDownload': '50000000000',
+        'TotalUpload': '20000000000',
+      }),
+      'net_current_plmn': '**REDACTED**',
+      'net_net_mode': dict({
+        'LTEBand': '7FFFFFFFFFFFFFFF',
+        'NetworkBand': '3FFFFFFF',
+        'NetworkMode': '03',
+      }),
+      'sms_sms_count': dict({
+        'LocalDraft': '1',
+        'LocalInbox': '5',
+        'LocalOutbox': '2',
+        'LocalUnread': '0',
+        'SimDraft': '0',
+        'SimInbox': '0',
+        'SimOutbox': '0',
+        'SimUnread': '0',
+      }),
+      'wlan_wifi_feature_switch': dict({
+        'wifi24g_switch_enable': 1,
+      }),
+      'wlan_wifi_guest_network_switch': dict({
+      }),
+    }),
+  })
+# ---
