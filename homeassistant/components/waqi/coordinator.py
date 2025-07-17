@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from aiowaqi import WAQIAirQuality, WAQIClient, WAQIError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,22 +19,23 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, client: WAQIClient
+        self, hass: HomeAssistant, config_entry: ConfigEntry, subentry: ConfigSubentry, client: WAQIClient
     ) -> None:
         """Initialize the WAQI data coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=subentry.title,
             update_interval=timedelta(minutes=5),
         )
         self._client = client
+        self.subentry = subentry
 
     async def _async_update_data(self) -> WAQIAirQuality:
         try:
             return await self._client.get_by_station_number(
-                self.config_entry.data[CONF_STATION_NUMBER]
+                self.subentry.data[CONF_STATION_NUMBER]
             )
         except WAQIError as exc:
             raise UpdateFailed from exc
