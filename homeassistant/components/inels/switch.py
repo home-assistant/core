@@ -11,7 +11,6 @@ from inelsmqtt.devices import Device
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from . import InelsConfigEntry
 from .const import ICON_SWITCH
@@ -124,7 +123,7 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         # Include index in unique_id for devices with multiple switches
         unique_key = f"{description.key}{index}" if index else description.key
 
-        self._attr_unique_id = slugify(f"{self._attr_unique_id}_{unique_key}")
+        self._attr_unique_id = f"{self._attr_unique_id}_{unique_key}".lower()
 
         # Set translation placeholders
         self._attr_translation_placeholders = self.entity_description.placeholder_fn(
