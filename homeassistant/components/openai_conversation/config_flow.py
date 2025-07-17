@@ -42,6 +42,7 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -60,6 +61,7 @@ from .const import (
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
@@ -312,7 +314,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         options = self.options
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {}
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_CODE_INTERPRETER,
+                default=RECOMMENDED_CODE_INTERPRETER,
+            ): bool,
+        }
 
         model = options[CONF_CHAT_MODEL]
 
@@ -374,18 +381,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     CONF_WEB_SEARCH_TIMEZONE,
                 )
             }
-
-        if not step_schema:
-            if self._is_new:
-                return self.async_create_entry(
-                    title=options.pop(CONF_NAME),
-                    data=options,
-                )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=options,
-            )
 
         if user_input is not None:
             if user_input.get(CONF_WEB_SEARCH):
