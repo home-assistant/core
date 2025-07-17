@@ -199,7 +199,7 @@
       }
     },
     "sensor": {
-      "average_background_rssi": {
+      "avg_signal_noise": {
         "name": "Avg. signal noise (channel {channel})"
       },
       "can": {
@@ -215,9 +215,6 @@
           "ready": "Ready",
           "unresponsive": "Unresponsive"
         }
-      },
-      "current_background_rssi": {
-        "name": "Signal noise (channel {channel})"
       },
       "last_seen": {
         "name": "Last seen"
@@ -238,11 +235,14 @@
           "unknown": "Unknown"
         }
       },
-      "rssi": {
-        "name": "Signal strength"
-      },
       "rtt": {
         "name": "Round trip time"
+      },
+      "signal_noise": {
+        "name": "Signal noise (channel {channel})"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
       },
       "successful_commands": {
         "name": "Successful commands ({direction})"
