@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from smarttub import Spa, SpaState
+from smarttub import Spa, SpaSensor, SpaState
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import ATTR_SENSORS, DOMAIN
 from .helpers import get_spa_name
 
 
@@ -47,8 +47,8 @@ class SmartTubEntity(CoordinatorEntity):
         return self.coordinator.data[self.spa.id].get("status")
 
 
-class SmartTubSensorBase(SmartTubEntity):
-    """Base class for SmartTub sensors."""
+class SmartTubOnboardSensorBase(SmartTubEntity):
+    """Base class for SmartTub onboard sensors."""
 
     def __init__(
         self,
@@ -65,3 +65,29 @@ class SmartTubSensorBase(SmartTubEntity):
     def _state(self):
         """Retrieve the underlying state from the spa."""
         return getattr(self.spa_status, self._state_key)
+
+
+class SmartTubExternalSensorBase(SmartTubEntity):
+    """Class for additional BLE wireless sensors sold separately."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        sensor: SpaSensor,
+    ) -> None:
+        """Initialize the external sensor entity."""
+        self.sensor_address = sensor.address
+        self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
+        super().__init__(coordinator, spa, self._human_readable_name(sensor))
+
+    @staticmethod
+    def _human_readable_name(sensor: SpaSensor) -> str:
+        return " ".join(
+            word.capitalize() for word in sensor.name.strip("{}").split("-")
+        )
+
+    @property
+    def sensor(self) -> SpaSensor:
+        """Convenience property to access the smarttub.SpaSensor instance for this sensor."""
+        return self.coordinator.data[self.spa.id][ATTR_SENSORS][self.sensor_address]
