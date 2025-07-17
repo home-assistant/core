@@ -1,5 +1,7 @@
 """The Growatt server PV inverter sensor integration."""
 
+from collections.abc import Mapping
+
 import growattServer
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -19,7 +21,7 @@ from .models import GrowattRuntimeData
 
 
 def get_device_list(
-    api: growattServer.GrowattApi, config: dict[str, str]
+    api: growattServer.GrowattApi, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
     """Retrieve the device list for the selected plant."""
     plant_id = config[CONF_PLANT_ID]
@@ -45,15 +47,16 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
 ) -> bool:
     """Set up Growatt from a config entry."""
-    config = {**config_entry.data}
+    config = config_entry.data
     username = config[CONF_USERNAME]
     url = config.get(CONF_URL, DEFAULT_URL)
 
     # If the URL has been deprecated then change to the default instead
     if url in DEPRECATED_URLS:
         url = DEFAULT_URL
-        config[CONF_URL] = url
-        hass.config_entries.async_update_entry(config_entry, data=config)
+        new_data = dict(config_entry.data)
+        new_data[CONF_URL] = url
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
 
     # Initialise the library with the username & a random id each time it is started
     api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
