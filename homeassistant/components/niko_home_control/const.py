@@ -12,11 +12,10 @@ NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP = {
     "auto": 5,
 }
 
-NIKO_HOME_CONTROL_THERMOSTAT_MODES = IntEnum(
-    "NIKO_HOME_CONTROL_THERMOSTAT_MODES",
-    {
-        "OFF": 3,
-        "COOL": 4,
-        "AUTO": 5,
-    },
-)
+
+class NikoHomeControlThermostatModes(IntEnum):
+    """Enum for Niko Home Control thermostat modes."""
+
+    OFF = 3
+    COOL = 4
+    AUTO = 5
