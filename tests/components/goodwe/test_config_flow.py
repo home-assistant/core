@@ -8,16 +8,17 @@ from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
     DEFAULT_NAME,
     DOMAIN,
+    PROTOCOL_UDP,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
-TEST_PORT = 8899
+TEST_PROTOCOL = PROTOCOL_UDP
 TEST_SERIAL = "123456789"
 
 
@@ -55,7 +56,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         CONF_MODEL_FAMILY: "AsyncMock",
     }
     assert len(mock_setup_entry.mock_calls) == 1
