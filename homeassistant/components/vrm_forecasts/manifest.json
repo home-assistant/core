@@ -1,0 +1,11 @@
+{
+  "domain": "vrm_forecasts",
+  "name": "Victron VRM Forecasts",
+  "codeowners": ["@AndyTempel"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vrm_forecasts",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["victron-vrm==0.1.3"]
+}
