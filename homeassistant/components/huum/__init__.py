@@ -22,6 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: HuumConfigEntry) 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: HuumConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: HuumConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
