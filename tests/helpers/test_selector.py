@@ -542,7 +542,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
             (None, True, 1),
         ),
         (
-            {"exclude_states": ["unknown", "unavailable"]},
+            {"hide_states": ["unknown", "unavailable"]},
             (),
             (),
         ),

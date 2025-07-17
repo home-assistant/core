@@ -1335,7 +1335,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
     entity_id: str
-    exclude_states: list[str]
+    hide_states: list[str]
 
 
 @SELECTORS.register("state")
@@ -1347,7 +1347,7 @@ class StateSelector(Selector[StateSelectorConfig]):
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("entity_id"): cv.entity_id,
-            vol.Optional("exclude_states"): [str],
+            vol.Optional("hide_states"): [str],
             # The attribute to filter on, is currently deliberately not
             # configurable/exposed. We are considering separating state
             # selectors into two types: one for state and one for attribute.
