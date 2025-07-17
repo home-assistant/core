@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelsConfigEntry
-from .const import ICON_SWITCH
 from .entity import InelsBaseEntity
 
 
@@ -21,7 +20,6 @@ from .entity import InelsBaseEntity
 class InelsSwitchEntityDescription(SwitchEntityDescription):
     """Class describing iNELS switch entities."""
 
-    icon: str = ICON_SWITCH
     value_fn: Callable[[Device, int], bool | None]
     set_fn: Callable[[Device, int, bool], None]
     get_state_fn: Callable[[Device, int], Any]
