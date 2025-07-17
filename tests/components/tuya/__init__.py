@@ -22,6 +22,7 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
         Platform.LIGHT,
+        Platform.SELECT,
     ],
     "co2bj_air_detector": [
         # https://github.com/home-assistant/core/issues/133173

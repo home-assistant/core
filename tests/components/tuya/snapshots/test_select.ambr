@@ -56,6 +56,63 @@
     'state': 'forward',
   })
 # ---
+# name: test_platform_setup_and_discovery[clkg_curtain_switch][select.tapparelle_studio_motor_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.tapparelle_studio_motor_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motor mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'control_back_mode',
+    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8control_back_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[clkg_curtain_switch][select.tapparelle_studio_motor_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tapparelle studio Motor mode',
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tapparelle_studio_motor_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'forward',
+  })
+# ---
 # name: test_platform_setup_and_discovery[co2bj_air_detector][select.aqi_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
