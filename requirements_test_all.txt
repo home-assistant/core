@@ -483,7 +483,7 @@ apsystems-ez1==2.7.0
 aranet4==2.5.1
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.1
+arcam-fmj==1.8.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
