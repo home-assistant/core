@@ -11,7 +11,6 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
-from homeassistant.components import image
 from homeassistant.components.input_text import (
     ATTR_VALUE as INPUT_TEXT_ATTR_VALUE,
     DOMAIN as INPUT_TEXT_DOMAIN,
@@ -23,10 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import async_get_flow_preview_state
-
 from tests.common import MockConfigEntry, assert_setup_component
-from tests.conftest import WebSocketGenerator
 from tests.typing import ClientSessionGenerator
 
 _DEFAULT = object()
@@ -586,20 +582,3 @@ async def test_device_id(
     template_entity = entity_registry.async_get("image.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
-
-
-@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
-async def test_flow_preview(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the config flow preview."""
-
-    state = await async_get_flow_preview_state(
-        hass,
-        hass_ws_client,
-        image.DOMAIN,
-        {"name": "My template", "url": "http://example.com"},
-    )
-
-    assert state["state"] == "2024-07-09T00:00:00+00:00"

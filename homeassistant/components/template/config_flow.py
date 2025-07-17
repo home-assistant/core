@@ -54,7 +54,6 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
-from .image import async_create_preview_image
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -410,7 +409,6 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
-    Platform.IMAGE: async_create_preview_image,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
