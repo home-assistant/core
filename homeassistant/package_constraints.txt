@@ -62,7 +62,6 @@ PyTurboJPEG==1.8.0
 PyYAML==6.0.2
 requests==2.32.4
 securetar==2025.2.1
-sentence-stream==1.0.0
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
