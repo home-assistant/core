@@ -108,7 +108,10 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         result = self.coordinator.get_data(self.entity_description)
-        if self.entity_description.precision is not None:
+        if (
+            isinstance(result, (int, float))
+            and self.entity_description.precision is not None
+        ):
             result = round(result, self.entity_description.precision)
         return result
 

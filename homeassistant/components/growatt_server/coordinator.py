@@ -3,7 +3,7 @@
 import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import growattServer
 
@@ -15,6 +15,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_URL, DOMAIN
 from .models import GrowattRuntimeData
+
+if TYPE_CHECKING:
+    from .sensor.sensor_entity_description import GrowattSensorEntityDescription
 
 type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
@@ -141,7 +144,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get the currency."""
         return self.data.get("currency")
 
-    def get_data(self, entity_description):
+    def get_data(
+        self, entity_description: "GrowattSensorEntityDescription"
+    ) -> str | int | float | None:
         """Get the data."""
         variable = entity_description.api_key
         api_value = self.data.get(variable)
