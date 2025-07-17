@@ -100,16 +100,10 @@ set_hvac_mode:
   fields:
     hvac_mode:
       selector:
-        select:
-          options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
-          translation_key: hvac_mode
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 set_swing_mode:
   target:
     entity:
