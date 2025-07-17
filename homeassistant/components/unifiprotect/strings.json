@@ -10,7 +10,8 @@
           "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "host": "Hostname or IP address of your UniFi Protect device."
@@ -22,7 +23,8 @@
           "host": "IP/Host of UniFi Protect server",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "discovery_confirm": {
@@ -30,7 +32,8 @@
         "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
@@ -52,6 +55,7 @@
         "title": "UniFi Protect options",
         "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "override_connection_host": "Override connection host",

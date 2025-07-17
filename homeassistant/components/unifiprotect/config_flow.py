@@ -23,6 +23,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_ID,
     CONF_PASSWORD,
@@ -214,6 +215,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -324,6 +326,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=form_data.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -366,6 +369,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -386,6 +390,7 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_API_KEY): str,
                     vol.Optional(
                         CONF_DISABLE_RTSP,
                         default=self.config_entry.options.get(CONF_DISABLE_RTSP, False),
