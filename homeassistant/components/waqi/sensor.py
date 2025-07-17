@@ -28,15 +28,6 @@ from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DOMINENTPOL = "dominentpol"
-ATTR_HUMIDITY = "humidity"
-ATTR_NITROGEN_DIOXIDE = "nitrogen_dioxide"
-ATTR_OZONE = "ozone"
-ATTR_PM10 = "pm_10"
-ATTR_PM2_5 = "pm_2_5"
-ATTR_PRESSURE = "pressure"
-ATTR_SULFUR_DIOXIDE = "sulfur_dioxide"
-
 
 @dataclass(frozen=True, kw_only=True)
 class WAQISensorEntityDescription(SensorEntityDescription):
