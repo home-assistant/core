@@ -320,7 +320,7 @@ async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> No
 )
 async def test_trapezoidal(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
     extra_config: dict[str, Any],
 ) -> None:
@@ -392,7 +392,7 @@ async def test_left(
     force_update: bool,
     extra_config: dict[str, Any],
 ) -> None:
-    """Test integration sensor state with left reimann method."""
+    """Test integration sensor state with left Riemann method."""
     config = {
         "sensor": {
             "platform": "integration",
@@ -462,7 +462,7 @@ async def test_right(
     force_update: bool,
     extra_config: dict[str, Any],
 ) -> None:
-    """Test integration sensor state with left reimann method."""
+    """Test integration sensor state with right Riemann method."""
     config = {
         "sensor": {
             "platform": "integration",
