@@ -65,9 +65,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     def _get_niko_mode(self, mode: str) -> int:
         """Return the Niko mode."""
-        if THERMOSTAT_MODES_REVERSE[mode]:
-            return THERMOSTAT_MODES_REVERSE[mode]
-        return NikoHomeControlThermostatModes.OFF
+        return THERMOSTAT_MODES_REVERSE.get(mode, NikoHomeControlThermostatModes.OFF)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
