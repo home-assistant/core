@@ -204,7 +204,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==1.2.2
+aioautomower==2.0.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -1334,7 +1334,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.4.0
+letpot==0.5.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.6
@@ -2478,7 +2478,7 @@ python-mpd2==3.1.1
 python-mystrom==2.4.0
 
 # homeassistant.components.open_router
-python-open-router==0.2.0
+python-open-router==0.3.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0

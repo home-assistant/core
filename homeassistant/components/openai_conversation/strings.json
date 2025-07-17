@@ -28,7 +28,7 @@
         "init": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "recommended": "Recommended model settings"
           },
