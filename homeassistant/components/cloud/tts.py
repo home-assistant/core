@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
@@ -307,7 +307,7 @@ async def async_setup_entry(
     tts_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
     tts_platform_loaded.set()
     cloud = hass.data[DATA_CLOUD]
-    async_add_entities([CloudTTSEntity(cloud, config_entry)])
+    async_add_entities([CloudTTSEntity(cloud)])
 
 
 class CloudTTSEntity(TextToSpeechEntity):
@@ -316,10 +316,9 @@ class CloudTTSEntity(TextToSpeechEntity):
     _attr_name = "Home Assistant Cloud"
     _attr_unique_id = TTS_ENTITY_UNIQUE_ID
 
-    def __init__(self, cloud: Cloud[CloudClient], config_entry: ConfigEntry) -> None:
+    def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize cloud text-to-speech entity."""
         self.cloud = cloud
-        self.config_entry = config_entry
         self._language, self._voice = cloud.client.prefs.tts_default_voice
 
     async def _sync_prefs(self, prefs: CloudPreferences) -> None:
@@ -329,7 +328,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @property
     def default_language(self) -> str:
         """Return the default language."""
-        return cast(str, self._language)
+        return self._language
 
     @property
     def default_options(self) -> dict[str, str]:
@@ -479,7 +478,7 @@ class CloudProvider(Provider):
     @property
     def default_language(self) -> str | None:
         """Return the default language."""
-        return cast(str, self._language)
+        return self._language
 
     @property
     def supported_languages(self) -> list[str]:
