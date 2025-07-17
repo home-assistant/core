@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
