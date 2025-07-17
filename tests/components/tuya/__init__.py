@@ -114,6 +114,7 @@ DEVICE_MOCKS = {
     "mal_alarm_host": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
+        Platform.NUMBER,
         Platform.SWITCH,
     ],
     "mcs_door_sensor": [
