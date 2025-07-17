@@ -1,8 +1,12 @@
 """Models for the Growatt server integration."""
 
-from dataclasses import dataclass
+from __future__ import annotations
 
-from .coordinator import GrowattCoordinator
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .coordinator import GrowattCoordinator
 
 
 @dataclass

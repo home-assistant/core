@@ -2,7 +2,6 @@
 
 import growattServer
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -15,7 +14,7 @@ from .const import (
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
 )
-from .coordinator import GrowattCoordinator
+from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
 
 
@@ -42,7 +41,9 @@ def get_device_list(
     return devices, plant_id
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GrowattConfigEntry
+) -> bool:
     """Set up Growatt from a config entry."""
     config = {**config_entry.data}
     username = config[CONF_USERNAME]
@@ -93,6 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: GrowattConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

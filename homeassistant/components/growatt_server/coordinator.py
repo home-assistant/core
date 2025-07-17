@@ -14,6 +14,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_URL, DOMAIN
+from .models import GrowattRuntimeData
+
+type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
@@ -26,22 +29,18 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: GrowattConfigEntry,
         device_id: str,
         device_type: str,
         plant_id: str,
     ) -> None:
         """Initialize the coordinator."""
-        self.config = {**config_entry.data}
-        self.username = self.config[CONF_USERNAME]
-        self.password = self.config[CONF_PASSWORD]
-        self.url = self.config.get(CONF_URL, DEFAULT_URL)
+        self.username = config_entry.data[CONF_USERNAME]
+        self.password = config_entry.data[CONF_PASSWORD]
+        self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
         self.api = growattServer.GrowattApi(
             add_random_user_id=True, agent_identifier=self.username
         )
-
-        # Store the ConfigEntry object
-        self.config_entry = config_entry
 
         # Set server URL
         self.api.server_url = self.url

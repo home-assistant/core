@@ -5,14 +5,13 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from ..const import DOMAIN
-from ..coordinator import GrowattCoordinator
+from ..coordinator import GrowattConfigEntry, GrowattCoordinator
 from .inverter import INVERTER_SENSOR_TYPES
 from .mix import MIX_SENSOR_TYPES
 from .sensor_entity_description import GrowattSensorEntityDescription
@@ -25,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GrowattConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Growatt sensor."""
@@ -82,7 +81,6 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
     """Representation of a Growatt Sensor."""
 
     _attr_has_entity_name = True
-    coordinator: GrowattCoordinator
     entity_description: GrowattSensorEntityDescription
 
     def __init__(
