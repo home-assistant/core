@@ -68,4 +68,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "ukuuku",
         },
         unique_id="123456",
+        entry_id="AABBCC112233",
     )

@@ -13,21 +13,22 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import HuumDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HuumConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Huum sauna with config flow."""
@@ -54,8 +55,13 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
         """Initialize the heater."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = coordinator.unique_id
-        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = coordinator.config_entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name="Huum sauna",
+            manufacturer="Huum",
+            model="UKU WiFi",
+        )
 
     @property
     def hvac_mode(self) -> HVACMode:
