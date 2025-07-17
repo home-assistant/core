@@ -1,0 +1,14 @@
+{
+  "domain": "cadio",
+  "name": "CADIO",
+  "version": "1.0.0",
+  "after_dependencies": ["hassio"],
+  "codeowners": ["@mohamed-rashad-ata"],
+  "config_flow": true,
+  "dependencies": ["file_upload", "http"],
+  "documentation": "https://egycad.com/cadio/docs/discover-cadio",
+  "iot_class": "cloud_push",
+  "quality_scale": "platinum",
+  "requirements": ["paho-mqtt==2.1.0"],
+  "single_config_entry": true
+}
