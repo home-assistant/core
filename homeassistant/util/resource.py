@@ -15,10 +15,10 @@ DEFAULT_SOFT_FILE_LIMIT: Final = 2048
 
 def set_open_file_descriptor_limit() -> None:
     """Set the maximum open file descriptor soft limit."""
-    # Check environment variable first, then use default
-    soft_limit = int(os.environ.get("SOFT_FILE_LIMIT", DEFAULT_SOFT_FILE_LIMIT))
-
     try:
+        # Check environment variable first, then use default
+        soft_limit = int(os.environ.get("SOFT_FILE_LIMIT", DEFAULT_SOFT_FILE_LIMIT))
+
         # Get current limits
         current_soft, current_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
 
@@ -61,3 +61,5 @@ def set_open_file_descriptor_limit() -> None:
 
     except OSError as err:
         _LOGGER.error("Failed to set file descriptor limit: %s", err)
+    except ValueError as err:
+        _LOGGER.error("Invalid file descriptor limit value: %s", err)

@@ -90,3 +90,18 @@ def test_set_open_file_descriptor_limit_os_error() -> None:
         assert (
             "Failed to set file descriptor limit" in mock_logger.error.call_args[0][0]
         )
+
+
+def test_set_open_file_descriptor_limit_value_error() -> None:
+    """Test handling ValueError when setting file limit."""
+
+    with (
+        patch.dict(os.environ, {"SOFT_FILE_LIMIT": "invalid_value"}),
+        patch("homeassistant.util.resource._LOGGER") as mock_logger,
+    ):
+        set_open_file_descriptor_limit()
+
+        mock_logger.error.assert_called_once()
+        assert (
+            "Invalid file descriptor limit value" in mock_logger.error.call_args[0][0]
+        )
