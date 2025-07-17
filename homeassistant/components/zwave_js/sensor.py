@@ -470,6 +470,23 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
         state_class=SensorStateClass.MEASUREMENT,
         convert=convert_nested_attr,
     ),
+    ZWaveJSStatisticsSensorEntityDescription(
+        key="background_rssi.channel_3.average",
+        translation_key="average_background_rssi",
+        translation_placeholders={"channel": "3"},
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        convert=convert_nested_attr,
+    ),
+    ZWaveJSStatisticsSensorEntityDescription(
+        key="background_rssi.channel_3.current",
+        translation_key="current_background_rssi",
+        translation_placeholders={"channel": "3"},
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        convert=convert_nested_attr,
+    ),
 ]
 
 CONTROLLER_STATISTICS_KEY_MAP: dict[str, str] = {
@@ -488,6 +505,8 @@ CONTROLLER_STATISTICS_KEY_MAP: dict[str, str] = {
     "background_rssi.channel_1.current": "backgroundRSSI.channel1.current",
     "background_rssi.channel_2.average": "backgroundRSSI.channel2.average",
     "background_rssi.channel_2.current": "backgroundRSSI.channel2.current",
+    "background_rssi.channel_3.average": "backgroundRSSI.channel3.average",
+    "background_rssi.channel_3.current": "backgroundRSSI.channel3.current",
 }
 
 # Node statistics descriptions

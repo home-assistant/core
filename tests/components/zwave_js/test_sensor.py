@@ -800,8 +800,10 @@ CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
     "average_background_rssi_channel_0": -2,
     "current_background_rssi_channel_1": -3,
     "average_background_rssi_channel_1": -4,
-    "current_background_rssi_channel_2": STATE_UNKNOWN,
-    "average_background_rssi_channel_2": STATE_UNKNOWN,
+    "current_background_rssi_channel_2": -5,
+    "average_background_rssi_channel_2": -6,
+    "current_background_rssi_channel_3": STATE_UNKNOWN,
+    "average_background_rssi_channel_3": STATE_UNKNOWN,
 }
 NODE_STATISTICS_ENTITY_PREFIX = "sensor.4_in_1_sensor_"
 # node statistics with initial state of 0
@@ -943,6 +945,10 @@ async def test_statistics_sensors_no_last_seen(
                     "channel1": {
                         "current": -3,
                         "average": -4,
+                    },
+                    "channel2": {
+                        "current": -5,
+                        "average": -6,
                     },
                     "timestamp": 1681967176510,
                 },
