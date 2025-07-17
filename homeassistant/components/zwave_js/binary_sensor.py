@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
@@ -18,15 +17,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -318,11 +317,36 @@ PROPERTY_SENSOR_MAPPINGS: dict[str, PropertyZWaveJSEntityDescription] = {
 
 
 # Mappings for boolean sensors
-BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
-    CommandClass.BATTERY: BinarySensorEntityDescription(
-        key=str(CommandClass.BATTERY),
+BOOLEAN_SENSOR_MAPPINGS: dict[tuple[int, int | str], BinarySensorEntityDescription] = {
+    (CommandClass.BATTERY, "backup"): BinarySensorEntityDescription(
+        key="battery_backup",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "disconnected"): BinarySensorEntityDescription(
+        key="battery_disconnected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "isLow"): BinarySensorEntityDescription(
+        key="battery_is_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (CommandClass.BATTERY, "lowFluid"): BinarySensorEntityDescription(
+        key="battery_low_fluid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "overheating"): BinarySensorEntityDescription(
+        key="battery_overheating",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "rechargeable"): BinarySensorEntityDescription(
+        key="battery_rechargeable",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -339,11 +363,11 @@ def is_valid_notification_binary_sensor(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
@@ -423,7 +447,7 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -432,8 +456,9 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
+        primary_value = self.info.primary_value
         if description := BOOLEAN_SENSOR_MAPPINGS.get(
-            self.info.primary_value.command_class
+            (primary_value.command_class, primary_value.property_)
         ):
             self.entity_description = description
 
@@ -450,7 +475,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         state_key: str,
@@ -483,7 +508,7 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         description: PropertyZWaveJSEntityDescription,
@@ -507,7 +532,7 @@ class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveConfigParameterBinarySensor entity."""
         super().__init__(config_entry, driver, info)

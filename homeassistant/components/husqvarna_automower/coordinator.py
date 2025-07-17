@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioautomower.exceptions import (
     ApiError,
@@ -61,20 +62,17 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
 
-    def _async_add_remove_devices_and_entities(self, data: MowerDictionary) -> None:
-        """Add/remove devices and dynamic entities, when amount of devices changed."""
-        self._async_add_remove_devices(data)
-        for mower_id in data:
-            if data[mower_id].capabilities.stay_out_zones:
-                self._async_add_remove_stay_out_zones(data)
-            if data[mower_id].capabilities.work_areas:
-                self._async_add_remove_work_areas(data)
+    @override
+    @callback
+    def async_update_listeners(self) -> None:
+        self._on_data_update()
+        super().async_update_listeners()
 
     async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
             await self.api.connect()
-            self.api.register_data_callback(self.callback)
+            self.api.register_data_callback(self.handle_websocket_updates)
             self.ws_connected = True
         try:
             data = await self.api.get_status()
@@ -82,14 +80,54 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             raise UpdateFailed(err) from err
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-        self._async_add_remove_devices_and_entities(data)
         return data
 
     @callback
-    def callback(self, ws_data: MowerDictionary) -> None:
+    def _on_data_update(self) -> None:
+        """Handle data updates and process dynamic entity management."""
+        if self.data is not None:
+            self._async_add_remove_devices()
+            for mower_id in self.data:
+                if self.data[mower_id].capabilities.stay_out_zones:
+                    self._async_add_remove_stay_out_zones()
+                if self.data[mower_id].capabilities.work_areas:
+                    self._async_add_remove_work_areas()
+
+    @callback
+    def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
+        self.hass.async_create_task(self._process_websocket_update(ws_data))
+
+    async def _process_websocket_update(self, ws_data: MowerDictionary) -> None:
+        """Handle incoming websocket update and update coordinator data."""
+        for data in ws_data.values():
+            existing_areas = data.work_areas or {}
+            for task in data.calendar.tasks:
+                work_area_id = task.work_area_id
+                if work_area_id is not None and work_area_id not in existing_areas:
+                    _LOGGER.debug(
+                        "New work area %s detected, refreshing data", work_area_id
+                    )
+                    await self.async_request_refresh()
+                    return
+
         self.async_set_updated_data(ws_data)
-        self._async_add_remove_devices_and_entities(ws_data)
+
+    @callback
+    def async_set_updated_data(self, data: MowerDictionary) -> None:
+        """Override DataUpdateCoordinator to preserve fixed polling interval.
+
+        The built-in implementation resets the polling timer on every websocket
+        update. Since websockets do not deliver all required data (e.g. statistics
+        or work area details), we enforce a constant REST polling cadence.
+        """
+        self.data = data
+        self.last_update_success = True
+        self.logger.debug(
+            "Manually updated %s data",
+            self.name,
+        )
+        self.async_update_listeners()
 
     async def client_listen(
         self,
@@ -122,9 +160,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 "reconnect_task",
             )
 
-    def _async_add_remove_devices(self, data: MowerDictionary) -> None:
+    def _async_add_remove_devices(self) -> None:
         """Add new device, remove non-existing device."""
-        current_devices = set(data)
+        current_devices = set(self.data)
 
         # Skip update if no changes
         if current_devices == self._devices_last_update:
@@ -139,7 +177,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         # Process new device
         new_devices = current_devices - self._devices_last_update
         if new_devices:
-            self.data = data
             _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
             self._add_new_devices(new_devices)
 
@@ -163,11 +200,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         for mower_callback in self.new_devices_callbacks:
             mower_callback(new_devices)
 
-    def _async_add_remove_stay_out_zones(self, data: MowerDictionary) -> None:
+    def _async_add_remove_stay_out_zones(self) -> None:
         """Add new stay-out zones, remove non-existing stay-out zones."""
         current_zones = {
             mower_id: set(mower_data.stay_out_zones.zones)
-            for mower_id, mower_data in data.items()
+            for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
         }
@@ -209,11 +246,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         return current_zones
 
-    def _async_add_remove_work_areas(self, data: MowerDictionary) -> None:
+    def _async_add_remove_work_areas(self) -> None:
         """Add new work areas, remove non-existing work areas."""
         current_areas = {
             mower_id: set(mower_data.work_areas)
-            for mower_id, mower_data in data.items()
+            for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None
         }
 

@@ -7,13 +7,7 @@ from homeassistant.components.feedreader.const import CONF_MAX_ENTRIES, DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
-
-
-def load_fixture_bytes(src: str) -> bytes:
-    """Return byte stream of fixture."""
-    feed_data = load_fixture(src, DOMAIN)
-    return bytes(feed_data, "utf-8")
+from tests.common import MockConfigEntry
 
 
 def create_mock_entry(
