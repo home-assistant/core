@@ -25,7 +25,7 @@ class DropletConnection:
         ssl_context.verify_mode = ssl.CERT_NONE
         headers = {"Authorization": token}
         return await session.ws_connect(
-            url=url, ssl_context=ssl_context, headers=headers
+            url=url, ssl_context=ssl_context, headers=headers, heartbeat=10
         )
 
 

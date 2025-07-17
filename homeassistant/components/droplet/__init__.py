@@ -22,7 +22,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: DropletConfigEntry
 ) -> bool:
     """Set up Droplet from a config entry."""
-    #    logger.error(f"Setup entry {config_entry}")
 
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
@@ -45,7 +44,6 @@ async def async_reload_entry(
     hass: HomeAssistant, config_entry: DropletConfigEntry
 ) -> None:
     """Reload the config entry when it changed."""
-    #    logger.error(f"Reload entry {config_entry}")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -54,7 +52,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
 
-    # logger.error(f"Unload entry {config_entry}")
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):

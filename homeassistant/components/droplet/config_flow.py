@@ -50,10 +50,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
-        await self.async_set_unique_id(f"{self._droplet_discovery.device_id}")
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+        existing_entry = await self.async_set_unique_id(
+            f"{self._droplet_discovery.device_id}"
+        )
+        if not existing_entry:
+            return await self.async_step_confirm()
 
-        return await self.async_step_confirm()
+        if existing_entry.data[CONF_HOST] != self._droplet_discovery.host:
+            _LOGGER.info("Updating host for device %s", existing_entry.unique_id)
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={**existing_entry.data, CONF_HOST: self._droplet_discovery.host},
+            )
+            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+
+        return self.async_abort(reason="already_configured")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -88,11 +99,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     title=self._droplet_discovery.device_id,
                     data=device_data,
                 )
+            # Nicer error message? Why isn't it using strings.json?
             errors["base"] = "failed_connect"
-        #            else:
-        #                # Abort reason not working? Not using translated string...?
-        #                # Also: How to let user try again?
-        #                return self.async_abort(reason="failed_connect")
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema(
