@@ -180,4 +180,7 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
         for key, value in details["status_range"].items()
     }
     device.status = details["status"]
+    for key, value in device.status.items():
+        if device.status_range[key].type == "Json":
+            device.status[key] = json_dumps(value)
     return device
