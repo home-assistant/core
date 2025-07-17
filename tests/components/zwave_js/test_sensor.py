@@ -247,7 +247,7 @@ async def test_invalid_multilevel_sensor_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
@@ -610,7 +610,7 @@ async def test_invalid_meter_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
