@@ -35,13 +35,13 @@
   "entity": {
     "switch": {
       "bit": {
-        "name": "Bit {addr}"
+        "name": "Bit{addr}"
       },
       "simple_relay": {
-        "name": "Simple relay {index}"
+        "name": "Simple relay{index}"
       },
       "relay": {
-        "name": "Relay {index}"
+        "name": "Relay{index}"
       }
     }
   }
