@@ -381,6 +381,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self._attr_native_max_value = self._number.max_scaled
             self._attr_native_min_value = self._number.min_scaled
             self._attr_native_step = self._number.step_scaled
+            if description.native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = int_type.unit
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
