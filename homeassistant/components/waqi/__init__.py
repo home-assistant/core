@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from aiowaqi import WAQIClient
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -15,7 +17,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN
 from .coordinator import WAQIDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -77,10 +79,12 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     for entry in entries:
         use_existing = False
         subentry = ConfigSubentry(
-            data=entry.options,
+            data=MappingProxyType(
+                {CONF_STATION_NUMBER: entry.data[CONF_STATION_NUMBER]}
+            ),
             subentry_type="station",
             title=entry.title,
-            unique_id=None,
+            unique_id=entry.unique_id,
         )
         if entry.data[CONF_API_KEY] not in api_keys_entries:
             use_existing = True
@@ -158,4 +162,5 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 title="WAQI",
                 version=2,
                 data={CONF_API_KEY: entry.data[CONF_API_KEY]},
+                unique_id=None,
             )

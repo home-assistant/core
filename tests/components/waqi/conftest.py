@@ -33,11 +33,11 @@ def mock_config_entry() -> MockConfigEntry:
         version=2,
         subentries_data=[
             ConfigSubentryData(
-                data={CONF_STATION_NUMBER: 4584},
+                data={CONF_STATION_NUMBER: 4585},
                 subentry_id="ABCDEF",
                 subentry_type="station",
                 title="de Jongweg, Utrecht",
-                unique_id="4584",
+                unique_id="4585",
             )
         ],
     )
