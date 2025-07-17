@@ -94,7 +94,7 @@ async def async_setup_entry(
 def async_create_preview_select(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> TemplateSelect:
-    """Create a preview sensor."""
+    """Create a preview select."""
     validated_config = SELECT_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return TemplateSelect(hass, validated_config, None)
 

@@ -210,7 +210,7 @@ async def async_setup_platform(
 def async_create_preview_alarm_control_panel(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateAlarmControlPanelEntity:
-    """Create a preview sensor."""
+    """Create a preview alarm control panel."""
     updated_config = rewrite_options_to_modern_conf(config)
     validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(
         updated_config | {CONF_NAME: name}
