@@ -14,6 +14,7 @@ from .const import (
     ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
+    METADATA_LEGACY,
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA,
@@ -53,9 +54,9 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
 def mock_legacy():
     """Mock Tesla Fleet Api products method."""
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True
-    ) as mock_pre2021:
-        yield mock_pre2021
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=METADATA_LEGACY
+    ) as mock_products:
+        yield mock_products
 
 
 @pytest.fixture(autouse=True)

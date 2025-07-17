@@ -59,7 +59,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["am43_corded_motor_zigbee_cover"],
+    ["cl_am43_corded_motor_zigbee_cover"],
 )
 @pytest.mark.parametrize(
     ("percent_control", "percent_state"),
