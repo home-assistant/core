@@ -42,7 +42,7 @@ SWITCH_TYPES = [
         get_state_fn=lambda device, index: device.state.bit[index],
         get_last_state_fn=lambda device, index: device.last_values.ha_value.bit[index],
         placeholder_fn=lambda device, index, indexed: {
-            "addr": device.state.bit[index].addr
+            "addr": f" {device.state.bit[index].addr}"
         },
     ),
     InelsSwitchEntityDescription(
@@ -57,7 +57,7 @@ SWITCH_TYPES = [
             lambda device, index: device.last_values.ha_value.simple_relay[index]
         ),
         placeholder_fn=lambda device, index, indexed: {
-            "index": str(index + 1) if indexed else ""
+            "index": f" {index + 1}" if indexed else ""
         },
     ),
     InelsSwitchEntityDescription(
@@ -73,7 +73,7 @@ SWITCH_TYPES = [
         ),
         alerts=[("overflow", "Relay overflow in %s of %s")],
         placeholder_fn=lambda device, index, indexed: {
-            "index": str(index + 1) if indexed else ""
+            "index": f" {index + 1}" if indexed else ""
         },
     ),
 ]
