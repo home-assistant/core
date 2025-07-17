@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from aiowaqi import WAQIAirQuality
 from aiowaqi.models import Pollutant
@@ -25,17 +24,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import WAQIDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_DOMINENTPOL = "dominentpol"
-ATTR_HUMIDITY = "humidity"
-ATTR_NITROGEN_DIOXIDE = "nitrogen_dioxide"
-ATTR_OZONE = "ozone"
-ATTR_PM10 = "pm_10"
-ATTR_PM2_5 = "pm_2_5"
-ATTR_PRESSURE = "pressure"
-ATTR_SULFUR_DIOXIDE = "sulfur_dioxide"
 
 
 @dataclass(frozen=True, kw_only=True)
