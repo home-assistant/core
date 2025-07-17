@@ -45,15 +45,24 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def mock_waqi(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
-    """Mock config entry."""
-    with patch(
-        "homeassistant.components.waqi.WAQIClient",
-        autospec=True,
-    ) as mock_waqi:
+    """Mock WAQI client."""
+    with (
+        patch(
+            "homeassistant.components.waqi.WAQIClient",
+            autospec=True,
+        ) as mock_waqi,
+        patch(
+            "homeassistant.components.waqi.config_flow.WAQIClient",
+            new=mock_waqi,
+        ),
+    ):
         client = mock_waqi.return_value
-        client.get_by_station_number.return_value = WAQIAirQuality.from_dict(
+        air_quality = WAQIAirQuality.from_dict(
             await async_load_json_object_fixture(
                 hass, "air_quality_sensor.json", DOMAIN
             )
         )
+        client.get_by_station_number.return_value = air_quality
+        client.get_by_ip.return_value = air_quality
+        client.get_by_coordinates.return_value = air_quality
         yield client
