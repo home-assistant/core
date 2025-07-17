@@ -30,6 +30,14 @@
             "station_number": "Measuring station number"
           }
         },
+        "map": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "location": "The location to get the nearest measuring station from"
+          }
+        },
         "station_number": {
           "data": {
             "station_number": "[%key:component::waqi::config_subentries::station::step::user::menu_options::station_number%]"
