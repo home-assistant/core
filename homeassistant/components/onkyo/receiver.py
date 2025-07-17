@@ -44,7 +44,8 @@ class ReceiverManager:
     info: ReceiverInfo
     receiver: Receiver | None = None
     callbacks: Callbacks
-    started: asyncio.Event
+
+    _started: asyncio.Event
 
     def __init__(
         self, hass: HomeAssistant, entry: OnkyoConfigEntry, info: ReceiverInfo
@@ -54,16 +55,36 @@ class ReceiverManager:
         self.entry = entry
         self.info = info
         self.callbacks = Callbacks()
-        self.started = asyncio.Event()
+        self._started = asyncio.Event()
 
-    async def run(self) -> None:
+    async def start(self) -> Awaitable[None] | None:
+        """Start the receiver manager run.
+
+        Returns `None`, if everything went fine.
+        Returns an awaitable with exception set, if something went wrong.
+        """
+        manager_task = self.entry.async_create_background_task(
+            self.hass, self._run(), "run_connection"
+        )
+        wait_for_started_task = asyncio.create_task(self._started.wait())
+        done, _ = await asyncio.wait(
+            (manager_task, wait_for_started_task), return_when=asyncio.FIRST_COMPLETED
+        )
+        if manager_task in done:
+            # Something went wrong, so let's return the manager task,
+            # so that it can be awaited to error out
+            return manager_task
+
+        return None
+
+    async def _run(self) -> None:
         """Run the connection to the receiver."""
         reconnect = False
         while True:
             try:
                 async with connect(self.info, retry=reconnect) as self.receiver:
                     if not reconnect:
-                        self.started.set()
+                        self._started.set()
                     else:
                         _LOGGER.info("Reconnected: %s", self.info)
 
@@ -98,8 +119,8 @@ class ReceiverManager:
         assert self.receiver is not None
         await self.receiver.write(message)
 
-    def close(self) -> None:
-        """Close the receiver manager."""
+    def start_unloading(self) -> None:
+        """Start unloading."""
         self.callbacks.clear()
 
 

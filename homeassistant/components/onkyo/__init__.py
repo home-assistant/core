@@ -1,6 +1,5 @@
 """The onkyo component."""
 
-import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -71,17 +70,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    manager_task = entry.async_create_background_task(
-        hass, manager.run(), "run_connection"
-    )
-    wait_for_started_task = asyncio.create_task(manager.started.wait())
-    done, _ = await asyncio.wait(
-        (manager_task, wait_for_started_task), return_when=asyncio.FIRST_COMPLETED
-    )
-    if manager_task in done:
-        # Something went wrong, so let's error out here by awaiting the task
+    if error := await manager.start():
         try:
-            await manager_task
+            await error
         except OSError as exc:
             raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
 
@@ -92,11 +83,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     """Unload Onkyo config entry."""
     del hass.data[DATA_MP_ENTITIES][entry.entry_id]
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    entry.runtime_data.manager.start_unloading()
 
-    entry.runtime_data.manager.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
