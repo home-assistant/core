@@ -140,7 +140,7 @@ async def validate_datadog_connection(
     """Attempt to send a test metric to the Datadog agent."""
     try:
         client = DogStatsd(user_input[CONF_HOST], user_input[CONF_PORT])
-        hass.async_add_executor_job(client.increment, "connection_test")
+        await hass.async_add_executor_job(client.increment, "connection_test")
     except (OSError, ValueError):
         return False
     else:

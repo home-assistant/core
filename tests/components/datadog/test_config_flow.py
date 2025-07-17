@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components import datadog
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.issue_registry as ir
 
@@ -86,8 +86,19 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
         assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd",
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=MOCK_OPTIONS
+        )
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert result3["data"] == MOCK_OPTIONS
 
-async def test_import_flow(hass: HomeAssistant) -> None:
+
+async def test_import_flow(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test import triggers config flow and is accepted."""
     # Success case: Valid import
     with (
@@ -111,14 +122,18 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Deprecation issue should be created
-        issue_registry = ir.async_get(hass)
-        issue = issue_registry.issues.get(
-            ("homeassistant", f"deprecated_yaml_{datadog.DOMAIN}")
+        issue = issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, "deprecated_yaml_datadog"
         )
         assert issue is not None
         assert issue.translation_key == "deprecated_yaml"
         assert issue.severity == ir.IssueSeverity.WARNING
 
+
+async def test_import_connection_error(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test import triggers connection error issue."""
     # Invalid import with connection error
     with patch(
         "homeassistant.components.datadog.config_flow.DogStatsd",

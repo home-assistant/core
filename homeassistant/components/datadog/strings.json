@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter your Datadog agent's address and port.",
+        "description": "Enter your Datadog Agent's address and port.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -10,8 +10,8 @@
           "rate": "Rate"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Datadog agent.",
-          "port": "Port the Datadog agent is listening on",
+          "host": "The hostname or IP address of the Datadog Agent.",
+          "port": "Port the Datadog Agent is listening on",
           "prefix": "Metric prefix to use",
           "rate": "The sample rate of UDP packets sent to Datadog."
         }
@@ -21,7 +21,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "There was an error connecting to the Datadog Agent when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."
     }
   },
   "options": {
@@ -49,7 +50,7 @@
   "issues": {
     "deprecated_yaml_import_connection_error": {
       "title": "{domain} YAML configuration import failed",
-      "description": "There was an error connecting to the Datadog Agent when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."
+      "description": "[%key:component::datadog::config::abort::cannot_connect%]"
     }
   }
 }
