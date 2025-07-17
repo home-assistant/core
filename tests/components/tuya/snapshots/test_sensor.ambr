@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinbattery_percentage',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin.battery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -85,7 +85,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'formaldehyde',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinch2o_value',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin.ch2o_value',
     'unit_of_measurement': 'mg/m3',
   })
 # ---
@@ -137,7 +137,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinhumidity_value',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin.humidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -193,7 +193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpintemp_current',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin.temp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -246,7 +246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voc',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinvoc_value',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin.voc_value',
     'unit_of_measurement': 'mg/m³',
   })
 # ---
@@ -299,7 +299,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqhumidity_indoor',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq.humidity_indoor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -352,7 +352,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.mock_device_idhumidity_indoor',
+    'unique_id': 'tuya.mock_device_id.humidity_indoor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -405,7 +405,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf6574iutyikgwkxbattery_percentage',
+    'unique_id': 'tuya.bf6574iutyikgwkx.battery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -456,7 +456,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odor_elimination_status',
-    'unique_id': 'tuya.bf6574iutyikgwkxwork_state_e',
+    'unique_id': 'tuya.bf6574iutyikgwkx.work_state_e',
     'unit_of_measurement': None,
   })
 # ---
@@ -506,7 +506,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_amount',
-    'unique_id': 'tuya.bfd0273e59494eb34esvrxfeed_report',
+    'unique_id': 'tuya.bfd0273e59494eb34esvrx.feed_report',
     'unit_of_measurement': '',
   })
 # ---
@@ -561,7 +561,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_duration',
-    'unique_id': 'tuya.23536058083a8dc57d96filter_life',
+    'unique_id': 'tuya.23536058083a8dc57d96.filter_life',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -617,7 +617,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_runtime',
-    'unique_id': 'tuya.23536058083a8dc57d96uv_runtime',
+    'unique_id': 'tuya.23536058083a8dc57d96.uv_runtime',
     'unit_of_measurement': 's',
   })
 # ---
@@ -668,7 +668,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level_state',
-    'unique_id': 'tuya.23536058083a8dc57d96water_level',
+    'unique_id': 'tuya.23536058083a8dc57d96.water_level',
     'unit_of_measurement': None,
   })
 # ---
@@ -721,7 +721,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_time',
-    'unique_id': 'tuya.23536058083a8dc57d96pump_time',
+    'unique_id': 'tuya.23536058083a8dc57d96.pump_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -777,7 +777,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_time',
-    'unique_id': 'tuya.23536058083a8dc57d96water_time',
+    'unique_id': 'tuya.23536058083a8dc57d96.water_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -836,7 +836,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_current',
+    'unique_id': 'tuya.eb0c772dabbb19d653ssi5.cur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -892,7 +892,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_power',
+    'unique_id': 'tuya.eb0c772dabbb19d653ssi5.cur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -951,7 +951,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_voltage',
+    'unique_id': 'tuya.eb0c772dabbb19d653ssi5.cur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1010,7 +1010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.mocked_device_idcur_current',
+    'unique_id': 'tuya.mocked_device_id.cur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1066,7 +1066,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.mocked_device_idcur_power',
+    'unique_id': 'tuya.mocked_device_id.cur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1125,7 +1125,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.mocked_device_idcur_voltage',
+    'unique_id': 'tuya.mocked_device_id.cur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1181,7 +1181,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_aelectriccurrent',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_a.electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1237,7 +1237,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_apower',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_a.power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1293,7 +1293,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_avoltage',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_a.voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1349,7 +1349,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_belectriccurrent',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_b.electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1405,7 +1405,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_bpower',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_b.power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1461,7 +1461,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_bvoltage',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_b.voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1517,7 +1517,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_celectriccurrent',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_c.electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1573,7 +1573,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_cpower',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_c.power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1629,7 +1629,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_cvoltage',
+    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27.phase_c.voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1682,7 +1682,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3battery',
+    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1733,7 +1733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.bff00f6abe0563b284t77pbattery_state',
+    'unique_id': 'tuya.bff00f6abe0563b284t77p.battery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1783,7 +1783,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bff00f6abe0563b284t77phumidity_value',
+    'unique_id': 'tuya.bff00f6abe0563b284t77p.humidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1839,7 +1839,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current_external',
+    'unique_id': 'tuya.bff00f6abe0563b284t77p.temp_current_external',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1895,7 +1895,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current',
+    'unique_id': 'tuya.bff00f6abe0563b284t77p.temp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1946,7 +1946,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbattery_state',
+    'unique_id': 'tuya.bf84c743a84eb2c8abeurz.battery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1996,7 +1996,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_value',
+    'unique_id': 'tuya.bf84c743a84eb2c8abeurz.humidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2049,7 +2049,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'illuminance',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbright_value',
+    'unique_id': 'tuya.bf84c743a84eb2c8abeurz.bright_value',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -2105,7 +2105,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external',
+    'unique_id': 'tuya.bf84c743a84eb2c8abeurz.temp_current_external',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2161,7 +2161,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current',
+    'unique_id': 'tuya.bf84c743a84eb2c8abeurz.temp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2214,7 +2214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas',
-    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_value',
+    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbz.gas_sensor_value',
     'unit_of_measurement': 'ppm',
   })
 # ---
@@ -2266,7 +2266,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgbattery_percentage',
+    'unique_id': 'tuya.bfb45cb8a9452fba66lexg.battery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2319,7 +2319,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf316b8707b061f044th18battery_percentage',
+    'unique_id': 'tuya.bf316b8707b061f044th18.battery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2372,7 +2372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf316b8707b061f044th18va_humidity',
+    'unique_id': 'tuya.bf316b8707b061f044th18.va_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2428,7 +2428,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bf316b8707b061f044th18va_temperature',
+    'unique_id': 'tuya.bf316b8707b061f044th18.va_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2481,7 +2481,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.mocked_device_idbattery_percentage',
+    'unique_id': 'tuya.mocked_device_id.battery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2537,7 +2537,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_aelectriccurrent',
+    'unique_id': 'tuya.bfe33b4c74661f1f1bgacy.phase_a.electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2593,7 +2593,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_apower',
+    'unique_id': 'tuya.bfe33b4c74661f1f1bgacy.phase_a.power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -2649,7 +2649,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_avoltage',
+    'unique_id': 'tuya.bfe33b4c74661f1f1bgacy.phase_a.voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

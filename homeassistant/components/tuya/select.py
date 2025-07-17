@@ -404,9 +404,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = ".".join(
-            part for part in (super().unique_id, description.key) if part
-        )
+        self._attr_unique_id = f"{super().unique_id}_{description.key}"
 
         self._attr_options: list[str] = []
         if enum_type := self.find_dpcode(

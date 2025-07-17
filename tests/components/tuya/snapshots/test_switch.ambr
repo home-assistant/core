@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqchild_lock',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq_child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.mock_device_idchild_lock',
+    'unique_id': 'tuya.mock_device_id_child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.mock_device_idanion',
+    'unique_id': 'tuya.mock_device_id_anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -177,7 +177,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bf6574iutyikgwkxswitch',
+    'unique_id': 'tuya.bf6574iutyikgwkx_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -225,7 +225,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
-    'unique_id': 'tuya.23536058083a8dc57d96filter_reset',
+    'unique_id': 'tuya.23536058083a8dc57d96_filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -273,7 +273,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.23536058083a8dc57d96switch',
+    'unique_id': 'tuya.23536058083a8dc57d96_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -321,7 +321,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_of_water_usage_days',
-    'unique_id': 'tuya.23536058083a8dc57d96water_reset',
+    'unique_id': 'tuya.23536058083a8dc57d96_water_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -369,7 +369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.23536058083a8dc57d96uv',
+    'unique_id': 'tuya.23536058083a8dc57d96_uv',
     'unit_of_measurement': None,
   })
 # ---
@@ -417,7 +417,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_pump_reset',
-    'unique_id': 'tuya.23536058083a8dc57d96pump_reset',
+    'unique_id': 'tuya.23536058083a8dc57d96_pump_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -465,7 +465,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket_1',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
+    'unique_id': 'tuya.eb0c772dabbb19d653ssi5_switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -514,7 +514,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket_2',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
+    'unique_id': 'tuya.eb0c772dabbb19d653ssi5_switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -563,7 +563,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.mocked_device_idchild_lock',
+    'unique_id': 'tuya.mocked_device_id_child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -611,7 +611,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.mocked_device_idswitch',
+    'unique_id': 'tuya.mocked_device_id_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -659,7 +659,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_1',
-    'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
+    'unique_id': 'tuya.0665305284f3ebe9fdc1_switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -708,7 +708,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.CENSOREDswitch',
+    'unique_id': 'tuya.CENSORED_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -756,7 +756,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.mock_device_idanion',
+    'unique_id': 'tuya.mock_device_id_anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -804,7 +804,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_beep',
-    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_sound',
+    'unique_id': 'tuya.123123aba12312312dazub_switch_alarm_sound',
     'unit_of_measurement': None,
   })
 # ---
@@ -852,7 +852,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
-    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_light',
+    'unique_id': 'tuya.123123aba12312312dazub_switch_alarm_light',
     'unit_of_measurement': None,
   })
 # ---
@@ -900,7 +900,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bf83514d9c14b426f0fz5yswitch',
+    'unique_id': 'tuya.bf83514d9c14b426f0fz5y_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -948,7 +948,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch',
+    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5m_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -996,7 +996,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_1',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
+    'unique_id': 'tuya.bf082711d275c0c883vb4p_switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1045,7 +1045,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_2',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
+    'unique_id': 'tuya.bf082711d275c0c883vb4p_switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1094,7 +1094,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_3',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
+    'unique_id': 'tuya.bf082711d275c0c883vb4p_switch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -1143,7 +1143,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_4',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
+    'unique_id': 'tuya.bf082711d275c0c883vb4p_switch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -1192,7 +1192,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgchild_lock',
+    'unique_id': 'tuya.bfb45cb8a9452fba66lexg_child_lock',
     'unit_of_measurement': None,
   })
 # ---

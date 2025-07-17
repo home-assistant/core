@@ -118,9 +118,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Init Tuya Alarm."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = ".".join(
-            part for part in (super().unique_id, description.key) if part
-        )
+        self._attr_unique_id = f"{super().unique_id}_{description.key}"
 
         # Determine supported  modes
         if supported_modes := self.find_dpcode(

@@ -128,9 +128,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = ".".join(
-            part for part in (super().unique_id, description.key) if part
-        )
+        self._attr_unique_id = f"{super().unique_id}_{description.key}"
 
         if dpcode := self.find_dpcode(description.key, dptype=DPType.ENUM):
             self._attr_event_types: list[str] = dpcode.range

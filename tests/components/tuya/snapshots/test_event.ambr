@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'numbered_button',
-    'unique_id': 'tuya.mocked_device_idswitch_mode1',
+    'unique_id': 'tuya.mocked_device_id_switch_mode1',
     'unit_of_measurement': None,
   })
 # ---
@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'numbered_button',
-    'unique_id': 'tuya.mocked_device_idswitch_mode2',
+    'unique_id': 'tuya.mocked_device_id_switch_mode2',
     'unit_of_measurement': None,
   })
 # ---
