@@ -125,7 +125,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
-            motor_mode=DPCode.CONTROL_BACK,
+            motor_mode=DPCode.CONTROL_BACK_MODE,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
@@ -134,7 +134,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
-            motor_mode=DPCode.CONTROL_BACK,
+            motor_mode=DPCode.CONTROL_BACK_MODE,
             device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
@@ -399,13 +399,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             ]
         )
 
-    def is_reverse(self):
-        if (
-            self.find_dpcode(
-                self.motor_mode, dptype=DPType.STRING, prefer_function=True
-            )
-            == "forward"
-        ):
-            return True
-        else:
-            return False
+    def is_reverse(self) -> bool:
+        """Return True if the cover direction should be reversed based on motor_mode."""
+        if self.entity_description.motor_mode:
+            mode = self.device.status.get(self.entity_description.motor_mode)
+            return mode == "forward"
+        return True
