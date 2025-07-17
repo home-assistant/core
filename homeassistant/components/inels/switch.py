@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any
 
 from inelsmqtt.devices import Device
@@ -28,7 +28,7 @@ class InelsSwitchEntityDescription(SwitchEntityDescription):
     get_state_fn: Callable[[Device, int], Any]
     get_last_state_fn: Callable[[Device, int], Any]
     alerts: list[tuple[str, str]] | None = None
-    placeholder_fn: Callable[[Device, int, int], dict[str, str]]
+    placeholder_fn: Callable[[Device, int, bool], dict[str, str]]
 
 
 SWITCH_TYPES = [
@@ -41,7 +41,7 @@ SWITCH_TYPES = [
         ),
         get_state_fn=lambda device, index: device.state.bit[index],
         get_last_state_fn=lambda device, index: device.last_values.ha_value.bit[index],
-        placeholder_fn=lambda device, index, values_cnt: {
+        placeholder_fn=lambda device, index, indexed: {
             "addr": device.state.bit[index].addr
         },
     ),
@@ -56,8 +56,8 @@ SWITCH_TYPES = [
         get_last_state_fn=(
             lambda device, index: device.last_values.ha_value.simple_relay[index]
         ),
-        placeholder_fn=lambda device, index, values_cnt: {
-            "index": "" if values_cnt == 1 else str(index + 1)
+        placeholder_fn=lambda device, index, indexed: {
+            "index": str(index + 1) if indexed else ""
         },
     ),
     InelsSwitchEntityDescription(
@@ -72,8 +72,8 @@ SWITCH_TYPES = [
             lambda device, index: device.last_values.ha_value.relay[index]
         ),
         alerts=[("overflow", "Relay overflow in %s of %s")],
-        placeholder_fn=lambda device, index, values_cnt: {
-            "index": "" if values_cnt == 1 else str(index + 1)
+        placeholder_fn=lambda device, index, indexed: {
+            "index": str(index + 1) if indexed else ""
         },
     ),
 ]
@@ -90,22 +90,16 @@ async def async_setup_entry(
     for device in entry.runtime_data.devices:
         for description in SWITCH_TYPES:
             if hasattr(device.state, description.key):
-                values_cnt = len(getattr(device.state, description.key))
-                for idx in range(values_cnt):
-                    translation_placeholders = description.placeholder_fn(
-                        device, idx, values_cnt
+                switch_count = len(getattr(device.state, description.key))
+                entities.extend(
+                    InelsSwitch(
+                        device=device,
+                        description=description,
+                        index=idx,
+                        switch_count=switch_count,
                     )
-
-                    entity_description = replace(
-                        description, translation_placeholders=translation_placeholders
-                    )
-                    entities.append(
-                        InelsSwitch(
-                            device=device,
-                            description=entity_description,
-                            index=idx,
-                        )
-                    )
+                    for idx in range(switch_count)
+                )
 
     async_add_entities(entities, False)
 
@@ -120,15 +114,22 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         device: Device,
         description: InelsSwitchEntityDescription,
         index: int = 0,
+        switch_count: int = 1,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device=device, key=description.key, index=index)
         self.entity_description = description
+        self._switch_count = switch_count
 
         # Include index in unique_id for devices with multiple switches
         unique_key = f"{description.key}{index}" if index else description.key
 
         self._attr_unique_id = slugify(f"{self._attr_unique_id}_{unique_key}")
+
+        # Set translation placeholders
+        self._attr_translation_placeholders = self.entity_description.placeholder_fn(
+            self._device, self._index, self._switch_count > 1
+        )
 
     @property
     def available(self) -> bool:
