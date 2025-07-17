@@ -29,6 +29,12 @@
   },
   "entity": {
     "sensor": {
+      "battery_autonomy": {
+        "name": "Battery autonomy"
+      },
+      "battery_charge_time": {
+        "name": "Battery charge time"
+      },
       "battery_power": {
         "name": "Battery power"
       },
@@ -119,6 +125,9 @@
       "meter_power": {
         "name": "Meter power"
       },
+      "meter_power_protocol": {
+        "name": "Meter power protocol"
+      },
       "output_current_l1": {
         "name": "Output current L1"
       },
@@ -173,6 +182,21 @@
       "temp_component_temperature": {
         "name": "Component temperature"
       },
+      "monitoring_building_consumption": {
+        "name": "Monitoring building consumption"
+      },
+      "monitoring_economy_factor": {
+        "name": "Monitoring economy factor"
+      },
+      "monitoring_grid_consumption": {
+        "name": "Monitoring grid consumption"
+      },
+      "monitoring_grid_injection": {
+        "name": "Monitoring grid injection"
+      },
+      "monitoring_grid_power_flow": {
+        "name": "Monitoring grid power flow"
+      },
       "monitoring_self_produced": {
         "name": "Self-produced"
       },
@@ -181,6 +205,9 @@
       },
       "monitoring_self_sufficiency": {
         "name": "Self-sufficiency"
+      },
+      "monitoring_solar_production": {
+        "name": "Monitoring solar production"
       },
       "monitoring_minute_building_consumption": {
         "name": "Building consumption"
