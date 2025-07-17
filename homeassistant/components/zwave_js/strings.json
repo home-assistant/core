@@ -200,7 +200,7 @@
     },
     "sensor": {
       "average_background_rssi": {
-        "name": "Average background RSSI (channel {channel})"
+        "name": "Avg. signal noise (channel {channel})"
       },
       "can": {
         "name": "Collisions"
@@ -217,7 +217,7 @@
         }
       },
       "current_background_rssi": {
-        "name": "Current background RSSI (channel {channel})"
+        "name": "Signal noise (channel {channel})"
       },
       "last_seen": {
         "name": "Last seen"
@@ -239,7 +239,7 @@
         }
       },
       "rssi": {
-        "name": "RSSI"
+        "name": "Signal strength"
       },
       "rtt": {
         "name": "Round trip time"
