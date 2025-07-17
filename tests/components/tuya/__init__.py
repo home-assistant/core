@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
-    "am43_corded_motor_zigbee_cover": [
+    "cl_am43_corded_motor_zigbee_cover": [
         # https://github.com/home-assistant/core/issues/71242
         Platform.SELECT,
         Platform.COVER,
