@@ -143,13 +143,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WAQI sensor."""
-    for subentry_id in entry.subentries.keys():
-        coordinator = hass.data[DOMAIN][entry.entry_id][subentry_id]
+    for subentry_id, coordinator in hass.data[DOMAIN][entry.entry_id].items():
         async_add_entities(
-            (WaqiSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.available_fn(coordinator.data)),
-            config_subentry_id= subentry_id,
+            (
+                WaqiSensor(coordinator, sensor)
+                for sensor in SENSORS
+                if sensor.available_fn(coordinator.data)
+            ),
+            config_subentry_id=subentry_id,
         )
 
 

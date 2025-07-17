@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATION_NUMBER, DOMAIN, LOGGER
+from .const import CONF_STATION_NUMBER, LOGGER
 
 
 class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
@@ -19,7 +19,11 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, subentry: ConfigSubentry, client: WAQIClient
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        client: WAQIClient,
     ) -> None:
         """Initialize the WAQI data coordinator."""
         super().__init__(

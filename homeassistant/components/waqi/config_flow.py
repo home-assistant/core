@@ -54,7 +54,7 @@ async def get_by_station_number(
 class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for World Air Quality Index (WAQI)."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""

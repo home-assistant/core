@@ -7,19 +7,20 @@ from aiowaqi import WAQIClient
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .const import DOMAIN
-from .coordinator import WAQIDataUpdateCoordinator
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DOMAIN
+from .coordinator import WAQIDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WAQI."""
@@ -56,6 +57,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
     """Migrate integration entry structure."""
@@ -157,4 +159,3 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 version=2,
                 data={CONF_API_KEY: entry.data[CONF_API_KEY]},
             )
-
