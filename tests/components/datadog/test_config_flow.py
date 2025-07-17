@@ -147,8 +147,7 @@ async def test_import_connection_error(
         assert result["type"] == "abort"
         assert result["reason"] == "cannot_connect"
 
-        issue_registry = ir.async_get(hass)
-        issue = issue_registry.issues.get(
+        issue = issue_registry.async_get_issue(
             (datadog.DOMAIN, "deprecated_yaml_import_connection_error")
         )
         assert issue is not None
