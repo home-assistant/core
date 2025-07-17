@@ -886,7 +886,9 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = ".".join(
+            part for part in (super().unique_id, description.key) if part
+        )
 
     @property
     def is_on(self) -> bool:

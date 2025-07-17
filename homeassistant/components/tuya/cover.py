@@ -192,7 +192,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = ".".join(
+            part for part in (super().unique_id, description.key) if part
+        )
         self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
