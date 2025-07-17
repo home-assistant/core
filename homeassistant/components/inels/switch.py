@@ -9,7 +9,7 @@ from typing import Any
 from inelsmqtt.devices import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelsConfigEntry
@@ -144,11 +144,6 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
             )
             and super().available
         )
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update attrs from device."""
-        self._attr_is_on = self.entity_description.value_fn(self._device, self._index)
 
     @property
     def is_on(self) -> bool | None:
