@@ -46,8 +46,6 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_max_temp = 110
-    _attr_min_temp = 40
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -62,6 +60,16 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
             manufacturer="Huum",
             model="UKU WiFi",
         )
+
+    @property
+    def min_temp(self) -> int:
+        """Return configured minimal temperature."""
+        return self.coordinator.data.sauna_config.min_temp
+
+    @property
+    def max_temp(self) -> int:
+        """Return configured maximum temperature."""
+        return self.coordinator.data.sauna_config.max_temp
 
     @property
     def hvac_mode(self) -> HVACMode:
