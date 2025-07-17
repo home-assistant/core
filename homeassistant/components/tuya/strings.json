@@ -573,6 +573,9 @@
       "last_amount": {
         "name": "Last amount"
       },
+      "meal_plan": {
+        "name": "Meal plan"
+      },
       "remaining_time": {
         "name": "Remaining time"
       },
