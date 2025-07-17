@@ -1334,8 +1334,16 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
-    entity_id: str
+    entity_id: str | list[str]
     hide_states: list[str]
+    combine_mode: StateCombineMode
+
+
+class StateCombineMode(StrEnum):
+    """Possible units for a color temperature selector."""
+
+    UNION = "union"
+    INTERSECTION = "intersection"
 
 
 @SELECTORS.register("state")
@@ -1348,6 +1356,9 @@ class StateSelector(Selector[StateSelectorConfig]):
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
+            vol.Optional("combine_mode", default=StateCombineMode.UNION): vol.All(
+                vol.Coerce(StateCombineMode), lambda val: val.value
+            ),
             # The attribute to filter on, is currently deliberately not
             # configurable/exposed. We are considering separating state
             # selectors into two types: one for state and one for attribute.

@@ -546,6 +546,11 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
             (),
             (),
         ),
+        (
+            {"combine_mode": "union"},
+            (),
+            (),
+        ),
     ],
 )
 def test_state_selector_schema(schema, valid_selections, invalid_selections) -> None:
