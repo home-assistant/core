@@ -1091,7 +1091,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                                     }
                                 ],
                                 "multiple": False,
-                                "reorder": False,
                             },
                         },
                     },
@@ -1114,7 +1113,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                             }
                         ],
                         "multiple": False,
-                        "reorder": False,
                     },
                 },
             },
