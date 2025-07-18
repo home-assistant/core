@@ -1,112 +1,172 @@
-"""sensors.py
-
-Home Assistant integration module for Greencell EVSE sensor entities over MQTT.
+"""Home Assistant integration module for Greencell EVSE sensor entities over MQTT.
 
 Provides:
-- Data storage classes:
-  * Habu3PhaseSensorData: tracks three-phase values (l1, l2, l3).
-  * HabuSingleSensorData: stores single-value metrics (power, status).
-- Sensor base classes:
+- Sensor  classes:
   * HabuSensor: abstract base for all sensors with common device identification and availability logic.
-  * Habu3PhaseSensor: abstract for per-phase sensors (current, voltage).
-  * HabuSingleSensor: abstract for single-value sensors (power, status).
-- Concrete sensor implementations:
-  * HabuCurrentSensor: converts mA→A with three decimals.
-  * HabuVoltageSensor: formats voltage with two decimals.
-  * HabuPowerSensor: formats power with one decimal.
-  * HabuStatusSensor: reports raw status strings.
+  * Habu3PhaseSensor:  for per-phase sensors (current, voltage).
+  * HabuSingleSensor:  single-value sensors (power, status).
 - setup_sensors(): subscribes to MQTT topics for current, voltage, power, status, and device_state;
   updates sensor state objects and schedules Home Assistant state updates.
 - async_setup_platform / async_setup_entry: legacy YAML and config-entry setup hooks.
 """
 
-from abc import ABC, abstractmethod
-import json
-from json import JSONDecodeError
+from abc import ABC
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Any
+
+from greencell_client.access import GreencellAccess
+from greencell_client.elec_data import ElecData3Phase
+from greencell_client.mqtt_parser import MqttParser
+from greencell_client.utils import GreencellUtils
 
 from homeassistant.components.mqtt import async_subscribe
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import (
+    DOMAIN,
+    GREENCELL_ACCESS_KEY,
+    GREENCELL_CURRENT_DATA_KEY,
     GREENCELL_HABU_DEN,
-    GREENCELL_HABU_DEN_SERIAL_PREFIX,
     GREENCELL_OTHER_DEVICE,
+    GREENCELL_POWER_DATA_KEY,
+    GREENCELL_STATE_DATA_KEY,
+    GREENCELL_VOLTAGE_DATA_KEY,
     MANUFACTURER,
-    GreencellHaAccessLevelEnum as AccessLevel,
 )
-from .helper import GreencellAccess
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Habu3PhaseSensorData:
-    """Class storing sensor data (e.g. current or voltage) for 3 phases."""
+@dataclass(frozen=True, kw_only=True)
+class GreencellSensorDescription(SensorEntityDescription):
+    """Describe a Greencell sensor."""
 
-    def __init__(self) -> None:
-        self._data = {"l1": None, "l2": None, "l3": None}
-
-    @property
-    def data(self) -> dict:
-        """Return the internal data dictionary."""
-        return self._data
-
-    def update_data(self, new_data: dict) -> None:
-        """Update sensor data if the dictionary contains keys corresponding to the phases."""
-        for phase in ["l1", "l2", "l3"]:
-            if phase in new_data:
-                self._data[phase] = new_data[phase]
+    value_fn: Callable[[Any], str]
 
 
-class HabuSingleSensorData:
-    """Class storing single-value data like power, etc."""
-
-    def __init__(self) -> None:
-        self._data = None
-
-    @property
-    def data(self) -> float:
-        """Return the internal data."""
-        return self._data
-
-    def update_data(self, new_data) -> None:
-        """Update sensor data"""
-        self._data = new_data
+SENSOR_DESCRIPTIONS = (
+    GreencellSensorDescription(
+        key="current_l1",
+        translation_key="current_l1",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+    ),
+    GreencellSensorDescription(
+        key="current_l2",
+        translation_key="current_l2",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+    ),
+    GreencellSensorDescription(
+        key="current_l3",
+        translation_key="current_l3",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+    ),
+    GreencellSensorDescription(
+        key="voltage_l1",
+        translation_key="voltage_l1",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+    ),
+    GreencellSensorDescription(
+        key="voltage_l2",
+        translation_key="voltage_l2",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+    ),
+    GreencellSensorDescription(
+        key="voltage_l3",
+        translation_key="voltage_l3",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+    ),
+    GreencellSensorDescription(
+        key="power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda data: f"{data:.1f}" if data is not None else "0.0",
+    ),
+    GreencellSensorDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "IDLE",
+            "CONNECTED",
+            "WAITING_FOR_CAR",
+            "CHARGING",
+            "FINISHED",
+            "ERROR_CAR",
+            "ERROR_EVSE",
+            "UNKNOWN",
+        ],
+        value_fn=lambda data: str(data).upper() if isinstance(data, str) else "UNKNOWN",
+    ),
+)
 
 
 class HabuSensor(SensorEntity, ABC):
     """Abstract base class for Habu sensors integration."""
 
+    entity_description: GreencellSensorDescription
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        sensor_name: str,
-        unit: str,
         sensor_type: str,
         serial_number: str,
         access: GreencellAccess,
+        description: GreencellSensorDescription,
     ) -> None:
-        """:param sensor_name: Name of the sensor displayed in Home Assistant
+        """Initialize the sensor entity.
+
+        :param sensor_name: Name of the sensor displayed in Home Assistant
         :param unit: Unit of measurement (e.g. "A" or "V")
         :param sensor_type: Sensor type (e.g. "current", "voltage" or another for single sensors)
         :param serial_number: Serial number of the device
         """
-        self._attr_name = sensor_name
-        self._unit = unit
         self._sensor_type = sensor_type
         self._serial_number = serial_number
         self._access = access
-
-    def _device_is_habu_den(self) -> bool:
-        """Check if the device is a Habu Den based on its serial number."""
-        return self._serial_number.startswith(GREENCELL_HABU_DEN_SERIAL_PREFIX)
+        self.entity_description = description
 
     def _device_name(self) -> str:
         """Return the device name based on its type."""
-        if self._device_is_habu_den():
+        if GreencellUtils.device_is_habu_den(self._serial_number):
             return GREENCELL_HABU_DEN
         return GREENCELL_OTHER_DEVICE
 
@@ -116,23 +176,9 @@ class HabuSensor(SensorEntity, ABC):
         return f"{self._device_name()}_{self._serial_number}_{self._sensor_type}_sensor"
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit
-
-    @abstractmethod
-    def convert_value(self, raw_value) -> str:
-        """Convert the raw value to a format suitable for display.
-        Must be implemented in derived classes.
-        """
-
-    def update(self) -> None:
-        """Update method - updates are handled externally (e.g. via MQTT callbacks)."""
-
-    @property
-    def device_info(self) -> dict:
+    def device_info(self):
         """Return device information."""
-        if self._device_is_habu_den():
+        if GreencellUtils.device_is_habu_den(self._serial_number):
             device_name = GREENCELL_HABU_DEN
         else:
             device_name = GREENCELL_OTHER_DEVICE
@@ -142,13 +188,6 @@ class HabuSensor(SensorEntity, ABC):
             "manufacturer": MANUFACTURER,
             "model": device_name,
         }
-
-    @property
-    @abstractmethod
-    def icon(self) -> str:
-        """Return the icon for the sensor.
-        Must be implemented in derived classes.
-        """
 
     @property
     def available(self) -> bool:
@@ -165,37 +204,43 @@ class HabuSensor(SensorEntity, ABC):
             self.async_schedule_update_ha_state()
 
 
-class Habu3PhaseSensor(HabuSensor, ABC):
+class Habu3PhaseSensor(HabuSensor):
     """Abstract class for 3-phase sensors (e.g. current, voltage)."""
 
     def __init__(
         self,
-        sensor_data: Habu3PhaseSensorData,
+        sensor_data: ElecData3Phase,
         phase: str,
-        sensor_name: str,
-        unit: str,
         sensor_type: str,
         serial_number: str,
         access: GreencellAccess,
+        description: GreencellSensorDescription,
     ) -> None:
-        """:param sensor_data: Object storing 3-phase data
+        """Initialize the 3-phase sensor.
+
+        :param sensor_data: Object storing 3-phase data
         :param phase: Phase identifier ('l1', 'l2', 'l3')
         :param sensor_name: Name of the sensor displayed in Home Assistant
         :param unit: Unit of measurement
         :param sensor_type: Sensor type (e.g. "current" or "voltage")
         :param serial_number: Device serial number
         """
-        super().__init__(sensor_name, unit, sensor_type, serial_number, access)
-        self._sensor_data = sensor_data.data
+        super().__init__(sensor_type, serial_number, access, description)
+        self._sensor_data = sensor_data
         self._phase = phase
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        raw_value = self._sensor_data.get(self._phase)
+        raw_value = self._sensor_data.get_value(self._phase)
         if raw_value is None:
-            return None
-        return self.convert_value(raw_value)
+            return (
+                "0.000"
+                if self.entity_description.native_unit_of_measurement
+                == UnitOfElectricCurrent.AMPERE
+                else "0.00"
+            )
+        return self.entity_description.value_fn(raw_value)
 
     @property
     def unique_id(self) -> str:
@@ -203,105 +248,39 @@ class Habu3PhaseSensor(HabuSensor, ABC):
         return f"{self._sensor_type}_sensor_{self._phase}_{self._serial_number}"
 
 
-class HabuCurrentSensor(Habu3PhaseSensor):
-    def __init__(
-        self,
-        sensor_data: Habu3PhaseSensorData,
-        phase: str,
-        sensor_name: str,
-        serial_number: str,
-        access: GreencellAccess,
-        unit: str = "A",
-    ) -> None:
-        super().__init__(
-            sensor_data,
-            phase,
-            sensor_name,
-            unit,
-            sensor_type="current",
-            serial_number=serial_number,
-            access=access,
-        )
-
-    def convert_value(self, value) -> str:
-        """Convert the raw current value in mA to a string in A with 3 decimal places."""
-        try:
-            numeric = float(value)
-            return f"{numeric / 1000:.3f}"
-        except (ValueError, TypeError) as ex:
-            _LOGGER.error("Cannot convert current: %s", ex)
-            return str(value)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the current sensor."""
-        return "mdi:flash-auto"
-
-
-class HabuVoltageSensor(Habu3PhaseSensor):
-    def __init__(
-        self,
-        sensor_data: Habu3PhaseSensorData,
-        phase: str,
-        sensor_name: str,
-        serial_number: str,
-        access: GreencellAccess,
-        unit: str = "V",
-    ) -> None:
-        super().__init__(
-            sensor_data,
-            phase,
-            sensor_name,
-            unit,
-            sensor_type="voltage",
-            serial_number=serial_number,
-            access=access,
-        )
-
-    def convert_value(self, value) -> str:
-        """Convert the raw voltage value to a string in V with 2 decimal places."""
-        try:
-            numeric = float(value)
-            return f"{numeric:.2f}"
-        except (ValueError, TypeError) as ex:
-            _LOGGER.error("Cannot convert voltage: %s", ex)
-            return str(value)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the voltage sensor."""
-        return "mdi:meter-electric"
-
-
 class HabuSingleSensor(HabuSensor):
     """Example class for sensors that return a single value."""
 
     def __init__(
         self,
-        raw_value,
-        sensor_name: str,
+        sensor_data,
         serial_number: str,
-        unit: str,
         sensor_type: str,
         access: GreencellAccess,
+        description: GreencellSensorDescription,
     ) -> None:
-        super().__init__(sensor_name, unit, sensor_type, serial_number, access)
-        self._value = raw_value
+        """Initialize the single-value sensor.
+
+        :param sensor_data: Object storing single-phase data
+        :param serial_number: Serial number of the device
+        :param sensor_type: Sensor type (e.g. "power", "status")
+        :param access: Greencell access level for the sensor
+        :param description: Description of the sensor entity
+        """
+        super().__init__(sensor_type, serial_number, access, description)
+        self._value = sensor_data
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self._value is None:
-            return None
-        return self.convert_value(self._value)
-
-    def update_value(self, new_value) -> None:
-        """Update the stored value."""
-        self._value = new_value
-
-    @abstractmethod
-    def convert_value(self, raw_value) -> str:
-        """Concrete class should convert the raw value."""
+            return (
+                "0.0"
+                if self.entity_description.native_unit_of_measurement
+                == UnitOfPower.WATT
+                else "UNKNOWN"
+            )
+        return self.entity_description.value_fn(self._value.data)
 
     @property
     def unique_id(self) -> str:
@@ -309,166 +288,87 @@ class HabuSingleSensor(HabuSensor):
         return f"{self._sensor_type}_sensor_{self._serial_number}"
 
 
-class HabuPowerSensor(HabuSingleSensor):
-    def __init__(
-        self,
-        raw_value,
-        sensor_name: str,
-        serial_number: str,
-        access: GreencellAccess,
-        unit: str = "W",
-    ) -> None:
-        super().__init__(
-            raw_value,
-            sensor_name,
-            serial_number,
-            unit,
-            sensor_type="power",
-            access=access,
-        )
-
-    def convert_value(self, raw_value) -> str:
-        """Convert the raw power value to a string in W with 1 decimal place."""
-        if raw_value.data is None:
-            return "0.0"
-        try:
-            numeric = float(raw_value.data)
-            return f"{numeric:.1f}"
-        except (ValueError, TypeError, AttributeError) as ex:
-            _LOGGER.error("Cannot convert power: %s", ex)
-            return "0.0"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the power sensor."""
-        return "mdi:battery-charging-high"
-
-
-class HabuStatusSensor(HabuSingleSensor):
-    def __init__(
-        self,
-        raw_value,
-        sensor_name: str,
-        serial_number: str,
-        access: GreencellAccess,
-        unit: str = "",
-    ) -> None:
-        super().__init__(
-            raw_value,
-            sensor_name,
-            serial_number,
-            unit,
-            sensor_type="status",
-            access=access,
-        )
-
-    def convert_value(self, raw_value) -> str:
-        """Convert the raw status value to a string."""
-        try:
-            return str(raw_value.data)
-        except (AttributeError, TypeError) as ex:
-            _LOGGER.error("Cannot convert status: %s", ex)
-            return "UNKNOWN"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the status sensor."""
-        return "mdi:ev-plug-type2"
-
-
 # --- async_setup_platform function ---
 async def setup_sensors(
-    hass: HomeAssistant, serial_number: str, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    serial_number: str,
+    async_add_entities: AddConfigEntryEntitiesCallback | AddEntitiesCallback,
+    entry: ConfigEntry | None = None,
 ):
-    """Set up the Greencell EVSE sensors."""
+    """Set up Greencell EVSE sensors based on serial number and config entry.
+
+    :param hass: Home Assistant instance
+    :param serial_number: Serial number of the Greencell EVSE device
+    :param async_add_entities: Callback to add entities to Home Assistant
+    :param entry: Optional config entry for the device
+    """
+
+    if entry is None:
+        raise ValueError("Config entry is required for setup_sensors")
+
     mqtt_topic_current = f"/greencell/evse/{serial_number}/current"
     mqtt_topic_voltage = f"/greencell/evse/{serial_number}/voltage"
     mqtt_topic_power = f"/greencell/evse/{serial_number}/power"
     mqtt_topic_status = f"/greencell/evse/{serial_number}/status"
     mqtt_topic_device_state = f"/greencell/evse/{serial_number}/device_state"
 
-    access = GreencellAccess(AccessLevel.EXECUTE)
-    current_data_obj = Habu3PhaseSensorData()
-    voltage_data_obj = Habu3PhaseSensorData()
-    power_data_obj = HabuSingleSensorData()
-    state_data_obj = HabuSingleSensorData()
+    status_desc = next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == "status")
 
-    current_sensors = [
-        HabuCurrentSensor(
+    power_desc = next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == "power")
+
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    access = runtime[GREENCELL_ACCESS_KEY]
+    current_data_obj = runtime[GREENCELL_CURRENT_DATA_KEY]
+    voltage_data_obj = runtime[GREENCELL_VOLTAGE_DATA_KEY]
+    power_data_obj = runtime[GREENCELL_POWER_DATA_KEY]
+    state_data_obj = runtime[GREENCELL_STATE_DATA_KEY]
+
+    current_sensors: list[Habu3PhaseSensor] = [
+        Habu3PhaseSensor(
             current_data_obj,
-            phase="l1",
-            sensor_name="Current phase L1",
-            serial_number=serial_number,
-            access=access,
-        ),
-        HabuCurrentSensor(
-            current_data_obj,
-            phase="l2",
-            sensor_name="Current phase L2",
-            serial_number=serial_number,
-            access=access,
-        ),
-        HabuCurrentSensor(
-            current_data_obj,
-            phase="l3",
-            sensor_name="Current phase L3",
-            serial_number=serial_number,
-            access=access,
-        ),
+            description.key.split("_")[-1],
+            description.key,
+            serial_number,
+            access,
+            description,
+        )
+        for description in SENSOR_DESCRIPTIONS
+        if description.key.startswith("current_l")
     ]
 
-    voltage_sensors = [
-        HabuVoltageSensor(
+    voltage_sensors: list[Habu3PhaseSensor] = [
+        Habu3PhaseSensor(
             voltage_data_obj,
-            phase="l1",
-            sensor_name="Voltage phase L1",
-            serial_number=serial_number,
-            access=access,
-        ),
-        HabuVoltageSensor(
-            voltage_data_obj,
-            phase="l2",
-            sensor_name="Voltage phase L2",
-            serial_number=serial_number,
-            access=access,
-        ),
-        HabuVoltageSensor(
-            voltage_data_obj,
-            phase="l3",
-            sensor_name="Voltage phase L3",
-            serial_number=serial_number,
-            access=access,
-        ),
+            description.key.split("_")[-1],
+            description.key,
+            serial_number,
+            access,
+            description,
+        )
+        for description in SENSOR_DESCRIPTIONS
+        if description.key.startswith("voltage_l")
     ]
 
-    power_sensor = HabuPowerSensor(
-        power_data_obj,
-        sensor_name="Charging Power",
-        serial_number=serial_number,
-        access=access,
-    )
-    state_sensor = HabuStatusSensor(
+    state_sensor = HabuSingleSensor(
         state_data_obj,
-        sensor_name="EVSE state",
         serial_number=serial_number,
+        sensor_type="status",
         access=access,
+        description=status_desc,
+    )
+
+    power_sensor = HabuSingleSensor(
+        power_data_obj,
+        serial_number=serial_number,
+        sensor_type="power",
+        access=access,
+        description=power_desc,
     )
 
     @callback
     def current_message_received(msg) -> None:
         """Handle the current message."""
-        try:
-            data = json.loads(msg.payload)
-        except JSONDecodeError as ex:
-            _LOGGER.error("Invalid JSON payload for current data: %s", ex)
-            return
-
-        try:
-            current_data_obj.update_data(data)
-        except (KeyError, TypeError, ValueError) as ex:
-            _LOGGER.error("Error updating current data object: %s", ex)
-            return
-
+        MqttParser.parse_3phase_msg(msg.payload, current_data_obj)
         for sensor in current_sensors:
             try:
                 sensor.async_schedule_update_ha_state(True)
@@ -478,18 +378,7 @@ async def setup_sensors(
     @callback
     def voltage_message_received(msg) -> None:
         """Handle the voltage message."""
-        try:
-            data = json.loads(msg.payload)
-        except JSONDecodeError as ex:
-            _LOGGER.error("Invalid JSON payload for voltage data: %s", ex)
-            return
-
-        try:
-            voltage_data_obj.update_data(data)
-        except (KeyError, TypeError, ValueError) as ex:
-            _LOGGER.error("Error updating voltage data object: %s", ex)
-            return
-
+        MqttParser.parse_3phase_msg(msg.payload, voltage_data_obj)
         for sensor in voltage_sensors:
             try:
                 sensor.async_schedule_update_ha_state(True)
@@ -499,19 +388,7 @@ async def setup_sensors(
     @callback
     def power_message_received(msg) -> None:
         """Handle the power message."""
-        try:
-            data = json.loads(msg.payload)
-        except JSONDecodeError as ex:
-            _LOGGER.error("Invalid JSON payload for power data: %s", ex)
-            return
-
-        momentary = data.get("momentary")
-        try:
-            power_data_obj.update_data(momentary)
-        except (KeyError, TypeError, ValueError) as ex:
-            _LOGGER.error("Error updating power data object: %s", ex)
-            return
-
+        MqttParser.parse_single_phase_msg(msg.payload, "momentary", power_data_obj)
         try:
             power_sensor.async_schedule_update_ha_state(True)
         except AttributeError as ex:
@@ -521,25 +398,11 @@ async def setup_sensors(
     def status_message_received(msg) -> None:
         """Handle the status message. If the device is offline, disable the entity."""
 
-        try:
-            data = json.loads(msg.payload)
-        except JSONDecodeError as ex:
-            _LOGGER.error("Invalid JSON payload for status data: %s", ex)
-            return
-
-        state = data.get("state")
-        if not isinstance(state, str):
-            _LOGGER.error("State value is not a string: %s", state)
-            return
+        MqttParser.parse_single_phase_msg(msg.payload, "state", state_data_obj)
+        state = state_data_obj.data
 
         if "OFFLINE" in state:
             access.update("OFFLINE")
-
-        try:
-            state_data_obj.update_data(state)
-        except (KeyError, TypeError, ValueError) as ex:
-            _LOGGER.error("Error updating state data object: %s", ex)
-            return
 
         try:
             state_sensor.async_schedule_update_ha_state(True)
@@ -549,18 +412,7 @@ async def setup_sensors(
     @callback
     def device_state_message_received(msg) -> None:
         """Handle the device state message. If device was offline, enable the entity."""
-        try:
-            data = json.loads(msg.payload)
-        except JSONDecodeError as ex:
-            _LOGGER.error("Invalid JSON payload for device state data: %s", ex)
-            return
-
-        level = data.get("level")
-        if level is not None:
-            try:
-                access.update(level)
-            except (TypeError, ValueError, KeyError) as ex:
-                _LOGGER.error("Error updating access level: %s", ex)
+        access.on_msg(msg.payload)
 
     await async_subscribe(hass, mqtt_topic_current, current_message_received)
     await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)
@@ -569,7 +421,7 @@ async def setup_sensors(
     await async_subscribe(hass, mqtt_topic_device_state, device_state_message_received)
 
     async_add_entities(
-        current_sensors + voltage_sensors + [power_sensor, state_sensor],
+        current_sensors + voltage_sensors + [state_sensor, power_sensor],
         update_before_add=True,
     )
 
@@ -584,21 +436,21 @@ async def async_setup_platform(
     """Set up the Greencell EVSE sensors from YAML configuration."""
     serial_number = config.get("serial_number") if config else None
     if not serial_number:
-        _LOGGER.error("Serial number not provided in YAML config.")
+        _LOGGER.error("Serial number not provided in YAML config")
         return
-    await setup_sensors(hass, serial_number, async_add_entities)
+    await setup_sensors(hass, serial_number, async_add_entities, config.get("entry"))
 
 
 # --- Config Flow Setup ---
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Greencell EVSE sensors from a config entry."""
     serial_number = entry.data.get("serial_number") if entry and entry.data else None
     if not serial_number:
-        _LOGGER.error("Serial number not provided in ConfigEntry.")
+        _LOGGER.error("Serial number not provided in ConfigEntry")
         return
-    await setup_sensors(hass, serial_number, async_add_entities)
+    await setup_sensors(hass, serial_number, async_add_entities, entry)

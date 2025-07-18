@@ -1,6 +1,4 @@
-"""config_flow.py
-
-Config flow for Greencell EVSE integration in Home Assistant.
+"""Config flow for Greencell EVSE integration in Home Assistant.
 
 This module implements:
 - EVSEConfigFlow: an asyncio-based MQTT discovery flow that:
@@ -13,13 +11,17 @@ This module implements:
 """
 
 import asyncio
+from collections.abc import Callable
 import json
 import logging
 from typing import Any
 
+from greencell_client.utils import GreencellUtils
+
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     DISCOVERY_TIMEOUT,
@@ -27,7 +29,6 @@ from .const import (
     GREENCELL_BROADCAST_TOPIC,
     GREENCELL_DISC_TOPIC,
     GREENCELL_HABU_DEN,
-    GREENCELL_HABU_DEN_SERIAL_PREFIX,
     GREENCELL_OTHER_DEVICE,
 )
 
@@ -37,16 +38,19 @@ _LOGGER = logging.getLogger(__name__)
 class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for EVSE device."""
 
+    _remove_listener: Callable[[], None] | None
     VERSION = 1
+    MINOR_VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the config flow."""
         self.discovery_event = asyncio.Event()
         self.discovery_data = None
-        self._remove_listener = None
+        self._remove_listener: Callable[[], None] | None = None
 
     def get_device_name(self, serial_number: str) -> str:
         """Get device name based on serial number."""
-        if serial_number.startswith(GREENCELL_HABU_DEN_SERIAL_PREFIX):
+        if GreencellUtils.device_is_habu_den(serial_number):
             return GREENCELL_HABU_DEN
         return GREENCELL_OTHER_DEVICE
 
@@ -55,14 +59,28 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         payload = json.dumps({"name": "BROADCAST"})
         await mqtt.async_publish(self.hass, GREENCELL_BROADCAST_TOPIC, payload, 0, True)
 
+    @callback
+    def _mqtt_message_received(self, msg):
+        """Handle incoming MQTT messages."""
+        try:
+            payload = json.loads(msg.payload)
+            self.discovery_data = payload
+            self.discovery_event.set()
+        except json.JSONDecodeError:
+            _LOGGER.error("Failed to decode MQTT message payload: %s", msg.payload)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
 
-        self._remove_listener = await mqtt.async_subscribe(
-            self.hass, GREENCELL_DISC_TOPIC, self._mqtt_message_received
-        )
+        try:
+            self._remove_listener = await mqtt.async_subscribe(
+                self.hass, GREENCELL_DISC_TOPIC, self._mqtt_message_received
+            )
+        except HomeAssistantError as e:
+            _LOGGER.error("Failed to subscribe to MQTT topic: %s", e)
+            return self.async_abort(reason="mqtt_subscription_failed")
 
         await self._publish_disc_request()
 
@@ -74,10 +92,13 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Device discovery timed out")
             return self.async_abort(reason="discovery_timeout")
         finally:
-            if self._remove_listener:
+            if self._remove_listener is not None:
                 self._remove_listener()
 
         discovery_payload = self.discovery_data
+        if not discovery_payload:
+            _LOGGER.error("No discovery data received")
+            return self.async_abort(reason="no_discovery_data")
         serial_number = discovery_payload.get("id")
 
         if not serial_number:
@@ -96,13 +117,3 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "serial_number": serial_number,
             },
         )
-
-    @callback
-    def _mqtt_message_received(self, msg):
-        """Handle incoming MQTT messages."""
-        try:
-            payload = json.loads(msg.payload)
-            self.discovery_data = payload
-            self.discovery_event.set()
-        except json.JSONDecodeError:
-            _LOGGER.error("Failed to decode MQTT message payload: %s", msg.payload)

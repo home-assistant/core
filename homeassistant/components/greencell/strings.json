@@ -7,7 +7,37 @@
     },
     "abort": {
       "discovery_timeout": "No device responded to the discovery request.",
-      "invalid_discovery_data": "The received discovery data is invalid."
+      "invalid_discovery_data": "The received discovery data is invalid.",
+      "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery. It could be caused by uninstalled MQTT integration.",
+      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_l1": {
+        "name": "Current phase L1"
+      },
+      "current_l2": {
+        "name": "Current phase L2"
+      },
+      "current_l3": {
+        "name": "Current phase L3"
+      },
+      "voltage_l1": {
+        "name": "Voltage phase L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage phase L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage phase L3"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "status": {
+        "name": "Status"
+      }
     }
   }
 }
