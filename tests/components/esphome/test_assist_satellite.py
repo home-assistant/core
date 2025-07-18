@@ -953,7 +953,6 @@ async def test_tts_format_from_media_player(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -1020,7 +1019,6 @@ async def test_tts_minimal_format_from_media_player(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -1156,7 +1154,6 @@ async def test_announce_media_id(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -1437,7 +1434,6 @@ async def test_start_conversation_media_id(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
