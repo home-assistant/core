@@ -369,14 +369,14 @@ class ConfigSubentry:
         }
 
 
-class ConfigEntry[_DataT = Any]:
+class ConfigEntry[DataT = Any]:
     """Hold a configuration entry."""
 
     entry_id: str
     domain: str
     title: str
     data: MappingProxyType[str, Any]
-    runtime_data: _DataT
+    runtime_data: DataT
     options: MappingProxyType[str, Any]
     subentries: MappingProxyType[str, ConfigSubentry]
     unique_id: str | None
@@ -1272,13 +1272,13 @@ class ConfigEntry[_DataT = Any]:
         )
 
     @callback
-    def async_create_task[_R](
+    def async_create_task[R](
         self,
         hass: HomeAssistant,
-        target: Coroutine[Any, Any, _R],
+        target: Coroutine[Any, Any, R],
         name: str | None = None,
         eager_start: bool = True,
-    ) -> asyncio.Task[_R]:
+    ) -> asyncio.Task[R]:
         """Create a task from within the event loop.
 
         This method must be run in the event loop.
@@ -1296,13 +1296,13 @@ class ConfigEntry[_DataT = Any]:
         return task
 
     @callback
-    def async_create_background_task[_R](
+    def async_create_background_task[R](
         self,
         hass: HomeAssistant,
-        target: Coroutine[Any, Any, _R],
+        target: Coroutine[Any, Any, R],
         name: str,
         eager_start: bool = True,
-    ) -> asyncio.Task[_R]:
+    ) -> asyncio.Task[R]:
         """Create a background task tied to the config entry lifecycle.
 
         Background tasks are automatically canceled when config entry is unloaded.
@@ -3486,11 +3486,8 @@ class OptionsFlowManager(
 
         if result["data"] is not None:
             automatic_reload = False
-            if (
-                hasattr(flow, "automatic_reload") is True
-                and flow.automatic_reload is True  # type: ignore[attr-defined]
-            ):
-                automatic_reload = True
+            if isinstance(flow, OptionsFlowWithReload):
+                automatic_reload = flow.automatic_reload
 
             if automatic_reload and entry.update_listeners:
                 raise ValueError(
@@ -3615,9 +3612,10 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 class OptionsFlowWithReload(OptionsFlow):
     """Automatic reloading class for config options flows.
 
-    Triggers an automatic reload of the config entry when the options are changed.
-    Integrations can not use this automatic reloading Options flow class
-    together with config entry update listeners.
+    Triggers an automatic reload of the config entry when the low ends with
+    calling `async_create_entry` with changed options.
+    It's not allowed to use this class if the integration uses config entry
+    update listeners.
     """
 
     automatic_reload: bool = True
