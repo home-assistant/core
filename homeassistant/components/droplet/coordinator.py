@@ -6,6 +6,8 @@ import asyncio
 from collections.abc import Callable
 import logging
 
+from pydroplet.droplet import Droplet
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -13,7 +15,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_HOST, CONF_PAIRING_CODE, CONF_PORT, DOMAIN, RECONNECT_DELAY
-from .dropletmqtt import Droplet
 
 _LOGGER = logging.getLogger(__name__)
 
