@@ -53,6 +53,7 @@ CONF_TO_ATTRIBUTE = {
     CONF_PICTURE: ATTR_ENTITY_PICTURE,
 }
 
+# Base schema for YAML template entities.
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ICON): cv.template,
@@ -96,13 +97,19 @@ def log_triggered_template_error(
     )
 
 
-TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
+# Base common schema for config entry and YAML sensors
+SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+)
+
+# Base schema for YAML template, rest, scrape, and snmp sensors
+TEMPLATE_SENSOR_BASE_SCHEMA = SENSOR_BASE_SCHEMA.extend(
+    TEMPLATE_ENTITY_BASE_SCHEMA.schema
+)
 
 
 class ValueTemplate(Template):

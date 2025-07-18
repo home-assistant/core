@@ -21,7 +21,6 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
-    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
@@ -31,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -43,8 +42,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,25 +95,26 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Alarm Control Panel"
 
-ALARM_CONTROL_PANEL_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-            vol.Optional(
-                CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
-            ): cv.enum(TemplateCodeFormat),
-            vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+ALARM_CONTROL_PANEL_FEATURE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
+        ),
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+    }
 )
 
+ALARM_CONTROL_PANEL_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+)
 
 LEGACY_ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
@@ -135,34 +143,9 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     }
 )
 
-ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
-            TemplateCodeFormat
-        ),
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-    }
+ALARM_CONTROL_PANEL_CONFIG_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
-
-
-def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, dict]:
-    """Rewrite option configuration to modern configuration."""
-    option_config = {**option_config}
-
-    if CONF_VALUE_TEMPLATE in option_config:
-        option_config[CONF_STATE] = option_config.pop(CONF_VALUE_TEMPLATE)
-
-    return option_config
 
 
 async def async_setup_entry(
@@ -171,18 +154,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    _options = rewrite_options_to_modern_conf(_options)
-    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [
-            StateAlarmControlPanelEntity(
-                hass,
-                validated_config,
-                config_entry.entry_id,
-            )
-        ]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateAlarmControlPanelEntity,
+        ALARM_CONTROL_PANEL_CONFIG_SCHEMA,
+        True,
     )
 
 
@@ -211,11 +189,14 @@ def async_create_preview_alarm_control_panel(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateAlarmControlPanelEntity:
     """Create a preview alarm control panel."""
-    updated_config = rewrite_options_to_modern_conf(config)
-    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(
-        updated_config | {CONF_NAME: name}
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateAlarmControlPanelEntity,
+        ALARM_CONTROL_PANEL_CONFIG_SCHEMA,
+        True,
     )
-    return StateAlarmControlPanelEntity(hass, validated_config, None)
 
 
 class AbstractTemplateAlarmControlPanel(

@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
@@ -38,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -50,8 +49,16 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_AVAILABILITY_TEMPLATE
-from .helpers import async_setup_template_platform
-from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
+)
 from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
@@ -64,7 +71,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_FEATURE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
@@ -73,12 +80,14 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+)
 
-BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-    }
+BINARY_SENSOR_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_SCHEMA.schema
+)
+
+BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
@@ -138,11 +147,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateBinarySensorEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateBinarySensorEntity,
+        BINARY_SENSOR_CONFIG_SCHEMA,
     )
 
 
@@ -151,8 +161,9 @@ def async_create_preview_binary_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateBinarySensorEntity:
     """Create a preview sensor."""
-    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return StateBinarySensorEntity(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass, name, config, StateBinarySensorEntity, BINARY_SENSOR_CONFIG_SCHEMA
+    )
 
 
 class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity):

@@ -25,7 +25,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
@@ -43,19 +42,27 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
+from homeassistant.helpers.trigger_template_entity import SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
-from .helpers import async_setup_template_platform
-from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
+)
 from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
@@ -77,26 +84,25 @@ def validate_last_reset(val):
     return val
 
 
+SENSOR_FEATURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+    }
+).extend(SENSOR_BASE_SCHEMA.schema)
+
 SENSOR_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
         }
     )
-    .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+    .extend(SENSOR_FEATURE_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema),
     validate_last_reset,
 )
 
-
-SENSOR_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_STATE): cv.template,
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        }
-    ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
+SENSOR_CONFIG_SCHEMA = SENSOR_FEATURE_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 LEGACY_SENSOR_SCHEMA = vol.All(
@@ -176,11 +182,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = SENSOR_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateSensorEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateSensorEntity,
+        SENSOR_CONFIG_SCHEMA,
     )
 
 
@@ -189,8 +196,9 @@ def async_create_preview_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateSensorEntity:
     """Create a preview sensor."""
-    validated_config = SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return StateSensorEntity(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass, name, config, StateSensorEntity, SENSOR_CONFIG_SCHEMA
+    )
 
 
 class StateSensorEntity(TemplateEntity, SensorEntity):
