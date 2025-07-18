@@ -43,6 +43,14 @@
           "offline": "mdi:account-off-outline"
         }
       }
+    },
+    "image": {
+      "share_profile": {
+        "default": "mdi:share-variant"
+      },
+      "avatar": {
+        "default": "mdi:account-circle"
+      }
     }
   }
 }
