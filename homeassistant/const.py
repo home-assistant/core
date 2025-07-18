@@ -465,8 +465,6 @@ ATTR_ID: Final = "id"
 
 # Name
 ATTR_NAME: Final = "name"
-ATTR_TRANSLATION_KEY: Final = "translation_key"
-ATTR_TRANSLATION_PLACEHOLDERS: Final = "translation_placeholders"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
@@ -520,6 +518,8 @@ ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_HW_VERSION: Final = "hw_version"
+ATTR_TRANSLATION_KEY: Final = "translation_key"
+ATTR_TRANSLATION_PLACEHOLDERS: Final = "translation_placeholders"
 ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
