@@ -142,7 +142,6 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Curtain": (BATTERY_DESCRIPTION,),
     "Curtain3": (BATTERY_DESCRIPTION,),
     "Roller Shade": (BATTERY_DESCRIPTION,),
-    "Blind Tilt": (BATTERY_DESCRIPTION,),
 }
 
 
