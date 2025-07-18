@@ -6,5 +6,5 @@
   "iot_class": "cloud_push",
   "loggers": ["rocketchat_API"],
   "quality_scale": "legacy",
-  "requirements": ["rocketchat-API==0.6.1"]
+  "requirements": ["rocketchat-API==1.35.1"]
 }
