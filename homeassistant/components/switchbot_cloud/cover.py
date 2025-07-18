@@ -51,23 +51,22 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
         if self.coordinator.data is None:
             return
         position: int | None = self.coordinator.data.get("slidePosition")
+
         if position is None:
             return
-        position = 100 - position
 
-        self._attr_is_closed = position == 0
+        self._attr_current_cover_position = 100 - position
+        self._attr_current_cover_tilt_position = 100 - position
 
-        self._attr_direction = self.coordinator.data.get("direction")
-        if self._attr_direction is not None:
-            self._attr_direction = self._attr_direction.lower()
+        self._attr_is_closed = position == 100
 
-        self._attr_current_cover_position = position
-        self._attr_current_cover_tilt_position = position
-        self.async_write_ha_state()
+        # only Blind Tilt have |direction|
+        direction = self.coordinator.data.get("direction")
+        self._attr_direction = direction.lower() if direction else None
 
 
 class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
-    """Representation of a SwitchBot Cover."""
+    """Representation of a SwitchBot Curtain & Curtain3."""
 
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.OPEN
@@ -80,16 +79,14 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(CommonCommands.ON)
-        self._attr_is_closed = False
-        self._attr_current_cover_position = 100
-        self.async_write_ha_state()
+        await asyncio.sleep(10)
+        await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close cover."""
+        """Close the cover."""
         await self.send_api_command(CommonCommands.OFF)
-        self._attr_current_cover_position = 0
-        self._attr_is_closed = True
-        self.async_write_ha_state()
+        await asyncio.sleep(10)
+        await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -99,21 +96,13 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
                 CurtainCommands.SET_POSITION,
                 parameters=f"{0},ff,{100 - position}",
             )
-            self._attr_current_cover_position = position
-            self._attr_is_closed = position == 0
-            self.async_write_ha_state()
+            await asyncio.sleep(10)
+            await self.coordinator.async_request_refresh()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.send_api_command(CurtainCommands.PAUSE)
-        await asyncio.sleep(2)
-        response: dict | None = await self._api.get_status(self.unique_id)
-        position: int | None = response.get("slidePosition") if response else None
-        if position is None:
-            return
-        self._attr_is_closed = position == 0
-        self._attr_current_cover_position = position
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
 class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
