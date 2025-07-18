@@ -1,0 +1,10 @@
+{
+  "services": {
+    "add_route": {
+      "service": "mdi:plus"
+    },
+    "remove_route": {
+      "service": "mdi:minus"
+    }
+  }
+}
