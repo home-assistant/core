@@ -1,10 +1,10 @@
 """Support for VeSync numeric entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +24,7 @@ from .const import (
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
+    VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -47,7 +48,7 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     current_option_fn: Callable[[VeSyncBaseDevice], str]
-    select_option_fn: Callable[[VeSyncBaseDevice, str], bool]
+    select_option_fn: Callable[[VeSyncBaseDevice, str], Awaitable[bool]]
 
 
 SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
@@ -107,7 +108,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -149,7 +152,5 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
-        if await self.hass.async_add_executor_job(
-            self.entity_description.select_option_fn, self.device, option
-        ):
+        if await self.entity_description.select_option_fn(self.device, option):
             await self.coordinator.async_request_refresh()
