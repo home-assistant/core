@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PointConfigEntry
-from .const import DOMAIN as POINT_DOMAIN, SIGNAL_WEBHOOK
+from .const import DOMAIN, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._attr_name = self._home["name"]
         self._attr_unique_id = f"point.{home_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(POINT_DOMAIN, home_id)},
+            identifiers={(DOMAIN, home_id)},
             manufacturer="Minut",
             name=self._attr_name,
         )

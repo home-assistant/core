@@ -12,6 +12,7 @@ from opower import (
     MeterType,
     Opower,
     ReadResolution,
+    create_cookie_jar,
 )
 from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
@@ -30,7 +31,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -62,7 +64,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            async_create_clientsession(hass, cookie_jar=create_cookie_jar()),
             config_entry.data[CONF_UTILITY],
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
@@ -113,14 +115,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
-            id_prefix = "_".join(
+            id_prefix = (
                 (
-                    self.api.utility.subdomain(),
-                    account.meter_type.name.lower(),
-                    # Some utilities like AEP have "-" in their account id.
-                    # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_").lower(),
+                    f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
+                    f"{account.utility_account_id}"
                 )
+                # Some utilities like AEP have "-" in their account id.
+                # Other utilities like ngny-gas have "-" in their subdomain.
+                # Replace it with "_" to avoid "Invalid statistic_id"
+                .replace("-", "_")
+                .lower()
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
             compensation_statistic_id = f"{DOMAIN}:{id_prefix}_energy_compensation"
@@ -441,7 +445,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 "energy_settings": "/config/energy",
                 "target_ids": "\n".join(
                     {
-                        v
+                        str(metadata_map[v]["name"])
                         for k, v in migration_map.items()
                         if k in need_migration_source_ids
                     }

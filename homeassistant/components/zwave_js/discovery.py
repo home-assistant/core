@@ -263,7 +263,7 @@ WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 )
 
 # For device class mapping see:
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/
 DISCOVERY_SCHEMAS = [
     # ====== START OF DEVICE SPECIFIC MAPPING SCHEMAS =======
     # Honeywell 39358 In-Wall Fan Control using switch multilevel CC
@@ -291,12 +291,16 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Control - 14287 / 55258 / ZW4002
+    # GE/Jasco - In-Wall Smart Fan Controls
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
-        product_id={0x3131, 0x3337},
+        product_id={
+            0x3131,
+            0x3337,  # 14287 / 55258 / ZW4002
+            0x3533,  # 58446 / ZWA4013
+        },
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(
@@ -896,6 +900,7 @@ DISCOVERY_SCHEMAS = [
             writeable=False,
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
@@ -912,12 +917,41 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.BATTERY,
                 CommandClass.ENERGY_PRODUCTION,
                 CommandClass.SENSOR_ALARM,
                 CommandClass.SENSOR_MULTILEVEL,
             },
             type={ValueType.NUMBER},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"level", "maximumCapacity"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"temperature"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="list",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"chargingStatus", "rechargeOrReplace"},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
@@ -932,6 +966,7 @@ DISCOVERY_SCHEMAS = [
         ),
         data_template=NumericSensorDataTemplate(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
@@ -957,6 +992,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
@@ -980,6 +1016,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # binary switch
     # barrier operator signaling states
@@ -1184,6 +1221,7 @@ DISCOVERY_SCHEMAS = [
             any_available_states={(0, "idle")},
         ),
         allow_multi=True,
+        entity_registry_enabled_default=False,
     ),
     # event
     # stateful = False
@@ -1204,7 +1242,7 @@ DISCOVERY_SCHEMAS = [
             property={RESET_METER_PROPERTY},
             type={ValueType.BOOLEAN},
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -1300,21 +1338,49 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_generic and (
-            not value.node.device_class
-            or not any(
-                value.node.device_class.generic.label == val
-                for val in schema.device_class_generic
+            (
+                (endpoint := value.endpoint) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
             )
         ):
             continue
 
         # check device_class_specific
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_specific and (
-            not value.node.device_class
-            or not any(
-                value.node.device_class.specific.label == val
-                for val in schema.device_class_specific
+            (
+                (endpoint := value.endpoint) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
             )
         ):
             continue

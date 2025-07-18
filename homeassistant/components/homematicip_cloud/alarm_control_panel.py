@@ -11,13 +11,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicipHAP
+from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +25,11 @@ CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
 
 

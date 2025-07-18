@@ -15,19 +15,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import refresh_system
-from .const import (
-    ATTR_TIME_PERIOD,
-    DOMAIN,
-    SERVICE_BOOST_HEATING_OFF,
-    SERVICE_BOOST_HEATING_ON,
-)
+from . import HiveConfigEntry, refresh_system
+from .const import ATTR_TIME_PERIOD, SERVICE_BOOST_HEATING_OFF, SERVICE_BOOST_HEATING_ON
 from .entity import HiveEntity
 
 HIVE_TO_HASS_STATE = {
@@ -59,12 +53,12 @@ _LOGGER = logging.getLogger()
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN][entry.entry_id]
+    hive = entry.runtime_data
     devices = hive.session.deviceList.get("climate")
     if devices:
         async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)

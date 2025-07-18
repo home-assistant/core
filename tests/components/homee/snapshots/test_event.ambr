@@ -1,0 +1,198 @@
+# serializer version: 1
+# name: test_event_snapshot[event.remote_control_kitchen_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'upper',
+        'lower',
+        'released',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.remote_control_kitchen_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Kitchen Light',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button_state_instance',
+    'unique_id': '00055511EECC-1-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_snapshot[event.remote_control_kitchen_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'upper',
+        'lower',
+        'released',
+      ]),
+      'friendly_name': 'Remote Control Kitchen Light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.remote_control_kitchen_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_snapshot[event.remote_control_switch_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'upper',
+        'lower',
+        'released',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.remote_control_switch_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Switch 2',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button_state_instance',
+    'unique_id': '00055511EECC-1-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_snapshot[event.remote_control_switch_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'upper',
+        'lower',
+        'released',
+      ]),
+      'friendly_name': 'Remote Control Switch 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.remote_control_switch_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_snapshot[event.remote_control_up_down_remote-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'released',
+        'up',
+        'down',
+        'stop',
+        'up_long',
+        'down_long',
+        'stop_long',
+        'c_button',
+        'b_button',
+        'a_button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.remote_control_up_down_remote',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Up/down remote',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'up_down_remote',
+    'unique_id': '00055511EECC-1-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_snapshot[event.remote_control_up_down_remote-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'released',
+        'up',
+        'down',
+        'stop',
+        'up_long',
+        'down_long',
+        'stop_long',
+        'c_button',
+        'b_button',
+        'a_button',
+      ]),
+      'friendly_name': 'Remote Control Up/down remote',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.remote_control_up_down_remote',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

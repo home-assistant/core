@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehiclePollingEntity
+from .entity import TeslemetryVehicleStreamEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
@@ -51,8 +51,8 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
         key="homelink",
         func=lambda self: handle_vehicle_command(
             self.api.trigger_homelink(
-                lat=self.coordinator.data["drive_state_latitude"],
-                lon=self.coordinator.data["drive_state_longitude"],
+                lat=self.hass.config.latitude,
+                lon=self.hass.config.longitude,
             )
         ),
     ),
@@ -74,7 +74,7 @@ async def async_setup_entry(
     )
 
 
-class TeslemetryButtonEntity(TeslemetryVehiclePollingEntity, ButtonEntity):
+class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
     api: Vehicle

@@ -1,0 +1,9 @@
+{
+  "title": "ACCLIMATE",
+  "from": "00:00:00:00:00:01",
+  "duration": 30,
+  "intensityReduction": 99,
+  "currentAcclDay": 0,
+  "acclActive": 0,
+  "pause": 0
+}
