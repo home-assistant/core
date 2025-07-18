@@ -3,6 +3,7 @@
 from typing import Literal
 
 from homeassistant.components import conversation
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,6 +30,14 @@ class OpenRouterConversationEntity(OpenRouterEntity, conversation.ConversationEn
     """OpenRouter conversation agent."""
 
     _attr_name = None
+
+    def __init__(self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the agent."""
+        super().__init__(entry, subentry)
+        if self.subentry.data.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
