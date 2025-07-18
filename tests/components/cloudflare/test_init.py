@@ -225,7 +225,7 @@ async def test_integration_update_interval(
     assert "All possible target records are up to date" not in caplog.text
 
 
-# Test für Legacy-Format (nur Name, kein Typ)
+# Test for legacy format (only name, no type)
 async def test_integration_legacy_records_format(
     hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
