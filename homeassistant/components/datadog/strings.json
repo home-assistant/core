@@ -40,7 +40,7 @@
       }
     },
     "error": {
-      "cannot_connect": "There was an error connecting to the Datadog Agent when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
