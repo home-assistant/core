@@ -34,6 +34,13 @@ switch:
       - switch.outside_switch
       - switch.outside_switch_2
 
+siren:
+  - platform: group
+    name: Master siren group
+    entities:
+      - siren.siren
+      - siren.siren_with_all_features
+
 notify:
   - platform: group
     name: new_group_notify

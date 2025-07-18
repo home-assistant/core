@@ -16,6 +16,7 @@
           "media_player": "Media player group",
           "notify": "Notify group",
           "sensor": "Sensor group",
+          "siren": "Siren group",
           "switch": "Switch group"
         }
       },
@@ -107,6 +108,14 @@
           "unit_of_measurement": "Unit of measurement"
         }
       },
+      "siren": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
       "switch": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
@@ -182,6 +191,14 @@
           "device_class": "[%key:component::group::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::group::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::group::config::step::sensor::data::unit_of_measurement%]"
+        }
+      },
+      "siren": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
       "switch": {
