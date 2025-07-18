@@ -139,6 +139,10 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Curtain": (BATTERY_DESCRIPTION,),
+    "Curtain3": (BATTERY_DESCRIPTION,),
+    "Roller Shade": (BATTERY_DESCRIPTION,),
+    "Blind Tilt": (BATTERY_DESCRIPTION,),
 }
 
 
