@@ -14,6 +14,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -121,24 +122,18 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Log diagnostic information if no switch DPCode is found
         if self._switch_dpcode is None:
-            available_codes = {
-                "function": list(self.device.function.keys()),
-                "status": list(self.device.status.keys()),
-                "status_range": list(self.device.status_range.keys()),
-            }
             LOGGER.warning(
                 "No suitable switch DPCode found for %s device '%s' (device_id: %s, category: %s). "
-                "Expected one of: %s. Available DPCodes: %s. "
-                "This device may not be controllable through Home Assistant. "
-                "Note that some devices have more features available in the Smart Life or Tuya Smart "
-                "apps than can be controlled remotely through Home Assistant. Consider reporting this "
-                "issue with your device diagnostics to help improve support",
+                "Expected one of: %s. Available DPCodes - function: %s, status: %s, status_range: %s. "
+                "This device may not be controllable through Home Assistant",
                 description.device_class,
                 self.device.name,
                 self.device.id,
                 self.device.category,
                 description.dpcode or DPCode(description.key),
-                available_codes,
+                list(self.device.function.keys()),
+                list(self.device.status.keys()),
+                list(self.device.status_range.keys()),
             )
 
         # Determine humidity parameters
@@ -208,7 +203,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if not self.has_required_dpcodes:
-            raise RuntimeError(
+            raise ServiceValidationError(
                 f"Cannot turn on {self.entity_description.device_class} device '{self.device.name}' "
                 f"(device_id: {self.device.id}). Device does not support any of the expected "
                 f"control codes: {self.entity_description.dpcode}. Available function codes: "
@@ -219,7 +214,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if not self.has_required_dpcodes:
-            raise RuntimeError(
+            raise ServiceValidationError(
                 f"Cannot turn off {self.entity_description.device_class} device '{self.device.name}' "
                 f"(device_id: {self.device.id}). Device does not support any of the expected "
                 f"control codes: {self.entity_description.dpcode}. Available function codes: "
