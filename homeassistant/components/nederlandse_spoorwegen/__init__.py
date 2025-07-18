@@ -8,14 +8,13 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from ns_api import NSAPI
-
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .api import NSAPIWrapper
 from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 
@@ -49,10 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
     # Set runtime_data for this entry (store the coordinator only)
     api_key = entry.data.get(CONF_API_KEY)
-    client = NSAPI(api_key)
+    if not api_key:
+        raise ValueError("API key is required")
+
+    api_wrapper = NSAPIWrapper(hass, api_key)
 
     # Create coordinator
-    coordinator = NSDataUpdateCoordinator(hass, client, entry)
+    coordinator = NSDataUpdateCoordinator(hass, api_wrapper, entry)
 
     # Initialize runtime data with coordinator
     entry.runtime_data = NSRuntimeData(coordinator=coordinator)
@@ -82,6 +84,13 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    _LOGGER.info("Nederlandse Spoorwegen config entry removed: %s", entry.title)
+    # Any cleanup code would go here if needed in the future
+    # Currently no persistent data or external resources to clean up
 
 
 async def _async_migrate_legacy_routes(
@@ -179,3 +188,38 @@ async def _async_migrate_legacy_routes(
         migrated_count,
         len(legacy_routes),
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        new_data = {**config_entry.data}
+
+        if config_entry.minor_version < 1:
+            # Future migrations can be added here for schema changes
+            pass
+
+        # Update the config entry with new data and version
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new_data,
+            minor_version=1,
+            version=1,
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True

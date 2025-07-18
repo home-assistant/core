@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-import importlib
 from json import JSONDecodeError
 import logging
 import re
@@ -17,6 +16,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .api import NSAPIWrapper
 from .const import (
     ATTR_FIRST_TRIP,
     ATTR_NEXT_TRIP,
@@ -31,10 +31,6 @@ from .const import (
     DOMAIN,
 )
 
-# Import ns_api only once at runtime to avoid issues with async setup
-NSAPI = importlib.import_module("ns_api").NSAPI
-RequestParametersError = importlib.import_module("ns_api").RequestParametersError
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -44,7 +40,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: NSAPI,  # type: ignore[valid-type]
+        api_wrapper: NSAPIWrapper,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
@@ -55,13 +51,13 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=1),
             config_entry=config_entry,
         )
-        self.client = client
+        self.api_wrapper = api_wrapper
         self.config_entry = config_entry
 
     async def test_connection(self) -> None:
         """Test connection to the API."""
         try:
-            await self.hass.async_add_executor_job(self.client.get_stations)  # type: ignore[attr-defined]
+            await self.api_wrapper.validate_api_key()
         except Exception as ex:
             _LOGGER.debug("Connection test failed: %s", ex)
             raise
@@ -112,9 +108,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             if station_cache_expired:
                 try:
-                    stations = await self.hass.async_add_executor_job(
-                        self.client.get_stations  # type: ignore[attr-defined]
-                    )
+                    stations = await self.api_wrapper.get_stations()
                     # Store full stations in runtime_data for UI dropdowns
                     if self.config_entry is not None:
                         runtime_data = self.config_entry.runtime_data
@@ -148,9 +142,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         route_key += f"_{route.get(CONF_VIA)}"
 
                 try:
-                    trips = await self.hass.async_add_executor_job(
-                        self._get_trips_for_route, route
-                    )
+                    trips = await self._get_trips_for_route(route)
                     route_data[route_key] = {
                         ATTR_ROUTE: route,
                         ATTR_TRIPS: trips,
@@ -178,14 +170,14 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             requests.exceptions.HTTPError,
         ) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except RequestParametersError as err:
+        except Exception as err:
             raise UpdateFailed(f"Invalid request parameters: {err}") from err
         else:
             return {
                 ATTR_ROUTES: route_data,
             }
 
-    def _get_trips_for_route(self, route: dict[str, Any]) -> list[Any]:
+    async def _get_trips_for_route(self, route: dict[str, Any]) -> list[Any]:
         """Get trips for a specific route, validating time field and structure."""
         # Ensure all required and optional keys are present
         required_keys = {CONF_NAME, CONF_FROM, CONF_TO}
@@ -260,28 +252,23 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 trip_time = now_nl
         else:
             trip_time = now_nl
-        trip_time_str = trip_time.strftime("%d-%m-%Y %H:%M")
-
         try:
-            trips = self.client.get_trips(  # type: ignore[attr-defined]
-                trip_time_str,
+            # Use the API wrapper which has a different signature
+            trips = await self.api_wrapper.get_trips(
                 from_station,
-                via_station if via_station else None,
                 to_station,
-                True,  # departure
-                0,  # previous
-                2,  # next
+                via_station if via_station else None,
+                departure_time=trip_time,
             )
-        except RequestParametersError as ex:
-            _LOGGER.error("Error calling NSAPI.get_trips: %s", ex)
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
+            _LOGGER.error("Error calling API wrapper get_trips: %s", ex)
             return []
-        # Filter out trips in the past (match official logic)
-        future_trips = []
-        for trip in trips or []:
-            dep_time = trip.departure_time_actual or trip.departure_time_planned
-            if dep_time and dep_time > now_nl:
-                future_trips.append(trip)
-        return future_trips
+
+        # Trips are already filtered for future departures in the API wrapper
+        return trips or []
 
     def _build_station_mapping(self, stations: list) -> dict[str, str]:
         """Build a mapping of station codes to names from fetched station data."""
@@ -314,15 +301,12 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ):  # Station codes are typically 2-4 uppercase chars
                     code, name = parts
                 else:
-                    # If we can't parse it properly, skip this station
-                    _LOGGER.debug("Could not parse station format: %s", station_str)
+                    # If we can't parse it properly, skip this station silently
                     continue
 
             # Only add if we have both code and name
             if code and name:
                 station_mapping[code.upper()] = name.strip()
-            else:
-                _LOGGER.debug("Skipping station with missing code or name: %s", station)
 
         return station_mapping
 

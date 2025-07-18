@@ -13,7 +13,7 @@
       },
       "routes": {
         "title": "Add route",
-        "description": "Select your departure and destination stations from the dropdown lists. Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
+        "description": "Select your departure and destination stations from the dropdown lists. Time is optional and if omitted, the next available train will be shown.",
         "data": {
           "name": "Route name",
           "from": "From station",
@@ -26,7 +26,7 @@
           "from": "Select the departure station",
           "to": "Select the destination station",
           "via": "Optional intermediate station",
-          "time": "Optional departure time in HH:MM:SS (24h)"
+          "time": "Optional departure time in HH:MM or HH:MM:SS (24h)"
         }
       },
       "reauth": {
@@ -57,6 +57,7 @@
       "no_stations_available": "Unable to load station list. Please check your connection and API key.",
       "same_station": "Departure and arrival stations must be different.",
       "invalid_station": "Please select a valid station from the list.",
+      "invalid_time_format": "Invalid time format. Use HH:MM or HH:MM:SS (24h format)",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -69,7 +70,7 @@
     "route": {
       "step": {
         "user": {
-          "title": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
+          "title": "{title}",
           "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::description%]",
           "data": {
             "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
@@ -101,88 +102,6 @@
         "reconfigure": "Edit route"
       },
       "entry_type": "Route"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure routes",
-        "description": "Configure the routes.",
-        "data": {
-          "action": "Action"
-        },
-        "data_description": {
-          "action": "Edit, add, or delete train routes for this integration."
-        }
-      },
-      "select_route": {
-        "title": "Select route",
-        "description": "Choose a route to {action}.",
-        "data": {
-          "route_idx": "Route"
-        },
-        "data_description": {
-          "route_idx": "Select the route you want to edit or delete."
-        }
-      },
-      "add_route": {
-        "title": "[%key:component::nederlandse_spoorwegen::config::step::routes::title%]",
-        "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::description%]",
-        "data": {
-          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
-          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::from%]",
-          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::to%]",
-          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::via%]",
-          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::time%]"
-        },
-        "data_description": {
-          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::name%]",
-          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::from%]",
-          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::to%]",
-          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::via%]",
-          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::time%]"
-        }
-      },
-      "edit_route": {
-        "title": "Edit route",
-        "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::description%]",
-        "data": {
-          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
-          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::from%]",
-          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::to%]",
-          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::via%]",
-          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::time%]"
-        },
-        "data_description": {
-          "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::name%]",
-          "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::from%]",
-          "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::to%]",
-          "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::via%]",
-          "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::time%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:component::nederlandse_spoorwegen::config::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_routes": "No routes configured yet.",
-      "missing_fields": "[%key:component::nederlandse_spoorwegen::config::error::missing_fields%]",
-      "same_station": "[%key:component::nederlandse_spoorwegen::config::error::same_station%]",
-      "invalid_route_index": "Invalid route selected."
-    }
-  },
-  "entity": {
-    "sensor": {
-      "service": {
-        "name": "Service",
-        "state": {
-          "connected": "Connected",
-          "disconnected": "Disconnected",
-          "no_routes": "No routes configured",
-          "unknown": "Unknown"
-        }
-      }
     }
   }
 }

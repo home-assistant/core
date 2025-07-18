@@ -5,7 +5,7 @@ imports legacy routes from config entry data (from YAML configuration)
 into the new subentry format.
 """
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.nederlandse_spoorwegen import (
     CONF_FROM,
@@ -23,7 +23,9 @@ from tests.common import MockConfigEntry
 
 async def test_migrate_legacy_routes_from_data(hass: HomeAssistant) -> None:
     """Test migration of legacy routes from config entry data (YAML config)."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
         # Mock stations with required station codes
         mock_station_asd = type(
             "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
@@ -35,14 +37,18 @@ async def test_migrate_legacy_routes_from_data(hass: HomeAssistant) -> None:
         mock_station_mt = type("Station", (), {"code": "MT", "name": "Maastricht"})()
         mock_station_zl = type("Station", (), {"code": "ZL", "name": "Zwolle"})()
 
-        mock_nsapi.return_value.get_stations.return_value = [
+        # Set up the mock API wrapper
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = [
             mock_station_asd,
             mock_station_rtd,
             mock_station_gn,
             mock_station_mt,
             mock_station_zl,
         ]
-        mock_nsapi.return_value.get_trips.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create config entry with legacy routes in data (from YAML config)
         config_entry = MockConfigEntry(
@@ -109,7 +115,9 @@ async def test_migrate_legacy_routes_from_data(hass: HomeAssistant) -> None:
 
 async def test_no_migration_when_already_migrated(hass: HomeAssistant) -> None:
     """Test that migration is skipped when already done."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
         # Mock stations with required station codes
         mock_station_asd = type(
             "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
@@ -118,11 +126,15 @@ async def test_no_migration_when_already_migrated(hass: HomeAssistant) -> None:
             "Station", (), {"code": "RTD", "name": "Rotterdam Centraal"}
         )()
 
-        mock_nsapi.return_value.get_stations.return_value = [
+        # Set up the mock API wrapper
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = [
             mock_station_asd,
             mock_station_rtd,
         ]
-        mock_nsapi.return_value.get_trips.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create config entry WITHOUT legacy routes - migration already done
         config_entry = MockConfigEntry(
@@ -151,10 +163,15 @@ async def test_no_migration_when_already_migrated(hass: HomeAssistant) -> None:
 
 async def test_no_migration_when_no_routes(hass: HomeAssistant) -> None:
     """Test that migration completes gracefully when no routes exist."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
-        # Mock empty stations list
-        mock_nsapi.return_value.get_stations.return_value = []
-        mock_nsapi.return_value.get_trips.return_value = []
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
+        # Set up the mock API wrapper
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create config entry without routes
         config_entry = MockConfigEntry(
@@ -179,7 +196,9 @@ async def test_no_migration_when_no_routes(hass: HomeAssistant) -> None:
 
 async def test_migration_error_handling(hass: HomeAssistant) -> None:
     """Test migration handles malformed routes gracefully."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
         # Mock stations with required station codes
         mock_station_asd = type(
             "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
@@ -197,14 +216,18 @@ async def test_migration_error_handling(hass: HomeAssistant) -> None:
             "Station", (), {"code": "AMS", "name": "Amsterdam Zuid"}
         )()
 
-        mock_nsapi.return_value.get_stations.return_value = [
+        # Set up the mock API wrapper
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = [
             mock_station_asd,
             mock_station_rtd,
             mock_station_hrl,
             mock_station_ut,
             mock_station_ams,
         ]
-        mock_nsapi.return_value.get_trips.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create config entry with mix of valid and invalid routes
         config_entry = MockConfigEntry(
@@ -257,7 +280,9 @@ async def test_migration_error_handling(hass: HomeAssistant) -> None:
 
 async def test_migration_unique_id_generation(hass: HomeAssistant) -> None:
     """Test unique ID generation for migrated routes."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
         # Mock stations with required station codes
         mock_station_asd = type(
             "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
@@ -269,14 +294,18 @@ async def test_migration_unique_id_generation(hass: HomeAssistant) -> None:
         mock_station_mt = type("Station", (), {"code": "MT", "name": "Maastricht"})()
         mock_station_zl = type("Station", (), {"code": "ZL", "name": "Zwolle"})()
 
-        mock_nsapi.return_value.get_stations.return_value = [
+        # Set up the mock API wrapper
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = [
             mock_station_asd,
             mock_station_rtd,
             mock_station_gn,
             mock_station_mt,
             mock_station_zl,
         ]
-        mock_nsapi.return_value.get_trips.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create config entry with routes that test unique_id generation
         config_entry = MockConfigEntry(

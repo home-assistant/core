@@ -51,9 +51,14 @@ async def test_async_setup(hass: HomeAssistant) -> None:
 
 async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
     """Test successful setup of config entry."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
-        mock_nsapi.return_value.get_stations.return_value = []
-        mock_nsapi.return_value.get_trips.return_value = []
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.return_value = []
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create a real MockConfigEntry instead of a mock object
         config_entry = MockConfigEntry(
@@ -82,11 +87,14 @@ async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
 
 async def test_async_setup_entry_connection_error(hass: HomeAssistant) -> None:
     """Test setup entry with connection error."""
-    with patch("homeassistant.components.nederlandse_spoorwegen.NSAPI") as mock_nsapi:
-        mock_nsapi.return_value.get_stations.side_effect = Exception(
-            "Connection failed"
-        )
-        mock_nsapi.return_value.get_trips.return_value = []
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+    ) as mock_api_wrapper_class:
+        mock_api_wrapper = AsyncMock()
+        mock_api_wrapper.get_stations.side_effect = Exception("Connection failed")
+        mock_api_wrapper.get_trips.return_value = []
+        mock_api_wrapper.validate_api_key.return_value = None
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
         # Create a real MockConfigEntry instead of a mock object
         config_entry = MockConfigEntry(

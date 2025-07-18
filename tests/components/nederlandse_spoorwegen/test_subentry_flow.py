@@ -200,7 +200,7 @@ async def test_subentry_flow_add_route_with_via_and_time(hass: HomeAssistant) ->
             "from": "AMS",
             "to": "GVC",
             "via": "UTR",
-            "time": "08:30",
+            "time": "08:30:00",
         }
     )
 
@@ -211,7 +211,7 @@ async def test_subentry_flow_add_route_with_via_and_time(hass: HomeAssistant) ->
         "from": "AMS",
         "to": "GVC",
         "via": "UTR",
-        "time": "08:30",
+        "time": "08:30:00",
     }
 
 
@@ -366,7 +366,7 @@ async def test_subentry_flow_reconfigure_mode(hass: HomeAssistant) -> None:
             "from": "UTR",
             "to": "AMS",
             "via": "",
-            "time": "10:00",
+            "time": "10:00:00",
         }
     )
 
@@ -376,7 +376,7 @@ async def test_subentry_flow_reconfigure_mode(hass: HomeAssistant) -> None:
         "name": "Updated Route",
         "from": "UTR",
         "to": "AMS",
-        "time": "10:00",
+        "time": "10:00:00",
     }
 
 
@@ -721,7 +721,7 @@ async def test_subentry_flow_case_insensitive_station_codes(
             "from": "ams",  # lowercase input
             "to": "utr",  # lowercase input
             "via": "gvc",  # lowercase input
-            "time": "10:30",
+            "time": "10:30:00",
         }
     )
 
@@ -733,4 +733,4 @@ async def test_subentry_flow_case_insensitive_station_codes(
     assert data.get("from") == "AMS"
     assert data.get("to") == "UTR"
     assert data.get("via") == "GVC"
-    assert data.get("time") == "10:30"
+    assert data.get("time") == "10:30:00"
