@@ -96,17 +96,13 @@ def log_triggered_template_error(
     )
 
 
-SENSOR_BASE_SCHEMA = vol.Schema(
+TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-)
-
-TEMPLATE_SENSOR_BASE_SCHEMA = SENSOR_BASE_SCHEMA.extend(
-    TEMPLATE_ENTITY_BASE_SCHEMA.schema
-)
+).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
 
 class ValueTemplate(Template):
