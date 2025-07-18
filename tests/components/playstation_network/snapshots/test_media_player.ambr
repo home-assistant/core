@@ -1,4 +1,164 @@
 # serializer version: 1
+# name: test_media_player_psvita[presence_payload0][media_player.playstation_vita-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_vita',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PSVITA',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_psvita[presence_payload0][media_player.playstation_vita-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'PlayStation Vita',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_vita',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_media_player_psvita[presence_payload1][media_player.playstation_vita-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_vita',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PSVITA',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_psvita[presence_payload1][media_player.playstation_vita-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture': 'https://image.api.playstation.com/trophy/np/NPWR03134_00_0008206095F67FD3BB385E9E00A7C9CFE6F5A4AB96/5F87A6997DD23D1C4D4CC0D1F958ED79CB905331.PNG',
+      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_vita?token=123456789&cache=c7c916a6e18aec3d',
+      'friendly_name': 'PlayStation Vita',
+      'media_content_id': 'PCSB00074_00',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'media_title': "Assassin's Creed® III Liberation",
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_vita',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_media_player_psvita[presence_payload2][media_player.playstation_vita-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_vita',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PSVITA',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_psvita[presence_payload2][media_player.playstation_vita-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture_local': None,
+      'friendly_name': 'PlayStation Vita',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_vita',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform[PS4_idle][media_player.playstation_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

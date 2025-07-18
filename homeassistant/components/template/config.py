@@ -65,7 +65,7 @@ from . import (
     weather as weather_platform,
 )
 from .const import DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints
+from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -249,16 +249,16 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
         legacy_warn_printed = False
 
-        for old_key, new_key, transform in (
+        for old_key, new_key, legacy_fields in (
             (
                 CONF_SENSORS,
                 DOMAIN_SENSOR,
-                sensor_platform.rewrite_legacy_to_modern_conf,
+                sensor_platform.LEGACY_FIELDS,
             ),
             (
                 CONF_BINARY_SENSORS,
                 DOMAIN_BINARY_SENSOR,
-                binary_sensor_platform.rewrite_legacy_to_modern_conf,
+                binary_sensor_platform.LEGACY_FIELDS,
             ),
         ):
             if old_key not in template_config:
@@ -276,7 +276,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(transform(hass, template_config[old_key]))
+            definitions.extend(
+                rewrite_legacy_to_modern_configs(
+                    hass, template_config[old_key], legacy_fields
+                )
+            )
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)

@@ -50,6 +50,7 @@ from .alarm_control_panel import (
     CONF_DISARM_ACTION,
     CONF_TRIGGER_ACTION,
     TemplateCodeFormat,
+    async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
@@ -63,7 +64,7 @@ from .number import (
     DEFAULT_STEP,
     async_create_preview_number,
 )
-from .select import CONF_OPTIONS, CONF_SELECT_OPTION
+from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_select
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
@@ -319,6 +320,7 @@ CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         config_schema(Platform.ALARM_CONTROL_PANEL),
+        preview="template",
         validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
     ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
@@ -332,6 +334,7 @@ CONFIG_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
+        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
@@ -341,6 +344,7 @@ CONFIG_FLOW = {
     ),
     Platform.SELECT: SchemaFlowFormStep(
         config_schema(Platform.SELECT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.SELECT),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
@@ -360,6 +364,7 @@ OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         options_schema(Platform.ALARM_CONTROL_PANEL),
+        preview="template",
         validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
     ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
@@ -373,6 +378,7 @@ OPTIONS_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
+        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
@@ -382,6 +388,7 @@ OPTIONS_FLOW = {
     ),
     Platform.SELECT: SchemaFlowFormStep(
         options_schema(Platform.SELECT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.SELECT),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
@@ -400,10 +407,12 @@ CREATE_PREVIEW_ENTITY: dict[
     str,
     Callable[[HomeAssistant, str, dict[str, Any]], TemplateEntity],
 ] = {
-    "binary_sensor": async_create_preview_binary_sensor,
-    "number": async_create_preview_number,
-    "sensor": async_create_preview_sensor,
-    "switch": async_create_preview_switch,
+    Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
+    Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.NUMBER: async_create_preview_number,
+    Platform.SELECT: async_create_preview_select,
+    Platform.SENSOR: async_create_preview_sensor,
+    Platform.SWITCH: async_create_preview_switch,
 }
 
 
