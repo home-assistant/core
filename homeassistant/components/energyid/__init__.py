@@ -13,7 +13,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -34,7 +33,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 EnergyIDConfigEntry = ConfigEntry[
     "EnergyIDRuntimeData"
@@ -123,9 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         upload_interval,
     )
     client.start_auto_sync(interval_seconds=upload_interval)
-
-    # Forward the setup to the sensor platform
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -274,10 +269,4 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
-
-    # The client and listeners are part of runtime_data, which is automatically
-    # cleaned up. The unload handlers we registered in async_setup_entry will
-    # take care of stopping tasks and closing the client.
-
-    # We only need to forward the unload to the platforms.
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return True
