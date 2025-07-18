@@ -1547,19 +1547,19 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
-            if self.entity_description.subkey is None:
-                return value
             if self.entity_description.raw_type is not None:
                 values = self.entity_description.raw_type.from_json(value)
-                return getattr(values, self.entity_description.subkey)
+                if self.entity_description.subkey is not None:
+                    return getattr(values, self.entity_description.subkey)
+                return value
             return None
 
         if self._type is DPType.RAW:
-            if self.entity_description.subkey is None:
-                return value
             if self.entity_description.raw_type is not None:
                 values = self.entity_description.raw_type.from_raw(value)
-                return getattr(values, self.entity_description.subkey)
+                if self.entity_description.subkey is not None:
+                    return getattr(values, self.entity_description.subkey)
+                return value
             return None
 
         # Valid string or enum value
