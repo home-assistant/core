@@ -131,7 +131,7 @@ async def test_create_conversation_agent(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            CONF_MODEL: "gpt-3.5-turbo",
+            CONF_MODEL: "openai/gpt-3.5-turbo",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: ["assist"],
         },
@@ -139,7 +139,7 @@ async def test_create_conversation_agent(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: ["assist"],
     }
@@ -166,7 +166,8 @@ async def test_create_conversation_agent_no_control(
     assert result["step_id"] == "user"
 
     assert result["data_schema"].schema["model"].config["options"] == [
-        {"value": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo"},
+        {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
+        {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
     ]
 
     result = await hass.config_entries.subentries.async_configure(
