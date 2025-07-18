@@ -51,7 +51,7 @@ class UnifiHub:
     @property
     def available(self) -> bool:
         """Websocket connection state."""
-        if self.config.option_realtime_updates:
+        if self.is_realtime():
             return bool(self.websocket and self.websocket.available)
         return True
 
