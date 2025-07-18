@@ -262,7 +262,7 @@ async def test_integration_legacy_records_format(
         )
         await hass.async_block_till_done()
 
-    # Es sollten nur A-Records aktualisiert werden
+    # Only A records should be updated
     assert all(
         call.kwargs["record_type"] == "A"
         for call in instance.update_dns_record.mock_calls
