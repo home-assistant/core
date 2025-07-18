@@ -73,44 +73,36 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
     @callback
     def _async_update_callback(self) -> None:
         """Handle update callbacks."""
-        try:
-            # Heating circuits list
-            heating_circuits = self.coordinator.data["heating_circuits"].values()
-            self._attr_options = [NO_HEATING_CIRCUIT_OPTION]
-            self._attr_options.extend(
-                hc["driverShortSerialNo"] for hc in heating_circuits
-            )
+        # Heating circuits list
+        heating_circuits = self.coordinator.data["heating_circuits"].values()
+        self._attr_options = [NO_HEATING_CIRCUIT_OPTION]
+        self._attr_options.extend(hc["driverShortSerialNo"] for hc in heating_circuits)
 
-            # Current heating circuit
-            zone_control = self.coordinator.data["zone_control"].get(self.zone_id)
-            if zone_control and "heatingCircuit" in zone_control:
-                heating_circuit_number = zone_control["heatingCircuit"]
-                if heating_circuit_number is None:
+        # Current heating circuit
+        zone_control = self.coordinator.data["zone_control"].get(self.zone_id)
+        if zone_control and "heatingCircuit" in zone_control:
+            heating_circuit_number = zone_control["heatingCircuit"]
+            if heating_circuit_number is None:
+                self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
+            else:
+                # Find heating circuit by number
+                heating_circuit = next(
+                    (
+                        hc
+                        for hc in heating_circuits
+                        if hc.get("number") == heating_circuit_number
+                    ),
+                    None,
+                )
+
+                if heating_circuit is None:
+                    _LOGGER.error(
+                        "Heating circuit with number %s not found for zone %s",
+                        heating_circuit_number,
+                        self.zone_name,
+                    )
                     self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
                 else:
-                    # Find heating circuit by number
-                    heating_circuit = next(
-                        (
-                            hc
-                            for hc in heating_circuits
-                            if hc.get("number") == heating_circuit_number
-                        ),
-                        None,
+                    self._attr_current_option = heating_circuit.get(
+                        "driverShortSerialNo"
                     )
-
-                    if heating_circuit is None:
-                        _LOGGER.error(
-                            "Heating circuit with number %s not found for zone %s",
-                            heating_circuit_number,
-                            self.zone_name,
-                        )
-                        self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
-                    else:
-                        self._attr_current_option = heating_circuit.get(
-                            "driverShortSerialNo"
-                        )
-        except KeyError:
-            _LOGGER.error(
-                "Could not update heating circuit info for zone %s",
-                self.zone_name,
-            )

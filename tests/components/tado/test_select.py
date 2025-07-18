@@ -31,7 +31,13 @@ async def test_heating_circuit_select(hass: HomeAssistant) -> None:
     assert HEATING_CIRCUIT_OPTION in state.attributes["options"]
 
 
-async def test_select_heating_circuit(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("option", "expected_circuit_id"),
+    [(HEATING_CIRCUIT_OPTION, HEATING_CIRCUIT_ID), (NO_HEATING_CIRCUIT, None)],
+)
+async def test_heating_circuit_select_action(
+    hass: HomeAssistant, option, expected_circuit_id
+) -> None:
     """Test selecting heating circuit option."""
 
     await async_init_integration(hass)
@@ -39,70 +45,24 @@ async def test_select_heating_circuit(hass: HomeAssistant) -> None:
     # Test selecting a specific heating circuit
     with (
         patch(
-            "homeassistant.components.tado.TadoDataUpdateCoordinator.set_heating_circuit"
-        ) as mock_set_heating_circuit,
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_heating_circuit"
+        ) as mock_set_zone_heating_circuit,
         patch(
-            "homeassistant.components.tado.TadoDataUpdateCoordinator.async_request_refresh"
-        ) as mock_refresh,
+            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_control"
+        ) as mock_get_zone_control,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: HEATING_CIRCUIT_SELECT_ENTITY,
-                ATTR_OPTION: HEATING_CIRCUIT_OPTION,
+                ATTR_OPTION: option,
             },
             blocking=True,
         )
 
-    mock_set_heating_circuit.assert_called_with(ZONE_ID, HEATING_CIRCUIT_ID)
-    assert mock_refresh.called
-
-
-async def test_select_no_heating_circuit(hass: HomeAssistant) -> None:
-    """Test selecting no heating circuit option."""
-
-    await async_init_integration(hass)
-
-    # Test selecting no heating circuit
-    with (
-        patch(
-            "homeassistant.components.tado.TadoDataUpdateCoordinator.set_heating_circuit"
-        ) as mock_set_heating_circuit,
-        patch(
-            "homeassistant.components.tado.TadoDataUpdateCoordinator.async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: HEATING_CIRCUIT_SELECT_ENTITY,
-                ATTR_OPTION: NO_HEATING_CIRCUIT,
-            },
-            blocking=True,
-        )
-
-    # None should be passed when selecting "no_heating_circuit"
-    mock_set_heating_circuit.assert_called_with(ZONE_ID, None)
-    assert mock_refresh.called
-
-
-async def test_coordinator_update(hass: HomeAssistant) -> None:
-    """Test coordinator update handling."""
-
-    await async_init_integration(hass)
-
-    entity = hass.data["entity_components"]["select"].get_entity(
-        HEATING_CIRCUIT_SELECT_ENTITY
-    )
-    assert entity is not None
-
-    # Simulate coordinator update with new heating circuit data
-    with patch.object(entity, "_async_update_callback") as mock_update_callback:
-        await entity.coordinator.async_refresh()
-
-    assert mock_update_callback.called
+    mock_set_zone_heating_circuit.assert_called_with(ZONE_ID, expected_circuit_id)
+    assert mock_get_zone_control.called
 
 
 @pytest.mark.usefixtures("caplog")
@@ -140,32 +100,3 @@ async def test_heating_circuit_not_found(
     )
     # Check that the entity falls back to no heating circuit
     assert entity.current_option == NO_HEATING_CIRCUIT
-
-
-@pytest.mark.usefixtures("caplog")
-async def test_keyerror_handling(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test handling of KeyError in _async_update_callback."""
-
-    await async_init_integration(hass)
-    entity = hass.data["entity_components"]["select"].get_entity(
-        HEATING_CIRCUIT_SELECT_ENTITY
-    )
-
-    # Create a coordinator with incomplete data that will trigger a KeyError
-    with patch.object(
-        entity.coordinator,
-        "data",
-        # Missing 'heating_circuits' key will trigger KeyError
-        {"zone_control": {}},
-    ):
-        # Force an update callback
-        entity._async_update_callback()
-
-    # Check that error was logged
-    assert any(
-        f"Could not update heating circuit info for zone {entity.zone_name}"
-        in record.message
-        for record in caplog.records
-    )
