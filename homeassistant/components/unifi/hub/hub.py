@@ -42,6 +42,8 @@ class UnifiHub:
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket: UnifiWebsocket | None = None
+        if self.is_realtime():
+            self.create_websocket()
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -97,15 +99,24 @@ class UnifiHub:
             self.config.entry.add_update_listener(self.async_config_entry_updated)
         )
 
-    async def update_websocket(self) -> None:
-        """Update websocket connection."""
-        if self.config.option_realtime_updates:
-            if self.websocket is None:
-                self.websocket = UnifiWebsocket(
-                    self.hass, self.api, self.signal_reachable
-                )
-                self.websocket.start()
-        elif self.websocket:
+    def is_realtime(self) -> bool:
+        """Check if the hub is configured for realtime updates."""
+        return self.config.option_realtime_updates
+
+    def create_websocket(self) -> None:
+        """Create a websocket connection."""
+        if self.websocket is None:
+            self.websocket = UnifiWebsocket(self.hass, self.api, self.signal_reachable)
+
+    def start_websocket(self) -> None:
+        """Start websocket connection."""
+        self.create_websocket()
+        if self.websocket:
+            self.websocket.start()
+
+    async def stop_websocket(self) -> None:
+        """Stop websocket connection."""
+        if self.websocket:
             await self.websocket.stop_and_wait()
             self.websocket = None
 
@@ -147,7 +158,10 @@ class UnifiHub:
         hub = config_entry.runtime_data
         hub.config = UnifiConfig.from_config_entry(config_entry)
         hub.entity_loader.build_polling_api_updaters()
-        await hub.update_websocket()
+        if hub.is_realtime():
+            hub.start_websocket()
+        else:
+            await hub.stop_websocket()
         async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
