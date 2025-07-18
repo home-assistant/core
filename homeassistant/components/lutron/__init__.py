@@ -22,6 +22,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+SUPPORTED_COVER_OUTPUT_TYPES = ("SYSTEM_SHADE", "MOTOR")
+
 _LOGGER = logging.getLogger(__name__)
 
 # Attribute on events that indicates what action was taken with the button.
@@ -80,7 +82,7 @@ async def async_setup_entry(
         for output in area.outputs:
             platform = None
             _LOGGER.debug("Working on output %s", output.type)
-            if output.type == "SYSTEM_SHADE":
+            if output.type in SUPPORTED_COVER_OUTPUT_TYPES:
                 entry_data.covers.append((area.name, output))
                 platform = Platform.COVER
             elif output.type == "CEILING_FAN_TYPE":
@@ -118,6 +120,7 @@ async def async_setup_entry(
                     "SingleSceneRaiseLower",
                     "MasterRaiseLower",
                     "AdvancedToggle",
+                    "AdvancedConditional",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
