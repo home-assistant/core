@@ -44,24 +44,6 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
     """Representation of a SwitchBot Cover."""
 
     _attr_name = None
-    _attr_is_closed: bool | None = None
-    _attr_direction: str | None = None
-
-    def _set_attributes(self) -> None:
-        if self.coordinator.data is None:
-            return
-
-
-class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
-    """Representation of a SwitchBot Curtain & Curtain3."""
-
-    _attr_supported_features: CoverEntityFeature = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
-    _attr_device_class = CoverDeviceClass.CURTAIN
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
@@ -72,6 +54,18 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         self._attr_current_cover_position = 100 - position
         self._attr_current_cover_tilt_position = 100 - position
         self._attr_is_closed = position == 100
+
+
+class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
+    """Representation of a SwitchBot Curtain & Curtain3."""
+
+    _attr_device_class = CoverDeviceClass.CURTAIN
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -102,28 +96,58 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         await self.coordinator.async_request_refresh()
 
 
-class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
+class SwitchBotCloudCoverRollerShade(SwitchBotCloudEntity, CoverEntity):
+    """Representation of a SwitchBot RollerShade."""
+
+    _attr_device_class = CoverDeviceClass.SHADE
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+    )
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(0))
+        await asyncio.sleep(10)
+        await self.coordinator.async_request_refresh()
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self.send_api_command(
+            RollerShadeCommands.SET_POSITION, parameters=str(100)
+        )
+        await asyncio.sleep(10)
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        position: int | None = kwargs.get("position")
+        if position is not None:
+            await self.send_api_command(
+                RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
+            )
+            await asyncio.sleep(10)
+            await self.coordinator.async_request_refresh()
+
+
+class SwitchBotCloudCoverBlindTilt(SwitchBotCloudEntity, CoverEntity):
     """Representation of a SwitchBot Blind Tilt."""
 
-    _attr_name = None
-    _attr_is_closed: bool | None = None
-    _attr_percent: int | None = None
-
+    _attr_direction: str | None = None
+    _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.SET_TILT_POSITION
         | CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
     )
-    _attr_device_class = CoverDeviceClass.BLIND
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
-        # print(self.coordinator.data)
         position: int | None = self.coordinator.data.get("slidePosition")
         if position is None:
             return
-
         self._attr_is_closed = position in [0, 100]
         if position > 50:
             percent = 100 - ((position - 50) * 2)
@@ -160,46 +184,6 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
             await asyncio.sleep(10)
             await self.coordinator.async_request_refresh()
-
-
-class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
-    """Representation of a SwitchBot Cover."""
-
-    _attr_name = None
-    _attr_is_closed: bool | None = None
-
-    _attr_supported_features: CoverEntityFeature = (
-        CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-    )
-
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(0))
-        self._attr_current_cover_position = 100
-        self._attr_is_closed = True
-        self.async_write_ha_state()
-
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close cover for roller shade."""
-        await self.send_api_command(
-            RollerShadeCommands.SET_POSITION, parameters=str(100)
-        )
-        self._attr_current_cover_position = 0
-        self._attr_is_closed = False
-        self.async_write_ha_state()
-
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Move the cover to a specific position."""
-        position: int | None = kwargs.get("position")
-        if position is not None:
-            await self.send_api_command(
-                RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
-            )
-            self._attr_current_cover_position = position
-            self._attr_is_closed = position == 0
-            self.async_write_ha_state()
 
 
 @callback
