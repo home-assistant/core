@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.config import area_registry
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -50,6 +51,13 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
+    hass.states.async_set(
+        "binary_sensor.mock_motion",
+        "off",
+        {
+            ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION,
+        },
+    )
 
 
 async def test_list_areas(
@@ -72,6 +80,7 @@ async def test_list_areas(
         humidity_entity_id="sensor.mock_humidity",
         icon="mdi:garage",
         labels={"label_1", "label_2"},
+        motion_entity_id="binary_sensor.mock_motion",
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
     )
@@ -92,6 +101,7 @@ async def test_list_areas(
             "name": "mock 1",
             "picture": None,
             "temperature_entity_id": None,
+            "motion_entity_id": None,
         },
         {
             "aliases": unordered(["alias_1", "alias_2"]),
@@ -102,6 +112,7 @@ async def test_list_areas(
             "icon": "mdi:garage",
             "labels": unordered(["label_1", "label_2"]),
             "modified_at": created_area2.timestamp(),
+            "motion_entity_id": "binary_sensor.mock_motion",
             "name": "mock 2",
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
@@ -135,6 +146,7 @@ async def test_create_area(
         "modified_at": utcnow().timestamp(),
         "temperature_entity_id": None,
         "humidity_entity_id": None,
+        "motion_entity_id": None,
     }
     assert len(area_registry.areas) == 1
 
@@ -149,6 +161,7 @@ async def test_create_area(
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
             "humidity_entity_id": "sensor.mock_humidity",
+            "motion_entity_id": "binary_sensor.mock_motion",
             "type": "config/area_registry/create",
         }
     )
@@ -168,6 +181,7 @@ async def test_create_area(
         "modified_at": utcnow().timestamp(),
         "temperature_entity_id": "sensor.mock_temperature",
         "humidity_entity_id": "sensor.mock_humidity",
+        "motion_entity_id": "binary_sensor.mock_motion",
     }
     assert len(area_registry.areas) == 2
 
@@ -246,6 +260,7 @@ async def test_update_area(
             "humidity_entity_id": "sensor.mock_humidity",
             "icon": "mdi:garage",
             "labels": ["label_1", "label_2"],
+            "motion_entity_id": "binary_sensor.mock_motion",
             "name": "mock 2",
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
@@ -261,6 +276,7 @@ async def test_update_area(
         "humidity_entity_id": "sensor.mock_humidity",
         "icon": "mdi:garage",
         "labels": unordered(["label_1", "label_2"]),
+        "motion_entity_id": "binary_sensor.mock_motion",
         "name": "mock 2",
         "picture": "/image/example.png",
         "temperature_entity_id": "sensor.mock_temperature",
@@ -281,6 +297,7 @@ async def test_update_area(
             "humidity_entity_id": None,
             "icon": None,
             "labels": [],
+            "motion_entity_id": None,
             "picture": None,
             "temperature_entity_id": None,
         }
@@ -298,6 +315,7 @@ async def test_update_area(
         "picture": None,
         "temperature_entity_id": None,
         "humidity_entity_id": None,
+        "motion_entity_id": None,
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
     }
