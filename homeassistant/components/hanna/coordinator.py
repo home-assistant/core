@@ -4,7 +4,7 @@ This module provides the data coordinator for fetching and managing Hanna Instru
 sensor data.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime
 import logging
 from typing import Any
 
@@ -19,78 +19,37 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class HannaMainCoordinator(DataUpdateCoordinator):
-    """Main coordinator for Hanna Instruments authentication and device management."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the main Hanna coordinator."""
-        self.api_client = HannaCloudClient()
-        self._devices: dict[str, dict] = {}
-        update_interval = timedelta(minutes=config_entry.data.get("update_interval", 1))
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="hanna_main",
-            update_interval=update_interval,
-        )
-
-    async def async_authenticate(self, email: str, password: str, code: str) -> None:
-        """Authenticate with the Hanna API."""
-        await self.hass.async_add_executor_job(
-            self.api_client.authenticate, email, password, code
-        )
-
-    async def async_get_devices(self) -> list[dict]:
-        """Get all devices associated with the account."""
-        devices = await self.hass.async_add_executor_job(self.api_client.get_devices)
-        self._devices = {device.get("DID"): device for device in devices}
-        return devices
-
-    def get_device(self, device_id: str) -> dict:
-        """Get a specific device by ID."""
-        return self._devices[device_id]
-
-    async def _async_update_data(self):
-        """Update the list of devices."""
-        try:
-            await self.async_get_devices()
-        except Exception as e:
-            _LOGGER.error("Error updating devices: %s", e)
-            raise UpdateFailed(f"Error updating devices: {e}") from e
-        else:
-            return self._devices
-
-
 class HannaDataCoordinator(DataUpdateCoordinator):
     """Coordinator for fetching Hanna sensor data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        main_coordinator: HannaMainCoordinator,
-        device: dict,
         config_entry: ConfigEntry,
+        device: dict,
     ) -> None:
         """Initialize the Hanna data coordinator."""
-        self.main_coordinator = main_coordinator
+        self.api_client = HannaCloudClient()
         self._device_data = device
         self._readings = None
-        update_interval = timedelta(minutes=config_entry.data.get("update_interval", 1))
+        self._email = config_entry.data["email"]
+        self._password = config_entry.data["password"]
+        self._code = config_entry.data["code"]
         super().__init__(
             hass,
             _LOGGER,
             name=f"hanna_{self.device_identifier}",
-            update_interval=update_interval,
         )
 
-    @property
-    def api_client(self) -> HannaCloudClient:
-        """Return the API client from the main coordinator."""
-        return self.main_coordinator.api_client
+    async def _async_setup(self) -> None:
+        """Set up the coordinator by authenticating with the Hanna API."""
+        await self.async_authenticate(self._email, self._password, self._code)
+
+    async def async_authenticate(self, email: str, password: str, code: str) -> None:
+        """Authenticate with the Hanna API."""
+        await self.hass.async_add_executor_job(
+            self.api_client.authenticate, email, password, code
+        )
 
     @property
     def device_identifier(self) -> str:
@@ -124,7 +83,7 @@ class HannaDataCoordinator(DataUpdateCoordinator):
         """Get the formatted last update time from sensor data."""
         format_string = "%Y-%m-%d %H:%M:%SZ"
         last_update_ts = int(self.get_messages_value("receivedAtUTCs"))
-        last_update_dt = datetime.fromtimestamp(last_update_ts)
+        last_update_dt = datetime.fromtimestamp(last_update_ts, tz=UTC)
         return last_update_dt.strftime(format_string)
 
     def get_messages(self) -> dict[str, Any]:

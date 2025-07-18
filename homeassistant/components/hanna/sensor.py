@@ -98,38 +98,36 @@ async def async_setup_entry(
     """Set up Hanna sensors from a config entry."""
     device_coordinators = entry.runtime_data["device_coordinators"]
 
+    # Collect all entities during initialization
+    all_entities: list[HannaParamSensor | HannaStatusSensor | HannaAlarmSensor] = []
+
     for coordinator in device_coordinators.values():
         if not coordinator.readings:
             _LOGGER.warning("No data received for %s", coordinator.device_identifier)
             continue
 
         # Add parameter sensors
-        param_sensors = []
         for parameter in coordinator.get_parameters():
             if description := SENSOR_DESCRIPTIONS.get(parameter["name"]):
-                param_sensors.append(HannaParamSensor(coordinator, description))
+                all_entities.append(HannaParamSensor(coordinator, description))
             else:
                 _LOGGER.warning("No sensor description found for %s", parameter["name"])
-        if param_sensors:
-            async_add_entities(param_sensors)
 
         # Add status sensors
-        status_sensors = []
         for sensor_name in coordinator.get_messages_value("status"):
             if description := SENSOR_DESCRIPTIONS.get(sensor_name):
-                status_sensors.append(HannaStatusSensor(coordinator, description))
+                all_entities.append(HannaStatusSensor(coordinator, description))
             else:
                 _LOGGER.warning("No sensor description found for %s", sensor_name)
-        if status_sensors:
-            async_add_entities(status_sensors)
 
         # Add alarms sensor
-        alarm_sensors = []
-        alarm_sensors.append(
+        all_entities.append(
             HannaAlarmSensor(coordinator, SENSOR_DESCRIPTIONS["alarms"])
         )
-        if alarm_sensors:
-            async_add_entities(alarm_sensors)
+
+    # Add all entities at once
+    if all_entities:
+        async_add_entities(all_entities)
 
 
 class HannaSensor(SensorEntity):
@@ -184,7 +182,7 @@ class HannaParamSensor(HannaSensor):
         super().__init__(coordinator, description)
 
         self._attr_native_value = coordinator.get_parameter_value(description.key)
-        self._attr_native_unit_of_measurement = description.unit_of_measurement
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_class = description.device_class
 

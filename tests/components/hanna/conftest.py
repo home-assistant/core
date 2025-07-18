@@ -1,11 +1,11 @@
 """Fixtures for Hanna Instruments integration tests."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.hanna.const import DOMAIN
-from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +24,9 @@ def mock_hanna_client():
         "homeassistant.components.hanna.config_flow.HannaCloudClient"
     ) as mock_client:
         client = mock_client.return_value
-        client.authenticate = AsyncMock()
+        client.authenticate = (
+            MagicMock()
+        )  # Use MagicMock since it's called synchronously
         yield client
 
 
@@ -37,7 +39,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
             CONF_CODE: "test-code",
-            CONF_SCAN_INTERVAL: 1,
         },
         title="test@example.com",
     )

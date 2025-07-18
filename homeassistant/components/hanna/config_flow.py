@@ -6,10 +6,15 @@ import logging
 from typing import Any
 
 from hanna_cloud import HannaCloudClient
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    RequestException,
+    Timeout,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
 
 from .const import DEFAULT_ENCRYPTION_KEY, DOMAIN
 
@@ -25,7 +30,6 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_EMAIL): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_CODE, default=DEFAULT_ENCRYPTION_KEY): str,
-            vol.Required(CONF_SCAN_INTERVAL, default=5): int,
         }
     )
 
@@ -50,14 +54,33 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 user_input[CONF_CODE],
             )
+        except (Timeout, RequestsConnectionError):
+            _LOGGER.exception("Connection timeout or error")
+            errors["base"] = "cannot_connect"
+        except RequestException as ex:
+            if hasattr(ex, "response") and ex.response is not None:
+                if ex.response.status_code in (401, 403):
+                    _LOGGER.exception("Authentication failed")
+                    errors["base"] = "invalid_auth"
+                else:
+                    _LOGGER.exception(
+                        "Request failed with status %s", ex.response.status_code
+                    )
+                    errors["base"] = "cannot_connect"
+            else:
+                _LOGGER.exception("Request failed")
+                errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "invalid_auth"
+            errors["base"] = "unknown"
+
+        if errors:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.data_schema,
                 errors=errors,
             )
+
         return self.async_create_entry(
             title=user_input[CONF_EMAIL],
             data=user_input,
@@ -84,9 +107,27 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 user_input[CONF_CODE],
             )
+        except (Timeout, RequestsConnectionError):
+            _LOGGER.exception("Connection timeout or error")
+            errors["base"] = "cannot_connect"
+        except RequestException as ex:
+            if hasattr(ex, "response") and ex.response is not None:
+                if ex.response.status_code in (401, 403):
+                    _LOGGER.exception("Authentication failed")
+                    errors["base"] = "invalid_auth"
+                else:
+                    _LOGGER.exception(
+                        "Request failed with status %s", ex.response.status_code
+                    )
+                    errors["base"] = "cannot_connect"
+            else:
+                _LOGGER.exception("Request failed")
+                errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "invalid_auth"
+            errors["base"] = "unknown"
+
+        if errors:
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=self.data_schema,
