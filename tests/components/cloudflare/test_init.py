@@ -117,7 +117,7 @@ async def test_integration_services(
         await hass.async_block_till_done()
 
     assert len(instance.update_dns_record.mock_calls) == 2
-    # Neue Debug-Ausgabe prüfen
+    # Check new debug output
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
     assert "All possible target records are up to date" not in caplog.text
 
