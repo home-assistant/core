@@ -44,6 +44,19 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Make sure to download and extract the [**trophy images pack**]({trophy_pack}) to `/config/www/playstation_network` before enabling entity pictures.",
+        "data": {
+          "show_entity_pictures": "Show entity pictures"
+        },
+        "data_description": {
+          "show_entity_pictures": "Displays authentic PlayStation icons for trophy-related sensors, including bronze, silver, gold, platinum trophies, and trophy level."
+        }
+      }
+    }
+  },
   "exceptions": {
     "not_ready": {
       "message": "Authentication to the PlayStation Network failed."
