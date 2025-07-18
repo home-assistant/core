@@ -1,12 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "battery_autonomy": {
-        "default": "mdi:battery-clock"
-      },
-      "battery_charge_time": {
-        "default": "mdi:battery-charging"
-      },
       "battery_power": {
         "default": "mdi:battery"
       },
@@ -57,9 +51,6 @@
       },
       "meter_power": {
         "default": "mdi:power-plug"
-      },
-      "meter_power_protocol": {
-        "default": "mdi:protocol"
       },
       "output_current_l1": {
         "default": "mdi:current-ac"
@@ -115,29 +106,11 @@
       "temp_component_temperature": {
         "default": "mdi:thermometer"
       },
-      "monitoring_building_consumption": {
-        "default": "mdi:home-lightning-bolt"
-      },
-      "monitoring_economy_factor": {
-        "default": "mdi:chart-bar"
-      },
-      "monitoring_grid_consumption": {
-        "default": "mdi:transmission-tower"
-      },
-      "monitoring_grid_injection": {
-        "default": "mdi:transmission-tower-export"
-      },
-      "monitoring_grid_power_flow": {
-        "default": "mdi:power-plug"
-      },
       "monitoring_self_consumption": {
         "default": "mdi:percent"
       },
       "monitoring_self_sufficiency": {
         "default": "mdi:percent"
-      },
-      "monitoring_solar_production": {
-        "default": "mdi:solar-power"
       },
       "monitoring_minute_building_consumption": {
         "default": "mdi:home-lightning-bolt"
