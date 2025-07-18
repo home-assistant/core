@@ -319,7 +319,7 @@ async def test_manual_trigger_sensor_entity_with_date(
     variables = entity._template_variables_with_value("2025-01-01T00:00:00+00:00")
     assert entity._render_availability_template(variables) is True
     assert entity.available is True
-    entity._set_value_with_possible_timestamp(
+    entity._set_native_value_with_possible_timestamp(
         entity.state, entity.device_class, variables
     )
     await hass.async_block_till_done()
