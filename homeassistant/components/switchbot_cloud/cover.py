@@ -199,7 +199,7 @@ class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
         if self.coordinator.data is None:
             return
         door_status: int | None = self.coordinator.data.get("doorStatus")
-        self._attr_is_closed = door_status == 1 if door_status else None
+        self._attr_is_closed = None if door_status is None else door_status == 1
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
