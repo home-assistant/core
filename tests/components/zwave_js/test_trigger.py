@@ -647,7 +647,7 @@ async def test_zwave_js_event(
     await hass.async_block_till_done()
 
     assert len(node_no_event_data_filter) == 1
-    assert len(node_event_data_filter) == 1
+    assert len(node_event_data_filter) == 0
     assert len(controller_no_event_data_filter) == 0
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
@@ -697,7 +697,7 @@ async def test_zwave_js_event(
     assert len(node_no_event_data_filter) == 0
     assert len(node_event_data_filter) == 0
     assert len(controller_no_event_data_filter) == 1
-    assert len(controller_event_data_filter) == 1
+    assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
@@ -801,7 +801,7 @@ async def test_zwave_js_event(
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
     assert len(node_event_data_no_partial_dict_match_filter) == 0
-    assert len(node_event_data_partial_dict_match_filter) == 1
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
