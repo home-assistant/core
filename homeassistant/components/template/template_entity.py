@@ -47,7 +47,6 @@ from homeassistant.helpers.template import (
     result_as_boolean,
 )
 from homeassistant.helpers.trigger_template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -58,6 +57,7 @@ from .const import (
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
+    TEMPLATE_ENTITY_BASE_SCHEMA,
 )
 from .entity import AbstractTemplateEntity
 

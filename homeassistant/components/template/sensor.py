@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -47,7 +48,6 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.trigger_template_entity import SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -87,8 +87,11 @@ def validate_last_reset(val):
 SENSOR_FEATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_STATE): cv.template,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-).extend(SENSOR_BASE_SCHEMA.schema)
+)
 
 SENSOR_SCHEMA = vol.All(
     vol.Schema(
