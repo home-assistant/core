@@ -465,6 +465,8 @@ ATTR_ID: Final = "id"
 
 # Name
 ATTR_NAME: Final = "name"
+ATTR_TRANSLATION_KEY: Final = "translation_key"
+ATTR_TRANSLATION_PLACEHOLDERS: Final = "translation_placeholders"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
