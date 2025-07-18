@@ -466,6 +466,7 @@ homeassistant.components.simplisafe.*
 homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
+homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
