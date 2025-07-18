@@ -117,16 +117,7 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
         """Handle the user step for adding a new sensor mapping."""
         errors: dict[str, str] = {}
 
-        # Get the parent config entry - use the correct context key
-        parent_entry_id = self.context.get("config_entry_id")
-        if not isinstance(parent_entry_id, str):
-            _LOGGER.error("No valid parent entry ID found in context: %s", self.context)
-            return self.async_abort(reason="no_parent_entry")
-
-        config_entry = self.hass.config_entries.async_get_entry(parent_entry_id)
-        if not config_entry:
-            _LOGGER.error("Parent config entry %s not found", parent_entry_id)
-            return self.async_abort(reason="parent_entry_not_found")
+        config_entry = self._get_entry()
 
         if user_input is not None:
             ha_entity_id = user_input.get(CONF_HA_ENTITY_ID)
