@@ -321,7 +321,7 @@ async def test_integration_new_records_format(
         )
         await hass.async_block_till_done()
 
-    # Es sollten A- und AAAA-Records aktualisiert werden
+    # A and AAAA records should be updated
     types = {
         call.kwargs["record_type"] for call in instance.update_dns_record.mock_calls
     }
