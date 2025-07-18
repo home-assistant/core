@@ -1,6 +1,5 @@
 """Test the Ubiquiti airOS config flow."""
 
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -13,16 +12,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import load_fixture
 
-
-def _ap_fixture(mode: str = "ap-ptp") -> dict[str, Any]:
-    """Load fixture data."""
-    fixture = load_fixture(f"airos/{mode}.json")
-    return json.loads(fixture)
-
-
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -35,7 +28,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         autospec=True,
     ) as airos_device_mock:
         airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = _ap_fixture("ap-ptp")
+        airos_device_mock.return_value.status.return_value = ap_fixture
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,7 +51,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 
 async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -91,7 +84,7 @@ async def test_form_invalid_auth(
         autospec=True,
     ) as airos_device_mock:
         airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = _ap_fixture("ap-ptp")
+        airos_device_mock.return_value.status.return_value = ap_fixture
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -114,7 +107,7 @@ async def test_form_invalid_auth(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -148,7 +141,7 @@ async def test_form_cannot_connect(
         autospec=True,
     ) as airos_device_mock:
         airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = _ap_fixture("ap-ptp")
+        airos_device_mock.return_value.status.return_value = ap_fixture
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
