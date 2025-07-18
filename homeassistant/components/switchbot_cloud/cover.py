@@ -96,7 +96,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         await self.coordinator.async_request_refresh()
 
 
-class SwitchBotCloudCoverRollerShade(SwitchBotCloudEntity, CoverEntity):
+class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
     """Representation of a SwitchBot RollerShade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
@@ -131,7 +131,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudEntity, CoverEntity):
             await self.coordinator.async_request_refresh()
 
 
-class SwitchBotCloudCoverBlindTilt(SwitchBotCloudEntity, CoverEntity):
+class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
     """Representation of a SwitchBot Blind Tilt."""
 
     _attr_direction: str | None = None
@@ -186,6 +186,33 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudEntity, CoverEntity):
             await self.coordinator.async_request_refresh()
 
 
+class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
+    """Representation of a SwitchBot Garage Door Opener."""
+
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    )
+
+    def _set_attributes(self) -> None:
+        if self.coordinator.data is None:
+            return
+        door_status: int | None = self.coordinator.data.get("doorStatus")
+        self._attr_is_closed = door_status == 1 if door_status else None
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.send_api_command(CommonCommands.ON)
+        await asyncio.sleep(1)
+        await self.coordinator.async_request_refresh()
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self.send_api_command(CommonCommands.OFF)
+        await asyncio.sleep(1)
+        await self.coordinator.async_request_refresh()
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -193,10 +220,13 @@ def _async_make_entity(
     SwitchBotCloudCoverBlindTilt
     | SwitchBotCloudCoverRollerShade
     | SwitchBotCloudCoverCurtain
+    | SwitchBotCloudCoverGarageDoorOpener
 ):
     """Make a SwitchBotCloudCover device."""
     if device.device_type == "Blind Tilt":
         return SwitchBotCloudCoverBlindTilt(api, device, coordinator)
     if device.device_type == "Roller Shade":
         return SwitchBotCloudCoverRollerShade(api, device, coordinator)
+    if device.device_type == "Garage Door Opener":
+        return SwitchBotCloudCoverGarageDoorOpener(api, device, coordinator)
     return SwitchBotCloudCoverCurtain(api, device, coordinator)
