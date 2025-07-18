@@ -117,7 +117,9 @@ async def test_integration_services(
         await hass.async_block_till_done()
 
     assert len(instance.update_dns_record.mock_calls) == 2
-    assert "All target records are up to date" not in caplog.text
+    # Neue Debug-Ausgabe prüfen
+    assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
+    assert "All possible target records are up to date" not in caplog.text
 
 
 async def test_integration_services_with_issue(
@@ -134,7 +136,9 @@ async def test_integration_services_with_issue(
             "homeassistant.components.cloudflare.async_detect_location_info",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"),
+        pytest.raises(
+            HomeAssistantError, match="Could not get any external IP address"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -182,7 +186,7 @@ async def test_integration_services_with_nonexisting_record(
         await hass.async_block_till_done()
 
     instance.update_dns_record.assert_not_called()
-    assert "All target records are up to date" in caplog.text
+    assert "All possible target records are up to date" in caplog.text
 
 
 async def test_integration_update_interval(
@@ -216,19 +220,125 @@ async def test_integration_update_interval(
             hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         )
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(instance.update_dns_record.mock_calls) == 2
-        assert "All target records are up to date" not in caplog.text
+    assert len(instance.update_dns_record.mock_calls) == 2
+    assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
+    assert "All possible target records are up to date" not in caplog.text
 
-        instance.list_dns_records.side_effect = pycfdns.AuthenticationException()
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
-        )
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(instance.update_dns_record.mock_calls) == 2
 
-        instance.list_dns_records.side_effect = pycfdns.ComunicationException()
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+# Test für Legacy-Format (nur Name, kein Typ)
+async def test_integration_legacy_records_format(
+    hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test integration with legacy CONF_RECORDS format (only names, no type)."""
+    instance = cfupdate.return_value
+
+    entry = await init_integration(
+        hass,
+        data={**ENTRY_CONFIG, CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"]},
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.cloudflare.async_detect_location_info",
+        return_value=LocationInfo(
+            "1.2.3.4",
+            "US",
+            "USD",
+            "CA",
+            "California",
+            "San Diego",
+            "92122",
+            "America/Los_Angeles",
+            32.8594,
+            -117.2073,
+            True,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_RECORDS,
+            {},
+            blocking=True,
         )
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(instance.update_dns_record.mock_calls) == 2
+        await hass.async_block_till_done()
+
+    # Es sollten nur A-Records aktualisiert werden
+    assert all(
+        call.kwargs["record_type"] == "A"
+        for call in instance.update_dns_record.mock_calls
+    )
+    assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
+
+
+# Test für neues Format (name|type)
+async def test_integration_new_records_format(
+    hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test integration with new CONF_RECORDS format (name|type)."""
+    instance = cfupdate.return_value
+
+    entry = await init_integration(
+        hass, data={**ENTRY_CONFIG, CONF_RECORDS: ["ha.mock.com|A", "ha.mock.com|AAAA"]}
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.cloudflare.async_detect_location_info",
+        side_effect=[
+            LocationInfo(
+                "1.2.3.4",
+                "US",
+                "USD",
+                "CA",
+                "California",
+                "San Diego",
+                "92122",
+                "America/Los_Angeles",
+                32.8594,
+                -117.2073,
+                True,
+            ),
+            LocationInfo(
+                "2001:db8::1",
+                "US",
+                "USD",
+                "CA",
+                "California",
+                "San Diego",
+                "92122",
+                "America/Los_Angeles",
+                32.8594,
+                -117.2073,
+                True,
+            ),
+        ],
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_RECORDS,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Es sollten A- und AAAA-Records aktualisiert werden
+    types = {
+        call.kwargs["record_type"] for call in instance.update_dns_record.mock_calls
+    }
+    assert types == {"A", "AAAA"}
+    assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
+    assert "Added Record ha.mock.com (AAAA) to Updatetask" in caplog.text
+
+    instance.list_dns_records.side_effect = pycfdns.AuthenticationException()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(instance.update_dns_record.mock_calls) == 2
+
+    instance.list_dns_records.side_effect = pycfdns.ComunicationException()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(instance.update_dns_record.mock_calls) == 2
