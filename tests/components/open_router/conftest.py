@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from openai.types import CompletionUsage
@@ -9,10 +10,11 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
 
-from homeassistant.components.open_router.const import DOMAIN
+from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_API_KEY, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -29,7 +31,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def enable_assist() -> bool:
+    """Mock conversation subentry data."""
+    return False
+
+
+@pytest.fixture
+def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
+    """Mock conversation subentry data."""
+    res: dict[str, Any] = {
+        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_PROMPT: "You are a helpful assistant.",
+    }
+    if enable_assist:
+        res[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
+    return res
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, conversation_subentry_data: dict[str, Any]
+) -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         title="OpenRouter",
@@ -39,7 +61,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         subentries_data=[
             ConfigSubentryData(
-                data={CONF_MODEL: "gpt-3.5-turbo"},
+                data=conversation_subentry_data,
                 subentry_id="ABCDEF",
                 subentry_type="conversation",
                 title="GPT-3.5 Turbo",
