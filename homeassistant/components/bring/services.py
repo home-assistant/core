@@ -1,5 +1,7 @@
 """Actions for Bring! integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -15,21 +17,34 @@ import voluptuous as vol
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.service import entity_service_call
 
 from .const import (
     ATTR_ACTIVITY,
+    ATTR_ITEM_NAME,
+    ATTR_NOTIFICATION_TYPE,
     ATTR_REACTION,
     ATTR_RECEIVER,
     DOMAIN,
     SERVICE_ACTIVITY_STREAM_REACTION,
+    SERVICE_PUSH_NOTIFICATION,
 )
 from .coordinator import BringConfigEntry
+from .todo import async_get_entities
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_PUSH_NOTIFICATION_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+            vol.Upper, vol.Coerce(BringNotificationType)
+        ),
+        vol.Optional(ATTR_ITEM_NAME): cv.string,
+    },
+)
 SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -54,8 +69,15 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> BringConfigEntry:
     return entry
 
 
+async def _async_send_message(call: ServiceCall) -> None:
+    await entity_service_call(
+        call.hass, async_get_entities(call.hass), "async_send_message", call
+    )
+
+
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Bring! integration."""
+    """Set up actions for bring integration."""
 
     async def async_send_activity_stream_reaction(call: ServiceCall) -> None:
         """Send a reaction in response to recent activity of a list member."""
@@ -101,6 +123,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="reaction_request_failed",
             ) from e
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_PUSH_NOTIFICATION,
+        schema=SERVICE_PUSH_NOTIFICATION_SCHEMA,
+        service_func=_async_send_message,
+    )
 
     hass.services.async_register(
         DOMAIN,
