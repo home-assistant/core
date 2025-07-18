@@ -601,6 +601,11 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
 
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return super().available and self.native_value is not None
+
 
 class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
     """Defining the Work area sensors with WorkAreaSensorEntityDescription."""

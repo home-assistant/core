@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.68.1
+PySwitchbot==0.68.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1017,7 +1017,7 @@ hole==0.9.0
 holidays==0.76
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250702.2
+home-assistant-frontend==20250702.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.6.23
@@ -1949,7 +1949,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.9.0
+pysmarlaapi==0.9.1
 
 # homeassistant.components.smartthings
 pysmartthings==3.2.8
