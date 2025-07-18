@@ -88,9 +88,6 @@
       },
       "snooze": {
         "name": "Snooze"
-      },
-      "meal_plan": {
-        "name": "Meal plan"
       }
     },
     "cover": {
@@ -581,9 +578,6 @@
       },
       "remaining_time": {
         "name": "Remaining time"
-      },
-      "meal_plan": {
-        "name": "Meal plan"
       },
       "methane": {
         "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
