@@ -50,21 +50,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
-        existing_entry = await self.async_set_unique_id(
-            f"{self._droplet_discovery.device_id}"
+        await self.async_set_unique_id(f"{self._droplet_discovery.device_id}")
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._droplet_discovery.host}
         )
-        if not existing_entry:
-            return await self.async_step_confirm()
 
-        if existing_entry.data[CONF_HOST] != self._droplet_discovery.host:
-            _LOGGER.info("Updating host for device %s", existing_entry.unique_id)
-            self.hass.config_entries.async_update_entry(
-                existing_entry,
-                data={**existing_entry.data, CONF_HOST: self._droplet_discovery.host},
-            )
-            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
-
-        return self.async_abort(reason="already_configured")
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -118,5 +110,4 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # We should allow this now!!
         return self.async_abort(reason="not_supported")

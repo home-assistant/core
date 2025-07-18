@@ -42,8 +42,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
 
     async def setup(self) -> bool:
         """Set up droplet client."""
-        if not await self.droplet.connect():
-            return False
 
         async def listen() -> None:
             """Listen for state changes via WebSocket."""

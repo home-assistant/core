@@ -44,7 +44,7 @@ async def async_reload_entry(
     hass: HomeAssistant, config_entry: DropletConfigEntry
 ) -> None:
     """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(
