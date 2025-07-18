@@ -183,4 +183,4 @@ async def _async_update_cloudflare(
 
     await asyncio.gather(*update_tasks)
 
-    _LOGGER.debug("Possible update for zone %s is complete", dns_zone["name"])
+    _LOGGER.debug("DNS record update for zone %s is complete", dns_zone["name"])
