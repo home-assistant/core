@@ -50,19 +50,6 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
-        position: int | None = self.coordinator.data.get("slidePosition")
-
-        if position is None:
-            return
-
-        self._attr_current_cover_position = 100 - position
-        self._attr_current_cover_tilt_position = 100 - position
-
-        self._attr_is_closed = position == 100
-
-        # only Blind Tilt have |direction|
-        direction = self.coordinator.data.get("direction")
-        self._attr_direction = direction.lower() if direction else None
 
 
 class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
@@ -75,6 +62,16 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         | CoverEntityFeature.SET_POSITION
     )
     _attr_device_class = CoverDeviceClass.CURTAIN
+
+    def _set_attributes(self) -> None:
+        if self.coordinator.data is None:
+            return
+        position: int | None = self.coordinator.data.get("slidePosition")
+        if position is None:
+            return
+        self._attr_current_cover_position = 100 - position
+        self._attr_current_cover_tilt_position = 100 - position
+        self._attr_is_closed = position == 100
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -105,8 +102,8 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         await self.coordinator.async_request_refresh()
 
 
-class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
-    """Representation of a SwitchBot Cover."""
+class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
+    """Representation of a SwitchBot Blind Tilt."""
 
     _attr_name = None
     _attr_is_closed: bool | None = None
@@ -117,6 +114,25 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
         | CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
     )
+    _attr_device_class = CoverDeviceClass.BLIND
+
+    def _set_attributes(self) -> None:
+        if self.coordinator.data is None:
+            return
+        # print(self.coordinator.data)
+        position: int | None = self.coordinator.data.get("slidePosition")
+        if position is None:
+            return
+
+        self._attr_is_closed = position in [0, 100]
+        if position > 50:
+            percent = 100 - ((position - 50) * 2)
+        else:
+            percent = 100 - (50 - position) * 2
+        self._attr_current_cover_position = percent
+        self._attr_current_cover_tilt_position = percent
+        direction = self.coordinator.data.get("direction")
+        self._attr_direction = direction.lower() if direction else None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -126,17 +142,14 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
                 BlindTiltCommands.SET_POSITION,
                 parameters=f"{self._attr_direction};{percent}",
             )
-            await asyncio.sleep(1)
-            await self.__update_current_cover_tilt_position()
-            self.async_write_ha_state()
+            await asyncio.sleep(10)
+            await self.coordinator.async_request_refresh()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
-        self._attr_is_closed = False
-        await asyncio.sleep(1)
-        await self.__update_current_cover_tilt_position()
-        self.async_write_ha_state()
+        await asyncio.sleep(10)
+        await self.coordinator.async_request_refresh()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -145,40 +158,8 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
                 await self.send_api_command(BlindTiltCommands.CLOSE_UP)
             else:
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
-            self._attr_is_closed = True
-            await asyncio.sleep(1)
-            await self.__update_current_cover_tilt_position()
-            self.async_write_ha_state()
-
-    def _set_attributes(self) -> None:
-        if self.coordinator.data is None:
-            return
-        position: int | None = self.coordinator.data.get("slidePosition")
-        if position is not None:
-            self._attr_is_closed = position in [0, 100]
-            if position > 50:
-                percent = 100 - ((position - 50) * 2)
-            else:
-                percent = 100 - (50 - position) * 2
-            self._attr_direction = self.coordinator.data.get("direction")
-            if self._attr_direction is not None:
-                self._attr_direction = self._attr_direction.lower()
-            self._attr_current_cover_position = percent
-            self._attr_current_cover_tilt_position = percent
-            self.async_write_ha_state()
-
-    async def __update_current_cover_tilt_position(self) -> None:
-        response: dict | None = await self._api.get_status(self.unique_id)
-        if response is not None:
-            position: int | None = response.get("slidePosition")
-            if position is not None:
-                self._attr_is_closed = position in [0, 100]
-                if position > 50:
-                    percent = 100 - ((position - 50) * 2)
-                else:
-                    percent = 100 - (50 - position) * 2
-                self._attr_current_cover_position = percent
-                self._attr_current_cover_tilt_position = percent
+            await asyncio.sleep(10)
+            await self.coordinator.async_request_refresh()
 
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
@@ -225,13 +206,13 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
 ) -> (
-    SwitchBotCloudCoverTilt
+    SwitchBotCloudCoverBlindTilt
     | SwitchBotCloudCoverRollerShade
     | SwitchBotCloudCoverCurtain
 ):
     """Make a SwitchBotCloudCover device."""
     if device.device_type == "Blind Tilt":
-        return SwitchBotCloudCoverTilt(api, device, coordinator)
+        return SwitchBotCloudCoverBlindTilt(api, device, coordinator)
     if device.device_type == "Roller Shade":
         return SwitchBotCloudCoverRollerShade(api, device, coordinator)
     return SwitchBotCloudCoverCurtain(api, device, coordinator)
