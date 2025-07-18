@@ -13,7 +13,7 @@ from homeassistant.components.nederlandse_spoorwegen.config_flow import (
     validate_time_format,
 )
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,7 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 API_KEY = "abc1234567"
-NEW_API_KEY = "xyz9876543"
 
 
 @pytest.mark.asyncio
@@ -124,74 +123,6 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
             )
             assert result.get("type") == FlowResultType.ABORT
             assert result.get("reason") == "already_configured"
-
-
-@pytest.mark.asyncio
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test reauthentication flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: API_KEY},
-        unique_id=DOMAIN,
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
-    ) as mock_wrapper_cls:
-        mock_wrapper = mock_wrapper_cls.return_value
-        mock_wrapper.validate_api_key = AsyncMock(return_value=True)
-        mock_wrapper.get_stations = AsyncMock(
-            return_value=[{"code": "AMS", "name": "Amsterdam"}]
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-        )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "reauth"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_API_KEY: NEW_API_KEY}
-        )
-        assert result.get("type") == FlowResultType.ABORT
-        assert result.get("reason") == "reauth_successful"
-        assert config_entry.data[CONF_API_KEY] == NEW_API_KEY
-
-
-@pytest.mark.asyncio
-async def test_reconfigure_flow(hass: HomeAssistant) -> None:
-    """Test reconfiguration flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: API_KEY},
-        unique_id=DOMAIN,
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
-    ) as mock_wrapper_cls:
-        mock_wrapper = mock_wrapper_cls.return_value
-        mock_wrapper.validate_api_key = AsyncMock(return_value=True)
-        mock_wrapper.get_stations = AsyncMock(
-            return_value=[{"code": "AMS", "name": "Amsterdam"}]
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-        )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "reconfigure"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_API_KEY: NEW_API_KEY}
-        )
-        assert result.get("type") == FlowResultType.ABORT
-        assert result.get("reason") == "reconfigure_successful"
-        assert config_entry.data[CONF_API_KEY] == NEW_API_KEY
 
 
 def test_validate_time_format() -> None:

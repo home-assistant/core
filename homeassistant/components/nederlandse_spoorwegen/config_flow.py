@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -74,8 +73,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     This config flow supports:
     - Initial setup with API key validation
-    - Re-authentication when API key expires
-    - Reconfiguration of existing integration
     - Route management via subentries
     """
 
@@ -128,60 +125,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"route": RouteSubentryFlowHandler}
-
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication step for updating API key."""
-        errors: dict[str, str] = {}
-        entry = self.context.get("entry")
-        if entry is None and "entry_id" in self.context:
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if user_input is not None and entry is not None:
-            entry = cast(ConfigEntry, entry)
-            api_key = user_input.get(CONF_API_KEY)
-            if not api_key:
-                errors[CONF_API_KEY] = "missing_fields"
-            else:
-                _LOGGER.debug("Reauth: User provided new API key for NS integration")
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_API_KEY: api_key}
-                )
-                return self.async_abort(reason="reauth_successful")
-        data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
-        return self.async_show_form(
-            step_id="reauth",
-            data_schema=data_schema,
-            errors=errors,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration step for updating API key."""
-        errors: dict[str, str] = {}
-        entry = self.context.get("entry")
-        if entry is None and "entry_id" in self.context:
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if user_input is not None and entry is not None:
-            entry = cast(ConfigEntry, entry)
-            api_key = user_input.get(CONF_API_KEY)
-            if not api_key:
-                errors[CONF_API_KEY] = "missing_fields"
-            else:
-                _LOGGER.debug(
-                    "Reconfigure: User provided new API key for NS integration"
-                )
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_API_KEY: api_key}
-                )
-                return self.async_abort(reason="reconfigure_successful")
-        data_schema = vol.Schema({vol.Required(CONF_API_KEY): str})
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=data_schema,
-            errors=errors,
-        )
 
 
 class RouteSubentryFlowHandler(ConfigSubentryFlow):

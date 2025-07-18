@@ -10,49 +10,11 @@
         "data_description": {
           "api_key": "Your NS API key."
         }
-      },
-      "routes": {
-        "title": "Add route",
-        "description": "Select your departure and destination stations from the dropdown lists. Time is optional and if omitted, the next available train will be shown.",
-        "data": {
-          "name": "Route name",
-          "from": "From station",
-          "to": "To station",
-          "via": "Via station (optional)",
-          "time": "Departure time (optional)"
-        },
-        "data_description": {
-          "name": "A name for this route.",
-          "from": "Select the departure station",
-          "to": "Select the destination station",
-          "via": "Optional intermediate station",
-          "time": "Optional departure time in HH:MM or HH:MM:SS (24h)"
-        }
-      },
-      "reauth": {
-        "title": "Re-authenticate",
-        "description": "Your NS API key needs to be updated.",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Enter your new NS API key."
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure",
-        "description": "Update your NS API key.",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Enter your new NS API key."
-        }
       }
     },
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
-      "invalid_auth": "Invalid API key.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
       "missing_fields": "Please fill in all required fields.",
       "no_stations_available": "Unable to load station list. Please check your connection and API key.",
       "same_station": "Departure and arrival stations must be different.",
@@ -61,9 +23,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "This API key is already configured.",
-      "reauth_successful": "Re-authentication successful.",
-      "reconfigure_successful": "Reconfiguration successful."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "config_subentries": {
@@ -71,20 +31,20 @@
       "step": {
         "user": {
           "title": "{title}",
-          "description": "[%key:component::nederlandse_spoorwegen::config::step::routes::description%]",
+          "description": "Select your departure and destination stations from the dropdown lists. Time is optional and if omitted, the next available train will be shown.",
           "data": {
-            "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::name%]",
-            "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::from%]",
-            "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::to%]",
-            "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::via%]",
-            "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data::time%]"
+            "name": "Route name",
+            "from": "From station",
+            "to": "To station",
+            "via": "Via station (optional)",
+            "time": "Departure time (optional)"
           },
           "data_description": {
-            "name": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::name%]",
-            "from": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::from%]",
-            "to": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::to%]",
-            "via": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::via%]",
-            "time": "[%key:component::nederlandse_spoorwegen::config::step::routes::data_description::time%]"
+            "name": "A name for this route.",
+            "from": "Select the departure station",
+            "to": "Select the destination station",
+            "via": "Optional intermediate station",
+            "time": "Optional departure time in HH:MM or HH:MM:SS (24h)"
           }
         }
       },
@@ -95,6 +55,7 @@
         "no_stations_available": "[%key:component::nederlandse_spoorwegen::config::error::no_stations_available%]",
         "same_station": "[%key:component::nederlandse_spoorwegen::config::error::same_station%]",
         "invalid_station": "[%key:component::nederlandse_spoorwegen::config::error::invalid_station%]",
+        "invalid_time_format": "[%key:component::nederlandse_spoorwegen::config::error::invalid_time_format%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
@@ -102,6 +63,52 @@
         "reconfigure": "Edit route"
       },
       "entry_type": "Route"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure_platform_planned": {
+        "name": "Departure platform planned"
+      },
+      "departure_platform_actual": {
+        "name": "Departure platform actual"
+      },
+      "arrival_platform_planned": {
+        "name": "Arrival platform planned"
+      },
+      "arrival_platform_actual": {
+        "name": "Arrival platform actual"
+      },
+      "departure_time_planned": {
+        "name": "Departure time planned"
+      },
+      "departure_time_actual": {
+        "name": "Departure time actual"
+      },
+      "arrival_time_planned": {
+        "name": "Arrival time planned"
+      },
+      "arrival_time_actual": {
+        "name": "Arrival time actual"
+      },
+      "next_departure": {
+        "name": "Next departure"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "route_via": {
+        "name": "Route via"
+      }
     }
   }
 }
