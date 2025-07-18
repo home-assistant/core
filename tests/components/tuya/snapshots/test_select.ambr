@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[am43_corded_motor_zigbee_cover][select.kitchen_blinds_motor_mode-entry]
+# name: test_platform_setup_and_discovery[cl_am43_corded_motor_zigbee_cover][select.kitchen_blinds_motor_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[am43_corded_motor_zigbee_cover][select.kitchen_blinds_motor_mode-state]
+# name: test_platform_setup_and_discovery[cl_am43_corded_motor_zigbee_cover][select.kitchen_blinds_motor_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kitchen Blinds Motor mode',

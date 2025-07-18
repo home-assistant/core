@@ -222,6 +222,15 @@
       },
       "temp_correction": {
         "name": "Temperature correction"
+      },
+      "arm_delay": {
+        "name": "Arm delay"
+      },
+      "alarm_delay": {
+        "name": "Alarm delay"
+      },
+      "siren_duration": {
+        "name": "Siren duration"
       }
     },
     "select": {
