@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, WorkArea
+from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -477,3 +477,116 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+
+
+async def test_dynamic_polling(
+    hass: HomeAssistant,
+    mock_automower_client,
+    mock_config_entry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
+
+    and that the pong callback stops polling when all mowers are inactive.
+    """
+    # Prepare initial and poll values
+    websocket_values = deepcopy(values)
+    poll_values = deepcopy(values)
+
+    # Holder for registered callbacks
+    callback_holder: dict[str, Callable] = {}
+
+    # 1) Capture the data-update callback
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["data_cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+
+    # 2) Capture the ws_ready_callback but do not execute it yet
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        callback_holder["ws_ready_cb"] = cb
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+
+    # 3) Capture the pong callback registration
+    @callback
+    def fake_register_pong_callback(cb) -> None:
+        """Capture pong callbacks without type issues."""
+        callback_holder["pong_cb"] = cb
+
+    mock_automower_client.register_pong_callback.side_effect = (
+        fake_register_pong_callback
+    )
+
+    # 4) Stub out hass.create_task so that the real Watchdog loop is never started so that the real Watchdog loop is never started
+    created_tasks: list = []
+    hass.create_task = (
+        lambda coro, name=None: created_tasks.append((coro, name)) or None
+    )
+
+    # 5) Initialize the integration - this registers our callbacks
+    await setup_integration(hass, mock_config_entry)
+
+    # 6) Trigger WebSocket ready
+    assert "ws_ready_cb" in callback_holder, "ws_ready_callback was not registered"
+    callback_holder["ws_ready_cb"]()
+    assert created_tasks, "No create_task() call for the Watchdog was made"
+
+    # 7) Simulate pong callback: mark all mowers inactive and invoke pong
+    # now = datetime.datetime.now(tz=datetime.UTC)
+    # set all mower metadata.connected = False to satisfy _should_poll() == False
+    for attrs in poll_values.values():
+        attrs.metadata.connected = False
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Trigger pong to stop polling
+    assert "pong_cb" in callback_holder
+    now = dt_util.now()
+    callback_holder["pong_cb"](now)
+
+    # Verify no further polling
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+    for attrs in poll_values.values():
+        attrs.metadata.connected = True
+        attrs.mower.state = MowerStates.OFF
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+
+    poll_values[TEST_MOWER_ID].mower.state = MowerStates.IN_OPERATION
+    websocket_values = deepcopy(poll_values)
+    callback_holder["data_cb"](websocket_values)
+    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("lawn_mower.test_mower_1")
+    assert state is not None
+    assert state.state == "docked"
+    assert mock_automower_client.get_status.call_count == 3
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4

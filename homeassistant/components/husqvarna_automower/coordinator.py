@@ -179,7 +179,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
     def _should_poll(self) -> bool:
         """Return True if at least one mower is connected or not OFF."""
         return any(
-            mower.metadata.connected or mower.mower.state != MowerStates.OFF
+            mower.metadata.connected and mower.mower.state != MowerStates.OFF
             for mower in self.data.values()
         )
 
