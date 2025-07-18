@@ -217,7 +217,8 @@ class SnmpSensor(ManualTriggerSensorEntity):
                 self.entity_id, variables, STATE_UNKNOWN
             )
 
-        self._set_value_with_possible_timestamp(value, self.device_class, variables)
+        self._set_native_value_with_possible_timestamp(value)
+        self._process_manual_data(variables)
 
 
 class SnmpData:

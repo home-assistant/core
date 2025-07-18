@@ -404,11 +404,11 @@ class SQLSensor(ManualTriggerSensorEntity):
                 _value = self._template.async_render_as_value_template(
                     self.entity_id, variables, None
                 )
-                self._set_value_with_possible_timestamp(
-                    _value, self.device_class, variables
-                )
+                self._set_native_value_with_possible_timestamp(value)
         else:
             self._attr_native_value = data
+
+        self._process_manual_data(variables)
 
         if data is None:
             _LOGGER.warning("%s returned no results", self._query)

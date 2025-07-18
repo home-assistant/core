@@ -179,5 +179,6 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
                 self.entity_id, variables, None
             )
 
-        self._set_value_with_possible_timestamp(value, self.device_class, variables)
+        self._set_native_value_with_possible_timestamp(value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()

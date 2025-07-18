@@ -393,19 +393,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
     @callback
-    def _set_value_with_possible_timestamp(
-        self,
-        value: Any,
-        device_class: SensorDeviceClass | None,
-        variables: dict[str, Any],
-    ) -> None:
-        """Set value with possible timestamp.
+    def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
+        """Set native value with possible timestamp.
 
-        Implementing class should call this last in update method to set the value
-        and then render all templates.
-        Ex: _set_value_with_possible_timestamp(value, device_class, variables)
+        If self.device_class is `date` or `timestamp`,
+        it will try to parse the value to a date/datetime object.
         """
-        if device_class not in (
+        if self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         ):
@@ -414,5 +408,3 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
             )
-
-        super()._process_manual_data(variables)
