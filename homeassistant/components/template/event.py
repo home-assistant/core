@@ -3,25 +3,20 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import voluptuous as vol
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
+    ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -31,6 +26,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
@@ -66,43 +62,21 @@ EVENT_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateEvent]:
-    """Create the Template event."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateEvent(hass, definition, unique_id))
-    return entities
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the template select."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template event entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerEventEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    """Set up the template event."""
+    await async_setup_template_platform(
+        hass,
+        EVENT_DOMAIN,
+        config,
+        StateEventEntity,
+        TriggerEventEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
@@ -115,11 +89,24 @@ async def async_setup_entry(
     _options = dict(config_entry.options)
     _options.pop("template_type")
     validated_config = EVENT_CONFIG_SCHEMA(_options)
-    async_add_entities([TemplateEvent(hass, validated_config, config_entry.entry_id)])
+    async_add_entities(
+        [StateEventEntity(hass, validated_config, config_entry.entry_id)]
+    )
+
+
+@callback
+def async_create_preview_event(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateEventEntity:
+    """Create a preview event."""
+    validated_config = EVENT_CONFIG_SCHEMA(config | {CONF_NAME: name})
+    return StateEventEntity(hass, validated_config, None)
 
 
 class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -168,7 +155,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
             )
 
 
-class TemplateEvent(TemplateEntity, AbstractTemplateEvent):
+class StateEventEntity(TemplateEntity, AbstractTemplateEvent):
     """Representation of a template event."""
 
     _attr_should_poll = False
@@ -180,14 +167,8 @@ class TemplateEvent(TemplateEntity, AbstractTemplateEvent):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateEvent.__init__(self, config)
-        if TYPE_CHECKING:
-            assert self._attr_name is not None
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass, config.get(CONF_DEVICE_ID)
-        )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -227,13 +208,6 @@ class TriggerEventEntity(TriggerEntity, AbstractTemplateEvent, RestoreEntity):
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateEvent.__init__(self, config)
-
-        # Render the _attr_name before initializing TriggerEventEntity
-        self._attr_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass, config.get(CONF_DEVICE_ID)
-        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

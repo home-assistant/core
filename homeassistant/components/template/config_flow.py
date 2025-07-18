@@ -55,7 +55,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
-from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES
+from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -354,6 +354,7 @@ CONFIG_FLOW = {
     ),
     Platform.EVENT: SchemaFlowFormStep(
         config_schema(Platform.EVENT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
@@ -402,6 +403,7 @@ OPTIONS_FLOW = {
     ),
     Platform.EVENT: SchemaFlowFormStep(
         options_schema(Platform.EVENT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
@@ -437,6 +439,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.EVENT: async_create_preview_event,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
