@@ -20,7 +20,7 @@ async def test_user_form_with_a_and_aaaa_records(
 ) -> None:
     """Test user flow with A and AAAA record types."""
 
-    # Simulierte Nutzereingaben für beide Typen
+    # Simulated user inputs for both record types
     user_input_records = {CONF_RECORDS: ["ha.mock.com|A", "ha.mock.com|AAAA"]}
 
     result = await hass.config_entries.flow.async_init(
