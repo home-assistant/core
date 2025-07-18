@@ -247,7 +247,7 @@ async def test_invalid_multilevel_sensor_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
@@ -610,7 +610,7 @@ async def test_invalid_meter_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
@@ -796,12 +796,14 @@ CONTROLLER_STATISTICS_SUFFIXES = {
 }
 # controller statistics with initial state of unknown
 CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
-    "current_background_rssi_channel_0": -1,
-    "average_background_rssi_channel_0": -2,
-    "current_background_rssi_channel_1": -3,
-    "average_background_rssi_channel_1": -4,
-    "current_background_rssi_channel_2": STATE_UNKNOWN,
-    "average_background_rssi_channel_2": STATE_UNKNOWN,
+    "signal_noise_channel_0": -1,
+    "avg_signal_noise_channel_0": -2,
+    "signal_noise_channel_1": -3,
+    "avg_signal_noise_channel_1": -4,
+    "signal_noise_channel_2": -5,
+    "avg_signal_noise_channel_2": -6,
+    "signal_noise_channel_3": STATE_UNKNOWN,
+    "avg_signal_noise_channel_3": STATE_UNKNOWN,
 }
 NODE_STATISTICS_ENTITY_PREFIX = "sensor.4_in_1_sensor_"
 # node statistics with initial state of 0
@@ -815,7 +817,7 @@ NODE_STATISTICS_SUFFIXES = {
 # node statistics with initial state of unknown
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
-    "rssi": 7,
+    "signal_strength": 7,
 }
 
 
@@ -885,7 +887,7 @@ async def test_statistics_sensors_no_last_seen(
     ):
         for suffix_key in suffixes:
             entry = entity_registry.async_get(f"{prefix}{suffix_key}")
-            assert entry
+            assert entry, f"Entity {prefix}{suffix_key} not found"
             assert entry.disabled
             assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -911,12 +913,12 @@ async def test_statistics_sensors_no_last_seen(
     ):
         for suffix_key in suffixes:
             entry = entity_registry.async_get(f"{prefix}{suffix_key}")
-            assert entry
+            assert entry, f"Entity {prefix}{suffix_key} not found"
             assert not entry.disabled
             assert entry.disabled_by is None
 
             state = hass.states.get(entry.entity_id)
-            assert state
+            assert state, f"State for {entry.entity_id} not found"
             assert state.state == initial_state
 
     # Fire statistics updated for controller
@@ -943,6 +945,10 @@ async def test_statistics_sensors_no_last_seen(
                     "channel1": {
                         "current": -3,
                         "average": -4,
+                    },
+                    "channel2": {
+                        "current": -5,
+                        "average": -6,
                     },
                     "timestamp": 1681967176510,
                 },
