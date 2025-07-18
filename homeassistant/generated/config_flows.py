@@ -188,6 +188,7 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "family_safety",
         "fastdotcom",
         "feedreader",
         "fibaro",

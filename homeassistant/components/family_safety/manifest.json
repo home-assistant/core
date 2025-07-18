@@ -1,0 +1,15 @@
+{
+  "domain": "family_safety",
+  "name": "Microsoft Family Safety",
+  "codeowners": [
+    "@pantherale0"
+  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/family_safety",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyfamilysafety"],
+  "quality_scale": "bronze",
+  "requirements": [
+    "pyfamilysafety==2.0.0b2"
+  ]
+}
