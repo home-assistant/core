@@ -193,8 +193,7 @@ async def make_device_data(
         "Curtain",
         "Curtain3",
         "Roller Shade",
-        # "Blind Tilt",
-        # "Garage Door Opener",
+        "Blind Tilt",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -204,7 +203,6 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Blind Tilt",
         "Garage Door Opener",
     ]:
         coordinator = await coordinator_for_device(
