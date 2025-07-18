@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.components import datadog
 from homeassistant.components.datadog import async_setup_entry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -178,8 +179,11 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+        assert entry.state is ConfigEntryState.LOADED
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
     client.flush.assert_called_once()
     client.close_socket.assert_called_once()

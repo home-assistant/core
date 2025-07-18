@@ -68,7 +68,6 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
         domain=datadog.DOMAIN,
         data=MOCK_DATA,
         options=MOCK_OPTIONS,
-        unique_id="datadog_unique",
     )
     mock_entry.add_to_hass(hass)
 
@@ -100,7 +99,6 @@ async def test_import_flow(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test import triggers config flow and is accepted."""
-    # Success case: Valid import
     with (
         patch(
             "homeassistant.components.datadog.config_flow.DogStatsd"
@@ -134,7 +132,6 @@ async def test_import_connection_error(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test import triggers connection error issue."""
-    # Invalid import with connection error
     with patch(
         "homeassistant.components.datadog.config_flow.DogStatsd",
         side_effect=OSError("connection refused"),
@@ -161,7 +158,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         domain=datadog.DOMAIN,
         data=MOCK_DATA,
         options=MOCK_OPTIONS,
-        unique_id="datadog_unique",
     )
     mock_entry.add_to_hass(hass)
 
