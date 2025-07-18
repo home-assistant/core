@@ -257,112 +257,304 @@ async def test_vacuum_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
-# @pytest.mark.parametrize("load_device_file", ["laundry_scenario/001_off.json"])
-# @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-# @pytest.mark.parametrize(
-#     ("device_name", "json_sequence", "expected_sensor_states"),
-#     [
-#         (
-#             "washing_machine",
-#             [
-#                 "laundry_scenario/002_washing.json",
-#                 "laundry_scenario/003_rinse_hold.json",
-#                 "laundry_scenario/004_wash_end.json",
-#                 "laundry_scenario/005_drying.json",  # washer remains programmed while starting dryer
-#             ],
-#             {
-#                 "": ["off", "in_use", "rinse_hold", "program_ended", "programmed"],
-#                 "program": [
-#                     "no_program",
-#                     "minimum_iron",
-#                     "minimum_iron",
-#                     "minimum_iron",
-#                     "minimum_iron",
-#                 ],
-#                 "program_phase": [
-#                     "not_running",
-#                     "main_wash",
-#                     "rinse_hold",
-#                     "anti_crease",
-#                     "not_running",
-#                 ],
-#                 # "target_temperature": ["unknown", "30", "30", "30", "40"],
-#                 "spin_speed": ["unknown", "1200", "1200", "1200", "1200"],
-#                 "remaining_time": ["0", "105", "8", "0", "119"],
-#                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
-#                 # IN_USE -> elapsed time from API (normal case)
-#                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
-#                 # PROGRAMMED -> elapsed time from API (normal case)
-#                 "elapsed_time": ["0", "12", "109", "109", "0"],
-#             },
-#         ),
-#         (
-#             "tumble_dryer",
-#             [
-#                 "laundry_scenario/005_drying.json",
-#                 "laundry_scenario/006_drying_end.json",
-#             ],
-#             {
-#                 "": ["off", "in_use", "program_ended"],
-#                 "program": ["no_program", "minimum_iron", "minimum_iron"],
-#                 "program_phase": ["not_running", "drying", "finished"],
-#                 "drying_step": ["unknown", "normal", "normal"],
-#                 "remaining_time": ["0", "49", "0"],
-#                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
-#                 # IN_USE -> elapsed time from API (normal case)
-#                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
-#                 "elapsed_time": ["0", "20", "20"],
-#             },
-#         ),
-#     ],
-# )
+@pytest.mark.parametrize("load_device_file", ["laundry.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_laundry_wash_scenario(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Parametrized test for verifying time sensors for wahsing machine devices when API glitches at program end."""
 
-#     device_name: str,
-#     json_sequence: list[str],
-#     expected_sensor_states: dict[str, list[str]],
-# ) -> None:
-#     """Parametrized test for verifying sensor state transitions for laundry devices."""
+    step = 0
 
-#     await mock_sensor_transitions(
-#         hass,
-#         mock_miele_client,
-#         mock_config_entry,
-#         device_name,
-#         json_sequence,
-#         expected_sensor_states,
-#     )
+    # Initial state when the washing machine is off
+    check_sensor_state(hass, "sensor.washing_machine", "off", step)
+    check_sensor_state(hass, "sensor.washing_machine_program", "no_program", step)
+    check_sensor_state(
+        hass, "sensor.washing_machine_program_phase", "not_running", step
+    )
+    check_sensor_state(
+        hass, "sensor.washing_machine_target_temperature", "unknown", step
+    )
+    check_sensor_state(hass, "sensor.washing_machine_spin_speed", "unknown", step)
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
+    # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "0", step)
+
+    # Simulate program started
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 5
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "In use"
+    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_raw"] = 3
+    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_localized"] = (
+        "Minimum iron"
+    )
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 260
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
+        "Main wash"
+    )
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 1
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 45
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0]["value_raw"] = 3000
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0][
+        "value_localized"
+    ] = 30.0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 12
+    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_raw"] = 1200
+    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_localized"] = "1200"
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.washing_machine", "in_use", step)
+    check_sensor_state(hass, "sensor.washing_machine_program", "minimum_iron", step)
+    check_sensor_state(hass, "sensor.washing_machine_program_phase", "main_wash", step)
+    check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
+    check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "105", step)
+    # IN_USE -> elapsed time from API (normal case)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "12", step)
+
+    # Simulate rinse hold phase
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 11
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "Rinse hold"
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 262
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
+        "Rinse hold"
+    )
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 8
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 1
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 49
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.washing_machine", "rinse_hold", step)
+    check_sensor_state(hass, "sensor.washing_machine_program", "minimum_iron", step)
+    check_sensor_state(hass, "sensor.washing_machine_program_phase", "rinse_hold", step)
+    check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
+    check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "8", step)
+    # RINSE HOLD -> elapsed time from API (normal case)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
+
+    # Simulate program ended
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 7
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "Finished"
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 267
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
+        "Anti-crease"
+    )
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.washing_machine", "program_ended", step)
+    check_sensor_state(hass, "sensor.washing_machine_program", "minimum_iron", step)
+    check_sensor_state(
+        hass, "sensor.washing_machine_program_phase", "anti_crease", step
+    )
+    check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
+    check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
+    # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
+
+    # Simulate when door is opened after program ended
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 3
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = (
+        "Programme selected"
+    )
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 256
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = ""
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0]["value_raw"] = 4000
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0][
+        "value_localized"
+    ] = 40.0
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 1
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 59
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.washing_machine", "programmed", step)
+    check_sensor_state(hass, "sensor.washing_machine_program", "minimum_iron", step)
+    check_sensor_state(
+        hass, "sensor.washing_machine_program_phase", "not_running", step
+    )
+    check_sensor_state(hass, "sensor.washing_machine_target_temperature", "40.0", step)
+    check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "119", step)
+    # PROGRAMMED -> elapsed time from API (normal case)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "0", step)
 
 
-# @pytest.mark.parametrize("load_device_file", ["laundry_scenario/003_rinse_hold.json"])
-# @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-# async def test_elapsed_time_sensor_restored(
+@pytest.mark.parametrize("load_device_file", ["laundry.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_laundry_dry_scenario(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Parametrized test for verifying time sensors for tumble dryer devices when API reports time value from last cycle, when device is off."""
+
+    step = 0
+
+    # Initial state when the washing machine is off
+    check_sensor_state(hass, "sensor.tumble_dryer", "off", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program", "no_program", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "not_running", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "unknown", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
+    # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
+    check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "0", step)
+
+    # Simulate program started
+    device_fixture["DummyDryer"]["state"]["status"]["value_raw"] = 5
+    device_fixture["DummyDryer"]["state"]["status"]["value_localized"] = "In use"
+    device_fixture["DummyDryer"]["state"]["ProgramID"]["value_raw"] = 3
+    device_fixture["DummyDryer"]["state"]["ProgramID"]["value_localized"] = (
+        "Minimum iron"
+    )
+    device_fixture["DummyDryer"]["state"]["programPhase"]["value_raw"] = 514
+    device_fixture["DummyDryer"]["state"]["programPhase"]["value_localized"] = "Drying"
+    device_fixture["DummyDryer"]["state"]["remainingTime"][0] = 0
+    device_fixture["DummyDryer"]["state"]["remainingTime"][1] = 49
+    device_fixture["DummyDryer"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyDryer"]["state"]["elapsedTime"][1] = 20
+    device_fixture["DummyDryer"]["state"]["dryingStep"]["value_raw"] = 2
+    device_fixture["DummyDryer"]["state"]["dryingStep"]["value_localized"] = "Normal"
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.tumble_dryer", "in_use", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program", "minimum_iron", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "drying", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "normal", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "49", step)
+    # IN_USE -> elapsed time from API (normal case)
+    check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
+
+    # Simulate program end
+    device_fixture["DummyDryer"]["state"]["status"]["value_raw"] = 7
+    device_fixture["DummyDryer"]["state"]["status"]["value_localized"] = "Finished"
+    device_fixture["DummyDryer"]["state"]["programPhase"]["value_raw"] = 522
+    device_fixture["DummyDryer"]["state"]["programPhase"]["value_localized"] = (
+        "Finished"
+    )
+    device_fixture["DummyDryer"]["state"]["remainingTime"][0] = 0
+    device_fixture["DummyDryer"]["state"]["remainingTime"][1] = 0
+    device_fixture["DummyDryer"]["state"]["elapsedTime"][0] = 1
+    device_fixture["DummyDryer"]["state"]["elapsedTime"][1] = 18
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step += 1
+
+    check_sensor_state(hass, "sensor.tumble_dryer", "program_ended", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program", "minimum_iron", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "finished", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "normal", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
+    # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
+    check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
 
 
-# ) -> None:
-#     """Test that elapsed time returns the restored value when program ended."""
+@pytest.mark.parametrize("load_device_file", ["laundry.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_elapsed_time_sensor_restored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that elapsed time returns the restored value when program ended."""
 
-#     entity_id = "sensor.washing_machine_elapsed_time"
+    entity_id = "sensor.washing_machine_elapsed_time"
 
-#     assert hass.states.get(entity_id).state == "109"
+    # Simulate program started
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 5
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "In use"
+    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_raw"] = 3
+    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_localized"] = (
+        "Minimum iron"
+    )
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 260
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
+        "Main wash"
+    )
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 1
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 45
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0]["value_raw"] = 3000
+    device_fixture["DummyWasher"]["state"]["targetTemperature"][0][
+        "value_localized"
+    ] = 30.0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 12
+    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_raw"] = 1200
+    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_localized"] = "1200"
 
-#     # load device when status is PROGRAM_ENDED and elapsed time reported by API is 0
-#     mock_miele_client.get_devices.return_value = load_json_object_fixture(
-#         "laundry_scenario/004_wash_end.json", DOMAIN
-#     )
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-#     # unload config entry and reload to make sure that the state is restored
+    assert hass.states.get(entity_id).state == "12"
 
+    # Simulate program ended
+    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 7
+    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "Finished"
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 267
+    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
+        "Anti-crease"
+    )
+    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
+    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
 
-#     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-#     await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-#     assert hass.states.get(entity_id).state == "unavailable"
+    # unload config entry and reload to make sure that the state is restored
 
-#     await hass.config_entries.async_reload(mock_config_entry.entry_id)
-#     await hass.async_block_till_done()
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    assert hass.states.get(entity_id).state == "unavailable"
 
-#     # check that elapsed time is the one restored and not the value reported by API (0)
-#     state = hass.states.get(entity_id)
-#     assert state is not None
-#     assert state.state == "109"
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # check that elapsed time is the one restored and not the value reported by API (0)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "12"
