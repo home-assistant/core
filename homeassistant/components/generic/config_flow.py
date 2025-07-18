@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime, timedelta
+from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
@@ -52,9 +52,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -569,18 +568,9 @@ async def ws_start_preview(
         )
     user_input = flow.preview_image_settings
 
-    # Create an EntityPlatform, needed for name translations
-    platform = await async_prepare_setup_platform(hass, {}, CAMERA_DOMAIN, DOMAIN)
-    entity_platform = EntityPlatform(
-        hass=hass,
-        logger=_LOGGER,
-        domain=CAMERA_DOMAIN,
-        platform_name=DOMAIN,
-        platform=platform,
-        scan_interval=timedelta(seconds=3600),
-        entity_namespace=None,
-    )
-    await entity_platform.async_load_translations()
+    # Create PlatformData, needed for name translations
+    platform_data = PlatformData(hass=hass, domain=CAMERA_DOMAIN, platform_name=DOMAIN)
+    await platform_data.async_load_translations()
 
     ha_still_url = None
     ha_stream_url = None
