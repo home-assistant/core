@@ -150,8 +150,6 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         self,
         coordinator: AirOSDataUpdateCoordinator,
         description: AirOSSensorEntityDescription,
-        # station_data: dict[str, Any] | None = None,
-        # station_index: int | None = None
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
