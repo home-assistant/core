@@ -16,13 +16,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
     mock_restore_cache_with_extra_data,
 )
+from tests.conftest import WebSocketGenerator
 
 TEST_OBJECT_ID = "template_event"
 TEST_ENTITY_ID = f"event.{TEST_OBJECT_ID}"
@@ -801,3 +802,22 @@ async def test_nested_unique_id(
     entry = entity_registry.async_get("event.test_b")
     assert entry
     assert entry.unique_id == "x-b"
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        event.DOMAIN,
+        {"name": "My template", **TEST_EVENT_CONFIG},
+    )
+
+    assert state["state"] == TEST_FROZEN_STATE
+    assert state["attributes"]["event_type"] == "single"
+    assert state["attributes"]["event_types"] == ["single", "double", "hold"]
