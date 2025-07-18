@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -20,13 +21,15 @@ DOWNLOAD_DIR = Path("build/translations-download").absolute()
 def run_download_docker():
     """Run the Docker image to download the translations."""
     print("Running Docker to download latest translations.")
-    run = subprocess.run(
+    result = subprocess.run(
         [
             "docker",
             "run",
             "-v",
             f"{DOWNLOAD_DIR}:/opt/dest/locale",
             "--rm",
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
             f"lokalise/lokalise-cli-2:{CLI_2_DOCKER_IMAGE}",
             # Lokalise command
             "lokalise2",
@@ -52,7 +55,7 @@ def run_download_docker():
     )
     print()
 
-    if run.returncode != 0:
+    if result.returncode != 0:
         raise ExitApp("Failed to download translations")
 
 
