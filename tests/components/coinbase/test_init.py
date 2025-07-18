@@ -14,9 +14,9 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     init_mock_coinbase,
-    mock_get_current_user,
     mock_get_exchange_rates,
-    mocked_get_accounts,
+    mock_get_portfolios,
+    mocked_get_accounts_v3,
 )
 from .const import (
     GOOD_CURRENCY,
@@ -30,16 +30,16 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
         patch(
-            "coinbase.wallet.client.Client.get_accounts",
-            new=mocked_get_accounts,
+            "coinbase.rest.RESTClient.get_accounts",
+            new=mocked_get_accounts_v3,
         ),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": {"rates": {}}},
         ),
     ):
         entry = await init_mock_coinbase(hass)
@@ -61,13 +61,13 @@ async def test_option_updates(
 
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
-        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
         ),
     ):
         config_entry = await init_mock_coinbase(hass)
@@ -141,13 +141,13 @@ async def test_ignore_vaults_wallets(
 
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
-        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
         ),
     ):
         config_entry = await init_mock_coinbase(hass, currencies=[GOOD_CURRENCY])
