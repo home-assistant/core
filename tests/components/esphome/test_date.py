@@ -26,7 +26,6 @@ async def test_generic_date_entity(
             object_id="mydate",
             key=1,
             name="my date",
-            unique_id="my_date",
         )
     ]
     states = [DateState(key=1, year=2024, month=12, day=31)]
@@ -62,7 +61,6 @@ async def test_generic_date_missing_state(
             object_id="mydate",
             key=1,
             name="my date",
-            unique_id="my_date",
         )
     ]
     states = [DateState(key=1, missing_state=True)]
