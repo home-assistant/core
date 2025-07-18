@@ -369,14 +369,14 @@ class ConfigSubentry:
         }
 
 
-class ConfigEntry[DataT = Any]:
+class ConfigEntry[_DataT = Any]:
     """Hold a configuration entry."""
 
     entry_id: str
     domain: str
     title: str
     data: MappingProxyType[str, Any]
-    runtime_data: DataT
+    runtime_data: _DataT
     options: MappingProxyType[str, Any]
     subentries: MappingProxyType[str, ConfigSubentry]
     unique_id: str | None
@@ -1272,13 +1272,13 @@ class ConfigEntry[DataT = Any]:
         )
 
     @callback
-    def async_create_task[R](
+    def async_create_task[_R](
         self,
         hass: HomeAssistant,
-        target: Coroutine[Any, Any, R],
+        target: Coroutine[Any, Any, _R],
         name: str | None = None,
         eager_start: bool = True,
-    ) -> asyncio.Task[R]:
+    ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
         This method must be run in the event loop.
@@ -1296,13 +1296,13 @@ class ConfigEntry[DataT = Any]:
         return task
 
     @callback
-    def async_create_background_task[R](
+    def async_create_background_task[_R](
         self,
         hass: HomeAssistant,
-        target: Coroutine[Any, Any, R],
+        target: Coroutine[Any, Any, _R],
         name: str,
         eager_start: bool = True,
-    ) -> asyncio.Task[R]:
+    ) -> asyncio.Task[_R]:
         """Create a background task tied to the config entry lifecycle.
 
         Background tasks are automatically canceled when config entry is unloaded.
