@@ -84,7 +84,7 @@ def validate_last_reset(val):
     return val
 
 
-SENSOR_FEATURE_SCHEMA = vol.Schema(
+SENSOR_COMMON_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -93,22 +93,22 @@ SENSOR_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-SENSOR_SCHEMA = vol.All(
+SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(ATTR_LAST_RESET): cv.template,
         }
     )
-    .extend(SENSOR_FEATURE_SCHEMA.schema)
+    .extend(SENSOR_COMMON_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema),
     validate_last_reset,
 )
 
-SENSOR_CONFIG_SCHEMA = SENSOR_FEATURE_SCHEMA.extend(
+SENSOR_CONFIG_ENTRY_SCHEMA = SENSOR_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
-LEGACY_SENSOR_SCHEMA = vol.All(
+SENSOR_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
@@ -150,7 +150,9 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
             vol.Optional(CONF_TRIGGERS): cv.match_all,  # to raise custom warning
-            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
+            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
+                SENSOR_LEGACY_YAML_SCHEMA
+            ),
         }
     ),
     extra_validation_checks,
@@ -190,7 +192,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateSensorEntity,
-        SENSOR_CONFIG_SCHEMA,
+        SENSOR_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -200,7 +202,7 @@ def async_create_preview_sensor(
 ) -> StateSensorEntity:
     """Create a preview sensor."""
     return async_setup_template_preview(
-        hass, name, config, StateSensorEntity, SENSOR_CONFIG_SCHEMA
+        hass, name, config, StateSensorEntity, SENSOR_CONFIG_ENTRY_SCHEMA
     )
 
 

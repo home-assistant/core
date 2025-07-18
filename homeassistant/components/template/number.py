@@ -52,7 +52,7 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_FEATURE_SCHEMA = vol.Schema(
+NUMBER_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
@@ -63,17 +63,17 @@ NUMBER_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-NUMBER_SCHEMA = (
+NUMBER_YAML_SCHEMA = (
     vol.Schema(
         {
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         }
     )
     .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(NUMBER_FEATURE_SCHEMA.schema)
+    .extend(NUMBER_COMMON_SCHEMA.schema)
 )
 
-NUMBER_CONFIG_SCHEMA = NUMBER_FEATURE_SCHEMA.extend(
+NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
@@ -107,7 +107,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateNumberEntity,
-        NUMBER_CONFIG_SCHEMA,
+        NUMBER_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -117,7 +117,7 @@ def async_create_preview_number(
 ) -> StateNumberEntity:
     """Create a preview number."""
     return async_setup_template_preview(
-        hass, name, config, StateNumberEntity, NUMBER_CONFIG_SCHEMA
+        hass, name, config, StateNumberEntity, NUMBER_CONFIG_ENTRY_SCHEMA
     )
 
 

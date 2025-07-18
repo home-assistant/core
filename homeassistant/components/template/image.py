@@ -40,7 +40,7 @@ DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
-IMAGE_SCHEMA = vol.Schema(
+IMAGE_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
@@ -48,7 +48,7 @@ IMAGE_SCHEMA = vol.Schema(
 ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 
 
-IMAGE_CONFIG_SCHEMA = vol.Schema(
+IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
@@ -85,7 +85,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateImageEntity,
-        IMAGE_CONFIG_SCHEMA,
+        IMAGE_CONFIG_ENTRY_SCHEMA,
     )
 
 

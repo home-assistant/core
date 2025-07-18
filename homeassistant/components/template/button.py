@@ -36,14 +36,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
-BUTTON_SCHEMA = vol.Schema(
+BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
-CONFIG_BUTTON_SCHEMA = vol.Schema(
+BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -80,7 +80,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateButtonEntity,
-        CONFIG_BUTTON_SCHEMA,
+        BUTTON_CONFIG_ENTRY_SCHEMA,
     )
 
 

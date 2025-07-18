@@ -71,7 +71,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-BINARY_SENSOR_FEATURE_SCHEMA = vol.Schema(
+BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
@@ -82,15 +82,15 @@ BINARY_SENSOR_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-BINARY_SENSOR_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_SCHEMA.schema
 )
 
-BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_FEATURE_SCHEMA.extend(
+BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
-LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
+BINARY_SENSOR_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
@@ -115,7 +115,7 @@ LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
-            LEGACY_BINARY_SENSOR_SCHEMA
+            BINARY_SENSOR_LEGACY_YAML_SCHEMA
         ),
     }
 )
@@ -152,7 +152,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateBinarySensorEntity,
-        BINARY_SENSOR_CONFIG_SCHEMA,
+        BINARY_SENSOR_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -162,7 +162,7 @@ def async_create_preview_binary_sensor(
 ) -> StateBinarySensorEntity:
     """Create a preview sensor."""
     return async_setup_template_preview(
-        hass, name, config, StateBinarySensorEntity, BINARY_SENSOR_CONFIG_SCHEMA
+        hass, name, config, StateBinarySensorEntity, BINARY_SENSOR_CONFIG_ENTRY_SCHEMA
     )
 
 

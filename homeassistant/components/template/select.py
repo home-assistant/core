@@ -47,7 +47,7 @@ CONF_SELECT_OPTION = "select_option"
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
 
-SELECT_FEATURE_SCHEMA = vol.Schema(
+SELECT_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_OPTIONS): cv.template,
         vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
@@ -55,17 +55,17 @@ SELECT_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-SELECT_SCHEMA = (
+SELECT_YAML_SCHEMA = (
     vol.Schema(
         {
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         }
     )
     .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(SELECT_FEATURE_SCHEMA.schema)
+    .extend(SELECT_COMMON_SCHEMA.schema)
 )
 
-SELECT_CONFIG_SCHEMA = SELECT_FEATURE_SCHEMA.extend(
+SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
@@ -99,7 +99,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         TemplateSelect,
-        SELECT_CONFIG_SCHEMA,
+        SELECT_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -109,7 +109,7 @@ def async_create_preview_select(
 ) -> TemplateSelect:
     """Create a preview select."""
     return async_setup_template_preview(
-        hass, name, config, TemplateSelect, SELECT_CONFIG_SCHEMA
+        hass, name, config, TemplateSelect, SELECT_CONFIG_ENTRY_SCHEMA
     )
 
 

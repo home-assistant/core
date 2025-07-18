@@ -59,7 +59,7 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Switch"
 
-SWITCH_FEATURE_SCHEMA = vol.Schema(
+SWITCH_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_STATE): cv.template,
         vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
@@ -67,11 +67,11 @@ SWITCH_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-SWITCH_SCHEMA = SWITCH_FEATURE_SCHEMA.extend(
+SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     make_template_entity_common_modern_schema(DEFAULT_NAME).schema
 )
 
-LEGACY_SWITCH_SCHEMA = vol.All(
+SWITCH_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
@@ -86,10 +86,10 @@ LEGACY_SWITCH_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(LEGACY_SWITCH_SCHEMA)}
+    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_LEGACY_YAML_SCHEMA)}
 )
 
-SWITCH_CONFIG_SCHEMA = SWITCH_FEATURE_SCHEMA.extend(
+SWITCH_CONFIG_ENTRY_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
@@ -135,7 +135,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateSwitchEntity,
-        SWITCH_CONFIG_SCHEMA,
+        SWITCH_CONFIG_ENTRY_SCHEMA,
         True,
     )
 
@@ -150,7 +150,7 @@ def async_create_preview_switch(
         name,
         config,
         StateSwitchEntity,
-        SWITCH_CONFIG_SCHEMA,
+        SWITCH_CONFIG_ENTRY_SCHEMA,
         True,
     )
 

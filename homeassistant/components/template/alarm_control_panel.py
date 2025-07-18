@@ -95,7 +95,7 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Alarm Control Panel"
 
-ALARM_CONTROL_PANEL_FEATURE_SCHEMA = vol.Schema(
+ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
@@ -112,11 +112,11 @@ ALARM_CONTROL_PANEL_FEATURE_SCHEMA = vol.Schema(
     }
 )
 
-ALARM_CONTROL_PANEL_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     make_template_entity_common_modern_schema(DEFAULT_NAME).schema
 )
 
-LEGACY_ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
+ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
@@ -138,12 +138,12 @@ LEGACY_ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
-            LEGACY_ALARM_CONTROL_PANEL_SCHEMA
+            ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA
         ),
     }
 )
 
-ALARM_CONTROL_PANEL_CONFIG_SCHEMA = ALARM_CONTROL_PANEL_FEATURE_SCHEMA.extend(
+ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
@@ -159,7 +159,7 @@ async def async_setup_entry(
         config_entry,
         async_add_entities,
         StateAlarmControlPanelEntity,
-        ALARM_CONTROL_PANEL_CONFIG_SCHEMA,
+        ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
     )
 
@@ -194,7 +194,7 @@ def async_create_preview_alarm_control_panel(
         name,
         config,
         StateAlarmControlPanelEntity,
-        ALARM_CONTROL_PANEL_CONFIG_SCHEMA,
+        ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
     )
 
