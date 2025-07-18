@@ -240,8 +240,8 @@ def _async_make_entity(
     | SwitchBotCloudCoverCurtain
 ):
     """Make a SwitchBotCloudCover device."""
-    if device.device_type in ["Blind Tilt"]:
+    if device.device_type == "Blind Tilt":
         return SwitchBotCloudCoverTilt(api, device, coordinator)
-    if device.device_type in ["Roller Shade"]:
+    if device.device_type == "Roller Shade":
         return SwitchBotCloudCoverRollerShade(api, device, coordinator)
     return SwitchBotCloudCoverCurtain(api, device, coordinator)
