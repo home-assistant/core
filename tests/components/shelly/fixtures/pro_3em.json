@@ -151,7 +151,7 @@
       "c_pf": 0.72,
       "c_voltage": 230.2,
       "id": 0,
-      "n_current": null,
+      "n_current": 3.124,
       "total_act_power": 2413.825,
       "total_aprt_power": 2525.779,
       "total_current": 11.116,
