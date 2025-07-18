@@ -3612,7 +3612,7 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 class OptionsFlowWithReload(OptionsFlow):
     """Automatic reloading class for config options flows.
 
-    Triggers an automatic reload of the config entry when the low ends with
+    Triggers an automatic reload of the config entry when the flow ends with
     calling `async_create_entry` with changed options.
     It's not allowed to use this class if the integration uses config entry
     update listeners.
