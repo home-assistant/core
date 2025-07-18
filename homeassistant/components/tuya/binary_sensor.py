@@ -111,6 +111,11 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             translation_key="feeding",
             on_value="feeding",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            translation_key="charge_state",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
@@ -431,7 +436,8 @@ async def async_setup_entry(
     async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
+        async_dispatcher_connect(
+            hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
 
 
