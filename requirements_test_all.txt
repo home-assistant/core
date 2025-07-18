@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.14
+aioairzone-cloud==0.6.15
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==1.2.2
+aioautomower==2.0.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -483,7 +483,7 @@ apsystems-ez1==2.7.0
 aranet4==2.5.1
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.1
+arcam-fmj==1.8.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -491,7 +491,7 @@ arcam-fmj==1.8.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.44.0
+async-upnp-client==0.45.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.106.0
+hass-nabucasa==0.107.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1153,7 +1153,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.4.0
+letpot==0.5.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.6
@@ -2644,7 +2644,7 @@ zeversolar==0.3.2
 zha==0.0.62
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.65.0
+zwave-js-server-python==0.66.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
