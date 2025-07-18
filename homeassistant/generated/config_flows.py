@@ -46,6 +46,7 @@ FLOWS = {
         "airvisual_pro",
         "airzone",
         "airzone_cloud",
+        "aladdin_connect",
         "alarmdecoder",
         "alexa_devices",
         "altruist",
