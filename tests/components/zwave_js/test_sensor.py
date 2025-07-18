@@ -1030,6 +1030,19 @@ async def test_last_seen_statistics_sensors(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2024-01-01T12:00:00+00:00"
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {
