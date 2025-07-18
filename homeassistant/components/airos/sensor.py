@@ -123,17 +123,6 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         .get("polling", {})
         .get("ul_capacity"),
     ),
-    AirOSSensorEntityDescription(
-        key="wireless_remote_hostname",
-        translation_key="wireless_remote_hostname",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
-        value_fn=lambda data: data.get("wireless", {})
-        .get("sta", {})[0]
-        .get("remote", {})
-        .get("hostname"),
-    ),
 )
 
 
