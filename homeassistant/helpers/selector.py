@@ -813,6 +813,7 @@ class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    reorder: bool
     filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
@@ -829,6 +830,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("reorder", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
                 cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],

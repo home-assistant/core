@@ -232,6 +232,11 @@ def test_device_selector_schema_error(schema) -> None:
             ),
         ),
         (
+            {"multiple": True, "reorder": True},
+            ((["sensor.abc123", "sensor.def456"],)),
+            (None, "abc123", ["sensor.abc123", None]),
+        ),
+        (
             {"filter": {"domain": "light"}},
             ("light.abc123", FAKE_UUID),
             (None,),
