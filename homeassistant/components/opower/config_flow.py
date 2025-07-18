@@ -9,6 +9,7 @@ from typing import Any
 from opower import (
     CannotConnect,
     InvalidAuth,
+    MfaRequired,
     Opower,
     create_cookie_jar,
     get_supported_utility_names,
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import VolDictType
 
-from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
+from .const import CONF_MFA_CODE, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def _validate_login(
-    hass: HomeAssistant, login_data: dict[str, str]
+    hass: HomeAssistant, login_data: dict[str, str], mfa_token: str | None = None
 ) -> dict[str, str]:
     """Validate login data and return any errors."""
     api = Opower(
@@ -46,6 +47,8 @@ async def _validate_login(
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
         login_data.get(CONF_TOTP_SECRET),
+        mfa_token=mfa_token,
+        mfa_code=login_data.get(CONF_MFA_CODE),
     )
     errors: dict[str, str] = {}
     try:
@@ -69,6 +72,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new OpowerConfigFlow."""
         self.utility_info: dict[str, Any] | None = None
+        self.mfa_token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,13 +86,17 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input[CONF_USERNAME],
                 }
             )
-            if select_utility(user_input[CONF_UTILITY]).accepts_mfa():
+            utility = select_utility(user_input[CONF_UTILITY])
+            if utility.accepts_mfa():
                 self.utility_info = user_input
                 return await self.async_step_mfa()
 
-            errors = await _validate_login(self.hass, user_input)
-            if not errors:
-                return self._async_create_opower_entry(user_input)
+            try:
+                errors = await _validate_login(self.hass, user_input)
+            except MfaRequired as exc:
+                self.utility_info = user_input
+                self.mfa_token = exc.mfa_token
+                return await self.async_step_mfa_code()
         else:
             user_input = {}
         user_input.pop(CONF_PASSWORD, None)
@@ -130,6 +138,28 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_mfa_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle MFA code step."""
+        assert self.utility_info is not None
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {**self.utility_info, **user_input}
+            try:
+                errors = await _validate_login(self.hass, data, self.mfa_token)
+            except MfaRequired as exc:
+                self.mfa_token = exc.mfa_token
+                errors["base"] = "invalid_mfa_code"
+            if not errors:
+                return self._async_create_opower_entry(data)
+
+        return self.async_show_form(
+            step_id="mfa_code",
+            data_schema=vol.Schema({vol.Required(CONF_MFA_CODE): str}),
+            errors=errors,
+        )
+
     @callback
     def _async_create_opower_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create the config entry."""
@@ -152,7 +182,12 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             data = {**reauth_entry.data, **user_input}
-            errors = await _validate_login(self.hass, data)
+            try:
+                errors = await _validate_login(self.hass, data)
+            except MfaRequired as exc:
+                self.utility_info = data
+                self.mfa_token = exc.mfa_token
+                return await self.async_step_mfa_code()
             if not errors:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)
 

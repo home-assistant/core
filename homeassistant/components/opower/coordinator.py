@@ -14,7 +14,7 @@ from opower import (
     ReadResolution,
     create_cookie_jar,
 )
-from opower.exceptions import ApiException, CannotConnect, InvalidAuth
+from opower.exceptions import ApiException, CannotConnect, InvalidAuth, MfaRequired
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -36,7 +36,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
+from .const import CONF_MFA_CODE, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             config_entry.data.get(CONF_TOTP_SECRET),
+            mfa_code=config_entry.data.get(CONF_MFA_CODE),
         )
 
         @callback
@@ -92,6 +93,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             await self.api.async_login()
         except InvalidAuth as err:
             _LOGGER.error("Error during login: %s", err)
+            raise ConfigEntryAuthFailed from err
+        except MfaRequired as err:
+            _LOGGER.error("MFA required during update: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)

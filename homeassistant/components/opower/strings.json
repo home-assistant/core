@@ -26,6 +26,13 @@
           "totp_secret": "The TOTP secret for your utility account, used for multi-factor authentication (MFA)."
         }
       },
+      "mfa_code": {
+        "title": "Multi-factor Authentication",
+        "description": "A verification code has been sent to you. Please enter it below.",
+        "data": {
+          "mfa_code": "Verification code"
+        }
+      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
@@ -42,7 +49,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "Invalid verification code"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
