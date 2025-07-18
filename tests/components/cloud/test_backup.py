@@ -21,7 +21,6 @@ from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
 from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReaderChunked
@@ -37,8 +36,7 @@ async def setup_integration(
     cloud: MagicMock,
     cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
-    """Set up cloud and backup integrations."""
-    async_initialize_backup(hass)
+    """Set up cloud integration."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),

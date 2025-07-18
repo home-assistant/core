@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import functools
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
@@ -147,11 +148,15 @@ async def _register_trigger_platform(
         )
         return
 
-    tasks: list[asyncio.Task[None]] = [
-        create_eager_task(listener(new_triggers))
-        for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]
-    ]
-    await asyncio.gather(*tasks)
+    # We don't use gather here because gather adds additional overhead
+    # when wrapping each coroutine in a task, and we expect our listeners
+    # to call trigger.async_get_all_descriptions which will only yield
+    # the first time it's called, after that it returns cached data.
+    for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]:
+        try:
+            await listener(new_triggers)
+        except Exception:
+            _LOGGER.exception("Error while notifying trigger platform listener")
 
 
 class Trigger(abc.ABC):
@@ -403,7 +408,7 @@ def _trigger_action_wrapper(
         check_func = check_func.func
 
     wrapper_func: Callable[..., Any] | Callable[..., Coroutine[Any, Any, Any]]
-    if asyncio.iscoroutinefunction(check_func):
+    if inspect.iscoroutinefunction(check_func):
         async_action = cast(Callable[..., Coroutine[Any, Any, Any]], action)
 
         @functools.wraps(async_action)

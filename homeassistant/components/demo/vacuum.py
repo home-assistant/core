@@ -19,10 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 SUPPORT_MINIMAL_SERVICES = VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
 
 SUPPORT_BASIC_SERVICES = (
-    VacuumEntityFeature.STATE
-    | VacuumEntityFeature.START
-    | VacuumEntityFeature.STOP
-    | VacuumEntityFeature.BATTERY
+    VacuumEntityFeature.STATE | VacuumEntityFeature.START | VacuumEntityFeature.STOP
 )
 
 SUPPORT_MOST_SERVICES = (
@@ -31,7 +28,6 @@ SUPPORT_MOST_SERVICES = (
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
 )
 
@@ -46,7 +42,6 @@ SUPPORT_ALL_SERVICES = (
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.STATUS
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.MAP
     | VacuumEntityFeature.CLEAN_SPOT
@@ -90,12 +85,6 @@ class StateDemoVacuum(StateVacuumEntity):
         self._attr_activity = VacuumActivity.DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
-        self._battery_level = 100
-
-    @property
-    def battery_level(self) -> int:
-        """Return the current battery level of the vacuum."""
-        return max(0, min(100, self._battery_level))
 
     @property
     def fan_speed(self) -> str:
@@ -117,7 +106,6 @@ class StateDemoVacuum(StateVacuumEntity):
         if self._attr_activity != VacuumActivity.CLEANING:
             self._attr_activity = VacuumActivity.CLEANING
             self._cleaned_area += 1.32
-            self._battery_level -= 1
             self.schedule_update_ha_state()
 
     def pause(self) -> None:
@@ -142,7 +130,6 @@ class StateDemoVacuum(StateVacuumEntity):
         """Perform a spot clean-up."""
         self._attr_activity = VacuumActivity.CLEANING
         self._cleaned_area += 1.32
-        self._battery_level -= 1
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:

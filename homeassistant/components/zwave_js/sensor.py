@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
@@ -28,7 +27,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -56,7 +54,6 @@ from .const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
-    DATA_CLIENT,
     DOMAIN,
     ENTITY_DESC_KEY_BATTERY_LEVEL,
     ENTITY_DESC_KEY_BATTERY_LIST_STATE,
@@ -94,6 +91,7 @@ from .discovery_data_template import (
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -423,7 +421,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_0.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -431,7 +429,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_0.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -440,7 +438,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_1.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -448,7 +446,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_1.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -457,7 +455,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_2.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "2"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -465,8 +463,25 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_2.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "2"},
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        convert=convert_nested_attr,
+    ),
+    ZWaveJSStatisticsSensorEntityDescription(
+        key="background_rssi.channel_3.average",
+        translation_key="avg_signal_noise",
+        translation_placeholders={"channel": "3"},
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        convert=convert_nested_attr,
+    ),
+    ZWaveJSStatisticsSensorEntityDescription(
+        key="background_rssi.channel_3.current",
+        translation_key="signal_noise",
+        translation_placeholders={"channel": "3"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -490,6 +505,8 @@ CONTROLLER_STATISTICS_KEY_MAP: dict[str, str] = {
     "background_rssi.channel_1.current": "backgroundRSSI.channel1.current",
     "background_rssi.channel_2.average": "backgroundRSSI.channel2.average",
     "background_rssi.channel_2.current": "backgroundRSSI.channel2.current",
+    "background_rssi.channel_3.average": "backgroundRSSI.channel3.average",
+    "background_rssi.channel_3.current": "backgroundRSSI.channel3.current",
 }
 
 # Node statistics descriptions
@@ -532,7 +549,7 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="rssi",
-        translation_key="rssi",
+        translation_key="signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -576,11 +593,11 @@ def get_entity_description(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 
@@ -717,7 +734,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -756,7 +773,7 @@ class ZWaveNumericSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -831,7 +848,7 @@ class ZWaveListSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -870,7 +887,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -906,7 +923,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     _attr_translation_key = "node_status"
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
@@ -968,7 +985,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "controller_status"
 
-    def __init__(self, config_entry: ConfigEntry, driver: Driver) -> None:
+    def __init__(self, config_entry: ZwaveJSConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.controller = driver.controller
@@ -1030,7 +1047,7 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         statistics_src: ZwaveNode | Controller,
         description: ZWaveJSStatisticsSensorEntityDescription,
