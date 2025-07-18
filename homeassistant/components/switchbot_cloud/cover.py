@@ -44,6 +44,7 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
     """Representation of a SwitchBot Cover."""
 
     _attr_name = None
+    _attr_is_closed: bool | None = None
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
