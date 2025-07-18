@@ -3,7 +3,7 @@
 import datetime
 from unittest.mock import AsyncMock
 
-from pooldose.request_handler import RequestStatus
+from pooldose.request_status import RequestStatus
 import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator

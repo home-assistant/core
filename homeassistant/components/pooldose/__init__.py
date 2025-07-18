@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 
 from pooldose.client import PooldoseClient
-from pooldose.request_handler import RequestStatus
+from pooldose.request_status import RequestStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform

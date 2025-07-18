@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pooldose.request_handler import RequestStatus
+from pooldose.request_status import RequestStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

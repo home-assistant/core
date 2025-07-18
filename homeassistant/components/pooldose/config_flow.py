@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from pooldose.client import PooldoseClient
-from pooldose.request_handler import RequestHandler, RequestStatus
+from pooldose.request_status import RequestStatus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,49 +37,47 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         error_placeholders = None
         if user_input is not None:
             host = user_input[CONF_HOST]
-
-            # Test connection to host and connect
-            handler = RequestHandler(host)
-            status = await handler.connect()
-            if status == RequestStatus.HOST_UNREACHABLE:
+            _LOGGER.debug("Connecting to PoolDose device at %s", host)
+            client = PooldoseClient(host)
+            client_status = await client.connect()
+            if client_status == RequestStatus.HOST_UNREACHABLE:
                 errors["base"] = "cannot_connect"
-            elif status == RequestStatus.PARAMS_FETCH_FAILED:
+            elif client_status == RequestStatus.PARAMS_FETCH_FAILED:
                 errors["base"] = "params_fetch_failed"
+            if client_status != RequestStatus.SUCCESS:
+                errors["base"] = "cannot_connect"
             else:  # SUCCESS
-                _LOGGER.debug("Connected to device at %s", host)
+                # Successfully connected, now check API version
+                _LOGGER.debug("Connected to PoolDose device at %s", host)
                 # Check API version
-                api_status, api_versions = handler.check_apiversion_supported()
+                _LOGGER.debug("Checking API version for PoolDose device at %s", host)
+                api_status, api_versions = client.check_apiversion_supported()
                 if api_status == RequestStatus.NO_DATA:
                     errors["base"] = "api_not_set"
                 elif api_status == RequestStatus.API_VERSION_UNSUPPORTED:
                     errors["base"] = "api_not_supported"
                     error_placeholders = api_versions
                 else:  # SUCCESS
-                    client = PooldoseClient(host)
-                    client_status = await client.connect()
-                    if client_status != RequestStatus.SUCCESS:
-                        errors["base"] = "cannot_connect"
-                    else:  # SUCCESS
-                        # Safely get device info and serial number
-                        device_info = client.device_info
-                        if device_info is None:
-                            _LOGGER.error("No device info available from client")
-                            errors["base"] = "no_device_info"
+                    # Get device info and serial number
+                    device_info = client.device_info
+                    if device_info is None:
+                        _LOGGER.error("No device info available from client")
+                        errors["base"] = "no_device_info"
+                    else:
+                        serial_number = device_info.get("SERIAL_NUMBER")
+                        if not serial_number:
+                            _LOGGER.error("No serial number found in device info")
+                            errors["base"] = "no_serial_number"
                         else:
-                            serial_number = device_info.get("SERIAL_NUMBER")
-                            if not serial_number:
-                                _LOGGER.error("No serial number found in device info")
-                                errors["base"] = "no_serial_number"
-                            else:
-                                await self.async_set_unique_id(serial_number)
-                                self._abort_if_unique_id_configured()
-                                entry_data = {
-                                    CONF_HOST: host,
-                                    CONF_SERIALNUMBER: serial_number,
-                                }
-                                return self.async_create_entry(
-                                    title=f"PoolDose {serial_number}", data=entry_data
-                                )
+                            await self.async_set_unique_id(serial_number)
+                            self._abort_if_unique_id_configured()
+                            entry_data = {
+                                CONF_HOST: host,
+                                CONF_SERIALNUMBER: serial_number,
+                            }
+                            return self.async_create_entry(
+                                title=f"PoolDose {serial_number}", data=entry_data
+                            )
 
         return self.async_show_form(
             step_id="user",
