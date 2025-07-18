@@ -41,7 +41,6 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
             icon="mdi:leaf",
         )
