@@ -98,14 +98,6 @@ LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
 )
 
-CONTACT_OPEN_DESCRIPTION = SensorEntityDescription(
-    key="openState",
-    icon="mdi:door",
-    translation_key="contact_open",
-    device_class=SensorDeviceClass.ENUM,
-    options=["open", "closed", "timeout"],
-)
-
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
