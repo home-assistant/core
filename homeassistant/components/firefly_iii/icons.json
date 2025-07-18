@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "account_type": {
+        "default": "mdi:bank",
+        "state": {
+          "expense": "mdi:cash-minus",
+          "revenue": "mdi:cash-plus",
+          "asset": "mdi:account-cash",
+          "liability": "mdi:hand-coin"
+        }
+      },
+      "category": {
+        "default": "mdi:label"
+      }
+    }
+  }
+}
