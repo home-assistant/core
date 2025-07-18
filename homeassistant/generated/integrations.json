@@ -1483,12 +1483,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dweet": {
-      "name": "dweet.io",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "hub",
@@ -3165,8 +3159,7 @@
       "name": "Jellyfin",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
+      "iot_class": "local_polling"
     },
     "jewish_calendar": {
       "name": "Jewish Calendar",
@@ -3259,7 +3252,7 @@
     },
     "keymitt_ble": {
       "name": "Keymitt MicroBot Push",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -4624,6 +4617,12 @@
     },
     "open_meteo": {
       "name": "Open-Meteo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "open_router": {
+      "name": "OpenRouter",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -7087,6 +7086,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "uptime_kuma": {
+      "name": "Uptime Kuma",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "uptimerobot": {
       "name": "UptimeRobot",
       "integration_type": "hub",
@@ -7122,6 +7127,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "vegehub": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "velbus": {
       "name": "Velbus",
@@ -7922,6 +7932,7 @@
     "trend",
     "uptime",
     "utility_meter",
+    "vegehub",
     "version",
     "waze_travel_time",
     "workday",

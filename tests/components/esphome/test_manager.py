@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, call
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    AreaInfo,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     HomeassistantServiceCall,
@@ -14,6 +15,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     LogLevel,
     RequiresEncryptionAPIError,
+    SubDeviceInfo,
     UserService,
     UserServiceArg,
     UserServiceArgType,
@@ -1179,6 +1181,29 @@ async def test_esphome_device_with_suggested_area(
     assert dev.suggested_area == "kitchen"
 
 
+async def test_esphome_device_area_priority(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that device_info.area takes priority over suggested_area."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "suggested_area": "kitchen",
+            "area": AreaInfo(area_id=0, name="Living Room"),
+        },
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    # Should use device_info.area.name instead of suggested_area
+    assert dev.suggested_area == "Living Room"
+
+
 async def test_esphome_device_with_project(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1500,3 +1525,266 @@ async def test_assist_in_progress_issue_deleted(
         )
         is None
     )
+
+
+async def test_sub_device_creation(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are created in device registry."""
+    device_registry = dr.async_get(hass)
+
+    # Define areas
+    areas = [
+        AreaInfo(area_id=1, name="Living Room"),
+        AreaInfo(area_id=2, name="Bedroom"),
+        AreaInfo(area_id=3, name="Kitchen"),
+    ]
+
+    # Define sub devices
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=1),
+        SubDeviceInfo(device_id=22222222, name="Light Switch", area_id=1),
+        SubDeviceInfo(device_id=33333333, name="Temperature Sensor", area_id=2),
+    ]
+
+    device_info = {
+        "areas": areas,
+        "devices": sub_devices,
+        "area": AreaInfo(area_id=0, name="Main Hub"),
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Check main device is created
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert main_device is not None
+    assert main_device.suggested_area == "Main Hub"
+
+    # Check sub devices are created
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    assert sub_device_1.name == "Motion Sensor"
+    assert sub_device_1.suggested_area == "Living Room"
+    assert sub_device_1.via_device_id == main_device.id
+
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Light Switch"
+    assert sub_device_2.suggested_area == "Living Room"
+    assert sub_device_2.via_device_id == main_device.id
+
+    sub_device_3 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    )
+    assert sub_device_3 is not None
+    assert sub_device_3.name == "Temperature Sensor"
+    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.via_device_id == main_device.id
+
+
+async def test_sub_device_cleanup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are removed when they no longer exist."""
+    device_registry = dr.async_get(hass)
+
+    # Initial sub devices
+    sub_devices_initial = [
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Device 2", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices_initial,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Verify all sub devices exist
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        )
+        is not None
+    )
+
+    # Now update with fewer sub devices (device 2 removed)
+    sub_devices_updated = [
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+    ]
+
+    # Update device info
+    device.device_info = DeviceInfo(
+        name="test",
+        friendly_name="Test",
+        esphome_version="1.0.0",
+        mac_address="11:22:33:44:55:AA",
+        devices=sub_devices_updated,
+    )
+
+    # Update the mock client to return the new device info
+    mock_client.device_info = AsyncMock(return_value=device.device_info)
+
+    # Simulate reconnection which triggers device registry update
+    await device.mock_connect()
+    await hass.async_block_till_done()
+
+    # Verify device 2 was removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        )
+        is None
+    )  # Should be removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        )
+        is not None
+    )
+
+
+async def test_sub_device_with_empty_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices with empty names are handled correctly."""
+    device_registry = dr.async_get(hass)
+
+    # Define sub devices with empty names
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
+        SubDeviceInfo(device_id=22222222, name="Valid Name", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Check sub device with empty name
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    # Empty sub-device names should fall back to main device name
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert sub_device_1.name == main_device.name
+
+    # Check sub device with valid name
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Valid Name"
+
+
+async def test_sub_device_references_main_device_area(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices can reference the main device's area."""
+    device_registry = dr.async_get(hass)
+
+    # Define areas - note we don't include area_id=0 in the areas list
+    areas = [
+        AreaInfo(area_id=1, name="Living Room"),
+        AreaInfo(area_id=2, name="Bedroom"),
+    ]
+
+    # Define sub devices - one references the main device's area (area_id=0)
+    sub_devices = [
+        SubDeviceInfo(
+            device_id=11111111, name="Motion Sensor", area_id=0
+        ),  # Main device area
+        SubDeviceInfo(
+            device_id=22222222, name="Light Switch", area_id=1
+        ),  # Living Room
+        SubDeviceInfo(
+            device_id=33333333, name="Temperature Sensor", area_id=2
+        ),  # Bedroom
+    ]
+
+    device_info = {
+        "areas": areas,
+        "devices": sub_devices,
+        "area": AreaInfo(area_id=0, name="Main Hub Area"),
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Check main device has correct area
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert main_device is not None
+    assert main_device.suggested_area == "Main Hub Area"
+
+    # Check sub device 1 uses main device's area
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    assert sub_device_1.suggested_area == "Main Hub Area"
+
+    # Check sub device 2 uses Living Room
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.suggested_area == "Living Room"
+
+    # Check sub device 3 uses Bedroom
+    sub_device_3 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    )
+    assert sub_device_3 is not None
+    assert sub_device_3.suggested_area == "Bedroom"

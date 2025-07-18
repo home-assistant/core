@@ -1,8 +1,8 @@
-"""Support for KNX/IP covers."""
+"""Support for KNX cover entities."""
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover
@@ -28,22 +28,20 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import CoverSchema
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_ANGLE,
-    CONF_GA_PASSIVE,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
-    CONF_GA_STATE,
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_UP_DOWN,
-    CONF_GA_WRITE,
 )
+from .storage.util import ConfigExtractor
 
 
 async def async_setup_entry(
@@ -230,38 +228,24 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
 def _create_ui_cover(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxCover:
     """Return a KNX Light device to be used within XKNX."""
 
-    def get_address(
-        key: str, address_type: Literal["write", "state"] = CONF_GA_WRITE
-    ) -> str | None:
-        """Get a single group address for given key."""
-        return knx_config[key][address_type] if key in knx_config else None
-
-    def get_addresses(
-        key: str, address_type: Literal["write", "state"] = CONF_GA_STATE
-    ) -> list[Any] | None:
-        """Get group address including passive addresses as list."""
-        return (
-            [knx_config[key][address_type], *knx_config[key][CONF_GA_PASSIVE]]
-            if key in knx_config
-            else None
-        )
+    conf = ConfigExtractor(knx_config)
 
     return XknxCover(
         xknx=xknx,
         name=name,
-        group_address_long=get_addresses(CONF_GA_UP_DOWN, CONF_GA_WRITE),
-        group_address_short=get_addresses(CONF_GA_STEP, CONF_GA_WRITE),
-        group_address_stop=get_addresses(CONF_GA_STOP, CONF_GA_WRITE),
-        group_address_position=get_addresses(CONF_GA_POSITION_SET, CONF_GA_WRITE),
-        group_address_position_state=get_addresses(CONF_GA_POSITION_STATE),
-        group_address_angle=get_address(CONF_GA_ANGLE),
-        group_address_angle_state=get_addresses(CONF_GA_ANGLE),
-        travel_time_down=knx_config[CoverConf.TRAVELLING_TIME_DOWN],
-        travel_time_up=knx_config[CoverConf.TRAVELLING_TIME_UP],
-        invert_updown=knx_config.get(CoverConf.INVERT_UPDOWN, False),
-        invert_position=knx_config.get(CoverConf.INVERT_POSITION, False),
-        invert_angle=knx_config.get(CoverConf.INVERT_ANGLE, False),
-        sync_state=knx_config[CONF_SYNC_STATE],
+        group_address_long=conf.get_write_and_passive(CONF_GA_UP_DOWN),
+        group_address_short=conf.get_write_and_passive(CONF_GA_STEP),
+        group_address_stop=conf.get_write_and_passive(CONF_GA_STOP),
+        group_address_position=conf.get_write_and_passive(CONF_GA_POSITION_SET),
+        group_address_position_state=conf.get_state_and_passive(CONF_GA_POSITION_STATE),
+        group_address_angle=conf.get_write(CONF_GA_ANGLE),
+        group_address_angle_state=conf.get_state_and_passive(CONF_GA_ANGLE),
+        travel_time_down=conf.get(CoverConf.TRAVELLING_TIME_DOWN),
+        travel_time_up=conf.get(CoverConf.TRAVELLING_TIME_UP),
+        invert_updown=conf.get(CoverConf.INVERT_UPDOWN, default=False),
+        invert_position=conf.get(CoverConf.INVERT_POSITION, default=False),
+        invert_angle=conf.get(CoverConf.INVERT_ANGLE, default=False),
+        sync_state=conf.get(CONF_SYNC_STATE),
     )
 
 

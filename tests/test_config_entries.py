@@ -4901,6 +4901,7 @@ async def test_setup_raise_entry_error_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -4941,6 +4942,7 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -5020,6 +5022,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -5072,6 +5075,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -8823,7 +8827,7 @@ async def test_create_entry_existing_unique_id(
 
     log_text = (
         f"Detected that integration '{domain}' creates a config entry "
-        "when another entry with the same unique ID exists. Please "
-        "create a bug report at https:"
+        "when another entry with the same unique ID exists. This will stop "
+        "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log

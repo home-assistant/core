@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from reolink_aio.api import Chime
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
     LoginPrivacyModeError,
@@ -270,22 +269,25 @@ async def test_removing_disconnected_cams(
 
 
 @pytest.mark.parametrize(
-    ("attr", "value", "expected_models"),
+    ("attr", "value", "expected_models", "expected_remove_call_count"),
     [
         (
             None,
             None,
             [TEST_HOST_MODEL, TEST_CAM_MODEL, CHIME_MODEL],
+            1,
         ),
         (
             "connect_state",
             -1,
             [TEST_HOST_MODEL, TEST_CAM_MODEL],
+            0,
         ),
         (
             "remove",
             -1,
             [TEST_HOST_MODEL, TEST_CAM_MODEL],
+            1,
         ),
     ],
 )
@@ -294,12 +296,13 @@ async def test_removing_chime(
     hass_ws_client: WebSocketGenerator,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
-    reolink_chime: Chime,
+    reolink_chime: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     attr: str | None,
     value: Any,
     expected_models: list[str],
+    expected_remove_call_count: int,
 ) -> None:
     """Test removing a chime."""
     reolink_host.channels = [0]
@@ -324,7 +327,7 @@ async def test_removing_chime(
             """Remove chime."""
             reolink_chime.connect_state = -1
 
-        reolink_chime.remove = test_remove_chime
+        reolink_chime.remove = AsyncMock(side_effect=test_remove_chime)
     elif attr is not None:
         setattr(reolink_chime, attr, value)
 
@@ -334,6 +337,7 @@ async def test_removing_chime(
         if device.model == CHIME_MODEL:
             response = await client.remove_device(device.id, config_entry.entry_id)
             assert response["success"] == expected_success
+            assert reolink_chime.remove.call_count == expected_remove_call_count
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -1156,11 +1160,11 @@ async def test_camera_wake_callback(
 
 async def test_baichaun_only(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test initializing a baichuan only device."""
-    reolink_connect.baichuan_only = True
+    reolink_host.baichuan_only = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

@@ -77,7 +77,15 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.get_stream_source = AsyncMock()
     host_mock.get_snapshot = AsyncMock()
     host_mock.get_encoding = AsyncMock(return_value="h264")
+    host_mock.pull_point_request = AsyncMock()
+    host_mock.set_audio = AsyncMock()
+    host_mock.set_email = AsyncMock()
     host_mock.ONVIF_event_callback = AsyncMock()
+    host_mock.set_whiteled = AsyncMock()
+    host_mock.set_state_light = AsyncMock()
+    host_mock.renew = AsyncMock()
+    host_mock.get_vod_source = AsyncMock()
+    host_mock.expire_session = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.mac_address = TEST_MAC
@@ -271,6 +279,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
         "people": {"switch": 0, "musicId": 1},
         "visitor": {"switch": 1, "musicId": 2},
     }
+    TEST_CHIME.remove = AsyncMock()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME
