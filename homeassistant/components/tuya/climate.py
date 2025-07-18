@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -250,6 +250,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         )
 
         # Determine fan modes
+        self._fan_mode_dp_code: str | None = None
         if enum_type := self.find_dpcode(
             (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
@@ -257,6 +258,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._attr_fan_modes = enum_type.range
+            self._fan_mode_dp_code = enum_type.dpcode
 
         # Determine swing modes
         if self.find_dpcode(
@@ -304,7 +306,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._send_command([{"code": DPCode.FAN_SPEED_ENUM, "value": fan_mode}])
+        if TYPE_CHECKING:
+            # We can rely on supported_features from __init__
+            assert self._fan_mode_dp_code is not None
+
+        self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -460,7 +466,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        return self.device.status.get(DPCode.FAN_SPEED_ENUM)
+        return (
+            self.device.status.get(self._fan_mode_dp_code)
+            if self._fan_mode_dp_code
+            else None
+        )
 
     @property
     def swing_mode(self) -> str:

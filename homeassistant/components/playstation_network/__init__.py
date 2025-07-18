@@ -16,6 +16,7 @@ from .helpers import PlaystationNetwork
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.IMAGE,
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
 ]

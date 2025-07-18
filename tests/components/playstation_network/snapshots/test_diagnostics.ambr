@@ -71,6 +71,9 @@
         'PS5',
         'PSVITA',
       ]),
+      'shareable_profile_link': dict({
+        'shareImageUrl': 'https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493',
+      }),
       'trophy_summary': dict({
         'account_id': '**REDACTED**',
         'earned_trophies': dict({

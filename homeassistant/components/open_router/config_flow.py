@@ -16,8 +16,9 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import callback
+from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -25,9 +26,10 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TemplateSelector,
 )
 
-from .const import DOMAIN
+from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +92,8 @@ class ConversationFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to create a sensor subentry."""
         if user_input is not None:
+            if not user_input.get(CONF_LLM_HASS_API):
+                user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
                 title=self.options[user_input[CONF_MODEL]], data=user_input
             )
@@ -99,11 +103,17 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             api_key=entry.data[CONF_API_KEY],
             http_client=get_async_client(self.hass),
         )
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(self.hass)
+        ]
         options = []
         async for model in client.with_options(timeout=10.0).models.list():
             options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
             self.options[model.id] = model.name  # type: ignore[attr-defined]
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -112,6 +122,20 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
                         ),
+                    ),
+                    vol.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": RECOMMENDED_CONVERSATION_OPTIONS[
+                                CONF_PROMPT
+                            ]
+                        },
+                    ): TemplateSelector(),
+                    vol.Optional(
+                        CONF_LLM_HASS_API,
+                        default=RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
                 }
             ),

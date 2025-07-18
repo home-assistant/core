@@ -1050,7 +1050,7 @@ async def test_websocket_subscription_not_logged_in(
     client = await hass_ws_client(hass)
 
     with patch(
-        "hass_nabucasa.cloud_api.async_subscription_info",
+        "hass_nabucasa.payments_api.PaymentsApi.subscription_info",
         return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})

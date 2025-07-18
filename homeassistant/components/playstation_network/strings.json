@@ -96,6 +96,14 @@
           "busy": "Away"
         }
       }
+    },
+    "image": {
+      "share_profile": {
+        "name": "Share profile"
+      },
+      "avatar": {
+        "name": "Avatar"
+      }
     }
   }
 }

@@ -156,9 +156,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         )
         yield ResponseInProgressEvent(
             response=response,
-            sequence_number=0,
+            sequence_number=1,
             type="response.in_progress",
         )
+        sequence_number = 2
         response.status = "completed"
 
         for value in events:
@@ -173,6 +174,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 response.error = value
                 break
 
+            value.sequence_number = sequence_number
+            sequence_number += 1
             yield value
 
             if isinstance(value, ResponseErrorEvent):
@@ -181,19 +184,19 @@ def mock_create_stream() -> Generator[AsyncMock]:
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.incomplete",
             )
         elif response.status == "failed":
             yield ResponseFailedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.completed",
             )
 

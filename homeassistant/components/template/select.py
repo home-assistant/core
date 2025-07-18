@@ -90,6 +90,15 @@ async def async_setup_entry(
     async_add_entities([TemplateSelect(hass, validated_config, config_entry.entry_id)])
 
 
+@callback
+def async_create_preview_select(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> TemplateSelect:
+    """Create a preview select."""
+    validated_config = SELECT_CONFIG_SCHEMA(config | {CONF_NAME: name})
+    return TemplateSelect(hass, validated_config, None)
+
+
 class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 

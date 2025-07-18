@@ -359,7 +359,7 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        ERROR_GETTING_RESPONSE
+        "Unable to get response"
     )
 
 

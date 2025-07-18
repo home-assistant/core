@@ -451,7 +451,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get(CONF_GEN, 1)
+    return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
 
 def get_rpc_key_instances(
