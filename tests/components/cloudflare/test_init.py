@@ -270,7 +270,7 @@ async def test_integration_legacy_records_format(
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
 
 
-# Test für neues Format (name|type)
+# Test for new format (name|type)
 async def test_integration_new_records_format(
     hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
