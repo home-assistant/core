@@ -23,15 +23,15 @@ from .coordinator import AirOSDataUpdateCoordinator
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
-type AirOSConfigEntry = ConfigEntry[AirOS]
+type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Set up Ubiquiti airOS from a config entry."""
 
-    host = entry.data.get(CONF_HOST)
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    host = entry.data[CONF_HOST]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     session = async_get_clientsession(hass, verify_ssl=False)
 

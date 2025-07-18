@@ -38,9 +38,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     session = async_get_clientsession(hass, verify_ssl=False)
     airos_device = AirOS(
-        host=data.get(CONF_HOST),
-        username=data.get(CONF_USERNAME),
-        password=data.get(CONF_PASSWORD),
+        host=data[CONF_HOST],
+        username=data[CONF_USERNAME],
+        password=data[CONF_PASSWORD],
         session=session,
     )
 
