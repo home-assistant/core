@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -99,7 +99,7 @@ async def async_setup_platform(
         hass,
         NUMBER_DOMAIN,
         config,
-        TemplateNumber,
+        StateNumberEntity,
         TriggerNumberEntity,
         async_add_entities,
         discovery_info,
