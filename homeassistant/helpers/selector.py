@@ -1339,6 +1339,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
     entity_id: Required[str]
+    multiple: bool
 
 
 @SELECTORS.register("state")
@@ -1355,6 +1356,7 @@ class StateSelector(Selector[StateSelectorConfig]):
             # selectors into two types: one for state and one for attribute.
             # Limiting the public use, prevents breaking changes in the future.
             # vol.Optional("attribute"): str,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
@@ -1362,10 +1364,14 @@ class StateSelector(Selector[StateSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        state: str = vol.Schema(str)(data)
-        return state
+        if not self.config["multiple"]:
+            state: str = vol.Schema(str)(data)
+            return state
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 @SELECTORS.register("target")
