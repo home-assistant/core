@@ -212,7 +212,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close cover."""
+        """Close cover for roller shade."""
         await self.send_api_command(
             RollerShadeCommands.SET_POSITION, parameters=str(100)
         )
