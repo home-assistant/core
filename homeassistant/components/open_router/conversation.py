@@ -3,7 +3,7 @@
 from typing import Literal
 
 from homeassistant.components import conversation
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,7 +47,7 @@ class OpenRouterConversationEntity(OpenRouterEntity, conversation.ConversationEn
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
-                None,
+                options.get(CONF_PROMPT),
                 user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
