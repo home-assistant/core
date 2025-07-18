@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,14 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnergyIDConfigEntry
-from .const import (
-    CONF_DEVICE_ID,
-    CONF_ENERGYID_KEY,
-    CONF_HA_ENTITY_ID,
-    DATA_CLIENT,
-    DOMAIN,
-    SIGNAL_CONFIG_ENTRY_CHANGED,
-)
+from .const import CONF_DEVICE_ID, DOMAIN, SIGNAL_CONFIG_ENTRY_CHANGED
 
 PARALLEL_UPDATES = 1
 
@@ -58,28 +50,6 @@ class EnergyIDStatusSensor(SensorEntity):
             model="Webhook Bridge",
             entry_type=DeviceEntryType.SERVICE,
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the sensor."""
-        client = self.hass.data[DOMAIN][self._entry.entry_id][DATA_CLIENT]
-
-        # Get mappings from subentries instead of options
-        mappings = {
-            subentry.data.get(CONF_HA_ENTITY_ID): subentry.data.get(CONF_ENERGYID_KEY)
-            for subentry in self._entry.subentries.values()
-            if subentry.data.get(CONF_HA_ENTITY_ID)
-            and subentry.data.get(CONF_ENERGYID_KEY)
-        }
-
-        return {
-            "claimed": client.is_claimed,
-            "last_sync": client.last_sync_time,
-            "webhook_endpoint": client.webhook_url,
-            "webhook_policy": client.webhook_policy,
-            "mapped_entities": mappings,
-            "config_entry_id": self._entry.entry_id,
-        }
 
     @property
     def native_value(self) -> int:

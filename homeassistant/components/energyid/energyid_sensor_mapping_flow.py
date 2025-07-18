@@ -1,23 +1,18 @@
 """Subentry flow for EnergyID integration, handling sensor mapping management."""
 
-import datetime as dt
 import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigSubentryFlow,
-    SubentryFlowResult,
-)
+from homeassistant.config_entries import ConfigSubentryFlow, SubentryFlowResult
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DATA_CLIENT, DOMAIN
+from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,16 +70,16 @@ def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
         ):
             try:
                 float(current_state.state)
-                suitable_entities.append(entity_entry.entity_id)
-                _LOGGER.debug(
-                    "Added entity %s to suitable entities", entity_entry.entity_id
-                )
             except (ValueError, TypeError):
                 _LOGGER.debug(
                     "Entity %s state cannot be converted to float",
                     entity_entry.entity_id,
                 )
                 continue
+            suitable_entities.append(entity_entry.entity_id)
+            _LOGGER.debug(
+                "Added entity %s to suitable entities", entity_entry.entity_id
+            )
         elif (
             is_likely_numeric
             and current_state
@@ -102,7 +97,7 @@ def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
 @callback
 def _validate_mapping_input(
     ha_entity_id: str | None,
-    current_mappings: dict[str, Any],
+    current_mappings: set[str],
 ) -> dict[str, str]:
     """Validate mapping input and return errors if any."""
     errors: dict[str, str] = {}
@@ -111,60 +106,6 @@ def _validate_mapping_input(
     elif ha_entity_id in current_mappings:
         errors[CONF_HA_ENTITY_ID] = "entity_already_mapped"
     return errors
-
-
-async def _send_initial_state(
-    hass: HomeAssistant, ha_entity_id: str, energyid_key: str, config_entry: ConfigEntry
-) -> None:
-    """Send the initial state of the mapped entity to EnergyID."""
-    _LOGGER.debug(
-        "Starting _send_initial_state for entity %s with key %s",
-        ha_entity_id,
-        energyid_key,
-    )
-    if not (entry_data := hass.data.get(DOMAIN, {}).get(config_entry.entry_id)) or not (
-        client := entry_data.get(DATA_CLIENT)
-    ):
-        _LOGGER.error("Integration or client not ready for %s", config_entry.title)
-        return
-
-    current_state = hass.states.get(ha_entity_id)
-    _LOGGER.debug(
-        "Current state for %s: %s",
-        ha_entity_id,
-        current_state.state if current_state else "None",
-    )
-    if not current_state or current_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-        _LOGGER.warning(
-            "Mapping %s: Initial send skipped, state is %s",
-            ha_entity_id,
-            current_state.state if current_state else "None",
-        )
-        return
-
-    try:
-        value = float(current_state.state)
-    except (ValueError, TypeError):
-        _LOGGER.warning(
-            "Mapping %s: Initial send failed, cannot convert state '%s' to float",
-            ha_entity_id,
-            current_state.state,
-        )
-        return
-
-    timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
-    if timestamp.tzinfo is None:
-        timestamp = timestamp.replace(tzinfo=dt.UTC)
-    elif timestamp.tzinfo != dt.UTC:
-        timestamp = timestamp.astimezone(dt.UTC)
-
-    try:
-        await client.update_sensor(energyid_key, value, timestamp)
-        _LOGGER.info("Mapping %s: Initial state sent successfully", ha_entity_id)
-    except Exception:
-        _LOGGER.exception(
-            "Mapping %s: Initial send failed with an API exception", ha_entity_id
-        )
 
 
 class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
@@ -176,16 +117,27 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
         """Handle the user step for adding a new sensor mapping."""
         errors: dict[str, str] = {}
 
-        # Get the config entry using the built-in helper method
-        config_entry = self._get_entry()
+        # Get the parent config entry - use the correct context key
+        parent_entry_id = self.context.get("config_entry_id")
+        if not isinstance(parent_entry_id, str):
+            _LOGGER.error("No valid parent entry ID found in context: %s", self.context)
+            return self.async_abort(reason="no_parent_entry")
+
+        config_entry = self.hass.config_entries.async_get_entry(parent_entry_id)
+        if not config_entry:
+            _LOGGER.error("Parent config entry %s not found", parent_entry_id)
+            return self.async_abort(reason="parent_entry_not_found")
 
         if user_input is not None:
             ha_entity_id = user_input.get(CONF_HA_ENTITY_ID)
 
-            errors = _validate_mapping_input(ha_entity_id, current_mappings={})
+            current_mappings = {
+                sub.data[CONF_HA_ENTITY_ID] for sub in config_entry.subentries.values()
+            }
+
+            errors = _validate_mapping_input(ha_entity_id, current_mappings)
 
             if not errors and ha_entity_id:
-                # Derive energyid_key automatically from ha_entity_id
                 energyid_key = ha_entity_id.split(".", 1)[-1]
 
                 subentry_data = {
@@ -193,9 +145,6 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
                     CONF_ENERGYID_KEY: energyid_key,
                 }
 
-                await _send_initial_state(
-                    self.hass, ha_entity_id, energyid_key, config_entry
-                )
                 title = f"{ha_entity_id.split('.', 1)[-1]} → {energyid_key}"
                 return self.async_create_entry(title=title, data=subentry_data)
 
