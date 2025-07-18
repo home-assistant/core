@@ -91,7 +91,7 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Cover"
 
-COVER_SCHEMA = vol.All(
+COVER_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
@@ -110,7 +110,7 @@ COVER_SCHEMA = vol.All(
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-LEGACY_COVER_SCHEMA = vol.All(
+COVER_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -134,7 +134,7 @@ LEGACY_COVER_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(LEGACY_COVER_SCHEMA)}
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_LEGACY_YAML_SCHEMA)}
 )
 
 

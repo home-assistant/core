@@ -54,7 +54,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-LOCK_SCHEMA = vol.All(
+LOCK_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_CODE_FORMAT): cv.template,
@@ -67,7 +67,6 @@ LOCK_SCHEMA = vol.All(
         }
     ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
-
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
