@@ -284,8 +284,10 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def browse_limit(self) -> int:
         """Return the max number of items to return from browse."""
-        return self.coordinator.config_entry.options.get(
-            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+            )
         )
 
     @property
