@@ -1,4 +1,4 @@
-"""Support for rain sensors built into some velux windows."""
+"""Support for rain sensors built into some Velux windows."""
 
 from __future__ import annotations
 
