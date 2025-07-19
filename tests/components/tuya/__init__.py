@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
-    "am43_corded_motor_zigbee_cover": [
+    "cl_am43_corded_motor_zigbee_cover": [
         # https://github.com/home-assistant/core/issues/71242
         Platform.SELECT,
         Platform.COVER,
@@ -74,6 +74,10 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "dj_smart_light_bulb": [
+        # https://github.com/home-assistant/core/pull/126242
+        Platform.LIGHT
+    ],
     "dlq_earu_electric_eawcpt": [
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
@@ -103,9 +107,14 @@ DEVICE_MOCKS = {
         Platform.LIGHT,
         Platform.SWITCH,
     ],
+    "kt_serenelife_slpac905wuk_air_conditioner": [
+        # https://github.com/home-assistant/core/pull/148646
+        Platform.CLIMATE,
+    ],
     "mal_alarm_host": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
+        Platform.NUMBER,
         Platform.SWITCH,
     ],
     "mcs_door_sensor": [

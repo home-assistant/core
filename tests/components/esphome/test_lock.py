@@ -34,7 +34,6 @@ async def test_lock_entity_no_open(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
             supports_open=False,
             requires_code=False,
         )
@@ -72,7 +71,6 @@ async def test_lock_entity_start_locked(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
         )
     ]
     states = [LockEntityState(key=1, state=ESPHomeLockState.LOCKED)]
@@ -99,7 +97,6 @@ async def test_lock_entity_supports_open(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
             supports_open=True,
             requires_code=True,
         )
