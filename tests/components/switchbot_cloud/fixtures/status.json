@@ -1,0 +1,21 @@
+[
+  {
+    "version": "V1.8",
+    "power": "on",
+    "auto": false,
+    "humidity": 50,
+    "temperature": 24.3,
+    "deviceId": "test-id-1",
+    "deviceType": "Humidifier",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.0",
+    "power": "on",
+    "mode": 1,
+    "humidity": 50,
+    "deviceId": "test-id-1",
+    "deviceType": "Humidifier2",
+    "hubDeviceId": "test-hub-id"
+  }
+]

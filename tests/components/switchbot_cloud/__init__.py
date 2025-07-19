@@ -40,3 +40,19 @@ CIRCULATOR_FAN_INFO = Device(
     deviceType="Battery Circulator Fan",
     hubDeviceId="test-hub-id",
 )
+
+
+HUMIDIFIER_INFO = Device(
+    version="V1.0",
+    deviceId="humidifier-id-1",
+    deviceName="humidifier-1",
+    deviceType="Humidifier",
+    hubDeviceId="test-hub-id",
+)
+HUMIDIFIER2_INFO = Device(
+    version="V1.0",
+    deviceId="humidifier2-id-1",
+    deviceName="humidifier2-1",
+    deviceType="Humidifier2",
+    hubDeviceId="test-hub-id",
+)
