@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
@@ -71,8 +70,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.RETURN_HOME
+        VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.START
@@ -86,11 +84,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
             self.device.statusEvents.subscribe(
-                lambda _: self.schedule_update_ha_state()
-            )
-        )
-        self._event_listeners.append(
-            self.device.batteryEvents.subscribe(
                 lambda _: self.schedule_update_ha_state()
             )
         )
@@ -136,21 +129,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
             return VacuumActivity.RETURNING
 
         return None
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        if self.device.battery_status is not None:
-            return self.device.battery_status * 100  # type: ignore[no-any-return]
-
-        return None
-
-    @property
-    def battery_icon(self) -> str:
-        """Return the battery icon for the vacuum cleaner."""
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=self.device.is_charging
-        )
 
     @property
     def fan_speed(self) -> str | None:
