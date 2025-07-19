@@ -111,6 +111,7 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.resource import set_open_file_descriptor_limit
 from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
@@ -301,6 +302,8 @@ async def async_setup_hass(
         return hass
 
     hass = await create_hass()
+
+    set_open_file_descriptor_limit()
 
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
