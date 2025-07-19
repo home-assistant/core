@@ -5,15 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pylutron import Output
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
-from .entity import LutronDevice
+from . import DOMAIN, LutronController, LutronData
+from .entity import LutronOutput
+from .lutron_db import Output
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,17 +30,18 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            LutronFan(area_name, device, entry_data.client)
-            for area_name, device in entry_data.fans
+            LutronFan(
+                area_name, device_name, device, entry_data.controller, config_entry
+            )
+            for area_name, device_name, device in entry_data.fans
         ],
         True,
     )
 
 
-class LutronFan(LutronDevice, FanEntity):
+class LutronFan(LutronOutput, FanEntity):
     """Representation of a Lutron fan."""
 
-    _attr_name = None
     _attr_should_poll = False
     _attr_speed_count = 3
     _attr_supported_features = (
@@ -49,17 +49,27 @@ class LutronFan(LutronDevice, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _lutron_device: Output
     _prev_percentage: int | None = None
 
-    def set_percentage(self, percentage: int) -> None:
+    def __init__(
+        self,
+        area_name: str,
+        device_name: str,
+        lutron_device: Output,
+        controller: LutronController,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, device_name, lutron_device, controller)
+        self._config_entry = config_entry
+
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
             self._prev_percentage = percentage
-        self._lutron_device.level = percentage
-        self.schedule_update_ha_state()
+        await self._controller.output_set_level(self._lutron_device.id, percentage)
 
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -75,20 +85,21 @@ class LutronFan(LutronDevice, FanEntity):
             new_percentage = 67
         else:
             new_percentage = self._prev_percentage
-        self.set_percentage(new_percentage)
+        await self._controller.output_set_level(self._lutron_device.id, new_percentage)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self.set_percentage(0)
+        await self._controller.output_set_level(self._lutron_device.id, 0)
 
-    def _request_state(self) -> None:
+    async def _request_state(self) -> None:
         """Request the state from the device."""
-        _ = self._lutron_device.level
+        await self._controller.output_get_level(self._lutron_device.id)
 
-    def _update_attrs(self) -> None:
+    def _update_callback(self, value: int):
         """Update the state attributes."""
-        level = self._lutron_device.last_level()
-        self._attr_is_on = level > 0
-        self._attr_percentage = level
-        if self._prev_percentage is None or level != 0:
-            self._prev_percentage = level
+        self._attr_is_on = value > 0
+        self._attr_percentage = value
+        if self._prev_percentage is None or value != 0:
+            self._prev_percentage = value
+
+        self.async_write_ha_state()
