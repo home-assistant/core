@@ -52,7 +52,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -2537,7 +2537,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class MQTTOptionsFlowHandler(OptionsFlow):
+class MQTTOptionsFlowHandler(OptionsFlowWithReload):
     """Handle MQTT options."""
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
@@ -3353,7 +3353,7 @@ def _validate_pki_file(
 
 
 async def async_get_broker_settings(  # noqa: C901
-    flow: ConfigFlow | OptionsFlow,
+    flow: ConfigFlow | OptionsFlowWithReload,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
@@ -3682,7 +3682,7 @@ def try_connection(
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # noqa: PLC0415
+    import paho.mqtt.client as mqtt
 
     mqtt_client_setup = MqttClientSetup(user_input)
     mqtt_client_setup.setup()
