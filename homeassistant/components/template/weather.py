@@ -32,15 +32,14 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
+    CONF_NAME,
     CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -52,11 +51,8 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .coordinator import TriggerUpdateCoordinator
-from .template_entity import (
-    TemplateEntity,
-    make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
-)
+from .helpers import async_setup_template_platform
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
@@ -109,7 +105,7 @@ CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
 DEFAULT_NAME = "Template Weather"
 
-WEATHER_SCHEMA = vol.Schema(
+WEATHER_YAML_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
@@ -135,34 +131,32 @@ WEATHER_SCHEMA = vol.Schema(
     }
 ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
-PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the weather entities."""
-    entities = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        entities.append(
-            WeatherTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(entities)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+    }
+).extend(WEATHER_PLATFORM_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -172,39 +166,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template weather."""
-    if discovery_info is None:
-        config = rewrite_common_legacy_to_modern_conf(hass, config)
-        unique_id = config.get(CONF_UNIQUE_ID)
-        async_add_entities(
-            [
-                WeatherTemplate(
-                    hass,
-                    config,
-                    unique_id,
-                )
-            ]
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerWeatherEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        WEATHER_DOMAIN,
+        config,
+        StateWeatherEntity,
+        TriggerWeatherEntity,
+        async_add_entities,
+        discovery_info,
+        {},
     )
 
 
-class WeatherTemplate(TemplateEntity, WeatherEntity):
+class StateWeatherEntity(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -213,9 +191,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template weather."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(hass, config, unique_id)
 
-        name = self._attr_name
         self._condition_template = config[CONF_CONDITION_TEMPLATE]
         self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
         self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
@@ -242,8 +219,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
         self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
-
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
         self._condition = None
         self._temperature = None
@@ -538,6 +513,7 @@ class WeatherExtraStoredData(ExtraStoredData):
 class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = WEATHER_DOMAIN
     extra_template_keys = (
         CONF_CONDITION_TEMPLATE,
@@ -553,6 +529,7 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     ) -> None:
         """Initialize."""
         super().__init__(hass, coordinator, config)
+
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)

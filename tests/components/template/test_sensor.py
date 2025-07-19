@@ -1141,7 +1141,7 @@ async def test_duplicate_templates(hass: HomeAssistant) -> None:
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensors": {
-                        "hello": {
+                        "hello_name": {
                             "friendly_name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "device_class": "battery",
@@ -1360,7 +1360,7 @@ async def test_trigger_conditional_entity_invalid_condition(
                 {
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensors": {
-                        "hello": {
+                        "hello_name": {
                             "friendly_name": "Hello Name",
                             "value_template": "{{ trigger.event.data.beer }}",
                             "entity_picture_template": "{{ '/local/dogs.png' }}",
