@@ -31,7 +31,7 @@ rules:
     comment: This integration does not provide any actions.
   config-entry-unloading:
     status: exempt
-    comment: This integration does provide any runtime data that needs to be preserved during unloading.
+    comment: This integration does not provide any runtime data that needs to be preserved during unloading.
   docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
