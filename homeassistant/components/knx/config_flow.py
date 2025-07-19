@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -899,7 +899,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class KNXOptionsFlow(OptionsFlow):
+class KNXOptionsFlow(OptionsFlowWithReload):
     """Handle KNX options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
