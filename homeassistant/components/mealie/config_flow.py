@@ -175,7 +175,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm Supervisor discovery."""
+        """Confirm Supervisor discovery and prompt for API token."""
         if user_input is None and self._hassio_discovery is not None:
             self.host = f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
             self.verify_ssl = True
