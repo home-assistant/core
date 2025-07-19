@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backlight',
-    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8switch_backlight',
+    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8_switch_backlight',
     'unit_of_measurement': None,
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.REDACTEDswitch_led',
+    'unique_id': 'tuya.REDACTED_switch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -167,7 +167,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.eb3e988f33c233290cfs3lswitch_led',
+    'unique_id': 'tuya.eb3e988f33c233290cfs3l_switch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backlight',
-    'unique_id': 'tuya.mock_device_idlight',
+    'unique_id': 'tuya.mock_device_id_light',
     'unit_of_measurement': None,
   })
 # ---

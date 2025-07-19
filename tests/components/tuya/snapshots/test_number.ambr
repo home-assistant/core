@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_duration',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinalarm_time',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin_alarm_time',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feed',
-    'unique_id': 'tuya.bfd0273e59494eb34esvrxmanual_feed',
+    'unique_id': 'tuya.bfd0273e59494eb34esvrx_manual_feed',
     'unit_of_measurement': '',
   })
 # ---
@@ -152,7 +152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_delay',
-    'unique_id': 'tuya.123123aba12312312dazubalarm_delay_time',
+    'unique_id': 'tuya.123123aba12312312dazub_alarm_delay_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_delay',
-    'unique_id': 'tuya.123123aba12312312dazubdelay_set',
+    'unique_id': 'tuya.123123aba12312312dazub_delay_set',
     'unit_of_measurement': 's',
   })
 # ---
@@ -270,7 +270,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren_duration',
-    'unique_id': 'tuya.123123aba12312312dazubalarm_time',
+    'unique_id': 'tuya.123123aba12312312dazub_alarm_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -329,7 +329,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgtemp_correction',
+    'unique_id': 'tuya.bfb45cb8a9452fba66lexg_temp_correction',
     'unit_of_measurement': '℃',
   })
 # ---

@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.zah67ekdcontrol',
+    'unique_id': 'tuya.zah67ekd_control',
     'unit_of_measurement': None,
   })
 # ---
@@ -81,7 +81,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8control',
+    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8_control',
     'unit_of_measurement': None,
   })
 # ---

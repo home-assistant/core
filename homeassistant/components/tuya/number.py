@@ -396,7 +396,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = f"{super().unique_id}_{description.key}"
 
         if int_type := self.find_dpcode(
             description.key, dptype=DPType.INTEGER, prefer_function=True

@@ -1429,8 +1429,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{super().unique_id}{description.key}{description.subkey or ''}"
+        self._attr_unique_id = ".".join(
+            part
+            for part in (super().unique_id, description.key, description.subkey)
+            if part
         )
 
         if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
