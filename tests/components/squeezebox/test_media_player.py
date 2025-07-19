@@ -510,7 +510,10 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
 ) -> None:
     """Test play service call with announce and volume zero."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+    ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
