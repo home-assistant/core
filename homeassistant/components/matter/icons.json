@@ -40,6 +40,9 @@
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
       "temperature_level": {
         "default": "mdi:thermometer"
       }
@@ -113,6 +116,11 @@
       },
       "pump_status": {
         "default": "mdi:pump"
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
       }
     },
     "switch": {
