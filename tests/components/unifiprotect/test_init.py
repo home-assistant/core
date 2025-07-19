@@ -97,6 +97,7 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     options = dict(ufp.entry.options)
     options[CONF_DISABLE_RTSP] = True
     hass.config_entries.async_update_entry(ufp.entry, options=options)
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
     assert ufp.entry.state is ConfigEntryState.LOADED
