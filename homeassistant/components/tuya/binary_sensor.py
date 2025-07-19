@@ -436,8 +436,7 @@ async def async_setup_entry(
     async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, TUYA_DISCOVERY_NEW, async_discover_device)
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
 
 
