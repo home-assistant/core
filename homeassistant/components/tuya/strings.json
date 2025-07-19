@@ -424,7 +424,7 @@
           "back": "Back"
         }
       },
-       "control_back_mode": {
+      "control_back_mode": {
         "name": "Motor mode",
         "state": {
           "forward": "Forward",
