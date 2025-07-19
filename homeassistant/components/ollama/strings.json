@@ -94,5 +94,10 @@
         "download": "[%key:component::ollama::config_subentries::conversation::progress::download%]"
       }
     }
+  },
+  "exceptions": {
+    "unsupported_attachment_type": {
+      "message": "Ollama only supports image attachments in user content, but received non-image attachment."
+    }
   }
 }
