@@ -166,7 +166,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle a option flow for nut."""
+    """Handle an option flow for NINA."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
