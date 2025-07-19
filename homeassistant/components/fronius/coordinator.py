@@ -155,6 +155,9 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
                 data = await self.solar_net.fronius.current_inverter_data(
                     self.inverter_info.solar_net_id
                 )
+                data_3p = await self.solar_net.fronius.current_inverter_3p_data(
+                    self.inverter_info.solar_net_id
+                )
             except BadStatusError:
                 if silent_retry == (self.SILENT_RETRIES - 1):
                     raise
@@ -162,7 +165,7 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
             break
         # wrap a single devices data in a dict with solar_net_id key for
         # FroniusCoordinatorBase _async_update_data and add_entities_for_seen_keys
-        return {self.inverter_info.solar_net_id: data}
+        return {self.inverter_info.solar_net_id: {**data, **data_3p}}
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
