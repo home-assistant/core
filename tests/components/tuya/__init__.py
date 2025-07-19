@@ -63,6 +63,8 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,
         Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.SWITCH,
     ],
     "cwysj_pixi_smart_drinking_fountain": [
         # https://github.com/home-assistant/core/pull/146599
