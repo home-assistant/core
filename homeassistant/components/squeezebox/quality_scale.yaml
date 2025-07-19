@@ -31,7 +31,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow:
-    status: todo
+    status: exempt
     comment: Integration doesn't have an auth flow.
   test-coverage: done
 
