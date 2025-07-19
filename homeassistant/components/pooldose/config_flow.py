@@ -42,9 +42,9 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             client_status = await client.connect()
             if client_status == RequestStatus.HOST_UNREACHABLE:
                 errors["base"] = "cannot_connect"
-            elif client_status == RequestStatus.PARAMS_FETCH_FAILED:
+            if client_status == RequestStatus.PARAMS_FETCH_FAILED:
                 errors["base"] = "params_fetch_failed"
-            if client_status != RequestStatus.SUCCESS:
+            elif client_status != RequestStatus.SUCCESS:
                 errors["base"] = "cannot_connect"
             else:  # SUCCESS
                 # Successfully connected, now check API version
