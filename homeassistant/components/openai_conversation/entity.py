@@ -38,6 +38,10 @@ from openai.types.responses import (
     WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.tool_param import (
+    CodeInterpreter,
+    CodeInterpreterContainerCodeInterpreterToolAuto,
+)
 from openai.types.responses.web_search_tool_param import UserLocation
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -52,6 +56,7 @@ from homeassistant.util import slugify
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
@@ -292,7 +297,7 @@ class OpenAIBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[ToolParam] | None = None
+        tools: list[ToolParam] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -314,9 +319,17 @@ class OpenAIBaseLLMEntity(Entity):
                     country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
                     timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 )
-            if tools is None:
-                tools = []
             tools.append(web_search)
+
+        if options.get(CONF_CODE_INTERPRETER):
+            tools.append(
+                CodeInterpreter(
+                    type="code_interpreter",
+                    container=CodeInterpreterContainerCodeInterpreterToolAuto(
+                        type="auto"
+                    ),
+                )
+            )
 
         model_args = {
             "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -345,6 +358,26 @@ class OpenAIBaseLLMEntity(Entity):
             for content in chat_log.content
             for m in _convert_content_to_param(content)
         ]
+
+        last_content = chat_log.content[-1]
+
+        # Handle attachments by adding them to the last user message
+        if last_content.role == "user" and last_content.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                [a.path for a in last_content.attachments],
+            )
+            last_message = messages[-1]
+            assert (
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
+            )
+            last_message["content"] = [
+                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
+                *files,  # type: ignore[list-item]
+            ]
+
         if structure and structure_name:
             model_args["text"] = {
                 "format": {
@@ -362,18 +395,25 @@ class OpenAIBaseLLMEntity(Entity):
 
             try:
                 result = await client.responses.create(**model_args)
+
+                async for content in chat_log.async_add_delta_content_stream(
+                    self.entity_id, _transform_stream(chat_log, result, messages)
+                ):
+                    if not isinstance(content, conversation.AssistantContent):
+                        messages.extend(_convert_content_to_param(content))
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
+                if (
+                    isinstance(err, openai.APIError)
+                    and err.type == "insufficient_quota"
+                ):
+                    LOGGER.error("Insufficient funds for OpenAI: %s", err)
+                    raise HomeAssistantError("Insufficient funds for OpenAI") from err
+
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
-
-            async for content in chat_log.async_add_delta_content_stream(
-                self.entity_id, _transform_stream(chat_log, result, messages)
-            ):
-                if not isinstance(content, conversation.AssistantContent):
-                    messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break
