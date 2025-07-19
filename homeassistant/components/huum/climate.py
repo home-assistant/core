@@ -16,12 +16,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
+from .entity import HuumBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +33,7 @@ async def async_setup_entry(
     async_add_entities([HuumDevice(entry.runtime_data)])
 
 
-class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
+class HuumDevice(HuumBaseEntity, ClimateEntity):
     """Representation of a heater."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
@@ -46,9 +44,6 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_max_temp = 110
-    _attr_min_temp = 40
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
@@ -56,12 +51,16 @@ class HuumDevice(CoordinatorEntity[HuumDataUpdateCoordinator], ClimateEntity):
         super().__init__(coordinator)
 
         self._attr_unique_id = coordinator.config_entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name="Huum sauna",
-            manufacturer="Huum",
-            model="UKU WiFi",
-        )
+
+    @property
+    def min_temp(self) -> int:
+        """Return configured minimal temperature."""
+        return self.coordinator.data.sauna_config.min_temp
+
+    @property
+    def max_temp(self) -> int:
+        """Return configured maximum temperature."""
+        return self.coordinator.data.sauna_config.max_temp
 
     @property
     def hvac_mode(self) -> HVACMode:

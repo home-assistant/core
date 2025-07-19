@@ -15,9 +15,9 @@ from homeassistant.components.select import (
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -27,8 +27,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,24 +47,26 @@ CONF_SELECT_OPTION = "select_option"
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
 
-SELECT_SCHEMA = vol.Schema(
+SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Required(ATTR_OPTIONS): cv.template,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    }
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-
-
-SELECT_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Required(CONF_OPTIONS): cv.template,
+        vol.Optional(ATTR_OPTIONS): cv.template,
         vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_STATE): cv.template,
     }
+)
+
+SELECT_YAML_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        }
+    )
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+    .extend(SELECT_COMMON_SCHEMA.schema)
+)
+
+SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -84,10 +94,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = SELECT_CONFIG_SCHEMA(_options)
-    async_add_entities([TemplateSelect(hass, validated_config, config_entry.entry_id)])
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        TemplateSelect,
+        SELECT_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_select(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> TemplateSelect:
+    """Create a preview select."""
+    return async_setup_template_preview(
+        hass, name, config, TemplateSelect, SELECT_CONFIG_ENTRY_SCHEMA
+    )
 
 
 class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
