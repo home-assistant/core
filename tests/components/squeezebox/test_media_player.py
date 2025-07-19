@@ -68,7 +68,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
@@ -80,30 +79,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-
-async def test_device_registry(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    configured_player: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
-    assert reg_device is not None
-    assert reg_device == snapshot
-
-
-async def test_device_registry_server_merged(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    configured_players: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
-    assert reg_device is not None
-    assert reg_device == snapshot
 
 
 async def test_entity_registry(
