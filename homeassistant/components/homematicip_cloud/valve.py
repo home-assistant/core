@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the HomematicIP cover from a config entry."""
+    """Set up the HomematicIP valves from a config entry."""
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:

@@ -323,7 +323,7 @@ class HomematicipWaterVolumeSensor(HomematicipGenericEntity, SensorEntity):
         post: str,
         attribute: str,
     ) -> None:
-        """Initialize the watering flow sensor device."""
+        """Initialize the watering volume sensor device."""
         super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
         self._attribute_name = attribute
 
@@ -340,7 +340,7 @@ class HomematicipWaterVolumeSinceOpenSensor(HomematicipWaterVolumeSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
-        """Initialize the watering flow sensor device."""
+        """Initialize the watering flow volume since open device."""
         super().__init__(
             hap,
             device,

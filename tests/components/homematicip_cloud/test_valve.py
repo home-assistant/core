@@ -9,7 +9,7 @@ from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entit
 async def test_watering_valve(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
-    """Test HomematicipLight with HS color mode."""
+    """Test HomematicIP watering valve."""
     entity_id = "valve.bewaesserungsaktor_watering"
     entity_name = "Bewaesserungsaktor watering"
     device_model = "ELV-SH-WSM"
