@@ -27,7 +27,7 @@ class PooldoseRuntimeData:
 
     client: PooldoseClient
     coordinator: PooldoseCoordinator
-    device_info: dict[str, str | None]
+    device_properties: dict[str, str | None]
 
 
 type PooldoseConfigEntry = ConfigEntry[PooldoseRuntimeData]
@@ -50,13 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     # Get device info from client after successful connection
-    device_info = client.device_info
+    device_properties = client.device_info
 
     # Store runtime data
     entry.runtime_data = PooldoseRuntimeData(
         client=client,
         coordinator=coordinator,
-        device_info=device_info,
+        device_properties=device_properties,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

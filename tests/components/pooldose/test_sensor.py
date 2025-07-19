@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from pooldose.request_status import RequestStatus
 import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
@@ -24,26 +23,23 @@ def get_description(key: str) -> PooldoseSensorEntityDescription:
 def mock_coordinator():
     """Create a mock coordinator with realistic Pooldose data."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (
-        RequestStatus.SUCCESS,
-        {
-            "temperature": [25.5, "°C"],  # [value, unit]
-            "ph": [7.2, "pH"],
-            "orp": [650, "mV"],
-            "ph_type_dosing": ["Automatic", ""],
-            "peristaltic_ph_dosing": [15, "ml/min"],
-            "ofa_ph_value": [7.0, "pH"],
-            "orp_type_dosing": ["Manual", ""],
-            "peristaltic_orp_dosing": [10, "ml/min"],
-            "ofa_orp_value": [700, "mV"],
-            "ph_calibration_type": ["2-point", ""],
-            "ph_calibration_offset": [0.1, "mV"],
-            "ph_calibration_slope": [58.2, "mV/pH"],
-            "orp_calibration_type": ["1-point", ""],
-            "orp_calibration_offset": [5.0, "mV"],
-            "orp_calibration_slope": [1.0, "mV/mV"],
-        },
-    )
+    coordinator.data = {
+        "temperature": [25.5, "°C"],  # [value, unit]
+        "ph": [7.2, "pH"],
+        "orp": [650, "mV"],
+        "ph_type_dosing": ["Automatic", ""],
+        "peristaltic_ph_dosing": [15, "ml/min"],
+        "ofa_ph_value": [7.0, "pH"],
+        "orp_type_dosing": ["Manual", ""],
+        "peristaltic_orp_dosing": [10, "ml/min"],
+        "ofa_orp_value": [700, "mV"],
+        "ph_calibration_type": ["2-point", ""],
+        "ph_calibration_offset": [0.1, "mV"],
+        "ph_calibration_slope": [58.2, "mV/pH"],
+        "orp_calibration_type": ["1-point", ""],
+        "orp_calibration_offset": [5.0, "mV"],
+        "orp_calibration_slope": [1.0, "mV/mV"],
+    }
     return coordinator
 
 
@@ -121,7 +117,7 @@ def test_sensor_native_value_missing_key(mock_coordinator, mock_device_info) -> 
 def test_sensor_api_error(mock_device_info) -> None:
     """Test that the sensor returns None when the API returns an error status."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (RequestStatus.HOST_UNREACHABLE, {})
+    coordinator.data = {}
     description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
@@ -210,12 +206,9 @@ def test_sensor_disabled_by_default(mock_coordinator, mock_device_info) -> None:
 def test_sensor_with_undefined_unit(mock_device_info) -> None:
     """Test that sensor returns None for undefined units."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (
-        RequestStatus.SUCCESS,
-        {
-            "temperature": [25.5, "UNDEFINED"],  # Undefined unit
-        },
-    )
+    coordinator.data = {
+        "temperature": [25.5, "UNDEFINED"],  # Undefined unit
+    }
     description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
@@ -260,12 +253,9 @@ def test_sensor_translation_key_property(mock_coordinator, mock_device_info) -> 
 def test_sensor_with_no_unit_data(mock_device_info) -> None:
     """Test sensor behavior when unit data is missing."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (
-        RequestStatus.SUCCESS,
-        {
-            "temperature": [25.5],  # Only value, no unit
-        },
-    )
+    coordinator.data = {
+        "temperature": [25.5],  # Only value, no unit
+    }
     description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
@@ -281,12 +271,9 @@ def test_sensor_with_no_unit_data(mock_device_info) -> None:
 def test_sensor_with_ph_unit_filtering(mock_device_info) -> None:
     """Test that pH sensor filters out 'ph' as unit."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (
-        RequestStatus.SUCCESS,
-        {
-            "ph": [7.2, "ph"],  # pH unit should be filtered out
-        },
-    )
+    coordinator.data = {
+        "ph": [7.2, "ph"],  # pH unit should be filtered out
+    }
     description = get_description("ph")
     sensor = PooldoseSensor(
         coordinator,
@@ -333,7 +320,7 @@ def test_sensor_entity_description_inheritance() -> None:
 def test_sensor_coordinator_unavailable(mock_device_info) -> None:
     """Test sensor behavior when coordinator is not available."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = (RequestStatus.UNKNOWN_ERROR, {})
+    coordinator.data = {}
     description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,

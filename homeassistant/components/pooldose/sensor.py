@@ -133,14 +133,17 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PooldoseConfigEntry,
+    config_entry: PooldoseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Pooldose sensor entities from a config entry."""
-    coordinator = entry.runtime_data.coordinator
-    client = entry.runtime_data.client
-    serial_number = entry.data["serialnumber"]
-    device_info_dict = entry.runtime_data.device_info
+    coordinator = config_entry.runtime_data.coordinator
+    client = config_entry.runtime_data.client
+    serial_number = config_entry.unique_id
+    if not serial_number:
+        _LOGGER.error("No serial number found in config entry, cannot create entities")
+        return
+    device_properties = config_entry.runtime_data.device_properties
 
     available = client.available_sensors()
     entities: list[SensorEntity] = []
@@ -153,7 +156,7 @@ async def async_setup_entry(
                 coordinator,
                 description,
                 serial_number,
-                device_info_dict,
+                device_properties,
             )
         )
 
@@ -169,15 +172,15 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         self,
         coordinator: PooldoseCoordinator,
         description: PooldoseSensorEntityDescription,
-        serialnumber: str,
-        device_info_dict: dict[str, Any],
+        serial_number: str,
+        device_properties: dict[str, Any],
     ) -> None:
         """Initialize a Pooldose sensor entity."""
         self.entity_description = description
         super().__init__(
             coordinator,
-            serialnumber,
-            device_info(device_info_dict),
+            serial_number,
+            device_info(device_properties, serial_number),
         )
 
     @property

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pooldose.request_status import RequestStatus
 import pytest
 
-from homeassistant.components.pooldose.const import CONF_SERIALNUMBER, DOMAIN
+from homeassistant.components.pooldose.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -49,10 +49,7 @@ async def test_form_shows_and_creates_entry(
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
         assert result2["title"] == "PoolDose SN123456789"
-        assert result2["data"] == {
-            CONF_HOST: "192.168.1.100",
-            CONF_SERIALNUMBER: "SN123456789",
-        }
+        assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_form_cannot_connect_host_unreachable(hass: HomeAssistant) -> None:
@@ -82,7 +79,6 @@ async def test_form_cannot_connect_host_unreachable(hass: HomeAssistant) -> None
 async def test_form_params_fetch_failed(hass: HomeAssistant) -> None:
     """Test that the form shows error when client connection fails with params fetch error."""
     mock_client = MagicMock()
-    # ✅ connect() gibt direkt PARAMS_FETCH_FAILED zurück
     mock_client.connect = AsyncMock(return_value=RequestStatus.PARAMS_FETCH_FAILED)
     mock_client.is_connected = False
 
@@ -100,7 +96,7 @@ async def test_form_params_fetch_failed(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"  # ✅ Erwartetes Verhalten
+        assert result2["errors"]["base"] == "cannot_connect"
         assert result2["step_id"] == "user"
 
 
@@ -190,7 +186,7 @@ async def test_duplicate_entry_aborts(hass: HomeAssistant) -> None:
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="SN123456789",
-        data={CONF_HOST: "192.168.1.50", CONF_SERIALNUMBER: "SN123456789"},
+        data={CONF_HOST: "192.168.1.50"},
     )
     existing_entry.add_to_hass(hass)
 
@@ -345,6 +341,7 @@ async def test_form_retry_after_error(hass: HomeAssistant) -> None:
 
         assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["title"] == "PoolDose SN123456789"
+        assert result3["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_form_with_hostname(hass: HomeAssistant) -> None:
@@ -371,10 +368,8 @@ async def test_form_with_hostname(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {
-            CONF_HOST: "pooldose.local",
-            CONF_SERIALNUMBER: "SN123456789",
-        }
+        assert result2["title"] == "PoolDose SN123456789"
+        assert result2["data"] == {CONF_HOST: "pooldose.local"}
 
 
 async def test_form_with_default_host(hass: HomeAssistant) -> None:
@@ -401,10 +396,8 @@ async def test_form_with_default_host(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {
-            CONF_HOST: "KOMMSPOT",
-            CONF_SERIALNUMBER: "SN123456789",
-        }
+        assert result2["title"] == "PoolDose SN123456789"
+        assert result2["data"] == {CONF_HOST: "KOMMSPOT"}
 
 
 async def test_form_with_different_client_error_statuses(hass: HomeAssistant) -> None:

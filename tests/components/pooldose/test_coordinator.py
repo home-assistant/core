@@ -106,8 +106,7 @@ async def test_coordinator_successful_data_fetch(
     assert coordinator.last_update_success is True
     assert coordinator.available is True
 
-    status, data = coordinator.data
-    assert status == RequestStatus.SUCCESS
+    data = coordinator.data
     assert isinstance(data, dict)
     assert "deviceInfo" in data
     assert data["deviceInfo"]["dwi_status"] == "ok"
@@ -334,8 +333,7 @@ async def test_coordinator_data_structure_validation(
     assert coordinator.last_update_success is True
     assert coordinator.available is True
 
-    status, data = coordinator.data
-    assert status == RequestStatus.SUCCESS
+    data = coordinator.data
     assert data == {}
     mock_client.instant_values.assert_called_once()
 
@@ -374,7 +372,7 @@ async def test_coordinator_multiple_refresh_cycles(
     assert coordinator.available is True
     assert coordinator.last_update_success is True
 
-    status, data = coordinator.data
+    data = coordinator.data
     assert data["PDPR1H1HAW100_FW539187_w_1ekeigkin"]["current"] == 8.0
     assert mock_client.instant_values.call_count == 2
 

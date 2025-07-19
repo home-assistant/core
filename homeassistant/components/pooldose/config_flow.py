@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SERIALNUMBER, DEFAULT_HOST, DOMAIN
+from .const import DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,10 +71,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                         else:
                             await self.async_set_unique_id(serial_number)
                             self._abort_if_unique_id_configured()
-                            entry_data = {
-                                CONF_HOST: host,
-                                CONF_SERIALNUMBER: serial_number,
-                            }
+                            entry_data = {CONF_HOST: host}
                             return self.async_create_entry(
                                 title=f"PoolDose {serial_number}", data=entry_data
                             )
