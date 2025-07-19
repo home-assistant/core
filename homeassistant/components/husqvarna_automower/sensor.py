@@ -8,6 +8,7 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
+    ExternalReasons,
     InactiveReasons,
     MowerAttributes,
     MowerModes,
@@ -190,9 +191,35 @@ RESTRICTED_REASONS: list = [
     RestrictedReasons.PARK_OVERRIDE,
     RestrictedReasons.SENSOR,
     RestrictedReasons.WEEK_SCHEDULE,
+    ExternalReasons.AMAZON_ALEXA,
+    ExternalReasons.DEVELOPER_PORTAL,
+    ExternalReasons.GARDENA_SMART_SYSTEM,
+    ExternalReasons.GOOGLE_ASSISTANT,
+    ExternalReasons.HOME_ASSISTANT,
+    ExternalReasons.IFTTT,
+    ExternalReasons.IFTTT_APPLETS,
+    ExternalReasons.IFTTT_CALENDAR_CONNECTION,
+    ExternalReasons.SMART_ROUTINE,
+    ExternalReasons.SMART_ROUTINE_FROST_GUARD,
+    ExternalReasons.SMART_ROUTINE_RAIN_GUARD,
+    ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
+
+@callback
+def _get_restricted_reason(data: MowerAttributes) -> str:
+    """Return the restricted reason.
+
+    If there is an external reason, return that instead, if it's available.
+    """
+    if (
+        data.planner.restricted_reason == RestrictedReasons.EXTERNAL
+        and data.planner.external_reason is not None
+    ):
+        return data.planner.external_reason
+    return data.planner.restricted_reason
 
 
 @callback
@@ -400,7 +427,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
-        value_fn=attrgetter("planner.restricted_reason"),
+        value_fn=_get_restricted_reason,
     ),
     AutomowerSensorEntityDescription(
         key="inactive_reason",
