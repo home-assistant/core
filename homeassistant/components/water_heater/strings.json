@@ -66,6 +66,14 @@
           "name": "Temperature",
           "description": "New target temperature for the water heater."
         },
+        "target_temp_high": {
+          "name": "Upper target temperature",
+          "description": "The max temperature setpoint."
+        },
+        "target_temp_low": {
+          "name": "Lower target temperature",
+          "description": "The min temperature setpoint."
+        },
         "operation_mode": {
           "name": "Operation mode",
           "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation."
@@ -97,6 +105,12 @@
     },
     "operation_list_not_defined": {
       "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
+    },
+    "missing_target_temperature_entity_feature": {
+      "message": "Set temperature action was used with the target temperature parameter but the entity does not support it."
+    },
+    "missing_target_temperature_range_entity_feature": {
+      "message": "Set temperature action was used with the target temperature low/high parameter but the entity does not support it."
     }
   }
 }
