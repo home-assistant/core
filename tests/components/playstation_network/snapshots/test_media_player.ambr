@@ -39,9 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'receiver',
-      'entity_picture_local': None,
       'friendly_name': 'PlayStation Vita',
-      'media_content_type': <MediaType.GAME: 'game'>,
       'supported_features': <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -49,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'standby',
+    'state': 'off',
   })
 # ---
 # name: test_media_player_psvita[presence_payload1][media_player.playstation_vita-entry]

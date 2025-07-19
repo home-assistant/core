@@ -287,7 +287,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def browse_limit(self) -> int:
         """Return the step to be used for volume up down."""
-        return self.coordinator.config_entry.options.get(
+        return self.coordinator.config_entry.options.get(  # type: ignore[no-any-return]
             CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
         )
 

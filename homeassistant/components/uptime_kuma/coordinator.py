@@ -16,7 +16,7 @@ from pythonkuma import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -59,7 +59,7 @@ class UptimeKumaDataUpdateCoordinator(
         try:
             metrics = await self.api.metrics()
         except UptimeKumaAuthenticationException as e:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed_exception",
             ) from e
