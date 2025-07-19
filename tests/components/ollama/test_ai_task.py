@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import ollama
 import pytest
 import voluptuous as vol
 
@@ -273,6 +274,63 @@ async def test_generate_data_with_attachment(
                     mime_type="image/jpeg",
                     path=Path("doorbell_snapshot.jpg"),
                 ),
+            ],
+        ),
+        patch(
+            "ollama.AsyncClient.chat",
+            return_value=mock_chat_response(),
+        ) as mock_chat,
+    ):
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=entity_id,
+            instructions="Generate test data",
+            attachments=[
+                {"media_content_id": "media-source://media/doorbell_snapshot.jpg"},
+            ],
+        )
+
+    assert result.data == "Generated test data"
+
+    assert mock_chat.call_count == 1
+    messages = mock_chat.call_args[1]["messages"]
+    assert len(messages) == 2
+    chat_message = messages[1]
+    assert chat_message.role == "user"
+    assert chat_message.content == "Generate test data"
+    assert chat_message.images == [
+        ollama.Image(value=Path("doorbell_snapshot.jpg")),
+    ]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_with_unsupported_file_format(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test AI Task data generation with image attachments."""
+    entity_id = "ai_task.ollama_ai_task"
+
+    # Mock the Ollama chat response as an async iterator
+    async def mock_chat_response():
+        """Mock streaming response."""
+        yield {
+            "message": {"role": "assistant", "content": "Generated test data"},
+            "done": True,
+            "done_reason": "stop",
+        }
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            side_effect=[
+                media_source.PlayMedia(
+                    url="http://example.com/doorbell_snapshot.jpg",
+                    mime_type="image/jpeg",
+                    path=Path("doorbell_snapshot.jpg"),
+                ),
                 media_source.PlayMedia(
                     url="http://example.com/context.txt",
                     mime_type="text/plain",
@@ -284,8 +342,12 @@ async def test_generate_data_with_attachment(
             "ollama.AsyncClient.chat",
             return_value=mock_chat_response(),
         ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Ollama only supports image attachments in user content",
+        ),
     ):
-        result = await ai_task.async_generate_data(
+        await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
             entity_id=entity_id,
@@ -295,5 +357,3 @@ async def test_generate_data_with_attachment(
                 {"media_content_id": "media-source://media/context.txt"},
             ],
         )
-
-    assert result.data == "Generated test data"

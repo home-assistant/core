@@ -106,10 +106,14 @@ def _convert_content(
             ],
         )
     if isinstance(chat_content, conversation.UserContent):
-        images = [
-            ollama.Image(value=attachment.path)
-            for attachment in chat_content.attachments or ()
-        ]
+        images: list[ollama.Image] = []
+        for attachment in chat_content.attachments or ():
+            if not attachment.mime_type.startswith("image/"):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_attachment_type",
+                )
+            images.append(ollama.Image(value=attachment.path))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
