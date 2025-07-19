@@ -16,6 +16,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
+    CONF_REALTIME_UPDATES,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -426,6 +427,7 @@ async def test_advanced_option_flow(
         user_input={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_REALTIME_UPDATES: True,
         },
     )
 
@@ -442,6 +444,7 @@ async def test_advanced_option_flow(
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
+        CONF_REALTIME_UPDATES: True,
     }
 
 
