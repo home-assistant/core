@@ -1,7 +1,6 @@
 """Support for Met Éireann weather service."""
 
-import logging
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any, cast
 
 from homeassistant.components.weather import (
@@ -29,10 +28,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import MetEireannWeatherData
 
 
 def format_condition(condition: str | None) -> str | None:
@@ -64,7 +61,7 @@ async def async_setup_entry(
     async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:
@@ -90,7 +87,7 @@ class MetEireannWeather(
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[MetEireannWeatherData],
-        config: MappingProxyType[str, Any],
+        config: Mapping[str, Any],
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)

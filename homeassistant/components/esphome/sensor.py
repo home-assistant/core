@@ -82,6 +82,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         # if the string is empty
         if unit_of_measurement := static_info.unit_of_measurement:
             self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = static_info.accuracy_decimals
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
@@ -89,16 +90,16 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return
         if (
             state_class == EsphomeSensorStateClass.MEASUREMENT
-            and static_info.last_reset_type == LastResetType.AUTO
+            and static_info.legacy_last_reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the
+            # Legacy, legacy_last_reset_type auto was the equivalent to the
             # TOTAL_INCREASING state class
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         else:
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def native_value(self) -> datetime | float | None:
+    def native_value(self) -> datetime | int | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
             return None

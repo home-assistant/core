@@ -9,6 +9,7 @@ from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -104,6 +105,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
     _attr_translation_key = "mobile_connection"
     _attr_entity_registry_enabled_default = True
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     key = KEY_MONITORING_STATUS
     item = "ConnectionStatus"
@@ -139,6 +141,8 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
 class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE WiFi status binary sensor base class."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def is_on(self) -> bool:

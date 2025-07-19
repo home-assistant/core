@@ -78,7 +78,7 @@ class EsphomeMediaPlayer(
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[static_info.unique_id] = cast(
+        self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
 
@@ -96,7 +96,7 @@ class EsphomeMediaPlayer(
 
     @property
     @esphome_float_state_property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
@@ -114,9 +114,8 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self._static_info.unique_id)
+            self._entry_data.media_player_formats.get(self.unique_id)
         )
 
         if (
@@ -133,13 +132,16 @@ class EsphomeMediaPlayer(
             media_id = proxy_url
 
         self._client.media_player_command(
-            self._key, media_url=media_id, announcement=announcement
+            self._key,
+            media_url=media_id,
+            announcement=announcement,
+            device_id=self._static_info.device_id,
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.entity_id, None)
+        self._entry_data.media_player_formats.pop(self.unique_id, None)
 
     def _get_proxy_url(
         self,
@@ -215,22 +217,36 @@ class EsphomeMediaPlayer(
     @convert_api_error_ha_error
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._client.media_player_command(self._key, volume=volume)
+        self._client.media_player_command(
+            self._key, volume=volume, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.PAUSE)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.PAUSE,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_media_play(self) -> None:
         """Send play command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.PLAY)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.PLAY,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.STOP)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.STOP,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_mute_volume(self, mute: bool) -> None:
@@ -238,6 +254,7 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
+            device_id=self._static_info.device_id,
         )
 
 

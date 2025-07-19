@@ -7,12 +7,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -52,11 +50,11 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IntellifireConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure switch entities."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         IntellifireSwitch(coordinator=coordinator, description=description)

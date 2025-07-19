@@ -6,7 +6,7 @@ from pylamarzocco.const import FirmwareType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -53,6 +53,7 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
 
     await async_init_integration(hass, mock_config_entry)
@@ -90,6 +91,7 @@ async def test_invalid_auth(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test auth error during setup."""
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = AuthFail("")
     await async_init_integration(hass, mock_config_entry)
 

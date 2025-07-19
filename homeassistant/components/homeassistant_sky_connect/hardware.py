@@ -9,7 +9,7 @@ from .config_flow import HomeAssistantSkyConnectConfigFlow
 from .const import DOMAIN
 from .util import get_hardware_variant
 
-DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
+DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1"
 EXPECTED_ENTRY_VERSION = (
     HomeAssistantSkyConnectConfigFlow.VERSION,
     HomeAssistantSkyConnectConfigFlow.MINOR_VERSION,

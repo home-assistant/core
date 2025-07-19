@@ -1,6 +1,6 @@
 """Tests the diagnostics for Home Assistant Backup integration."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
