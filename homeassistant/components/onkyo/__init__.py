@@ -47,7 +47,6 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Set up the Onkyo config entry."""
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     host = entry.data[CONF_HOST]
 
@@ -82,8 +81,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     receiver.conn.close()
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
