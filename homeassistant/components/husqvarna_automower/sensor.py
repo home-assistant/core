@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
     InactiveReasons,
+    MessageData,
     MowerAttributes,
     MowerModes,
     RestrictedReasons,
@@ -28,9 +29,13 @@ from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
 from .const import ERROR_STATES
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import (
+    AutomowerDataUpdateCoordinator,
+    AutomowerMessageUpdateCoordinator,
+)
 from .entity import (
     AutomowerBaseEntity,
+    AutomowerMessageBaseEntity,
     WorkAreaAvailableEntity,
     _work_area_translation_key,
 )
@@ -423,6 +428,38 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
 
 
 @dataclass(frozen=True, kw_only=True)
+class AutomowerMessageSensorEntityDescription(SensorEntityDescription):
+    """Describes Automower sensor entity."""
+
+    exists_fn: Callable[[MessageData], bool] = lambda _: True
+    option_fn: Callable[[MessageData], list[str] | None] = lambda _: None
+    value_fn: Callable[[MessageData], StateType | datetime]
+
+
+MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageSensorEntityDescription, ...] = (
+    AutomowerMessageSensorEntityDescription(
+        key="last_error",
+        translation_key="last_error",
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: ERROR_KEY_LIST,
+        exists_fn=lambda data: bool(data.attributes.messages),
+        value_fn=lambda data: (
+            data.attributes.messages[0].code if data.attributes.messages else None
+        ),
+    ),
+    AutomowerMessageSensorEntityDescription(
+        key="last_error_time",
+        translation_key="last_error_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        exists_fn=lambda data: bool(data.attributes.messages),
+        value_fn=lambda data: (
+            data.attributes.messages[0].time if data.attributes.messages else None
+        ),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class WorkAreaSensorEntityDescription(SensorEntityDescription):
     """Describes the work area sensor entities."""
 
@@ -456,7 +493,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
+    message_coordinator = entry.runtime_data.message_coordinators
     entities: list[SensorEntity] = []
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
@@ -475,6 +513,16 @@ async def async_setup_entry(
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
+    for mower_id in message_coordinator:
+        entities.extend(
+            AutomowerMessageSensorEntity(
+                mower_id,
+                message_coordinator[mower_id],
+                description,
+            )
+            for description in MESSAGE_SENSOR_TYPES
+            if description.exists_fn(message_coordinator[mower_id].data)
+        )
     async_add_entities(entities)
 
     def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
@@ -491,12 +539,24 @@ async def async_setup_entry(
         )
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
-        async_add_entities(
+        entities: list[SensorEntity] = []
+        entities.extend(
             AutomowerSensorEntity(mower_id, coordinator, description)
             for mower_id in mower_ids
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
+        entities.extend(
+            AutomowerMessageSensorEntity(
+                mower_id,
+                message_coordinator[mower_id],
+                description,
+            )
+            for description in MESSAGE_SENSOR_TYPES
+            for mower_id in mower_ids
+            if description.exists_fn(message_coordinator[mower_id].data)
+        )
+        async_add_entities(entities)
         for mower_id in mower_ids:
             mower_data = coordinator.data[mower_id]
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
@@ -578,3 +638,30 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         return self.entity_description.translation_key_fn(
             self.work_area_id, self.entity_description.key
         )
+
+
+class AutomowerMessageSensorEntity(AutomowerMessageBaseEntity, SensorEntity):
+    """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
+
+    entity_description: AutomowerMessageSensorEntityDescription
+
+    def __init__(
+        self,
+        mower_id: str,
+        coordinator: AutomowerMessageUpdateCoordinator,
+        description: AutomowerMessageSensorEntityDescription,
+    ) -> None:
+        """Set up AutomowerSensors."""
+        super().__init__(mower_id, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{mower_id}_{description.key}"
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the option of the sensor."""
+        return self.entity_description.option_fn(self.coordinator.data)

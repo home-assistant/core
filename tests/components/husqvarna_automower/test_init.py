@@ -3,7 +3,7 @@
 from asyncio import Event
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import datetime, time as dt_time, timedelta
+from datetime import UTC, datetime, time as dt_time, timedelta
 import http
 import time
 from unittest.mock import AsyncMock, patch
@@ -14,7 +14,8 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, WorkArea
+from aioautomower.model import Calendar, Message, MessageData, MowerAttributes, WorkArea
+from aioautomower.model.model_message import MessageAttributes, Severity
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -112,21 +113,27 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception", "entry_state"),
+    ("exception_get_status", "exception_async_get_messages", "entry_state"),
     [
-        (ApiError, ConfigEntryState.SETUP_RETRY),
-        (AuthError, ConfigEntryState.SETUP_ERROR),
+        (ApiError("Test error"), None, ConfigEntryState.SETUP_RETRY),
+        (AuthError("Test error"), None, ConfigEntryState.SETUP_ERROR),
+        (None, ApiError("Test error"), ConfigEntryState.SETUP_RETRY),
+        (None, AuthError("Test error"), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    values: dict[str, MowerAttributes],
+    exception_get_status: Exception | None,
+    exception_async_get_messages: Exception | None,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
-    mock_automower_client.get_status.side_effect = exception("Test error")
+    mock_automower_client.get_status.side_effect = exception_get_status or None
+    mock_automower_client.get_status.return_value = values
+    mock_automower_client.async_get_messages.side_effect = exception_async_get_messages
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is entry_state
@@ -297,6 +304,7 @@ async def test_coordinator_automatic_registry_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
+    messages: MessageData,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test automatic registry cleanup."""
@@ -312,6 +320,8 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
     # Remove mower 2 and check if it worked
+    mower2_messages = messages.pop("1234")
+    mock_automower_client.async_get_messages.return_value = mower2_messages
     values_copy = deepcopy(values)
     mower2 = values_copy.pop("1234")
     mock_automower_client.get_status.return_value = values_copy
@@ -328,6 +338,8 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 2 and check if it worked
+    messages["1234"] = mower2_messages
+    mock_automower_client.async_get_messages.return_value = messages
     values_copy = deepcopy(values)
     values_copy["1234"] = mower2
     mock_automower_client.get_status.return_value = values_copy
@@ -344,6 +356,8 @@ async def test_coordinator_automatic_registry_cleanup(
     )
 
     # Remove mower 1 and check if it worked
+    mower1_messages = messages.pop(TEST_MOWER_ID)
+    mock_automower_client.async_get_messages.return_value = messages
     values_copy = deepcopy(values)
     mower1 = values_copy.pop(TEST_MOWER_ID)
     mock_automower_client.get_status.return_value = values_copy
@@ -360,6 +374,32 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 1 and check if it worked
+    messages[TEST_MOWER_ID] = mower1_messages
+
+    def get_message_side_effect(mower_id: str) -> MessageData:
+        return messages.get(
+            mower_id,
+            MessageData(
+                type="messages",
+                id=mower_id,
+                attributes=MessageAttributes(
+                    messages=[
+                        {
+                            "time": 1751146587,
+                            "code": 2,
+                            "severity": "ERROR",
+                            "latitude": 49,
+                            "longitude": 10,
+                        },
+                    ]
+                ),
+            ),
+        )
+
+    mock_automower_client.async_get_messages = AsyncMock(
+        side_effect=get_message_side_effect
+    )
+
     values_copy = deepcopy(values)
     values_copy[TEST_MOWER_ID] = mower1
     mock_automower_client.get_status.return_value = values_copy
@@ -484,3 +524,94 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+
+
+async def test_new_websocket_message(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a new message arriving over the websocket updates the sensor."""
+
+    # Capture callbacks per mower_id
+    callback_holder: dict[str, Callable[[MessageData], None]] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[MessageData], None],
+        mower_id: str,
+    ) -> None:
+        callback_holder[mower_id] = cb
+
+    mock_automower_client.register_message_callback.side_effect = (
+        fake_register_websocket_response
+    )
+
+    # Set up integration
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    # Wait for all coordinator/entity setup
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Ensure callback was registered for the test mower
+    assert mock_automower_client.register_message_callback.called
+    assert TEST_MOWER_ID in callback_holder
+
+    # Check initial state
+    state = hass.states.get("sensor.test_mower_1_last_error")
+    assert state is not None
+    assert state.state == "no_loop_signal"
+
+    # Simulate a new message for this mower
+    message = MessageData(
+        type="messages",
+        id=TEST_MOWER_ID,
+        attributes=MessageAttributes(
+            messages=[
+                Message(
+                    time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                    code="trapped",
+                    severity=Severity.ERROR,
+                    latitude=49.0,
+                    longitude=10.0,
+                )
+            ]
+        ),
+    )
+    callback_holder[TEST_MOWER_ID](message)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_mower_1_last_error")
+    assert state.state == "trapped"
+
+    # Simulate a message for another mower – should NOT affect this sensor
+    other_message = MessageData(
+        type="messages",
+        id="1234",
+        attributes=MessageAttributes(
+            messages=[
+                Message(
+                    time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                    code="internal_voltage_error",
+                    severity=Severity.ERROR,
+                    latitude=49.0,
+                    longitude=10.0,
+                )
+            ]
+        ),
+    )
+
+    # This would call all callbacks; here we directly call only the test mower
+    # (so we simulate the library’s internal filtering)
+    callback_holder["1234"](other_message)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_mower_1_last_error")
+    assert (
+        state.state == "trapped"
+    )  # Should still be "trapped", not "internal_voltage_error"

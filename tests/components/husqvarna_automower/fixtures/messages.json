@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "messages",
+    "id": "messages",
+    "attributes": {
+      "messages": [
+        {
+          "time": 1751146587,
+          "code": 2,
+          "severity": "ERROR",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1751120576,
+          "code": 10,
+          "severity": "FATAL",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1751055322,
+          "code": 2,
+          "severity": "ERROR",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1750968922,
+          "code": 2,
+          "severity": "ERROR",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1750523106,
+          "code": 76,
+          "severity": "WARNING",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1744293259,
+          "code": 110,
+          "severity": "FATAL",
+          "latitude": 49,
+          "longitude": 10
+        },
+        {
+          "time": 1744293255,
+          "code": 2,
+          "severity": "ERROR",
+          "latitude": 49,
+          "longitude": 10
+        }
+      ]
+    }
+  }
+}
