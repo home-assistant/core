@@ -44,6 +44,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     _is_blind = False
     node: OpeningDevice
 
+    # Do not name the "main" feature of the device (position control)
+    _attr_name = None
+
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
@@ -60,8 +63,6 @@ class VeluxCover(VeluxEntity, CoverEntity):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-
-        self._attr_translation_key = self._attr_device_class.name.lower()
 
     @property
     def supported_features(self) -> CoverEntityFeature:

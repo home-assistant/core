@@ -33,26 +33,6 @@
       "rain_sensor": {
         "name": "Rain sensor"
       }
-    },
-    "cover": {
-      "window": {
-        "name": "[%key:component::cover::entity_component::window::name%]"
-      },
-      "awning": {
-        "name": "[%key:component::cover::entity_component::awning::name%]"
-      },
-      "blind": {
-        "name": "[%key:component::cover::entity_component::blind::name%]"
-      },
-      "garage": {
-        "name": "[%key:component::cover::entity_component::garage::name%]"
-      },
-      "gate": {
-        "name": "[%key:component::cover::entity_component::gate::name%]"
-      },
-      "shutter": {
-        "name": "[%key:component::cover::entity_component::shutter::name%]"
-      }
     }
   }
 }
