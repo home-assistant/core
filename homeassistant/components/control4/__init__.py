@@ -62,7 +62,9 @@ async def call_c4_api_retry(func, *func_args):
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
             _LOGGER.error(
-                "Try: %d, Error connecting to Control4 account API: %s", i, exception
+                "Try: %d, Error connecting to Control4 account API: %s",
+                i + 1,
+                exception,
             )
             exc = exception
     raise ConfigEntryNotReady(exc) from exc
