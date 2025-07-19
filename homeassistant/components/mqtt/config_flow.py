@@ -3682,7 +3682,7 @@ def try_connection(
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt
+    import paho.mqtt.client as mqtt  # noqa: PLC0415
 
     mqtt_client_setup = MqttClientSetup(user_input)
     mqtt_client_setup.setup()
