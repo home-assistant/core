@@ -46,11 +46,8 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 f"Failed to connect to PoolDose client: {client_status}"
             )
 
-        # Update device info
-        if self.client.device_info is None:
-            _LOGGER.error("Device info is not available from PoolDose client")
-        else:
-            self.device_info = self.client.device_info
+        # Update device info after successful connection
+        self.device_info = self.client.device_info
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the PoolDose API."""
