@@ -9069,9 +9069,9 @@
             "IFeatureWateringProfileActuatorChannel": true
           },
           "userDesiredProfileMode": "AUTOMATIC",
-          "waterFlow": 0.0,
-          "waterVolume": 0.0,
-          "waterVolumeSinceOpen": 0.0,
+          "waterFlow": 12.0,
+          "waterVolume": 455.0,
+          "waterVolumeSinceOpen": 67.0,
           "wateringActive": false,
           "wateringOnTime": 3600.0
         }
