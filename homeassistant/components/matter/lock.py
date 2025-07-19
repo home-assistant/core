@@ -24,7 +24,7 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-ATTR_USER_INDEX = "user_index"
+ATTR_USER_INDEX: str = "user_index"
 
 DOOR_LOCK_OPERATION_SOURCE = {
     # mapping from operation source id's to textual representation
@@ -83,28 +83,29 @@ class MatterLock(MatterEntity, LockEntity):
     def _on_matter_node_event(
         self,
         event: EventType,
-        data: MatterNodeEvent,
+        nodeEvent: MatterNodeEvent,
     ) -> None:
         """Call on NodeEvent."""
-        if (data.endpoint_id != self._endpoint.endpoint_id) or (
-            data.cluster_id != clusters.DoorLock.id
+        if (nodeEvent.endpoint_id != self._endpoint.endpoint_id) or (
+            nodeEvent.cluster_id != clusters.DoorLock.id
         ):
             return
 
         LOGGER.debug(
             "Received _on_matter_node_event: event type %s, event id %s for %s with data %s",
             event,
-            data.event_id,
+            nodeEvent.event_id,
             self.entity_id,
-            data.data,
+            nodeEvent.data,
         )
 
         # handle the DoorLock events
-        match data.event_id:
+        nodeEventData: dict[str, int] = nodeEvent.data or {}
+        match nodeEvent.event_id:
             case (
                 clusters.DoorLock.Events.DoorLockAlarm.event_id
             ):  # Lock cluster event 0
-                match data.data.get("alarmCode"):
+                match nodeEventData.get("alarmCode"):
                     case 0:  # lock is jammed
                         # set in an uncertain state if jammed
                         self._attr_is_locked = None
@@ -115,12 +116,12 @@ class MatterLock(MatterEntity, LockEntity):
                         self.async_write_ha_state()
             case clusters.DoorLock.Events.LockOperation.event_id:  # Lock cluster vent 2
                 # update the changed_by attribute to indicate lock operation source
-                operation_source = data.data.get("operationSource")
+                operation_source: int = nodeEventData.get("operationSource", -1)
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
                 # update the user index attribute to indicate which user performed the operation
-                self._attr_user_index = data.data.get("userIndex")
+                self._attr_user_index = nodeEventData.get("userIndex")
                 self.async_write_ha_state()
             case (
                 clusters.DoorLock.Events.LockOperationError.event_id
@@ -138,8 +139,8 @@ class MatterLock(MatterEntity, LockEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the additional user_index state attribute of the lock."""
-        attrs = super().extra_state_attributes or {}
-        attrs[ATTR_USER_INDEX] = self._attr_user_index
+        attrs = super().extra_state_attributes or {}  # type: ignore[unused-ignore]
+        attrs[ATTR_USER_INDEX] = self._attr_user_index  # type: ignore[index]
         return attrs
 
     @property
@@ -259,7 +260,7 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_open = None
             self._attr_is_opening = None
             self._attr_is_jammed = None
-            self._attr_changed_by = None
+            self._attr_changed_by = "Unknown"
             self._attr_user_index = None
 
     @callback
