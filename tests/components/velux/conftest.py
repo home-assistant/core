@@ -71,6 +71,9 @@ def mock_window() -> AsyncMock:
     window.name = "Test Window"
     window.rain_sensor = True
     window.serial_number = "123456789"
+    window.is_opening = False
+    window.is_closing = False
+    window.position = AsyncMock(autospec=True)
     window.get_limitation.return_value = MagicMock(min_value=0)
     return window
 

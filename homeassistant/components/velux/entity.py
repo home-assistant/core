@@ -49,3 +49,18 @@ class VeluxEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
         self.async_register_callbacks()
+
+
+class VeluxCoordinatorEntity(VeluxEntity):
+    """Abstraction for Velux entities that use a coordinator."""
+
+    def __init__(self, node: Node, config_entry_id: str, coordinator) -> None:
+        """Initialize the Velux device with a coordinator."""
+        super().__init__(node, config_entry_id)
+        self.coordinator = coordinator
+
+    @callback
+    def async_register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
+        super().async_register_callbacks()
+        self.coordinator.async_add_listener(self.async_write_ha_state)

@@ -33,6 +33,16 @@
       "rain_sensor": {
         "name": "Rain sensor"
       }
+    },
+    "select": {
+      "cover_velocity": {
+        "name": "Cover velocity",
+        "state": {
+          "default": "Default",
+          "silent": "Silent",
+          "fast": "Fast"
+        }
+      }
     }
   }
 }

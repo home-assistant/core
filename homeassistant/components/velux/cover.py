@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyvlx import OpeningDevice, Position
+from pyvlx.const import Velocity
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter
 
 from homeassistant.components.cover import (
@@ -19,26 +20,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VeluxEntity
+from .coordinator import VeluxDataUpdateCoordinator
+from .entity import VeluxCoordinatorEntity
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up cover(s) for Velux platform."""
-    module = hass.data[DOMAIN][config.entry_id]
+    """Set up cover entities."""
+    coordinator = config_entry.runtime_data  # Get coordinator
+    module = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        VeluxCover(node, config.entry_id)
+        VeluxCover(node, config_entry.entry_id, coordinator)
         for node in module.pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
 
 
-class VeluxCover(VeluxEntity, CoverEntity):
+class VeluxCover(VeluxCoordinatorEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     _is_blind = False
@@ -47,9 +50,15 @@ class VeluxCover(VeluxEntity, CoverEntity):
     # Do not name the "main" feature of the device (position control)
     _attr_name = None
 
-    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
+    def __init__(
+        self,
+        node: OpeningDevice,
+        config_entry_id: str,
+        coordinator: VeluxDataUpdateCoordinator,
+    ) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node, config_entry_id)
+        super().__init__(node, config_entry_id, coordinator)
+
         # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
@@ -63,6 +72,23 @@ class VeluxCover(VeluxEntity, CoverEntity):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
+
+    def _get_velocity(self) -> Velocity:
+        """Get PyVLX velocity object for current setting."""
+        # Get velocity from coordinator
+        return self.coordinator.get_velocity(str(self._attr_device_info))
+
+    @property
+    def current_cover_velocity(self) -> str:
+        """Return the current velocity setting for this cover."""
+        return self._get_velocity().name.capitalize()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        return {
+            "velocity": self.current_cover_velocity,
+        }
 
     @property
     def supported_features(self) -> CoverEntityFeature:
@@ -110,19 +136,24 @@ class VeluxCover(VeluxEntity, CoverEntity):
         return self.node.is_closing
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        await self.node.close(wait_for_completion=False)
+        """Close the cover using current velocity setting."""
+        velocity = self._get_velocity()
+        await self.node.close(wait_for_completion=False, velocity=velocity)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        await self.node.open(wait_for_completion=False)
+        """Open the cover using current velocity setting."""
+        velocity = self._get_velocity()
+        await self.node.open(wait_for_completion=False, velocity=velocity)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Move the cover to a specific position."""
+        """Move the cover to a specific position using current velocity setting."""
         position_percent = 100 - kwargs[ATTR_POSITION]
+        velocity = self._get_velocity()
 
         await self.node.set_position(
-            Position(position_percent=position_percent), wait_for_completion=False
+            Position(position_percent=position_percent),
+            wait_for_completion=False,
+            velocity=velocity,
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -145,6 +176,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]
         orientation = Position(position_percent=position_percent)
+
         await cast(Blind, self.node).set_orientation(
             orientation=orientation, wait_for_completion=False
         )
