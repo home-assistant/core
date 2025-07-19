@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
+import json
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
@@ -24,6 +25,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
+import yaml
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
@@ -66,6 +68,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DISCOVERY,
     CONF_EFFECT,
+    CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -77,6 +80,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_STATE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -84,6 +88,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
@@ -319,6 +324,10 @@ SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+TEXT_SELECTOR_READ_ONLY = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, read_only=True)
+)
+URL_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
 PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PORT_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
@@ -398,6 +407,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     )
 )
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+TEMPLATE_SELECTOR_READ_ONLY = TemplateSelector(TemplateSelectorConfig(read_only=True))
 
 SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -410,6 +420,14 @@ SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): TEXT_SELECTOR,
     }
+)
+ENTITY_CATEGORY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[category.value for category in EntityCategory],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ENTITY_CATEGORY,
+        sort=True,
+    )
 )
 
 # Sensor specific selectors
@@ -429,6 +447,15 @@ BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[EntityCategory.DIAGNOSTIC.value],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ENTITY_CATEGORY,
+        sort=True,
+    )
+)
+
 BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[device_class.value for device_class in ButtonDeviceClass],
@@ -536,6 +563,8 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
 
 
 @callback
@@ -735,11 +764,24 @@ COMMON_ENTITY_FIELDS: dict[str, PlatformField] = {
     ),
 }
 
+SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
+    CONF_ENTITY_CATEGORY: PlatformField(
+        selector=ENTITY_CATEGORY_SELECTOR,
+        required=False,
+        default=None,
+    ),
+}
+
 PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
     Platform.BINARY_SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
             required=False,
+        ),
+        CONF_ENTITY_CATEGORY: PlatformField(
+            selector=SENSOR_ENTITY_CATEGORY_SELECTOR,
+            required=False,
+            default=None,
         ),
     },
     Platform.BUTTON.value: {
@@ -803,6 +845,11 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=OPTIONS_SELECTOR,
             required=False,
             conditions=({"device_class": "enum"},),
+        ),
+        CONF_ENTITY_CATEGORY: PlatformField(
+            selector=SENSOR_ENTITY_CATEGORY_SELECTOR,
+            required=False,
+            default=None,
         ),
     },
     Platform.SWITCH.value: {
@@ -1867,8 +1914,12 @@ ENTITY_CONFIG_VALIDATOR: dict[
 
 MQTT_DEVICE_PLATFORM_FIELDS = {
     ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
-    ATTR_SW_VERSION: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_HW_VERSION: PlatformField(selector=TEXT_SELECTOR, required=False),
+    ATTR_SW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    ),
+    ATTR_HW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    ),
     ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_CONFIGURATION_URL: PlatformField(
@@ -2070,10 +2121,11 @@ def data_schema_from_fields(
             if field_details.section == schema_section
             and field_details.exclude_from_reconfig
         }
-        if not data_element_options:
-            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
+            continue
+        if not data_schema_element:
+            # Do not show empty sections
             continue
         collapsed = (
             not any(
@@ -2690,6 +2742,19 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             for field_key, value in data_schema.schema.items()
         }
 
+    @callback
+    def get_suggested_values_from_device_data(
+        self, data_schema: vol.Schema
+    ) -> dict[str, Any]:
+        """Get suggestions from device data based on the data schema."""
+        device_data = self._subentry_data["device"]
+        return {
+            field_key: self.get_suggested_values_from_device_data(value.schema)
+            if isinstance(value, section)
+            else device_data.get(field_key)
+            for field_key, value in data_schema.schema.items()
+        }
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -2719,15 +2784,24 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             reconfig=True,
         )
         if user_input is not None:
+            new_device_data: dict[str, Any] = user_input.copy()
             _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
+            if "advanced_settings" in new_device_data:
+                new_device_data |= new_device_data.pop("advanced_settings")
             if not errors:
-                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
+                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
                 return await self.async_step_entity()
-        data_schema = self.add_suggested_values_to_schema(
-            data_schema, device_data if user_input is None else user_input
-        )
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, device_data if user_input is None else user_input
+            )
+        elif self.source == SOURCE_RECONFIGURE:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self.get_suggested_values_from_device_data(data_schema),
+            )
+
         return self.async_show_form(
             step_id=CONF_DEVICE,
             data_schema=data_schema,
@@ -2834,7 +2908,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
         platform = component_data[CONF_PLATFORM]
-        data_schema_fields = PLATFORM_ENTITY_FIELDS[platform]
+        data_schema_fields = (
+            SHARED_PLATFORM_ENTITY_FIELDS | PLATFORM_ENTITY_FIELDS[platform]
+        )
         errors: dict[str, str] = {}
 
         data_schema = data_schema_from_fields(
@@ -2845,8 +2921,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             component_data=component_data,
             user_input=user_input,
         )
-        if not data_schema.schema:
-            return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
             merged_user_input, errors = validate_user_input(
@@ -2940,6 +3014,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             platform = component_data[CONF_PLATFORM]
             platform_fields: dict[str, PlatformField] = (
                 COMMON_ENTITY_FIELDS
+                | SHARED_PLATFORM_ENTITY_FIELDS
                 | PLATFORM_ENTITY_FIELDS[platform]
                 | PLATFORM_MQTT_FIELDS[platform]
             )
@@ -3037,8 +3112,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             menu_options.append("delete_entity")
         menu_options.extend(["device", "availability"])
         self._async_update_component_data_defaults()
-        if self._subentry_data != self._get_reconfigure_subentry().data:
-            menu_options.append("save_changes")
+        menu_options.append(
+            "save_changes"
+            if self._subentry_data != self._get_reconfigure_subentry().data
+            else "export"
+        )
         return self.async_show_menu(
             step_id="summary_menu",
             menu_options=menu_options,
@@ -3078,6 +3156,117 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             subentry,
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
+        )
+
+    async def async_step_export(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config as YAML or discovery payload."""
+        return self.async_show_menu(
+            step_id="export",
+            menu_options=["export_yaml", "export_discovery"],
+        )
+
+    async def async_step_export_yaml(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config as YAML."""
+        if user_input is not None:
+            return await self.async_step_summary_menu()
+
+        subentry = self._get_reconfigure_subentry()
+        mqtt_yaml_config_base: dict[str, list[dict[str, dict[str, Any]]]] = {DOMAIN: []}
+        mqtt_yaml_config = mqtt_yaml_config_base[DOMAIN]
+
+        for component_id, component_data in self._subentry_data["components"].items():
+            component_config: dict[str, Any] = component_data.copy()
+            component_config[CONF_UNIQUE_ID] = f"{subentry.subentry_id}_{component_id}"
+            component_config[CONF_DEVICE] = {
+                key: value
+                for key, value in self._subentry_data["device"].items()
+                if key != "mqtt_settings"
+            } | {"identifiers": [subentry.subentry_id]}
+            platform = component_config.pop(CONF_PLATFORM)
+            component_config.update(self._subentry_data.get("availability", {}))
+            component_config.update(
+                self._subentry_data["device"].get("mqtt_settings", {}).copy()
+            )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
+            mqtt_yaml_config.append({platform: component_config})
+
+        yaml_config = yaml.dump(mqtt_yaml_config_base)
+        data_schema = vol.Schema(
+            {
+                vol.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
+            }
+        )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema=data_schema,
+            suggested_values={"yaml": yaml_config},
+        )
+        return self.async_show_form(
+            step_id="export_yaml",
+            last_step=False,
+            data_schema=data_schema,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/mqtt/"
+            },
+        )
+
+    async def async_step_export_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config dor MQTT discovery."""
+
+        if user_input is not None:
+            return await self.async_step_summary_menu()
+
+        subentry = self._get_reconfigure_subentry()
+        discovery_topic = f"homeassistant/device/{subentry.subentry_id}/config"
+        discovery_payload: dict[str, Any] = {}
+        discovery_payload.update(self._subentry_data.get("availability", {}))
+        discovery_payload["dev"] = {
+            key: value
+            for key, value in self._subentry_data["device"].items()
+            if key != "mqtt_settings"
+        } | {"identifiers": [subentry.subentry_id]}
+        discovery_payload["o"] = {"name": "MQTT subentry export"}
+        discovery_payload["cmps"] = {}
+
+        for component_id, component_data in self._subentry_data["components"].items():
+            component_config: dict[str, Any] = component_data.copy()
+            component_config[CONF_UNIQUE_ID] = f"{subentry.subentry_id}_{component_id}"
+            component_config.update(self._subentry_data.get("availability", {}))
+            component_config.update(
+                self._subentry_data["device"].get("mqtt_settings", {}).copy()
+            )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
+            discovery_payload["cmps"][component_id] = component_config
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
+                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
+            }
+        )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema=data_schema,
+            suggested_values={
+                "discovery_topic": discovery_topic,
+                "discovery_payload": json.dumps(discovery_payload, indent=2),
+            },
+        )
+        return self.async_show_form(
+            step_id="export_discovery",
+            last_step=False,
+            data_schema=data_schema,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/mqtt/"
+            },
         )
 
 

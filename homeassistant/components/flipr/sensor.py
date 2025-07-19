@@ -19,7 +19,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
         translation_key="chlorine",
-        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_unit_of_measurement="mg/L",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
