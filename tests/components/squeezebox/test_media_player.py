@@ -65,6 +65,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -76,7 +77,7 @@ from .conftest import (
     FAKE_VALID_ITEM_ID,
     TEST_MAC,
     TEST_VOLUME_STEP,
-    configure_squeezebox_media_player_platform,
+    configure_squeezebox_platform,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -126,7 +127,7 @@ async def test_squeezebox_new_player_discovery(
 ) -> None:
     """Test discovery of a new squeezebox player."""
     # Initial setup with one player (from the 'lms' fixture)
-    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    await configure_squeezebox_platform(hass, config_entry, lms, Platform.MEDIA_PLAYER)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("media_player.test_player") is not None
     assert hass.states.get("media_player.test_player_2") is None
