@@ -336,6 +336,7 @@ class Output(Device):
     is_dimmable: bool = field(init=False, default=False)
     is_light: bool = field(init=False, default=False)
     is_shade: bool = field(init=False, default=False)
+    is_motor: bool = field(init=False, default=False)
     is_fan: bool = field(init=False, default=False)
     is_switch: bool = field(init=False, default=False)
 
@@ -343,17 +344,23 @@ class Output(Device):
         """Set the type of OUTPUT."""
         super().__post_init__()
 
-        match self.output_type:
-            case t if t.startswith("CCO_") or t == "RELAY_LIGHTING":
-                self.is_switch = True
-            case t if t.startswith("MOTOR") or t == "SYSTEM_SHADE":
-                self.is_shade = True
-            case "EXHAUST_FAN_TYPE" | "CEILING_FAN_TYPE":
-                self.is_fan = True
-            case _:
-                self.is_light = True
+        t = self.output_type
 
-        self.is_dimmable = self.is_light and not self.output_type.startswith("NON_DIM")
+        if t.startswith("CCO_") or t in {
+            "RELAY_LIGHTING",
+            "EXHAUST_FAN_TYPE",
+            "SWITCHED_MOTOR",
+        }:
+            self.is_switch = True
+        elif t == "SYSTEM_SHADE":
+            self.is_shade = True
+        elif t.startswith("MOTOR"):
+            self.is_motor = True
+        elif t == "CEILING_FAN_TYPE":
+            self.is_fan = True
+        else:
+            self.is_light = True
+            self.is_dimmable = not t.startswith("NON_DIM")
 
 
 @dataclass

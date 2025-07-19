@@ -47,17 +47,27 @@ async def async_setup_entry(
 
     Adds shades from the Main Repeater associated with the config_entry as
     cover entities.
+    Motors can use set_level only for closing (0) or opening(100), so we use Cover Time Based entity.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            LutronCoverTimeBased(
+    devs = []
+
+    for area_name, device_name, device in entry_data.covers:
+        if device.is_motor:
+            dev = LutronCoverTimeBased(
                 area_name, device_name, device, entry_data.controller, config_entry
             )
-            for area_name, device_name, device in entry_data.covers
-        ],
-        True,
-    )
+        elif device.is_shade:
+            continue
+        else:
+            _LOGGER.warning(
+                "Lutron cover %s is not a motor or shades device", device_name
+            )
+            continue
+
+        devs.append(dev)
+
+    async_add_entities(devs, True)
 
 
 class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):

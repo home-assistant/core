@@ -353,7 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 else area_name + " " + output.name
             )
             _LOGGER.debug("Working on output %s", output.output_type)
-            if output.is_shade:
+            if output.is_motor or output.is_shade:
                 entry_data.covers.append((area_name, device_name, output))
                 platform = Platform.COVER
             elif output.is_fan:
