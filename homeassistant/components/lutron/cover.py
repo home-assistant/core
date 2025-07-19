@@ -25,7 +25,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, LutronController, LutronData
 from .entity import LutronOutput
-from .lutron_db import Device
+from .lutron_db import Device, Output
 from .travelcalculator import TravelCalculator, TravelStatus
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,24 +50,27 @@ async def async_setup_entry(
     Motors can use set_level only for closing (0) or opening(100), so we use Cover Time Based entity.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-    devs = []
-
-    for area_name, device_name, device in entry_data.covers:
-        if device.is_motor:
-            dev = LutronCoverTimeBased(
+    async_add_entities(
+        (
+            LutronCoverTimeBased(
                 area_name, device_name, device, entry_data.controller, config_entry
             )
-        elif device.is_shade:
-            continue
-        else:
-            _LOGGER.warning(
-                "Lutron cover %s is not a motor or shades device", device_name
+            for area_name, device_name, device in entry_data.covers
+            if device.is_motor
+        ),
+        True,
+    )
+
+    async_add_entities(
+        (
+            LutronCover(
+                area_name, device_name, device, entry_data.controller, config_entry
             )
-            continue
-
-        devs.append(dev)
-
-    async_add_entities(devs, True)
+            for area_name, device_name, device in entry_data.covers
+            if device.is_shade
+        ),
+        True,
+    )
 
 
 class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
@@ -395,3 +398,55 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
 
         # Update state of entity
         self.async_write_ha_state()
+
+
+class LutronCover(LutronOutput, CoverEntity):
+    """Representation of a Lutron shade."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
+    _attr_is_closed: bool | None = None
+    _attr_current_cover_position: int | None = None
+    _attr_assumed_state = True
+
+    def __init__(
+        self,
+        area_name: str,
+        device_name: str,
+        lutron_device: Output,
+        controller: LutronController,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, device_name, lutron_device, controller)
+        self._config_entry = config_entry
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._controller.output_set_level(self._lutron_device.id, 0)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._controller.output_set_level(self._lutron_device.id, 100)
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the shade to a specific position."""
+        if ATTR_POSITION in kwargs:
+            position = kwargs[ATTR_POSITION]
+            await self._controller.output_set_level(self._lutron_device.id, position)
+
+    async def _request_state(self) -> None:
+        """Request the state from the device."""
+        await self._controller.output_get_level(self._lutron_device.id)
+
+    def _update_callback(self, value: int):
+        """Update the state attributes."""
+        self._attr_is_closed = value < 1
+        self._attr_current_cover_position = value
+        self.async_write_ha_state()
+
+        _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, value)
