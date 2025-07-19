@@ -24,6 +24,7 @@ class SMHIForecastData:
 
     daily: list[SMHIForecast]
     hourly: list[SMHIForecast]
+    twice_daily: list[SMHIForecast]
 
 
 class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
@@ -52,6 +53,9 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             async with asyncio.timeout(TIMEOUT):
                 _forecast_daily = await self._smhi_api.async_get_daily_forecast()
                 _forecast_hourly = await self._smhi_api.async_get_hourly_forecast()
+                _forecast_twice_daily = (
+                    await self._smhi_api.async_get_twice_daily_forecast()
+                )
         except SmhiForecastException as ex:
             raise UpdateFailed(
                 "Failed to retrieve the forecast from the SMHI API"
@@ -60,6 +64,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
         return SMHIForecastData(
             daily=_forecast_daily,
             hourly=_forecast_hourly,
+            twice_daily=_forecast_twice_daily,
         )
 
     @property
