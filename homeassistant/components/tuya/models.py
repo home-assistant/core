@@ -99,8 +99,27 @@ class EnumTypeData:
         return cls(dpcode, **parsed)
 
 
+class BaseTypeData:
+    """Base Type Data."""
+
+    @classmethod
+    def from_json(cls, data: str) -> Self:
+        """Load JSON string and return a BaseTypeData object."""
+        raise NotImplementedError("from_json is not implemented for this type")
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self:
+        """Decode base64 string and return a BaseTypeData object."""
+        raise NotImplementedError("from_raw is not implemented for this type")
+
+    @classmethod
+    def to_json(cls, data: str) -> str:
+        """Convert BaseTypeData to JSON."""
+        raise NotImplementedError("to_json is not implemented for this type")
+
+
 @dataclass
-class ElectricityTypeData:
+class ElectricityTypeData(BaseTypeData):
     """Electricity Type Data."""
 
     electriccurrent: str | None = None
@@ -122,3 +141,20 @@ class ElectricityTypeData:
         return cls(
             electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
         )
+
+
+@dataclass
+class RawTypeData(BaseTypeData):
+    """Raw Type Data."""
+
+    raw: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> Self:
+        """Load JSON string and return a RawTypeData object."""
+        return cls(data)
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self:
+        """Return a RawTypeData object."""
+        return cls(raw=data)
