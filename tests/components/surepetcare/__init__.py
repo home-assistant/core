@@ -77,7 +77,7 @@ MOCK_PET = {
     "id": 24680,
     "household_id": HOUSEHOLD_ID,
     "name": "Pet",
-    "position": {"since": "2020-08-23T23:10:50", "where": 1},
+    "position": {"since": "2020-08-23T23:10:50", "where": 1, "device_id": 13576},
     "status": {},
 }
 
@@ -85,3 +85,5 @@ MOCK_API_DATA = {
     "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
     "pets": [MOCK_PET],
 }
+
+MOCK_HASS_AREAS = ["Garage", "Hall"]
