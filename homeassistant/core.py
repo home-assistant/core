@@ -114,7 +114,9 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers import template
     from .helpers.entity import StateInfo
+    from .helpers.script import ScriptRun
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -2445,7 +2447,14 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
+    __slots__ = [
+        "domain",
+        "job",
+        "schema",
+        "service",
+        "supports_response",
+        "template_exclude_keys",
+    ]
 
     def __init__(
         self,
@@ -2462,17 +2471,27 @@ class Service:
         context: Context | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        template_exclude_keys: template.ExcludeKeys = None,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}", job_type=job_type)
         self.schema = schema
         self.supports_response = supports_response
+        self.template_exclude_keys = template_exclude_keys
 
 
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("context", "data", "domain", "hass", "return_response", "service")
+    __slots__ = (
+        "context",
+        "data",
+        "domain",
+        "hass",
+        "return_response",
+        "script_run",
+        "service",
+    )
 
     def __init__(
         self,
@@ -2482,6 +2501,7 @@ class ServiceCall:
         data: dict[str, Any] | None = None,
         context: Context | None = None,
         return_response: bool = False,
+        script_run: ScriptRun | None = None,
     ) -> None:
         """Initialize a service call."""
         self.hass = hass
@@ -2490,6 +2510,7 @@ class ServiceCall:
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
         self.return_response = return_response
+        self.script_run = script_run
 
     def __repr__(self) -> str:
         """Return the representation of the service."""
@@ -2569,6 +2590,10 @@ class ServiceRegistry:
             return SupportsResponse.NONE
         return handler.supports_response
 
+    def template_exclude_keys(self, domain: str, service: str) -> template.ExcludeKeys:
+        """Return data keys excluded from template rendering."""
+        return self._services[domain][service].template_exclude_keys
+
     def register(
         self,
         domain: str,
@@ -2609,6 +2634,7 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        template_exclude_keys: template.ExcludeKeys = None,
     ) -> None:
         """Register a service.
 
@@ -2618,7 +2644,13 @@ class ServiceRegistry:
         """
         self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
-            domain, service, service_func, schema, supports_response, job_type
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            template_exclude_keys,
         )
 
     @callback
@@ -2636,6 +2668,7 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        template_exclude_keys: template.ExcludeKeys = None,
     ) -> None:
         """Register a service.
 
@@ -2652,6 +2685,7 @@ class ServiceRegistry:
             service,
             supports_response=supports_response,
             job_type=job_type,
+            template_exclude_keys=template_exclude_keys,
         )
 
         if domain in self._services:
@@ -2736,6 +2770,7 @@ class ServiceRegistry:
         context: Context | None = None,
         target: dict[str, Any] | None = None,
         return_response: bool = False,
+        script_run: ScriptRun | None = None,
     ) -> ServiceResponse:
         """Call a service.
 
@@ -2810,7 +2845,13 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            self._hass, domain, service, processed_data, context, return_response
+            self._hass,
+            domain,
+            service,
+            processed_data,
+            context,
+            return_response,
+            script_run,
         )
 
         self._hass.bus.async_fire_internal(
