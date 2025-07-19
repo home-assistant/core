@@ -65,7 +65,7 @@ async def test_rain_sensor_device_association(
 
     test_entity_id = "binary_sensor.test_window_rain_sensor"
 
-    # Verify entity exists and has correct state
+    # Verify entity exists
     state = hass.states.get(test_entity_id)
     assert state is not None
 
@@ -83,6 +83,5 @@ async def test_rain_sensor_device_association(
     assert device_entry is not None
 
     # Verify device has correct identifiers
-    expected_identifier = ("velux", mock_window.serial_number)
-    assert expected_identifier in device_entry.identifiers
+    assert ("velux", mock_window.serial_number) in device_entry.identifiers
     assert device_entry.name == mock_window.name
