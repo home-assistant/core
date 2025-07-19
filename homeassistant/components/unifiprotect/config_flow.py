@@ -260,6 +260,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             port=port,
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
+            api_key=user_input[CONF_API_KEY],
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
             config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
@@ -288,6 +289,11 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             auth_user = bootstrap.users.get(bootstrap.auth_user_id)
             if auth_user and auth_user.cloud_account:
                 errors["base"] = "cloud_user"
+        try:
+            await protect.get_meta_info()
+        except NotAuthorized as ex:
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
 
         return nvr_data, errors
 
@@ -390,7 +396,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
                     vol.Optional(
                         CONF_DISABLE_RTSP,
                         default=self.config_entry.options.get(CONF_DISABLE_RTSP, False),

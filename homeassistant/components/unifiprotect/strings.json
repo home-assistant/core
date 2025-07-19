@@ -55,7 +55,6 @@
         "title": "UniFi Protect options",
         "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "override_connection_host": "Override connection host",
