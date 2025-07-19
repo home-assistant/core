@@ -669,6 +669,7 @@ FLOWS = {
         "trafikverket_weatherstation",
         "transmission",
         "triggercmd",
+        "tuneblade_remote",
         "tuya",
         "twentemilieu",
         "twilio",
