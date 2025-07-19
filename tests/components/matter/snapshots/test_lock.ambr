@@ -37,15 +37,17 @@
 # name: test_locks[door_lock][lock.mock_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'changed_by': 'Unknown',
       'friendly_name': 'Mock Door Lock',
       'supported_features': <LockEntityFeature: 0>,
+      'user_index': None,
     }),
     'context': <ANY>,
     'entity_id': 'lock.mock_door_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unlocked',
+    'state': 'jammed',
   })
 # ---
 # name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-entry]
@@ -86,8 +88,10 @@
 # name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'changed_by': 'Unknown',
       'friendly_name': 'Mock Door Lock',
       'supported_features': <LockEntityFeature: 1>,
+      'user_index': None,
     }),
     'context': <ANY>,
     'entity_id': 'lock.mock_door_lock',
