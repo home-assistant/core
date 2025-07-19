@@ -33,7 +33,6 @@ async def test_rain_sensor_state(
         await hass.async_block_till_done()
 
     # simulate no rain detected
-    mock_window.get_limitation.return_value = MagicMock(min_value=0)
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -42,7 +41,8 @@ async def test_rain_sensor_state(
     assert state.state == STATE_OFF
 
     # simulate rain detected
-    mock_window.get_limitation.return_value = MagicMock(min_value=93)
+    limitation = await mock_window.get_limitation()
+    limitation.min_value = 93
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
