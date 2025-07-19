@@ -26,6 +26,11 @@ REAUTH_SCHEMA = vol.Schema(
         vol.Required(CONF_API_TOKEN): str,
     }
 )
+DISCOVERY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_TOKEN): str,
+    }
+)
 
 
 class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -175,9 +180,19 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             self.host = f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
             self.verify_ssl = True
 
+            user_input = dict[str, Any]
+            user_input[CONF_HOST] = self.host
+            user_input[CONF_VERIFY_SSL] = self.verify_ssl
+
+            errors, user_id = await self.check_connection(
+                user_input[CONF_API_TOKEN],
+            )
+
             return self.async_show_form(
                 step_id="hassio_confirm",
+                data_schema=DISCOVERY_SCHEMA,
                 description_placeholders={"addon": self._hassio_discovery["addon"]},
+                errors=errors,
             )
 
         return await self.async_step_user()
