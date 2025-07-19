@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
+
 from aiontfy import Message
 from aiontfy.exceptions import (
     NtfyException,
@@ -11,6 +14,7 @@ from aiontfy.exceptions import (
 from yarl import URL
 
 from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
@@ -20,7 +24,11 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_platforms,
+)
 
 from .const import CONF_TOPIC, DOMAIN
 from .coordinator import NtfyConfigEntry
@@ -39,6 +47,15 @@ async def async_setup_entry(
         async_add_entities(
             [NtfyNotifyEntity(config_entry, subentry)], config_subentry_id=subentry_id
         )
+
+
+def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
+    """Get entities for a domain."""
+    entities: dict[str, Entity] = {}
+    for platform in async_get_platforms(hass, DOMAIN):
+        if platform.domain == NOTIFY_DOMAIN:
+            entities.update(platform.entities)
+    return entities
 
 
 class NtfyNotifyEntity(NotifyEntity):
@@ -76,7 +93,19 @@ class NtfyNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""
-        msg = Message(topic=self.topic, message=message, title=title)
+        await self.publish(message=message, title=title)
+
+    async def publish(self, **kwargs: Any) -> None:
+        """Publish a message to a topic."""
+
+        params: dict[str, Any] = kwargs
+        delay: timedelta | None = params.get("delay")
+        if delay:
+            params["delay"] = (
+                f"{delay.days}d {delay.seconds}s" if delay.days else f"{delay.seconds}s"
+            )
+
+        msg = Message(topic=self.topic, **params)
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:
