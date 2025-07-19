@@ -306,6 +306,11 @@ class WebRTCProvider(CameraWebRTCProvider):
             await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
 
+        if camera.platform.platform_name == "generic":
+            # This is a workaround to use ffmpeg for generic cameras
+            # A proper fix will be added in the future together with supporting multiple streams per camera
+            stream_source = "ffmpeg:" + stream_source
+
         if not self.async_is_supported(stream_source):
             await self.teardown()
             raise HomeAssistantError("Stream source is not supported by go2rtc")
@@ -323,7 +328,6 @@ class WebRTCProvider(CameraWebRTCProvider):
                     # Connection problems to the camera will be logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-                    f"ffmpeg:{camera.entity_id}#video=mjpeg",
                 ],
             )
 

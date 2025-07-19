@@ -1,0 +1,370 @@
+# serializer version: 1
+# name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_frozen_precipitation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Frozen precipitation',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frozen_precipitation',
+    'unique_id': '59.32624, 17.84197-frozen_precipitation',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Frozen precipitation',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_frozen_precipitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_high_cloud_coverage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'High cloud coverage',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'high_cloud',
+    'unique_id': '59.32624, 17.84197-high_cloud',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test High cloud coverage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_high_cloud_coverage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_low_cloud_coverage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Low cloud coverage',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_cloud',
+    'unique_id': '59.32624, 17.84197-low_cloud',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Low cloud coverage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_low_cloud_coverage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_medium_cloud_coverage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Medium cloud coverage',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'medium_cloud',
+    'unique_id': '59.32624, 17.84197-medium_cloud',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Medium cloud coverage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_medium_cloud_coverage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_precipitation_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Precipitation category',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation_category',
+    'unique_id': '59.32624, 17.84197-precipitation_category',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'device_class': 'enum',
+      'friendly_name': 'Test Precipitation category',
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_precipitation_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_thunder_probability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thunder probability',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thunder',
+    'unique_id': '59.32624, 17.84197-thunder',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Thunder probability',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_thunder_probability',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_total_cloud_coverage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cloud coverage',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cloud',
+    'unique_id': '59.32624, 17.84197-total_cloud',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Total cloud coverage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_total_cloud_coverage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
