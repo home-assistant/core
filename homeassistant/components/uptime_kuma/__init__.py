@@ -2,12 +2,39 @@
 
 from __future__ import annotations
 
+from pythonkuma.update import UpdateChecker
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import (
+    UptimeKumaConfigEntry,
+    UptimeKumaDataUpdateCoordinator,
+    UptimeKumaSoftwareUpdateCoordinator,
+)
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+UPTIME_KUMA_KEY: HassKey[UptimeKumaSoftwareUpdateCoordinator] = HassKey(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Uptime Kuma."""
+
+    session = async_get_clientsession(hass)
+    update_checker = UpdateChecker(session)
+
+    update_coordinator = UptimeKumaSoftwareUpdateCoordinator(hass, update_checker)
+    await update_coordinator.async_request_refresh()
+
+    hass.data[UPTIME_KUMA_KEY] = update_coordinator
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -> bool:
