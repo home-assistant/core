@@ -195,4 +195,13 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
+        if user_input:
+            if not errors:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title="Mealie",
+                    data=user_input,
+                )
+
         return await self.async_step_user()
