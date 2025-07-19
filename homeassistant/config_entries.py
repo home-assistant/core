@@ -2233,16 +2233,20 @@ class ConfigEntries:
         return await entry.async_unload(self.hass)
 
     @callback
-    def async_schedule_reload(self, entry_id: str) -> None:
+    def async_schedule_reload(
+        self, entry_id: str, reloading_callback: Callable[[], Any] | None = None
+    ) -> None:
         """Schedule a config entry to be reloaded."""
         entry = self.async_get_known_entry(entry_id)
         entry.async_cancel_retry_setup()
         self.hass.async_create_task(
-            self.async_reload(entry_id),
+            self.async_reload(entry_id, reloading_callback=reloading_callback),
             f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
         )
 
-    async def async_reload(self, entry_id: str) -> bool:
+    async def async_reload(
+        self, entry_id: str, reloading_callback: Callable[[], Any] | None = None
+    ) -> bool:
         """Reload an entry.
 
         When reloading from an integration is is preferable to
@@ -2268,11 +2272,17 @@ class ConfigEntries:
             # the config entry will be loaded as well. We need
             # to do this before holding the lock to avoid a
             # deadlock.
+            if reloading_callback is not None:
+                reloading_callback()
+
             await async_setup_component(self.hass, entry.domain, self._hass_config)
             return entry.state is ConfigEntryState.LOADED
 
         async with entry.setup_lock:
             unload_result = await self.async_unload(entry_id, _lock=False)
+
+            if reloading_callback is not None:
+                reloading_callback()
 
             if not unload_result or entry.disabled_by:
                 return unload_result
@@ -2312,6 +2322,35 @@ class ConfigEntries:
             er.async_config_entry_disabled_by_changed(ent_reg, entry)
 
         return reload_result
+
+    @callback
+    def async_would_update_entry(
+        self,
+        entry: ConfigEntry,
+        *,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+    ) -> bool:
+        """Return True if the entry would be updated."""
+        if entry.entry_id not in self._entries:
+            raise UnknownEntry(entry.entry_id)
+
+        self.hass.verify_event_loop_thread(
+            "hass.config_entries.async_would_update_entry"
+        )
+
+        for attr, value in (
+            ("data", data),
+            ("options", options),
+            ("title", title),
+            ("unique_id", unique_id),
+        ):
+            if value is not UNDEFINED and getattr(entry, attr) != value:
+                return True
+
+        return False
 
     @callback
     def async_update_entry(
@@ -3167,7 +3206,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
-        """Update config entry, reload config entry and finish config flow.
+        """Update config entry, while reloading it and finish config flow.
 
         :param data: replace the entry data with new data
         :param data_updates: add items from data_updates to entry data - existing keys
@@ -3180,21 +3219,36 @@ class ConfigFlow(ConfigEntryBaseFlow):
         `reauth_successful` or `reconfigure_successful` based on flow source
 
         :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
-        should not be reloaded if it is unchanged
+        should not be reloaded if it would not have changed
         """
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
             data = entry.data | data_updates
-        result = self.hass.config_entries.async_update_entry(
+        would_update = self.hass.config_entries.async_would_update_entry(
             entry=entry,
             unique_id=unique_id,
             title=title,
             data=data,
             options=options,
         )
-        if reload_even_if_entry_is_unchanged or result:
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        reloading_callback: Callable[[], None] | None = None
+        if would_update:
+
+            def reloading_callback() -> None:
+                self.hass.config_entries.async_update_entry(
+                    entry=entry,
+                    unique_id=unique_id,
+                    title=title,
+                    data=data,
+                    options=options,
+                )
+
+        if reload_even_if_entry_is_unchanged or would_update:
+            self.hass.config_entries.async_schedule_reload(
+                entry.entry_id, reloading_callback=reloading_callback
+            )
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
