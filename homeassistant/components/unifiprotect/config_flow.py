@@ -294,6 +294,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_API_KEY] = "invalid_auth"
+        except ClientError as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
 
         return nvr_data, errors
 
