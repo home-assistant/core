@@ -226,10 +226,7 @@ def get_announce_timeout(extra: dict) -> int | None:
 
 
 class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
-    """Representation of the media player features of a SqueezeBox device.
-
-    Wraps a pysqueezebox.Player() object.
-    """
+    """Representation of the media player features of a SqueezeBox device."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -286,9 +283,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     @property
     def browse_limit(self) -> int:
-        """Return the step to be used for volume up down."""
-        return self.coordinator.config_entry.options.get(  # type: ignore[no-any-return]
-            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        """Return the max number of items to return from browse."""
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+            )
         )
 
     @property
