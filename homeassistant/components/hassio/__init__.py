@@ -92,6 +92,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    COORDINATOR,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_CORE_INFO,
@@ -106,6 +107,7 @@ from .const import (
     HASSIO_UPDATE_INTERVAL,
 )
 from .coordinator import (
+    HassioAddOnDataUpdateCoordinator,
     HassioDataUpdateCoordinator,
     get_addons_info,
     get_addons_stats,  # noqa: F401
@@ -555,9 +557,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
+
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[ADDONS_COORDINATOR] = coordinator
+    hass.data[COORDINATOR] = coordinator
+
+    addon_coordinator = HassioAddOnDataUpdateCoordinator(hass, entry, dev_reg)
+    await addon_coordinator.async_config_entry_first_refresh()
+    hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
