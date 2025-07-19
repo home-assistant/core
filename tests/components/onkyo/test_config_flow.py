@@ -1,11 +1,9 @@
 """Test Onkyo config flow."""
 
-from unittest.mock import patch
-
+from aioonkyo import ReceiverInfo
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
     DOMAIN,
     OPTION_INPUT_SOURCES,
@@ -23,15 +21,13 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from . import (
-    create_config_entry_from_info,
-    create_connection,
-    create_empty_config_entry,
-    create_receiver_info,
-    setup_integration,
-)
+from . import RECEIVER_INFO, RECEIVER_INFO_2, mock_discovery, setup_integration
 
 from tests.common import MockConfigEntry
+
+
+def _entry_title(receiver_info: ReceiverInfo) -> str:
+    return f"{receiver_info.model_name} ({receiver_info.host})"
 
 
 async def test_user_initial_menu(hass: HomeAssistant) -> None:
@@ -46,7 +42,7 @@ async def test_user_initial_menu(hass: HomeAssistant) -> None:
     assert not set(init_result["menu_options"]) ^ {"manual", "eiscp_discovery"}
 
 
-async def test_manual_valid_host(hass: HomeAssistant, default_mock_discovery) -> None:
+async def test_manual_valid_host(hass: HomeAssistant) -> None:
     """Test valid host entered."""
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -60,14 +56,16 @@ async def test_manual_valid_host(hass: HomeAssistant, default_mock_discovery) ->
 
     select_result = await hass.config_entries.flow.async_configure(
         form_result["flow_id"],
-        user_input={CONF_HOST: "host 1"},
+        user_input={CONF_HOST: RECEIVER_INFO.host},
     )
 
     assert select_result["step_id"] == "configure_receiver"
-    assert select_result["description_placeholders"]["name"] == "type 1 (host 1)"
+    assert select_result["description_placeholders"]["name"] == _entry_title(
+        RECEIVER_INFO
+    )
 
 
-async def test_manual_invalid_host(hass: HomeAssistant, stub_mock_discovery) -> None:
+async def test_manual_invalid_host(hass: HomeAssistant) -> None:
     """Test invalid host entered."""
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -79,18 +77,17 @@ async def test_manual_invalid_host(hass: HomeAssistant, stub_mock_discovery) -> 
         {"next_step_id": "manual"},
     )
 
-    host_result = await hass.config_entries.flow.async_configure(
-        form_result["flow_id"],
-        user_input={CONF_HOST: "sample-host-name"},
-    )
+    with mock_discovery([]):
+        host_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
 
     assert host_result["step_id"] == "manual"
     assert host_result["errors"]["base"] == "cannot_connect"
 
 
-async def test_manual_valid_host_unexpected_error(
-    hass: HomeAssistant, empty_mock_discovery
-) -> None:
+async def test_manual_valid_host_unexpected_error(hass: HomeAssistant) -> None:
     """Test valid host entered."""
 
     init_result = await hass.config_entries.flow.async_init(
@@ -103,112 +100,102 @@ async def test_manual_valid_host_unexpected_error(
         {"next_step_id": "manual"},
     )
 
-    host_result = await hass.config_entries.flow.async_configure(
-        form_result["flow_id"],
-        user_input={CONF_HOST: "sample-host-name"},
-    )
+    with mock_discovery(None):
+        host_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
 
     assert host_result["step_id"] == "manual"
     assert host_result["errors"]["base"] == "unknown"
 
 
-async def test_discovery_and_no_devices_discovered(
-    hass: HomeAssistant, stub_mock_discovery
-) -> None:
-    """Test initial menu."""
-    init_result = await hass.config_entries.flow.async_init(
+async def test_eiscp_discovery_no_devices_found(hass: HomeAssistant) -> None:
+    """Test eiscp discovery with no devices found."""
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    form_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
-        {"next_step_id": "eiscp_discovery"},
-    )
-
-    assert form_result["type"] is FlowResultType.ABORT
-    assert form_result["reason"] == "no_devices_found"
-
-
-async def test_discovery_with_exception(
-    hass: HomeAssistant, empty_mock_discovery
-) -> None:
-    """Test discovery which throws an unexpected exception."""
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    form_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
-        {"next_step_id": "eiscp_discovery"},
-    )
-
-    assert form_result["type"] is FlowResultType.ABORT
-    assert form_result["reason"] == "unknown"
-
-
-async def test_discovery_with_new_and_existing_found(hass: HomeAssistant) -> None:
-    """Test discovery with a new and an existing entry."""
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    async def mock_discover(discovery_callback, timeout):
-        await discovery_callback(create_connection(1))
-        await discovery_callback(create_connection(2))
-
-    with (
-        patch("pyeiscp.Connection.discover", new=mock_discover),
-        # Fake it like the first entry was already added
-        patch.object(OnkyoConfigFlow, "_async_current_ids", return_value=["id1"]),
-    ):
-        form_result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
+    with mock_discovery([]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {"next_step_id": "eiscp_discovery"},
         )
 
-    assert form_result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
-    assert form_result["data_schema"] is not None
-    schema = form_result["data_schema"].schema
+
+async def test_eiscp_discovery_unexpected_exception(hass: HomeAssistant) -> None:
+    """Test eiscp discovery with an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with mock_discovery(None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_eiscp_discovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test eiscp discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with mock_discovery([RECEIVER_INFO, RECEIVER_INFO_2]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+
+    assert result["data_schema"] is not None
+    schema = result["data_schema"].schema
     container = schema["device"].container
-    assert container == {"id2": "type 2 (host 2)"}
+    assert container == {RECEIVER_INFO_2.identifier: _entry_title(RECEIVER_INFO_2)}
 
-
-async def test_discovery_with_one_selected(hass: HomeAssistant) -> None:
-    """Test discovery after a selection."""
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"device": RECEIVER_INFO_2.identifier},
     )
 
-    async def mock_discover(discovery_callback, timeout):
-        await discovery_callback(create_connection(42))
-        await discovery_callback(create_connection(0))
+    assert result["step_id"] == "configure_receiver"
 
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
-        form_result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
-            {"next_step_id": "eiscp_discovery"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "volume_resolution": 200,
+            "input_sources": ["TV"],
+            "listening_modes": ["THX"],
+        },
+    )
 
-        select_result = await hass.config_entries.flow.async_configure(
-            form_result["flow_id"],
-            user_input={"device": "id42"},
-        )
-
-    assert select_result["step_id"] == "configure_receiver"
-    assert select_result["description_placeholders"]["name"] == "type 42 (host 42)"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == RECEIVER_INFO_2.host
+    assert result["result"].unique_id == RECEIVER_INFO_2.identifier
 
 
-async def test_ssdp_discovery_success(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_ssdp_discovery_success(hass: HomeAssistant) -> None:
     """Test SSDP discovery with valid host."""
     discovery_info = SsdpServiceInfo(
-        ssdp_location="http://192.168.1.100:8080",
+        ssdp_location="http://192.168.0.101:8080",
         upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
@@ -224,7 +211,7 @@ async def test_ssdp_discovery_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_receiver"
 
-    select_result = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             "volume_resolution": 200,
@@ -233,24 +220,19 @@ async def test_ssdp_discovery_success(
         },
     )
 
-    assert select_result["type"] is FlowResultType.CREATE_ENTRY
-    assert select_result["data"]["host"] == "192.168.1.100"
-    assert select_result["result"].unique_id == "id1"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == RECEIVER_INFO.host
+    assert result["result"].unique_id == RECEIVER_INFO.identifier
 
 
 async def test_ssdp_discovery_already_configured(
-    hass: HomeAssistant, default_mock_discovery
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test SSDP discovery with already configured device."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="id1",
-    )
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     discovery_info = SsdpServiceInfo(
-        ssdp_location="http://192.168.1.100:8080",
+        ssdp_location="http://192.168.0.101:8080",
         upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
@@ -276,10 +258,7 @@ async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
         ssdp_st="mock_st",
     )
 
-    with patch(
-        "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
-        side_effect=OSError,
-    ):
+    with mock_discovery(None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
@@ -290,9 +269,7 @@ async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "unknown"
 
 
-async def test_ssdp_discovery_host_none_info(
-    hass: HomeAssistant, stub_mock_discovery
-) -> None:
+async def test_ssdp_discovery_host_none_info(hass: HomeAssistant) -> None:
     """Test SSDP discovery with host info error."""
     discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
@@ -301,19 +278,18 @@ async def test_ssdp_discovery_host_none_info(
         ssdp_st="mock_st",
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=discovery_info,
-    )
+    with mock_discovery([]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery_info,
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
-async def test_ssdp_discovery_no_location(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
+async def test_ssdp_discovery_no_location(hass: HomeAssistant) -> None:
     """Test SSDP discovery with no location."""
     discovery_info = SsdpServiceInfo(
         ssdp_location=None,
@@ -332,9 +308,7 @@ async def test_ssdp_discovery_no_location(
     assert result["reason"] == "unknown"
 
 
-async def test_ssdp_discovery_no_host(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
+async def test_ssdp_discovery_no_host(hass: HomeAssistant) -> None:
     """Test SSDP discovery with no host."""
     discovery_info = SsdpServiceInfo(
         ssdp_location="http://",
@@ -353,9 +327,7 @@ async def test_ssdp_discovery_no_host(
     assert result["reason"] == "unknown"
 
 
-async def test_configure_no_resolution(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
+async def test_configure_no_resolution(hass: HomeAssistant) -> None:
     """Test receiver configure with no resolution set."""
 
     init_result = await hass.config_entries.flow.async_init(
@@ -380,9 +352,9 @@ async def test_configure_no_resolution(
         )
 
 
-async def test_configure(hass: HomeAssistant, default_mock_discovery) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_configure(hass: HomeAssistant) -> None:
     """Test receiver configure."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -395,7 +367,7 @@ async def test_configure(hass: HomeAssistant, default_mock_discovery) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "sample-host-name"},
+        user_input={CONF_HOST: RECEIVER_INFO.host},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -437,9 +409,7 @@ async def test_configure(hass: HomeAssistant, default_mock_discovery) -> None:
     }
 
 
-async def test_configure_invalid_resolution_set(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
+async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
     """Test receiver configure with invalid resolution."""
 
     init_result = await hass.config_entries.flow.async_init(
@@ -464,22 +434,23 @@ async def test_configure_invalid_resolution_set(
         )
 
 
-async def test_reconfigure(hass: HomeAssistant, default_mock_discovery) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the reconfigure config flow."""
-    receiver_info = create_receiver_info(1)
-    config_entry = create_config_entry_from_info(receiver_info)
-    await setup_integration(hass, config_entry, receiver_info)
+    await setup_integration(hass, mock_config_entry)
 
-    old_host = config_entry.data[CONF_HOST]
-    old_options = config_entry.options
+    old_host = mock_config_entry.data[CONF_HOST]
+    old_options = mock_config_entry.options
 
-    result = await config_entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"host": receiver_info.host}
+        result["flow_id"], user_input={"host": mock_config_entry.data[CONF_HOST]}
     )
     await hass.async_block_till_done()
 
@@ -494,36 +465,28 @@ async def test_reconfigure(hass: HomeAssistant, default_mock_discovery) -> None:
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reconfigure_successful"
 
-    assert config_entry.data[CONF_HOST] == old_host
-    assert config_entry.options[OPTION_VOLUME_RESOLUTION] == 200
+    assert mock_config_entry.data[CONF_HOST] == old_host
+    assert mock_config_entry.options[OPTION_VOLUME_RESOLUTION] == 200
     for option, option_value in old_options.items():
         if option == OPTION_VOLUME_RESOLUTION:
             continue
-        assert config_entry.options[option] == option_value
+        assert mock_config_entry.options[option] == option_value
 
 
-async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_new_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the reconfigure config flow with new device."""
-    receiver_info = create_receiver_info(1)
-    config_entry = create_config_entry_from_info(receiver_info)
-    await setup_integration(hass, config_entry, receiver_info)
+    await setup_integration(hass, mock_config_entry)
 
-    old_unique_id = receiver_info.identifier
+    old_unique_id = mock_config_entry.unique_id
 
-    result = await config_entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    mock_connection = create_connection(2)
-
-    # Create mock discover that calls callback immediately
-    async def mock_discover(host, discovery_callback, timeout):
-        await discovery_callback(mock_connection)
-
-    with patch(
-        "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
-        new=mock_discover,
-    ):
+    with mock_discovery([RECEIVER_INFO_2]):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"host": mock_connection.host}
+            result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
         )
         await hass.async_block_till_done()
 
@@ -531,9 +494,10 @@ async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
     assert result2["reason"] == "unique_id_mismatch"
 
     # unique id should remain unchanged
-    assert config_entry.unique_id == old_unique_id
+    assert mock_config_entry.unique_id == old_unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "ignore_missing_translations",
     [
@@ -545,16 +509,15 @@ async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
         ]
     ],
 )
-async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test options flow."""
+    await setup_integration(hass, mock_config_entry)
 
-    receiver_info = create_receiver_info(1)
-    config_entry = create_empty_config_entry()
-    await setup_integration(hass, config_entry, receiver_info)
+    old_volume_resolution = mock_config_entry.options[OPTION_VOLUME_RESOLUTION]
 
-    old_volume_resolution = config_entry.options[OPTION_VOLUME_RESOLUTION]
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

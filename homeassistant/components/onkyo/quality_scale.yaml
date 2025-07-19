@@ -77,7 +77,4 @@ rules:
     status: exempt
     comment: |
       This integration is not making any HTTP requests.
-  strict-typing:
-    status: todo
-    comment: |
-      The library is not fully typed yet.
+  strict-typing: done

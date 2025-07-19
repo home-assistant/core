@@ -3,11 +3,12 @@
   "name": "Onkyo",
   "codeowners": ["@arturpragacz", "@eclair4151"],
   "config_flow": true,
+  "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "integration_type": "device",
   "iot_class": "local_push",
-  "loggers": ["pyeiscp"],
-  "requirements": ["pyeiscp==0.0.7"],
+  "loggers": ["aioonkyo"],
+  "requirements": ["aioonkyo==0.2.0"],
   "ssdp": [
     {
       "manufacturer": "ONKYO",
