@@ -239,7 +239,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][select.smart_odor_eliminator_pro_odor_elimination_mode-entry]
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][select.smart_odor_eliminator_pro_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -257,7 +257,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.smart_odor_eliminator_pro_odor_elimination_mode',
+    'entity_id': 'select.smart_odor_eliminator_pro_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -269,7 +269,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Odor elimination mode',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -279,17 +279,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][select.smart_odor_eliminator_pro_odor_elimination_mode-state]
+# name: test_platform_setup_and_discovery[cwjwq_smart_odor_eliminator][select.smart_odor_eliminator_pro_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Odor Eliminator-Pro Odor elimination mode',
+      'friendly_name': 'Smart Odor Eliminator-Pro None',
       'options': list([
         'smart',
         'interim',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.smart_odor_eliminator_pro_odor_elimination_mode',
+    'entity_id': 'select.smart_odor_eliminator_pro_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
