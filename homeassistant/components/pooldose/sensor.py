@@ -7,8 +7,6 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pooldose.request_status import RequestStatus
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -188,13 +186,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        status, data = self.coordinator.data
-        if status != RequestStatus.SUCCESS:
-            _LOGGER.warning(
-                "Pooldose API returned status %s, entities will be unavailable", status
-            )
-            return None
-
+        data = self.coordinator.data
         sensor_data = data.get(self.entity_description.key)
         if not sensor_data:
             return None
@@ -207,7 +199,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        _, data = self.coordinator.data
+        data = self.coordinator.data
         sensor_data = data.get(self.entity_description.key)
         if sensor_data and len(sensor_data) > 1:
             unit = sensor_data[1]

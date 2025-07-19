@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, Any]]]):
+class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Pooldose integration."""
 
     def __init__(
@@ -52,7 +52,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
         else:
             self.device_info = self.client.device_info
 
-    async def _async_update_data(self) -> tuple[RequestStatus, dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the PoolDose API."""
         try:
             status, instant_values = await self.client.instant_values()
@@ -73,7 +73,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, A
         if instant_values is None:
             raise UpdateFailed("No data received from API")
 
-        return status, instant_values
+        return instant_values
 
     @property
     def available(self) -> bool:
