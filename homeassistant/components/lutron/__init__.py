@@ -31,14 +31,12 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
     Platform.EVENT,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    # The following platforms are commented out because their implementation files don't exist yet
-    # Platform.FAN,
-    #
 ]
 
 _LOGGER = logging.getLogger(__name__)
