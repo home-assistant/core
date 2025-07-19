@@ -33,20 +33,10 @@ class PooldoseRuntimeData:
 type PooldoseConfigEntry = ConfigEntry[PooldoseRuntimeData]
 
 
-async def async_update_device_info(client: PooldoseClient) -> dict[str, str | None]:
-    """Fetch latest device info from all relevant endpoints."""
-    device_info: dict[str, str | None] = {}
-    if client.device_info is None:
-        _LOGGER.error("Device info is not available from PoolDose client")
-    else:
-        device_info = client.device_info
-    return device_info
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
     """Set up Seko PoolDose from a config entry."""
-    # Obtain values, preferring options (re‑configure) over static data
-    host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
+    # Get host from config entry data (connection-critical configuration)
+    host = entry.data[CONF_HOST]
 
     # Create the PoolDose API client and connect
     client = PooldoseClient(host)
@@ -55,11 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
         _LOGGER.error("Failed to create PoolDose client: %s", client_status)
         raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")
 
+    # Create coordinator and perform first refresh
     coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=600), entry)
     await coordinator.async_config_entry_first_refresh()
 
-    # Update device info on every reload
-    device_info = await async_update_device_info(client)
+    # Get device info from client after successful connection
+    device_info = client.device_info
 
     # Store runtime data
     entry.runtime_data = PooldoseRuntimeData(

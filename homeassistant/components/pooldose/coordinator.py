@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -11,32 +10,47 @@ from pooldose.request_status import RequestStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
-type PooldoseConfigEntry = ConfigEntry[PooldoseClient]
-
 
 class PooldoseCoordinator(DataUpdateCoordinator[tuple[RequestStatus, dict[str, Any]]]):
-    """Class to manage fetching data from the PoolDose API."""
+    """Coordinator for Pooldose integration."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         client: PooldoseClient,
-        update_interval: timedelta,
-        config_entry: PooldoseConfigEntry,
+        update_interval,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger=_LOGGER,
-            name="pooldose",
+            _LOGGER,
+            name="Pooldose",
             update_interval=update_interval,
             config_entry=config_entry,
         )
         self.client = client
+        self.device_info: dict[str, str | None] = {}
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        # Connect to the client
+        client_status = await self.client.connect()
+        if client_status != RequestStatus.SUCCESS:
+            raise ConfigEntryNotReady(
+                f"Failed to connect to PoolDose client: {client_status}"
+            )
+
+        # Update device info
+        if self.client.device_info is None:
+            _LOGGER.error("Device info is not available from PoolDose client")
+        else:
+            self.device_info = self.client.device_info
 
     async def _async_update_data(self) -> tuple[RequestStatus, dict[str, Any]]:
         """Fetch data from the PoolDose API."""
