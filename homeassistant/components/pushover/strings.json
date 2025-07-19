@@ -27,7 +27,7 @@
   },
   "services": {
     "cancel": {
-      "name": "Cancel",
+      "name": "Cancel notification",
       "description": "Cancels a pushover emergency notification.",
       "fields": {
         "data": {

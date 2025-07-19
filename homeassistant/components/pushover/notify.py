@@ -78,7 +78,7 @@ class PushoverNotificationService(BaseNotificationService):
             """Handle cancel notification message service calls."""
             kwargs = {}
             kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
-            await self.async_cancel(**kwargs)
+            await self.hass.async_add_executor_job(partial(self.cancel, **kwargs))
 
         hass.services.async_register(
             DOMAIN,
@@ -189,10 +189,3 @@ class PushoverNotificationService(BaseNotificationService):
             except BadAPIRequestError:
                 _LOGGER.exception("Error while trying to cancel receipt %s", receipt)
             del self.receipt_tags[receipt]
-
-    async def async_cancel(self, **kwargs):
-        """Cancel a notification.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(partial(self.cancel, **kwargs))
