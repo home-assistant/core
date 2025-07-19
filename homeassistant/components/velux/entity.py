@@ -3,13 +3,17 @@
 from pyvlx import Node
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 
 class VeluxEntity(Entity):
-    """Abstraction for al Velux entities."""
+    """Abstraction for all Velux entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
@@ -19,7 +23,24 @@ class VeluxEntity(Entity):
             if node.serial_number
             else f"{config_entry_id}_{node.node_id}"
         )
-        self._attr_name = node.name if node.name else f"#{node.node_id}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            {
+                "identifiers": {
+                    (
+                        DOMAIN,
+                        self.node.serial_number
+                        if self.node.serial_number
+                        else str(self.node.node_id),
+                    )
+                },
+                "name": self.node.name if self.node.name else f"#{self.node.node_id}",
+                "serial_number": self.node.serial_number,
+            }
+        )
 
     @callback
     def async_register_callbacks(self):

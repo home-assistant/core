@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
+from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -47,6 +47,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
+        # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
@@ -59,8 +60,8 @@ class VeluxCover(VeluxEntity, CoverEntity):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if isinstance(node, Window):
-            self._attr_device_class = CoverDeviceClass.WINDOW
+
+        self._attr_translation_key = self._attr_device_class.name.lower()
 
     @property
     def supported_features(self) -> CoverEntityFeature:
