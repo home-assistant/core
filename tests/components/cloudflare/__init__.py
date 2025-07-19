@@ -53,6 +53,20 @@ MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [
         "proxied": True,
         "content": "127.0.0.1",
     },
+    {
+        "id": "zone-record-id-4",
+        "type": "AAAA",
+        "name": "ha.mock.com",
+        "proxied": True,
+        "content": "::1",
+    },
+    {
+        "id": "zone-record-id-5",
+        "type": "AAAA",
+        "name": "homeassistant.mock.com",
+        "proxied": True,
+        "content": "::1",
+    },
 ]
 
 
@@ -81,11 +95,19 @@ async def init_integration(
 
 
 def get_mock_client() -> Mock:
-    """Return of Mock of pycfdns.Client."""
+    """Return a Mock of pycfdns.Client."""
     client = Mock()
 
     client.list_zones = AsyncMock(return_value=[MOCK_ZONE])
-    client.list_dns_records = AsyncMock(return_value=MOCK_ZONE_RECORDS)
+
+    def list_dns_records(zone_id, type=None):
+        if type == "A":
+            return [r for r in MOCK_ZONE_RECORDS if r["type"] == "A"]
+        if type == "AAAA":
+            return [r for r in MOCK_ZONE_RECORDS if r["type"] == "AAAA"]
+        return MOCK_ZONE_RECORDS
+
+    client.list_dns_records = AsyncMock(side_effect=list_dns_records)
     client.update_dns_record = AsyncMock(return_value=None)
 
     return client
