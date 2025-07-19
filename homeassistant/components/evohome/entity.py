@@ -9,6 +9,7 @@ import evohomeasync2 as evo
 from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -48,20 +49,14 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         if payload["unique_id"] != self._attr_unique_id:
             return
         if payload["service"] in (
-            EvoService.SET_ZONE_OVERRIDE,
-            EvoService.RESET_ZONE_OVERRIDE,
+            EvoService.RESET_SYSTEM,
+            EvoService.SET_SYSTEM_MODE,
         ):
-            await self.async_zone_svc_request(payload["service"], payload["data"])
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
+            await self.async_tcs_svc_request(payload["service"], payload["data"])
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller."""
-        raise NotImplementedError
-
-    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (setpoint override) for a zone."""
-        raise NotImplementedError
+        raise ServiceNotSupported(DOMAIN, "set_system_mode", self.entity_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
