@@ -70,33 +70,22 @@ async def test_heating_circuit_not_found(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test when a heating circuit with a specific number is not found."""
+    circuit_not_matching_zone_control = 999
+    heating_circuits = [
+        {
+            "number": circuit_not_matching_zone_control,
+            "driverSerialNo": "RU1234567890",
+            "driverShortSerialNo": "RU1234567890",
+        }
+    ]
 
-    await async_init_integration(hass)
-    entity = hass.data["entity_components"]["select"].get_entity(
-        HEATING_CIRCUIT_SELECT_ENTITY
-    )
-
-    # Prepare test data with a heating circuit number that doesn't exist
-    nonexistent_circuit_number = 999
-
-    # Create a modified zone_control
-    modified_zone_control = {
-        "heatingCircuit": nonexistent_circuit_number,
-        "type": "HEATING",
-    }
-
-    # Replace the zone_control data in the coordinator
-    with patch.dict(
-        entity.coordinator.data["zone_control"], {entity.zone_id: modified_zone_control}
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.get_heating_circuits",
+        return_value=heating_circuits,
     ):
-        # Force an update callback
-        entity._async_update_callback()
+        await async_init_integration(hass)
 
-    # Check that error was logged
-    assert any(
-        f"Heating circuit with number {nonexistent_circuit_number} not found for zone"
-        in record.message
-        for record in caplog.records
-    )
-    # Check that the entity falls back to no heating circuit
-    assert entity.current_option == NO_HEATING_CIRCUIT
+    state = hass.states.get(HEATING_CIRCUIT_SELECT_ENTITY)
+    assert state.state == NO_HEATING_CIRCUIT
+
+    assert "Heating circuit with number 1 not found for zone" in caplog.text
