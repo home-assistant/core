@@ -665,6 +665,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bauknecht": {
+      "name": "Bauknecht",
+      "integration_type": "virtual",
+      "supported_by": "whirlpool"
+    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
