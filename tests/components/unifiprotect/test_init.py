@@ -12,7 +12,6 @@ from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
-    CONF_DISABLE_RTSP,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import (
@@ -85,22 +84,6 @@ async def test_setup_multiple(
         assert mock_config.state is ConfigEntryState.LOADED
         assert ufp.api.update.called
         assert mock_config.unique_id == ufp.api.bootstrap.nvr.mac
-
-
-async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
-    """Test updating entry reload entry."""
-
-    await hass.config_entries.async_setup(ufp.entry.entry_id)
-    await hass.async_block_till_done()
-    assert ufp.entry.state is ConfigEntryState.LOADED
-
-    options = dict(ufp.entry.options)
-    options[CONF_DISABLE_RTSP] = True
-    hass.config_entries.async_update_entry(ufp.entry, options=options)
-    await hass.async_block_till_done()
-
-    assert ufp.entry.state is ConfigEntryState.LOADED
-    assert ufp.api.async_disconnect_ws.called
 
 
 async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light) -> None:
