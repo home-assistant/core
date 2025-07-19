@@ -145,30 +145,21 @@ async def test_squeezebox_player_rediscovery(
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
-async def test_squeezebox_turn_on(
-    hass: HomeAssistant, configured_player: MagicMock
+@pytest.mark.parametrize(
+    ("service", "state"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+async def test_squeezebox_turn_on_off(
+    hass: HomeAssistant, configured_player: MagicMock, service: str, state: bool
 ) -> None:
     """Test turn on service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_power.assert_called_once_with(True)
-
-
-async def test_squeezebox_turn_off(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test turn off service call."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    configured_player.async_set_power.assert_called_once_with(False)
+    configured_player.async_set_power.assert_called_once_with(state)
 
 
 async def test_squeezebox_state(
