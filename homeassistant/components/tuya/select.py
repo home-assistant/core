@@ -347,6 +347,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="led_type_2",
         ),
     ),
+    # Curtain Switch
+    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    "clkg": (
+        SelectEntityDescription(
+            key=DPCode.CONTROL_BACK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="control_back_mode",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
