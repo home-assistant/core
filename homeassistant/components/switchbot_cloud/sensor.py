@@ -199,3 +199,10 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+        value = self.coordinator.data.get(self.entity_description.key)
+
+        if self.entity_description.key == "lightLevel":
+            self._attr_native_value = str(value) if value is not None else None
+        else:
+            self._attr_native_value = value
