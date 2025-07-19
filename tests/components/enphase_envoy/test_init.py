@@ -626,3 +626,23 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
             "00:11:22:33:44:55",
         )
     }
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_empty_via_device(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no issue with empty via_device."""
+    caplog.clear()
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+    assert "non existing `via_device`" not in caplog.text
