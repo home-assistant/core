@@ -111,7 +111,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()
 
-            if self.player.connected is False:
+            if not self.player.connected:
                 _LOGGER.info("Player %s is not available", self.name)
                 self.available = False
 
