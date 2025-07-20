@@ -175,32 +175,45 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Supervisor discovery and prompt for API token."""
-        if user_input is None and self._hassio_discovery is not None:
-            self.host = f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
-            self.verify_ssl = True
 
-            user_input = dict[str, Any]
-            user_input[CONF_HOST] = self.host
-            user_input[CONF_VERIFY_SSL] = self.verify_ssl
+        # TODO: Remove these after testing
+        LOGGER.warning(f"HassIO Discovery Confirm {self._hassio_discovery}")
 
-            errors, user_id = await self.check_connection(
-                user_input[CONF_API_TOKEN],
+        if user_input is None:
+            return await self._show_hassio_form()
+
+        assert self._hassio_discovery
+
+        self.host = (
+            f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
+        )
+        self.verify_ssl = True
+
+        errors, user_id = await self.check_connection(
+            user_input[CONF_API_TOKEN],
+        )
+
+        if not errors:
+            await self.async_set_unique_id(user_id)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title="Mealie",
+                data={
+                    CONF_HOST: self.host,
+                    CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    CONF_VERIFY_SSL: self.verify_ssl,
+                },
             )
+        return await self._show_hassio_form(errors)
 
-            return self.async_show_form(
-                step_id="hassio_confirm",
-                data_schema=DISCOVERY_SCHEMA,
-                description_placeholders={"addon": self._hassio_discovery["addon"]},
-                errors=errors,
-            )
-
-        if user_input:
-            if not errors:
-                await self.async_set_unique_id(user_id)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Mealie",
-                    data=user_input,
-                )
-
-        return await self.async_step_user()
+    async def _show_hassio_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the Hass.io confirmation form to the user."""
+        assert self._hassio_discovery
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            data_schema=DISCOVERY_SCHEMA,
+            description_placeholders={"addon": self._hassio_discovery["addon"]},
+            errors=errors or {},
+        )
