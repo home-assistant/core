@@ -40,7 +40,10 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: todo
-  discovery: done
+  discovery:
+    status: done
+    comment: |
+      The integration will discover a Mealie addon posting a discovery message.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: todo
