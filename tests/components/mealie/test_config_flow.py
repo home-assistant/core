@@ -452,37 +452,6 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-# async def test_hassio_connection_error(
-#     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-# ) -> None:
-#     """Test we show Hass.io confirm form on AdGuard Home connection error."""
-#     aioclient_mock.get(
-#         "http://mock-adguard:3000/control/status", exc=aiohttp.ClientError
-#     )
-
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         data=HassioServiceInfo(
-#             config={
-#                 "addon": "AdGuard Home Addon",
-#                 "host": "mock-adguard",
-#                 "port": 3000,
-#             },
-#             name="AdGuard Home Addon",
-#             slug="adguard",
-#             uuid="1234",
-#         ),
-#         context={"source": config_entries.SOURCE_HASSIO},
-#     )
-
-#     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-#     assert result
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["step_id"] == "hassio_confirm"
-#     assert result["errors"] == {"base": "cannot_connect"}
-
-
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
