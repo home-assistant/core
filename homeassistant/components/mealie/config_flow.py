@@ -166,18 +166,12 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._hassio_discovery = discovery_info.config
 
-        # TODO: Remove these after testing
-        LOGGER.warning(f"HassIO Discovery {self._hassio_discovery}")
-
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Supervisor discovery and prompt for API token."""
-
-        # TODO: Remove these after testing
-        LOGGER.warning(f"HassIO Discovery Confirm {self._hassio_discovery}")
 
         if user_input is None:
             return await self._show_hassio_form()
