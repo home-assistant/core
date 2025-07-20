@@ -421,7 +421,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_0.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -429,7 +429,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_0.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -438,7 +438,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_1.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -446,7 +446,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_1.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -455,7 +455,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_2.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "2"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -463,7 +463,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_2.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "2"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -472,7 +472,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_3.average",
-        translation_key="average_background_rssi",
+        translation_key="avg_signal_noise",
         translation_placeholders={"channel": "3"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -480,7 +480,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="background_rssi.channel_3.current",
-        translation_key="current_background_rssi",
+        translation_key="signal_noise",
         translation_placeholders={"channel": "3"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -549,7 +549,7 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="rssi",
-        translation_key="rssi",
+        translation_key="signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -558,7 +558,7 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         key="last_seen",
         translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
 ]
 
