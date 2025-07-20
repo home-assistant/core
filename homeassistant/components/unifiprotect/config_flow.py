@@ -249,6 +249,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         session = async_create_clientsession(
             self.hass, cookie_jar=CookieJar(unsafe=True)
         )
+        public_api_session = async_get_clientsession(self.hass)
 
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT, DEFAULT_PORT)
@@ -256,6 +257,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         protect = ProtectApiClient(
             session=session,
+            public_api_session=public_api_session,
             host=host,
             port=port,
             username=user_input[CONF_USERNAME],

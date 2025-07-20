@@ -40,7 +40,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry.",
+      "protect_version": "Minimum required version is v6.0.0. Please upgrade UniFi Protect and then retry.",
       "cloud_user": "Ubiquiti Cloud users are not supported. Please use a local user instead."
     },
     "abort": {
@@ -671,6 +671,11 @@
           "description": "Any device from the UniFi Protect instance you want to retrieve keyring details. This is useful for systems with multiple Protect instances."
         }
       }
+    }
+  },
+  "exceptions": {
+    "protect_version": {
+      "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}."
     }
   }
 }

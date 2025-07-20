@@ -18,7 +18,11 @@ from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -33,7 +37,6 @@ from .const import (
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
-    OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
@@ -103,12 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
         )
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
-        _LOGGER.error(
-            OUTDATED_LOG_MESSAGE,
-            nvr_info.version,
-            MIN_REQUIRED_PROTECT_V,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="protect_version",
+            translation_placeholders={
+                "current_version": str(nvr_info.version),
+                "min_version": str(MIN_REQUIRED_PROTECT_V),
+            },
         )
-        return False
 
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
