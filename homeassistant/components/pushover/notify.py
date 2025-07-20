@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -35,14 +36,16 @@ from .const import (
     ATTR_URL_TITLE,
     CONF_USER_KEY,
     DOMAIN,
-    SERVICE_CANCEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CANCEL_SERVICE_SCHEMA = vol.Schema(
+SERVICE_CANCEL = "cancel"
+SERVICE_CANCEL_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_DATA): dict,
+        vol.Optional(ATTR_DATA): {
+            vol.Optional(ATTR_TAG): cv.string,
+        },
     }
 )
 
@@ -77,7 +80,7 @@ class PushoverNotificationService(BaseNotificationService):
             DOMAIN,
             SERVICE_CANCEL,
             self.cancel_message_service,
-            schema=CANCEL_SERVICE_SCHEMA,
+            schema=SERVICE_CANCEL_SCHEMA,
         )
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
