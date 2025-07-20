@@ -816,13 +816,20 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
                 return MediaPlayerState.IDLE
-        if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
-                # Some apps don't report media status, show the player as playing
-                return MediaPlayerState.PLAYING
-            return MediaPlayerState.IDLE
+
         if self._chromecast is not None and self._chromecast.is_idle:
+            # Iff library consider us idle, that is our off state
+            # it takes HDMI status into account for cast devices.
             return MediaPlayerState.OFF
+
+        if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+            # Some apps don't report media status, show the player as playing
+            return MediaPlayerState.PLAYING
+
+        if self.app_id is not None:
+            # We have an active app
+            return MediaPlayerState.IDLE
+
         return None
 
     @property
