@@ -37,12 +37,12 @@
       "core_temps": {
         "state": {
           "off": "[%key:common::state::off%]",
-          "heating_push_low": "Heating low",
-          "heating_push_med": "Heating medium",
-          "heating_push_high": "Heating high",
-          "cooling_pull_low": "Cooling low",
-          "cooling_pull_med": "Cooling medium",
-          "cooling_pull_high": "Cooling high"
+          "heating_low": "Heating low",
+          "heating_medium": "Heating medium",
+          "heating_high": "Heating high",
+          "cooling_low": "Cooling low",
+          "cooling_medium": "Cooling medium",
+          "cooling_high": "Cooling high"
         }
       }
     }

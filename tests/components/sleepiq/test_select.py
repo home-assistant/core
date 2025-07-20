@@ -218,7 +218,7 @@ async def test_core_climate(
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
     )
-    assert state.state == CoreTemps.COOLING_PULL_MED.name.lower()
+    assert state.state == "cooling_medium"
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -267,7 +267,7 @@ async def test_core_climate(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate",
-            ATTR_OPTION: "heating_push_high",
+            ATTR_OPTION: "heating_high",
         },
         blocking=True,
     )
