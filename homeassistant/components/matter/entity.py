@@ -119,8 +119,8 @@ class MatterEntity(Entity):
         # entity request it by including a list of labels that may be used for naming
         if entity_info.entity_description.name_using_matter_labels is not None:
             for attr in (
-                clusters.FixedLabel.Attributes.LabelList,
                 clusters.UserLabel.Attributes.LabelList,
+                clusters.FixedLabel.Attributes.LabelList,
             ):
                 if not (labels := self.get_matter_attribute_value(attr)):
                     continue
