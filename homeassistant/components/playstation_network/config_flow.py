@@ -10,13 +10,28 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
 )
+from psnawp_api.models import User
 from psnawp_api.utils.misc import parse_npsso_token
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import CONF_NPSSO, DOMAIN, NPSSO_LINK, PSN_LINK
+from .const import CONF_ACCOUNT_ID, CONF_NPSSO, DOMAIN, NPSSO_LINK, PSN_LINK
+from .coordinator import PlaystationNetworkConfigEntry
 from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +41,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_NPSSO): str})
 
 class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Playstation Network."""
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"friend": FriendSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -131,4 +154,52 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 "npsso_link": NPSSO_LINK,
                 "psn_link": PSN_LINK,
             },
+        )
+
+
+class FriendSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding a friend."""
+
+    friends_list: dict[str, User]
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+        errors: dict[str, str] = {}
+        config_entry: PlaystationNetworkConfigEntry = self._get_entry()
+        if user_input is None:
+            self.friends_list = await self.hass.async_add_executor_job(
+                lambda: {
+                    friend.account_id: friend
+                    for friend in config_entry.runtime_data.user_data.psn.user.friends_list()
+                }
+            )
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
+                data=user_input,
+                unique_id=user_input[CONF_ACCOUNT_ID],
+            )
+
+        options = [
+            SelectOptionDict(
+                value=friend.account_id,
+                label=friend.online_id,
+            )
+            for friend in self.friends_list.values()
+        ]
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ACCOUNT_ID): SelectSelector(
+                            SelectSelectorConfig(options=options)
+                        )
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
         )

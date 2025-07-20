@@ -44,6 +44,33 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
+  "config_subentries": {
+    "friend": {
+      "step": {
+        "user": {
+          "title": "Friend online status",
+          "description": "Track the online status of a PlayStation Network friend.",
+          "data": {
+            "account_id": "Online ID"
+          },
+          "data_description": {
+            "account_id": "Select a friend from your friend list to track their online status."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add friend"
+      },
+      "entry_type": "Friend",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "Friend is already configured"
+      }
+    }
+  },
   "exceptions": {
     "not_ready": {
       "message": "Authentication to the PlayStation Network failed."
@@ -59,6 +86,12 @@
     },
     "send_message_failed": {
       "message": "Failed to send message to group {group_name}. Try again later."
+    },
+    "user_profile_private": {
+      "message": "Unable to retrieve data for {user}. Privacy settings restrict access to activity."
+    },
+    "user_not_found": {
+      "message": "Unable to retrieve data for {user}. User does not exist or has been removed."
     }
   },
   "entity": {
@@ -104,6 +137,9 @@
           "availabletocommunicate": "Online on PS App",
           "busy": "Away"
         }
+      },
+      "now_playing": {
+        "name": "Now playing"
       }
     },
     "image": {
@@ -112,6 +148,9 @@
       },
       "avatar": {
         "name": "Avatar"
+      },
+      "now_playing_image": {
+        "name": "[%key:component::playstation_network::entity::sensor::now_playing::name%]"
       }
     },
     "notify": {

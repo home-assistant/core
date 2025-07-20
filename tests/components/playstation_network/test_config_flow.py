@@ -10,8 +10,12 @@ from homeassistant.components.playstation_network.config_flow import (
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
 )
-from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.components.playstation_network.const import (
+    CONF_ACCOUNT_ID,
+    CONF_NPSSO,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -325,3 +329,75 @@ async def test_flow_reconfigure(
     assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_add_friend_flow(hass: HomeAssistant) -> None:
+    """Test add friend subentry flow."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_NPSSO: NPSSO_TOKEN,
+        },
+        unique_id=PSN_ID,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "friend"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNT_ID: "fren-psn-id"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={CONF_ACCOUNT_ID: "fren-psn-id"},
+            subentry_id=subentry_id,
+            subentry_type="friend",
+            title="PublicUniversalFriend",
+            unique_id="fren-psn-id",
+        )
+    }
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_add_friend_flow_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test we abort add friend subentry flow when already configured."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "friend"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNT_ID: "fren-psn-id"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
