@@ -4,4 +4,4 @@ from homeassistant.const import Platform
 
 DOMAIN = "huum"
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE]
