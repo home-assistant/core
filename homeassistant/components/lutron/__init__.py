@@ -21,6 +21,7 @@ from .const import (
     CONF_REFRESH_DATA,
     CONF_USE_AREA_FOR_DEVICE_NAME,
     CONF_USE_FULL_PATH,
+    CONF_USE_RADIORA_MODE,
     CONF_VARIABLE_IDS,
     DOMAIN,
     LUTRON_DATA_FILE,
@@ -65,6 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_REFRESH_DATA, default=True): cv.boolean,
                 vol.Required(CONF_USE_FULL_PATH, default=False): cv.boolean,
                 vol.Required(CONF_USE_AREA_FOR_DEVICE_NAME, default=False): cv.boolean,
+                vol.Required(CONF_USE_RADIORA_MODE, default=False): cv.boolean,
                 vol.Required(CONF_VARIABLE_IDS, default=""): cv.string,
             }
         )
@@ -228,7 +230,13 @@ class LutronController:
         """Get the Variable state."""
         await self.query(LIPMode.SYSVAR, sysvar_id, LIPAction.SYSVAR_STATE)
 
-    def load_xml_db(self, cache_path=None, refresh_data=True, variable_ids=None):
+    def load_xml_db(
+        self,
+        cache_path=None,
+        refresh_data=True,
+        use_radiora_mode=False,
+        variable_ids=None,
+    ):
         """Load the Lutron database from the server if refresh_data is True.
 
         If not, if a locally cached copy is available, use that instead, or
@@ -258,7 +266,11 @@ class LutronController:
 
         _LOGGER.info("Loaded xml db from %s", loaded_from)
 
-        parser = LutronXmlDbParser(xml_db_str=xml_db, variable_ids=variable_ids)
+        parser = LutronXmlDbParser(
+            xml_db_str=xml_db,
+            use_radiora_mode=use_radiora_mode,
+            variable_ids=variable_ids,
+        )
         assert parser.parse()  # throw our own exception
         self.areas = parser.areas
         self.name = parser.project_name
@@ -308,6 +320,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     use_area_for_device_name = get_entry_value(
         config_entry, CONF_USE_AREA_FOR_DEVICE_NAME, False
     )  # use area name in the device name
+    use_radiora_mode = get_entry_value(
+        config_entry, CONF_USE_RADIORA_MODE, False
+    )  # use compatibility mode for old integration
     variable_ids_str = get_entry_value(config_entry, CONF_VARIABLE_IDS, "")
     variable_ids = [
         int(v.strip()) for v in variable_ids_str.split(",") if v.strip().isdigit()
@@ -318,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lutron_controller = LutronController(hass, host, uid, pwd)
     await hass.async_add_executor_job(
         lambda: lutron_controller.load_xml_db(
-            lutron_data_file, refresh_data, variable_ids=variable_ids
+            lutron_data_file, refresh_data, use_radiora_mode, variable_ids=variable_ids
         )
     )
     await lutron_controller.connect()
@@ -390,6 +405,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # If the button has a function assigned to it, add it as a scene
                 # Add the button for the corresponding events
                 # Add the leds if they are controlled by integration in Lutron
+
                 if button.has_action:
                     entry_data.buttons.append((area_name, device_name, button))
 

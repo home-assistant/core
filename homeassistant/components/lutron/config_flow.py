@@ -29,6 +29,7 @@ from .const import (
     CONF_REFRESH_DATA,
     CONF_USE_AREA_FOR_DEVICE_NAME,
     CONF_USE_FULL_PATH,
+    CONF_USE_RADIORA_MODE,
     CONF_VARIABLE_IDS,
     DEFAULT_DIMMER_LEVEL,
     DOMAIN,
@@ -75,10 +76,14 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
                     for v in user_input.get(CONF_VARIABLE_IDS, "").split(",")
                     if v.strip().isdigit()
                 ]
+                use_radiora_mode = user_input.get(CONF_USE_RADIORA_MODE)
 
                 await self.hass.async_add_executor_job(
                     lambda: lutron_controller.load_xml_db(
-                        lutron_data_file, refresh_data, variable_ids=variable_ids
+                        lutron_data_file,
+                        refresh_data,
+                        use_radiora_mode,
+                        variable_ids=variable_ids,
                     )
                 )
             except HTTPError:
@@ -108,6 +113,7 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_REFRESH_DATA, default=True): bool,
                     vol.Required(CONF_USE_FULL_PATH, default=False): bool,
                     vol.Required(CONF_USE_AREA_FOR_DEVICE_NAME, default=False): bool,
+                    vol.Required(CONF_USE_RADIORA_MODE, default=False): bool,
                     vol.Required(CONF_VARIABLE_IDS, default=""): str,
                 }
             ),
@@ -147,6 +153,9 @@ class OptionsFlowHandler(OptionsFlow):
             vol.Required(
                 CONF_USE_AREA_FOR_DEVICE_NAME,
                 default=config.get(CONF_USE_AREA_FOR_DEVICE_NAME, False),
+            ): bool,
+            vol.Required(
+                CONF_USE_RADIORA_MODE, default=config.get(CONF_USE_RADIORA_MODE, False)
             ): bool,
             vol.Required(
                 CONF_VARIABLE_IDS, default=config.get(CONF_VARIABLE_IDS, "")

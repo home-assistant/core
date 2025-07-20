@@ -24,7 +24,7 @@ class LutronXmlDbParser:
     etc. are not implemented.
     """
 
-    def __init__(self, xml_db_str, variable_ids):
+    def __init__(self, xml_db_str, use_radiora_mode, variable_ids):
         """Initialize the XML parser, takes the raw XML data as string input."""
         self._xml_db_str = xml_db_str
         self.areas = []
@@ -33,6 +33,7 @@ class LutronXmlDbParser:
         self.project_name = None
         self._variables_ids = variable_ids
         self.lutron_guid = None
+        self.use_radiora_mode = use_radiora_mode
 
     def parse(self):
         """Create the Main entrypoint into the parser.
@@ -208,7 +209,11 @@ class LutronXmlDbParser:
         led_logic = (
             0 if button_xml.get("LedLogic") is None else int(button_xml.get("LedLogic"))
         )
-        name = f"Btn {component_number}"
+
+        if self.use_radiora_mode:
+            name = engraving or f"Unknown Button {component_number}"
+        else:
+            name = f"Btn {component_number}"
 
         # Hybrid keypads have dimmer buttons which have no engravings.
         if button_type == "SingleSceneRaiseLower":
