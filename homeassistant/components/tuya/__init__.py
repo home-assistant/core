@@ -36,7 +36,7 @@ from .const import (
 )
 
 # Suppress logs from the library, it logs unneeded on error
-logging.getLogger("tuya_sharing").setLevel(logging.DEBUG)
+logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
 
 type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
 
@@ -221,7 +221,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
-
     return True
 
 
@@ -286,20 +285,12 @@ class DeviceListener(SharingDeviceListener):
             updated_status_properties,
             dp_timestamps,
         )
-
-        if dp_timestamps:
-            dispatcher_send(
-                self.hass,
-                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
-                updated_status_properties,
-                dp_timestamps,
-            )
-        else:
-            dispatcher_send(
-                self.hass,
-                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
-                updated_status_properties,
-            )
+        dispatcher_send(
+            self.hass,
+            f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
+            updated_status_properties,
+            dp_timestamps,
+        )
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
