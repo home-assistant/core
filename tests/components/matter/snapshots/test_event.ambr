@@ -125,7 +125,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button-entry]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -147,7 +147,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_fancy_button',
+    'entity_id': 'event.mock_generic_switch_fancy_button_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,7 +159,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Fancy Button',
+    'original_name': 'Fancy Button (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -169,7 +169,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button-state]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -182,17 +182,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'friendly_name': 'Mock Generic Switch Fancy Button (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_fancy_button',
+    'entity_id': 'event.mock_generic_switch_fancy_button_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_config-entry]
+# name: test_events[multi_endpoint_light][event.inovelli_config_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -215,7 +215,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_config',
+    'entity_id': 'event.inovelli_config_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -227,7 +227,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Config (5)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -237,7 +237,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_config-state]
+# name: test_events[multi_endpoint_light][event.inovelli_config_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -251,17 +251,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Config',
+      'friendly_name': 'Inovelli Config (5)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_config',
+    'entity_id': 'event.inovelli_config_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_down-entry]
+# name: test_events[multi_endpoint_light][event.inovelli_down_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -284,7 +284,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_down',
+    'entity_id': 'event.inovelli_down_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -296,7 +296,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Down (4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -306,7 +306,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_down-state]
+# name: test_events[multi_endpoint_light][event.inovelli_down_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -320,17 +320,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Down',
+      'friendly_name': 'Inovelli Down (4)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_down',
+    'entity_id': 'event.inovelli_down_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_up-entry]
+# name: test_events[multi_endpoint_light][event.inovelli_up_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -353,7 +353,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_up',
+    'entity_id': 'event.inovelli_up_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -365,7 +365,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Up',
+    'original_name': 'Up (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -375,7 +375,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_up-state]
+# name: test_events[multi_endpoint_light][event.inovelli_up_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -389,10 +389,10 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Up',
+      'friendly_name': 'Inovelli Up (3)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_up',
+    'entity_id': 'event.inovelli_up_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
