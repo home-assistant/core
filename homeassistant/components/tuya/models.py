@@ -112,11 +112,6 @@ class BaseTypeData:
         """Decode base64 string and return a BaseTypeData object."""
         raise NotImplementedError("from_raw is not implemented for this type")
 
-    @classmethod
-    def to_json(cls, data: str) -> str:
-        """Convert BaseTypeData to JSON."""
-        raise NotImplementedError("to_json is not implemented for this type")
-
 
 @dataclass
 class ElectricityTypeData(BaseTypeData):
@@ -148,11 +143,6 @@ class RawTypeData(BaseTypeData):
     """Raw Type Data."""
 
     raw: str | None = None
-
-    @classmethod
-    def from_json(cls, data: str) -> Self:
-        """Load JSON string and return a RawTypeData object."""
-        return cls(data)
 
     @classmethod
     def from_raw(cls, data: str) -> Self:
