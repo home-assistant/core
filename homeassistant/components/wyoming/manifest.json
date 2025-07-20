@@ -1,7 +1,8 @@
 {
   "domain": "wyoming",
   "name": "Wyoming Protocol",
-  "codeowners": ["@synesthesiam"],
+  "version": "1.0.0",
+  "codeowners": ["@balloob", "@synesthesiam"],
   "config_flow": true,
   "dependencies": [
     "assist_satellite",
