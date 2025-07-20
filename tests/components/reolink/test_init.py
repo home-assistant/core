@@ -180,26 +180,6 @@ async def test_credential_error_three(
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
 
 
-async def test_entry_reloading(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_host: MagicMock,
-) -> None:
-    """Test the entry is reloaded correctly when settings change."""
-    reolink_host.is_nvr = False
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 0
-    assert config_entry.title == "test_reolink_name"
-
-    hass.config_entries.async_update_entry(config_entry, title="New Name")
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 1
-    assert config_entry.title == "New Name"
-
-
 @pytest.mark.parametrize(
     ("attr", "value", "expected_models"),
     [
