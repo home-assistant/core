@@ -291,16 +291,11 @@ class TuyaOptionsFlow(OptionsFlow):
             ] = selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        selector.SelectOptionDict(
-                            value=ENERGY_REPORT_MODE_CUMULATIVE,
-                            label="cumulative",
-                        ),
-                        selector.SelectOptionDict(
-                            value=ENERGY_REPORT_MODE_INCREMENTAL,
-                            label="incremental",
-                        ),
+                        ENERGY_REPORT_MODE_CUMULATIVE,
+                        ENERGY_REPORT_MODE_INCREMENTAL,
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="energy_report_mode",
                 )
             )
 
