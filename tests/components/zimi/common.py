@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.zimi.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -57,11 +57,11 @@ async def check_toggle(
 
     services = hass.services.async_services()
 
-    assert "turn_on" in services[entity_type_override or entity_type]
+    assert SERVICE_TURN_ON in services[entity_type_override or entity_type]
 
     await hass.services.async_call(
         entity_type_override or entity_type,
-        "turn_on",
+        SERVICE_TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -71,11 +71,11 @@ async def check_toggle(
     else:
         assert mock_device.turn_on.called
 
-    assert "turn_off" in services[entity_type_override or entity_type]
+    assert SERVICE_TURN_OFF in services[entity_type_override or entity_type]
 
     await hass.services.async_call(
         entity_type_override or entity_type,
-        "turn_off",
+        SERVICE_TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )
