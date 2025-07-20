@@ -9,7 +9,7 @@ from holidays import HolidayBase, __version__ as python_holidays_version
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_COUNTRY, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -24,19 +24,9 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    ALLOWED_DAYS,
-    CONF_ADD_HOLIDAYS,
-    CONF_EXCLUDES,
-    CONF_OFFSET,
-    CONF_REMOVE_HOLIDAYS,
-    CONF_WORKDAYS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ALLOWED_DAYS, CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS, DOMAIN
 
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
@@ -45,115 +35,17 @@ SERVICE_CHECK_DATE: Final = "check_date"
 CHECK_DATE: Final = "check_date"
 
 
-def validate_dates(holiday_list: list[str]) -> list[str]:
-    """Validate and adds to list of dates to add or remove."""
-    calc_holidays: list[str] = []
-    for add_date in holiday_list:
-        if add_date.find(",") > 0:
-            dates = add_date.split(",", maxsplit=1)
-            d1 = dt_util.parse_date(dates[0])
-            d2 = dt_util.parse_date(dates[1])
-            if d1 is None or d2 is None:
-                LOGGER.error("Incorrect dates in date range: %s", add_date)
-                continue
-            _range: timedelta = d2 - d1
-            for i in range(_range.days + 1):
-                day: date = d1 + timedelta(days=i)
-                calc_holidays.append(day.strftime("%Y-%m-%d"))
-            continue
-        calc_holidays.append(add_date)
-    return calc_holidays
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WorkdayConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
-    remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
-    country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
-
     obj_holidays = entry.runtime_data
-    calc_add_holidays: list[str] = validate_dates(add_holidays)
-    calc_remove_holidays: list[str] = validate_dates(remove_holidays)
-    next_year = dt_util.now().year + 1
-
-    # Add custom holidays
-    try:
-        obj_holidays.append(calc_add_holidays)  # type: ignore[arg-type]
-    except ValueError as error:
-        LOGGER.error("Could not add custom holidays: %s", error)
-
-    # Remove holidays
-    for remove_holiday in calc_remove_holidays:
-        try:
-            # is this formatted as a date?
-            if dt_util.parse_date(remove_holiday):
-                # remove holiday by date
-                removed = obj_holidays.pop(remove_holiday)
-                LOGGER.debug("Removed %s", remove_holiday)
-            else:
-                # remove holiday by name
-                LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
-                removed = obj_holidays.pop_named(remove_holiday)
-                for holiday in removed:
-                    LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
-        except KeyError as unmatched:
-            LOGGER.warning("No holiday found matching %s", unmatched)
-            if _date := dt_util.parse_date(remove_holiday):
-                if _date.year <= next_year:
-                    # Only check and raise issues for current and next year
-                    async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                        is_fixable=True,
-                        is_persistent=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="bad_date_holiday",
-                        translation_placeholders={
-                            CONF_COUNTRY: country if country else "-",
-                            "title": entry.title,
-                            CONF_REMOVE_HOLIDAYS: remove_holiday,
-                        },
-                        data={
-                            "entry_id": entry.entry_id,
-                            "country": country,
-                            "named_holiday": remove_holiday,
-                        },
-                    )
-            else:
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="bad_named_holiday",
-                    translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
-                        "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
-                    },
-                    data={
-                        "entry_id": entry.entry_id,
-                        "country": country,
-                        "named_holiday": remove_holiday,
-                    },
-                )
-
-    LOGGER.debug("Found the following holidays for your configuration:")
-    for holiday_date, name in sorted(obj_holidays.items()):
-        # Make explicit str variable to avoid "Incompatible types in assignment"
-        _holiday_string = holiday_date.strftime("%Y-%m-%d")
-        LOGGER.debug("%s %s", _holiday_string, name)
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
