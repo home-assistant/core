@@ -139,8 +139,8 @@ class MatterLock(MatterEntity, LockEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the additional user_index state attribute of the lock."""
-        attrs = super().extra_state_attributes or {}  # type: ignore[unused-ignore]
-        attrs[ATTR_USER_INDEX] = self._attr_user_index  # type: ignore[index]
+        attrs = dict((super().extra_state_attributes or {}).items())
+        attrs[ATTR_USER_INDEX] = self._attr_user_index
         return attrs
 
     @property
