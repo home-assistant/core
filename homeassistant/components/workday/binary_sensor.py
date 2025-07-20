@@ -3,19 +3,13 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from holidays import (
-    PUBLIC,
-    HolidayBase,
-    __version__ as python_holidays_version,
-    country_holidays,
-)
+from holidays import HolidayBase, __version__ as python_holidays_version
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -36,15 +30,16 @@ from homeassistant.util import dt as dt_util, slugify
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_CATEGORY,
     CONF_EXCLUDES,
     CONF_OFFSET,
-    CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
     CONF_WORKDAYS,
     DOMAIN,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from . import WorkdayConfigEntry
 
 SERVICE_CHECK_DATE: Final = "check_date"
 CHECK_DATE: Final = "check_date"
@@ -70,89 +65,9 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
-def _get_obj_holidays(
-    country: str | None,
-    province: str | None,
-    year: int,
-    language: str | None,
-    categories: list[str] | None,
-) -> HolidayBase:
-    """Get the object for the requested country and year."""
-    if not country:
-        return HolidayBase()
-
-    set_categories = None
-    if categories:
-        category_list = [PUBLIC]
-        category_list.extend(categories)
-        set_categories = tuple(category_list)
-
-    obj_holidays: HolidayBase = country_holidays(
-        country,
-        subdiv=province,
-        years=[year, year + 1],
-        language=language,
-        categories=set_categories,
-    )
-
-    supported_languages = obj_holidays.supported_languages
-    default_language = obj_holidays.default_language
-
-    if default_language and not language:
-        # If no language is set, use the default language
-        LOGGER.debug("Changing language from None to %s", default_language)
-        return country_holidays(  # Return default if no language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-        )
-
-    if (
-        default_language
-        and language
-        and language not in supported_languages
-        and language.startswith("en")
-    ):
-        # If language does not match supported languages, use the first English variant
-        if default_language.startswith("en"):
-            LOGGER.debug("Changing language from %s to %s", language, default_language)
-            return country_holidays(  # Return default English if default language
-                country,
-                subdiv=province,
-                years=year,
-                language=default_language,
-                categories=set_categories,
-            )
-        for lang in supported_languages:
-            if lang.startswith("en"):
-                LOGGER.debug("Changing language from %s to %s", language, lang)
-                return country_holidays(
-                    country,
-                    subdiv=province,
-                    years=year,
-                    language=lang,
-                    categories=set_categories,
-                )
-
-    if default_language and language and language not in supported_languages:
-        # If language does not match supported languages, use the default language
-        LOGGER.debug("Changing language from %s to %s", language, default_language)
-        return country_holidays(  # Return default English if default language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-        )
-
-    return obj_holidays
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WorkdayConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
@@ -161,16 +76,10 @@ async def async_setup_entry(
     country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
-    province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
-    language: str | None = entry.options.get(CONF_LANGUAGE)
-    categories: list[str] | None = entry.options.get(CONF_CATEGORY)
 
-    year: int = (dt_util.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = await hass.async_add_executor_job(
-        _get_obj_holidays, country, province, year, language, categories
-    )
+    obj_holidays = entry.runtime_data
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
     next_year = dt_util.now().year + 1
