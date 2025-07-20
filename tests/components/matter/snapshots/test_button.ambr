@@ -1065,104 +1065,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_config-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_config',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Config',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_config-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Config',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_config',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_down-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_down',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Down',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_down-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Down',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_down',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_buttons[multi_endpoint_light][button.inovelli_identify_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1261,6 +1163,153 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.inovelli_identify_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Inovelli Identify (3)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.inovelli_identify_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Inovelli Identify (4)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.inovelli_identify_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Inovelli Identify (5)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[multi_endpoint_light][button.inovelli_identify_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1304,55 +1353,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.inovelli_identify_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Up',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2087,7 +2087,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-entry]
+# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2100,7 +2100,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.mock_temperature_sensor_identify_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2112,7 +2112,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (0)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2122,14 +2122,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-state]
+# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Mock Temperature Sensor Identify',
+      'friendly_name': 'Mock Temperature Sensor Identify (0)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.mock_temperature_sensor_identify_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
