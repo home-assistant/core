@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
 from typing import Any
 
@@ -48,7 +47,7 @@ CANCEL_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_get_service(
+def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -74,16 +73,10 @@ class PushoverNotificationService(BaseNotificationService):
         self.pushover = pushover
         self.receipt_tags: dict[str, list[str]] = {}
 
-        async def async_cancel_message(service: ServiceCall) -> None:
-            """Handle cancel notification message service calls."""
-            kwargs = {}
-            kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
-            await self.hass.async_add_executor_job(partial(self.cancel, **kwargs))
-
-        hass.services.async_register(
+        hass.services.register(
             DOMAIN,
             SERVICE_CANCEL,
-            async_cancel_message,
+            self.cancel_message_service,
             schema=CANCEL_SERVICE_SCHEMA,
         )
 
@@ -153,21 +146,21 @@ class PushoverNotificationService(BaseNotificationService):
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
 
-    def cancel(self, **kwargs):
+    def cancel_message_service(self, service: ServiceCall):
         """Cancel all notifications with a given tag."""
-        data = kwargs.get(ATTR_DATA)
+        data = service.data.get(ATTR_DATA)
         tag = data.get(ATTR_TAG) if data else ""
 
         if not self.receipt_tags:
             _LOGGER.debug("There are no notifications to be canceled")
             return
 
+        receipts: list[str] = []
         if not tag:
             _LOGGER.debug("Attempting to cancel all notifications")
             receipts = list(self.receipt_tags.keys())
         else:
             _LOGGER.debug("Attempting to cancel all notifications with tag '%s'", tag)
-            receipts: list[str] = []
             for receipt, msg_tags in self.receipt_tags.items():
                 if tag in msg_tags:
                     _LOGGER.debug(
