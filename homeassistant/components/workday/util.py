@@ -8,7 +8,7 @@ from .const import LOGGER
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
-    """Validate and adds to list of dates to add or remove."""
+    """Validate and add to list of dates to add or remove."""
     calc_holidays: list[str] = []
     for add_date in holiday_list:
         if add_date.find(",") > 0:
