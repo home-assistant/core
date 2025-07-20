@@ -50,35 +50,32 @@ async def async_setup_entry(
     Motors can use set_level only for closing (0) or opening(100), so we use Cover Time Based entity.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        (
-            LutronCoverTimeBased(
-                area_name, device_name, device, entry_data.controller, config_entry
-            )
-            for area_name, device_name, device in entry_data.covers
-            if device.is_motor
-        ),
-        True,
-    )
+    entities: list[CoverEntity] = []
 
-    async_add_entities(
-        (
-            LutronCover(
-                area_name, device_name, device, entry_data.controller, config_entry
+    for area_name, device_name, device in entry_data.covers:
+        if device.is_motor:
+            entities.append(
+                LutronCoverTimeBased(
+                    area_name, device_name, device, entry_data.controller, config_entry
+                )
             )
-            for area_name, device_name, device in entry_data.covers
-            if device.is_shade
-        ),
-        True,
-    )
+        elif device.is_shade:
+            entities.append(
+                LutronCover(
+                    area_name, device_name, device, entry_data.controller, config_entry
+                )
+            )
+
+    async_add_entities(entities, True)
 
 
 class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
     """Representation of a Lutron motor.
 
-    We are using the code from the custom component ...
-    MOTOR doesn't support level , We are using travel time to get the current state and to travel to a specific level
-    We don't use the callback with the level, because it's only 0 or 100, and we always get 100 when it stops
+    Code from the custom component https://github.com/Sdahl1234/home-assistant-custom-components-cover-rf-time-based/tree/master.
+    MOTOR doesn't support level. We are using travel time to get the current state and to travel to a specific level.
+    We don't use the callback with the level, because it's only 0 or 100, and we always get 100 when it stops.
+    Motor should report action_numer = 17 for the travel_time, but it doesn't.
     """
 
     _attr_supported_features = (
