@@ -40,7 +40,7 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: todo
