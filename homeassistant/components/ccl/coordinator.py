@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+_CHECKING_INTERVAL = 600
 
 type CCLConfigEntry = ConfigEntry[CCLDevice]
 
@@ -34,7 +35,7 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(seconds=600),
+            update_interval=timedelta(seconds=_CHECKING_INTERVAL),
             update_method=self._async_update_data,
             always_update=True,
         )
@@ -49,6 +50,6 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
         )
         if self.device.last_update_time is None:
             raise UpdateFailed("Device is offline or not ready")
-        if time.monotonic() - self.device.last_update_time >= 600:
+        if time.monotonic() - self.device.last_update_time >= _CHECKING_INTERVAL:
             raise UpdateFailed("Device is offline or not ready")
         return self.device.get_sensors()  # raise CCLDataUpdateException when failed

@@ -177,23 +177,27 @@ async def async_setup_entry(
     """Add sensors for passed config entry in HA."""
     coordinator = entry.runtime_data
 
-    def _new_sensor(sensor: CCLSensor) -> bool | None:
-        """Add a sensor to the data entry."""
-        if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
-            entity_description = dataclasses.replace(
-                CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],
-                key=sensor.key,
-                name=sensor.name,
-            )
-            async_add_entities([CCLSensorEntity(coordinator, entity_description)])
-            return True
-        return None
+    def _new_sensors(sensors: list[CCLSensor]) -> bool:
+        """Add sensors to the data entry."""
+        sensor_entities = []
 
-    coordinator.device.set_new_sensor_callback(_new_sensor)
+        for sensor in sensors:
+            if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
+                entity_description = dataclasses.replace(
+                    CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],
+                    key=sensor.key,
+                    name=sensor.name,
+                )
+                sensor_entities.append(CCLSensorEntity(coordinator, entity_description))
+
+        async_add_entities(sensor_entities)
+
+        return True
+
+    coordinator.device.set_new_sensor_callback(_new_sensors)
 
     if coordinator.data is not None:
-        for sensor in coordinator.data.values():
-            _new_sensor(sensor)
+        _new_sensors(coordinator.data.values())
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):

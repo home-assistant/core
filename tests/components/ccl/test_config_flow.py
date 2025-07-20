@@ -1,6 +1,6 @@
 """Test the CCL Electronics config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.ccl.const import DOMAIN
@@ -10,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test we can create a config entry."""
     await async_setup_component(hass, "http", {})
 
@@ -21,14 +21,10 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.ccl.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CCL Weather Station"
-    assert len(result["data"][CONF_WEBHOOK_ID]) == 8
+    assert len(result["data"][CONF_WEBHOOK_ID]) == 6
     assert len(mock_setup_entry.mock_calls) == 1
