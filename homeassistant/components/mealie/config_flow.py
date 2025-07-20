@@ -162,13 +162,13 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        await self._async_handle_discovery_without_unique_id()
+        # TODO: Add this back in after testing
+        # await self._async_handle_discovery_without_unique_id()
 
         self._hassio_discovery = discovery_info.config
 
-        # TODO - Remove these after testing
-        LOGGER.warning("HassIO Discovery")
-        LOGGER.warning(self._hassio_discovery)
+        # TODO: Remove these after testing
+        LOGGER.warning(f"HassIO Discovery {self._hassio_discovery}")
 
         return await self.async_step_hassio_confirm()
 
