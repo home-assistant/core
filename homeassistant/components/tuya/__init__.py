@@ -11,6 +11,7 @@ from tuya_sharing import (
     Manager,
     SharingDeviceListener,
     SharingTokenListener,
+    strategy,
 )
 from tuya_sharing.mq import SharingMQ, SharingMQConfig
 
@@ -35,7 +36,7 @@ from .const import (
 )
 
 # Suppress logs from the library, it logs unneeded on error
-logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
+logging.getLogger("tuya_sharing").setLevel(logging.DEBUG)
 
 type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
 
@@ -78,6 +79,60 @@ class ManagerCompat(Manager):
         sharing_mq.start()
         sharing_mq.add_message_listener(self.on_message)
         self.mq = sharing_mq
+
+    def on_message(self, msg: dict):
+        """Handle MQTT message."""
+        LOGGER.debug(f"mq receive-> {msg}")
+        super().on_message(msg)
+
+    def _on_device_report(self, device_id: str, status: list):
+        """Enhanced device report handling with DP timestamps."""
+        device = self.device_map.get(device_id, None)
+        if not device:
+            return
+
+        updated_status_properties = []
+        dp_timestamps = {}
+
+        if device.support_local:
+            for item in status:
+                if "dpId" in item and "value" in item:
+                    dp_id_item = device.local_strategy[item["dpId"]]
+                    strategy_name = dp_id_item["value_convert"]
+                    config_item = dp_id_item["config_item"]
+                    dp_item = (dp_id_item["status_code"], item["value"])
+                    code, value = strategy.convert(strategy_name, dp_item, config_item)
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+                    dp_timestamps[code] = item.get("t", None)  # 获取时间戳，如果有的话
+        else:
+            for item in status:
+                if "code" in item and "value" in item:
+                    code = item["code"]
+                    value = item["value"]
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+                    dp_timestamps[code] = item.get("t", None)  # 获取时间戳，如果有的话
+
+        # 调用增强的设备更新方法，传递时间戳
+        self.__update_device_with_timestamps(
+            device, updated_status_properties, dp_timestamps
+        )
+
+    def __update_device_with_timestamps(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict,
+    ):
+        """Update device with timestamp information."""
+        for listener in self.device_listeners:
+            try:
+                # 尝试调用新的 3 参数版本
+                listener.update_device(device, updated_status_properties, dp_timestamps)
+            except TypeError:
+                # 如果失败，回退到原来的 2 参数版本
+                listener.update_device(device, updated_status_properties)
 
 
 class SharingMQCompat(SharingMQ):
@@ -166,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
+
     return True
 
 
@@ -217,20 +273,33 @@ class DeviceListener(SharingDeviceListener):
         self.manager = manager
 
     def update_device(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
     ) -> None:
-        """Update device status."""
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s)",
+            "Received update for device %s: %s (updated properties: %s, dp_timestamps: %s)",
             device.id,
             self.manager.device_map[device.id].status,
             updated_status_properties,
+            dp_timestamps,
         )
-        dispatcher_send(
-            self.hass,
-            f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
-            updated_status_properties,
-        )
+
+        if dp_timestamps:
+            dispatcher_send(
+                self.hass,
+                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
+                updated_status_properties,
+                dp_timestamps,
+            )
+        else:
+            dispatcher_send(
+                self.hass,
+                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
+                updated_status_properties,
+            )
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""

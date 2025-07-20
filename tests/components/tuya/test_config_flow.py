@@ -7,10 +7,18 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.tuya.const import (
+    CONF_APP_TYPE,
+    CONF_USER_CODE,
+    DOMAIN,
+    ENERGY_REPORT_MODE_CUMULATIVE,
+    ENERGY_REPORT_MODE_INCREMENTAL,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -242,3 +250,122 @@ async def test_reauth_flow_failed_qr_code(
 
     assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
+
+
+async def test_options_flow_no_energy_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow when no energy sensors are present."""
+    # Create a mock config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Create an options flow
+    options_flow = hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        user_input=None,
+    )
+
+    # Should complete immediately with no options since no energy sensors
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {}
+
+
+async def test_options_flow_with_energy_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow when energy sensors are present."""
+    # Add mock config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock entity registry with an energy sensor
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_device_1_energy",
+        config_entry=mock_config_entry,
+        device_class=SensorDeviceClass.ENERGY,
+    )
+
+    # Start options flow
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    # Configure with device-specific incremental mode
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"energy_report_mode_test_device_1": ENERGY_REPORT_MODE_INCREMENTAL},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {
+        "device_energy_modes": {"test_device_1": ENERGY_REPORT_MODE_INCREMENTAL}
+    }
+
+    # Configure with device-specific cumulative mode
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"energy_report_mode_test_device_1": ENERGY_REPORT_MODE_CUMULATIVE},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {
+        "device_energy_modes": {"test_device_1": ENERGY_REPORT_MODE_CUMULATIVE}
+    }
+
+    # Configure with multiple devices
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_device_2_energy",
+        config_entry=mock_config_entry,
+        device_class=SensorDeviceClass.ENERGY,
+    )
+
+    result3 = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result5 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        user_input={"energy_report_mode_test_device_2": ENERGY_REPORT_MODE_CUMULATIVE},
+    )
+
+    assert result5.get("type") is FlowResultType.CREATE_ENTRY
+    assert result5.get("data") == {
+        "device_energy_modes": {
+            "test_device_1": ENERGY_REPORT_MODE_INCREMENTAL,
+            "test_device_2": ENERGY_REPORT_MODE_CUMULATIVE,
+        }
+    }
+
+    # Edge case: no selection, should not fail
+    result6 = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result7 = await hass.config_entries.options.async_configure(
+        result6["flow_id"],
+        user_input={},
+    )
+
+    assert result7.get("type") is FlowResultType.CREATE_ENTRY
+    assert result7.get("data") == {
+        "device_energy_modes": {
+            "test_device_1": ENERGY_REPORT_MODE_INCREMENTAL,
+            "test_device_2": ENERGY_REPORT_MODE_CUMULATIVE,
+        }
+    }
+
+    # Error handling: invalid mode
+    result8 = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result9 = await hass.config_entries.options.async_configure(
+        result8["flow_id"],
+        user_input={"energy_report_mode_test_device_1": "invalid_mode"},
+    )
+
+    assert result9.get("type") is FlowResultType.FORM
+    assert result9.get("errors") == {"base": "unknown_energy_report_mode"}
