@@ -1,7 +1,6 @@
 {
   "domain": "wyoming",
   "name": "Wyoming Protocol",
-  "version": "1.0.0",
   "codeowners": ["@balloob", "@synesthesiam"],
   "config_flow": true,
   "dependencies": [
