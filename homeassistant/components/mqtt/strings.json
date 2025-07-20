@@ -678,7 +678,7 @@
           },
           "data_description": {
             "discovery_topic": "The [discovery topic]({url}#discovery-topic) to publish the discovery payload, used to trigger MQTT discovery. An empty payload published to this topic will remove the device and discovered entities.",
-            "discovery_payload": "The JSON [discovery payload]({url}#discovery-discovery-payload) that contains information about the MQTT device."
+            "discovery_payload": "The JSON [discovery payload]({url}#device-discovery-payload) that contains information about the MQTT device."
           }
         }
       },
