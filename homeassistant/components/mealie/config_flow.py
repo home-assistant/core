@@ -162,8 +162,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        # TODO: Add this back in after testing
-        # await self._async_handle_discovery_without_unique_id()
+        await self._async_handle_discovery_without_unique_id()
 
         self._hassio_discovery = discovery_info.config
 
