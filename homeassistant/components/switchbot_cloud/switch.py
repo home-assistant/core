@@ -112,7 +112,7 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
-        if not self.coordinator.data:
+        if self.coordinator.data is None:
             return
         self._attr_is_on = self.coordinator.data.get(f"switch{self.channel}Status") == 1
 

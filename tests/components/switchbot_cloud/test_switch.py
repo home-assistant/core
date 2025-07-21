@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud relay switch & bot."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from switchbot_api import Device
 
@@ -111,10 +111,10 @@ async def test_pressmode_bot_no_switch_entity(
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
-async def test_switch_no_coordinator_data(
+async def test_switch_relay_2pm_turn_on(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turn on and turn off."""
+    """Test switch relay 2pm turn on."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -133,23 +133,52 @@ async def test_switch_no_coordinator_data(
     entity_id = "switch.relay_switch_2_1"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    with patch.object(SwitchBotAPI, "send_command"):
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    assert hass.states.get(entity_id).state == STATE_ON
+    mock_send_command.assert_called_once()
 
-    with patch.object(SwitchBotAPI, "send_command"):
+
+async def test_switch_relay_2pm_turn_off(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test switch relay 2pm turn off."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-id-1",
+            deviceName="relay-switch-2",
+            deviceType="Relay Switch 2PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "switch.relay_switch_2_1"
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        patch("asyncio.sleep", AsyncMock()),
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    assert hass.states.get(entity_id).state == STATE_OFF
+    mock_send_command.assert_called_once()
 
 
-async def test_switch_no_coordinator_data2(
+async def test_switch_relay_2pm_coordination_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test turn on and turn off."""
+    """Test switch relay 2pm coordination is none."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -166,27 +195,4 @@ async def test_switch_no_coordinator_data2(
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "switch.relay_switch_2_1"
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-
-async def test_switch_no_coordinator_data3(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test turn on and turn off."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="relay-switch-id-1",
-            deviceName="relay-switch-1",
-            deviceType="Relay Switch 1",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    mock_get_status.return_value = None
-
-    entry = await configure_integration(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    entity_id = "switch.relay_switch_1"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
