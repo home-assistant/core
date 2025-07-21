@@ -22,8 +22,8 @@
         }
       },
       "zeroconf_confirm": {
-        "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
-        "title": "Discovered devolo home network device",
+        "description": "Do you want to add the devolo Home Network device with the hostname `{host_name}` to Home Assistant?",
+        "title": "Discovered devolo Home Network device",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
