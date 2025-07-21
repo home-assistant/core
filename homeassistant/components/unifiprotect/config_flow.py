@@ -331,6 +331,11 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(

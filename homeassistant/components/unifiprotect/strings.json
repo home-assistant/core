@@ -14,17 +14,23 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your UniFi Protect device."
+          "host": "Hostname or IP address of your UniFi Protect device.",
+          "api_key": "API key for your local user account."
         }
       },
       "reauth_confirm": {
         "title": "UniFi Protect reauth",
+        "description": "Your credentials or API key seem to be missing or invalid. For instructions on how to create a local user or generate a new API key, please refer to the documentation: {local_user_documentation_url}",
         "data": {
           "host": "IP/Host of UniFi Protect server",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key for your local user account.",
+          "username": "Username for your local (not cloud) user account."
         }
       },
       "discovery_confirm": {
@@ -34,6 +40,9 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key for your local user account."
         }
       }
     },
