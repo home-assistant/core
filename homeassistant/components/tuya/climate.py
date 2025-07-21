@@ -20,12 +20,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -308,7 +307,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if TYPE_CHECKING:
-            # guarded by supported features
+            # guarded by ClimateEntityFeature.FAN_MODE
             assert self._fan_mode_dp_code is not None
 
         self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
@@ -316,7 +315,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if TYPE_CHECKING:
-            # guarded by supported features
+            # guarded by ClimateEntityFeature.TARGET_HUMIDITY
             assert self._set_humidity is not None
 
         self._send_command(
@@ -355,11 +354,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._set_temperature is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
-            )
+        if TYPE_CHECKING:
+            # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
+            assert self._set_temperature is not None
 
         self._send_command(
             [
