@@ -49,7 +49,7 @@ def mock_redgtech_api() -> AsyncMock:
                 "value": False
             },
             {
-                "endpointId": "switch_002", 
+                "endpointId": "switch_002",
                 "friendlyName": "Kitchen Switch",
                 "value": True
             }
@@ -157,7 +157,7 @@ async def test_switch_toggle(
             "Connection error",
         ),
         (
-            RedgtechAuthError("Auth failed"), 
+            RedgtechAuthError("Auth failed"),
             "Failed to set switch state due to authentication error",
         ),
     ],

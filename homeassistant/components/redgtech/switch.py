@@ -49,7 +49,7 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
-        new_state = not self.is_on    
+        new_state = not self.is_on
         try:
             if not self.coordinator.access_token:
                 self.coordinator.access_token = await self.coordinator.login(

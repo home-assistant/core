@@ -48,8 +48,8 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             config_entry=config_entry,
         )
 
-    async def login(self, email: str, password: str) -> None:
-        """Login to the Redgtech API and store the access token."""
+    async def login(self, email: str, password: str) -> str:
+        """Login to the Redgtech API and return the access token."""
         try:
             self.access_token = await self.api.login(email, password)
         except RedgtechAuthError as e:
