@@ -55,6 +55,3 @@ rules:
   async-dependency: todo
   inject-websession: todo
   strict-typing: todo
-
-
-  
