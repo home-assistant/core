@@ -110,7 +110,6 @@ async def test_options_reconfigure(
             CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT + 1,
         },
     )
-    assert result["result"]
 
     # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
     assert config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1

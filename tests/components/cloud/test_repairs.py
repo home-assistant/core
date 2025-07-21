@@ -236,7 +236,6 @@ async def test_legacy_subscription_repair_flow_timeout(
         "handler": "cloud",
         "reason": "operation_took_too_long",
         "description_placeholders": None,
-        "result": None,
     }
 
     assert issue_registry.async_get_issue(
