@@ -4,104 +4,139 @@ import os
 import resource
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.util.resource import (
     DEFAULT_SOFT_FILE_LIMIT,
     set_open_file_descriptor_limit,
 )
 
 
-def test_set_open_file_descriptor_limit_default() -> None:
+@pytest.mark.parametrize(
+    ("original_soft", "should_increase"),
+    [
+        (1024, True),
+        (DEFAULT_SOFT_FILE_LIMIT - 1, True),
+        (DEFAULT_SOFT_FILE_LIMIT, False),
+        (DEFAULT_SOFT_FILE_LIMIT + 1, False),
+    ],
+)
+def test_set_open_file_descriptor_limit_default(
+    caplog: pytest.LogCaptureFixture, original_soft: int, should_increase: bool
+) -> None:
     """Test setting file limit with default value."""
-    original_soft, original_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-
-    with patch("homeassistant.util.resource._LOGGER") as mock_logger:
+    original_hard = 524288
+    with (
+        patch(
+            "homeassistant.util.resource.resource.getrlimit",
+            return_value=(original_soft, original_hard),
+        ),
+        patch("homeassistant.util.resource.resource.setrlimit") as mock_setrlimit,
+    ):
         set_open_file_descriptor_limit()
 
-        # Check that we attempted to set the limit
-        new_soft, new_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-
-        # If the original soft limit was already >= DEFAULT_SOFT_FILE_LIMIT,
-        # it should remain unchanged
-        if original_soft >= DEFAULT_SOFT_FILE_LIMIT:
-            assert new_soft == original_soft
-            mock_logger.debug.assert_called()
-        else:
-            # Should have been increased to DEFAULT_SOFT_FILE_LIMIT or hard limit
-            expected_soft = min(DEFAULT_SOFT_FILE_LIMIT, original_hard)
-            assert new_soft == expected_soft
-            mock_logger.info.assert_called()
+    if should_increase:
+        mock_setrlimit.assert_called_once_with(
+            resource.RLIMIT_NOFILE, (DEFAULT_SOFT_FILE_LIMIT, original_hard)
+        )
+    else:
+        mock_setrlimit.assert_not_called()
+        assert f"Current soft limit ({original_soft}) is already" in caplog.text
 
 
-def test_set_open_file_descriptor_limit_environment_variable() -> None:
+@pytest.mark.parametrize(
+    ("original_soft", "custom_limit", "should_increase"),
+    [
+        (1499, 1500, True),
+        (1500, 1500, False),
+        (1501, 1500, False),
+    ],
+)
+def test_set_open_file_descriptor_limit_environment_variable(
+    caplog: pytest.LogCaptureFixture,
+    original_soft: int,
+    custom_limit: int,
+    should_increase: bool,
+) -> None:
     """Test setting file limit from environment variable."""
-    custom_limit = 1500
-
+    original_hard = 524288
     with (
         patch.dict(os.environ, {"SOFT_FILE_LIMIT": str(custom_limit)}),
-        patch("homeassistant.util.resource._LOGGER") as mock_logger,
+        patch(
+            "homeassistant.util.resource.resource.getrlimit",
+            return_value=(original_soft, original_hard),
+        ),
+        patch("homeassistant.util.resource.resource.setrlimit") as mock_setrlimit,
     ):
-        original_soft, original_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-
         set_open_file_descriptor_limit()
 
-        new_soft, new_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if should_increase:
+        mock_setrlimit.assert_called_once_with(
+            resource.RLIMIT_NOFILE, (custom_limit, original_hard)
+        )
+    else:
+        mock_setrlimit.assert_not_called()
+        assert f"Current soft limit ({original_soft}) is already" in caplog.text
 
-        if original_soft >= custom_limit:
-            assert new_soft == original_soft
-            mock_logger.debug.assert_called()
-        else:
-            expected_soft = min(custom_limit, original_hard)
-            assert new_soft == expected_soft
 
-
-def test_set_open_file_descriptor_limit_exceeds_hard_limit() -> None:
+def test_set_open_file_descriptor_limit_exceeds_hard_limit(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test setting file limit that exceeds hard limit."""
-    original_soft, original_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    excessive_limit = original_hard + 1000
+    original_soft, original_hard = (1024, 524288)
+    excessive_limit = original_hard + 1
 
     with (
         patch.dict(os.environ, {"SOFT_FILE_LIMIT": str(excessive_limit)}),
-        patch("homeassistant.util.resource._LOGGER") as mock_logger,
+        patch(
+            "homeassistant.util.resource.resource.getrlimit",
+            return_value=(original_soft, original_hard),
+        ),
+        patch("homeassistant.util.resource.resource.setrlimit") as mock_setrlimit,
     ):
         set_open_file_descriptor_limit()
 
-        new_soft, new_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    mock_setrlimit.assert_called_once_with(
+        resource.RLIMIT_NOFILE, (original_hard, original_hard)
+    )
+    assert (
+        f"Requested soft limit ({excessive_limit}) exceeds hard limit ({original_hard})"
+        in caplog.text
+    )
 
-        # Should be capped at hard limit
-        assert new_soft == original_hard
-        mock_logger.warning.assert_called_once()
 
-
-def test_set_open_file_descriptor_limit_os_error() -> None:
+def test_set_open_file_descriptor_limit_os_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test handling OSError when setting file limit."""
     with (
         patch(
-            "homeassistant.util.resource.resource.getrlimit", return_value=(1000, 4096)
+            "homeassistant.util.resource.resource.getrlimit",
+            return_value=(1024, 524288),
         ),
         patch(
             "homeassistant.util.resource.resource.setrlimit",
             side_effect=OSError("Permission denied"),
         ),
-        patch("homeassistant.util.resource._LOGGER") as mock_logger,
     ):
         set_open_file_descriptor_limit()
 
-        mock_logger.error.assert_called_once()
-        assert (
-            "Failed to set file descriptor limit" in mock_logger.error.call_args[0][0]
-        )
+    assert "Failed to set file descriptor limit" in caplog.text
+    assert "Permission denied" in caplog.text
 
 
-def test_set_open_file_descriptor_limit_value_error() -> None:
+def test_set_open_file_descriptor_limit_value_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test handling ValueError when setting file limit."""
-
     with (
         patch.dict(os.environ, {"SOFT_FILE_LIMIT": "invalid_value"}),
-        patch("homeassistant.util.resource._LOGGER") as mock_logger,
+        patch(
+            "homeassistant.util.resource.resource.getrlimit",
+            return_value=(1024, 524288),
+        ),
     ):
         set_open_file_descriptor_limit()
 
-        mock_logger.error.assert_called_once()
-        assert (
-            "Invalid file descriptor limit value" in mock_logger.error.call_args[0][0]
-        )
+    assert "Invalid file descriptor limit value" in caplog.text
+    assert "'invalid_value'" in caplog.text
