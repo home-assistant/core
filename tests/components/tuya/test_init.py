@@ -1,4 +1,4 @@
-"""Test Tuya fan platform."""
+"""Test Tuya initialization."""
 
 from __future__ import annotations
 
