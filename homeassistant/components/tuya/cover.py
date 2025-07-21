@@ -337,7 +337,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._set_position is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="dpcode_not_found",
+                translation_key="action_dpcode_not_found",
             )
 
         self._send_command(
@@ -369,7 +369,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._tilt is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="dpcode_not_found",
+                translation_key="action_dpcode_not_found",
             )
 
         self._send_command(
