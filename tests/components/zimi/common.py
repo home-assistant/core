@@ -86,18 +86,18 @@ async def check_toggle(
         assert mock_device.turn_off.called
 
 
-def mock_entity(
+def mock_api_device(
     device_name: str | None = None,
     entity_type: str | None = None,
 ) -> MagicMock:
-    """Mock a Zimi entity with defaults."""
+    """Mock a Zimi ControlPointDevice which is used in the zcc API with defaults."""
 
-    mock_entity = MagicMock()
+    mock_api_device = MagicMock()
 
-    mock_entity.identifier = ENTITY_INFO["id"]
-    mock_entity.room = ENTITY_INFO["room"]
-    mock_entity.name = ENTITY_INFO["name"]
-    mock_entity.type = entity_type or ENTITY_INFO["type"]
+    mock_api_device.identifier = ENTITY_INFO["id"]
+    mock_api_device.room = ENTITY_INFO["room"]
+    mock_api_device.name = ENTITY_INFO["name"]
+    mock_api_device.type = entity_type or ENTITY_INFO["type"]
 
     mock_manfacture_info = MagicMock()
     mock_manfacture_info.identifier = DEVICE_INFO["id"]
@@ -107,19 +107,19 @@ def mock_entity(
     mock_manfacture_info.hwVersion = DEVICE_INFO["hwVersion"]
     mock_manfacture_info.firmwareVersion = DEVICE_INFO["fwVersion"]
 
-    mock_entity.manufacture_info = mock_manfacture_info
+    mock_api_device.manufacture_info = mock_manfacture_info
 
-    mock_entity.subscribe = AsyncMock()
+    mock_api_device.subscribe = AsyncMock()
 
-    mock_entity.close_door = AsyncMock()
-    mock_entity.open_door = AsyncMock()
-    mock_entity.open_to_percentage = AsyncMock()
-    mock_entity.set_brightness = AsyncMock()
-    mock_entity.set_fanspeed = AsyncMock()
-    mock_entity.turn_on = AsyncMock()
-    mock_entity.turn_off = AsyncMock()
+    mock_api_device.close_door = AsyncMock()
+    mock_api_device.open_door = AsyncMock()
+    mock_api_device.open_to_percentage = AsyncMock()
+    mock_api_device.set_brightness = AsyncMock()
+    mock_api_device.set_fanspeed = AsyncMock()
+    mock_api_device.turn_on = AsyncMock()
+    mock_api_device.turn_off = AsyncMock()
 
-    return mock_entity
+    return mock_api_device
 
 
 async def setup_platform(
