@@ -22,7 +22,7 @@ async def test_sensors(
     """Test sensor entities."""
     reolink_connect.ptz_pan_position.return_value = 1200
     reolink_connect.wifi_connection = True
-    reolink_connect.wifi_signal = 3
+    reolink_connect.wifi_signal.return_value = 3
     reolink_connect.hdd_list = [0]
     reolink_connect.hdd_storage.return_value = 95
 

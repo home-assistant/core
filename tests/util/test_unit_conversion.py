@@ -8,6 +8,7 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -761,6 +762,13 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
             2000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # 3 g/m³ = 3000 mg/m³
+        (
+            3,
+            CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            3000,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
     ],
     VolumeConverter: [

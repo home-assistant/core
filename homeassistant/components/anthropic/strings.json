@@ -29,7 +29,7 @@
         "set_options": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
             "temperature": "Temperature",

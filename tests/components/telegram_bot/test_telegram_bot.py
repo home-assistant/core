@@ -50,7 +50,9 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_VERIFY_SSL,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
+    SECTION_ADVANCED_SETTINGS,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
@@ -182,6 +184,7 @@ async def test_send_message(
         (
             {
                 ATTR_MESSAGE: "test_message",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
                 ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
             },
             InlineKeyboardMarkup(
@@ -198,6 +201,7 @@ async def test_send_message(
         (
             {
                 ATTR_MESSAGE: "test_message",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
                 ATTR_KEYBOARD_INLINE: [
                     [["command1", "/cmd1"]],
                     [["mock_link", "https://mock_link"]],
@@ -249,7 +253,7 @@ async def test_send_message_with_inline_keyboard(
         mock_send_message.assert_called_once_with(
             12345678,
             "test_message",
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=None,
             disable_web_page_preview=None,
             disable_notification=False,
             reply_to_message_id=None,
@@ -677,13 +681,35 @@ async def test_send_message_with_config_entry(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # test: send message to invalid chat id
+
+    with pytest.raises(HomeAssistantError) as err:
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                ATTR_MESSAGE: "mock message",
+                ATTR_TARGET: [123456, 1],
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "failed_chat_ids"
+    assert err.value.translation_placeholders["chat_ids"] == "1"
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+
+    # test: send message to valid chat id
+
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         {
             CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
             ATTR_MESSAGE: "mock message",
-            ATTR_TARGET: 1,
+            ATTR_TARGET: 123456,
         },
         blocking=True,
         return_response=True,
@@ -700,6 +726,7 @@ async def test_send_message_no_chat_id_error(
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
+        SECTION_ADVANCED_SETTINGS: {},
     }
 
     with patch("homeassistant.components.telegram_bot.config_flow.Bot.get_me"):
@@ -767,6 +794,23 @@ async def test_delete_message(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # test: delete message with invalid chat id
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_MESSAGE,
+            {ATTR_CHAT_ID: 1, ATTR_MESSAGEID: "last"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders["chat_ids"] == "1"
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+
+    # test: delete message with valid chat id
+
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
@@ -808,7 +852,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
-            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 
@@ -822,7 +866,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_CAPTION,
-            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 
@@ -836,7 +880,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 
