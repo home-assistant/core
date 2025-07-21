@@ -70,7 +70,7 @@
           "motor_fault_short": "Motor shorted",
           "motor_ot_amps": "Motor overtorqued",
           "motor_disconnected": "Motor disconnected",
-          "empty": "Empty"
+          "empty": "[%key:common::state::empty%]"
         }
       },
       "last_seen": {
@@ -121,6 +121,10 @@
       "total_cycles": {
         "name": "Total cycles",
         "unit_of_measurement": "cycles"
+      },
+      "visits_today": {
+        "name": "Visits today",
+        "unit_of_measurement": "visits"
       },
       "waste_drawer": {
         "name": "Waste drawer"

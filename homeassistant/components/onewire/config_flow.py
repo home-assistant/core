@@ -8,7 +8,11 @@ from typing import Any
 from pyownet import protocol
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -160,7 +164,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         return OnewireOptionsFlowHandler(config_entry)
 
 
-class OnewireOptionsFlowHandler(OptionsFlow):
+class OnewireOptionsFlowHandler(OptionsFlowWithReload):
     """Handle OneWire Config options."""
 
     configurable_devices: dict[str, str]

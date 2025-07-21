@@ -52,10 +52,10 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
+    STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -112,7 +112,7 @@ async def test_idle_setup(
     """Test setup with idle device."""
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert state.state == STATE_STANDBY
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
