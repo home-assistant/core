@@ -8,9 +8,9 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
+    InactiveReasons,
     MowerAttributes,
     MowerModes,
-    MowerStates,
     RestrictedReasons,
     WorkArea,
 )
@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
+from .const import ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
@@ -166,19 +167,17 @@ ERROR_KEYS = [
     "zone_generator_problem",
 ]
 
-ERROR_STATES = [
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.ERROR,
-    MowerStates.FATAL_ERROR,
-    MowerStates.OFF,
-    MowerStates.STOPPED,
-    MowerStates.WAIT_POWER_UP,
-    MowerStates.WAIT_UPDATING,
-]
 
 ERROR_KEY_LIST = list(
     dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
 )
+
+INACTIVE_REASONS: list = [
+    InactiveReasons.NONE,
+    InactiveReasons.PLANNING,
+    InactiveReasons.SEARCHING_FOR_SATELLITES,
+]
+
 
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
@@ -404,6 +403,14 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=attrgetter("planner.restricted_reason"),
     ),
     AutomowerSensorEntityDescription(
+        key="inactive_reason",
+        translation_key="inactive_reason",
+        exists_fn=lambda data: data.capabilities.work_areas,
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: INACTIVE_REASONS,
+        value_fn=attrgetter("mower.inactive_reason"),
+    ),
+    AutomowerSensorEntityDescription(
         key="work_area",
         translation_key="work_area",
         device_class=SensorDeviceClass.ENUM,
@@ -533,6 +540,11 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
+
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return super().available and self.native_value is not None
 
 
 class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):

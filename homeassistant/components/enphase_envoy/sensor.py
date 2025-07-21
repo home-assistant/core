@@ -1313,6 +1313,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
             manufacturer="Enphase",
             model="Inverter",
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
     @property
@@ -1356,6 +1357,7 @@ class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
 
@@ -1420,6 +1422,7 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
             name=f"Enpower {enpower_data.serial_number}",
             sw_version=str(enpower_data.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=enpower_data.serial_number,
         )
 
     @property

@@ -60,6 +60,35 @@
           }
         }
       }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "mdi:string-lights",
+              "halloween": "mdi:halloween",
+              "sunset": "mdi:weather-sunset",
+              "vitality": "mdi:parachute",
+              "flashing": "mdi:flash",
+              "strobe": "mdi:led-strip-variant",
+              "fade": "mdi:water-opacity",
+              "smooth": "mdi:led-strip-variant",
+              "forest": "mdi:forest",
+              "ocean": "mdi:waves",
+              "autumn": "mdi:leaf-maple",
+              "cool": "mdi:emoticon-cool-outline",
+              "flow": "mdi:pulse",
+              "relax": "mdi:coffee",
+              "modern": "mdi:school-outline",
+              "rose": "mdi:flower",
+              "colorful": "mdi:looks",
+              "flickering": "mdi:led-strip-variant",
+              "breathing": "mdi:heart-pulse"
+            }
+          }
+        }
+      }
     }
   }
 }

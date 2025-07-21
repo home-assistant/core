@@ -25,4 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[MEATER_DATA] = (
+            hass.data[MEATER_DATA] - entry.runtime_data.found_probes
+        )
+    return unload_ok

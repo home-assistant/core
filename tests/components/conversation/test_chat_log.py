@@ -1,6 +1,5 @@
 """Test the conversation session."""
 
-from collections.abc import Generator
 from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
@@ -24,27 +23,6 @@ from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-
-
-@pytest.fixture
-def mock_conversation_input(hass: HomeAssistant) -> ConversationInput:
-    """Return a conversation input instance."""
-    return ConversationInput(
-        text="Hello",
-        context=Context(),
-        conversation_id=None,
-        agent_id="mock-agent-id",
-        device_id=None,
-        language="en",
-    )
-
-
-@pytest.fixture
-def mock_ulid() -> Generator[Mock]:
-    """Mock the ulid library."""
-    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
-        mock_ulid_now.return_value = "mock-ulid"
-        yield mock_ulid_now
 
 
 async def test_cleanup(

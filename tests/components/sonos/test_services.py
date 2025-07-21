@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockSoCo, group_speakers, ungroup_speakers
 
@@ -83,6 +84,31 @@ async def test_media_player_join_bad_entity(
             blocking=True,
         )
     assert "media_player.bad_entity" in str(excinfo.value)
+
+
+async def test_media_player_join_entity_no_speaker(
+    hass: HomeAssistant,
+    sonos_setup_two_speakers: list[MockSoCo],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test error handling of joining with no associated speaker."""
+
+    bad_media_player = entity_registry.async_get_or_create(
+        "media_player", "demo", "1234"
+    )
+
+    # Ensure an error is raised if the entity does not have a speaker
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_JOIN,
+            {
+                "entity_id": "media_player.living_room",
+                "group_members": bad_media_player.entity_id,
+            },
+            blocking=True,
+        )
+    assert bad_media_player.entity_id in str(excinfo.value)
 
 
 @asynccontextmanager
