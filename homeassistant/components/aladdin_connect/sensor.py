@@ -52,7 +52,6 @@ async def async_setup_entry(
     session: api.AsyncConfigEntryAuth = entry.runtime_data
     acc = AladdinConnectClient(session)
 
-    entities = []
     doors = await acc.get_doors()
     if doors is None:
         return
@@ -89,14 +88,11 @@ class AladdinConnectSensor(SensorEntity):
             name=device.name,
             manufacturer="Overhead Door",
         )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self._acc, self._device_id, self._number
-        )
+        self._attr_native_value: float | None = None
 
     async def async_update(self) -> None:
         """Update the sensor."""
         await self._acc.update_door(self._device_id, self._number)
+        self._attr_native_value = self.entity_description.value_fn(
+            self._acc, self._device_id, self._number
+        )
