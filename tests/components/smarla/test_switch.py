@@ -35,9 +35,9 @@ SWITCH_ENTITIES = [
 ]
 
 
+@pytest.mark.usefixtures("mock_federwiege")
 async def test_entities(
     hass: HomeAssistant,
-    mock_federwiege: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

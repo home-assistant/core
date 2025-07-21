@@ -18,7 +18,7 @@ from .const import (
     ListeningMode,
 )
 from .receiver import Receiver, async_interview
-from .services import DATA_MP_ENTITIES, async_register_services
+from .services import DATA_MP_ENTITIES, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +41,12 @@ type OnkyoConfigEntry = ConfigEntry[OnkyoData]
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up Onkyo component."""
-    await async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Set up the Onkyo config entry."""
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     host = entry.data[CONF_HOST]
 
@@ -82,8 +81,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     receiver.conn.close()
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
