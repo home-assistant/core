@@ -29,8 +29,13 @@ def mock_huum() -> Generator[AsyncMock]:
             "homeassistant.components.huum.coordinator.Huum.turn_on",
             return_value=huum,
         ) as turn_on,
+        patch(
+            "homeassistant.components.huum.coordinator.Huum.toggle_light",
+            return_value=huum,
+        ) as toggle_light,
     ):
         huum.status = SaunaStatus.ONLINE_NOT_HEATING
+        huum.config = 3
         huum.door_closed = True
         huum.temperature = 30
         huum.sauna_name = 123456
@@ -45,6 +50,7 @@ def mock_huum() -> Generator[AsyncMock]:
         huum.sauna_config.max_timer = 0
         huum.sauna_config.min_timer = 0
         huum.turn_on = turn_on
+        huum.toggle_light = toggle_light
 
         yield huum
 
