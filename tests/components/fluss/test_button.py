@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 @pytest.fixture
-def mock_hass():
+def mock_hass() -> HomeAssistant:
     """Mock Home Assistant Environment."""
     hass = Mock(spec=HomeAssistant)
     hass.config_entries = Mock()
@@ -24,7 +24,7 @@ def mock_hass():
 
 
 @pytest.fixture
-def mock_entry():
+def mock_entry() -> ConfigEntry:
     """Mock API Entry."""
     entry = Mock(spec=ConfigEntry)
     entry.data = {"api_key": "test_api_key"}
@@ -33,7 +33,7 @@ def mock_entry():
 
 
 @pytest.fixture
-def mock_api_client():
+def mock_api_client() -> FlussApiClient:
     """Mock API Client Session."""
     api_client = Mock(spec=FlussApiClient)
     api_client.async_get_devices = AsyncMock(
@@ -43,7 +43,7 @@ def mock_api_client():
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry(mock_hass, mock_entry, mock_api_client) -> None:
+async def test_async_setup_entry(mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient) -> None:
     """Test successful setup of the button."""
     mock_entry.runtime_data = mock_api_client  # Assign directly, not as a dict
     mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
@@ -90,7 +90,7 @@ async def test_fluss_button() -> None:
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_no_devices(
-    mock_hass, mock_entry, mock_api_client
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
 ) -> None:
     """Test setup when no devices are returned."""
     mock_entry.runtime_data = mock_api_client
@@ -105,7 +105,7 @@ async def test_async_setup_entry_no_devices(
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_exception(
-    mock_hass, mock_entry, mock_api_client
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
 ) -> None:
     """Test setup entry when async_get_devices raises an exception."""
     mock_entry.runtime_data = mock_api_client
