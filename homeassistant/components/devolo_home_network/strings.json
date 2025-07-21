@@ -9,7 +9,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network App on the device dashboard.",
+          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network app on the device dashboard.",
           "password": "Password you protected the device with."
         }
       },
