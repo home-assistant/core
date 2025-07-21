@@ -627,24 +627,23 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'lhm-lpc-nct6687d-0-fan-2',
-    'unit_of_measurement': 'RPM',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-      'max_value': '0',
-      'min_value': '0',
+      'max_value': '-',
+      'min_value': '-',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_temperature-entry]
@@ -1459,17 +1458,16 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-        'max_value': '0',
-        'min_value': '0',
+        'max_value': '-',
+        'min_value': '-',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0',
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
