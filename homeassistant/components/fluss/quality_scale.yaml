@@ -42,7 +42,7 @@ rules:
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: todo
-  repair-issues: todo
+  repair-issues: exempt
   docs-use-cases: todo
   docs-supported-devices: todo
   docs-supported-functions: todo
@@ -55,6 +55,3 @@ rules:
   async-dependency: todo
   inject-websession: todo
   strict-typing: todo
-
-
-  
