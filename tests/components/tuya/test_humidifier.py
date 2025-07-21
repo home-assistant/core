@@ -157,7 +157,7 @@ async def test_turn_on_unsupported(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test turn on service."""
+    """Test turn on service (not supported by this device)."""
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -183,7 +183,7 @@ async def test_turn_off_unsupported(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test turn off service."""
+    """Test turn off service (not supported by this device)."""
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -209,7 +209,7 @@ async def test_set_humidity_unsupported(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test set humidity service."""
+    """Test set humidity service (not supported by this device)."""
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
