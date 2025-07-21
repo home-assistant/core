@@ -13,13 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .models import MyStromConfigEntry
 
 
 @dataclass(frozen=True)
@@ -56,11 +56,11 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MyStromConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device: MyStromSwitch = hass.data[DOMAIN][entry.entry_id].device
+    device: MyStromSwitch = entry.runtime_data.device
 
     async_add_entities(
         MyStromSwitchSensor(device, entry.title, description)

@@ -124,7 +124,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: device.ip_address},
             )
 
-        current_unique_ids = self._async_current_ids()
+        current_unique_ids = self._async_current_ids(include_ignore=False)
         current_hosts = {
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)

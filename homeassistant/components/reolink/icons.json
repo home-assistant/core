@@ -405,7 +405,12 @@
         "default": "mdi:thermometer"
       },
       "battery_state": {
-        "default": "mdi:battery-charging"
+        "default": "mdi:battery-unknown",
+        "state": {
+          "discharging": "mdi:battery-minus-variant",
+          "charging": "mdi:battery-charging",
+          "chargecomplete": "mdi:battery-check"
+        }
       },
       "day_night_state": {
         "default": "mdi:theme-light-dark"

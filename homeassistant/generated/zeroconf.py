@@ -534,6 +534,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
+        },
+    ],
     "_homeconnect._tcp.local.": [
         {
             "domain": "home_connect",
@@ -562,6 +567,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
         },
         {
             "domain": "eheimdigital",
@@ -769,6 +778,16 @@ ZEROCONF = {
     "_owserver._tcp.local.": [
         {
             "domain": "onewire",
+        },
+    ],
+    "_philipstv_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
+    "_philipstv_s_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
         },
     ],
     "_plexmediasvr._tcp.local.": [

@@ -118,7 +118,7 @@
       "water_level": {
         "name": "Water level",
         "state": {
-          "empty": "Empty",
+          "empty": "[%key:common::state::empty%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
           "high": "[%key:common::state::high%]"
@@ -242,6 +242,35 @@
             "state": {
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "sunset": "Sunset",
+              "vitality": "Vitality",
+              "flashing": "Flashing",
+              "strobe": "Strobe",
+              "fade": "Fade",
+              "smooth": "Smooth",
+              "forest": "Forest",
+              "ocean": "Ocean",
+              "autumn": "Autumn",
+              "cool": "Cool",
+              "flow": "Flow",
+              "relax": "Relax",
+              "modern": "Modern",
+              "rose": "Rose",
+              "colorful": "Colorful",
+              "flickering": "Flickering",
+              "breathing": "Breathing"
             }
           }
         }

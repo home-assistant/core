@@ -75,7 +75,7 @@ async def test_config_flow(
         next_step_id: str,
     ) -> ConfigFlowResult:
         if next_step_id == "start_otbr_addon":
-            next_step_id = "confirm_otbr"
+            next_step_id = "pre_confirm_otbr"
 
         return await getattr(self, f"async_step_{next_step_id}")(user_input={})
 
@@ -100,14 +100,22 @@ async def test_config_flow(
             ),
         ),
     ):
-        result = await hass.config_entries.flow.async_configure(
+        confirm_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": step},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == (
+            "confirm_zigbee" if step == STEP_PICK_FIRMWARE_ZIGBEE else "confirm_otbr"
+        )
 
-    config_entry = result["result"]
+        create_result = await hass.config_entries.flow.async_configure(
+            confirm_result["flow_id"], user_input={}
+        )
+
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = create_result["result"]
     assert config_entry.data == {
         "firmware": fw_type.value,
         "firmware_version": fw_version,
@@ -171,7 +179,7 @@ async def test_options_flow(
     assert result["description_placeholders"]["model"] == model
 
     async def mock_async_step_pick_firmware_zigbee(self, data):
-        return await self.async_step_confirm_zigbee(user_input={})
+        return await self.async_step_pre_confirm_zigbee()
 
     with (
         patch(
@@ -190,13 +198,20 @@ async def test_options_flow(
             ),
         ),
     ):
-        result = await hass.config_entries.options.async_configure(
+        confirm_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"] is True
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == "confirm_zigbee"
+
+        create_result = await hass.config_entries.options.async_configure(
+            confirm_result["flow_id"], user_input={}
+        )
+
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    assert create_result["result"] is True
 
     assert config_entry.data == {
         "firmware": "ezsp",
