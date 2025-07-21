@@ -85,8 +85,8 @@ rules:
     status: todo
     comment: The integration is async, but underlying huawei-lte-api is not.
   inject-websession:
-    status: todo
-    comment: Underlying huawei-lte-api does not use aiohttp or httpx, so not sure if we can do anything about this.
+    status: exempt
+    comment: Underlying huawei-lte-api does not use aiohttp or httpx, so this does not apply.
   strict-typing:
     status: todo
     comment: Integration is strictly typechecked already, and huawei-lte-api and url-normalize are in order. stringcase is not typed.
