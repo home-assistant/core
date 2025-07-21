@@ -7,16 +7,27 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME
+import voluptuous as vol
+
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NSConfigEntry
 from .api import get_ns_api_version
-from .const import CONF_FROM, CONF_TO, CONF_VIA, DOMAIN
+from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 from .ns_logging import UnavailabilityLogger
 from .utils import format_time, get_trip_attribute
@@ -25,6 +36,25 @@ _LOGGER = logging.getLogger(__name__)
 
 # Limit parallel updates to prevent overwhelming the NS API
 PARALLEL_UPDATES = 0  # 0 = unlimited, since we use coordinator pattern
+
+# Schema for a single route in YAML
+ROUTE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FROM): cv.string,
+        vol.Required(CONF_TO): cv.string,
+        vol.Optional(CONF_VIA): cv.string,
+        vol.Optional(CONF_TIME): cv.string,
+    }
+)
+
+# Platform schema for sensor YAML configuration
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_ROUTES, default=[]): vol.All(cv.ensure_list, [ROUTE_SCHEMA]),
+    }
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -145,12 +175,61 @@ NEXT_DEPARTURE_DESCRIPTION = NSSensorEntityDescription(
 )
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up NS sensors from YAML sensor platform configuration.
+
+    This function handles the legacy YAML sensor platform configuration format:
+    sensor:
+      - platform: nederlandse_spoorwegen
+        api_key: ...
+        routes: ...
+
+    It creates an import flow to migrate the configuration to the new config entry format,
+    which provides a better user experience with the UI and subentries for routes.
+    """
+    _LOGGER.warning(
+        "YAML sensor platform configuration for Nederlandse Spoorwegen is deprecated. "
+        "Your configuration is being imported to the UI. "
+        "Please remove the sensor platform configuration from YAML after import is complete"
+    )
+
+    # Create import flow for sensor platform configuration
+    # The config flow will handle validation and integration setup
+    if config:
+        _LOGGER.debug("Importing sensor platform YAML configuration: %s", config)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "import"},
+                data=config,  # Pass the sensor platform config to the flow
+            )
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up NS sensors from a config entry."""
+    """Set up NS sensors from a config entry.
+
+    This function handles the modern config entry-based setup where:
+    - The integration is configured via UI or imported from YAML
+    - Routes are stored as subentries for better management
+    - Each route gets its own device in the device registry
+    - Sensors are created based on the coordinator data
+
+    This is the preferred setup method as it provides:
+    - Better UI/UX with proper config flows
+    - Individual route management via subentries
+    - Proper device registry integration
+    - Easier maintenance and debugging
+    """
     coordinator = entry.runtime_data.coordinator
     if coordinator is None:
         _LOGGER.error("Coordinator not found in runtime_data for NS integration")

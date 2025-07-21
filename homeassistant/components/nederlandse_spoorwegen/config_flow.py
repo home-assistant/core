@@ -87,6 +87,15 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Integration already configured, skipping YAML import")
             return self.async_abort(reason="already_configured")
 
+        # The sensor platform should pass the platform config directly
+        # This contains: api_key, routes (list)
+        if CONF_API_KEY not in import_data:
+            _LOGGER.error(
+                "No API key found in YAML import data "
+                "Expected sensor platform configuration with api_key"
+            )
+            return self.async_abort(reason="unknown")
+
         # Validate API key
         api_key = import_data[CONF_API_KEY]
         api_wrapper = NSAPIWrapper(self.hass, api_key)
@@ -103,24 +112,28 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{DOMAIN}")
         self._abort_if_unique_id_configured()
 
-        config_entry = self.async_create_entry(
-            title="Nederlandse Spoorwegen",
-            data={CONF_API_KEY: api_key},
-        )
-
-        # If there are routes in the YAML, create subentries
+        # Extract routes from sensor platform config
         routes = import_data.get(CONF_ROUTES, [])
         if routes:
-            _LOGGER.info("Importing %d routes from YAML configuration", len(routes))
-            # Note: The actual subentry creation will be handled by the migration
-            # function in async_setup_entry since we can't create subentries here
-            # We'll store the routes temporarily in the entry data
+            _LOGGER.info(
+                "Importing %d routes from sensor platform YAML configuration",
+                len(routes),
+            )
+            # Store routes in the entry data for migration
             config_entry = self.async_create_entry(
                 title="Nederlandse Spoorwegen",
                 data={
                     CONF_API_KEY: api_key,
-                    CONF_ROUTES: routes,  # Will be migrated to subentries
+                    CONF_ROUTES: routes,  # Will be migrated to subentries in async_setup_entry
                 },
+            )
+        else:
+            _LOGGER.info(
+                "No routes found in YAML configuration, creating entry with API key only"
+            )
+            config_entry = self.async_create_entry(
+                title="Nederlandse Spoorwegen",
+                data={CONF_API_KEY: api_key},
             )
 
         return config_entry

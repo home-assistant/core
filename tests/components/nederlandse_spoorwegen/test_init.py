@@ -8,7 +8,6 @@ from homeassistant.components.nederlandse_spoorwegen import (
     DOMAIN,
     NSRuntimeData,
     async_reload_entry,
-    async_setup,
     async_setup_entry,
     async_unload_entry,
 )
@@ -39,13 +38,6 @@ def mock_config_entry():
     entry.async_on_unload = MagicMock()
     entry.add_update_listener = MagicMock()
     return entry
-
-
-async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test async_setup completes successfully."""
-    result = await async_setup(hass, {})
-
-    assert result is True
 
 
 async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
