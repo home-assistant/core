@@ -13,6 +13,8 @@ from .sensor import CONF_API_KEY, CONF_TRAVEL_TIMES, DOMAIN
 
 DIALOG_API_KEY = "API Key"
 DIALOG_NAME = "Name"
+CONF_TITLE = "title"
+CONF_DATA = "data"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,4 +71,14 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+        """Handle a flow initialized by import."""
+        return self.async_create_entry(
+            title=DOMAIN,
+            data={
+                CONF_API_KEY: import_info[CONF_API_KEY],
+                CONF_TRAVEL_TIMES: import_info[CONF_TRAVEL_TIMES],
+            },
         )

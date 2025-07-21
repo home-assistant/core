@@ -13,12 +13,17 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +44,31 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         ],
     }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Migrate a platform-style wsdot to entry-style."""
+    # old-style config was entered by hand. make sure all values are valid
+    api_key = config[CONF_API_KEY]
+    session = async_get_clientsession(hass)
+    try:
+        # check for valid API Key
+        wsdot_api.WsdotTravelTimes(
+            api_key=api_key, session=session
+        ).get_all_travel_times()
+    except wsdot_api.WsdotTravelError:
+        raise PlatformNotReady
+
+    for old_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        await hass.config_entries.async_remove(old_entry.entry_id)
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
 
 async def async_setup_entry(
