@@ -23,6 +23,9 @@ from .utils import format_time, get_trip_attribute
 
 _LOGGER = logging.getLogger(__name__)
 
+# Limit parallel updates to prevent overwhelming the NS API
+PARALLEL_UPDATES = 0  # 0 = unlimited, since we use coordinator pattern
+
 
 @dataclass(frozen=True, kw_only=True)
 class NSSensorEntityDescription(SensorEntityDescription):
