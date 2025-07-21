@@ -9,6 +9,7 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONFIG_LIGHT, CONFIG_STEAMER_AND_LIGHT
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
@@ -24,8 +25,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Light is configured for this sauna.
-    if coordinator.data.config >= 2:
-        async_add_entities([HuumLight(coordinator)], True)
+    if coordinator.data.config in [CONFIG_LIGHT, CONFIG_STEAMER_AND_LIGHT]:
+        async_add_entities([HuumLight(coordinator)])
 
 
 class HuumLight(HuumBaseEntity, LightEntity):
