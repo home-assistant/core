@@ -30,12 +30,16 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
+    CALENDAR_EVENT_TYPES,
+    CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CALENDAR_EVENTS,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
@@ -51,6 +55,15 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
         ): int,
+        vol.Optional(
+            CONF_CALENDAR_EVENTS, default=DEFAULT_CALENDAR_EVENTS
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=CALENDAR_EVENT_TYPES,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
     }
 )
 
