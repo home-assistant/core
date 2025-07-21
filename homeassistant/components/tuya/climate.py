@@ -308,18 +308,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if TYPE_CHECKING:
-            # We can rely on supported_features from __init__
+            # guarded by supported features
             assert self._fan_mode_dp_code is not None
 
         self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if self._set_humidity is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
-            )
+        if TYPE_CHECKING:
+            # guarded by supported features
+            assert self._set_humidity is not None
 
         self._send_command(
             [
