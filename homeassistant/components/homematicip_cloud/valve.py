@@ -22,14 +22,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP valves from a config entry."""
     hap = config_entry.runtime_data
-    entities: list[HomematicipGenericEntity] = []
-    for device in hap.home.devices:
-        entities.extend(
-            HomematicipWateringValve(hap, device, ch.index)
-            for ch in device.functionalChannels
-            if ch.functionalChannelType
-            == FunctionalChannelType.WATERING_ACTUATOR_CHANNEL
-        )
+    entities = [
+        HomematicipWateringValve(hap, device, ch.index)
+        for device in hap.home.devices
+        for ch in device.functionalChannels
+        if ch.functionalChannelType == FunctionalChannelType.WATERING_ACTUATOR_CHANNEL
+    ]
 
     async_add_entities(entities)
 
