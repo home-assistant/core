@@ -988,7 +988,7 @@ habiticalib==0.4.0
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.107.1
+hass-nabucasa==0.108.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1925,7 +1925,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2025.7.2
+pyschlage==2025.7.3
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
