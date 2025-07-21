@@ -1161,7 +1161,7 @@ letpot==0.6.1
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.6
 
-# homeassistant.components.librehardwaremonitor
+# homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.2.1
 
 # homeassistant.components.mikrotik

@@ -14,10 +14,10 @@ from librehardwaremonitor_api.model import (
 )
 import pytest
 
-from homeassistant.components.librehardwaremonitor import (
+from homeassistant.components.libre_hardware_monitor import (
     LibreHardwareMonitorCoordinator,
 )
-from homeassistant.components.librehardwaremonitor.const import DOMAIN
+from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed

@@ -3477,7 +3477,7 @@
         }
       }
     },
-    "librehardwaremonitor": {
+    "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "hub",
       "config_flow": true,
