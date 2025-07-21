@@ -674,6 +674,9 @@
     }
   },
   "exceptions": {
+    "api_key_required": {
+      "message": "API key is required. Please reauthenticate this integration to provide an API key."
+    },
     "protect_version": {
       "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}."
     }

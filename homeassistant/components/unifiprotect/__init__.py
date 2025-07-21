@@ -16,7 +16,7 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -72,6 +72,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
+    # Check if API key is missing and trigger reauth
+    if not entry.data.get(CONF_API_KEY):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "reauth", "entry_id": entry.entry_id},
+                data=entry.data,
+            )
+        )
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        )
+
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
 
