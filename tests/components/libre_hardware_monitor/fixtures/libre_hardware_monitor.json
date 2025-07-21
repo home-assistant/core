@@ -138,9 +138,9 @@
                     {
                       "id": 14,
                       "Text": "System Fan #1",
-                      "Min": "0 RPM",
-                      "Value": "0 RPM",
-                      "Max": "0 RPM",
+                      "Min": "-",
+                      "Value": "-",
+                      "Max": "-",
                       "SensorId": "/lpc/nct6687d/0/fan/2",
                       "Type": "Fan",
                       "ImageURL": "images/transparent.png",
