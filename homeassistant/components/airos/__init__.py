@@ -6,17 +6,14 @@ import logging
 
 from airos.airos8 import AirOS
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import AirOSDataUpdateCoordinator
+from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
-
-type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airos.airos8 import AirOS
 from airos.exceptions import (
@@ -14,8 +14,7 @@ from airos.exceptions import (
     DeviceConnectionError,
 )
 
-if TYPE_CHECKING:
-    from . import AirOSConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -30,6 +29,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
 
 
 @dataclass
