@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -109,6 +110,8 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    reauth_entry: CoinbaseConfigEntry
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -138,6 +141,58 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["title"], data=user_input)
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication flow."""
+        self.reauth_entry = self._get_reauth_entry()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={
+                    "account_name": self.reauth_entry.title,
+                },
+                errors=errors,
+            )
+
+        try:
+            await validate_api(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidKey:
+            errors["base"] = "invalid_auth_key"
+        except InvalidSecret:
+            errors["base"] = "invalid_auth_secret"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return self.async_update_reload_and_abort(
+                self.reauth_entry,
+                data_updates=user_input,
+                reason="reauth_successful",
+            )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            description_placeholders={
+                "account_name": self.reauth_entry.title,
+            },
+            errors=errors,
         )
 
     @staticmethod

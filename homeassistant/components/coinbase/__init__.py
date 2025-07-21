@@ -11,6 +11,7 @@ from coinbase.rest.rest_base import HTTPError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import Throttle
 
@@ -63,6 +64,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) ->
 
 def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
     """Create and update a Coinbase Data instance."""
+
+    # Check if user is using deprecated v2 API credentials
+    if "organizations" not in entry.data[CONF_API_KEY]:
+        # Trigger reauthentication to ask user for v3 credentials
+        raise ConfigEntryAuthFailed(
+            "Your Coinbase API key appears to be for the deprecated v2 API. "
+            "Please reconfigure with a new API key created for the v3 API. "
+            "Visit https://www.coinbase.com/developer-platform to create new credentials."
+        )
+
     client = RESTClient(
         api_key=entry.data[CONF_API_KEY], api_secret=entry.data[CONF_API_TOKEN]
     )
