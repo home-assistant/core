@@ -13,7 +13,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .coordinator import AirOSData, AirOSDataUpdateCoordinator
+from .coordinator import AirOSDataUpdateCoordinator
 
 
 class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
@@ -44,8 +44,3 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
             name=data.hostname,
             sw_version=host_data.get(AIROS_FWVERSION_KEY),
         )
-
-    @property
-    def _airdata(self) -> AirOSData:
-        """Return the AirOS data."""
-        return self.coordinator.data
