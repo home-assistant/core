@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .conftest import LHM_SAMPLE_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -81,14 +80,15 @@ async def test_sensors_are_updated(
 
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "39.4"
+    assert state.state == "52.8"
 
-    updated_data = dict(LHM_SAMPLE_DATA.sensor_data)
+    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
     updated_data["amdcpu-0-temperature-3"] = replace(
         updated_data["amdcpu-0-temperature-3"], value="42,1"
     )
     mock_lhm_client.get_data.return_value = replace(
-        LHM_SAMPLE_DATA, sensor_data=MappingProxyType(updated_data)
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(updated_data),
     )
 
     freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
@@ -117,12 +117,13 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
 
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "39.4"
+    assert state.state == "52.8"
 
-    updated_data = dict(LHM_SAMPLE_DATA.sensor_data)
+    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
     del updated_data["amdcpu-0-temperature-3"]
     mock_lhm_client.get_data.return_value = replace(
-        LHM_SAMPLE_DATA, sensor_data=MappingProxyType(updated_data)
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(updated_data),
     )
 
     freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))

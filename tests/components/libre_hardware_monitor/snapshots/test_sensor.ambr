@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D Core (Tctl/Tdie) Temperature',
-      'max_value': '62.8',
-      'min_value': '40.6',
+      'max_value': '69.1',
+      'min_value': '39.4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -50,7 +50,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '41.9',
+    'state': '55.5',
   })
 # ---
 # name: test_sensors_are_created[sensor.amd_ryzen_7_7800x3d_cpu_total_load-entry]
@@ -94,7 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D CPU Total Load',
-      'max_value': '15.9',
+      'max_value': '55.8',
       'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -104,7 +104,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.9',
+    'state': '9.1',
   })
 # ---
 # name: test_sensors_are_created[sensor.amd_ryzen_7_7800x3d_package_power-entry]
@@ -148,8 +148,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D Package Power',
-      'max_value': '46.6',
-      'min_value': '30.7',
+      'max_value': '70.1',
+      'min_value': '25.1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'W',
     }),
@@ -158,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.0',
+    'state': '39.6',
   })
 # ---
 # name: test_sensors_are_created[sensor.amd_ryzen_7_7800x3d_package_temperature-entry]
@@ -202,8 +202,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D Package Temperature',
-      'max_value': '73.0',
-      'min_value': '37.4',
+      'max_value': '74.0',
+      'min_value': '38.4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -212,7 +212,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '39.4',
+    'state': '52.8',
   })
 # ---
 # name: test_sensors_are_created[sensor.amd_ryzen_7_7800x3d_vddcr_soc_voltage-entry]
@@ -256,7 +256,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D VDDCR SoC Voltage',
-      'max_value': '1.305',
+      'max_value': '1.306',
       'min_value': '1.305',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'V',
@@ -310,8 +310,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'AMD Ryzen 7 7800X3D VDDCR Voltage',
-      'max_value': '1.162',
-      'min_value': '0.519',
+      'max_value': '1.173',
+      'min_value': '0.452',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'V',
     }),
@@ -320,7 +320,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.081',
+    'state': '1.083',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage-entry]
@@ -365,7 +365,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) +12V Voltage',
       'max_value': '12.096',
-      'min_value': '12.072',
+      'min_value': '12.048',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'V',
     }),
@@ -418,8 +418,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) +5V Voltage',
-      'max_value': '5.060',
-      'min_value': '5.050',
+      'max_value': '5.050',
+      'min_value': '5.020',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'V',
     }),
@@ -428,7 +428,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.050',
+    'state': '5.030',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan-entry]
@@ -526,8 +526,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Temperature',
-      'max_value': '62.0',
-      'min_value': '40.0',
+      'max_value': '68.0',
+      'min_value': '39.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -536,7 +536,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '42.0',
+    'state': '55.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan-entry]
@@ -627,23 +627,24 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'lhm-lpc-nct6687d-0-fan-2',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'RPM',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-      'max_value': '-',
-      'min_value': '-',
+      'max_value': '0',
+      'min_value': '0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_temperature-entry]
@@ -687,8 +688,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Temperature',
-      'max_value': '31.5',
-      'min_value': '30.5',
+      'max_value': '46.5',
+      'min_value': '32.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -697,7 +698,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.5',
+    'state': '45.5',
   })
 # ---
 # name: test_sensors_are_created[sensor.msi_mag_b650m_mortar_wifi_ms_7d76_vcore_voltage-entry]
@@ -741,8 +742,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) Vcore Voltage',
-      'max_value': '1.316',
-      'min_value': '1.314',
+      'max_value': '1.318',
+      'min_value': '1.310',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'V',
     }),
@@ -751,7 +752,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.314',
+    'state': '1.312',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_core_clock-entry]
@@ -795,7 +796,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Clock',
-      'max_value': '2550.0',
+      'max_value': '2805.0',
       'min_value': '210.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'MHz',
@@ -805,7 +806,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '210.0',
+    'state': '2805.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_core_load-entry]
@@ -849,7 +850,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Load',
-      'max_value': '2.0',
+      'max_value': '19.0',
       'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -859,7 +860,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '5.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_core_temperature-entry]
@@ -903,8 +904,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Temperature',
-      'max_value': '25.0',
-      'min_value': '23.0',
+      'max_value': '37.0',
+      'min_value': '25.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -913,7 +914,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '23.0',
+    'state': '36.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_fan_1_fan-entry]
@@ -1065,8 +1066,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Hot Spot Temperature',
-      'max_value': '32.2',
-      'min_value': '30.8',
+      'max_value': '43.3',
+      'min_value': '32.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°C',
     }),
@@ -1075,7 +1076,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.0',
+    'state': '43.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_memory_clock-entry]
@@ -1119,7 +1120,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Memory Clock',
-      'max_value': '11752.0',
+      'max_value': '11502.0',
       'min_value': '405.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'MHz',
@@ -1129,7 +1130,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '405.0',
+    'state': '11252.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_memory_controller_load-entry]
@@ -1173,7 +1174,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Memory Controller Load',
-      'max_value': '1.0',
+      'max_value': '49.0',
       'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -1227,8 +1228,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Package Power',
-      'max_value': '42.3',
-      'min_value': '10.2',
+      'max_value': '66.6',
+      'min_value': '4.1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'W',
     }),
@@ -1237,7 +1238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.3',
+    'state': '59.6',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput-entry]
@@ -1274,24 +1275,24 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'lhm-gpu-nvidia-0-throughput-1',
-    'unit_of_measurement': 'KB/s',
+    'unit_of_measurement': 'MB/s',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-      'max_value': '300.0',
-      'min_value': '50.0',
+      'max_value': '2422.8',
+      'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'KB/s',
+      'unit_of_measurement': 'MB/s',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '166.1',
   })
 # ---
 # name: test_sensors_are_created[sensor.nvidia_geforce_rtx_4080_super_gpu_video_engine_load-entry]
@@ -1335,7 +1336,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Video Engine Load',
-      'max_value': '0.0',
+      'max_value': '99.0',
       'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -1345,7 +1346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '97.0',
   })
 # ---
 # name: test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry[valid_sensor_data]
@@ -1354,7 +1355,7 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) +12V Voltage',
         'max_value': '12.096',
-        'min_value': '12.072',
+        'min_value': '12.048',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'V',
       }),
@@ -1368,8 +1369,8 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) +5V Voltage',
-        'max_value': '5.060',
-        'min_value': '5.050',
+        'max_value': '5.050',
+        'min_value': '5.020',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'V',
       }),
@@ -1378,13 +1379,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '5.050',
+      'state': '5.030',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) Vcore Voltage',
-        'max_value': '1.316',
-        'min_value': '1.314',
+        'max_value': '1.318',
+        'min_value': '1.310',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'V',
       }),
@@ -1393,13 +1394,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1.314',
+      'state': '1.312',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Temperature',
-        'max_value': '62.0',
-        'min_value': '40.0',
+        'max_value': '68.0',
+        'min_value': '39.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1408,13 +1409,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '42.0',
+      'state': '55.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Temperature',
-        'max_value': '31.5',
-        'min_value': '30.5',
+        'max_value': '46.5',
+        'min_value': '32.5',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1423,7 +1424,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '31.5',
+      'state': '45.5',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1458,22 +1459,23 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-        'max_value': '-',
-        'min_value': '-',
+        'max_value': '0',
+        'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'unknown',
+      'state': '0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D VDDCR Voltage',
-        'max_value': '1.162',
-        'min_value': '0.519',
+        'max_value': '1.173',
+        'min_value': '0.452',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'V',
       }),
@@ -1482,12 +1484,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1.081',
+      'state': '1.083',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D VDDCR SoC Voltage',
-        'max_value': '1.305',
+        'max_value': '1.306',
         'min_value': '1.305',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'V',
@@ -1502,8 +1504,8 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D Package Power',
-        'max_value': '46.6',
-        'min_value': '30.7',
+        'max_value': '70.1',
+        'min_value': '25.1',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'W',
       }),
@@ -1512,13 +1514,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '31.0',
+      'state': '39.6',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D Core (Tctl/Tdie) Temperature',
-        'max_value': '62.8',
-        'min_value': '40.6',
+        'max_value': '69.1',
+        'min_value': '39.4',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1527,13 +1529,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '41.9',
+      'state': '55.5',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D Package Temperature',
-        'max_value': '73.0',
-        'min_value': '37.4',
+        'max_value': '74.0',
+        'min_value': '38.4',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1542,12 +1544,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '39.4',
+      'state': '52.8',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'AMD Ryzen 7 7800X3D CPU Total Load',
-        'max_value': '15.9',
+        'max_value': '55.8',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -1557,13 +1559,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.9',
+      'state': '9.1',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Package Power',
-        'max_value': '42.3',
-        'min_value': '10.2',
+        'max_value': '66.6',
+        'min_value': '4.1',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'W',
       }),
@@ -1572,12 +1574,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '10.3',
+      'state': '59.6',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Clock',
-        'max_value': '2550.0',
+        'max_value': '2805.0',
         'min_value': '210.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'MHz',
@@ -1587,12 +1589,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '210.0',
+      'state': '2805.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Memory Clock',
-        'max_value': '11752.0',
+        'max_value': '11502.0',
         'min_value': '405.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'MHz',
@@ -1602,13 +1604,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '405.0',
+      'state': '11252.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Temperature',
-        'max_value': '25.0',
-        'min_value': '23.0',
+        'max_value': '37.0',
+        'min_value': '25.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1617,13 +1619,13 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '23.0',
+      'state': '36.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Hot Spot Temperature',
-        'max_value': '32.2',
-        'min_value': '30.8',
+        'max_value': '43.3',
+        'min_value': '32.5',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°C',
       }),
@@ -1632,12 +1634,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '31.0',
+      'state': '43.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Core Load',
-        'max_value': '2.0',
+        'max_value': '19.0',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -1647,12 +1649,12 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.0',
+      'state': '5.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Memory Controller Load',
-        'max_value': '1.0',
+        'max_value': '49.0',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -1667,7 +1669,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU Video Engine Load',
-        'max_value': '0.0',
+        'max_value': '99.0',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -1677,7 +1679,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.0',
+      'state': '97.0',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1712,17 +1714,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': '300.0',
-        'min_value': '50.0',
+        'max_value': '2422.8',
+        'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'KB/s',
+        'unit_of_measurement': 'MB/s',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '50.0',
+      'state': '166.1',
     }),
   ])
 # ---
