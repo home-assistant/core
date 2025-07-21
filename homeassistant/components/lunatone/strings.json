@@ -8,15 +8,30 @@
         "description": "Connect to the API of your Lunatone DALI IoT Gateway.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL to the Lunatone gateway device."
         }
       },
       "dali": {
         "data": {
           "device_scan_method": "Select a DALI device scan method"
+        },
+        "data_description": {
+          "device_scan_method": "Available DALI device scan methods"
         }
       },
       "finish": {
         "description": "DALI device scan completed successfully"
+      },
+      "reconfigure": {
+        "description": "Update the URL.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+        }
       }
     },
     "error": {
