@@ -88,7 +88,7 @@ async def async_setup_entry(
 
 
 class ServerStatusSensor(LMSStatusEntity, SensorEntity):
-    """LMS Status based sensor from LMS via cooridnatior."""
+    """LMS Status based sensor from LMS via coordinator."""
 
     @property
     def native_value(self) -> StateType:
