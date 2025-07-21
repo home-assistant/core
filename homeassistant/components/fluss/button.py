@@ -24,11 +24,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     devices = coordinator.data
 
-    entities: list[FlussButton] = []
-    for device_id, device in devices.items():
-        entities.append(FlussButton(coordinator, device_id, device))
-
-    async_add_entities(entities)
+    async_add_entities(FlussButton(coordinator, device_id, device) for device_id, device in devices.items())
 
 
 class FlussButton(FlussEntity, ButtonEntity):
