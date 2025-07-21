@@ -8,6 +8,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.components.redgtech.const import DOMAIN
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
+from typing import Generator, Callable, Any
 
 
 TEST_EMAIL = "test@example.com"
@@ -16,13 +17,18 @@ FAKE_TOKEN = "fake_token"
 
 
 @pytest.fixture
-def mock_redgtech_api():
-    """Mock RedgtechAPI class."""
+def mock_redgtech_api() -> Generator[Callable[..., AsyncMock], None, None]:
+    """Mock the Redgtech API."""
     with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI") as mock_api_class:
-        mock_api = AsyncMock()
-        mock_api.login.return_value = FAKE_TOKEN
-        mock_api_class.return_value = mock_api
-        yield mock_api
+        def _get_mock(side_effect: Any = None) -> AsyncMock:
+            mock_api = AsyncMock()
+            if side_effect is not None:
+                mock_api.login.side_effect = side_effect
+            else:
+                mock_api.login.return_value = FAKE_TOKEN
+            mock_api_class.return_value = mock_api
+            return mock_api
+        yield _get_mock
 
 
 @pytest.mark.parametrize(
@@ -33,28 +39,33 @@ def mock_redgtech_api():
         (Exception("Generic error"), "unknown"),
     ],
 )
-async def test_user_step_errors(hass: HomeAssistant, side_effect, expected_error):
-    """Tests error handling at the user's step."""
+async def test_user_step_errors(
+    hass: HomeAssistant,
+    mock_redgtech_api: Callable[..., AsyncMock],
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test user step with various errors."""
     user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
+    mock_api = mock_redgtech_api(side_effect=side_effect)
 
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI") as mock_api_class:
-        mock_api = AsyncMock()
-        mock_api.login.side_effect = side_effect
-        mock_api_class.return_value = mock_api
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=user_input
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=user_input
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
     mock_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
 
 
-async def test_user_step_creates_entry(hass: HomeAssistant, mock_redgtech_api):
+async def test_user_step_creates_entry(
+    hass: HomeAssistant,
+    mock_redgtech_api: Callable[..., AsyncMock],
+) -> None:
     """Tests the correct creation of the entry in the configuration."""
     user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
 
+    mock_api = mock_redgtech_api()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=user_input
     )
@@ -62,10 +73,13 @@ async def test_user_step_creates_entry(hass: HomeAssistant, mock_redgtech_api):
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_EMAIL
     assert result["data"] == user_input
-    mock_redgtech_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
+    mock_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
 
 
-async def test_user_step_duplicate_entry(hass: HomeAssistant, mock_redgtech_api):
+async def test_user_step_duplicate_entry(
+    hass: HomeAssistant,
+    mock_redgtech_api: Callable[..., AsyncMock],
+) -> None:
     """Test attempt to add duplicate entry."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -76,6 +90,7 @@ async def test_user_step_duplicate_entry(hass: HomeAssistant, mock_redgtech_api)
 
     user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
 
+    mock_api = mock_redgtech_api()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=user_input
     )
@@ -83,4 +98,4 @@ async def test_user_step_duplicate_entry(hass: HomeAssistant, mock_redgtech_api)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Login should not be called if already configured
-    mock_redgtech_api.login.assert_not_called()
+    mock_api.login.assert_not_called()
