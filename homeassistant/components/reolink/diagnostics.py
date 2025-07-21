@@ -24,6 +24,8 @@ async def async_get_config_entry_diagnostics(
         IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
         IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
+        if (signal := api.wifi_signal(ch)) is not None:
+            IPC_cam[ch]["WiFi signal"] = signal
 
     chimes: dict[int, dict[str, Any]] = {}
     for chime in api.chime_list:
