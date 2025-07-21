@@ -873,7 +873,7 @@ async def test_options_flow_abort_no_scripts_support(
 async def test_options_flow_abort_zigbee_firmware(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test ble options abort if Zigbee firmware is used."""
+    """Test ble options abort if Zigbee firmware is active."""
     monkeypatch.setattr(mock_rpc_device, "zigbee_firmware", True)
     entry = await init_integration(hass, 4)
 
