@@ -7,9 +7,8 @@ from functools import partial
 from typing import Any
 
 from psnawp_api import PSNAWP
-from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
 from psnawp_api.models.client import Client
-from psnawp_api.models.trophies import PlatformType
+from psnawp_api.models.trophies import PlatformType, TrophySummary, TrophyTitle
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
 
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import SUPPORTED_PLATFORMS
 
-LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4}
+LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4, PlatformType.PS_VITA}
 
 
 @dataclass
@@ -39,22 +38,40 @@ class PlaystationNetworkData:
     presence: dict[str, Any] = field(default_factory=dict)
     username: str = ""
     account_id: str = ""
-    available: bool = False
+    availability: str = "unavailable"
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
+    trophy_summary: TrophySummary | None = None
+    profile: dict[str, Any] = field(default_factory=dict)
+    shareable_profile_link: dict[str, str] = field(default_factory=dict)
 
 
 class PlaystationNetwork:
     """Helper Class to return playstation network data in an easy to use structure."""
 
+    shareable_profile_link: dict[str, str]
+
     def __init__(self, hass: HomeAssistant, npsso: str) -> None:
         """Initialize the class with the npsso token."""
         rate = Rate(300, Duration.MINUTE * 15)
         self.psn = PSNAWP(npsso, rate_limit=rate)
-        self.client: Client | None = None
+        self.client: Client
         self.hass = hass
         self.user: User
         self.legacy_profile: dict[str, Any] | None = None
+        self.trophy_titles: list[TrophyTitle] = []
+        self._title_icon_urls: dict[str, str] = {}
+
+    def _setup(self) -> None:
+        """Setup PSN."""
+        self.user = self.psn.user(online_id="me")
+        self.client = self.psn.me()
+        self.shareable_profile_link = self.client.get_shareable_profile_link()
+        self.trophy_titles = list(self.user.trophy_titles())
+
+    async def async_setup(self) -> None:
+        """Setup PSN."""
+        await self.hass.async_add_executor_job(self._setup)
 
     async def get_user(self) -> User:
         """Get the user object from the PlayStation Network."""
@@ -67,15 +84,15 @@ class PlaystationNetwork:
         """Bundle api calls to retrieve data from the PlayStation Network."""
         data = PlaystationNetworkData()
 
-        if not self.client:
-            self.client = self.psn.me()
-
         data.registered_platforms = {
             PlatformType(device["deviceType"])
             for device in self.client.get_account_devices()
         } & SUPPORTED_PLATFORMS
 
         data.presence = self.user.get_presence()
+
+        data.trophy_summary = self.client.trophy_summary()
+        data.profile = self.user.profile()
 
         # check legacy platforms if owned
         if LEGACY_PLATFORMS & data.registered_platforms:
@@ -87,11 +104,8 @@ class PlaystationNetwork:
         data = await self.hass.async_add_executor_job(self.retrieve_psn_data)
         data.username = self.user.online_id
         data.account_id = self.user.account_id
-
-        data.available = (
-            data.presence.get("basicPresence", {}).get("availability")
-            == "availableToPlay"
-        )
+        data.shareable_profile_link = self.shareable_profile_link
+        data.availability = data.presence["basicPresence"]["availability"]
 
         session = SessionData()
         session.platform = PlatformType(
@@ -120,32 +134,58 @@ class PlaystationNetwork:
 
         if self.legacy_profile:
             presence = self.legacy_profile["profile"].get("presences", [])
-            game_title_info = presence[0] if presence else {}
-            session = SessionData()
+            if (game_title_info := presence[0] if presence else {}) and game_title_info[
+                "onlineStatus"
+            ] != "offline":
+                platform = PlatformType(game_title_info["platform"])
 
-            # If primary console isn't online, check legacy platforms for status
-            if not data.available:
-                data.available = game_title_info["onlineStatus"] == "online"
+                if platform is PlatformType.PS4:
+                    media_image_url = game_title_info.get("npTitleIconUrl")
+                elif platform is PlatformType.PS3 and game_title_info.get("npTitleId"):
+                    media_image_url = self.psn.game_title(
+                        game_title_info["npTitleId"],
+                        platform=PlatformType.PS3,
+                        account_id="me",
+                        np_communication_id="",
+                    ).get_title_icon_url()
+                elif platform is PlatformType.PS_VITA and game_title_info.get(
+                    "npTitleId"
+                ):
+                    media_image_url = self.get_psvita_title_icon_url(game_title_info)
+                else:
+                    media_image_url = None
 
-            if "npTitleId" in game_title_info:
-                session.title_id = game_title_info["npTitleId"]
-                session.title_name = game_title_info["titleName"]
-                session.format = game_title_info["platform"]
-                session.platform = game_title_info["platform"]
-                session.status = game_title_info["onlineStatus"]
-                if PlatformType(session.format) is PlatformType.PS4:
-                    session.media_image_url = game_title_info["npTitleIconUrl"]
-                elif PlatformType(session.format) is PlatformType.PS3:
-                    try:
-                        title = self.psn.game_title(
-                            session.title_id, platform=PlatformType.PS3, account_id="me"
-                        )
-                    except PSNAWPNotFoundError:
-                        session.media_image_url = None
-
-                    if title:
-                        session.media_image_url = title.get_title_icon_url()
-
-            if game_title_info["onlineStatus"] == "online":
-                data.active_sessions[session.platform] = session
+                data.active_sessions[platform] = SessionData(
+                    platform=platform,
+                    title_id=game_title_info.get("npTitleId"),
+                    title_name=game_title_info.get("titleName"),
+                    format=platform,
+                    media_image_url=media_image_url,
+                    status=game_title_info["onlineStatus"],
+                )
         return data
+
+    def get_psvita_title_icon_url(self, game_title_info: dict[str, Any]) -> str | None:
+        """Look up title_icon_url from trophy titles data."""
+
+        if url := self._title_icon_urls.get(game_title_info["npTitleId"]):
+            return url
+
+        url = next(
+            (
+                title.title_icon_url
+                for title in self.trophy_titles
+                if game_title_info["titleName"]
+                == normalize_title(title.title_name or "")
+                and next(iter(title.title_platform)) == PlatformType.PS_VITA
+            ),
+            None,
+        )
+        if url is not None:
+            self._title_icon_urls[game_title_info["npTitleId"]] = url
+        return url
+
+
+def normalize_title(name: str) -> str:
+    """Normalize trophy title."""
+    return name.removesuffix("Trophies").removesuffix("Trophy Set").strip()

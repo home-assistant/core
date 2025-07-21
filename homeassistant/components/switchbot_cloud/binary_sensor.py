@@ -48,7 +48,15 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Smart Lock Lite": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
     "Smart Lock Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Ultra": (
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
@@ -69,7 +77,6 @@ async def async_setup_entry(
         for description in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[
             device.device_type
         ]
-        if device.device_type in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES
     )
 
 

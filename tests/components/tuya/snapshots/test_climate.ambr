@@ -1,0 +1,142 @@
+# serializer version: 1
+# name: test_platform_setup_and_discovery[kt_serenelife_slpac905wuk_air_conditioner][climate.air_conditioner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        '1',
+        '2',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 86.0,
+      'min_temp': 16.0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.air_conditioner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.mock_device_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[kt_serenelife_slpac905wuk_air_conditioner][climate.air_conditioner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22.0,
+      'fan_mode': 1,
+      'fan_modes': list([
+        '1',
+        '2',
+      ]),
+      'friendly_name': 'Air Conditioner',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 86.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1.0,
+      'temperature': 23.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.air_conditioner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][climate.wifi_smart_gas_boiler_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.wifi_smart_gas_boiler_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'tuya.bfb45cb8a9452fba66lexg',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][climate.wifi_smart_gas_boiler_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 24.9,
+      'friendly_name': 'WiFi Smart Gas Boiler Thermostat ',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.5,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.wifi_smart_gas_boiler_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---

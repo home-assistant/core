@@ -67,7 +67,6 @@ async def test_select_generic_entity(
             object_id="myselect",
             key=1,
             name="my select",
-            unique_id="my_select",
             options=["a", "b"],
         )
     ]
@@ -79,17 +78,17 @@ async def test_select_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("select.test_myselect")
+    state = hass.states.get("select.test_my_select")
     assert state is not None
     assert state.state == "a"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_myselect", ATTR_OPTION: "b"},
+        {ATTR_ENTITY_ID: "select.test_my_select", ATTR_OPTION: "b"},
         blocking=True,
     )
-    mock_client.select_command.assert_has_calls([call(1, "b")])
+    mock_client.select_command.assert_has_calls([call(1, "b", device_id=0)])
 
 
 async def test_wake_word_select_no_wake_words(
