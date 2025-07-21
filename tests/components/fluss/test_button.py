@@ -12,12 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .coordinator import FlussDataUpdateCoordinator
+
 
 @pytest.fixture
 def mock_hass() -> HomeAssistant:
     """Mock Home Assistant Environment."""
     hass = Mock(spec=HomeAssistant)
     hass.config_entries = Mock()
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
     return hass
 
 
@@ -26,7 +29,7 @@ def mock_entry() -> ConfigEntry:
     """Mock API Entry."""
     entry = Mock(spec=ConfigEntry)
     entry.data = {CONF_API_KEY: "test_api_key"}
-    entry.runtime_data = None  # Will be set in tests
+    entry.runtime_data = None  # Will be set by integration setup
     return entry
 
 
@@ -39,20 +42,40 @@ def mock_api_client() -> FlussApiClient:
     )
     return api_client
 
+
 @pytest.fixture
+def mock_fluss_api_client(mock_api_client: FlussApiClient) -> FlussApiClient:
+    """Mock the FlussApiClient class."""
+    with patch("fluss_api.main.FlussApiClient", return_value=mock_api_client):
+        yield mock_api_client
+
+
+@pytest.fixture
+def mock_coordinator(mock_hass: HomeAssistant, mock_api_client: FlussApiClient) -> FlussDataUpdateCoordinator:
+    """Mock the FlussDataUpdateCoordinator."""
+    coordinator = Mock(spec=FlussDataUpdateCoordinator)
+    coordinator.hass = mock_hass
+    coordinator.api = mock_api_client
+    coordinator.data = {"1": {"deviceId": "1", "deviceName": "Test Device"}}
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+    return coordinator
+
+
+@pytest.mark.asyncio
 async def test_async_setup_entry(
-    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_fluss_api_client: FlussApiClient
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
 ) -> None:
     """Test successful setup of the button."""
-    mock_entry.runtime_data = mock_fluss_api_client
     mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
-    mock_fluss_api_client.async_get_devices.return_value = {
-        "devices": [{"deviceId": "1", "deviceName": "Test Device"}]
-    }
-    await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
+    with patch(
+        "homeassistant.components.fluss.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
+        mock_setup.assert_awaited_once_with(mock_hass, mock_entry)
 
-    # Verify that async_get_devices was called
-    mock_fluss_api_client.async_get_devices.assert_awaited_once()
+    # Verify that async_get_devices was called via coordinator
+    mock_coordinator.api.async_get_devices.assert_awaited_once()
 
     # Verify that FlussButton instances were created correctly
     mock_add_entities.assert_called_once()
@@ -60,7 +83,7 @@ async def test_async_setup_entry(
     assert len(added_entities) == 1
     added_button = added_entities[0]
     assert isinstance(added_button, FlussButton)
-    assert added_button.api == mock_fluss_api_client
+    assert added_button.api == mock_coordinator.api
     assert added_button.device == {"deviceId": "1", "deviceName": "Test Device"}
     assert added_button.name == "Test Device"
     assert added_button.unique_id == "fluss_1"
@@ -91,32 +114,41 @@ async def test_fluss_button() -> None:
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_no_devices(
-    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
 ) -> None:
     """Test setup when no devices are returned."""
-    mock_entry.runtime_data = mock_api_client
-    mock_api_client.async_get_devices = AsyncMock(return_value={"devices": []})
-    async_add_entities = AsyncMock(spec=AddEntitiesCallback)
+    mock_coordinator.data = {}
+    mock_coordinator.api.async_get_devices = AsyncMock(return_value={"devices": []})
+    mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
 
-    await async_setup_entry(mock_hass, mock_entry, async_add_entities)
+    with patch(
+        "homeassistant.components.fluss.async_setup_entry",
+        return_value=True,
+    ):
+        await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
 
     # No buttons should be added
-    async_add_entities.assert_called_once_with([])
+    mock_add_entities.assert_called_once_with([])
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_exception(
-    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
 ) -> None:
     """Test setup entry when async_get_devices raises an exception."""
-    mock_entry.runtime_data = mock_api_client
-    mock_api_client.async_get_devices = AsyncMock(
+    mock_coordinator.api.async_get_devices = AsyncMock(
         side_effect=Exception("Unexpected error")
     )
-    async_add_entities = AsyncMock(spec=AddEntitiesCallback)
+    mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
 
-    with pytest.raises(Exception):  # noqa: B017
-        await async_setup_entry(mock_hass, mock_entry, async_add_entities)
+    with patch(
+        "homeassistant.components.fluss.async_setup_entry",
+        return_value=True,
+    ):
+        await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
+
+    # Verify no entities were added due to exception
+    mock_add_entities.assert_called_once_with([])
 
 
 @pytest.mark.asyncio
@@ -129,6 +161,12 @@ async def test_fluss_button_initialization_success() -> None:
 
     assert button.name == "Test Device"
     assert button._attr_unique_id == "fluss_123"
+    assert button.device_info == DeviceInfo(
+        identifiers={("fluss", "123")},
+        name="Test Device",
+        manufacturer="Fluss",
+        model="Fluss Device",
+    )
 
 
 @pytest.mark.asyncio
