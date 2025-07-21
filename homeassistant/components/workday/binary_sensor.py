@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from holidays import HolidayBase, __version__ as python_holidays_version
 import voluptuous as vol
@@ -26,10 +26,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
+from . import WorkdayConfigEntry
 from .const import ALLOWED_DAYS, CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS, DOMAIN
-
-if TYPE_CHECKING:
-    from . import WorkdayConfigEntry
 
 SERVICE_CHECK_DATE: Final = "check_date"
 CHECK_DATE: Final = "check_date"
