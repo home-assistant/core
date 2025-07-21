@@ -42,7 +42,7 @@ async def async_get_config_entry_diagnostics(
         "Baichuan port": api.baichuan.port,
         "Baichuan only": api.baichuan_only,
         "WiFi connection": api.wifi_connection,
-        "WiFi signal": api.wifi_signal,
+        "WiFi signal": api.wifi_signal(),
         "RTMP enabled": api.rtmp_enabled,
         "RTSP enabled": api.rtsp_enabled,
         "ONVIF enabled": api.onvif_enabled,
