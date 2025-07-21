@@ -558,11 +558,12 @@ async def test_dynamic_polling(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
 
     # Trigger pong to stop polling
-    assert "pong_cb" in callback_holder
-    now = dt_util.now()
-    callback_holder["pong_cb"](now)
+    # assert "pong_cb" in callback_holder
+    # now = dt_util.now()
+    # callback_holder["pong_cb"](now)
 
     # Verify no further polling
     freezer.tick(SCAN_INTERVAL)
@@ -575,7 +576,6 @@ async def test_dynamic_polling(
     assert mock_automower_client.get_status.call_count == 3
     for attrs in poll_values.values():
         attrs.metadata.connected = True
-        attrs.mower.state = MowerStates.OFF
     mock_automower_client.get_status.return_value = poll_values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -583,17 +583,32 @@ async def test_dynamic_polling(
     assert mock_automower_client.get_status.call_count == 3
 
     poll_values[TEST_MOWER_ID].mower.state = MowerStates.IN_OPERATION
+    poll_values[TEST_MOWER_ID].metadata.connected = True
     websocket_values = deepcopy(poll_values)
     callback_holder["data_cb"](websocket_values)
     await hass.async_block_till_done()
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state is not None
-    assert state.state == "docked"
-    assert mock_automower_client.get_status.call_count == 3
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 5
+
+    for attrs in poll_values.values():
+        attrs.metadata.connected = True
+        attrs.mower.state = MowerStates.OFF
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 6
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 6
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 6

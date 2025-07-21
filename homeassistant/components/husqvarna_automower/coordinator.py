@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import MowerDictionary, MowerStates
+from aioautomower.model import MowerDictionary
 from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -103,14 +103,26 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     self._async_add_remove_stay_out_zones()
                 if self.data[mower_id].capabilities.work_areas:
                     self._async_add_remove_work_areas()
+            if not self._should_poll() and self.update_interval is not None:
+                print("All mowers inactive and websocket alive: stop polling")
+                self.update_interval = None
+            print("self.update_interval:", self.update_interval)
+            print("self._should_poll():", self._should_poll())
+            for mower_id in self.data:
+                print(
+                    "self.data[mower_id].metadata.connected and state:",
+                    self.data[mower_id].metadata.connected,
+                    self.data[mower_id].mower.state,
+                )
+            if self.update_interval is None and self._should_poll():
+                print("Polling re-enabled via WebSocket: at least one mower active")
+                self.update_interval = SCAN_INTERVAL
+                self.hass.async_create_task(self.async_request_refresh())
 
     @callback
     def _on_pong(self, timestamp: datetime) -> None:
         """Callback from aioautomower when a pong (empty message) is received."""
         self.pong = timestamp
-        if not self._should_poll() and self.update_interval is not None:
-            _LOGGER.debug("All mowers inactive and websocket alive: stop polling")
-            self.update_interval = None
 
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
@@ -129,10 +141,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     )
                     await self.async_request_refresh()
                     return
-
-        if self.update_interval is None and self._should_poll():
-            _LOGGER.debug("Polling re-enabled via WebSocket: at least one mower active")
-            self.update_interval = SCAN_INTERVAL
 
         self.async_set_updated_data(ws_data)
 
@@ -185,10 +193,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
     def _should_poll(self) -> bool:
         """Return True if at least one mower is connected or not OFF."""
-        return any(
-            mower.metadata.connected and mower.mower.state != MowerStates.OFF
-            for mower in self.data.values()
-        )
+        return any(mower.metadata.connected for mower in self.data.values())
 
     async def _pong_watchdog(self) -> None:
         _LOGGER.debug("Watchdog started")
