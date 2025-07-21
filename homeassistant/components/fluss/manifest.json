@@ -1,6 +1,6 @@
 {
   "domain": "fluss",
-  "name": "Fluss +",
+  "name": "Fluss+",
   "codeowners": ["@fluss"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fluss",
