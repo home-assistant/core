@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from librehardwaremonitor_api import LibreHardwareMonitorConnectionError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.librehardwaremonitor.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.libre_hardware_monitor.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 

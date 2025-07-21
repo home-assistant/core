@@ -11,7 +11,7 @@ from librehardwaremonitor_api.model import (
 )
 import pytest
 
-from homeassistant.components.librehardwaremonitor.const import DOMAIN
+from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -23,7 +23,7 @@ VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.librehardwaremonitor.async_setup_entry",
+        "homeassistant.components.libre_hardware_monitor.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
@@ -45,11 +45,11 @@ def mock_lhm_client() -> Generator[AsyncMock]:
     """Mock a LibreHardwareMonitor client."""
     with (
         patch(
-            "homeassistant.components.librehardwaremonitor.config_flow.LibreHardwareMonitorClient",
+            "homeassistant.components.libre_hardware_monitor.config_flow.LibreHardwareMonitorClient",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.librehardwaremonitor.coordinator.LibreHardwareMonitorClient",
+            "homeassistant.components.libre_hardware_monitor.coordinator.LibreHardwareMonitorClient",
             new=mock_client,
         ),
     ):
