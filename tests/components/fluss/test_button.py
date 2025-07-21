@@ -9,6 +9,7 @@ from homeassistant.components.fluss import CONF_API_KEY
 from homeassistant.components.fluss.button import FlussButton, async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
