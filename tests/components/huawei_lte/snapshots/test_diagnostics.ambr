@@ -48,7 +48,7 @@
         'dlfrequency': '2159700kHz',
         'earfcn': 'DL:123 UL:45678',
         'ecio': None,
-        'enodeb_id': '0012345',
+        'enodeb_id': '**REDACTED**',
         'ims': '0',
         'lac': None,
         'ltedlfreq': '21597',

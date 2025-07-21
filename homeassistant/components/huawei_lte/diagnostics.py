@@ -34,6 +34,7 @@ DEVICE_INFORMATION_DATA_TO_REDACT = {
 DEVICE_SIGNAL_DATA_TO_REDACT = {
     "pci",
     "cell_id",
+    "enodeb_id",
     "rac",
     "lac",
     "tac",
