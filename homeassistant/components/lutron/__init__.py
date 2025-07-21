@@ -361,10 +361,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
             device_name = (
-                output.name
-                if not use_area_for_device_name
-                else area_name + " " + output.name
+                f"{area_name} {output.name}"
+                if use_area_for_device_name
+                else output.name
             )
+
             _LOGGER.debug("Working on output %s", output.output_type)
             if output.is_motor or output.is_shade:
                 entry_data.covers.append((area_name, device_name, output))
@@ -397,9 +398,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         for keypad in area.keypads:
             device_name = (
-                keypad.name
-                if not use_area_for_device_name
-                else area_name + " " + keypad.name
+                f"{area_name} {keypad.name}"
+                if use_area_for_device_name
+                else keypad.name
+            )
+
+            _async_check_device_identifiers(
+                hass,
+                device_registry,
+                keypad.uuid,
+                keypad.legacy_uuid,
+                entry_data.controller.guid,
             )
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
@@ -436,17 +445,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     )
 
                     # Add the LED as a light device if is controlled via integration
-                    if led is not None and button.led_logic == 5:
+                    # RadioRa mode adds all leds as switches
+                    if led is not None and (use_radiora_mode or button.led_logic == 5):
                         entry_data.leds.append((area_name, device_name, led))
+                        platform = (
+                            Platform.SWITCH if use_radiora_mode else Platform.LIGHT
+                        )
 
                         _async_check_entity_unique_id(
                             hass,
                             entity_registry,
-                            Platform.LIGHT,
+                            platform,
                             led.uuid,
                             led.legacy_uuid,
                             entry_data.controller.guid,
                         )
+
                 else:
                     _LOGGER.debug(
                         "Button without action %s -  %s ", keypad.name, button.engraving

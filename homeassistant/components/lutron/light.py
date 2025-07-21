@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LIPLedState, LutronController, LutronData
+from . import CONF_USE_RADIORA_MODE, DOMAIN, LIPLedState, LutronController, LutronData
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
 from .entity import LutronKeypadComponent, LutronOutput
 from .lutron_db import Led, Output
@@ -33,13 +33,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Lutron light platform.
 
-    Add dimmers from the Main Repeater associated with the config_entry as
+    Add lights from the Main Repeater associated with the config_entry as
     light entities.
 
-    Add keypad leds as light entities.
+    Add keypad leds as light entities. Not if radiora_mode.
     """
     _LOGGER.debug("Setting up Lutron light platform")
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    use_radiora_mode = config_entry.options.get(
+        CONF_USE_RADIORA_MODE, config_entry.data.get(CONF_USE_RADIORA_MODE, False)
+    )
 
     async_add_entities(
         (
@@ -52,15 +55,16 @@ async def async_setup_entry(
     )
     _LOGGER.debug("Lutron light platform setup complete")
 
-    async_add_entities(
-        (
-            LutronLedLight(
-                area_name, device_name, device, entry_data.controller, config_entry
-            )
-            for area_name, device_name, device in entry_data.leds
-        ),
-        True,
-    )
+    if not use_radiora_mode:
+        async_add_entities(
+            (
+                LutronLedLight(
+                    area_name, device_name, device, entry_data.controller, config_entry
+                )
+                for area_name, device_name, device in entry_data.leds
+            ),
+            True,
+        )
 
 
 def to_lutron_level(level):
