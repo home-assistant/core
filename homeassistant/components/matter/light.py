@@ -241,7 +241,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return int(color_temp)
 
-    def _get_brightness(self) -> int:
+    def _get_brightness(self) -> int | None:
         """Get brightness from matter."""
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
@@ -254,6 +254,9 @@ class MatterLight(MatterEntity, LightEntity):
             level_control.currentLevel,
             self.entity_id,
         )
+        if level_control.currentLevel is None:
+            # currentLevel is a nullable value.
+            return None
 
         return round(
             renormalize(
