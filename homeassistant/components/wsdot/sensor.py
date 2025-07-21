@@ -61,8 +61,8 @@ async def async_setup_platform(
         wsdot_api.WsdotTravelTimes(
             api_key=api_key, session=session
         ).get_all_travel_times()
-    except wsdot_api.WsdotTravelError:
-        raise PlatformNotReady
+    except wsdot_api.WsdotTravelError as wsdot_error:
+        raise PlatformNotReady from wsdot_error
 
     for old_entry in hass.config_entries.async_loaded_entries(DOMAIN):
         await hass.config_entries.async_remove(old_entry.entry_id)

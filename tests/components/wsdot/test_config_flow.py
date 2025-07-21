@@ -3,7 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-from homeassistant.components.wsdot.config_flow import DIALOG_API_KEY, DIALOG_NAME
+from homeassistant.components.wsdot.config_flow import (
+    CONF_DATA,
+    CONF_TITLE,
+    DIALOG_API_KEY,
+    DIALOG_NAME,
+)
 from homeassistant.components.wsdot.sensor import (
     CONF_API_KEY,
     CONF_ID,
@@ -18,9 +23,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-CONF_TITLE = "title"
 CONF_STEP_ID = "step_id"
-CONF_DATA = "data"
 CONF_REASON = "reason"
 
 VALID_USER_CONFIG = {
