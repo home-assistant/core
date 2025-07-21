@@ -18,6 +18,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "key_data_missing": "Key data not returned from device",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -59,6 +60,20 @@
       "wireless_remote_hostname": {
         "name": "Remote hostname"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "key_data_missing": {
+      "message": "Key data not returned from device"
+    },
+    "error_data_missing": {
+      "message": "Data incomplete or missing"
     }
   }
 }

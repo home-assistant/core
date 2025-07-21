@@ -3,10 +3,14 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from airos.exceptions import DataMissingError, DeviceConnectionError
+from airos.exceptions import (
+    ConnectionAuthenticationError,
+    DataMissingError,
+    DeviceConnectionError,
+    KeyDataMissingError,
+)
 
 from homeassistant import config_entries
-from homeassistant.components.airos.config_flow import InvalidAuth
 from homeassistant.components.airos.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -62,7 +66,7 @@ async def test_form_invalid_auth(
         "homeassistant.components.airos.config_flow.AirOS",
         autospec=True,
     ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = InvalidAuth
+        airos_device_mock.return_value.login.side_effect = ConnectionAuthenticationError
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -166,7 +170,7 @@ async def test_form_cannot_connect(
 async def test_form_cookies_or_data_issues(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle cookies and data issues."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -189,8 +193,26 @@ async def test_form_cookies_or_data_issues(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    with patch(
+        "homeassistant.components.airos.config_flow.AirOS",
+        autospec=True,
+    ) as airos_device_mock:
+        airos_device_mock.return_value.login.side_effect = KeyDataMissingError
 
-async def test_form_device_information_missing(
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "key_data_missing"}
+
+
+async def test_form_unknown_handling(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
@@ -202,8 +224,7 @@ async def test_form_device_information_missing(
         "homeassistant.components.airos.config_flow.AirOS",
         autospec=True,
     ) as airos_device_mock:
-        airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = {}
+        airos_device_mock.return_value.login.side_effect = Exception
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -22,3 +23,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.airos.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_airos_client(ap_fixture: dict[str, Any]):
+    """Fixture to mock the AirOS API client."""
+    with patch(
+        "homeassistant.components.airos.AirOS", autospec=True
+    ) as mock_airos_class:
+        mock_client_instance = mock_airos_class.return_value
+        mock_client_instance.login.return_value = True
+        mock_client_instance.status.return_value = ap_fixture
+        yield mock_airos_class

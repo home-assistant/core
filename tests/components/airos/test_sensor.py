@@ -1,12 +1,10 @@
 """Test the Ubiquiti airOS sensors."""
 
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airos import DOMAIN
+from homeassistant.components.airos.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -21,18 +19,6 @@ MOCK_CONFIG = {
     CONF_USERNAME: "test_user",
     CONF_PASSWORD: "test_password",
 }
-
-
-@pytest.fixture
-def mock_airos_client(ap_fixture: dict[str, Any]):
-    """Fixture to mock the AirOS API client."""
-    with patch(
-        "homeassistant.components.airos.AirOS", autospec=True
-    ) as mock_airos_class:
-        mock_client_instance = mock_airos_class.return_value
-        mock_client_instance.login.return_value = True
-        mock_client_instance.status.return_value = ap_fixture
-        yield mock_airos_class
 
 
 async def test_all_entities(

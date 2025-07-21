@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class AirOSSensorEntityDescription(SensorEntityDescription):
     """Describe an AirOS sensor."""
 
-    value_fn: Callable[[dict[str, Any]], StateType | None]
+    value_fn: Callable[[dict[str, Any]], StateType]
 
 
 SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
@@ -42,7 +42,6 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         key="host_cpuload",
         translation_key="host_cpuload",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get("host", {}).get("cpuload"),
         entity_registry_enabled_default=False,
@@ -50,9 +49,6 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="host_netrole",
         translation_key="host_netrole",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
         value_fn=lambda data: data.get("host", {}).get("netrole"),
     ),
     AirOSSensorEntityDescription(
@@ -66,17 +62,11 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="wireless_essid",
         translation_key="wireless_essid",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
         value_fn=lambda data: data.get("wireless", {}).get("essid"),
     ),
     AirOSSensorEntityDescription(
         key="wireless_mode",
         translation_key="wireless_mode",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
         value_fn=lambda data: data.get("wireless", {}).get("mode"),
     ),
     AirOSSensorEntityDescription(
@@ -134,15 +124,14 @@ async def async_setup_entry(
     """Set up the AirOS sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    entities = [AirOSSensor(coordinator, description) for description in SENSORS]
-
-    async_add_entities(entities, update_before_add=False)
+    async_add_entities(
+        [AirOSSensor(coordinator, description) for description in SENSORS],
+        update_before_add=False,
+    )
 
 
 class AirOSSensor(AirOSEntity, SensorEntity):
     """Representation of a Sensor."""
-
-    _attr_has_entity_name = True
 
     entity_description: AirOSSensorEntityDescription
 
@@ -155,7 +144,7 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.device_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
