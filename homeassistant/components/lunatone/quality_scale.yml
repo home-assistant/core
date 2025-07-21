@@ -5,7 +5,7 @@ rules:
     comment: |
       This integration does not provide additional actions.
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -50,7 +50,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: todo
     comment: Discovery not yet supported
@@ -78,4 +78,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo
