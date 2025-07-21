@@ -34,6 +34,8 @@ type LibreHardwareMonitorConfigEntry = ConfigEntry[LibreHardwareMonitorCoordinat
 class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitorData]):
     """Class to manage fetching LibreHardwareMonitor data."""
 
+    config_entry: LibreHardwareMonitorConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
     ) -> None:
@@ -111,7 +113,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,  # type: ignore[union-attr]
+                        remove_config_entry_id=self.config_entry.entry_id,
                     )
 
         if new_devices := detected_device_ids - previous_device_ids:
