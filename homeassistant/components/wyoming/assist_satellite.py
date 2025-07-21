@@ -67,6 +67,7 @@ _TTS_SAMPLE_RATE: Final = 16000
 _ANNOUNCE_CHUNK_BYTES: Final = 2048
 _TTS_TIMEOUT_EXTRA: Final = 1.0
 
+# Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
     PipelineStage.WAKE: assist_pipeline.PipelineStage.WAKE_WORD,
     PipelineStage.ASR: assist_pipeline.PipelineStage.STT,
@@ -130,10 +131,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._muted_changed_event = asyncio.Event()
 
         self._conversation_id: str | None = None
-
         self._conversation_id_time: float | None = None
+
         self.device.set_is_muted_listener(self._muted_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
+        self.device.set_audio_settings_listener(self._audio_settings_changed)
 
         # For announcements
         self.device.set_audio_settings_listener(self._audio_settings_changed)
@@ -356,7 +358,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 "pipe:",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                close_fds=False,
+                close_fds=False,  # use posix_spawn in CPython < 3.13
             )
             assert proc.stdout is not None
             while True:
@@ -411,6 +413,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     def start_satellite(self) -> None:
         """Start the main satellite event loop."""
         self.is_running = True
+
         self.config_entry.async_create_background_task(
             self.hass, self.run(), "wyoming satellite run"
         )
@@ -433,6 +436,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     async def run(self) -> None:
         """Run the main satellite event loop, reconnecting on failure."""
+        _LOGGER.debug("Running satellite task")
+
         unregister_timer_handler = intent.async_register_timer_handler(
             self.hass, self.device.device_id, self._handle_timer
         )
@@ -538,6 +543,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 break
             except ConnectionError:
                 self._client = None  # client is not valid
+
                 await self.on_reconnect()
 
         if self._client is None:
@@ -689,7 +695,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         if start_stage is None:
             raise ValueError(f"Invalid start stage: {start_stage}")
-            
+
         if end_stage is None:
             raise ValueError(f"Invalid end stage: {end_stage}")
 
@@ -807,10 +813,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 )
 
                 await self._client.write_event(audio_chunk.event())
-            _LOGGER.debug("TTS streaming complete")
                 timestamp += audio_chunk.milliseconds
                 total_seconds += audio_chunk.seconds
+
             await self._client.write_event(AudioStop(timestamp=timestamp).event())
+            _LOGGER.debug("TTS streaming complete")
         finally:
             send_duration = time.monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
@@ -1057,5 +1064,5 @@ def _try_parse_wav_header(header_data: bytes) -> tuple[int, int, int, bytes] | N
     except wave.Error:
         # Ignore errors and return None
         pass
-        
+
     return None
