@@ -250,6 +250,17 @@ SELECT_ENTITIES = (
         value=lambda api, ch: str(api.bit_rate(ch, "sub")),
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
+    ReolinkSelectEntityDescription(
+        key="post_rec_time",
+        cmd_key="GetRec",
+        translation_key="post_rec_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.post_recording_time_list(ch),
+        supported=lambda api, ch: api.supported(ch, "post_rec_time"),
+        value=lambda api, ch: api.post_recording_time(ch),
+        method=lambda api, ch, value: api.set_post_recording_time(ch, value),
+    ),
 )
 
 HOST_SELECT_ENTITIES = (
