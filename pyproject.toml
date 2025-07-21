@@ -589,10 +589,6 @@ filterwarnings = [
   # -- Websockets 14.1
   # https://websockets.readthedocs.io/en/stable/howto/upgrade.html
   "ignore:websockets.legacy is deprecated:DeprecationWarning:websockets.legacy",
-  # https://github.com/bluecurrent/HomeAssistantAPI/pull/19 - >=1.2.4
-  "ignore:websockets.client.connect is deprecated:DeprecationWarning:bluecurrent_api.websocket",
-  "ignore:websockets.client.WebSocketClientProtocol is deprecated:DeprecationWarning:bluecurrent_api.websocket",
-  "ignore:websockets.exceptions.InvalidStatusCode is deprecated:DeprecationWarning:bluecurrent_api.websocket",
   # https://github.com/graphql-python/gql/pull/543 - >=4.0.0a0
   "ignore:websockets.client.WebSocketClientProtocol is deprecated:DeprecationWarning:gql.transport.websockets_base",
 
