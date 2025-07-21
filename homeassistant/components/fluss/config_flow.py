@@ -34,10 +34,9 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
-        session = async_get_clientsession(self.hass)
         if user_input is not None:
             try:
-                FlussApiClient(user_input[CONF_API_KEY], session=session)
+                FlussApiClient(user_input[CONF_API_KEY], session=async_get_clientsession(self.hass))
             except FlussApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except FlussApiClientAuthenticationError:
