@@ -66,7 +66,11 @@ async def test_async_setup_entry(
     mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
 ) -> None:
     """Test successful setup of the button."""
-    mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
+    added_entities = []
+
+    async def mock_add_entities(entities, update_before_add=False):
+        added_entities.extend(entities)
+
     with patch(
         "homeassistant.components.fluss.async_setup_entry",
         return_value=True,
@@ -78,8 +82,6 @@ async def test_async_setup_entry(
     mock_coordinator.api.async_get_devices.assert_awaited_once()
 
     # Verify that FlussButton instances were created correctly
-    mock_add_entities.assert_called_once()
-    added_entities = mock_add_entities.call_args[0][0]
     assert len(added_entities) == 1
     added_button = added_entities[0]
     assert isinstance(added_button, FlussButton)
