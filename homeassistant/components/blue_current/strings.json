@@ -128,9 +128,6 @@
       "stop_charge_session": {
         "name": "Stop charge session"
       },
-      "start_charge_session": {
-        "name": "Start charge session"
-      },
       "reboot": {
         "name": "Reboot"
       },
