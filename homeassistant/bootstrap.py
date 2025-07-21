@@ -694,7 +694,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # The common config section [homeassistant] could be filtered here,
     # but that is not necessary, since it corresponds to the core integration,
-    # that is always uncoditionally loaded.
+    # that is always unconditionally loaded.
     domains = {cv.domain_key(key) for key in config}
 
     # Add config entry and default domains
