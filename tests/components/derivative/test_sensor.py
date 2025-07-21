@@ -332,8 +332,8 @@ async def test_data_moving_average_with_zeroes(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(events[2:]) == len(times)
-    for time, event in zip(times, events[2:], strict=True):
+    assert len(events[1:]) == len(times)
+    for time, event in zip(times, events[1:], strict=True):
         state = event.data["new_state"]
         derivative = round(float(state.state), config["sensor"]["round"])
 
