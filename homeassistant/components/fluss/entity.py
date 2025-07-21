@@ -36,7 +36,3 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
             self.device.get("deviceName", super().name) if self.device else super().name
         )
 
-    @property
-    def available(self) -> bool:
-        """Return if the entity is available."""
-        return super().available and self.device_id in self.coordinator.data
