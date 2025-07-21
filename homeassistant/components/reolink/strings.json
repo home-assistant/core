@@ -859,7 +859,7 @@
         "name": "Recording packing time"
       },
       "post_rec_time": {
-        "name": "Post recording time"
+        "name": "Post-recording time"
       }
     },
     "sensor": {
