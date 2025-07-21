@@ -170,10 +170,20 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        if self._switch_dpcode is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="action_dpcode_not_found",
+            )
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if self._switch_dpcode is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="action_dpcode_not_found",
+            )
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:
