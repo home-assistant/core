@@ -1,542 +1,169 @@
-"""Test config flow for Nederlandse Spoorwegen integration."""
+"""Test config flow for Nederlandse Spoorwegen integration (new architecture)."""
 
-import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.nederlandse_spoorwegen.config_flow import (
-    NSOptionsFlowHandler,
+from homeassistant.components.nederlandse_spoorwegen.api import (
+    NSAPIAuthError,
+    NSAPIConnectionError,
 )
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
+from homeassistant.components.nederlandse_spoorwegen.utils import (
+    normalize_and_validate_time_format,
+    validate_time_format,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 API_KEY = "abc1234567"
-ROUTE = {"name": "Test", "from": "AMS", "to": "UTR"}
 
 
 @pytest.mark.asyncio
-async def test_full_user_flow_and_trip(hass: HomeAssistant) -> None:
-    """Test the full config flow and a trip fetch."""
-    # Patch NSAPI to avoid real network calls
+async def test_config_flow_user_success(hass: HomeAssistant) -> None:
+    """Test successful user config flow."""
     with patch(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.ns_api.NSAPI"
-    ) as mock_nsapi_cls:
-        mock_nsapi = MagicMock()
-        mock_nsapi.get_stations.return_value = [
-            MagicMock(code="AMS"),
-            MagicMock(code="UTR"),
-        ]
-        mock_trip = MagicMock()
-        mock_trip.departure = "AMS"
-        mock_trip.going = "Utrecht"
-        mock_trip.status = "ON_TIME"
-        mock_trip.nr_transfers = 0
-        mock_trip.trip_parts = []
-        fixed_now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=datetime.UTC)
-        mock_trip.departure_time_planned = fixed_now
-        mock_trip.departure_time_planned = fixed_now
-        mock_trip.departure_time_actual = fixed_now
-        mock_trip.departure_platform_planned = "5"
-        mock_trip.departure_platform_actual = "5"
-        mock_trip.arrival_time_planned = fixed_now
-        mock_trip.arrival_time_actual = fixed_now
-        mock_trip.arrival_platform_planned = "8"
-        mock_trip.arrival_platform_actual = "8"
-        mock_nsapi.get_trips.return_value = [mock_trip]
-        mock_nsapi_cls.return_value = mock_nsapi
+        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
+    ) as mock_wrapper_cls:
+        mock_wrapper = mock_wrapper_cls.return_value
+        mock_wrapper.validate_api_key = AsyncMock(return_value=True)
+        mock_wrapper.get_stations = AsyncMock(
+            return_value=[{"code": "AMS", "name": "Amsterdam"}]
+        )
 
-        # Start the config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
         assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "user"
 
-        # Submit API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+        )
+        assert result.get("type") == FlowResultType.CREATE_ENTRY
+        assert result.get("title") == "Nederlandse Spoorwegen"
+        assert result.get("data") == {CONF_API_KEY: API_KEY}
+
+
+@pytest.mark.asyncio
+async def test_config_flow_user_invalid_auth(hass: HomeAssistant) -> None:
+    """Test config flow with invalid auth."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
+    ) as mock_wrapper_cls:
+        mock_wrapper_cls.return_value.validate_api_key = AsyncMock(
+            side_effect=NSAPIAuthError("Invalid API key")
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "invalid_key"}
+        )
+        assert result.get("type") == FlowResultType.FORM
+        assert result.get("errors") == {"base": "invalid_auth"}
+
+
+@pytest.mark.asyncio
+async def test_config_flow_user_cannot_connect(hass: HomeAssistant) -> None:
+    """Test config flow with connection error."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
+    ) as mock_wrapper_cls:
+        mock_wrapper_cls.return_value.validate_api_key = AsyncMock(
+            side_effect=NSAPIConnectionError("Cannot connect")
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: API_KEY}
         )
         assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "routes"
-
-        # Submit route
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=ROUTE
-        )
-        assert result.get("type") == FlowResultType.CREATE_ENTRY
-        assert result.get("data", {}).get(CONF_API_KEY) == API_KEY
-        assert result.get("data", {}).get("routes") == [ROUTE]
-
-        # Set up the entry and test the sensor
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert entries
-        # Do not call async_setup here; not supported in config flow tests
-        # await hass.config_entries.async_setup(entry.entry_id)
-        # await hass.async_block_till_done()
-
-        # Check that the sensor was created and update works
-        # Optionally, call update and check state
-        # from homeassistant.components.nederlandse_spoorwegen.sensor import NSDepartureSensor
-        # sensors = [e for e in hass.data[DOMAIN][entry.entry_id]["entities"] if isinstance(e, NSDepartureSensor)] if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN] else []
-        # assert sensors or True  # At least the flow and patching worked
+        assert result.get("errors") == {"base": "cannot_connect"}
 
 
 @pytest.mark.asyncio
-async def test_full_user_flow_multiple_routes(hass: HomeAssistant) -> None:
-    """Test config flow with multiple routes added."""
-    with patch(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.ns_api.NSAPI"
-    ) as mock_nsapi_cls:
-        mock_nsapi = MagicMock()
-        mock_nsapi.get_stations.return_value = [
-            MagicMock(code="AMS"),
-            MagicMock(code="UTR"),
-            MagicMock(code="RTD"),
-        ]
-        mock_trip = MagicMock()
-        mock_trip.departure = "AMS"
-        mock_trip.going = "Utrecht"
-        mock_trip.status = "ON_TIME"
-        mock_trip.nr_transfers = 0
-        mock_trip.trip_parts = []
-        mock_trip.departure_time_planned = None
-        mock_trip.departure_time_actual = None
-        mock_trip.departure_platform_planned = "5"
-        mock_trip.departure_platform_actual = "5"
-        mock_trip.arrival_time_planned = None
-        mock_trip.arrival_time_actual = None
-        mock_trip.arrival_platform_planned = "8"
-        mock_trip.arrival_platform_actual = "8"
-        mock_nsapi.get_trips.return_value = [mock_trip]
-        mock_nsapi_cls.return_value = mock_nsapi
+async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test config flow aborts if already configured."""
+    # Since single_config_entry is true, we should get an abort when trying to add a second
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: API_KEY},
+        unique_id=API_KEY,  # Use API key as unique_id
+    )
+    config_entry.add_to_hass(hass)
 
-        # Start the config flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "user"
-
-        # Submit API key
-        result = await hass.config_entries.flow.async_configure(
-            result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
-        )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "routes"
-
-        # Submit first route
-        route1 = {"name": "Test1", "from": "AMS", "to": "UTR"}
-        route2 = {"name": "Test2", "from": "UTR", "to": "RTD"}
-        result = await hass.config_entries.flow.async_configure(
-            result.get("flow_id"), user_input=route1
-        )
-        # Should allow adding another route or finishing
-        if (
-            result.get("type") == FlowResultType.FORM
-            and result.get("step_id") == "routes"
-        ):
-            # Submit second route
-            result = await hass.config_entries.flow.async_configure(
-                result.get("flow_id"), user_input=route2
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    # The flow should be aborted or show an error immediately due to single_config_entry
+    # Check if it's aborted on init
+    if result.get("type") == FlowResultType.ABORT:
+        assert result.get("reason") in ["single_instance_allowed", "already_configured"]
+    else:
+        # If not aborted on init, it should be on configuration
+        with patch(
+            "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPIWrapper"
+        ) as mock_wrapper_cls:
+            mock_wrapper = mock_wrapper_cls.return_value
+            mock_wrapper.validate_api_key = AsyncMock(return_value=True)
+            mock_wrapper.get_stations = AsyncMock(
+                return_value=[{"code": "AMS", "name": "Amsterdam"}]
             )
-            # Finish (simulate user done)
+
             result = await hass.config_entries.flow.async_configure(
-                result.get("flow_id"),
-                user_input=None,  # None or empty to finish
+                result["flow_id"], user_input={CONF_API_KEY: API_KEY}
             )
-            assert result.get("type") == FlowResultType.CREATE_ENTRY
-            data = result.get("data")
-            assert data is not None
-            assert data.get(CONF_API_KEY) == API_KEY
-            routes = data.get("routes")
-            assert routes is not None
-            assert route1 in routes
-            assert route2 in routes
-        else:
-            # Only one route was added
-            assert result.get("type") == FlowResultType.CREATE_ENTRY
-            data = result.get("data")
-            assert data is not None
-            assert data.get(CONF_API_KEY) == API_KEY
-            routes = data.get("routes")
-            assert routes is not None
-            assert route1 in routes
-
-        # Set up the entry and test the sensor
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert entries
-        # Do not call async_setup here; not supported in config flow tests
-        # await hass.config_entries.async_setup(entry.entry_id)
-        # await hass.async_block_till_done()
-
-        # Check that the sensor was created and update works
-        # Optionally, call update and check state
-        # from homeassistant.components.nederlandse_spoorwegen.sensor import NSDepartureSensor
-        # sensors = [e for e in hass.data[DOMAIN][entry.entry_id]["entities"] if isinstance(e, NSDepartureSensor)] if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN] else []
-        # assert sensors or True  # At least the flow and patching worked
+            assert result.get("type") == FlowResultType.ABORT
+            assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.asyncio
-async def test_options_flow_edit_routes(hass: HomeAssistant) -> None:
-    """Test editing routes via the options flow (form-based, not YAML)."""
-    # Use the config flow to create the entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-    entry = entries[0]
-    # Start options flow
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    # Add a new route via the form
-    result = await hass.config_entries.options.async_configure(
-        result.get("flow_id"), user_input={"action": "add"}
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "add_route"
-    # Submit new route
-    new_route = {"name": "Test2", "from": "UTR", "to": "AMS"}
-    result = await hass.config_entries.options.async_configure(
-        result.get("flow_id"), user_input=new_route
-    )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("data", {}).get("routes") == [ROUTE, new_route]
-    # Ensure config entry options are updated
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.options.get("routes") == [ROUTE, new_route]
+def test_validate_time_format() -> None:
+    """Test the time format validation function."""
+    # Valid time formats
+    assert validate_time_format("08:30:00") is True
+    assert validate_time_format("23:59:59") is True
+    assert validate_time_format("00:00:00") is True
+    assert validate_time_format("12:30:45") is True
+    assert validate_time_format("8:30:00") is True  # Single digit hour is allowed
+    assert validate_time_format(None) is True  # Optional field
+    assert validate_time_format("") is True  # Empty string treated as None
+
+    # Invalid time formats
+    assert validate_time_format("08:30") is True  # HH:MM format is now allowed
+    assert validate_time_format("08:30:00:00") is False  # Too many parts
+    assert validate_time_format("25:30:00") is False  # Invalid hour
+    assert validate_time_format("08:60:00") is False  # Invalid minute
+    assert validate_time_format("08:30:60") is False  # Invalid second
+    assert validate_time_format("not_a_time") is False  # Invalid format
+    assert validate_time_format("08-30-00") is False  # Wrong separator
 
 
-@pytest.mark.asyncio
-async def test_options_flow_edit_route(hass: HomeAssistant) -> None:
-    """Test editing a specific route via the options flow."""
-    # Create initial entry with routes
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
+def test_normalize_and_validate_time_format() -> None:
+    """Test the time normalization and validation function."""
+    # Test normalization from HH:MM to HH:MM:SS
+    assert normalize_and_validate_time_format("08:30") == (True, "08:30:00")
+    assert normalize_and_validate_time_format("8:30") == (True, "08:30:00")
+    assert normalize_and_validate_time_format("23:59") == (True, "23:59:00")
 
-    # Start options flow and select edit
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "edit"}
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "select_route"
+    # Test that HH:MM:SS stays unchanged
+    assert normalize_and_validate_time_format("08:30:00") == (True, "08:30:00")
+    assert normalize_and_validate_time_format("23:59:59") == (True, "23:59:59")
 
-    # Select the route to edit
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"route_idx": "0"}
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "edit_route"
+    # Test empty/None values
+    assert normalize_and_validate_time_format("") == (True, None)
+    assert normalize_and_validate_time_format(None) == (True, None)
 
-    # Edit the route
-    edited_route = {
-        "name": "Edited Test",
-        "from": "AMS",
-        "to": "RTD",
-        "via": "UTR",
-        "time": "08:30",
-    }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=edited_route
-    )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("data", {}).get("routes") == [edited_route]
-
-
-@pytest.mark.asyncio
-async def test_options_flow_delete_route(hass: HomeAssistant) -> None:
-    """Test deleting a specific route via the options flow."""
-    # Create initial entry with multiple routes
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Add a second route first
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "add"}
-    )
-    route2 = {"name": "Test2", "from": "UTR", "to": "RTD"}
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=route2
-    )
-
-    # Now delete the first route
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "delete"}
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "select_route"
-
-    # Select the route to delete
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"route_idx": "0"}
-    )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    # Should only have the second route left
-    assert len(result.get("data", {}).get("routes", [])) == 1
-
-
-@pytest.mark.asyncio
-async def test_options_flow_no_routes_error(hass: HomeAssistant) -> None:
-    """Test options flow when no routes are configured."""
-    # Create initial entry without routes
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Clear routes from entry data
-    hass.config_entries.async_update_entry(
-        entry, data={CONF_API_KEY: API_KEY, "routes": []}
-    )
-
-    # Start options flow and try to edit (should redirect due to no routes)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "edit"}
-    )
-    # Should be redirected back to init due to no routes
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "init"
-
-
-@pytest.mark.asyncio
-async def test_options_flow_add_route_missing_fields(hass: HomeAssistant) -> None:
-    """Test options flow add route with missing required fields."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Start options flow and add route with missing fields
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "add"}
-    )
-
-    # Submit incomplete route (missing 'to' field and empty values)
-    incomplete_route = {"name": "", "from": "AMS", "to": "", "via": "", "time": ""}
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=incomplete_route
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "add_route"
-    errors = result.get("errors") or {}
-    assert errors.get("base") == "missing_fields"
-
-
-@pytest.mark.asyncio
-async def test_options_flow_edit_route_missing_fields(hass: HomeAssistant) -> None:
-    """Test options flow edit route with missing required fields."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Start options flow and edit route
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "edit"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"route_idx": "0"}
-    )
-
-    # Submit incomplete edit (missing 'to' field)
-    incomplete_edit = {"name": "Edited", "from": "AMS", "to": ""}
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=incomplete_edit
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "edit_route"
-    errors = result.get("errors") or {}
-    assert errors.get("base") == "missing_fields"
-
-
-@pytest.mark.asyncio
-async def test_options_flow_edit_invalid_route_index(hass: HomeAssistant) -> None:
-    """Test options flow with invalid route index."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Create options flow handler and manually test invalid route scenario
-    handler = NSOptionsFlowHandler(entry)
-    # Simulate empty routes to trigger no_routes error first
-    handler._config_entry = MagicMock()
-    handler._config_entry.options.get.return_value = []
-    handler._config_entry.data.get.return_value = []
-
-    # Try to call select_route with no routes (should redirect to init)
-    result = await handler.async_step_select_route({"action": "edit"})
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "init"
-
-
-@pytest.mark.asyncio
-async def test_config_flow_duplicate_api_key(hass: HomeAssistant) -> None:
-    """Test config flow aborts with duplicate API key."""
-    # Create first entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-
-    # Try to create second entry with same API key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
-
-
-@pytest.mark.asyncio
-async def test_options_flow_edit_route_form_submission(hass: HomeAssistant) -> None:
-    """Test the form submission flow in edit route (covers the else branch for idx)."""
-    # Create initial entry with routes
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0]
-
-    # Start options flow and select edit
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"action": "edit"}
-    )
-
-    # Select the route to edit
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"route_idx": "0"}
-    )
-    assert result.get("step_id") == "edit_route"
-
-    # Submit the form with missing required fields to trigger validation
-    # This tests the path where user_input is provided but idx is not in user_input
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"name": ""},  # Missing required fields
-    )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "edit_route"
-    errors = result.get("errors", {})
-    assert errors is not None and "base" in errors
-    assert errors["base"] == "missing_fields"
-
-
-@pytest.mark.asyncio
-async def test_config_flow_reauth_and_reconfigure(hass: HomeAssistant) -> None:
-    """Test reauthentication and reconfiguration steps update the API key."""
-    # Create initial entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=ROUTE
-    )
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-    entry = entries[0]
-    # Test reauth
-    flow = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth", "entry_id": entry.entry_id}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], user_input={CONF_API_KEY: "newkey123"}
-    )
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_API_KEY] == "newkey123"
-    # Test reconfigure
-    flow = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], user_input={CONF_API_KEY: "anotherkey456"}
-    )
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "reconfigure_successful"
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_API_KEY] == "anotherkey456"
+    # Test invalid formats return False with None
+    assert normalize_and_validate_time_format("25:30") == (False, None)
+    assert normalize_and_validate_time_format("08:60") == (False, None)
+    assert normalize_and_validate_time_format("invalid") == (False, None)
+    assert normalize_and_validate_time_format("08:30:60") == (False, None)
+    assert normalize_and_validate_time_format("08") == (False, None)

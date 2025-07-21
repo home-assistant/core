@@ -4,7 +4,9 @@
   "codeowners": ["@YarmoM", "@heindrichpaul"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
-  "requirements": ["nsapi==3.1.2"]
+  "quality_scale": "bronze",
+  "requirements": ["nsapi==3.1.2"],
+  "single_config_entry": true
 }

@@ -11,12 +11,12 @@ CONF_NAME = "name"
 CONF_ACTION = "action"
 CONF_ROUTE_IDX = "route_idx"
 
-MIN_TIME_BETWEEN_UPDATES_SECONDS = 120
-
-ATTR_ATTRIBUTION = "Data provided by NS"
-ATTR_ICON = "mdi:train"
-
-PARALLEL_UPDATES = 2
+# Attribute and schema keys
+ATTR_ROUTE = "route"
+ATTR_TRIPS = "trips"
+ATTR_FIRST_TRIP = "first_trip"
+ATTR_NEXT_TRIP = "next_trip"
+ATTR_ROUTES = "routes"
 
 STATION_LIST_URL = (
     "https://nl.wikipedia.org/wiki/Lijst_van_spoorwegstations_in_Nederland"

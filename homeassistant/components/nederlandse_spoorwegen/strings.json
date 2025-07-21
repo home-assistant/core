@@ -2,142 +2,111 @@
   "config": {
     "step": {
       "user": {
-        "title": "Nederlandse Spoorwegen Setup",
+        "title": "Nederlandse Spoorwegen setup",
         "description": "Set up your Nederlandse Spoorwegen integration.",
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your NS API key."
         }
-      },
-      "routes": {
-        "title": "Add Route",
-        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
-        "data": {
-          "name": "Route name",
-          "from": "From station",
-          "to": "To station",
-          "via": "Via station (optional)",
-          "time": "Departure time (optional)"
-        },
-        "data_description": {
-          "name": "A name for this route.",
-          "from": "Departure station code (e.g., AMS)",
-          "to": "Arrival station code (e.g., UTR)",
-          "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM:SS (24h)"
-        }
-      },
-      "reauth": {
-        "title": "Re-authenticate",
-        "description": "Your NS API key needs to be updated.",
-        "data": {
-          "api_key": "API key"
-        },
-        "data_description": {
-          "api_key": "Enter your new NS API key."
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure",
-        "description": "Update your NS API key.",
-        "data": {
-          "api_key": "API key"
-        },
-        "data_description": {
-          "api_key": "Enter your new NS API key."
-        }
       }
     },
     "error": {
       "cannot_connect": "Could not connect to NS API. Check your API key.",
-      "invalid_auth": "Invalid API key.",
-      "unknown": "Unknown error occurred."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "missing_fields": "Please fill in all required fields.",
+      "no_stations_available": "Unable to load station list. Please check your connection and API key.",
+      "same_station": "Departure and arrival stations must be different.",
+      "invalid_station": "Please select a valid station from the list.",
+      "invalid_time_format": "Invalid time format. Use HH:MM or HH:MM:SS (24h format)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "This API key is already configured.",
-      "reauth_successful": "Re-authentication successful.",
-      "reconfigure_successful": "Reconfiguration successful."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure Routes",
-        "description": "Configure the routes.",
-        "data": {
-          "action": "Action"
-        },
-        "data_description": {
-          "action": "Edit, add, or delete train routes for this integration."
+  "config_subentries": {
+    "route": {
+      "step": {
+        "user": {
+          "title": "{title}",
+          "description": "Select your departure and destination stations from the dropdown lists. Time is optional and if omitted, the next available train will be shown.",
+          "data": {
+            "name": "Route name",
+            "from": "From station",
+            "to": "To station",
+            "via": "Via station (optional)",
+            "time": "Departure time (optional)"
+          },
+          "data_description": {
+            "name": "A name for this route.",
+            "from": "Select the departure station",
+            "to": "Select the destination station",
+            "via": "Optional intermediate station",
+            "time": "Optional departure time in HH:MM or HH:MM:SS (24h)"
+          }
         }
       },
-      "select_route": {
-        "title": "Select Route",
-        "description": "Choose a route to {action}.",
-        "data": {
-          "route_idx": "Route"
-        },
-        "data_description": {
-          "route_idx": "Select the route you want to edit or delete."
-        }
+      "error": {
+        "cannot_connect": "[%key:component::nederlandse_spoorwegen::config::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+        "missing_fields": "[%key:component::nederlandse_spoorwegen::config::error::missing_fields%]",
+        "no_stations_available": "[%key:component::nederlandse_spoorwegen::config::error::no_stations_available%]",
+        "same_station": "[%key:component::nederlandse_spoorwegen::config::error::same_station%]",
+        "invalid_station": "[%key:component::nederlandse_spoorwegen::config::error::invalid_station%]",
+        "invalid_time_format": "[%key:component::nederlandse_spoorwegen::config::error::invalid_time_format%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
       },
-      "add_route": {
-        "title": "Add Route",
-        "description": "Add a train route to monitor. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
-        "data": {
-          "name": "Route name",
-          "from": "From station",
-          "to": "To station",
-          "via": "Via station (optional)",
-          "time": "Departure time (optional)"
-        },
-        "data_description": {
-          "name": "A name for this route.",
-          "from": "Departure station code (e.g., AMS)",
-          "to": "Arrival station code (e.g., UTR)",
-          "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM:SS (24h)"
-        }
+      "initiate_flow": {
+        "user": "Add route"
       },
-      "edit_route": {
-        "title": "Edit Route",
-        "description": "Edit the details for this route. [Find Dutch station codes here]({station_list_url}). Time is optional and must be in HH:MM:SS format (e.g., 08:06:00). If omitted, the next available train will be shown.",
-        "data": {
-          "name": "Route name",
-          "from": "From station",
-          "to": "To station",
-          "via": "Via station (optional)",
-          "time": "Departure time (optional)"
-        },
-        "data_description": {
-          "name": "A name for this route.",
-          "from": "Departure station code (e.g., AMS)",
-          "to": "Arrival station code (e.g., UTR)",
-          "via": "Optional via station code (e.g., RTD)",
-          "time": "Optional departure time in HH:MM:SS (24h)"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Could not connect to NS API. Check your API key.",
-      "invalid_auth": "Invalid API key.",
-      "unknown": "Unknown error occurred.",
-      "no_routes": "No routes configured yet.",
-      "missing_fields": "Please fill in all required fields.",
-      "invalid_route_index": "Invalid route selected."
+      "entry_type": "Route"
     }
   },
   "entity": {
     "sensor": {
-      "departure": {
-        "name": "Next Departure",
-        "state": {
-          "on_time": "On time",
-          "delayed": "Delayed",
-          "cancelled": "Cancelled"
-        }
+      "departure_platform_planned": {
+        "name": "Departure platform planned"
+      },
+      "departure_platform_actual": {
+        "name": "Departure platform actual"
+      },
+      "arrival_platform_planned": {
+        "name": "Arrival platform planned"
+      },
+      "arrival_platform_actual": {
+        "name": "Arrival platform actual"
+      },
+      "departure_time_planned": {
+        "name": "Departure time planned"
+      },
+      "departure_time_actual": {
+        "name": "Departure time actual"
+      },
+      "arrival_time_planned": {
+        "name": "Arrival time planned"
+      },
+      "arrival_time_actual": {
+        "name": "Arrival time actual"
+      },
+      "next_departure": {
+        "name": "Next departure"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "route_via": {
+        "name": "Route via"
       }
     }
   }

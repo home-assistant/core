@@ -16,13 +16,13 @@ from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 from tests.typing import WebSocketGenerator
 
 
-async def test_run_task_preferred_entity(
+async def test_generate_data_preferred_entity(
     hass: HomeAssistant,
     init_components: None,
     mock_ai_task_entity: MockAITaskEntity,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test running a task with an unknown entity."""
+    """Test generating data with entity via preferences."""
     client = await hass_ws_client(hass)
 
     with pytest.raises(
@@ -90,11 +90,11 @@ async def test_run_task_preferred_entity(
         )
 
 
-async def test_run_data_task_unknown_entity(
+async def test_generate_data_unknown_entity(
     hass: HomeAssistant,
     init_components: None,
 ) -> None:
-    """Test running a data task with an unknown entity."""
+    """Test generating data with an unknown entity."""
 
     with pytest.raises(
         HomeAssistantError, match="AI Task entity ai_task.unknown_entity not found"
@@ -113,7 +113,7 @@ async def test_run_data_task_updates_chat_log(
     init_components: None,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that running a data task updates the chat log."""
+    """Test that generating data updates the chat log."""
     result = await async_generate_data(
         hass,
         task_name="Test Task",
@@ -127,3 +127,30 @@ async def test_run_data_task_updates_chat_log(
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.content == snapshot
+
+
+async def test_generate_data_attachments_not_supported(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test generating data with attachments when entity doesn't support them."""
+    # Remove attachment support from the entity
+    mock_ai_task_entity._attr_supported_features = AITaskEntityFeature.GENERATE_DATA
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="AI Task entity ai_task.test_task_entity does not support attachments",
+    ):
+        await async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+            attachments=[
+                {
+                    "media_content_id": "media-source://mock/test.mp4",
+                    "media_content_type": "video/mp4",
+                }
+            ],
+        )

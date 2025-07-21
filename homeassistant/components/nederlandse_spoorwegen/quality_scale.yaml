@@ -7,9 +7,9 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling:
-    status: exempt
+    status: done
     comment: |
-      This integration does not poll.
+      Integration polls every 3 minutes for train data, which is appropriate for frequently changing transportation information.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -48,23 +48,23 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
-    status: done
+    status: todo
     comment: |
-      PARALLEL_UPDATES is set to 2 in const.py and imported in sensor.py. Test coverage confirms correct integration and no regressions.
+      PARALLEL_UPDATES needs to be set in sensor.py to control concurrent entity updates.
   reauthentication-flow:
-    status: done
+    status: todo
     comment: |
-      Reauthentication flow is implemented and tested. async_step_reauth is present and covered by tests.
+      async_step_reauth needs to be implemented in config_flow.py to handle API key expiration or authentication failures.
   test-coverage: done
   # Gold
   devices:
-    status: todo
+    status: done
     comment: |
-      Not implemented. No device is created for the NS API account. Required for gold.
+      Devices are created for each route with proper DeviceInfo including identifiers, name, manufacturer, model, and configuration_url.
   diagnostics:
-    status: todo
+    status: done
     comment: |
-      Not implemented. No diagnostics handler is present. Required for gold.
+      Diagnostics handler is implemented providing comprehensive debugging information while properly sanitizing sensitive data.
   discovery-update-info:
     status: exempt
     comment: |
@@ -74,13 +74,13 @@ rules:
     comment: |
       This integration is a cloud service and does not support discovery.
   docs-data-update:
-    status: exempt
+    status: done
     comment: |
-      This integration does not poll or push.
+      Documentation properly describes the 3-minute polling interval for train data updates.
   docs-examples:
     status: exempt
     comment: |
-      This integration only serves backup.
+      Integration provides transportation data and does not require configuration examples.
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
@@ -112,7 +112,10 @@ rules:
     status: done
     comment: |
       All user-facing strings are translated.
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      Integration does not raise user-facing translated exceptions.
   icon-translations:
     status: done
     comment: |
@@ -120,7 +123,7 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: |
-      This integration does not support reconfiguration and does not implement async_step_reconfigure.
+      Will be implemented in an upcoming PR to support reconfiguring existing routes.
   repair-issues: done
   stale-devices:
     status: exempt
@@ -130,4 +133,7 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      Integration needs to be added to .strict-typing file and async_migrate_entry signature needs to be updated to use typed ConfigEntry.

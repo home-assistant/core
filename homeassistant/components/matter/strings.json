@@ -83,8 +83,8 @@
       "evse_plug": {
         "name": "Plug state"
       },
-      "evse_supply_charging_state": {
-        "name": "Supply charging state"
+      "evse_supply_state": {
+        "name": "Charger supply state"
       },
       "boost_state": {
         "name": "Boost state"
@@ -193,7 +193,13 @@
         "name": "Occupied to unoccupied delay"
       },
       "auto_relock_timer": {
-        "name": "Automatic relock timer"
+        "name": "Autorelock time"
+      },
+      "led_indicator_intensity_off": {
+        "name": "LED off intensity"
+      },
+      "led_indicator_intensity_on": {
+        "name": "LED on intensity"
       }
     },
     "light": {
@@ -318,6 +324,9 @@
           "docked": "Docked"
         }
       },
+      "estimated_end_time": {
+        "name": "Estimated end time"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
@@ -398,6 +407,9 @@
           "over_temperature": "Overtemperature",
           "other": "Other fault"
         }
+      },
+      "evse_soc": {
+        "name": "State of charge"
       },
       "pump_control_mode": {
         "name": "Control mode",

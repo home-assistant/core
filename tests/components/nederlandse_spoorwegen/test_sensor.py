@@ -1,20 +1,25 @@
 """Test the Nederlandse Spoorwegen sensor logic."""
 
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import requests
 
-from homeassistant.components.nederlandse_spoorwegen.sensor import (
-    NSDepartureSensor,
-    PlatformNotReady,
-    RequestParametersError,
-    setup_platform,
-    valid_stations,
+from homeassistant.components.nederlandse_spoorwegen import DOMAIN, NSRuntimeData
+from homeassistant.components.nederlandse_spoorwegen.coordinator import (
+    NSDataUpdateCoordinator,
 )
+from homeassistant.components.nederlandse_spoorwegen.sensor import (
+    NEXT_DEPARTURE_DESCRIPTION,
+    SENSOR_DESCRIPTIONS,
+    NSNextDepartureSensor,
+    NSSensor,
+    async_setup_entry,
+)
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-FIXED_NOW = datetime(2023, 1, 1, 12, 0, 0)
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -22,518 +27,584 @@ def mock_nsapi():
     """Mock NSAPI client."""
     nsapi = MagicMock()
     nsapi.get_stations.return_value = [MagicMock(code="AMS"), MagicMock(code="UTR")]
+    nsapi.get_trips.return_value = []
     return nsapi
 
 
 @pytest.fixture
-def mock_trip():
-    """Mock a trip object."""
-    trip = MagicMock()
-    trip.departure = "AMS"
-    trip.going = "Utrecht"
-    trip.status = "ON_TIME"
-    trip.nr_transfers = 0
-    trip.trip_parts = []
-    trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
-    trip.departure_time_actual = None
-    trip.departure_platform_planned = "5"
-    trip.departure_platform_actual = "5"
-    trip.arrival_time_planned = FIXED_NOW + timedelta(minutes=40)
-    trip.arrival_time_actual = None
-    trip.arrival_platform_planned = "8"
-    trip.arrival_platform_actual = "8"
-    return trip
+def mock_config_entry():
+    """Mock config entry."""
+    entry = MagicMock()
+    entry.entry_id = "test_entry_id"
+    entry.data = {CONF_API_KEY: "test_api_key"}
+    entry.options = {"routes": []}
+    entry.subentries = {}
+    return entry
 
 
 @pytest.fixture
-def mock_trip_delayed():
-    """Mock a delayed trip object."""
-    trip = MagicMock()
-    trip.departure = "AMS"
-    trip.going = "Utrecht"
-    trip.status = "DELAYED"
-    trip.nr_transfers = 1
-    trip.trip_parts = []
-    trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
-    trip.departure_time_actual = FIXED_NOW + timedelta(minutes=15)
-    trip.departure_platform_planned = "5"
-    trip.departure_platform_actual = "6"
-    trip.arrival_time_planned = FIXED_NOW + timedelta(minutes=40)
-    trip.arrival_time_actual = FIXED_NOW + timedelta(minutes=45)
-    trip.arrival_platform_planned = "8"
-    trip.arrival_platform_actual = "9"
-    return trip
+def mock_coordinator(mock_config_entry, mock_nsapi):
+    """Mock coordinator."""
+    hass = MagicMock(spec=HomeAssistant)
+    hass.async_add_executor_job = AsyncMock()
 
-
-def test_sensor_attributes(mock_nsapi, mock_trip) -> None:
-    """Test sensor attributes are set correctly."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["going"] == "Utrecht"
-    assert attrs["departure_platform_planned"] == "5"
-    assert attrs["arrival_platform_planned"] == "8"
-    assert attrs["status"] == "on_time"
-    assert attrs["transfers"] == 0
-    assert attrs["route"] == ["AMS"]
-
-
-def test_sensor_native_value(mock_nsapi, mock_trip) -> None:
-    """Test native_value returns the correct state."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._state = "12:34"
-    assert sensor.native_value == "12:34"
-
-
-def test_sensor_next_trip(mock_nsapi, mock_trip, mock_trip_delayed) -> None:
-    """Test extra_state_attributes with next_trip present."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip, mock_trip_delayed]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = mock_trip_delayed
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["next"] == mock_trip_delayed.departure_time_actual.strftime("%H:%M")
-
-
-def test_sensor_unavailable(mock_nsapi) -> None:
-    """Test extra_state_attributes returns None if no trips."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = None
-    sensor._first_trip = None
-    assert sensor.extra_state_attributes is None
-
-
-def test_sensor_delay_logic(mock_nsapi, mock_trip_delayed) -> None:
-    """Test delay logic for departure and arrival."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip_delayed]
-    sensor._first_trip = mock_trip_delayed
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["departure_delay"] is True
-    assert attrs["arrival_delay"] is True
-    assert attrs["departure_time_planned"] != attrs["departure_time_actual"]
-    assert attrs["arrival_time_planned"] != attrs["arrival_time_actual"]
-
-
-def test_sensor_trip_parts_route(mock_nsapi, mock_trip) -> None:
-    """Test route attribute with multiple trip_parts."""
-    part1 = MagicMock(destination="HLD")
-    part2 = MagicMock(destination="EHV")
-    mock_trip.trip_parts = [part1, part2]
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["route"] == ["AMS", "HLD", "EHV"]
-
-
-def test_sensor_missing_optional_fields(mock_nsapi) -> None:
-    """Test attributes when optional fields are None."""
-    trip = MagicMock()
-    trip.departure = "AMS"
-    trip.going = "Utrecht"
-    trip.status = "ON_TIME"
-    trip.nr_transfers = 0
-    trip.trip_parts = []
-    trip.departure_time_planned = None
-    trip.departure_time_actual = None
-    trip.departure_platform_planned = None
-    trip.departure_platform_actual = None
-    trip.arrival_time_planned = None
-    trip.arrival_time_actual = None
-    trip.arrival_platform_planned = None
-    trip.arrival_platform_actual = None
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [trip]
-    sensor._first_trip = trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["departure_time_planned"] is None
-    assert attrs["departure_time_actual"] is None
-    assert attrs["arrival_time_planned"] is None
-    assert attrs["arrival_time_actual"] is None
-    assert attrs["departure_platform_planned"] is None
-    assert attrs["arrival_platform_planned"] is None
-    assert attrs["departure_delay"] is False
-    assert attrs["arrival_delay"] is False
-
-
-def test_sensor_multiple_transfers(mock_nsapi, mock_trip) -> None:
-    """Test attributes with multiple transfers."""
-    mock_trip.nr_transfers = 3
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["transfers"] == 3
-
-
-def test_sensor_next_trip_no_actual_time(
-    mock_nsapi, mock_trip, mock_trip_delayed
-) -> None:
-    """Test next attribute uses planned time if actual is None."""
-    mock_trip_delayed.departure_time_actual = None
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip, mock_trip_delayed]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = mock_trip_delayed
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["next"] == mock_trip_delayed.departure_time_planned.strftime("%H:%M")
-
-
-def test_sensor_next_trip_no_planned_time(
-    mock_nsapi, mock_trip, mock_trip_delayed
-) -> None:
-    """Test next attribute when next trip has no planned or actual time."""
-    mock_trip_delayed.departure_time_actual = None
-    mock_trip_delayed.departure_time_planned = None
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip, mock_trip_delayed]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = mock_trip_delayed
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["next"] is None
-
-
-def test_sensor_extra_state_attributes_error_handling(mock_nsapi) -> None:
-    """Test extra_state_attributes returns None if _first_trip is None or _trips is falsy."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = []
-    sensor._first_trip = None
-    assert sensor.extra_state_attributes is None
-    sensor._trips = None
-    assert sensor.extra_state_attributes is None
-
-
-def test_sensor_status_lowercase(mock_nsapi, mock_trip) -> None:
-    """Test status is always lowercased in attributes."""
-    mock_trip.status = "DELAYED"
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["status"] == "delayed"
-
-
-def test_sensor_platforms_differ(mock_nsapi, mock_trip) -> None:
-    """Test platform planned and actual differ."""
-    mock_trip.departure_platform_planned = "5"
-    mock_trip.departure_platform_actual = "6"
-    mock_trip.arrival_platform_planned = "8"
-    mock_trip.arrival_platform_actual = "9"
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["departure_platform_planned"] != attrs["departure_platform_actual"]
-    assert attrs["arrival_platform_planned"] != attrs["arrival_platform_actual"]
-
-
-def test_valid_stations_all_valid() -> None:
-    """Test valid_stations returns True when all stations are valid."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert valid_stations(stations, ["AMS", "UTR"]) is True
-
-
-def test_valid_stations_some_invalid(caplog: pytest.LogCaptureFixture) -> None:
-    """Test valid_stations returns False and logs warning for invalid station."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    with caplog.at_level("WARNING"):
-        assert valid_stations(stations, ["AMS", "XXX"]) is False
-        assert "is not a valid station" in caplog.text
-
-
-def test_valid_stations_none_ignored() -> None:
-    """Test valid_stations ignores None values in given_stations."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert valid_stations(stations, [None, "AMS"]) is True
-
-
-def test_valid_stations_all_none() -> None:
-    """Test valid_stations returns True if all given stations are None."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
-    assert valid_stations(stations, [None, None]) is True
-
-
-def test_update_sets_first_and_next_trip(
-    monkeypatch: pytest.MonkeyPatch, mock_nsapi, mock_trip, mock_trip_delayed
-) -> None:
-    """Test update sets _first_trip, _next_trip, and _state correctly."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    # Patch dt_util.now to FIXED_NOW
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
-    )
-    # Patch get_trips to return two trips
-    mock_nsapi.get_trips.return_value = [mock_trip, mock_trip_delayed]
-    # Set planned/actual times in the future
-    mock_trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
-    mock_trip_delayed.departure_time_actual = FIXED_NOW + timedelta(minutes=20)
-    sensor.update()
-    assert sensor._first_trip == mock_trip
-    assert sensor._next_trip == mock_trip_delayed
-    assert sensor._state == (FIXED_NOW + timedelta(minutes=10)).strftime("%H:%M")
-
-
-def test_update_no_trips(monkeypatch: pytest.MonkeyPatch, mock_nsapi) -> None:
-    """Test update sets _first_trip and _state to None if no trips returned."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
-    )
-    mock_nsapi.get_trips.return_value = []
-    sensor.update()
-    assert sensor._first_trip is None
-    assert sensor._state is None
-
-
-def test_update_all_trips_in_past(
-    monkeypatch: pytest.MonkeyPatch, mock_nsapi, mock_trip
-) -> None:
-    """Test update sets _first_trip and _state to None if all trips are in the past."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
-    )
-    # All trips in the past
-    mock_trip.departure_time_planned = FIXED_NOW - timedelta(minutes=10)
-    mock_trip.departure_time_actual = None
-    mock_nsapi.get_trips.return_value = [mock_trip]
-    sensor.update()
-    assert sensor._first_trip is None
-    assert sensor._state is None
-
-
-def test_update_handles_connection_error(
-    monkeypatch: pytest.MonkeyPatch, mock_nsapi
-) -> None:
-    """Test update logs error and does not raise on connection error."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
-    )
-    mock_nsapi.get_trips.side_effect = requests.exceptions.ConnectionError("fail")
-    sensor.update()  # Should not raise
-
-
-def test_setup_platform_connection_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test setup_platform raises PlatformNotReady on connection error."""
-
-    class DummyNSAPI:
-        def __init__(self, *a, **kw) -> None:
-            pass
-
-        def get_stations(self):
-            raise requests.exceptions.ConnectionError("fail")
-
-    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
-    config = {"api_key": "abc", "routes": []}
-    with pytest.raises(PlatformNotReady):
-        setup_platform(MagicMock(), config, lambda *a, **kw: None)
-
-
-def test_setup_platform_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test setup_platform raises PlatformNotReady on HTTP error."""
-
-    class DummyNSAPI:
-        def __init__(self, *a, **kw) -> None:
-            pass
-
-        def get_stations(self):
-            raise requests.exceptions.HTTPError("fail")
-
-    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
-    config = {"api_key": "abc", "routes": []}
-    with pytest.raises(PlatformNotReady):
-        setup_platform(MagicMock(), config, lambda *a, **kw: None)
-
-
-def test_setup_platform_request_parameters_error(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test setup_platform returns None and logs error on RequestParametersError."""
-
-    class DummyNSAPI:
-        def __init__(self, *a, **kw) -> None:
-            pass
-
-        def get_stations(self):
-            raise RequestParametersError("fail")
-
-    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
-    config = {"api_key": "abc", "routes": []}
-    with caplog.at_level("ERROR"):
-        assert setup_platform(MagicMock(), config, lambda *a, **kw: None) is None
-        assert "Could not fetch stations" in caplog.text
-
-
-def test_setup_platform_no_valid_stations(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test setup_platform does not add sensors if stations are invalid."""
-
-    class DummyNSAPI:
-        def __init__(self, *a, **kw) -> None:
-            pass
-
-        def get_stations(self):
-            return [type("Station", (), {"code": "AMS"})()]
-
-    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
-    config = {
-        "api_key": "abc",
-        "routes": [{"name": "Test", "from": "AMS", "to": "XXX"}],
+    coordinator = NSDataUpdateCoordinator(hass, mock_nsapi, mock_config_entry)
+    coordinator.data = {
+        "routes": {},
+        "stations": [MagicMock(code="AMS"), MagicMock(code="UTR")],
     }
-    called = {}
-
-    def add_entities(new_entities, update_before_add=False):
-        called["sensors"] = list(new_entities)
-        called["update"] = update_before_add
-
-    setup_platform(MagicMock(), config, add_entities)
-    assert called["sensors"] == []
-    assert called["update"] is True
+    return coordinator
 
 
-def test_setup_platform_adds_sensor(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test setup_platform adds a sensor for valid stations."""
+async def test_async_setup_entry_no_routes(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test setup entry with no routes configured."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
 
-    class DummyNSAPI:
-        def __init__(self, *a, **kw) -> None:
-            pass
+    # Mock coordinator data with no routes
+    mock_coordinator.data = {"routes": {}, "stations": []}
 
-        def get_stations(self):
-            return [
-                type("Station", (), {"code": "AMS"})(),
-                type("Station", (), {"code": "UTR"})(),
+    entities = []
+
+    def mock_add_entities(
+        new_entities, update_before_add=False, *, config_subentry_id=None
+    ):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+
+    # Should create no sensors (new architecture: no main entry sensors)
+    assert len(entities) == 0
+
+
+async def test_async_setup_entry_with_routes(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test setup entry with routes configured."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
+
+    # Mock coordinator data with routes
+    mock_coordinator.data = {
+        "routes": {
+            "Test Route_AMS_UTR": {
+                "route": {"name": "Test Route", "from": "AMS", "to": "UTR"}
+            },
+            "Another Route_RTD_GVC": {
+                "route": {"name": "Another Route", "from": "RTD", "to": "GVC"}
+            },
+        },
+        "stations": [],
+    }
+
+    entities = []
+
+    def mock_add_entities(
+        new_entities, update_before_add=False, *, config_subentry_id=None
+    ):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+
+    # Should create no sensors (new architecture: no main entry sensors, only subentry sensors)
+    assert len(entities) == 0
+
+
+async def test_async_setup_entry_no_coordinator_data(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test setup entry when coordinator has no data yet."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
+
+    # Mock coordinator with no data
+    mock_coordinator.data = None
+
+    entities = []
+
+    def mock_add_entities(
+        new_entities, update_before_add=False, *, config_subentry_id=None
+    ):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+
+    # Should create no sensors (new architecture: no main entry sensors)
+    assert len(entities) == 0
+
+
+async def test_device_association_after_migration(hass: HomeAssistant) -> None:
+    """Test that sensors are created under subentries, not main integration."""
+    with (
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
+        ) as mock_api_wrapper_class,
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.normalize_station_code",
+            side_effect=lambda code: code.upper() if code else "",
+        ),
+    ):
+        # Mock stations with required station codes
+        mock_station_asd = type(
+            "Station", (), {"code": "ASD", "name": "Amsterdam Centraal"}
+        )()
+        mock_station_rtd = type(
+            "Station", (), {"code": "RTD", "name": "Rotterdam Centraal"}
+        )()
+
+        # Set up the mock API wrapper
+        mock_api_wrapper = MagicMock()
+        # Make async methods async
+        mock_api_wrapper.get_stations = AsyncMock(
+            return_value=[
+                mock_station_asd,
+                mock_station_rtd,
             ]
+        )
+        mock_api_wrapper.get_trips = AsyncMock(return_value=[])
+        mock_api_wrapper.validate_api_key = AsyncMock(return_value=None)
+        # Mock the get_station_codes as a regular method (not async)
+        mock_api_wrapper.get_station_codes = MagicMock(return_value={"ASD", "RTD"})
+        # Mock the normalize_station_code method as regular method
+        mock_api_wrapper.normalize_station_code = MagicMock(
+            side_effect=lambda code: code.upper() if code else ""
+        )
+        mock_api_wrapper_class.return_value = mock_api_wrapper
 
-    monkeypatch.setattr("ns_api.NSAPI", lambda *a, **kw: DummyNSAPI())
-    config = {
-        "api_key": "abc",
-        "routes": [{"name": "Test", "from": "AMS", "to": "UTR"}],
+        # Create config entry with legacy routes
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "api_key": "test_key",
+                "routes": [
+                    {
+                        "name": "Test Route",
+                        "from": "ASD",
+                        "to": "RTD",
+                    },
+                ],
+            },
+        )
+        config_entry.add_to_hass(hass)
+
+        # Setup the integration
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Get registries
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+
+        # Check that migration created subentries
+        assert len(config_entry.subentries) == 1
+        subentry = next(iter(config_entry.subentries.values()))
+
+        # Find all devices
+        devices = list(device_registry.devices.values())
+
+        main_devices = [
+            device
+            for device in devices
+            if (DOMAIN, config_entry.entry_id) in device.identifiers
+        ]
+
+        subentry_devices = [
+            device
+            for device in devices
+            if any(
+                identifier[0] == DOMAIN and identifier[1] == subentry.subentry_id
+                for identifier in device.identifiers
+            )
+        ]
+
+        # Should have 0 main devices (no entities created under main integration)
+        assert len(main_devices) == 0, (
+            f"Expected 0 main devices, got {len(main_devices)}"
+        )
+
+        # Should have 1 subentry device (route sensor creates its own device)
+        assert len(subentry_devices) == 1, (
+            f"Expected 1 subentry device, got {len(subentry_devices)}"
+        )
+
+        # Find all entities
+        entities = list(entity_registry.entities.values())
+
+        main_entities = [
+            entity
+            for entity in entities
+            if entity.config_entry_id == config_entry.entry_id
+            and entity.config_subentry_id is None
+        ]
+
+        subentry_entities = [
+            entity
+            for entity in entities
+            if entity.config_entry_id == config_entry.entry_id
+            and entity.config_subentry_id is not None
+        ]
+
+        # Should have 0 main entities: no sensors under main integration
+        assert len(main_entities) == 0, (
+            f"Expected 0 main entities, got {len(main_entities)}"
+        )
+
+        # Should have 14 subentry entities (14 attribute sensors, no main trip sensor)
+        assert len(subentry_entities) == 14, (
+            f"Expected 14 subentry entities, got {len(subentry_entities)}"
+        )
+
+        # Verify we have all the expected sensors
+        subentry_entity_ids = {entity.entity_id for entity in subentry_entities}
+        expected_entities = {
+            "sensor.test_route_departure_platform_planned",
+            "sensor.test_route_departure_platform_actual",
+            "sensor.test_route_arrival_platform_planned",
+            "sensor.test_route_arrival_platform_actual",
+            "sensor.test_route_departure_time_planned",
+            "sensor.test_route_departure_time_actual",
+            "sensor.test_route_arrival_time_planned",
+            "sensor.test_route_arrival_time_actual",
+            "sensor.test_route_next_departure",
+            "sensor.test_route_status",
+            "sensor.test_route_transfers",
+            "sensor.test_route_route_from",
+            "sensor.test_route_route_to",
+            "sensor.test_route_route_via",
+        }
+        assert subentry_entity_ids == expected_entities
+
+        # Verify the subentry device has the route information
+        subentry_device = subentry_devices[0]
+        assert subentry_device.name == "Test Route"
+        assert subentry_device.manufacturer == "Nederlandse Spoorwegen"
+
+        # Unload entry
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_async_setup_entry_no_coordinator(hass: HomeAssistant) -> None:
+    """Test setup entry when coordinator is None (missing coverage line 158-159)."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.entry_id = "test_entry"
+    mock_config_entry.subentries = {}
+
+    # Create a mock coordinator for NSRuntimeData
+    mock_coordinator = MagicMock()
+    mock_config_entry.runtime_data = NSRuntimeData(coordinator=mock_coordinator)
+
+    # Then set the coordinator to None to trigger the error path
+    mock_config_entry.runtime_data.coordinator = None
+
+    entities = []
+
+    def mock_add_entities(
+        new_entities, update_before_add=False, *, config_subentry_id=None
+    ):
+        entities.extend(new_entities)
+
+    # This should trigger the error path on lines 158-159
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+
+    # Should create no sensors when coordinator is None
+    assert len(entities) == 0
+
+
+async def test_sensor_device_info_legacy_route(hass: HomeAssistant) -> None:
+    """Test sensor device info creation for legacy routes (coverage lines 249, 284-285)."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.entry_id = "test_entry"
+    mock_coordinator = MagicMock()
+
+    # Create a route without subentry (legacy route)
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]  # Use first description
+
+    # Create sensor without subentry_id to trigger legacy device logic
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Test device info for legacy route (lines 249, 284-285)
+    device_info = sensor.device_info
+    assert device_info is not None
+    assert device_info.get("identifiers") is not None
+    assert (DOMAIN, mock_config_entry.entry_id) in device_info["identifiers"]
+
+
+async def test_sensor_available_property_coordinator_data_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test sensor availability when coordinator data is None (coverage line 264)."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.entry_id = "test_entry"
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = None  # This triggers line 264
+    mock_coordinator.last_update_success = True
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should be unavailable when coordinator.data is None
+    assert not sensor.available
+
+
+async def test_sensor_available_property_route_not_in_data(hass: HomeAssistant) -> None:
+    """Test sensor availability when route key not in coordinator data (coverage line 264)."""
+    mock_config_entry = MagicMock()
+    mock_config_entry.entry_id = "test_entry"
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": {}}  # Empty routes dict
+    mock_coordinator.last_update_success = True
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should be unavailable when route key not in data
+    assert not sensor.available
+
+
+async def test_sensor_native_value_no_coordinator_data(hass: HomeAssistant) -> None:
+    """Test sensor native value when coordinator data is None (coverage line 274)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = None  # This triggers line 274
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should return None when coordinator data is None
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_no_value_fn(hass: HomeAssistant) -> None:
+    """Test sensor native value when description has no value_fn (coverage line 274)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": {"Test Route_AMS_UTR": {}}}
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+
+    # Create description without value_fn
+    description = MagicMock()
+    description.key = "test"
+    description.value_fn = None  # This triggers line 274
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should return None when value_fn is None
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_invalid_routes_data(hass: HomeAssistant) -> None:
+    """Test sensor native value with invalid routes data structure (coverage lines 279-280)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": "invalid_data"}  # Not a dict
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should return None when routes data is invalid
+    assert sensor.native_value is None
+
+
+async def test_sensor_native_value_invalid_route_specific_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test sensor native value with invalid route-specific data (coverage lines 291-295)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {
+        "routes": {"Test Route_AMS_UTR": "invalid_route_data"}  # Not a dict
     }
-    called = {}
 
-    def add_entities(new_entities, update_before_add=False):
-        called["sensors"] = list(new_entities)
-        called["update"] = update_before_add
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+    description = SENSOR_DESCRIPTIONS[0]
 
-    setup_platform(MagicMock(), config, add_entities)
-    assert len(called["sensors"]) == 1
-    assert isinstance(called["sensors"][0], NSDepartureSensor)
-    assert called["update"] is True
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should return None when route-specific data is invalid
+    assert sensor.native_value is None
 
 
-def test_update_no_time_branch(
-    monkeypatch: pytest.MonkeyPatch, mock_nsapi, mock_trip
+async def test_sensor_native_value_exception_handling(hass: HomeAssistant) -> None:
+    """Test sensor native value exception handling (coverage lines 305, TypeError/AttributeError/KeyError)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": {"Test Route_AMS_UTR": {"first_trip": {}}}}
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+
+    # Create description with value_fn that raises exception
+    description = MagicMock()
+    description.key = "test"
+    description.value_fn = MagicMock(side_effect=TypeError("Test error"))
+
+    sensor = NSSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
+    )
+
+    # Should return None when value_fn raises exception
+    assert sensor.native_value is None
+
+
+async def test_next_departure_sensor_native_value_no_coordinator_data(
+    hass: HomeAssistant,
 ) -> None:
-    """Test update covers the else branch for self._time (uses dt_util.now)."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._time = None
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
+    """Test next departure sensor native value when coordinator data is None (coverage line 310-311)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = None  # This triggers line 310-311
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+
+    sensor = NSNextDepartureSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=NEXT_DEPARTURE_DESCRIPTION,
     )
-    mock_trip.departure_time_planned = FIXED_NOW + timedelta(minutes=10)
-    mock_nsapi.get_trips.return_value = [mock_trip]
-    sensor.update()
-    assert sensor._first_trip == mock_trip
-    assert sensor._state == (FIXED_NOW + timedelta(minutes=10)).strftime("%H:%M")
+
+    # Should return None when coordinator data is None
+    assert sensor.native_value is None
 
 
-def test_update_early_return(monkeypatch: pytest.MonkeyPatch, mock_nsapi) -> None:
-    """Test update returns early if self._time is set and now is not within ±30 min."""
-    future_time = (FIXED_NOW + timedelta(hours=2)).time()
-    sensor = NSDepartureSensor(
-        mock_nsapi, "Test Sensor", "AMS", "UTR", None, future_time
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
-    )
-    sensor.update()
-    assert sensor._state is None
-    assert sensor._first_trip is None
-    assert sensor._next_trip is None
-
-
-def test_update_logs_error(
-    monkeypatch: pytest.MonkeyPatch, mock_nsapi, caplog: pytest.LogCaptureFixture
+async def test_next_departure_sensor_native_value_invalid_routes_data(
+    hass: HomeAssistant,
 ) -> None:
-    """Test update logs error on requests.ConnectionError or HTTPError."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    monkeypatch.setattr(
-        "homeassistant.components.nederlandse_spoorwegen.sensor.dt_util.now",
-        lambda: FIXED_NOW,
+    """Test next departure sensor with invalid routes data (coverage lines 315-316)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": "invalid_data"}  # Not a dict
+
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
+
+    sensor = NSNextDepartureSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=NEXT_DEPARTURE_DESCRIPTION,
     )
-    mock_nsapi.get_trips.side_effect = requests.exceptions.HTTPError("fail")
-    with caplog.at_level("ERROR"):
-        sensor.update()
-        assert "Couldn't fetch trip info" in caplog.text
+
+    # Should return None when routes data is invalid
+    assert sensor.native_value is None
 
 
-def test_extra_state_attributes_next_none(mock_nsapi, mock_trip) -> None:
-    """Test extra_state_attributes covers else branch for next_trip is None."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, None)
-    sensor._trips = [mock_trip]
-    sensor._first_trip = mock_trip
-    sensor._next_trip = None
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs["next"] is None
+async def test_next_departure_sensor_native_value_exception_handling(
+    hass: HomeAssistant,
+) -> None:
+    """Test next departure sensor exception handling (coverage lines 322-324)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {"routes": {"Test Route_AMS_UTR": {"next_trip": {}}}}
 
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
 
-def test_sensor_time_validation_string_conversion(mock_nsapi) -> None:
-    """Test sensor time string conversion and validation."""
-    # Test valid time string (now must be HH:MM:SS)
-    sensor = NSDepartureSensor(
-        mock_nsapi, "Test Sensor", "AMS", "UTR", None, "08:30:00"
+    # Create description with value_fn that raises exception
+    description = MagicMock()
+    description.key = "next_departure"
+    description.value_fn = MagicMock(side_effect=KeyError("Test error"))
+
+    sensor = NSNextDepartureSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=description,
     )
-    sensor.update()
-    assert isinstance(sensor._time, type(datetime(2023, 1, 1, 8, 30).time()))
 
-    # Test empty string time
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "")
-    sensor.update()
-    assert sensor._time is None
-
-    # Test only whitespace string time
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "   ")
-    sensor.update()
-    assert sensor._time is None
+    # Should return None when value_fn raises exception
+    assert sensor.native_value is None
 
 
-def test_invalid_time_format_raises_error(mock_nsapi) -> None:
-    """Test that an invalid time format logs error and sets time to None."""
-    sensor = NSDepartureSensor(mock_nsapi, "Test Sensor", "AMS", "UTR", None, "08h06m")
-    sensor.update()
-    assert sensor._time is None
+async def test_next_departure_sensor_invalid_route_specific_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test next departure sensor with invalid route-specific data (coverage lines 315-316)."""
+    mock_config_entry = MagicMock()
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = {
+        "routes": {"Test Route_AMS_UTR": "invalid_route_data"}  # Not a dict
+    }
 
+    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
+    route_key = "Test Route_AMS_UTR"
 
-def test_valid_time_format(mock_nsapi) -> None:
-    """Test that a valid time format is accepted and converted to time object."""
-    sensor = NSDepartureSensor(
-        mock_nsapi, "Test Sensor", "AMS", "UTR", None, "08:06:00"
+    sensor = NSNextDepartureSensor(
+        coordinator=mock_coordinator,
+        entry=mock_config_entry,
+        route=route,
+        route_key=route_key,
+        description=NEXT_DEPARTURE_DESCRIPTION,
     )
-    sensor.update()
-    assert isinstance(sensor._time, type(datetime(2023, 1, 1, 8, 6).time()))
+
+    # Should return None when route-specific data is invalid
+    assert sensor.native_value is None
