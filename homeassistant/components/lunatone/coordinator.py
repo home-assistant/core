@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from lunatone_dali_api_client import Devices, Info
-from lunatone_dali_api_client.models import DevicesData, InfoData
+from lunatone_rest_api_client import Devices, Info
+from lunatone_rest_api_client.models import DevicesData, InfoData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

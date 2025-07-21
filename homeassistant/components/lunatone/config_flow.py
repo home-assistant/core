@@ -8,8 +8,8 @@ import logging
 from typing import Any, Final
 
 import aiohttp
-from lunatone_dali_api_client import Auth, DALIScan, Info
-from lunatone_dali_api_client.models import StartScanData
+from lunatone_rest_api_client import Auth, DALIScan, Info
+from lunatone_rest_api_client.models import StartScanData
 import voluptuous as vol
 
 from homeassistant.config_entries import (

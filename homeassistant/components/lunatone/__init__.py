@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from lunatone_dali_api_client import Auth, Devices, Info
+from lunatone_rest_api_client import Auth, Devices, Info
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant

@@ -9,8 +9,8 @@ from typing import Any
 
 import aiohttp
 from awesomeversion import AwesomeVersion
-from lunatone_dali_api_client import Device
-from lunatone_dali_api_client.models import ControlData
+from lunatone_rest_api_client import Device
+from lunatone_rest_api_client.models import ControlData
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
