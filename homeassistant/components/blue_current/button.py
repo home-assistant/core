@@ -14,7 +14,7 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import UID, BlueCurrentConfigEntry, Connector
+from . import BlueCurrentConfigEntry, Connector
 from .entity import ChargepointEntity
 
 
@@ -37,13 +37,6 @@ CHARGE_POINT_BUTTONS = (
         translation_key="reboot",
         function=lambda connector, evse_id: connector.client.reboot(evse_id),
         device_class=ButtonDeviceClass.RESTART,
-    ),
-    ChargePointButtonEntityDescription(
-        key="start_charge_session",
-        translation_key="start_charge_session",
-        function=lambda connector, evse_id: connector.client.start_session(
-            evse_id, connector.selected_charge_card[UID]
-        ),
     ),
     ChargePointButtonEntityDescription(
         key="stop_charge_session",
