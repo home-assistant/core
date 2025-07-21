@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -133,13 +132,13 @@ async def test_dimmable_light(
     """Test a dimmable light."""
 
     # Test for currentLevel is None
-    set_node_attribute(matter_node, 1, 8, 0, NullValue)
+    set_node_attribute(matter_node, 1, 8, 0, None)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "on"
-    assert state.attributes["brightness"] is NullValue
+    assert state.attributes["brightness"] is None
 
     # Test that the light brightness is 50 (out of 254)
     set_node_attribute(matter_node, 1, 8, 0, 50)
