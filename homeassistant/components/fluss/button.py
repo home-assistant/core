@@ -43,7 +43,3 @@ class FlussButton(FlussEntity, ButtonEntity):
         """Handle the button press."""
         await self.coordinator.api.async_trigger_device(self.device_id)
 
-    @property
-    def available(self) -> bool:
-        """Return if the entity is available."""
-        return self.coordinator.last_update_success
