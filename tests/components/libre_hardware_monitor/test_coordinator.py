@@ -1,6 +1,7 @@
 """Test the LibreHardwareMonitor coordinator."""
 
 import logging
+from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from librehardwaremonitor_api import (
@@ -70,9 +71,9 @@ async def test_refresh_updates_data(
     sensor_data = coordinator.data.sensor_data.get("amdcpu-0-power-0")
     assert sensor_data
     assert sensor_data.name == "Package Power"
-    assert sensor_data.value == "31,0"
-    assert sensor_data.min == "30,7"
-    assert sensor_data.max == "46,6"
+    assert sensor_data.value == "39,6"
+    assert sensor_data.min == "25,1"
+    assert sensor_data.max == "70,1"
     assert sensor_data.unit == "W"
     assert sensor_data.device_name == "AMD Ryzen 7 7800X3D"
     assert sensor_data.device_type == "CPU"
@@ -89,10 +90,12 @@ async def test_orphaned_devices_are_removed(
     await coordinator._async_refresh()
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_ids_and_names={
-            DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
-            DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
-        },
+        main_device_ids_and_names=MappingProxyType(
+            {
+                DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
+                DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
+            }
+        ),
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
@@ -122,10 +125,12 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
     coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_ids_and_names={
-            **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-            DeviceId("generic-memory"): DeviceName("Generic Memory"),
-        },
+        main_device_ids_and_names=MappingProxyType(
+            {
+                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
+                DeviceId("generic-memory"): DeviceName("Generic Memory"),
+            }
+        ),
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
     )
 
