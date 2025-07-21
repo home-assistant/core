@@ -83,8 +83,9 @@ async def test_percent_state_on_cover(
     # 100 is closed and 0 is open for Tuya covers
     mock_device.status["percent_state"] = 100 - percent_state
 
+    entity_id = "cover.kitchen_blinds_curtain"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    cover_state = hass.states.get("cover.kitchen_blinds_curtain")
-    assert cover_state is not None, "cover.kitchen_blinds_curtain does not exist"
-    assert cover_state.attributes["current_position"] == percent_state
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.attributes["current_position"] == percent_state

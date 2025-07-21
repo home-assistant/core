@@ -8,6 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
+)
 from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -69,16 +73,17 @@ async def test_fan_mode_windspeed(
     mock_device: CustomerDevice,
 ) -> None:
     """Test fan mode with windspeed."""
+    entity_id = "climate.air_conditioner"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    state = hass.states.get("climate.air_conditioner")
-    assert state is not None, "climate.air_conditioner does not exist"
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
     assert state.attributes["fan_mode"] == 1
     await hass.services.async_call(
-        Platform.CLIMATE,
-        "set_fan_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
         {
-            "entity_id": "climate.air_conditioner",
+            "entity_id": entity_id,
             "fan_mode": 2,
         },
     )
@@ -104,17 +109,18 @@ async def test_fan_mode_no_valid_code(
     mock_device.status_range.pop("windspeed", None)
     mock_device.status.pop("windspeed", None)
 
+    entity_id = "climate.air_conditioner"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    state = hass.states.get("climate.air_conditioner")
-    assert state is not None, "climate.air_conditioner does not exist"
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
     assert state.attributes.get("fan_mode") is None
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
-            Platform.CLIMATE,
-            "set_fan_mode",
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
             {
-                "entity_id": "climate.air_conditioner",
+                "entity_id": entity_id,
                 "fan_mode": 2,
             },
             blocking=True,
