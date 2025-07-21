@@ -39,7 +39,6 @@ def mock_api_client() -> FlussApiClient:
     return api_client
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry(
     mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
 ) -> None:
