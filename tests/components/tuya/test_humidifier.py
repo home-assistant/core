@@ -17,6 +17,7 @@ from homeassistant.components.humidifier import (
 from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import DEVICE_MOCKS, initialize_entry
@@ -144,3 +145,84 @@ async def test_set_humidity(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "dehumidify_set_value", "value": 50}]
     )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_smart_dry_plus"],
+)
+async def test_turn_on_unsupported(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test turn on service."""
+    entity_id = "humidifier.dehumidifier"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+    assert err.value.translation_key == "action_dpcode_not_found"
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_smart_dry_plus"],
+)
+async def test_turn_off_unsupported(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test turn off service."""
+    entity_id = "humidifier.dehumidifier"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+    assert err.value.translation_key == "action_dpcode_not_found"
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_smart_dry_plus"],
+)
+async def test_set_humidity_unsupported(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test set humidity service."""
+    entity_id = "humidifier.dehumidifier"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": entity_id,
+                "humidity": 50,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "action_dpcode_not_found"
