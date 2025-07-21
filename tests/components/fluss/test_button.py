@@ -97,19 +97,42 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.asyncio
-async def test_fluss_button() -> None:
-    """Test Scenario of Fluss Button."""
-    mock_api = Mock(spec=FlussApiClient)
-    device = {"deviceId": "1", "deviceName": "Test Device"}
-    button = FlussButton(mock_api, device)
+async def test_fluss_button(
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
+) -> None:
+    """Test Fluss Button by simulating a service call."""
+    mock_registry = Mock()
+    mock_registry.async_get.return_value = Mock(
+        entity_id="button.test_device",
+        unique_id="fluss_1",
+        platform="fluss",
+        device_id="1",
+    )
+    mock_hass.entity_registry = mock_registry
 
-    assert button.name == "Test Device"
+    mock_hass.services = Mock()
+    mock_hass.services.async_call = AsyncMock()
 
-    with patch.object(
-        mock_api, "async_trigger_device", new=AsyncMock()
-    ) as mock_trigger:
-        await button.async_press()
-        mock_trigger.assert_called_once_with("1")
+    with patch(
+        "homeassistant.components.fluss.async_setup_entry",
+        return_value=True,
+    ):
+        await async_setup_entry(mock_hass, mock_entry, AsyncMock())
+
+    mock_registry.async_get.assert_called_once_with("button.test_device")
+
+    mock_api = mock_coordinator.api
+    mock_api.async_trigger_device = AsyncMock()
+
+    await mock_hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": "button.test_device"},
+        blocking=True,
+    )
+
+    # Verify that the API's async_trigger_device was called
+    mock_api.async_trigger_device.assert_called_once_with("1")
 
 
 @pytest.mark.asyncio
