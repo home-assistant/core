@@ -362,6 +362,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "host": "1.1.1.1",
             "username": "test-username",
             "password": "test-password",
+            "api_key": "test-api-key",
             "id": "UnifiProtect",
             "port": 443,
             "verify_ssl": False,
