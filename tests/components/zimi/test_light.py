@@ -2,16 +2,21 @@
 
 from unittest.mock import MagicMock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.light import ColorMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, check_states, check_toggle, mock_entity, setup_platform
+from .common import ENTITY_INFO, check_toggle, mock_api_device, setup_platform
 
 
 async def test_light_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_api: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests lights entity."""
 
@@ -19,7 +24,9 @@ async def test_light_entity(
     entity_key = "light.light_controller_test_entity_name"
     entity_type = "light"
 
-    mock_api.lights = [mock_entity(device_name=device_name, entity_type=entity_type)]
+    mock_api.lights = [
+        mock_api_device(device_name=device_name, entity_type=entity_type)
+    ]
 
     await setup_platform(hass, Platform.LIGHT)
 
@@ -30,7 +37,9 @@ async def test_light_entity(
         "supported_color_modes": [ColorMode.ONOFF],
     }
 
-    await check_states(hass, entity_type, entity_key)
+    state = hass.states.get(entity_key)
+    assert state == snapshot
+
     await check_toggle(
         hass,
         entity_type,
@@ -40,7 +49,10 @@ async def test_light_entity(
 
 
 async def test_dimmer_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_api: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests dimmer entity."""
 
@@ -48,7 +60,9 @@ async def test_dimmer_entity(
     entity_key = "light.light_controller_test_entity_name"
     entity_type = "dimmer"
 
-    mock_api.lights = [mock_entity(device_name=device_name, entity_type=entity_type)]
+    mock_api.lights = [
+        mock_api_device(device_name=device_name, entity_type=entity_type)
+    ]
 
     await setup_platform(hass, Platform.LIGHT)
 
@@ -59,7 +73,9 @@ async def test_dimmer_entity(
         "supported_color_modes": [ColorMode.BRIGHTNESS],
     }
 
-    await check_states(hass, entity_type, entity_key)
+    state = hass.states.get(entity_key)
+    assert state == snapshot
+
     await check_toggle(
         hass,
         entity_type,

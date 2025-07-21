@@ -29,18 +29,6 @@ INPUT_HOST = "192.168.1.100"
 INPUT_PORT = 5003
 
 
-async def check_states(
-    hass: HomeAssistant,
-    entity_type: str,
-    entity_key: str,
-) -> None:
-    """Check that the entity states exist."""
-
-    state = hass.states.get(entity_key)
-    assert state is not None
-    assert state.entity_id == entity_key
-
-
 async def check_toggle(
     hass: HomeAssistant,
     entity_type: str,
@@ -111,9 +99,13 @@ def mock_api_device(
 
     mock_api_device.subscribe = AsyncMock()
 
+    mock_api_device.brightness = 0
+    mock_api_device.percentage = 0
+
     mock_api_device.close_door = AsyncMock()
     mock_api_device.open_door = AsyncMock()
     mock_api_device.open_to_percentage = AsyncMock()
+
     mock_api_device.set_brightness = AsyncMock()
     mock_api_device.set_fanspeed = AsyncMock()
     mock_api_device.turn_on = AsyncMock()

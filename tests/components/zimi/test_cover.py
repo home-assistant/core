@@ -2,16 +2,26 @@
 
 from unittest.mock import MagicMock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.const import Platform
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, check_states, mock_entity, setup_platform
+from .common import ENTITY_INFO, mock_api_device, setup_platform
 
 
 async def test_cover_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_api: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests cover entity."""
 
@@ -19,7 +29,7 @@ async def test_cover_entity(
     entity_key = "cover.cover_controller_test_entity_name"
     entity_type = Platform.COVER
 
-    mock_api.doors = [mock_entity(device_name=device_name, entity_type=entity_type)]
+    mock_api.doors = [mock_api_device(device_name=device_name, entity_type=entity_type)]
 
     await setup_platform(hass, entity_type)
 
@@ -34,32 +44,33 @@ async def test_cover_entity(
         | CoverEntityFeature.SET_POSITION
     )
 
-    await check_states(hass, entity_type, entity_key)
+    state = hass.states.get(entity_key)
+    assert state == snapshot
 
     services = hass.services.async_services()
 
-    assert "close_cover" in services[entity_type]
+    assert SERVICE_CLOSE_COVER in services[entity_type]
     await hass.services.async_call(
         entity_type,
-        "close_cover",
+        SERVICE_CLOSE_COVER,
         {"entity_id": entity_key},
         blocking=True,
     )
     assert mock_api.doors[0].close_door.called
 
-    assert "open_cover" in services[entity_type]
+    assert SERVICE_OPEN_COVER in services[entity_type]
     await hass.services.async_call(
         entity_type,
-        "open_cover",
+        SERVICE_OPEN_COVER,
         {"entity_id": entity_key},
         blocking=True,
     )
     assert mock_api.doors[0].open_door.called
 
-    assert "set_cover_position" in services[entity_type]
+    assert SERVICE_SET_COVER_POSITION in services[entity_type]
     await hass.services.async_call(
         entity_type,
-        "set_cover_position",
+        SERVICE_SET_COVER_POSITION,
         {"entity_id": entity_key, "position": 50},
         blocking=True,
     )
