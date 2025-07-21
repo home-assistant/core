@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[am43_corded_motor_zigbee_cover][cover.kitchen_blinds_curtain-entry]
+# name: test_platform_setup_and_discovery[cl_am43_corded_motor_zigbee_cover][cover.kitchen_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[am43_corded_motor_zigbee_cover][cover.kitchen_blinds_curtain-state]
+# name: test_platform_setup_and_discovery[cl_am43_corded_motor_zigbee_cover][cover.kitchen_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 48,
