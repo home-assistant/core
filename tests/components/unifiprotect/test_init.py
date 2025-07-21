@@ -18,6 +18,7 @@ from homeassistant.components.unifiprotect.data import (
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -68,6 +69,7 @@ async def test_setup_multiple(
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                CONF_API_KEY: "test-api-key",
                 "id": "UnifiProtect",
                 "port": 443,
                 "verify_ssl": False,
@@ -350,3 +352,53 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
         assert entry.version == 2
         assert entry.options.get(CONF_ALLOW_EA) is None
         assert entry.unique_id == "123456"
+
+
+async def test_setup_missing_api_key(hass: HomeAssistant) -> None:
+    """Test setup of unifiprotect entry with missing API key triggers reauth."""
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+        patch("homeassistant.components.unifiprotect.async_start_discovery"),
+    ):
+        # Create config entry without API key
+        mock_config = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+                "id": "UnifiProtect",
+                "port": 443,
+                "verify_ssl": False,
+                # Note: No CONF_API_KEY in data
+            },
+            version=2,
+        )
+        mock_config.add_to_hass(hass)
+
+        # Mock the API client (though it shouldn't be called)
+        mock_api.return_value = Mock()
+
+        # Track reauth flow initiation
+        with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+            # Setup should fail with ConfigEntryAuthFailed
+            await hass.config_entries.async_setup(mock_config.entry_id)
+            await hass.async_block_till_done()
+
+            # Verify entry is in setup error state
+            assert mock_config.state is ConfigEntryState.SETUP_ERROR
+
+            # Verify reauth flow was initiated (could be called once or twice by HA)
+            assert mock_flow_init.call_count >= 1
+
+            # Check that the first call was our expected call
+            first_call = mock_flow_init.call_args_list[0]
+            assert first_call[0] == (DOMAIN,)  # Positional args
+            assert first_call[1]["context"]["source"] == "reauth"
+            assert first_call[1]["context"]["entry_id"] == mock_config.entry_id
+            assert first_call[1]["data"] == mock_config.data
+
+            # Verify the API client was never created (since we failed before that)
+            mock_api.assert_not_called()
