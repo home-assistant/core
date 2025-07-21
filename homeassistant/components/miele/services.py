@@ -6,7 +6,7 @@ from typing import cast
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -22,8 +22,6 @@ SERVICE_PROGRAM = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
-        vol.Optional(ATTR_DURATION): cv.positive_int,
-        vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
     },
 )
 
@@ -58,13 +56,6 @@ async def set_program(call: ServiceCall) -> None:
     device_entry = device_reg.async_get(device)
 
     data = {"programId": call.data[ATTR_PROGRAM_ID]}
-    if ATTR_DURATION in call.data:
-        data[ATTR_DURATION] = [
-            call.data[ATTR_DURATION] // 60,
-            call.data[ATTR_DURATION] % 60,
-        ]
-    if ATTR_TEMPERATURE in call.data:
-        data[ATTR_TEMPERATURE] = call.data[ATTR_TEMPERATURE]
     try:
         if serial_number := cast(dr.DeviceEntry, device_entry).serial_number:
             await api.set_program(serial_number, data)

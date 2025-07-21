@@ -7,8 +7,8 @@ import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.services import ATTR_DURATION, ATTR_PROGRAM_ID
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
+from homeassistant.components.miele.services import ATTR_PROGRAM_ID
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -42,23 +42,6 @@ async def test_services(
     mock_miele_client.set_program.assert_called_once_with(
         TEST_APPLIANCE, {"programId": 24}
     )
-    mock_miele_client.reset_mock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_program",
-        {
-            ATTR_DEVICE_ID: device.id,
-            ATTR_PROGRAM_ID: 24,
-            ATTR_DURATION: 75,
-            ATTR_TEMPERATURE: 195,
-        },
-        blocking=True,
-    )
-    mock_miele_client.set_program.assert_called_once_with(
-        TEST_APPLIANCE, {"programId": 24, ATTR_DURATION: [1, 15], ATTR_TEMPERATURE: 195}
-    )
-    mock_miele_client.reset_mock()
 
 
 async def test_service_api_errors(

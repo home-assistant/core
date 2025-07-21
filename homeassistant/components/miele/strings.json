@@ -1081,14 +1081,6 @@
         "program_id": {
           "description": "The ID of the program to set.",
           "name": "Program ID"
-        },
-        "duration": {
-          "description": "The duration of the program in minutes (only for ovens).",
-          "name": "Duration"
-        },
-        "temperature": {
-          "description": "The target temperature in degrees Celsius (only for ovens).",
-          "name": "Temperature"
         }
       }
     }
