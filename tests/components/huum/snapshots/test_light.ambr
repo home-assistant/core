@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        'f',
-        'n',
-        'o',
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -46,9 +44,7 @@
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'Huum sauna Light',
       'supported_color_modes': list([
-        'f',
-        'n',
-        'o',
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),

@@ -33,7 +33,7 @@ class HuumLight(HuumBaseEntity, LightEntity):
     """Representation of a light."""
 
     _attr_name = "Light"
-    _attr_supported_color_modes = set(ColorMode.ONOFF)
+    _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
