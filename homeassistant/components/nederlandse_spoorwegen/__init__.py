@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 from dataclasses import dataclass
 import logging
 from types import MappingProxyType
@@ -47,9 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    api_key = entry.data.get(CONF_API_KEY)
-    if not api_key:
-        raise ValueError("API key is required")
+    api_key = entry.data[CONF_API_KEY]
 
     api_wrapper = NSAPIWrapper(hass, api_key)
 
@@ -61,8 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    with contextlib.suppress(asyncio.CancelledError):
-        await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -76,10 +71,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
-    """Handle removal of a config entry."""
 
 
 async def _async_migrate_legacy_routes(
