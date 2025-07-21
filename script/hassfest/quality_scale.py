@@ -602,7 +602,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "loqed",
     "luci",
     "luftdaten",
-    "lunatone",
     "lupusec",
     "lutron",
     "lutron_caseta",
