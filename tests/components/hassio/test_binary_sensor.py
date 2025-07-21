@@ -1,19 +1,29 @@
 """The tests for the hassio binary sensors."""
 
+from dataclasses import asdict, replace
+from datetime import timedelta
+import json
 import os
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohasupervisor.models.mounts import (
+    CIFSMountResponse,
+    MountState,
+    NFSMountResponse,
+)
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -153,6 +163,34 @@ def mock_all(
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_mounts(
+    aioclient_mock: AiohttpClientMocker,
+) -> list[CIFSMountResponse | NFSMountResponse]:
+    """Mock mount requests."""
+    mounts: list[CIFSMountResponse | NFSMountResponse] = []
+
+    async def _respose(method: str, url: str, _: Any) -> str:
+        return AiohttpClientMockResponse(
+            method,
+            url,
+            response=json.dumps(
+                {
+                    "result": "ok",
+                    "data": {
+                        "default_backup_mount": None,
+                        "mounts": [asdict(mount) for mount in mounts],
+                    },
+                }
+            ).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+
+    aioclient_mock.get("http://127.0.0.1/mounts", side_effect=_respose)
+
+    return mounts
+
+
 @pytest.mark.parametrize(
     ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
 )
@@ -197,3 +235,70 @@ async def test_binary_sensor(
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
+
+
+async def test_mount_binary_sensor(
+    hass: HomeAssistant,
+    mock_mounts: list[CIFSMountResponse | NFSMountResponse],
+    # freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test hassio mounts binary sensor."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    entity_id = "binary_sensor.nas_connected"
+
+    # Verify that the entity doesn't exist.
+    assert hass.states.get(entity_id) is None
+
+    # Add a mount.
+    mock_mounts.append(
+        CIFSMountResponse(
+            share="files",
+            server="1.2.3.4",
+            name="NAS",
+            type="cifs",
+            usage="share",
+            read_only=False,
+            state=MountState.ACTIVE,
+            user_path="/share/nas",
+        )
+    )
+
+    # Let it reload.
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Test new entity.
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "on"
+
+    # Change state and test again.
+    mock_mounts[0] = replace(mock_mounts[0], state=MountState.FAILED)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "off"
+
+    # Remove mount and test again.
+    mount = mock_mounts.pop()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id) is None
+
+    # Recreate mount with the same name.
+    mock_mounts.append(mount)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id) is not None
