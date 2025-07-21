@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from fluss_api import FlussApiClient
 import pytest
 
+from homeassistant.components.fluss import CONF_API_KEY
 from homeassistant.components.fluss.button import FlussButton, async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ def mock_hass() -> HomeAssistant:
 def mock_entry() -> ConfigEntry:
     """Mock API Entry."""
     entry = Mock(spec=ConfigEntry)
-    entry.data = {"api_key": "test_api_key"}
+    entry.data = {CONF_API_KEY: "test_api_key"}
     entry.runtime_data = None  # Will be set in tests
     return entry
 
