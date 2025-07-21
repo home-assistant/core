@@ -30,25 +30,25 @@
         "name": "CPU load"
       },
       "host_netrole": {
-        "name": "Network Role"
+        "name": "Network role"
       },
       "wireless_frequency": {
-        "name": "Wireless Frequency"
+        "name": "Wireless frequency"
       },
       "wireless_essid": {
         "name": "Wireless SSID"
       },
       "wireless_mode": {
-        "name": "Wireless Mode"
+        "name": "Wireless mode"
       },
       "wireless_antenna_gain": {
-        "name": "Antenna Gain"
+        "name": "Antenna gain"
       },
       "wireless_throughput_tx": {
-        "name": "Throughput Transmit (actual)"
+        "name": "Throughput transmit (actual)"
       },
       "wireless_throughput_rx": {
-        "name": "Throughput Receive (actual)"
+        "name": "Throughput receive (actual)"
       },
       "wireless_polling_dl_capacity": {
         "name": "Download capacity"
@@ -57,7 +57,7 @@
         "name": "Upload capacity"
       },
       "wireless_remote_hostname": {
-        "name": "Remote Hostname"
+        "name": "Remote hostname"
       }
     }
   }
