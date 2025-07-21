@@ -250,6 +250,12 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
+        LOGGER.debug(
+            "Got brightness %s for %s",
+            level_control.currentLevel,
+            self.entity_id,
+        )
+
         if level_control.currentLevel is NullValue:
             # currentLevel is a nullable value.
             return None
