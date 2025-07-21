@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -16,12 +16,11 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -334,11 +333,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if self._set_position is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
-            )
+        if TYPE_CHECKING:
+            # guarded by CoverEntityFeature.SET_POSITION
+            assert self._set_position is not None
 
         self._send_command(
             [
@@ -366,11 +363,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if self._tilt is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
-            )
+        if TYPE_CHECKING:
+            # guarded by CoverEntityFeature.SET_TILT_POSITION
+            assert self._tilt is not None
 
         self._send_command(
             [
