@@ -442,3 +442,61 @@ class NSAPIWrapper:
         if not station_code:
             return ""
         return station_code.upper().strip()
+
+    def convert_station_name_to_code(
+        self, station_input: str, stations: list[Any] | None = None
+    ) -> str:
+        """Convert station name to station code using station data.
+
+        Args:
+            station_input: Either a station name or station code
+            stations: List of station objects (required for name conversion)
+
+        Returns:
+            Station code (uppercase) or the original input if no mapping found
+        """
+        if not station_input:
+            return ""
+
+        # Normalize input
+        normalized_input = station_input.upper().strip()
+
+        # Check if it's already a station code (typically 2-5 characters)
+        if len(normalized_input) <= 5 and normalized_input.isalpha():
+            return normalized_input
+
+        if not stations:
+            # If no stations available, return normalized input
+            _LOGGER.warning(
+                "No station data available for name-to-code conversion of '%s'",
+                station_input,
+            )
+            return normalized_input
+
+        # Build name-to-code mapping
+        station_mapping = self.build_station_mapping(stations)
+        name_to_code_mapping = {
+            name.upper(): code for code, name in station_mapping.items()
+        }
+
+        # Try to find the station code by name
+        station_code = name_to_code_mapping.get(normalized_input)
+        if station_code:
+            return station_code
+
+        # If no exact match, try partial matching for common variations
+        for name, code in name_to_code_mapping.items():
+            if normalized_input in name or name in normalized_input:
+                _LOGGER.debug(
+                    "Using partial match for station '%s' -> '%s' (%s)",
+                    station_input,
+                    code,
+                    name,
+                )
+                return code
+
+        # If no mapping found, return the original input (might already be a code)
+        _LOGGER.warning(
+            "No station code mapping found for '%s', using as-is", station_input
+        )
+        return normalized_input

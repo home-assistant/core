@@ -19,7 +19,15 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
 
 from .api import NSAPIAuthError, NSAPIConnectionError, NSAPIError, NSAPIWrapper
-from .const import CONF_FROM, CONF_NAME, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
+from .const import (
+    CONF_FROM,
+    CONF_NAME,
+    CONF_ROUTES,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    DOMAIN,
+)
 from .utils import get_current_utc_timestamp, normalize_and_validate_time_format
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +76,54 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        _LOGGER.debug("Importing YAML configuration: %s", import_data)
+
+        # Check if we already have an entry for this integration
+        existing_entries = self._async_current_entries()
+        if existing_entries:
+            _LOGGER.warning("Integration already configured, skipping YAML import")
+            return self.async_abort(reason="already_configured")
+
+        # Validate API key
+        api_key = import_data[CONF_API_KEY]
+        api_wrapper = NSAPIWrapper(self.hass, api_key)
+
+        try:
+            if not await api_wrapper.validate_api_key():
+                _LOGGER.error("Invalid API key in YAML configuration")
+                return self.async_abort(reason="invalid_api_key")
+        except (NSAPIAuthError, NSAPIConnectionError, NSAPIError) as err:
+            _LOGGER.error("Failed to validate API key during import: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
+        # Create the main config entry
+        await self.async_set_unique_id(f"{DOMAIN}")
+        self._abort_if_unique_id_configured()
+
+        config_entry = self.async_create_entry(
+            title="Nederlandse Spoorwegen",
+            data={CONF_API_KEY: api_key},
+        )
+
+        # If there are routes in the YAML, create subentries
+        routes = import_data.get(CONF_ROUTES, [])
+        if routes:
+            _LOGGER.info("Importing %d routes from YAML configuration", len(routes))
+            # Note: The actual subentry creation will be handled by the migration
+            # function in async_setup_entry since we can't create subentries here
+            # We'll store the routes temporarily in the entry data
+            config_entry = self.async_create_entry(
+                title="Nederlandse Spoorwegen",
+                data={
+                    CONF_API_KEY: api_key,
+                    CONF_ROUTES: routes,  # Will be migrated to subentries
+                },
+            )
+
+        return config_entry
 
     @classmethod
     @callback

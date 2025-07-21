@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant.components.nederlandse_spoorwegen.api import (
     NSAPIAuthError,
     NSAPIConnectionError,
@@ -23,7 +21,6 @@ from tests.common import MockConfigEntry
 API_KEY = "abc1234567"
 
 
-@pytest.mark.asyncio
 async def test_config_flow_user_success(hass: HomeAssistant) -> None:
     """Test successful user config flow."""
     with patch(
@@ -49,7 +46,6 @@ async def test_config_flow_user_success(hass: HomeAssistant) -> None:
         assert result.get("data") == {CONF_API_KEY: API_KEY}
 
 
-@pytest.mark.asyncio
 async def test_config_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test config flow with invalid auth."""
     with patch(
@@ -69,7 +65,6 @@ async def test_config_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "invalid_auth"}
 
 
-@pytest.mark.asyncio
 async def test_config_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test config flow with connection error."""
     with patch(
@@ -89,14 +84,13 @@ async def test_config_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "cannot_connect"}
 
 
-@pytest.mark.asyncio
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
     """Test config flow aborts if already configured."""
     # Since single_config_entry is true, we should get an abort when trying to add a second
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: API_KEY},
-        unique_id=API_KEY,  # Use API key as unique_id
+        unique_id="nederlandse_spoorwegen",  # Use the same unique_id as config flow
     )
     config_entry.add_to_hass(hass)
 
@@ -167,3 +161,112 @@ def test_normalize_and_validate_time_format() -> None:
     assert normalize_and_validate_time_format("invalid") == (False, None)
     assert normalize_and_validate_time_format("08:30:60") == (False, None)
     assert normalize_and_validate_time_format("08") == (False, None)
+
+
+async def test_config_flow_import_success(hass: HomeAssistant) -> None:
+    """Test successful import flow from YAML configuration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.api.NSAPIWrapper.validate_api_key",
+        return_value=True,
+    ):
+        # Test import with API key only
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={"api_key": "test_api_key"},
+        )
+
+        assert result.get("type") == FlowResultType.CREATE_ENTRY
+        assert result.get("title") == "Nederlandse Spoorwegen"
+        assert result.get("data") == {"api_key": "test_api_key"}
+
+
+async def test_config_flow_import_with_routes(hass: HomeAssistant) -> None:
+    """Test import flow with routes from YAML configuration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.api.NSAPIWrapper.validate_api_key",
+        return_value=True,
+    ):
+        import_data = {
+            "api_key": "test_api_key",
+            "routes": [
+                {
+                    "name": "Home to Work",
+                    "from": "Amsterdam",
+                    "to": "Utrecht",
+                    "via": "Hoofddorp",
+                    "time": "08:30",
+                }
+            ],
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=import_data,
+        )
+
+        assert result.get("type") == FlowResultType.CREATE_ENTRY
+        assert result.get("title") == "Nederlandse Spoorwegen"
+        assert result.get("data") is not None
+        data = result.get("data")
+        assert data is not None
+        assert data["api_key"] == "test_api_key"
+        assert "routes" in data
+        assert len(data["routes"]) == 1
+
+
+async def test_config_flow_import_already_configured(hass: HomeAssistant) -> None:
+    """Test import flow when integration is already configured."""
+    # Create an existing config entry with the same unique ID
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "existing_key"},
+        unique_id="nederlandse_spoorwegen",  # Same unique ID as import
+    )
+    existing_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.api.NSAPIWrapper.validate_api_key",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={"api_key": "test_api_key"},
+        )
+
+        assert result.get("type") == FlowResultType.ABORT
+        assert result.get("reason") == "single_instance_allowed"
+
+
+async def test_config_flow_import_invalid_api_key(hass: HomeAssistant) -> None:
+    """Test import flow with invalid API key."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.api.NSAPIWrapper.validate_api_key",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={"api_key": "invalid_key"},
+        )
+
+        assert result.get("type") == FlowResultType.ABORT
+        assert result.get("reason") == "invalid_api_key"
+
+
+async def test_config_flow_import_connection_error(hass: HomeAssistant) -> None:
+    """Test import flow with connection error."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.api.NSAPIWrapper.validate_api_key",
+        side_effect=NSAPIConnectionError("Connection failed"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={"api_key": "test_api_key"},
+        )
+
+        assert result.get("type") == FlowResultType.ABORT
+        assert result.get("reason") == "cannot_connect"

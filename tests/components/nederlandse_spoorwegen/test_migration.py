@@ -28,11 +28,13 @@ async def test_migrate_legacy_routes_from_data(hass: HomeAssistant) -> None:
             "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
         ) as mock_api_wrapper_class,
         patch(
-            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.normalize_station_code"
-        ) as mock_normalize,
+            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.convert_station_name_to_code"
+        ) as mock_convert,
     ):
-        # Mock normalize_station_code to return uppercase strings
-        mock_normalize.side_effect = lambda code: code.upper() if code else ""
+        # Mock convert_station_name_to_code to return uppercase strings
+        mock_convert.side_effect = (
+            lambda code, stations=None: str(code).upper() if code else ""
+        )
 
         # Mock stations with required station codes
         mock_station_asd = type(
@@ -63,9 +65,9 @@ async def test_migrate_legacy_routes_from_data(hass: HomeAssistant) -> None:
         mock_api_wrapper.get_station_codes = MagicMock(
             return_value={"ASD", "RTD", "GN", "MT", "ZL"}
         )
-        # Mock the normalize_station_code method as regular method
-        mock_api_wrapper.normalize_station_code = MagicMock(
-            side_effect=lambda code: code.upper() if code else ""
+        # Mock the convert_station_name_to_code method as regular method
+        mock_api_wrapper.convert_station_name_to_code = MagicMock(
+            side_effect=lambda code, stations=None: str(code).upper() if code else ""
         )
         mock_api_wrapper_class.return_value = mock_api_wrapper
 
@@ -238,8 +240,8 @@ async def test_migration_error_handling(hass: HomeAssistant) -> None:
             "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
         ) as mock_api_wrapper_class,
         patch(
-            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.normalize_station_code",
-            side_effect=lambda code: code.upper() if code else "",
+            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.convert_station_name_to_code",
+            side_effect=lambda code, stations=None: str(code).upper() if code else "",
         ),
     ):
         # Mock stations with required station codes
@@ -277,9 +279,9 @@ async def test_migration_error_handling(hass: HomeAssistant) -> None:
         mock_api_wrapper.get_station_codes = MagicMock(
             return_value={"ASD", "RTD", "GN", "MT", "ZL"}
         )
-        # Mock the normalize_station_code method as regular method
-        mock_api_wrapper.normalize_station_code = MagicMock(
-            side_effect=lambda code: code.upper() if code else ""
+        # Mock the convert_station_name_to_code method as regular method
+        mock_api_wrapper.convert_station_name_to_code = MagicMock(
+            side_effect=lambda code, stations=None: str(code).upper() if code else ""
         )
         mock_api_wrapper_class.return_value = mock_api_wrapper
 
@@ -339,11 +341,13 @@ async def test_migration_unique_id_generation(hass: HomeAssistant) -> None:
             "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper"
         ) as mock_api_wrapper_class,
         patch(
-            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.normalize_station_code"
-        ) as mock_normalize,
+            "homeassistant.components.nederlandse_spoorwegen.NSAPIWrapper.convert_station_name_to_code"
+        ) as mock_convert,
     ):
-        # Mock normalize_station_code to return uppercase strings
-        mock_normalize.side_effect = lambda code: code.upper() if code else ""
+        # Mock convert_station_name_to_code to return uppercase strings
+        mock_convert.side_effect = (
+            lambda code, stations=None: str(code).upper() if code else ""
+        )
 
         # Mock stations with required station codes
         mock_station_asd = type(
@@ -374,9 +378,9 @@ async def test_migration_unique_id_generation(hass: HomeAssistant) -> None:
         mock_api_wrapper.get_station_codes = MagicMock(
             return_value={"ASD", "RTD", "GN", "MT", "ZL"}
         )
-        # Mock the normalize_station_code method as regular method
-        mock_api_wrapper.normalize_station_code = MagicMock(
-            side_effect=lambda code: code.upper() if code else ""
+        # Mock the convert_station_name_to_code method as regular method
+        mock_api_wrapper.convert_station_name_to_code = MagicMock(
+            side_effect=lambda code, stations=None: str(code).upper() if code else ""
         )
         mock_api_wrapper_class.return_value = mock_api_wrapper
 

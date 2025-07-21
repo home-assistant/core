@@ -7,20 +7,45 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .api import NSAPIWrapper
+from .api import NSAPIAuthError, NSAPIConnectionError, NSAPIError, NSAPIWrapper
 from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# This integration can only be configured via config entries
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+# Schema for a single route
+ROUTE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FROM): cv.string,
+        vol.Required(CONF_TO): cv.string,
+        vol.Optional(CONF_VIA): cv.string,
+        vol.Optional(CONF_TIME): cv.string,
+    }
+)
+
+# Schema for the integration configuration
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_ROUTES, default=[]): vol.All(
+                    cv.ensure_list, [ROUTE_SCHEMA]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 # Define runtime data structure for this integration
@@ -40,6 +65,17 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nederlandse Spoorwegen component."""
+    # Check if there's YAML configuration to import
+    if DOMAIN in config:
+        # Create import flow using the standard pattern
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "import"},
+                data=config[DOMAIN],
+            )
+        )
+
     return True
 
 
@@ -53,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
 
     entry.runtime_data = NSRuntimeData(coordinator=coordinator)
 
-    await _async_migrate_legacy_routes(hass, entry)
+    # Handle legacy routes migration (even if no routes exist)
+    if not entry.options.get("routes_migrated", False):
+        await _async_migrate_legacy_routes(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -93,6 +131,16 @@ async def _async_migrate_legacy_routes(
     if not legacy_routes:
         return
 
+    # Create API wrapper instance for station name normalization
+    api_wrapper = NSAPIWrapper(hass, entry.data[CONF_API_KEY])
+
+    # Fetch stations for name-to-code conversion
+    try:
+        stations = await api_wrapper.get_stations()
+    except (NSAPIAuthError, NSAPIConnectionError, NSAPIError) as ex:
+        _LOGGER.warning("Failed to fetch stations for migration: %s", ex)
+        stations = []
+
     migrated_count = 0
 
     for route in legacy_routes:
@@ -103,27 +151,36 @@ async def _async_migrate_legacy_routes(
                 )
                 continue
 
-            # Create subentry data with centralized station code normalization
+            # Convert station names to codes using the API wrapper method
+            from_station = str(
+                api_wrapper.convert_station_name_to_code(route[CONF_FROM], stations)
+            )
+            to_station = str(
+                api_wrapper.convert_station_name_to_code(route[CONF_TO], stations)
+            )
+
+            # Create subentry data with converted station codes
             subentry_data = {
                 CONF_NAME: route[CONF_NAME],
-                CONF_FROM: NSAPIWrapper.normalize_station_code(route[CONF_FROM]),
-                CONF_TO: NSAPIWrapper.normalize_station_code(route[CONF_TO]),
+                CONF_FROM: from_station,
+                CONF_TO: to_station,
             }
 
             # Add optional fields if present
             if route.get(CONF_VIA):
-                subentry_data[CONF_VIA] = NSAPIWrapper.normalize_station_code(
-                    route[CONF_VIA]
+                via_station = str(
+                    api_wrapper.convert_station_name_to_code(route[CONF_VIA], stations)
                 )
+                subentry_data[CONF_VIA] = via_station
 
             if route.get(CONF_TIME):
                 subentry_data[CONF_TIME] = route[CONF_TIME]
 
-            # Create unique_id with centralized station code normalization
+            # Create unique_id with converted station codes
             unique_id_parts = [
-                NSAPIWrapper.normalize_station_code(route[CONF_FROM]),
-                NSAPIWrapper.normalize_station_code(route[CONF_TO]),
-                NSAPIWrapper.normalize_station_code(route.get(CONF_VIA, "")),
+                from_station,
+                to_station,
+                subentry_data.get(CONF_VIA, ""),
             ]
             unique_id = "_".join(part for part in unique_id_parts if part)
 
