@@ -153,7 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
-        model = f"{device.product_name} (unsupported)"
         if not device.status and not device.status_range and not device.function:
             # If the device has no status, status_range or function, it cannot be supported
             LOGGER.info(
@@ -162,13 +161,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
                 device.product_name,
                 device.id,
             )
-            model = f"{device.product_name} (unsupported)"
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
-            model=model,
+            model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
         )
 
