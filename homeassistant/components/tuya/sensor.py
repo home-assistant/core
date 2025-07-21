@@ -1689,27 +1689,36 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
     ) -> None:
         """Initialize energy sensor."""
         super().__init__(device, device_manager, description)
-        self._device_manager = device_manager
         self._config_entry = config_entry
         self._cumulative_total: Decimal = Decimal(0)
-        self._last_update_time: float | None = None
+        self._last_update_time: int | None = None
         self._last_raw_value: Decimal | None = None
 
     async def async_added_to_hass(self) -> None:
         """Restore state on startup."""
         await super().async_added_to_hass()
 
-        if self._is_incremental_mode and (state := await self.async_get_last_state()):
-            if state.state not in ("unknown", "unavailable"):
+        if (
+            self._is_incremental_mode
+            and (state := await self.async_get_last_state())
+            and state.state not in ("unknown", "unavailable")
+            and state.attributes
+        ):
+            # Restore cumulative total if available
+            if cumulative_total := state.attributes.get("cumulative_total"):
                 with contextlib.suppress(ValueError, TypeError, InvalidOperation):
-                    self._cumulative_total = Decimal(
-                        str(state.attributes["cumulative_total"])
-                    )
+                    self._cumulative_total = Decimal(str(cumulative_total))
 
-            # Try to restore last update time from attributes
-            if state.attributes and "last_update_time" in state.attributes:
+            # Restore last update time if available
+            if last_update_time := state.attributes.get("last_update_time"):
                 with contextlib.suppress(ValueError, TypeError):
-                    self._last_update_time = float(state.attributes["last_update_time"])
+                    # Direct conversion handles str, int, float inputs
+                    self._last_update_time = int(last_update_time)
+
+            # Restore last raw value if available to prevent duplicate accumulation
+            if last_raw_value := state.attributes.get("last_raw_value"):
+                with contextlib.suppress(ValueError, TypeError, InvalidOperation):
+                    self._last_raw_value = Decimal(str(last_raw_value))
 
     @property
     def _is_incremental_mode(self) -> bool:
@@ -1792,7 +1801,7 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
         )
 
     def _is_new_update(
-        self, current_value: Decimal, dp_timestamp: float | None = None
+        self, current_value: Decimal, dp_timestamp: int | None = None
     ) -> bool:
         if dp_timestamp is not None:
             if self._last_update_time is None or dp_timestamp > self._last_update_time:
@@ -1803,7 +1812,7 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
 
         if self._last_raw_value is None or current_value != self._last_raw_value:
             self._last_raw_value = current_value
-            self._last_update_time = time.time() * 1000
+            self._last_update_time = int(time.time() * 1000)
             return True
 
         return False
@@ -1819,8 +1828,9 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return diagnostic attributes."""
-        # Only show energy report mode attributes for qualifying energy sensors
         attrs = dict(super().extra_state_attributes or {})
+
+        # Only show energy report mode attributes for qualifying energy sensors
         if self.device_class in (
             SensorDeviceClass.ENERGY,
             SensorDeviceClass.ENERGY_STORAGE,
@@ -1830,8 +1840,14 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
         ):
             if self._is_incremental_mode:
                 attrs["energy_report_mode"] = "incremental"
-                attrs["cumulative_total"] = float(self._cumulative_total)
-                attrs["last_update_time"] = self._last_update_time
+                # Use string representation to avoid float precision issues
+                attrs["cumulative_total"] = str(self._cumulative_total)
+                # Only include last_update_time if it's not None
+                if self._last_update_time is not None:
+                    attrs["last_update_time"] = self._last_update_time
+                # Only include last_raw_value if it's not None
+                if self._last_raw_value is not None:
+                    attrs["last_raw_value"] = str(self._last_raw_value)
             else:
                 attrs["energy_report_mode"] = "cumulative"
 
