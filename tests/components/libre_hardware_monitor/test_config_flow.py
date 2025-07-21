@@ -26,10 +26,16 @@ async def test_create_entry(
 ) -> None:
     """Test that a complete config entry is created."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id is None
 
@@ -38,10 +44,7 @@ async def test_create_entry(
         mock_config_entry.title
         == f"{VALID_CONFIG[CONF_HOST]}:{VALID_CONFIG[CONF_PORT]}"
     )
-    assert mock_config_entry.data == {
-        CONF_HOST: VALID_CONFIG[CONF_HOST],
-        CONF_PORT: VALID_CONFIG[CONF_PORT],
-    }
+    assert mock_config_entry.data == VALID_CONFIG
 
     assert mock_setup_entry.call_count == 1
 
@@ -53,30 +56,36 @@ async def test_errors_and_flow_recovery(
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
     assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorNoDevicesError()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
-    assert result
     assert result["errors"] == {"base": "no_devices"}
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_lhm_client.get_data.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
-    assert result
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert mock_setup_entry.call_count == 1
@@ -89,10 +98,16 @@ async def test_lhm_server_already_exists(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
