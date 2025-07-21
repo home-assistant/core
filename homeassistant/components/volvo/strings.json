@@ -133,7 +133,7 @@
         "name": "Distance to service"
       },
       "engine_time_to_service": {
-        "name": "Engine time to service"
+        "name": "Time to engine service"
       },
       "estimated_charging_time": {
         "name": "Estimated charging time"

@@ -19,18 +19,6 @@
       "average_fuel_consumption_automatic": {
         "default": "mdi:gas-station"
       },
-      "average_speed": {
-        "default": "mdi:speedometer"
-      },
-      "average_speed_automatic": {
-        "default": "mdi:speedometer"
-      },
-      "battery_capacity": {
-        "default": "mdi:car-battery"
-      },
-      "battery_charge_level": {
-        "default": "mdi:battery"
-      },
       "charger_connection_status": {
         "default": "mdi:ev-plug-ccs2"
       },
@@ -49,8 +37,9 @@
         "default": "mdi:ev-station"
       },
       "charging_type": {
-        "default": "mdi:current-ac",
+        "default": "mdi:power-plug-off-outline",
         "state": {
+          "ac": "mdi:current-ac",
           "dc": "mdi:current-dc"
         }
       },
