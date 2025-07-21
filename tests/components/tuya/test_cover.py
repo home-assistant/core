@@ -91,7 +91,6 @@ async def test_cover_open_close(
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    entity_id: str,
     service_name: str,
     actions: list,
 ) -> None:
