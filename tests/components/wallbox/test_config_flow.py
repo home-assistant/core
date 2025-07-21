@@ -3,7 +3,6 @@
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
@@ -18,12 +17,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    authorisation_response,
-    authorisation_response_unauthorised,
-    http_403_error,
-    http_404_error,
-    setup_integration,
+from .conftest import http_403_error, http_404_error, setup_integration
+from .const import (
+    WALLBOX_AUTHORISATION_RESPONSE,
+    WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED,
 )
 
 from tests.common import MockConfigEntry
@@ -40,10 +37,9 @@ test_response = {
 
 async def test_show_set_form(hass: HomeAssistant, mock_wallbox) -> None:
     """Test that the setup form is served."""
-    flow = config_flow.WallboxConfigFlow()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -112,7 +108,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.authenticate",
-            return_value=authorisation_response,
+            return_value=WALLBOX_AUTHORISATION_RESPONSE,
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
@@ -143,7 +139,7 @@ async def test_form_reauth(
         patch.object(
             mock_wallbox,
             "authenticate",
-            return_value=authorisation_response_unauthorised,
+            return_value=WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED,
         ),
         patch.object(mock_wallbox, "getChargerStatus", return_value=test_response),
     ):
@@ -176,7 +172,7 @@ async def test_form_reauth_invalid(
         patch.object(
             mock_wallbox,
             "authenticate",
-            return_value=authorisation_response_unauthorised,
+            return_value=WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED,
         ),
         patch.object(mock_wallbox, "getChargerStatus", return_value=test_response),
     ):

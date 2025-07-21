@@ -131,7 +131,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user_data
     async_add_entities(
         PlaystationNetworkSensorEntity(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
@@ -156,9 +156,9 @@ class PlaystationNetworkSensorEntity(
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if self.entity_description.key is PlaystationNetworkSensor.ONLINE_ID and (
-            profile_pictures := self.coordinator.data.profile["personalDetail"].get(
-                "profilePictures"
-            )
+            profile_pictures := self.coordinator.data.profile.get(
+                "personalDetail", {}
+            ).get("profilePictures")
         ):
             return next(
                 (pic.get("url") for pic in profile_pictures if pic.get("size") == "xl"),

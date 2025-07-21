@@ -38,11 +38,9 @@ async def test_subscribe_advertisements(
     """Test bluetooth subscribe_advertisements."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS
@@ -68,7 +66,7 @@ async def test_subscribe_advertisements(
                 "connectable": True,
                 "manufacturer_data": {},
                 "name": "wohand_signal_100",
-                "rssi": -127,
+                "rssi": -100,
                 "service_data": {},
                 "service_uuids": [],
                 "source": HCI0_SOURCE_ADDRESS,
@@ -134,11 +132,9 @@ async def test_subscribe_connection_allocations(
     """Test bluetooth subscribe_connection_allocations."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS
