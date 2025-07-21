@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.zimi.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -27,51 +27,6 @@ ENTITY_INFO = {
 
 INPUT_HOST = "192.168.1.100"
 INPUT_PORT = 5003
-
-
-async def check_toggle(
-    hass: HomeAssistant,
-    entity_type: str,
-    entity_key: str,
-    mock_device: MagicMock,
-    entity_type_override: str | None = None,
-    turn_on_override: AsyncMock | None = None,
-    turn_off_override: AsyncMock | None = None,
-) -> None:
-    """Check that the entity can be toggled on and off.
-
-    Allows for override of default entity_type and turn_on and turn_off.
-    """
-
-    services = hass.services.async_services()
-
-    assert SERVICE_TURN_ON in services[entity_type_override or entity_type]
-
-    await hass.services.async_call(
-        entity_type_override or entity_type,
-        SERVICE_TURN_ON,
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-
-    if turn_on_override:
-        assert turn_on_override.called
-    else:
-        assert mock_device.turn_on.called
-
-    assert SERVICE_TURN_OFF in services[entity_type_override or entity_type]
-
-    await hass.services.async_call(
-        entity_type_override or entity_type,
-        SERVICE_TURN_OFF,
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-
-    if turn_off_override:
-        assert turn_off_override.called
-    else:
-        assert mock_device.turn_off.called
 
 
 def mock_api_device(

@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import FanEntityFeature
-from homeassistant.const import Platform
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, check_toggle, mock_api_device, setup_platform
+from .common import ENTITY_INFO, mock_api_device, setup_platform
 
 
 async def test_fan_entity(
@@ -41,14 +41,30 @@ async def test_fan_entity(
     state = hass.states.get(entity_key)
     assert state == snapshot
 
-    await check_toggle(
-        hass,
+    services = hass.services.async_services()
+
+    assert SERVICE_TURN_ON in services[entity_type]
+
+    await hass.services.async_call(
         entity_type,
-        entity_key,
-        mock_api.fans[0],
+        SERVICE_TURN_ON,
+        {"entity_id": entity_key},
+        blocking=True,
     )
 
-    services = hass.services.async_services()
+    assert mock_api.fans[0].turn_on.called
+
+    assert SERVICE_TURN_OFF in services[entity_type]
+
+    await hass.services.async_call(
+        entity_type,
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_key},
+        blocking=True,
+    )
+
+    assert mock_api.fans[0].turn_off.called
+
     assert "set_percentage" in services[entity_type]
     await hass.services.async_call(
         entity_type,
