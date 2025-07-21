@@ -5,11 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from fluss_api import FlussApiClient
 import pytest
 
-from homeassistant.components.fluss.button import (
-    FlussButton,
-    async_setup_entry,
-    validate_device,
-)
+from homeassistant.components.fluss.button import FlussButton, async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +39,9 @@ def mock_api_client() -> FlussApiClient:
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry(mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient) -> None:
+async def test_async_setup_entry(
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
+) -> None:
     """Test successful setup of the button."""
     mock_entry.runtime_data = mock_api_client  # Assign directly, not as a dict
     mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
@@ -157,23 +155,3 @@ async def test_fluss_button_async_press_success() -> None:
 
     # Assert that the method was called with the correct deviceId
     mock_api.async_trigger_device.assert_called_once_with("123")
-
-
-def test_validate_device_success() -> None:
-    """Test validate_device with valid device data."""
-    device = {"deviceId": "123", "deviceName": "Test Device"}
-    assert validate_device(device) is True  # Should return True
-
-
-def test_validate_device_failure_not_a_dict() -> None:
-    """Test validate_device with a non-dictionary device."""
-    device = ["deviceId", "123"]  # Invalid data type
-    with pytest.raises(ValueError, match="Invalid device data: 'deviceId' is required"):
-        validate_device(device)
-
-
-def test_validate_device_failure_missing_device_id() -> None:
-    """Test validate_device with missing deviceId."""
-    device = {"deviceName": "Test Device"}  # Missing 'deviceId'
-    with pytest.raises(ValueError, match="Invalid device data: 'deviceId' is required"):
-        validate_device(device)
