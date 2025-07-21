@@ -26,7 +26,7 @@ class LetPotTimeEntityDescription(TimeEntityDescription):
     """Describes a LetPot time entity."""
 
     value_fn: Callable[[LetPotDeviceStatus], time | None]
-    set_value_fn: Callable[[LetPotDeviceClient, time], Coroutine[Any, Any, None]]
+    set_value_fn: Callable[[LetPotDeviceClient, str, time], Coroutine[Any, Any, None]]
 
 
 TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
@@ -34,8 +34,10 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
         key="light_schedule_end",
         translation_key="light_schedule_end",
         value_fn=lambda status: None if status is None else status.light_schedule_end,
-        set_value_fn=lambda deviceclient, value: deviceclient.set_light_schedule(
-            start=None, end=value
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_light_schedule(
+                serial=serial, start=None, end=value
+            )
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -43,8 +45,10 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
         key="light_schedule_start",
         translation_key="light_schedule_start",
         value_fn=lambda status: None if status is None else status.light_schedule_start,
-        set_value_fn=lambda deviceclient, value: deviceclient.set_light_schedule(
-            start=value, end=None
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_light_schedule(
+                serial=serial, start=value, end=None
+            )
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -89,5 +93,5 @@ class LetPotTimeEntity(LetPotEntity, TimeEntity):
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         await self.entity_description.set_value_fn(
-            self.coordinator.device_client, value
+            self.coordinator.device_client, self.coordinator.device.serial_number, value
         )

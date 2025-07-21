@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
@@ -53,7 +54,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-LOCK_SCHEMA = vol.All(
+LOCK_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_CODE_FORMAT): cv.template,
@@ -66,7 +67,6 @@ LOCK_SCHEMA = vol.All(
         }
     ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
-
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
@@ -103,6 +103,8 @@ async def async_setup_platform(
 
 class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     """Representation of a template lock features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -283,7 +285,7 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
         unique_id: str | None,
     ) -> None:
         """Initialize the lock."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateLock.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:

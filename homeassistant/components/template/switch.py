@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_SWITCHES,
@@ -29,9 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -40,9 +37,14 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
-from .helpers import async_setup_template_platform
+from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_schema,
@@ -57,16 +59,19 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Switch"
 
-
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_STATE): cv.template,
-        vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
     }
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+)
 
-LEGACY_SWITCH_SCHEMA = vol.All(
+SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+)
+
+SWITCH_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
@@ -81,17 +86,11 @@ LEGACY_SWITCH_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(LEGACY_SWITCH_SCHEMA)}
+    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_LEGACY_YAML_SCHEMA)}
 )
 
-SWITCH_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-    }
+SWITCH_CONFIG_ENTRY_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -131,12 +130,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    _options = rewrite_options_to_modern_conf(_options)
-    validated_config = SWITCH_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateSwitchEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateSwitchEntity,
+        SWITCH_CONFIG_ENTRY_SCHEMA,
+        True,
     )
 
 
@@ -145,15 +145,21 @@ def async_create_preview_switch(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateSwitchEntity:
     """Create a preview switch."""
-    updated_config = rewrite_options_to_modern_conf(config)
-    validated_config = SWITCH_CONFIG_SCHEMA(updated_config | {CONF_NAME: name})
-    return StateSwitchEntity(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateSwitchEntity,
+        SWITCH_CONFIG_ENTRY_SCHEMA,
+        True,
+    )
 
 
 class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -162,11 +168,8 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
+        super().__init__(hass, config, unique_id)
+
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -180,10 +183,6 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
 
         self._state: bool | None = False
         self._attr_assumed_state = self._template is None
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @callback
     def _update_state(self, result):
@@ -246,6 +245,7 @@ class StateSwitchEntity(TemplateEntity, SwitchEntity, RestoreEntity):
 class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     """Switch entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = SWITCH_DOMAIN
 
     def __init__(
@@ -256,6 +256,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self._template = config.get(CONF_STATE)
         if on_action := config.get(CONF_TURN_ON):
@@ -267,11 +268,6 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         if not self._attr_assumed_state:
             self._to_render_simple.append(CONF_STATE)
             self._parse_result.add(CONF_STATE)
-
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
