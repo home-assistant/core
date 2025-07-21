@@ -32,7 +32,6 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        await self.async_set_unique_id(DOMAIN)
 
         errors: dict[str, str] = {}
         session = async_get_clientsession(self.hass)
