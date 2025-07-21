@@ -20,11 +20,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -315,8 +316,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="action_dpcode_not_found",
             )
 
         self._send_command(
@@ -356,9 +358,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self._set_temperature is None:
-            raise RuntimeError(
-                "Cannot set target temperature, device doesn't provide methods to"
-                " set it"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dpcode_not_found",
             )
 
         self._send_command(

@@ -16,11 +16,12 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -334,8 +335,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if self._set_position is None:
-            raise RuntimeError(
-                "Cannot set position, device doesn't provide methods to set it"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dpcode_not_found",
             )
 
         self._send_command(
@@ -365,8 +367,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         if self._tilt is None:
-            raise RuntimeError(
-                "Cannot set tilt, device doesn't provide methods to set it"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dpcode_not_found",
             )
 
         self._send_command(

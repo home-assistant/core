@@ -12,6 +12,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -463,7 +464,10 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
-            raise RuntimeError("Cannot set value, device doesn't provide type data")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dpcode_not_found",
+            )
 
         self._send_command(
             [

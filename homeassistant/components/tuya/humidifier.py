@@ -14,11 +14,12 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 
@@ -178,8 +179,9 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dpcode_not_found",
             )
 
         self._send_command(

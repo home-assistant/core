@@ -942,5 +942,10 @@
         "name": "Siren"
       }
     }
+  },
+  "exceptions": {
+    "action_dpcode_not_found": {
+      "message": "Unable to process action as the device does not provide corresponding DPCode."
+    }
   }
 }
