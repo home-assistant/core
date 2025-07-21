@@ -298,6 +298,7 @@ class ConfigFlowContext(FlowContext, total=False):
 class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
+    # Extra keys, only present if type is CREATE_ENTRY
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry

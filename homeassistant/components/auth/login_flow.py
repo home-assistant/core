@@ -281,6 +281,7 @@ class LoginFlowBaseView(HomeAssistantView):
             )
 
         process_success_login(request)
+        # We overwrite the Credentials object with the string code to retrieve it.
         result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
 
         return self.json(result)
