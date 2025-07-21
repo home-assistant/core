@@ -63,34 +63,32 @@ def mock_coordinator(mock_hass: HomeAssistant, mock_api_client: FlussApiClient) 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(
-    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator
+    hass: HomeAssistant, mock_entry: ConfigEntry, mock_coordinator: FlussDataUpdateCoordinator, entity_registry
 ) -> None:
     """Test successful setup of the button."""
-    added_entities = []
-
-    async def mock_add_entities(entities, update_before_add=False):
-        added_entities.extend(entities)
-
     with patch(
         "homeassistant.components.fluss.async_setup_entry",
         return_value=True,
     ) as mock_setup:
-        await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
-        mock_setup.assert_awaited_once_with(mock_hass, mock_entry)
+        await async_setup_entry(hass, mock_entry, AsyncMock())
+        mock_setup.assert_awaited_once_with(hass, mock_entry)
 
     # Verify that async_get_devices was called via coordinator
     mock_coordinator.api.async_get_devices.assert_awaited_once()
 
-    # Verify that FlussButton instances were created correctly
-    assert len(added_entities) == 1
-    added_button = added_entities[0]
-    assert isinstance(added_button, FlussButton)
-    assert added_button.api == mock_coordinator.api
-    assert added_button.device == {"deviceId": "1", "deviceName": "Test Device"}
-    assert added_button.name == "Test Device"
-    assert added_button.unique_id == "fluss_1"
-    # Verify DeviceInfo
-    assert added_button.device_info == DeviceInfo(
+    # Check the entity registry for the button
+    entity = entity_registry.async_get("button.test_device")
+    assert entity is not None
+    assert entity.unique_id == "fluss_1"
+    assert entity.platform == "fluss"
+    assert entity.device_id == "1"
+
+    # Verify button properties
+    device = {"deviceId": "1", "deviceName": "Test Device"}
+    button = FlussButton(mock_coordinator, "1", device)
+    assert button.name == "Test Device"
+    assert button.unique_id == "fluss_1"
+    assert button.device_info == DeviceInfo(
         identifiers={("fluss", "1")},
         name="Test Device",
         manufacturer="Fluss",
