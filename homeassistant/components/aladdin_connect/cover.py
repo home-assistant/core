@@ -34,7 +34,7 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     doors_to_add = []
     for door in doors:
-        existing = device_registry.async_get(door.unique_id)
+        existing = device_registry.async_get_device({(DOMAIN, door.unique_id)})
         if existing is None:
             doors_to_add.append(door)
 
@@ -82,6 +82,7 @@ class AladdinDevice(CoverEntity):
         self._acc = acc
         self._device_id = device.device_id
         self._number = device.door_number
+        self._cached_door_status: str | None = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.unique_id)},
@@ -101,11 +102,17 @@ class AladdinDevice(CoverEntity):
     async def async_update(self) -> None:
         """Update status of cover."""
         await self._acc.update_door(self._device_id, self._number)
+        # Cache the door status to avoid redundant API calls
+        self._cached_door_status = self._acc.get_door_status(self._device_id, self._number)
+
+    def _get_door_status(self) -> str | None:
+        """Get cached door status."""
+        return self._cached_door_status
 
     @property
     def is_closed(self) -> bool | None:
         """Update is closed attribute."""
-        value = self._acc.get_door_status(self._device_id, self._number)
+        value = self._get_door_status()
         if value is None:
             return None
         return bool(value == "closed")
@@ -113,7 +120,7 @@ class AladdinDevice(CoverEntity):
     @property
     def is_closing(self) -> bool | None:
         """Update is closing attribute."""
-        value = self._acc.get_door_status(self._device_id, self._number)
+        value = self._get_door_status()
         if value is None:
             return None
         return bool(value == "closing")
@@ -121,7 +128,7 @@ class AladdinDevice(CoverEntity):
     @property
     def is_opening(self) -> bool | None:
         """Update is opening attribute."""
-        value = self._acc.get_door_status(self._device_id, self._number)
+        value = self._get_door_status()
         if value is None:
             return None
         return bool(value == "opening")
