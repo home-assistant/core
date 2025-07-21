@@ -38,7 +38,7 @@ TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
     clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
     clusters.WindowCovering.Enums.Type.kTiltBlindTiltOnly: CoverDeviceClass.BLIND,
-    clusters.WindowCovering.Enums.Type.TiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
+    clusters.WindowCovering.Enums.Type.kTiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
 }
 
 
