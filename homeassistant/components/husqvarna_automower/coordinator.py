@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
+from typing import override
 
 from aioautomower.exceptions import (
     ApiError,
@@ -66,6 +67,12 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         self.async_add_listener(self._on_data_update)
         self.api.register_pong_callback(self._on_pong)
+
+    @override
+    @callback
+    def async_update_listeners(self) -> None:
+        self._on_data_update()
+        super().async_update_listeners()
 
     async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""

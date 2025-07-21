@@ -43,10 +43,13 @@ class PlaystationNetworkData:
     registered_platforms: set[PlatformType] = field(default_factory=set)
     trophy_summary: TrophySummary | None = None
     profile: dict[str, Any] = field(default_factory=dict)
+    shareable_profile_link: dict[str, str] = field(default_factory=dict)
 
 
 class PlaystationNetwork:
     """Helper Class to return playstation network data in an easy to use structure."""
+
+    shareable_profile_link: dict[str, str]
 
     def __init__(self, hass: HomeAssistant, npsso: str) -> None:
         """Initialize the class with the npsso token."""
@@ -63,6 +66,7 @@ class PlaystationNetwork:
         """Setup PSN."""
         self.user = self.psn.user(online_id="me")
         self.client = self.psn.me()
+        self.shareable_profile_link = self.client.get_shareable_profile_link()
         self.trophy_titles = list(self.user.trophy_titles())
 
     async def async_setup(self) -> None:
@@ -100,7 +104,7 @@ class PlaystationNetwork:
         data = await self.hass.async_add_executor_job(self.retrieve_psn_data)
         data.username = self.user.online_id
         data.account_id = self.user.account_id
-
+        data.shareable_profile_link = self.shareable_profile_link
         data.availability = data.presence["basicPresence"]["availability"]
 
         session = SessionData()

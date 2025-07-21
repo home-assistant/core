@@ -34,6 +34,14 @@
         'title': 'Google AI Conversation',
         'unique_id': None,
       }),
+      'ulid-stt': dict({
+        'data': dict({
+        }),
+        'subentry_id': 'ulid-stt',
+        'subentry_type': 'stt',
+        'title': 'Google AI STT',
+        'unique_id': None,
+      }),
       'ulid-tts': dict({
         'data': dict({
         }),
