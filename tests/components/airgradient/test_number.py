@@ -24,7 +24,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -83,7 +83,7 @@ async def test_cloud_creates_no_number(
     assert len(hass.states.async_all()) == 0
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        load_fixture("get_config_local.json", DOMAIN)
+        await async_load_fixture(hass, "get_config_local.json", DOMAIN)
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -93,7 +93,7 @@ async def test_cloud_creates_no_number(
     assert len(hass.states.async_all()) == 2
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        load_fixture("get_config_cloud.json", DOMAIN)
+        await async_load_fixture(hass, "get_config_cloud.json", DOMAIN)
     )
 
     freezer.tick(timedelta(minutes=5))

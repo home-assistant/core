@@ -6,11 +6,8 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.jewish_calendar.const import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_time_changed
 
@@ -140,17 +137,3 @@ async def test_issur_melacha_sensor_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(sensor_id).state == results[1]
-
-
-async def test_no_discovery_info(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test setup without discovery info."""
-    assert BINARY_SENSOR_DOMAIN not in hass.config.components
-    assert await async_setup_component(
-        hass,
-        BINARY_SENSOR_DOMAIN,
-        {BINARY_SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
-    await hass.async_block_till_done()
-    assert BINARY_SENSOR_DOMAIN in hass.config.components

@@ -68,6 +68,6 @@ class StarlineButton(StarlineEntity, ButtonEntity):
         """Return True if entity is available."""
         return super().available and self._device.online
 
-    def press(self):
+    def press(self) -> None:
         """Press the button."""
         self._account.api.set_car_state(self._device.device_id, self._key, True)

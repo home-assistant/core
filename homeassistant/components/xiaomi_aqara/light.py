@@ -5,6 +5,8 @@ import logging
 import struct
 from typing import Any
 
+from xiaomi_gateway import XiaomiGateway
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -45,18 +47,19 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, device, name, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiGatewayLight."""
         self._data_key = "rgb"
         self._hs = (0, 0)
         self._brightness = 100
 
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def is_on(self):
-        """Return true if it is on."""
-        return self._state
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -65,7 +68,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             return False
 
         if value == 0:
-            self._state = False
+            self._attr_is_on = False
             return True
 
         rgbhexstr = f"{value:x}"
@@ -84,7 +87,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
 
         self._brightness = brightness
         self._hs = color_util.color_RGB_to_hs(*rgb)
-        self._state = True
+        self._attr_is_on = True
         return True
 
     @property
@@ -111,11 +114,11 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         rgbhex = int(rgbhex_str, 16)
 
         if self._write_to_hub(self._sid, **{self._data_key: rgbhex}):
-            self._state = True
+            self._attr_is_on = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._write_to_hub(self._sid, **{self._data_key: 0}):
-            self._state = False
+            self._attr_is_on = False
             self.schedule_update_ha_state()

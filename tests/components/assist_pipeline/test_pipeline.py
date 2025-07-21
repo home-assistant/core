@@ -2,11 +2,12 @@
 
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components import (
     assist_pipeline,
@@ -28,12 +29,11 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
-    async_migrate_engine,
     async_update_pipeline,
 )
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import chat_session, intent
+from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES, process_events
@@ -161,12 +161,6 @@ async def test_loading_pipelines_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored pipelines on start."""
-    async_migrate_engine(
-        hass,
-        "conversation",
-        conversation.OLD_HOME_ASSISTANT_AGENT,
-        conversation.HOME_ASSISTANT_AGENT,
-    )
     id_1 = "01GX8ZWBAQYWNB1XV3EXEZ75DY"
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -175,7 +169,7 @@ async def test_loading_pipelines_from_storage(
         "data": {
             "items": [
                 {
-                    "conversation_engine": conversation.OLD_HOME_ASSISTANT_AGENT,
+                    "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
                     "conversation_language": "language_1",
                     "id": id_1,
                     "language": "language_1",
@@ -667,43 +661,6 @@ async def test_update_pipeline(
     }
 
 
-@pytest.mark.usefixtures("init_supporting_components")
-async def test_migrate_after_load(hass: HomeAssistant) -> None:
-    """Test migrating an engine after done loading."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
-
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    store = pipeline_data.pipeline_store
-    assert len(store.data) == 1
-
-    assert (
-        await async_create_default_pipeline(
-            hass,
-            stt_engine_id="bla",
-            tts_engine_id="bla",
-            pipeline_name="Bla pipeline",
-        )
-        is None
-    )
-    pipeline = await async_create_default_pipeline(
-        hass,
-        stt_engine_id="test",
-        tts_engine_id="test",
-        pipeline_name="Test pipeline",
-    )
-    assert pipeline is not None
-
-    async_migrate_engine(hass, "stt", "test", "stt.test")
-    async_migrate_engine(hass, "tts", "test", "tts.test")
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    pipeline_updated = async_get_pipeline(hass, pipeline.id)
-
-    assert pipeline_updated.stt_engine == "stt.test"
-    assert pipeline_updated.tts_engine == "tts.test"
-
-
 def test_fallback_intent_filter() -> None:
     """Test that we filter the right things."""
     assert (
@@ -1109,6 +1066,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
             None,
         )
         assert (intent_end_event is not None) and intent_end_event.data
+        assert intent_end_event.data["processed_locally"] is True
         assert (
             intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
                 "speech"
@@ -1191,6 +1149,7 @@ async def test_prefer_local_intents(
             None,
         )
         assert (intent_end_event is not None) and intent_end_event.data
+        assert intent_end_event.data["processed_locally"] is True
         assert (
             intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
                 "speech"
@@ -1361,7 +1320,7 @@ async def test_stt_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1437,7 +1396,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1513,7 +1472,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1575,20 +1534,86 @@ async def test_pipeline_language_used_instead_of_conversation_language(
 
 
 @pytest.mark.parametrize(
-    ("to_stream_tts", "expected_chunks"),
+    ("to_stream_deltas", "expected_chunks", "chunk_text"),
     [
+        # Size below STREAM_RESPONSE_CHUNKS
         (
-            [
-                "hello,",
-                " ",
-                "how",
-                " ",
-                "are",
-                " ",
-                "you",
-                "?",
-            ],
+            (
+                [
+                    "hello,",
+                    " ",
+                    "how",
+                    " ",
+                    "are",
+                    " ",
+                    "you",
+                    "?",
+                ],
+            ),
+            # We always stream when possible, so 1 chunk via streaming method
             1,
+            "hello, how are you?",
+        ),
+        # Size above STREAM_RESPONSE_CHUNKS
+        (
+            (
+                [
+                    "hello, ",
+                    "how ",
+                    "are ",
+                    "you",
+                    "? ",
+                    "I'm ",
+                    "doing ",
+                    "well",
+                    ", ",
+                    "thank ",
+                    "you",
+                    ". ",
+                    "What ",
+                    "about ",
+                    "you",
+                    "?",
+                    "!",
+                ],
+            ),
+            # We are streamed. First 15 chunks are grouped into 1 chunk
+            # and the rest are streamed
+            3,
+            "hello, how are you? I'm doing well, thank you. What about you?!",
+        ),
+        # Stream a bit, then a tool call, then stream some more
+        (
+            (
+                [
+                    "hello, ",
+                    "how ",
+                    "are ",
+                    "you",
+                    "? ",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [
+                    "I'm ",
+                    "doing ",
+                    "well",
+                    ", ",
+                    "thank ",
+                    "you",
+                    ".",
+                ],
+            ),
+            # 1 chunk before tool call, then 7 after
+            8,
+            "hello, how are you? I'm doing well, thank you.",
         ),
     ],
 )
@@ -1600,10 +1625,18 @@ async def test_chat_log_tts_streaming(
     snapshot: SnapshotAssertion,
     mock_tts_entity: MockTTSEntity,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
-    to_stream_tts: list[str],
+    to_stream_deltas: tuple[dict | list[str]],
     expected_chunks: int,
+    chunk_text: str,
 ) -> None:
     """Test that chat log events are streamed to the TTS entity."""
+    text_deltas = [
+        delta
+        for deltas in to_stream_deltas
+        if isinstance(deltas, list)
+        for delta in deltas
+    ]
+
     events: list[assist_pipeline.PipelineEvent] = []
 
     pipeline_store = pipeline_data.pipeline_store
@@ -1627,22 +1660,41 @@ async def test_chat_log_tts_streaming(
         ),
     )
 
+    received_tts = []
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock stream TTS audio."""
+
+        async def gen_data():
+            async for msg in request.message_gen:
+                received_tts.append(msg)
+                yield msg.encode()
+
+        return tts.TTSAudioResponse(
+            extension="mp3",
+            data_gen=gen_data(),
+        )
+
     async def async_get_tts_audio(
         message: str,
         language: str,
         options: dict[str, Any] | None = None,
-    ) -> tts.TTSAudioResponse:
+    ) -> tts.TtsAudioType:
         """Mock get TTS audio."""
-        return ("mp3", b"".join([chunk.encode() for chunk in to_stream_tts]))
+        return ("mp3", b"".join([chunk.encode() for chunk in text_deltas]))
 
     mock_tts_entity.async_get_tts_audio = async_get_tts_audio
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     with patch(
         "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
-            supports_streaming=False,
+            supports_streaming=True,
         ),
     ):
         await pipeline_input.validate()
@@ -1669,9 +1721,13 @@ async def test_chat_log_tts_streaming(
         )
 
         async def stream_llm_response():
-            yield {"role": "assistant"}
-            for chunk in to_stream_tts:
-                yield {"content": chunk}
+            for deltas in to_stream_deltas:
+                if isinstance(deltas, dict):
+                    yield deltas
+                else:
+                    yield {"role": "assistant"}
+                    for chunk in deltas:
+                        yield {"content": chunk}
 
         with (
             chat_session.async_get_chat_session(hass, conversation_id) as session,
@@ -1681,21 +1737,39 @@ async def test_chat_log_tts_streaming(
                 conversation_input,
             ) as chat_log,
         ):
+            await chat_log.async_provide_llm_data(
+                conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+                user_llm_prompt=None,
+                user_extra_system_prompt=conversation_input.extra_system_prompt,
+            )
             async for _content in chat_log.async_add_delta_content_stream(
                 agent_id, stream_llm_response()
             ):
                 pass
             intent_response = intent.IntentResponse(language)
-            intent_response.async_set_speech("".join(to_stream_tts))
+            intent_response.async_set_speech("".join(to_stream_deltas[-1]))
             return conversation.ConversationResult(
                 response=intent_response,
                 conversation_id=chat_log.conversation_id,
                 continue_conversation=chat_log.continue_conversation,
             )
 
-    with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
-        mock_converse,
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema({})
+    mock_tool.async_call.return_value = "Test response"
+
+    with (
+        patch(
+            "homeassistant.helpers.llm.AssistAPI._async_get_tools",
+            return_value=[mock_tool],
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+            mock_converse,
+        ),
     ):
         await pipeline_input.execute()
 
@@ -1705,8 +1779,9 @@ async def test_chat_log_tts_streaming(
         [chunk.decode() async for chunk in stream.async_stream_result()]
     )
 
-    streamed_text = "".join(to_stream_tts)
+    streamed_text = "".join(text_deltas)
     assert tts_result == streamed_text
-    assert expected_chunks == 1
+    assert len(received_tts) == expected_chunks
+    assert "".join(received_tts) == chunk_text
 
     assert process_events(events) == snapshot

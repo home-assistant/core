@@ -74,6 +74,18 @@
       "dehumidifier": {
         "name": "Dehumidifier"
       }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {

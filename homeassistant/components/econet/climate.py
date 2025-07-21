@@ -53,7 +53,6 @@ SUPPORT_FLAGS_THERMOSTAT = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     | ClimateEntityFeature.FAN_MODE
-    | ClimateEntityFeature.AUX_HEAT
 )
 
 
@@ -206,12 +205,12 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         self._econet.set_fan_mode(HA_FAN_STATE_TO_ECONET[fan_mode])
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._econet.set_point_limits[0]
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._econet.set_point_limits[1]
 

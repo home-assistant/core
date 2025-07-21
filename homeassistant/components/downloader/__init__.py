@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import _LOGGER, CONF_DOWNLOAD_DIR
-from .services import register_services
+from .services import async_setup_services
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,6 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True

@@ -159,7 +159,7 @@ class EphEmberThermostat(ClimateEntity):
         self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
         if self._hot_water:
@@ -168,7 +168,7 @@ class EphEmberThermostat(ClimateEntity):
         return 5.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)

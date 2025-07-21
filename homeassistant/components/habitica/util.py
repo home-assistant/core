@@ -95,21 +95,16 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     'DTSTART:YYYYMMDDTHHMMSS\nRRULE:FREQ=YEARLY;INTERVAL=2'
 
-    Parameters
-    ----------
-    recurrence : rrule
-        An RRULE object.
+    Args:
+        recurrence: An RRULE object.
 
-    Returns
-    -------
-    str
+    Returns:
         The recurrence rule portion of the RRULE string, starting with 'FREQ='.
 
-    Example
-    -------
-    >>> rule = get_recurrence_rule(task)
-    >>> print(rule)
-    'FREQ=YEARLY;INTERVAL=2'
+    Example:
+        >>> rule = get_recurrence_rule(task)
+        >>> print(rule)
+        'FREQ=YEARLY;INTERVAL=2'
 
     """
     return str(recurrence).split("RRULE:")[1]
@@ -162,3 +157,25 @@ def inventory_list(
         for k, v in getattr(user.items, item_type, {}).items()
         if k != "Saddle"
     }
+
+
+def pending_quest_items(user: UserData, content: ContentData) -> int | None:
+    """Pending quest items."""
+
+    return (
+        user.party.quest.progress.collectedItems
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].collect is not None
+        else None
+    )
+
+
+def pending_damage(user: UserData, content: ContentData) -> float | None:
+    """Pending damage."""
+
+    return (
+        user.party.quest.progress.up
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].boss is not None
+        else None
+    )
