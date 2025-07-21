@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
@@ -54,11 +55,15 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
             registry=dr.async_get(self.hass), config_entry_id=config_entry.entry_id
         )
-        self._previous_devices: dict[DeviceId, DeviceName] = {
-            DeviceId(next(iter(device.identifiers))[1]): DeviceName(device.name)
-            for device in device_entries
-            if device.identifiers and device.name
-        }
+        self._previous_devices: MappingProxyType[DeviceId, DeviceName] = (
+            MappingProxyType(
+                {
+                    DeviceId(next(iter(device.identifiers))[1]): DeviceName(device.name)
+                    for device in device_entries
+                    if device.identifiers and device.name
+                }
+            )
+        )
 
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
@@ -87,7 +92,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         )
 
     async def _async_handle_changes_in_devices(
-        self, detected_devices: dict[DeviceId, DeviceName]
+        self, detected_devices: MappingProxyType[DeviceId, DeviceName]
     ) -> None:
         """Handle device changes by deleting devices from / adding devices to Home Assistant."""
         previous_device_ids = set(self._previous_devices.keys())
