@@ -300,6 +300,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
 
     minor_version: int
     options: Mapping[str, Any]
+    result: ConfigEntry
     subentries: Iterable[ConfigSubentryData]
     version: int
 
@@ -3345,7 +3346,6 @@ class ConfigSubentryFlowManager(
             ),
         )
 
-        result["result"] = True
         return result
 
 
@@ -3493,7 +3493,6 @@ class OptionsFlowManager(
         if result["data"] is not None:
             self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
-        result["result"] = True
         return result
 
     async def _async_setup_preview(
