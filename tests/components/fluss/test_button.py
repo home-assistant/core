@@ -38,25 +38,20 @@ def mock_api_client() -> FlussApiClient:
     )
     return api_client
 
-
+@pytest.fixture
 async def test_async_setup_entry(
-    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_api_client: FlussApiClient
+    mock_hass: HomeAssistant, mock_entry: ConfigEntry, mock_fluss_api_client: FlussApiClient
 ) -> None:
     """Test successful setup of the button."""
-    mock_entry.runtime_data = mock_api_client  # Assign directly, not as a dict
+    mock_entry.runtime_data = mock_fluss_api_client
     mock_add_entities = AsyncMock(spec=AddEntitiesCallback)
-    mock_api_client.async_get_devices.return_value = {
+    mock_fluss_api_client.async_get_devices.return_value = {
         "devices": [{"deviceId": "1", "deviceName": "Test Device"}]
     }
-    # Patch to return the mock API client
-    with patch(
-        "fluss_api.main.FlussApiClient",
-        return_value=mock_api_client,
-    ):
-        await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
+    await async_setup_entry(mock_hass, mock_entry, mock_add_entities)
 
     # Verify that async_get_devices was called
-    mock_api_client.async_get_devices.assert_awaited_once()
+    mock_fluss_api_client.async_get_devices.assert_awaited_once()
 
     # Verify that FlussButton instances were created correctly
     mock_add_entities.assert_called_once()
@@ -64,10 +59,17 @@ async def test_async_setup_entry(
     assert len(added_entities) == 1
     added_button = added_entities[0]
     assert isinstance(added_button, FlussButton)
-    assert added_button.api == mock_api_client
+    assert added_button.api == mock_fluss_api_client
     assert added_button.device == {"deviceId": "1", "deviceName": "Test Device"}
     assert added_button.name == "Test Device"
     assert added_button.unique_id == "fluss_1"
+    # Verify DeviceInfo
+    assert added_button.device_info == DeviceInfo(
+        identifiers={("fluss", "1")},
+        name="Test Device",
+        manufacturer="Fluss",
+        model="Fluss Device",
+    )
 
 
 @pytest.mark.asyncio
