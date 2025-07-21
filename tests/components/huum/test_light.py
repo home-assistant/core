@@ -1,4 +1,4 @@
-"""Tests for the Huum climate entity."""
+"""Tests for the Huum light entity."""
 
 from unittest.mock import AsyncMock
 
@@ -30,9 +30,7 @@ async def test_light(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the initial parameters."""
-    await setup_with_selected_platforms(
-        hass, mock_config_entry, [Platform.BINARY_SENSOR]
-    )
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

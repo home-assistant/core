@@ -1,18 +1,24 @@
 # serializer version: 1
-# name: test_light[binary_sensor.huum_sauna_door-entry]
+# name: test_light[light.huum_sauna_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        'f',
+        'n',
+        'o',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
+    'domain': 'light',
     'entity_category': None,
-    'entity_id': 'binary_sensor.huum_sauna_door',
+    'entity_id': 'light.huum_sauna_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,29 +28,35 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Light',
     'platform': 'huum',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'AABBCC112233_door',
+    'unique_id': 'AABBCC112233',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light[binary_sensor.huum_sauna_door-state]
+# name: test_light[light.huum_sauna_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Huum sauna Door',
+      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      'friendly_name': 'Huum sauna Light',
+      'supported_color_modes': list([
+        'f',
+        'n',
+        'o',
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.huum_sauna_door',
+    'entity_id': 'light.huum_sauna_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---

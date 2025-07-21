@@ -40,7 +40,7 @@ class HuumLight(HuumBaseEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"
+        self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
     def is_on(self) -> bool | None:
