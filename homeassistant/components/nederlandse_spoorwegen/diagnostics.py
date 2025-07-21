@@ -15,14 +15,13 @@ from .const import CONF_FROM, CONF_NAME, CONF_TO, CONF_VIA
 
 def _sanitize_route_data(route_data: dict[str, Any]) -> dict[str, Any]:
     """Sanitize route data for diagnostics."""
+    route_info = route_data.get("route", {})
     safe_route_data = {
         "route": {
             CONF_NAME: "redacted",  # Always redact route names for privacy
-            CONF_FROM: "redacted",  # Always redact station codes for privacy
-            CONF_TO: "redacted",  # Always redact station codes for privacy
-            CONF_VIA: route_data.get("route", {}).get(CONF_VIA)
-            if route_data.get("route", {}).get(CONF_VIA) is None
-            else "redacted",
+            CONF_FROM: route_info.get(CONF_FROM),  # Station codes are public data
+            CONF_TO: route_info.get(CONF_TO),  # Station codes are public data
+            CONF_VIA: route_info.get(CONF_VIA),  # Station codes are public data
         },
         "has_first_trip": "first_trip" in route_data,
         "has_next_trip": "next_trip" in route_data,
@@ -145,11 +144,11 @@ async def async_get_config_entry_diagnostics(
             "subentry_info": redacted_subentry,
             "route_config": {
                 CONF_NAME: "redacted",  # Always redact route names for privacy
-                CONF_FROM: "redacted",  # Always redact station codes for privacy
-                CONF_TO: "redacted",  # Always redact station codes for privacy
-                CONF_VIA: subentry.data.get(CONF_VIA)
-                if subentry.data.get(CONF_VIA) is None
-                else "redacted",
+                CONF_FROM: subentry.data.get(
+                    CONF_FROM
+                ),  # Station codes are public data
+                CONF_TO: subentry.data.get(CONF_TO),  # Station codes are public data
+                CONF_VIA: subentry.data.get(CONF_VIA),  # Station codes are public data
                 "data_keys": list(subentry.data.keys()),
             },
         }
@@ -220,11 +219,13 @@ async def async_get_device_diagnostics(
     if device_subentry:
         diagnostics["route_config"] = {
             CONF_NAME: "redacted",  # Always redact route names for privacy
-            CONF_FROM: "redacted",  # Always redact station codes for privacy
-            CONF_TO: "redacted",  # Always redact station codes for privacy
-            CONF_VIA: device_subentry.data.get(CONF_VIA)
-            if device_subentry.data.get(CONF_VIA) is None
-            else "redacted",
+            CONF_FROM: device_subentry.data.get(
+                CONF_FROM
+            ),  # Station codes are public data
+            CONF_TO: device_subentry.data.get(CONF_TO),  # Station codes are public data
+            CONF_VIA: device_subentry.data.get(
+                CONF_VIA
+            ),  # Station codes are public data
             "config_keys": list(device_subentry.data.keys()),
         }
 

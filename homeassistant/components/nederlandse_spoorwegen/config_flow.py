@@ -8,7 +8,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -93,12 +92,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a new route subentry."""
-        return await self._async_step_route_form(user_input)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Reconfigure an existing route subentry."""
         return await self._async_step_route_form(user_input)
 
     async def _async_step_route_form(
@@ -213,15 +206,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
     async def _handle_route_creation_or_update(
         self, route_config: dict[str, Any], route_name: str
     ) -> SubentryFlowResult:
-        """Handle route creation or update based on flow source."""
-        if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=route_config,
-                title=route_name,
-            )
-
+        """Handle route creation."""
         return self.async_create_entry(title=route_name, data=route_config)
 
     async def _show_route_configuration_form(

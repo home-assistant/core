@@ -108,8 +108,8 @@ async def test_config_entry_diagnostics(hass: HomeAssistant) -> None:
     route_data = coordinator_data["routes"]["route_1"]
     assert "route" in route_data
     assert route_data["route"]["name"] == "redacted"
-    assert route_data["route"]["from"] == "redacted"
-    assert route_data["route"]["to"] == "redacted"
+    assert route_data["route"]["from"] == "AMS"  # Station codes are public data
+    assert route_data["route"]["to"] == "UTR"  # Station codes are public data
     assert route_data["has_first_trip"] is True
     assert route_data["has_next_trip"] is True
 
@@ -228,8 +228,8 @@ async def test_device_diagnostics(hass: HomeAssistant) -> None:
     # Verify route config is redacted
     route_config = diagnostics["route_config"]
     assert route_config["name"] == "redacted"
-    assert route_config["from"] == "redacted"
-    assert route_config["to"] == "redacted"
+    assert route_config["from"] == "AMS"  # Station codes are public data
+    assert route_config["to"] == "UTR"  # Station codes are public data
 
     # Verify route data status
     route_data_status = diagnostics["route_data_status"]

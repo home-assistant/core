@@ -50,7 +50,6 @@ async def test_subentry_flow_handler_initialization(hass: HomeAssistant) -> None
 
     # Test that it has the required methods
     assert hasattr(handler, "async_step_user")
-    assert hasattr(handler, "async_step_reconfigure")
     assert hasattr(handler, "_async_step_route_form")
     assert hasattr(handler, "_ensure_stations_available")
     assert hasattr(handler, "_get_station_options")
@@ -321,120 +320,6 @@ async def test_subentry_flow_no_stations_available(hass: HomeAssistant) -> None:
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "no_stations_available"}
-
-
-async def test_subentry_flow_reconfigure_mode(hass: HomeAssistant) -> None:
-    """Test subentry flow in reconfigure mode."""
-    # Create a mock config entry with stations data
-    mock_config_entry = MockConfigEntry(
-        domain="nederlandse_spoorwegen",
-        data={CONF_API_KEY: API_KEY},
-    )
-
-    # Mock runtime data with stations
-    mock_coordinator = MagicMock()
-    mock_runtime_data = NSRuntimeData(
-        coordinator=mock_coordinator,
-        stations=[
-            {"code": "AMS", "name": "Amsterdam Centraal"},
-            {"code": "UTR", "name": "Utrecht Centraal"},
-        ],
-        stations_updated="2024-01-01T00:00:00Z",
-    )
-
-    # Set runtime_data directly on the mock config entry
-    mock_config_entry.runtime_data = mock_runtime_data
-
-    # Add to hass data
-    hass.data.setdefault("nederlandse_spoorwegen", {})[mock_config_entry.entry_id] = (
-        mock_runtime_data
-    )
-
-    # Create a subentry flow handler instance
-    handler = config_flow.RouteSubentryFlowHandler()
-    handler.hass = hass
-    handler.handler = (mock_config_entry.entry_id, "route")
-    handler.context = {"source": "user"}  # Required for async_create_entry
-
-    # Mock the _get_entry method
-    handler._get_entry = MagicMock(return_value=mock_config_entry)
-
-    # Test successful reconfigure by calling async_step_reconfigure directly
-    result = await handler.async_step_reconfigure(
-        user_input={
-            "name": "Updated Route",
-            "from": "UTR",
-            "to": "AMS",
-            "via": "",
-            "time": "10:00:00",
-        }
-    )
-
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Updated Route"
-    assert result.get("data") == {
-        "name": "Updated Route",
-        "from": "UTR",
-        "to": "AMS",
-        "time": "10:00:00",
-    }
-
-
-async def test_subentry_flow_reconfigure_with_existing_data(
-    hass: HomeAssistant,
-) -> None:
-    """Test subentry flow reconfigure mode with existing route data."""
-    # Create a mock config entry with stations data
-    mock_config_entry = MockConfigEntry(
-        domain="nederlandse_spoorwegen",
-        data={CONF_API_KEY: API_KEY},
-    )
-
-    # Mock runtime data with stations
-    mock_coordinator = MagicMock()
-    mock_runtime_data = NSRuntimeData(
-        coordinator=mock_coordinator,
-        stations=[
-            {"code": "AMS", "name": "Amsterdam Centraal"},
-            {"code": "UTR", "name": "Utrecht Centraal"},
-            {"code": "GVC", "name": "Den Haag Centraal"},
-        ],
-        stations_updated="2024-01-01T00:00:00Z",
-    )
-
-    # Set runtime_data directly on the mock config entry
-    mock_config_entry.runtime_data = mock_runtime_data
-
-    # Create a subentry flow handler instance
-    handler = config_flow.RouteSubentryFlowHandler()
-    handler.hass = hass
-    handler.handler = (mock_config_entry.entry_id, "route")
-    handler.context = {"source": "reconfigure"}  # Use reconfigure source
-
-    # Mock the _get_entry method
-    handler._get_entry = MagicMock(return_value=mock_config_entry)
-
-    # Mock the _get_reconfigure_subentry method to return existing route data
-    existing_subentry = MagicMock()
-    existing_subentry.data = {
-        "name": "Existing Route",
-        "from": "AMS",
-        "to": "UTR",
-        "via": "",
-        "time": "09:00",
-    }
-    handler._get_reconfigure_subentry = MagicMock(return_value=existing_subentry)
-
-    # Test showing the form with existing data
-    result = await handler.async_step_reconfigure()
-
-    assert result.get("type") == "form"
-    assert result.get("step_id") == "user"
-    assert "data_schema" in result
-
-    # Verify form was created successfully (specific schema validation would require more complex mocking)
-    data_schema = result["data_schema"]
-    assert data_schema is not None
 
 
 async def test_subentry_flow_invalid_via_station(hass: HomeAssistant) -> None:
