@@ -4263,7 +4263,7 @@
     },
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true

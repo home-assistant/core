@@ -28,6 +28,15 @@ def mock_api_wrapper():
         ]
     )
 
+    # Mock the centralized normalize_station_code method
+    def normalize_station_code(code):
+        return code.upper() if code else ""
+
+    wrapper.normalize_station_code = normalize_station_code
+
+    # Mock get_station_codes method
+    wrapper.get_station_codes = MagicMock(return_value={"AMS", "UTR"})
+
     # Create proper trip mocks with datetime objects
     future_time = datetime.now(UTC).replace(hour=23, minute=0, second=0, microsecond=0)
     mock_trips = [
@@ -145,7 +154,10 @@ async def test_update_data_with_via_route(
     coordinator, mock_hass, mock_api_wrapper, mock_config_entry
 ) -> None:
     """Test update data with route that has via station."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
+    stations = [
+        MagicMock(code="AMS", name="Amsterdam"),
+        MagicMock(code="UTR", name="Utrecht"),
+    ]
 
     # Create trips with proper datetime objects
     future_time = datetime.now(UTC) + timedelta(hours=1)
@@ -176,7 +188,10 @@ async def test_update_data_routes_from_data(
     coordinator, mock_hass, mock_api_wrapper, mock_config_entry
 ) -> None:
     """Test update data gets routes from config entry data when no options."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
+    stations = [
+        MagicMock(code="AMS", name="Amsterdam"),
+        MagicMock(code="UTR", name="Utrecht"),
+    ]
 
     # Create trips with proper datetime objects
     future_time = datetime.now(UTC) + timedelta(hours=1)
@@ -202,7 +217,10 @@ async def test_update_data_trip_error_handling(
     coordinator, mock_hass, mock_api_wrapper, mock_config_entry
 ) -> None:
     """Test update data handles trip fetching errors gracefully."""
-    stations = [MagicMock(code="AMS"), MagicMock(code="UTR")]
+    stations = [
+        MagicMock(code="AMS", name="Amsterdam"),
+        MagicMock(code="UTR", name="Utrecht"),
+    ]
 
     mock_config_entry.options = {
         "routes": [{"name": "Error Route", "from": "AMS", "to": "UTR"}]
@@ -239,7 +257,9 @@ async def test_update_data_api_error(
         "API Error"
     )
 
-    with pytest.raises(UpdateFailed, match="Error communicating with API"):
+    with pytest.raises(
+        UpdateFailed, match="Failed to fetch stations and no cache available"
+    ):
         await coordinator._async_update_data()
 
 
@@ -257,7 +277,10 @@ async def test_update_data_parameter_error(
 
     mock_api_wrapper.get_stations.side_effect = RequestParametersError("Invalid params")
 
-    with pytest.raises(UpdateFailed, match="Invalid request parameters"):
+    # When there are routes but stations can't be fetched and no cache, should raise
+    with pytest.raises(
+        UpdateFailed, match="Failed to fetch stations and no cache available"
+    ):
         await coordinator._async_update_data()
 
 
@@ -273,8 +296,15 @@ async def test_get_trips_for_route(coordinator, mock_api_wrapper) -> None:
 
     coordinator.config_entry.runtime_data = NSRuntimeData(
         coordinator=coordinator,
-        stations=[MagicMock(code="AMS"), MagicMock(code="UTR"), MagicMock(code="RTD")],
+        stations=[
+            type("Station", (), {"code": "AMS", "name": "Amsterdam"})(),
+            type("Station", (), {"code": "UTR", "name": "Utrecht"})(),
+            type("Station", (), {"code": "RTD", "name": "Rotterdam"})(),
+        ],
     )
+
+    # Mock the api_wrapper's get_station_codes method
+    mock_api_wrapper.get_station_codes.return_value = {"AMS", "UTR", "RTD"}
 
     # Mock the async call to get_trips
     async def mock_get_trips(*args, **kwargs):
@@ -296,8 +326,15 @@ async def test_get_trips_for_route_no_optional_params(
     trips = [MagicMock(departure_time_actual=now, departure_time_planned=now)]
 
     coordinator.config_entry.runtime_data = NSRuntimeData(
-        coordinator=coordinator, stations=[MagicMock(code="AMS"), MagicMock(code="UTR")]
+        coordinator=coordinator,
+        stations=[
+            MagicMock(code="AMS", name="Amsterdam"),
+            MagicMock(code="UTR", name="Utrecht"),
+        ],
     )
+
+    # Mock the api_wrapper's get_station_codes method
+    mock_api_wrapper.get_station_codes.return_value = {"AMS", "UTR"}
 
     # Mock the async call to get_trips
     async def mock_get_trips(*args, **kwargs):

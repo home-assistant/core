@@ -8,11 +8,11 @@ from homeassistant.components.nederlandse_spoorwegen.api import (
     NSAPIAuthError,
     NSAPIConnectionError,
 )
-from homeassistant.components.nederlandse_spoorwegen.config_flow import (
+from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
+from homeassistant.components.nederlandse_spoorwegen.utils import (
     normalize_and_validate_time_format,
     validate_time_format,
 )
-from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant

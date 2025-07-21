@@ -9,6 +9,11 @@ import zoneinfo
 
 import ns_api
 from ns_api import NSAPI
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    HTTPError,
+    Timeout,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -55,27 +60,19 @@ class NSAPIWrapper:
         """
         try:
             await self.hass.async_add_executor_job(self._client.get_stations)
-        except ValueError as ex:
-            _LOGGER.debug("API validation failed with ValueError: %s", ex)
-            if (
-                "401" in str(ex)
-                or "unauthorized" in str(ex).lower()
-                or "invalid" in str(ex).lower()
-            ):
+        except HTTPError as ex:
+            _LOGGER.debug("API validation failed with HTTP error: %s", ex)
+            if ex.response and ex.response.status_code == 401:
                 raise NSAPIAuthError("Invalid API key") from ex
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
-        except (ConnectionError, TimeoutError) as ex:
+        except (RequestsConnectionError, Timeout) as ex:
             _LOGGER.debug("API validation failed with connection error: %s", ex)
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
-        except Exception as ex:
-            _LOGGER.debug("API validation failed with unexpected error: %s", ex)
-            if (
-                "401" in str(ex)
-                or "unauthorized" in str(ex).lower()
-                or "invalid" in str(ex).lower()
-            ):
-                raise NSAPIAuthError("Invalid API key") from ex
-            raise NSAPIError(f"Unexpected error validating API key: {ex}") from ex
+        except ValueError as ex:
+            # ns_api library sometimes raises ValueError for auth issues
+            _LOGGER.debug("API validation failed with ValueError: %s", ex)
+            # No string parsing - treat ValueError as connection error
+            raise NSAPIConnectionError("Failed to connect to NS API") from ex
         else:
             return True
 
@@ -92,21 +89,17 @@ class NSAPIWrapper:
         """
         try:
             stations = await self.hass.async_add_executor_job(self._client.get_stations)
-        except ValueError as ex:
-            _LOGGER.warning("Failed to get stations - ValueError: %s", ex)
-            if (
-                "401" in str(ex)
-                or "unauthorized" in str(ex).lower()
-                or "invalid" in str(ex).lower()
-            ):
+        except HTTPError as ex:
+            _LOGGER.warning("Failed to get stations - HTTP error: %s", ex)
+            if ex.response and ex.response.status_code == 401:
                 raise NSAPIAuthError("Invalid API key") from ex
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
-        except (ConnectionError, TimeoutError) as ex:
+        except (RequestsConnectionError, Timeout) as ex:
             _LOGGER.warning("Failed to get stations - Connection error: %s", ex)
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
-        except Exception as ex:
-            _LOGGER.warning("Failed to get stations - Unexpected error: %s", ex)
-            raise NSAPIError(f"Unexpected error getting stations: {ex}") from ex
+        except ValueError as ex:
+            _LOGGER.warning("Failed to get stations - ValueError: %s", ex)
+            raise NSAPIConnectionError("Failed to connect to NS API") from ex
         else:
             _LOGGER.debug("Retrieved %d stations from NS API", len(stations))
             return stations
@@ -312,40 +305,103 @@ class NSAPIWrapper:
         station_mapping = {}
 
         for station in stations:
-            code = None
-            name = None
+            try:
+                code = None
+                name = None
 
-            if hasattr(station, "code") and hasattr(station, "name"):
-                # Standard format: separate code and name attributes
-                code = station.code
-                name = station.name
-            elif isinstance(station, dict):
-                # Dict format
-                code = station.get("code")
-                name = station.get("name")
-            else:
-                # Handle string format or object with __str__ method
-                station_str = str(station)
-
-                # Remove class name wrapper if present (e.g., "<Station> AC Abcoude" -> "AC Abcoude")
-                if station_str.startswith("<") and "> " in station_str:
-                    station_str = station_str.split("> ", 1)[1]
-
-                # Try to parse "CODE Name" format
-                parts = station_str.strip().split(" ", 1)
-                if len(parts) == 2 and parts[0]:
-                    code = parts[0]
-                    name = parts[1].strip()
+                if hasattr(station, "code") and hasattr(station, "name"):
+                    # Standard format: separate code and name attributes
+                    code = getattr(station, "code", None)
+                    name = getattr(station, "name", None)
+                elif isinstance(station, dict):
+                    # Dict format
+                    code = station.get("code")
+                    name = station.get("name")
                 else:
-                    # If we can't parse it properly, skip this station silently
-                    continue
+                    # Handle string format or object with __str__ method
+                    station_str = str(station)
 
-            # Only add if we have both code and name
-            if code and name:
-                station_mapping[code.upper()] = name.strip()
+                    # Validate string is reasonable length and contains expected chars
+                    if not station_str or len(station_str) > 200:
+                        _LOGGER.debug(
+                            "Skipping invalid station string: length %d",
+                            len(station_str),
+                        )
+                        continue
 
-        _LOGGER.info("Built station mapping with %d stations", len(station_mapping))
+                    # Remove class name wrapper if present
+                    # (e.g., "<Station> AC Abcoude" -> "AC Abcoude")
+                    if station_str.startswith("<") and "> " in station_str:
+                        try:
+                            station_str = station_str.split("> ", 1)[1]
+                        except IndexError:
+                            _LOGGER.debug(
+                                "Skipping malformed station string: %s",
+                                station_str[:50],
+                            )
+                            continue
+
+                    # Try to parse "CODE Name" format with proper validation
+                    parts = station_str.strip().split(" ", 1)
+                    if len(parts) == 2 and parts[0] and parts[1]:
+                        potential_code = parts[0].strip()
+                        potential_name = parts[1].strip()
+
+                        # Validate code format (should be reasonable station code)
+                        if (
+                            potential_code.isalnum()
+                            and 1 <= len(potential_code) <= 10
+                            and potential_name
+                            and len(potential_name) <= 100
+                        ):
+                            code = potential_code
+                            name = potential_name
+                        else:
+                            _LOGGER.debug(
+                                "Skipping invalid station format: %s", station_str[:50]
+                            )
+                            continue
+                    else:
+                        _LOGGER.debug(
+                            "Skipping unparsable station string: %s", station_str[:50]
+                        )
+                        continue
+
+                # Only add if we have both valid code and name
+                if (
+                    code
+                    and name
+                    and isinstance(code, str)
+                    and isinstance(name, str)
+                    and code.strip()
+                    and name.strip()
+                ):
+                    station_mapping[code.upper().strip()] = name.strip()
+                else:
+                    _LOGGER.debug(
+                        "Skipping station with missing code or name: code=%s, name=%s",
+                        code,
+                        name,
+                    )
+
+            except (AttributeError, TypeError, ValueError) as ex:
+                _LOGGER.debug("Error processing station %s: %s", station, ex)
+                continue
+
+        _LOGGER.debug("Built station mapping with %d stations", len(station_mapping))
         return station_mapping
+
+    def get_station_codes(self, stations: list[Any]) -> set[str]:
+        """Get valid station codes from station data.
+
+        Args:
+            stations: List of station objects from the API.
+
+        Returns:
+            Set of valid station codes (uppercase).
+        """
+        station_mapping = self.build_station_mapping(stations)
+        return set(station_mapping.keys())
 
     def _filter_future_trips(self, trips: list[Any]) -> list[Any]:
         """Filter out trips that have already departed.
@@ -376,3 +432,17 @@ class NSAPIWrapper:
             len(future_trips),
         )
         return future_trips
+
+    @staticmethod
+    def normalize_station_code(station_code: str | None) -> str:
+        """Normalize station code to uppercase for consistent handling.
+
+        Args:
+            station_code: Station code to normalize.
+
+        Returns:
+            Normalized station code (uppercase) or empty string if None.
+        """
+        if not station_code:
+            return ""
+        return station_code.upper().strip()

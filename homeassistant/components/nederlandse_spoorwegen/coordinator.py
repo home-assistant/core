@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-from json import JSONDecodeError
+from datetime import datetime, timedelta
 import logging
 import re
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from ns_api import RequestParametersError
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,8 +30,18 @@ from .const import (
     CONF_VIA,
     DOMAIN,
 )
+from .utils import (
+    generate_route_key,
+    get_current_utc_timestamp,
+    is_station_cache_valid,
+    normalize_station_code,
+    validate_route_structure,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Station cache validity (24 hours)
+STATION_CACHE_DURATION = timedelta(days=1)
 
 
 class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -48,11 +58,12 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=3),
             config_entry=config_entry,
         )
         self.api_wrapper = api_wrapper
         self.config_entry = config_entry
+        self._unavailable_logged = False
 
     async def test_connection(self) -> None:
         """Test connection to the API."""
@@ -63,7 +74,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise
 
     def _get_routes(self) -> list[dict[str, Any]]:
-        """Get routes from config entry subentries (preferred) or fallback to options/data."""
+        """Get routes from config entry subentries or fallback to options/data."""
         if self.config_entry is None:
             return []
 
@@ -87,177 +98,197 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update data via library."""
+    def _is_station_cache_valid(self, stations_updated: str | None) -> bool:
+        """Check if station cache is still valid."""
+        return is_station_cache_valid(stations_updated)
+
+    async def _refresh_station_cache(self) -> list[dict[str, Any]] | None:
+        """Refresh station cache if needed."""
         try:
-            # Use runtime_data to cache stations and timestamp
-            runtime_data = getattr(self.config_entry, "runtime_data", None)
-            stations = runtime_data.stations if runtime_data else None
-            stations_updated = runtime_data.stations_updated if runtime_data else None
-            station_cache_expired = False
-            now_utc = datetime.now(UTC)
-            if not stations or not stations_updated:
-                station_cache_expired = True
-            else:
+            stations = await self.api_wrapper.get_stations()
+        except Exception as exc:
+            if not self._unavailable_logged:
+                _LOGGER.info("NS API unavailable, using cached station data: %s", exc)
+                self._unavailable_logged = True
+            raise
+        else:
+            # Safely update runtime_data if available
+            if (
+                self.config_entry
+                and hasattr(self.config_entry, "runtime_data")
+                and self.config_entry.runtime_data
+            ):
                 try:
-                    updated_dt = datetime.fromisoformat(stations_updated)
-                    if (now_utc - updated_dt) > timedelta(days=1):
-                        station_cache_expired = True
-                except (ValueError, TypeError):
-                    station_cache_expired = True
-
-            if station_cache_expired:
-                try:
-                    stations = await self.api_wrapper.get_stations()
-                    # Store full stations in runtime_data for UI dropdowns
-                    if self.config_entry is not None:
-                        runtime_data = self.config_entry.runtime_data
-                        runtime_data.stations = stations
-                        runtime_data.stations_updated = now_utc.isoformat()
-                except (TypeError, JSONDecodeError) as exc:
-                    # Handle specific JSON parsing errors (None passed to json.loads)
-                    _LOGGER.warning(
-                        "Failed to parse stations response from NS API, using cached data: %s",
-                        exc,
+                    self.config_entry.runtime_data.stations = stations
+                    self.config_entry.runtime_data.stations_updated = (
+                        get_current_utc_timestamp()
                     )
-                    # Keep using existing stations data if available
-                    if not stations:
-                        raise UpdateFailed(
-                            f"Failed to parse stations response: {exc}"
-                        ) from exc
+                except (AttributeError, TypeError) as ex:
+                    _LOGGER.debug("Error updating runtime_data: %s", ex)
 
-            # Get routes from config entry options or data
+            return stations
+
+    def _get_cached_stations(self) -> tuple[list[dict[str, Any]] | None, str | None]:
+        """Get cached stations and update timestamp from runtime data."""
+        if not (
+            self.config_entry
+            and hasattr(self.config_entry, "runtime_data")
+            and self.config_entry.runtime_data
+        ):
+            return None, None
+
+        try:
+            runtime_data = self.config_entry.runtime_data
+            stations = getattr(runtime_data, "stations", None)
+            stations_updated = getattr(runtime_data, "stations_updated", None)
+        except (AttributeError, TypeError) as ex:
+            _LOGGER.debug("Error accessing runtime_data: %s", ex)
+            return None, None
+        else:
+            return stations, stations_updated
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update data via library with proper runtime data handling."""
+        try:
+            # Get routes from config entry first
             routes = self._get_routes()
+            if not routes:
+                _LOGGER.debug("No routes configured")
+                return {ATTR_ROUTES: {}}
+
+            # Ensure station data is available only if we have routes
+            stations = await self._ensure_stations_available()
+            if not stations:
+                raise UpdateFailed("Failed to fetch stations and no cache available")
 
             # Fetch trip data for each route
-            route_data = {}
-            for route in routes:
-                # Use route_id as the stable key if present
-                route_id = route.get("route_id")
-                if route_id:
-                    route_key = route_id
-                else:
-                    route_key = f"{route.get(CONF_NAME, '')}_{route.get(CONF_FROM, '')}_{route.get(CONF_TO, '')}"
-                    if route.get(CONF_VIA):
-                        route_key += f"_{route.get(CONF_VIA)}"
+            route_data = await self._fetch_route_data(routes)
 
-                try:
-                    trips = await self._get_trips_for_route(route)
-                    route_data[route_key] = {
-                        ATTR_ROUTE: route,
-                        ATTR_TRIPS: trips,
-                        ATTR_FIRST_TRIP: trips[0] if trips else None,
-                        ATTR_NEXT_TRIP: trips[1] if len(trips) > 1 else None,
-                    }
-                except (
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.HTTPError,
-                ) as err:
-                    _LOGGER.warning(
-                        "Error fetching trips for route %s: %s",
-                        route.get(CONF_NAME, ""),
-                        err,
-                    )
-                    route_data[route_key] = {
-                        ATTR_ROUTE: route,
-                        ATTR_TRIPS: [],
-                        ATTR_FIRST_TRIP: None,
-                        ATTR_NEXT_TRIP: None,
-                    }
+            # Log recovery if previously unavailable
+            if self._unavailable_logged:
+                _LOGGER.info("NS API connection restored")
+                self._unavailable_logged = False
 
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
+            requests.exceptions.Timeout,
         ) as err:
+            _LOGGER.error("Error communicating with NS API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Invalid request parameters: {err}") from err
         else:
-            return {
-                ATTR_ROUTES: route_data,
-            }
+            return {ATTR_ROUTES: route_data}
+
+    async def _ensure_stations_available(self) -> list[dict[str, Any]] | None:
+        """Ensure station data is available, fetching if cache is expired."""
+        stations, stations_updated = self._get_cached_stations()
+
+        # Check if cache is valid
+        if stations and self._is_station_cache_valid(stations_updated):
+            return stations
+
+        # Cache expired or missing, refresh
+        try:
+            return await self._refresh_station_cache()
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            requests.exceptions.Timeout,
+            RequestParametersError,
+        ):
+            # If refresh fails and we have cached data, use it
+            if stations:
+                _LOGGER.warning("Using stale station cache due to API unavailability")
+                return stations
+            # No cached data available
+            return None
+
+    async def _fetch_route_data(self, routes: list[dict[str, Any]]) -> dict[str, Any]:
+        """Fetch trip data for all routes."""
+        route_data = {}
+
+        for route in routes:
+            if not isinstance(route, dict):
+                _LOGGER.warning("Skipping invalid route data: %s", route)
+                continue
+
+            route_key = self._generate_route_key(route)
+            if not route_key:
+                continue
+
+            try:
+                trips = await self._get_trips_for_route(route)
+                route_data[route_key] = {
+                    ATTR_ROUTE: route,
+                    ATTR_TRIPS: trips,
+                    ATTR_FIRST_TRIP: trips[0] if trips else None,
+                    ATTR_NEXT_TRIP: trips[1] if len(trips) > 1 else None,
+                }
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError,
+                requests.exceptions.Timeout,
+            ) as err:
+                _LOGGER.warning(
+                    "Error fetching trips for route %s: %s",
+                    route.get(CONF_NAME, route_key),
+                    err,
+                )
+                # Add empty route data to maintain structure
+                route_data[route_key] = {
+                    ATTR_ROUTE: route,
+                    ATTR_TRIPS: [],
+                    ATTR_FIRST_TRIP: None,
+                    ATTR_NEXT_TRIP: None,
+                }
+
+        return route_data
+
+    def _generate_route_key(self, route: dict[str, Any]) -> str | None:
+        """Generate a stable route key for a route."""
+        # Generate stable route key
+        route_id = route.get("route_id")
+        if route_id and isinstance(route_id, str):
+            return route_id
+
+        # Use centralized route key generation for basic routes
+        basic_key = generate_route_key(route)
+        if not basic_key:
+            _LOGGER.warning("Skipping route with missing stations: %s", route)
+            return None
+
+        # Build NS-specific key with name prefix
+        name = route.get(CONF_NAME, "")
+        route_key = f"{name}_{basic_key}"
+
+        # Add via station if present
+        via_station = route.get(CONF_VIA, "")
+        if via_station:
+            route_key += f"_{normalize_station_code(via_station)}"
+
+        return route_key
 
     async def _get_trips_for_route(self, route: dict[str, Any]) -> list[Any]:
-        """Get trips for a specific route, validating time field and structure."""
-        # Ensure all required and optional keys are present
-        required_keys = {CONF_NAME, CONF_FROM, CONF_TO}
-        optional_keys = {CONF_VIA, CONF_TIME}
-        if not isinstance(route, dict) or not required_keys.issubset(route):
-            _LOGGER.warning("Skipping malformed route: %s", route)
+        """Get trips for a specific route with validation and normalization."""
+        # Validate route structure
+        if not self._validate_route_structure(route):
             return []
-        # Fill in missing optional keys with empty string
-        for key in optional_keys:
-            if key not in route:
-                route[key] = ""
-        # Validate 'time' is a string in the expected time format (HH:MM or HH:MM:SS) or empty
-        time_value = route.get(CONF_TIME, "")
-        if time_value:
-            if not (
-                isinstance(time_value, str)
-                and re.match(r"^\d{2}:\d{2}(:\d{2})?$", time_value.strip())
-            ):
-                _LOGGER.warning(
-                    "Ignoring invalid time value '%s' for route %s", time_value, route
-                )
-                time_value = ""
-        # Normalize station codes to uppercase for comparison and storage
-        from_station = route.get(CONF_FROM, "").upper()
-        to_station = route.get(CONF_TO, "").upper()
-        via_station = route.get(CONF_VIA, "").upper() if route.get(CONF_VIA) else ""
-        # Overwrite the route dict with uppercase codes
-        route[CONF_FROM] = from_station
-        route[CONF_TO] = to_station
-        if CONF_VIA in route:
-            route[CONF_VIA] = via_station
-        # Use the stored station codes from runtime_data for validation
-        valid_station_codes = self.get_station_codes()
-        # Store approved station codes in runtime_data for use in config flow
-        current_codes = list(self.get_station_codes())
-        # Always sort both lists before comparing and storing
-        sorted_valid_codes = sorted(valid_station_codes)
-        sorted_current_codes = sorted(current_codes)
-        if sorted_valid_codes != sorted_current_codes:
-            if (
-                self.config_entry is not None
-                and hasattr(self.config_entry, "runtime_data")
-                and self.config_entry.runtime_data
-            ):
-                self.config_entry.runtime_data.approved_station_codes = (
-                    sorted_valid_codes
-                )
-        if from_station not in valid_station_codes:
-            _LOGGER.error(
-                "'from' station code '%s' not found in NS station list for route: %s",
-                from_station,
-                route,
-            )
+
+        # Normalize station codes
+        normalized_route = self._normalize_route_stations(route)
+
+        # Validate stations exist
+        if not self._validate_route_stations(normalized_route):
             return []
-        if to_station not in valid_station_codes:
-            _LOGGER.error(
-                "'to' station code '%s' not found in NS station list for route: %s",
-                to_station,
-                route,
-            )
-            return []
-        # Build trip time string for NS API (use configured time or now)
-        tz_nl = ZoneInfo("Europe/Amsterdam")
-        now_nl = datetime.now(tz=tz_nl)
-        if time_value:
-            try:
-                hour, minute, *rest = map(int, time_value.split(":"))
-                trip_time = now_nl.replace(
-                    hour=hour, minute=minute, second=0, microsecond=0
-                )
-            except ValueError:
-                trip_time = now_nl
-        else:
-            trip_time = now_nl
+
+        # Build trip time
+        trip_time = self._build_trip_time(normalized_route.get(CONF_TIME, ""))
+
         try:
-            # Use the API wrapper which has a different signature
             trips = await self.api_wrapper.get_trips(
-                from_station,
-                to_station,
-                via_station if via_station else None,
+                normalized_route[CONF_FROM],
+                normalized_route[CONF_TO],
+                normalized_route.get(CONF_VIA) or None,
                 departure_time=trip_time,
             )
         except (
@@ -266,49 +297,97 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as ex:
             _LOGGER.error("Error calling API wrapper get_trips: %s", ex)
             return []
+        else:
+            return trips or []
 
-        # Trips are already filtered for future departures in the API wrapper
-        return trips or []
+    def _validate_route_structure(self, route: dict[str, Any]) -> bool:
+        """Validate route has required structure."""
+        # Use centralized validation for basic structure
+        if not validate_route_structure(route):
+            _LOGGER.warning("Skipping malformed route: %s", route)
+            return False
 
-    def _build_station_mapping(self, stations: list) -> dict[str, str]:
-        """Build a mapping of station codes to names from fetched station data."""
-        station_mapping = {}
+        # Additional NS-specific validation for required name field
+        if CONF_NAME not in route:
+            _LOGGER.warning("Skipping malformed route: %s", route)
+            return False
 
-        for station in stations:
-            code = None
-            name = None
+        # Fill in missing optional keys with empty string
+        optional_keys = {CONF_VIA, CONF_TIME}
+        for key in optional_keys:
+            if key not in route:
+                route[key] = ""
 
-            if hasattr(station, "code") and hasattr(station, "name"):
-                # Standard format: separate code and name attributes
-                code = station.code
-                name = station.name
-            elif isinstance(station, dict):
-                # Dict format
-                code = station.get("code")
-                name = station.get("name")
-            else:
-                # Handle string format or object with __str__ method
-                station_str = str(station)
+        return True
 
-                # Remove class name wrapper if present (e.g., "<Station> AC Abcoude" -> "AC Abcoude")
-                if station_str.startswith("<") and "> " in station_str:
-                    station_str = station_str.split("> ", 1)[1]
+    def _normalize_route_stations(self, route: dict[str, Any]) -> dict[str, Any]:
+        """Normalize station codes in route."""
+        normalized_route = route.copy()
 
-                # Try to parse "CODE Name" format
-                parts = station_str.strip().split(" ", 1)
-                if (
-                    len(parts) == 2 and len(parts[0]) <= 4 and parts[0].isupper()
-                ):  # Station codes are typically 2-4 uppercase chars
-                    code, name = parts
-                else:
-                    # If we can't parse it properly, skip this station silently
-                    continue
+        # Use centralized station code normalization
+        normalized_route[CONF_FROM] = normalize_station_code(route.get(CONF_FROM, ""))
+        normalized_route[CONF_TO] = normalize_station_code(route.get(CONF_TO, ""))
 
-            # Only add if we have both code and name
-            if code and name:
-                station_mapping[code.upper()] = name.strip()
+        via_station = route.get(CONF_VIA, "")
+        if via_station:
+            normalized_route[CONF_VIA] = normalize_station_code(via_station)
 
-        return station_mapping
+        return normalized_route
+
+    def _validate_route_stations(self, route: dict[str, Any]) -> bool:
+        """Validate route stations exist in NS station list."""
+        valid_station_codes = self.get_station_codes()
+
+        from_station = route[CONF_FROM]
+        to_station = route[CONF_TO]
+        via_station = route.get(CONF_VIA, "")
+
+        if from_station not in valid_station_codes:
+            _LOGGER.error(
+                "From station '%s' not found in NS station list for route: %s",
+                from_station,
+                route,
+            )
+            return False
+
+        if to_station not in valid_station_codes:
+            _LOGGER.error(
+                "To station '%s' not found in NS station list for route: %s",
+                to_station,
+                route,
+            )
+            return False
+
+        if via_station and via_station not in valid_station_codes:
+            _LOGGER.error(
+                "Via station '%s' not found in NS station list for route: %s",
+                via_station,
+                route,
+            )
+            return False
+
+        return True
+
+    def _build_trip_time(self, time_value: str) -> datetime:
+        """Build trip time from configured time or current time."""
+        # Validate time format if provided
+        if time_value and not re.match(r"^\d{2}:\d{2}(:\d{2})?$", time_value.strip()):
+            _LOGGER.warning("Ignoring invalid time value '%s'", time_value)
+            time_value = ""
+
+        tz_nl = ZoneInfo("Europe/Amsterdam")
+        now_nl = datetime.now(tz=tz_nl)
+
+        if time_value:
+            try:
+                hour, minute, *rest = map(int, time_value.split(":"))
+                return now_nl.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            except ValueError:
+                _LOGGER.warning(
+                    "Failed to parse time value '%s', using current time", time_value
+                )
+
+        return now_nl
 
     def get_station_codes(self) -> set[str]:
         """Get valid station codes from runtime data."""
@@ -318,8 +397,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             and self.config_entry.runtime_data
             and self.config_entry.runtime_data.stations
         ):
-            station_mapping = self._build_station_mapping(
+            return self.api_wrapper.get_station_codes(
                 self.config_entry.runtime_data.stations
             )
-            return set(station_mapping.keys())
         return set()

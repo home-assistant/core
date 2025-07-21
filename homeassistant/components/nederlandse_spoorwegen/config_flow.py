@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import logging
 from typing import Any
 
@@ -22,50 +21,9 @@ from homeassistant.helpers.selector import selector
 
 from .api import NSAPIAuthError, NSAPIConnectionError, NSAPIError, NSAPIWrapper
 from .const import CONF_FROM, CONF_NAME, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
+from .utils import get_current_utc_timestamp, normalize_and_validate_time_format
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def normalize_and_validate_time_format(time_str: str | None) -> tuple[bool, str | None]:
-    """Normalize and validate time format, returning (is_valid, normalized_time).
-
-    Accepts HH:MM or HH:MM:SS format and normalizes to HH:MM:SS.
-    """
-    if not time_str:
-        return True, None  # Optional field
-
-    try:
-        # Basic validation for HH:MM or HH:MM:SS format
-        parts = time_str.split(":")
-        if len(parts) == 2:
-            # Add seconds if not provided
-            hours, minutes = parts
-            seconds = "00"
-        elif len(parts) == 3:
-            hours, minutes, seconds = parts
-        else:
-            return False, None
-
-        # Validate ranges
-        if not (
-            0 <= int(hours) <= 23
-            and 0 <= int(minutes) <= 59
-            and 0 <= int(seconds) <= 59
-        ):
-            return False, None
-
-        # Return normalized format HH:MM:SS
-        normalized = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
-    except (ValueError, AttributeError):
-        return False, None
-    else:
-        return True, normalized
-
-
-def validate_time_format(time_str: str | None) -> bool:
-    """Validate time format (backward compatibility)."""
-    is_valid, _ = normalize_and_validate_time_format(time_str)
-    return is_valid
 
 
 class NSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -201,17 +159,30 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                     errors[CONF_TIME] = "invalid_time_format"
                     return errors
 
-            # Station validation
-            station_codes = [opt["value"] for opt in station_options]
-            station_codes_upper = [code.upper() for code in station_codes]
-
-            for field, station in (
-                (CONF_FROM, user_input.get(CONF_FROM)),
-                (CONF_TO, user_input.get(CONF_TO)),
-                (CONF_VIA, user_input.get(CONF_VIA)),
+            # Station validation using centralized API method
+            entry = self._get_entry()
+            if (
+                hasattr(entry, "runtime_data")
+                and entry.runtime_data
+                and hasattr(entry.runtime_data, "stations")
+                and entry.runtime_data.stations
             ):
-                if station and station.upper() not in station_codes_upper:
-                    errors[field] = "invalid_station"
+                api_wrapper = NSAPIWrapper(self.hass, entry.data[CONF_API_KEY])
+                valid_station_codes = api_wrapper.get_station_codes(
+                    entry.runtime_data.stations
+                )
+
+                for field, station in (
+                    (CONF_FROM, user_input.get(CONF_FROM)),
+                    (CONF_TO, user_input.get(CONF_TO)),
+                    (CONF_VIA, user_input.get(CONF_VIA)),
+                ):
+                    if (
+                        station
+                        and api_wrapper.normalize_station_code(station)
+                        not in valid_station_codes
+                    ):
+                        errors[field] = "invalid_station"
 
         except Exception:  # Allowed in config flows for robustness
             _LOGGER.exception("Exception in route subentry flow")
@@ -225,14 +196,17 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
         to_station = user_input.get(CONF_TO, "")
         via_station = user_input.get(CONF_VIA)
 
+        # Use centralized station code normalization
+        entry = self._get_entry()
+        api_wrapper = NSAPIWrapper(self.hass, entry.data[CONF_API_KEY])
         route_config = {
             CONF_NAME: user_input[CONF_NAME],
-            CONF_FROM: from_station.upper(),
-            CONF_TO: to_station.upper(),
+            CONF_FROM: api_wrapper.normalize_station_code(from_station),
+            CONF_TO: api_wrapper.normalize_station_code(to_station),
         }
 
         if via_station:
-            route_config[CONF_VIA] = via_station.upper()
+            route_config[CONF_VIA] = api_wrapper.normalize_station_code(via_station)
 
         if user_input.get(CONF_TIME):
             _, normalized_time = normalize_and_validate_time_format(
@@ -363,7 +337,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 _LOGGER.debug("Raw get_stations response: %r", stations)
                 # Store in runtime_data
                 entry.runtime_data.stations = stations
-                entry.runtime_data.stations_updated = datetime.now(UTC).isoformat()
+                entry.runtime_data.stations_updated = get_current_utc_timestamp()
             except (NSAPIAuthError, NSAPIConnectionError, NSAPIError) as ex:
                 _LOGGER.warning("Failed to fetch stations for subentry flow: %s", ex)
             except (
@@ -376,21 +350,17 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
     async def _get_station_options(self) -> list[dict[str, str]]:
         """Get the list of station options for dropdowns, sorted by name."""
         entry = self._get_entry()
-        stations = []
         if (
-            hasattr(entry, "runtime_data")
-            and entry.runtime_data
-            and hasattr(entry.runtime_data, "stations")
-            and entry.runtime_data.stations
+            not hasattr(entry, "runtime_data")
+            or not entry.runtime_data
+            or not hasattr(entry.runtime_data, "stations")
+            or not entry.runtime_data.stations
         ):
-            stations = entry.runtime_data.stations
-
-        if not stations:
             return []
 
-        # Build station mapping from fetched data
+        # Use centralized station mapping from API wrapper
         api_wrapper = NSAPIWrapper(self.hass, entry.data[CONF_API_KEY])
-        station_mapping = api_wrapper.build_station_mapping(stations)
+        station_mapping = api_wrapper.build_station_mapping(entry.runtime_data.stations)
 
         # Convert to dropdown options with station names as labels and codes as values
         station_options = [

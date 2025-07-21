@@ -12,10 +12,9 @@ from homeassistant.components.nederlandse_spoorwegen import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -96,17 +95,28 @@ async def test_async_setup_entry_connection_error(hass: HomeAssistant) -> None:
         mock_api_wrapper.validate_api_key.return_value = None
         mock_api_wrapper_class.return_value = mock_api_wrapper
 
-        # Create a real MockConfigEntry instead of a mock object
+        # Create a config entry with routes to trigger API calls
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={"api_key": "test_key"},
-            options={"routes_migrated": True},  # No migration needed
+            options={
+                "routes_migrated": True,
+                "routes": [
+                    {
+                        "name": "Test Route",
+                        "from": "AMS",
+                        "to": "UT",
+                        "show_future": True,
+                    }
+                ],
+            },
         )
         config_entry.add_to_hass(hass)
 
-        # The connection error should happen during coordinator first refresh
-        with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, config_entry)
+        # Use the config entries setup flow to properly test
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        assert result is False  # Setup should fail due to coordinator error
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_reload_entry(hass: HomeAssistant, mock_config_entry) -> None:

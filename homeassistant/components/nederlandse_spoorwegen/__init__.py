@@ -135,25 +135,27 @@ async def _async_migrate_legacy_routes(
                 )
                 continue
 
-            # Create subentry data
+            # Create subentry data with centralized station code normalization
             subentry_data = {
                 CONF_NAME: route[CONF_NAME],
-                CONF_FROM: route[CONF_FROM].upper(),
-                CONF_TO: route[CONF_TO].upper(),
+                CONF_FROM: NSAPIWrapper.normalize_station_code(route[CONF_FROM]),
+                CONF_TO: NSAPIWrapper.normalize_station_code(route[CONF_TO]),
             }
 
             # Add optional fields if present
             if route.get(CONF_VIA):
-                subentry_data[CONF_VIA] = route[CONF_VIA].upper()
+                subentry_data[CONF_VIA] = NSAPIWrapper.normalize_station_code(
+                    route[CONF_VIA]
+                )
 
             if route.get(CONF_TIME):
                 subentry_data[CONF_TIME] = route[CONF_TIME]
 
-            # Create unique_id with uppercase station codes for consistency
+            # Create unique_id with centralized station code normalization
             unique_id_parts = [
-                route[CONF_FROM].upper(),
-                route[CONF_TO].upper(),
-                route.get(CONF_VIA, "").upper(),
+                NSAPIWrapper.normalize_station_code(route[CONF_FROM]),
+                NSAPIWrapper.normalize_station_code(route[CONF_TO]),
+                NSAPIWrapper.normalize_station_code(route.get(CONF_VIA, "")),
             ]
             unique_id = "_".join(part for part in unique_id_parts if part)
 
