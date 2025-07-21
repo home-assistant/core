@@ -1,6 +1,6 @@
 """Platform for sensor integration."""
 
-from switchbot_api import Device, SwitchBotAPI
+from switchbot_api import Device, Remote, SwitchBotAPI
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +18,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -120,7 +120,7 @@ RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SensorEntityDescription(
 RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION = SensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.TOTAL,
+    state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
 )
 
@@ -189,63 +189,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
-    entities_list: list[SwitchBotCloudSensor | SwitchBotCloudRelaySwitch2PMSensor] = []
-    for device, coordinator in data.devices.sensors:
-        if SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type) is not None:
-            for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
-                if device.device_type in ["Relay Switch 2PM"]:
-                    entities_list.extend(
-                        [
-                            SwitchBotCloudRelaySwitch2PMSensor(
-                                data.api, device, coordinator, description
-                            )
-                        ]
-                    )
-                else:
-                    entities_list.extend(
-                        [
-                            SwitchBotCloudSensor(
-                                data.api, device, coordinator, description
-                            )
-                        ]
-                    )
-            async_add_entities(entities_list)
-
     async_add_entities(
-        SwitchBotCloudSensor(data.api, device, coordinator, description)
+        _async_make_entity(data.api, device, coordinator, description)
         for device, coordinator in data.devices.sensors
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
     )
-
-
-class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudEntity, SensorEntity):
-    """Representation of a SwitchBot Cloud Relay Switch 2PM sensor entity."""
-
-    def __init__(
-        self,
-        api: SwitchBotAPI,
-        device: Device,
-        coordinator: SwitchBotCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize SwitchBot Cloud sensor entity."""
-        super().__init__(api, device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.device_id}_{description.key}"
-
-    def _set_attributes(self) -> None:
-        """Set attributes from coordinator data."""
-        if not self.coordinator.data:
-            return
-        name: str | None = (
-            self._attr_device_info.get("name") if self._attr_device_info else None
-        )
-        if name is None:
-            return
-        switch_index = int(name.split("-")[-1].strip())
-        self._attr_native_value = self.coordinator.data.get(
-            f"switch{switch_index}{self.entity_description.key.strip()}"
-        )
 
 
 class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
@@ -268,3 +216,39 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+
+class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
+    """Representation of a SwitchBot Cloud Relay Switch 2PM sensor entity."""
+
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device,
+        coordinator: SwitchBotCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize SwitchBot Cloud sensor entity."""
+        super().__init__(api, device, coordinator, description)
+        self.channel = device.device_id.split("-")[1]
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+        self._attr_native_value = self.coordinator.data.get(
+            f"switch{self.channel}{self.entity_description.key.strip()}"
+        )
+
+
+@callback
+def _async_make_entity(
+    api: SwitchBotAPI,
+    device: Device | Remote,
+    coordinator: SwitchBotCoordinator,
+    description: SensorEntityDescription,
+) -> SwitchBotCloudSensor | SwitchBotCloudRelaySwitch2PMSensor:
+    """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
+    if "Relay Switch 2PM" in device.device_type:
+        return SwitchBotCloudRelaySwitch2PMSensor(api, device, coordinator, description)
+    return SwitchBotCloudSensor(api, device, coordinator, description)
