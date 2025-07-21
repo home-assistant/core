@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
@@ -227,7 +227,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HolidayOptionsFlowHandler(OptionsFlow):
+class HolidayOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Holiday options."""
 
     async def async_step_init(
