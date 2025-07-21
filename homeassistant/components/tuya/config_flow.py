@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from tuya_sharing import LoginControl
@@ -35,8 +34,6 @@ from .const import (
     TUYA_RESPONSE_SUCCESS,
     TUYA_SCHEMA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):

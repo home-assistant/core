@@ -96,6 +96,7 @@ class ManagerCompat(Manager):
 
         if device.support_local:
             for item in status:
+                # [{'dpId': 1, 't': 1752456620499, 'value': 120}]
                 if "dpId" in item and "value" in item:
                     dp_id_item = device.local_strategy[item["dpId"]]
                     strategy_name = dp_id_item["value_convert"]

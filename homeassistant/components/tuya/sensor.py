@@ -1802,24 +1802,9 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
 
         # Use new update check method that considers both value and timestamp
         if not self._is_new_update(current_value, dp_timestamp):
-            LOGGER.debug(
-                "not_new_update for %s at timestamp %s, total now %s for %s",
-                current_value,
-                dp_timestamp,
-                self._cumulative_total,
-                self.entity_id,
-            )
             return
 
         self._cumulative_total += current_value
-
-        LOGGER.debug(
-            "Energy increment +%s at timestamp %s, total now %s for %s",
-            current_value,
-            dp_timestamp,
-            self._cumulative_total,
-            self.entity_id,
-        )
 
     def _is_new_update(
         self, current_value: Decimal, dp_timestamp: int | None = None
