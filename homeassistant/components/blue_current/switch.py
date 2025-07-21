@@ -6,8 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from bluecurrent_api import Client
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,9 +26,9 @@ from .entity import ChargepointEntity
 class BlueCurrentSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Blue Current switch entity."""
 
-    function: Callable[[Client, str, bool], Any]
+    function: Callable[[Connector, str, bool], Any]
 
-    update_lastest_data: Callable[[str, Connector], tuple[bool, bool]]
+    turn_on_off_fn: Callable[[str, Connector], tuple[bool, bool]]
     """Update the switch based on the latest data received from the websocket. The first returned boolean is _attr_is_on, the second one has_value."""
 
     on_switch_update: Callable[[str, Connector, bool], None] | None = None
@@ -68,42 +66,46 @@ def update_charge_point(
         data_objects[VALUE] = new_switch_value
 
 
+async def set_plug_and_charge(connector: Connector, evse_id: str, value: bool) -> None:
+    """Toggle the plug and charge setting for a specific charging point."""
+    await connector.client.set_plug_and_charge(evse_id, value)
+    update_charge_point(PLUG_AND_CHARGE, evse_id, connector, value)
+
+
+async def set_linked_charge_cards(
+    connector: Connector, evse_id: str, value: bool
+) -> None:
+    """Toggle the plug and charge setting for a specific charging point."""
+    await connector.client.set_linked_charge_cards_only(evse_id, value)
+    update_charge_point(PUBLIC_CHARGING, evse_id, connector, not value)
+
+
 SWITCHES = (
     BlueCurrentSwitchEntityDescription(
         key=PLUG_AND_CHARGE,
         translation_key=PLUG_AND_CHARGE,
-        function=lambda client, evse_id, value: client.set_plug_and_charge(
-            evse_id, value
-        ),
-        update_lastest_data=lambda evse_id, connector: update_on_value_and_activity(
-            PLUG_AND_CHARGE, evse_id, connector
-        ),
-        on_switch_update=lambda evse_id,
-        connector,
-        new_switch_value: update_charge_point(
-            PLUG_AND_CHARGE, evse_id, connector, new_switch_value
+        function=set_plug_and_charge,
+        turn_on_off_fn=lambda evse_id, connector: (
+            update_on_value_and_activity(PLUG_AND_CHARGE, evse_id, connector)
         ),
     ),
     BlueCurrentSwitchEntityDescription(
         key=LINKED_CHARGE_CARDS,
         translation_key=LINKED_CHARGE_CARDS,
-        function=lambda client, evse_id, value: client.set_linked_charge_cards_only(
-            evse_id, value
-        ),
-        update_lastest_data=lambda evse_id, connector: update_on_value_and_activity(
-            PUBLIC_CHARGING, evse_id, connector, reverse_is_on=True
-        ),
-        on_switch_update=lambda evse_id,
-        connector,
-        new_switch_value: update_charge_point(
-            PUBLIC_CHARGING, evse_id, connector, not new_switch_value
+        function=set_linked_charge_cards,
+        turn_on_off_fn=lambda evse_id, connector: (
+            update_on_value_and_activity(
+                PUBLIC_CHARGING, evse_id, connector, reverse_is_on=True
+            )
         ),
     ),
     BlueCurrentSwitchEntityDescription(
         key=BLOCK,
         translation_key=BLOCK,
-        function=lambda client, evse_id, value: client.block(evse_id, value),
-        update_lastest_data=update_block_switch,
+        function=lambda connector, evse_id, value: connector.client.block(
+            evse_id, value
+        ),
+        turn_on_off_fn=update_block_switch,
     ),
 )
 
@@ -150,33 +152,23 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
 
     async def call_function(self, value: bool) -> None:
         """Call the function to set setting."""
-        await self.entity_description.function(
-            self.connector.client, self.evse_id, value
-        )
+        await self.entity_description.function(self.connector, self.evse_id, value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_function(True)
         self._attr_is_on = True
-        if self.entity_description.on_switch_update is not None:
-            self.entity_description.on_switch_update(self.evse_id, self.connector, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_function(False)
         self._attr_is_on = False
-        if self.entity_description.on_switch_update is not None:
-            self.entity_description.on_switch_update(
-                self.evse_id, self.connector, False
-            )
         self.async_write_ha_state()
 
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the switch."""
-        new_state = self.entity_description.update_lastest_data(
-            self.evse_id, self.connector
-        )
+        new_state = self.entity_description.turn_on_off_fn(self.evse_id, self.connector)
         self._attr_is_on = new_state[0]
         self.has_value = new_state[1]

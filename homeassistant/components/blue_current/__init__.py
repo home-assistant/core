@@ -21,8 +21,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CH_SETTINGS,
-    CH_STATUS,
+    CHARGEPOINT_SETTINGS,
+    CHARGEPOINT_STATUS,
     DOMAIN,
     EVSE_ID,
     LOGGER,
@@ -39,7 +39,7 @@ DELAY = 5
 
 GRID = "GRID"
 OBJECT = "object"
-VALUE_TYPES = [CH_STATUS, CH_SETTINGS]
+VALUE_TYPES = [CHARGEPOINT_STATUS, CHARGEPOINT_SETTINGS]
 
 
 async def async_setup_entry(
@@ -134,7 +134,7 @@ class Connector:
     def update_charge_point(self, evse_id: str, update_type: str, data: dict) -> None:
         """Update the charge point data."""
         charge_point = self.charge_points[evse_id]
-        if update_type == CH_SETTINGS:
+        if update_type == CHARGEPOINT_SETTINGS:
             # Update the plug and charge object. The library parses this object to a bool instead of an object.
             plug_and_charge = charge_point.get(PLUG_AND_CHARGE)
             if plug_and_charge is not None:

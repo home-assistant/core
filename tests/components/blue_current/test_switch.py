@@ -1,14 +1,14 @@
 """The tests for Bluecurrent switches."""
 
 from homeassistant.components.blue_current import (
-    CH_SETTINGS,
-    CH_STATUS,
+    CHARGEPOINT_SETTINGS,
     PLUG_AND_CHARGE,
     Connector,
 )
 from homeassistant.components.blue_current.const import (
     ACTIVITY,
     BLOCK,
+    CHARGEPOINT_STATUS,
     PUBLIC_CHARGING,
     UNAVAILABLE,
 )
@@ -128,7 +128,7 @@ async def test_setting_change(
 
     connector.update_charge_point(
         "101",
-        CH_SETTINGS,
+        CHARGEPOINT_SETTINGS,
         {
             PLUG_AND_CHARGE: True,
             PUBLIC_CHARGING: {"value": False, "permission": "write"},
@@ -140,7 +140,7 @@ async def test_setting_change(
             switch = hass.states.get(switch.entity_id)
             assert switch.state == STATE_ON
 
-    connector.update_charge_point("101", CH_STATUS, {ACTIVITY: UNAVAILABLE})
+    connector.update_charge_point("101", CHARGEPOINT_STATUS, {ACTIVITY: UNAVAILABLE})
 
     for switch in entity_entries:
         if switch.unique_id != f"{BLOCK}_101":
