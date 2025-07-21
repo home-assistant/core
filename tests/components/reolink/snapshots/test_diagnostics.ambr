@@ -64,7 +64,15 @@
       0,
     ]),
     'cmd list': dict({
+      '208': dict({
+        '0': 1,
+        'null': 1,
+      }),
       '296': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '299': dict({
         '0': 1,
         'null': 1,
       }),
@@ -137,6 +145,10 @@
         'null': 1,
       }),
       'GetManualRec': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetMask': dict({
         '0': 1,
         'null': 1,
       }),

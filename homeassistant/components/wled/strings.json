@@ -28,7 +28,7 @@
     "step": {
       "init": {
         "data": {
-          "keep_master_light": "Keep main light, even with 1 LED segment."
+          "keep_master_light": "Add 'Main' control even with single LED segment"
         }
       }
     }

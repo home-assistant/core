@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDevice
+from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
@@ -50,12 +50,20 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 device_type="echo",
                 device_owner_customer_id="amazon_ower_id",
                 device_cluster_members=[TEST_SERIAL_NUMBER],
+                device_locale="en-US",
                 online=True,
                 serial_number=TEST_SERIAL_NUMBER,
                 software_version="echo_test_software_version",
                 do_not_disturb=False,
                 response_style=None,
                 bluetooth_state=True,
+                entity_id="11111111-2222-3333-4444-555555555555",
+                appliance_id="G1234567890123456789012345678A",
+                sensors={
+                    "temperature": AmazonDeviceSensor(
+                        name="temperature", value="22.5", scale="CELSIUS"
+                    )
+                },
             )
         }
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(

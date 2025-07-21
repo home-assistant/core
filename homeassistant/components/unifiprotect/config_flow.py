@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -44,7 +44,6 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
-    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
@@ -224,7 +223,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -238,7 +237,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
                 CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
-                CONF_ALLOW_EA: False,
             },
         )
 
@@ -274,7 +272,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
         except ClientError as ex:
-            _LOGGER.debug(ex)
+            _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
@@ -374,7 +372,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
@@ -408,10 +406,6 @@ class OptionsFlowHandler(OptionsFlow):
                             CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
-                    vol.Optional(
-                        CONF_ALLOW_EA,
-                        default=self.config_entry.options.get(CONF_ALLOW_EA, False),
-                    ): bool,
                 }
             ),
         )
