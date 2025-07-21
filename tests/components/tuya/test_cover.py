@@ -8,6 +8,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+)
 from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -55,6 +60,56 @@ async def test_platform_setup_no_discovery(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_am43_corded_motor_zigbee_cover"],
+)
+@pytest.mark.parametrize(
+    ("service_name", "actions"),
+    [
+        (
+            SERVICE_CLOSE_COVER,
+            [
+                {"code": "control", "value": "close"},
+                {"code": "percent_control", "value": 100},
+            ],
+        ),
+        (
+            SERVICE_OPEN_COVER,
+            [
+                {"code": "control", "value": "open"},
+                {"code": "percent_control", "value": 0},
+            ],
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_cover_open_close(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    service_name: str,
+    actions: list,
+) -> None:
+    """Test open/close service."""
+    entity_id = "cover.kitchen_blinds_curtain"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service_name,
+        {
+            "entity_id": entity_id,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(mock_device.id, actions)
 
 
 @pytest.mark.parametrize(
