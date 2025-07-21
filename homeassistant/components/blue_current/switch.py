@@ -31,11 +31,6 @@ class BlueCurrentSwitchEntityDescription(SwitchEntityDescription):
     turn_on_off_fn: Callable[[str, Connector], tuple[bool, bool]]
     """Update the switch based on the latest data received from the websocket. The first returned boolean is _attr_is_on, the second one has_value."""
 
-    on_switch_update: Callable[[str, Connector, bool], None] | None = None
-    """
-    Change the settings on the charge point object when the value of the switch has changed.
-    """
-
 
 def update_on_value_and_activity(
     key: str, evse_id: str, connector: Connector, reverse_is_on: bool = False
