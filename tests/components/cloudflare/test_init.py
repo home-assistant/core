@@ -119,7 +119,7 @@ async def test_integration_services(
     assert len(instance.update_dns_record.mock_calls) == 2
     # Check new debug output
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
-    assert "All possible target records are up to date" not in caplog.text
+    assert "DNS record update for zone mock.com is complete" in caplog.text
 
 
 async def test_integration_services_with_issue(
@@ -222,7 +222,7 @@ async def test_integration_update_interval(
         await hass.async_block_till_done(wait_background_tasks=True)
     assert len(instance.update_dns_record.mock_calls) == 2
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
-    assert "All possible target records are up to date" not in caplog.text
+    assert "DNS record update for zone mock.com is complete" in caplog.text
 
 
 # Test for legacy format (only name, no type)
@@ -268,6 +268,7 @@ async def test_integration_legacy_records_format(
         for call in instance.update_dns_record.mock_calls
     )
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
+    assert "DNS record update for zone mock.com is complete" in caplog.text
 
 
 # Test for new format (name|type)
@@ -328,6 +329,7 @@ async def test_integration_new_records_format(
     assert types == {"A", "AAAA"}
     assert "Added Record ha.mock.com (A) to Updatetask" in caplog.text
     assert "Added Record ha.mock.com (AAAA) to Updatetask" in caplog.text
+    assert "DNS record update for zone mock.com is complete" in caplog.text
 
     instance.list_dns_records.side_effect = pycfdns.AuthenticationException()
     async_fire_time_changed(
