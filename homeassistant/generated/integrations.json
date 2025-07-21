@@ -204,6 +204,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "altruist": {
+      "name": "Altruist",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "amazon": {
       "name": "Amazon",
       "integrations": {
@@ -658,6 +664,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "bauknecht": {
+      "name": "Bauknecht",
+      "integration_type": "virtual",
+      "supported_by": "whirlpool"
     },
     "bbox": {
       "name": "Bbox",
@@ -1475,12 +1486,6 @@
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "dweet": {
-      "name": "dweet.io",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "eafm": {
@@ -3159,8 +3164,7 @@
       "name": "Jellyfin",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
+      "iot_class": "local_polling"
     },
     "jewish_calendar": {
       "name": "Jewish Calendar",
@@ -3174,12 +3178,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "juicenet": {
-      "name": "JuiceNet",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "justnimbus": {
       "name": "JustNimbus",
@@ -3259,7 +3257,7 @@
     },
     "keymitt_ble": {
       "name": "Keymitt MicroBot Push",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -4624,6 +4622,12 @@
     },
     "open_meteo": {
       "name": "Open-Meteo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "open_router": {
+      "name": "OpenRouter",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6229,6 +6233,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Sony Songpal"
+        },
+        "playstation_network": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "PlayStation Network"
         }
       }
     },
@@ -6426,7 +6436,10 @@
           "iot_class": "cloud_polling",
           "name": "SwitchBot Cloud"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "switcher_kis": {
       "name": "Switcher",
@@ -6742,11 +6755,22 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tilt_ble": {
-      "name": "Tilt Hydrometer BLE",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+    "tilt": {
+      "name": "Tilt",
+      "integrations": {
+        "tilt_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Tilt Hydrometer BLE"
+        },
+        "tilt_pi": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Tilt Pi"
+        }
+      }
     },
     "time_date": {
       "integration_type": "service",
@@ -7067,6 +7091,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "uptime_kuma": {
+      "name": "Uptime Kuma",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "uptimerobot": {
       "name": "UptimeRobot",
       "integration_type": "hub",
@@ -7102,6 +7132,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "vegehub": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "velbus": {
       "name": "Velbus",
@@ -7902,6 +7937,7 @@
     "trend",
     "uptime",
     "utility_meter",
+    "vegehub",
     "version",
     "waze_travel_time",
     "workday",

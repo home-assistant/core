@@ -25,5 +25,11 @@
     "Surname": "Kowalska",
     "Sex": false
   },
-  "Periods": []
+  "Periods": [],
+  "State": 0,
+  "MessageBox": {
+    "Id": 1,
+    "GlobalKey": "00000000-0000-0000-0000-000000000000",
+    "Name": "Test"
+  }
 }
