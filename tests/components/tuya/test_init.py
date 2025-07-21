@@ -43,6 +43,7 @@ async def test_unsupported_device(
     # Information log entry added
     assert (
         "Device DOLCECLIMA 10 HP WIFI (mock_device_id) has been ignored"
-        " as it does not provide any DPCode (status, status_range and function"
-        " are all empty)" in caplog.text
+        " as it does not provide any standard instructions (status, status_range"
+        " and function are all empty) - see "
+        "https://github.com/tuya/tuya-device-sharing-sdk/issues/11" in caplog.text
     )
