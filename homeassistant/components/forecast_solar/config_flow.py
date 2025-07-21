@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
@@ -88,7 +88,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ForecastSolarOptionFlowHandler(OptionsFlow):
+class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
