@@ -236,7 +236,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==36.0.1
+aioesphomeapi==37.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1024,7 +1024,7 @@ home-assistant-frontend==20250702.3
 home-assistant-intents==2025.6.23
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.7
+homematicip==2.2.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1923,7 +1923,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2025.4.0
+pyschlage==2025.7.2
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
@@ -2476,7 +2476,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.14.2
+uiprotect==7.16.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
