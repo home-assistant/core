@@ -85,6 +85,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Odor Eliminator-Pro
+    # Undocumented, see https://github.com/orgs/home-assistant/discussions/79
+    "cwjwq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
@@ -431,6 +439,30 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="ionizer",
+        ),
+    ),
+    # Alarm Host
+    # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
+    "mal": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_SOUND,
+            # This switch is called "Arm Beep" in the official Tuya app
+            translation_key="arm_beep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_LIGHT,
+            # This switch is called "Siren" in the official Tuya app
+            translation_key="siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Sous Vide Cooker
     # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
     "mzj": (
@@ -511,6 +543,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH,
             translation_key="socket",
             device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    # AC charging
+    # Not documented
+    "qccdz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
     # Unknown product with switch capabilities

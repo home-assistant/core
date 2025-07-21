@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioonkyo import Status
 import pytest
@@ -84,23 +84,3 @@ async def test_reconnect(
     await asyncio.sleep(0)
 
     assert mock_connect.call_count == 1
-
-
-@pytest.mark.usefixtures("mock_receiver")
-async def test_update_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test update options."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        # Force option change
-        assert hass.config_entries.async_update_entry(
-            mock_config_entry, options={"option": "new_value"}
-        )
-        await hass.async_block_till_done()
-
-        hass.config_entries.async_reload.assert_called_with(mock_config_entry.entry_id)

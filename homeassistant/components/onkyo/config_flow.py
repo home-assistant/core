@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -339,7 +339,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: OnkyoConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: OnkyoConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
         return OnkyoOptionsFlowHandler()
 
@@ -367,7 +367,7 @@ OPTIONS_STEP_INIT_SCHEMA = vol.Schema(
 )
 
 
-class OnkyoOptionsFlowHandler(OptionsFlow):
+class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow for Onkyo."""
 
     _data: dict[str, Any]
