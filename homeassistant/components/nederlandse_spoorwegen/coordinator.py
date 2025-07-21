@@ -78,22 +78,18 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.config_entry is None:
             return []
 
-        # First, try to get routes from subentries (new format)
         routes = []
         for subentry in self.config_entry.subentries.values():
             if subentry.subentry_type == "route":
-                # Convert subentry data to route format
                 route_data = dict(subentry.data)
-                # Ensure route has a route_id
                 if "route_id" not in route_data:
                     route_data["route_id"] = subentry.subentry_id
                 routes.append(route_data)
 
-        # If we have routes from subentries, use those
         if routes:
             return routes
 
-        # Fallback to legacy format (for backward compatibility during migration)
+        # Fallback to legacy format
         return self.config_entry.options.get(
             CONF_ROUTES, self.config_entry.data.get(CONF_ROUTES, [])
         )
@@ -150,21 +146,16 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library with proper runtime data handling."""
         try:
-            # Get routes from config entry first
             routes = self._get_routes()
             if not routes:
-                _LOGGER.debug("No routes configured")
                 return {ATTR_ROUTES: {}}
 
-            # Ensure station data is available only if we have routes
             stations = await self._ensure_stations_available()
             if not stations:
                 raise UpdateFailed("Failed to fetch stations and no cache available")
 
-            # Fetch trip data for each route
             route_data = await self._fetch_route_data(routes)
 
-            # Log recovery if previously unavailable
             if self._unavailable_logged:
                 _LOGGER.info("NS API connection restored")
                 self._unavailable_logged = False
@@ -234,7 +225,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     route.get(CONF_NAME, route_key),
                     err,
                 )
-                # Add empty route data to maintain structure
                 route_data[route_key] = {
                     ATTR_ROUTE: route,
                     ATTR_TRIPS: [],
@@ -246,12 +236,10 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _generate_route_key(self, route: dict[str, Any]) -> str | None:
         """Generate a stable route key for a route."""
-        # Generate stable route key
         route_id = route.get("route_id")
         if route_id and isinstance(route_id, str):
             return route_id
 
-        # Use centralized route key generation for basic routes
         basic_key = generate_route_key(route)
         if not basic_key:
             _LOGGER.warning("Skipping route with missing stations: %s", route)
@@ -261,7 +249,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         name = route.get(CONF_NAME, "")
         route_key = f"{name}_{basic_key}"
 
-        # Add via station if present
         via_station = route.get(CONF_VIA, "")
         if via_station:
             route_key += f"_{normalize_station_code(via_station)}"
@@ -270,14 +257,11 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _get_trips_for_route(self, route: dict[str, Any]) -> list[Any]:
         """Get trips for a specific route with validation and normalization."""
-        # Validate route structure
         if not self._validate_route_structure(route):
             return []
 
-        # Normalize station codes
         normalized_route = self._normalize_route_stations(route)
 
-        # Validate stations exist
         if not self._validate_route_stations(normalized_route):
             return []
 

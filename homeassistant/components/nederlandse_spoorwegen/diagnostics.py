@@ -48,16 +48,16 @@ def _sanitize_route_data(route_data: dict[str, Any]) -> dict[str, Any]:
     return safe_route_data
 
 
-# Define sensitive data fields to redact from diagnostics
+# Sensitive data fields to redact
 TO_REDACT = {
     CONF_API_KEY,
-    "unique_id",  # May contain sensitive route information
-    "entry_id",  # System identifiers
+    "unique_id",
+    "entry_id",
 }
 
-# Route-specific fields that should be redacted for privacy
+# Route-specific fields to redact
 ROUTE_TO_REDACT = {
-    "api_key",  # In case it appears in route data
+    "api_key",
 }
 
 
@@ -95,16 +95,15 @@ async def async_get_config_entry_diagnostics(
         "subentries": {},
     }
 
-    # Add coordinator data if available
+    # Coordinator data
     if coordinator and coordinator.data:
-        # Redact sensitive information from coordinator data
         coordinator_data: dict[str, Any] = {
             "routes": {},
             "stations": {},
             "last_updated": coordinator.data.get("last_updated"),
         }
 
-        # Add route information (redacted)
+        # Route information
         if coordinator.data.get("routes"):
             route_counter = 1
             for route_data in coordinator.data["routes"].values():
@@ -116,7 +115,7 @@ async def async_get_config_entry_diagnostics(
                     )
                     route_counter += 1
 
-        # Add station count and sample structure (without sensitive data)
+        # Station data
         if coordinator.data.get("stations"):
             stations = coordinator.data["stations"]
             coordinator_data["stations"] = {
@@ -132,7 +131,7 @@ async def async_get_config_entry_diagnostics(
 
         diagnostics_data["coordinator_data"] = coordinator_data
 
-    # Add subentry information
+    # Subentry information
     subentry_counter = 1
     for subentry in entry.subentries.values():
         subentry_dict = subentry.as_dict()
@@ -157,7 +156,7 @@ async def async_get_config_entry_diagnostics(
         diagnostics_data["subentries"][f"subentry_{subentry_counter}"] = subentry_data
         subentry_counter += 1
 
-    # Add integration health information
+    # Integration health
     diagnostics_data["integration_health"] = {
         "coordinator_available": coordinator is not None,
         "coordinator_has_data": coordinator is not None

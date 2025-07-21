@@ -31,9 +31,7 @@ class NSSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Any, dict[str, Any]], Any] | None = None
 
 
-# Sensor entity descriptions for all NS sensors
 SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
-    # Platform sensors
     NSSensorEntityDescription(
         key="departure_platform_planned",
         translation_key="departure_platform_planned",
@@ -66,7 +64,6 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
             first_trip, "arrival_platform_actual"
         ),
     ),
-    # Time sensors
     NSSensorEntityDescription(
         key="departure_time_planned",
         translation_key="departure_time_planned",
@@ -99,7 +96,6 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
             get_trip_attribute(first_trip, "arrival_time_actual")
         ),
     ),
-    # Status sensors
     NSSensorEntityDescription(
         key="status",
         translation_key="status",
@@ -114,7 +110,7 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
             first_trip, "nr_transfers"
         ),
     ),
-    # Route info sensors (static but useful for automation)
+    # Route info sensors
     NSSensorEntityDescription(
         key="route_from",
         translation_key="route_from",
@@ -135,7 +131,6 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
     ),
 )
 
-# Special sensor description for next departure (uses next_trip instead of first_trip)
 NEXT_DEPARTURE_DESCRIPTION = NSSensorEntityDescription(
     key="next_departure",
     translation_key="next_departure",
@@ -157,18 +152,11 @@ async def async_setup_entry(
     if coordinator is None:
         _LOGGER.error("Coordinator not found in runtime_data for NS integration")
         return
-    _LOGGER.debug(
-        "NS sensor setup: coordinator=%s, entry_id=%s", coordinator, entry.entry_id
-    )
 
-    # No entities created for main entry - all entities are created under subentries
-
-    # Handle subentry routes - create entities under each subentry
     for subentry_id, subentry in entry.subentries.items():
         subentry_entities: list[SensorEntity] = []
         subentry_data = subentry.data
 
-        # Create route sensor for this subentry
         route = {
             CONF_NAME: subentry_data.get(CONF_NAME, subentry.title),
             CONF_FROM: subentry_data[CONF_FROM],
@@ -177,13 +165,6 @@ async def async_setup_entry(
             "route_id": subentry_id,
         }
 
-        _LOGGER.debug(
-            "Creating sensors for subentry route %s (subentry_id: %s)",
-            route[CONF_NAME],
-            subentry_id,
-        )
-
-        # Create all standard sensors using list comprehension
         subentry_entities.extend(
             [
                 NSSensor(coordinator, entry, route, subentry_id, description)
@@ -191,14 +172,12 @@ async def async_setup_entry(
             ]
         )
 
-        # Create the special next departure sensor
         subentry_entities.append(
             NSNextDepartureSensor(
                 coordinator, entry, route, subentry_id, NEXT_DEPARTURE_DESCRIPTION
             )
         )
 
-        # Add subentry entities to Home Assistant
         async_add_entities(subentry_entities, config_subentry_id=subentry_id)
 
 
@@ -224,17 +203,13 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         self._route = route
         self._route_key = route_key
 
-        # Initialize unavailability logger
         self._unavailability_logger = UnavailabilityLogger(
             _LOGGER, f"Sensor {route_key}_{description.key}"
         )
 
-        # Set unique ID and name based on description
         self._attr_unique_id = f"{route_key}_{description.key}"
 
-        # Check if this is a subentry route
         if route.get("route_id") and route["route_id"] in entry.subentries:
-            # For subentry routes, create a unique device per route
             subentry_id = route["route_id"]
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, subentry_id)},
@@ -245,7 +220,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
                 configuration_url="https://www.ns.nl/",
             )
         else:
-            # For legacy routes, use the main integration device
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, entry.entry_id)},
             )
@@ -259,7 +233,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             and self._route_key in self.coordinator.data.get("routes", {})
         )
 
-        # Implement unavailability logging pattern
         if not is_available:
             self._unavailability_logger.log_unavailable()
         else:
@@ -286,7 +259,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
 
             first_trip = route_specific_data.get("first_trip")
 
-            # Safely call the value function with error handling
             return self.entity_description.value_fn(first_trip, self._route)
         except (TypeError, AttributeError, KeyError) as ex:
             _LOGGER.debug(
@@ -317,7 +289,6 @@ class NSNextDepartureSensor(NSSensor):
 
             next_trip = route_specific_data.get("next_trip")
 
-            # Safely call the value function with error handling
             return self.entity_description.value_fn(next_trip, self._route)
         except (TypeError, AttributeError, KeyError) as ex:
             _LOGGER.debug("Failed to get next departure value: %s", ex)

@@ -69,9 +69,7 @@ class NSAPIWrapper:
             _LOGGER.debug("API validation failed with connection error: %s", ex)
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
         except ValueError as ex:
-            # ns_api library sometimes raises ValueError for auth issues
             _LOGGER.debug("API validation failed with ValueError: %s", ex)
-            # No string parsing - treat ValueError as connection error
             raise NSAPIConnectionError("Failed to connect to NS API") from ex
         else:
             return True
@@ -130,10 +128,9 @@ class NSAPIWrapper:
         try:
             # Create a partial function to handle optional parameters
             def _get_trips():
-                # Convert datetime to string format expected by NSAPI
                 timestamp_str = None
                 if departure_time:
-                    # NSAPI expects format: 'dd-mm-yyyy HH:MM'
+                    # Format: 'dd-mm-yyyy HH:MM'
                     timestamp_str = departure_time.strftime("%d-%m-%Y %H:%M")
 
                 return self._client.get_trips(
@@ -415,7 +412,6 @@ class NSAPIWrapper:
         if not trips:
             return []
 
-        # Get current time in Netherlands timezone
         nl_tz = zoneinfo.ZoneInfo("Europe/Amsterdam")
         now_nl = dt_util.now(nl_tz)
 

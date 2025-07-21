@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 import logging
 from types import MappingProxyType
@@ -46,31 +47,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    # Set runtime_data for this entry (store the coordinator only)
     api_key = entry.data.get(CONF_API_KEY)
     if not api_key:
         raise ValueError("API key is required")
 
     api_wrapper = NSAPIWrapper(hass, api_key)
 
-    # Create coordinator
     coordinator = NSDataUpdateCoordinator(hass, api_wrapper, entry)
 
-    # Initialize runtime data with coordinator
     entry.runtime_data = NSRuntimeData(coordinator=coordinator)
 
-    # Migrate legacy routes on first setup if needed
     await _async_migrate_legacy_routes(hass, entry)
 
-    # Add update listener after migration to avoid reload during migration
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # Fetch initial data so we have data when entities subscribe
-    try:
+    with contextlib.suppress(asyncio.CancelledError):
         await coordinator.async_config_entry_first_refresh()
-    except asyncio.CancelledError:
-        # Handle cancellation gracefully (e.g., during test shutdown)
-        _LOGGER.debug("Coordinator first refresh was cancelled, continuing setup")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -88,9 +80,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
     """Handle removal of a config entry."""
-    _LOGGER.info("Nederlandse Spoorwegen config entry removed: %s", entry.title)
-    # Any cleanup code would go here if needed in the future
-    # Currently no persistent data or external resources to clean up
 
 
 async def _async_migrate_legacy_routes(
@@ -101,34 +90,22 @@ async def _async_migrate_legacy_routes(
     This handles routes stored in entry.data[CONF_ROUTES] from legacy YAML config.
     One-time migration to avoid duplicate imports.
     """
-    # Check if migration has already been performed
     if entry.options.get("routes_migrated", False):
-        _LOGGER.debug("Routes already migrated for entry %s", entry.entry_id)
         return
 
-    # Get legacy routes from data (from YAML configuration)
     legacy_routes = entry.data.get(CONF_ROUTES, [])
 
-    # Mark migration as starting to prevent duplicate calls
     hass.config_entries.async_update_entry(
         entry, options={**entry.options, "routes_migrated": True}
     )
 
     if not legacy_routes:
-        _LOGGER.debug(
-            "No legacy routes found in configuration, migration marked as complete"
-        )
         return
 
-    _LOGGER.info(
-        "Migrating %d legacy routes from configuration to subentries",
-        len(legacy_routes),
-    )
     migrated_count = 0
 
     for route in legacy_routes:
         try:
-            # Validate required fields
             if not all(key in route for key in (CONF_NAME, CONF_FROM, CONF_TO)):
                 _LOGGER.warning(
                     "Skipping invalid route missing required fields: %s", route
@@ -170,7 +147,6 @@ async def _async_migrate_legacy_routes(
             # Add the subentry to the config entry
             hass.config_entries.async_add_subentry(entry, subentry)
             migrated_count += 1
-            _LOGGER.debug("Successfully migrated route: %s", route[CONF_NAME])
 
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
@@ -184,12 +160,6 @@ async def _async_migrate_legacy_routes(
 
     # Update the config entry to remove legacy routes
     hass.config_entries.async_update_entry(entry, data=new_data)
-
-    _LOGGER.info(
-        "Migration complete: %d of %d routes successfully migrated to subentries",
-        migrated_count,
-        len(legacy_routes),
-    )
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

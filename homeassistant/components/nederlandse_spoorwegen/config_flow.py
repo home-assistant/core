@@ -47,22 +47,16 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
-            # Only log API key validation attempt
-            _LOGGER.debug("Validating user API key for NS integration")
             api_wrapper = NSAPIWrapper(self.hass, api_key)
             try:
                 await api_wrapper.validate_api_key()
             except NSAPIAuthError:
-                _LOGGER.debug("API validation failed - invalid auth")
                 errors["base"] = "invalid_auth"
             except NSAPIConnectionError:
-                _LOGGER.debug("API validation failed - connection error")
                 errors["base"] = "cannot_connect"
             except Exception:  # Allowed in config flows for robustness  # noqa: BLE001
-                _LOGGER.debug("API validation failed - unexpected error")
                 errors["base"] = "cannot_connect"
             if not errors:
-                # Use a stable unique ID instead of the API key since keys can be rotated
                 await self.async_set_unique_id("nederlandse_spoorwegen")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -122,7 +116,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                     route_config, user_input[CONF_NAME]
                 )
 
-        # Show the form
         return await self._show_route_configuration_form(errors)
 
     async def _validate_route_input(self, user_input: dict[str, Any]) -> dict[str, str]:
@@ -137,7 +130,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "no_stations_available"
                 return errors
 
-            # Basic field validation
+            # Field validation
             if (
                 not user_input.get(CONF_NAME)
                 or not user_input.get(CONF_FROM)
@@ -159,7 +152,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                     errors[CONF_TIME] = "invalid_time_format"
                     return errors
 
-            # Station validation using centralized API method
+            # Station validation
             entry = self._get_entry()
             if (
                 hasattr(entry, "runtime_data")
@@ -222,12 +215,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle route creation or update based on flow source."""
         if self.source == SOURCE_RECONFIGURE:
-            # For reconfiguration, update the existing subentry
-            _LOGGER.debug(
-                "Updating route subentry: title=%r, data=%r",
-                route_name,
-                route_config,
-            )
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
@@ -235,12 +222,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 title=route_name,
             )
 
-        # For new routes, create a new entry
-        _LOGGER.debug(
-            "Creating new route subentry: title=%r, data=%r",
-            route_name,
-            route_config,
-        )
         return self.async_create_entry(title=route_name, data=route_config)
 
     async def _show_route_configuration_form(
@@ -334,8 +315,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
             api_wrapper = NSAPIWrapper(self.hass, entry.data[CONF_API_KEY])
             try:
                 stations = await api_wrapper.get_stations()
-                _LOGGER.debug("Raw get_stations response: %r", stations)
-                # Store in runtime_data
                 entry.runtime_data.stations = stations
                 entry.runtime_data.stations_updated = get_current_utc_timestamp()
             except (NSAPIAuthError, NSAPIConnectionError, NSAPIError) as ex:

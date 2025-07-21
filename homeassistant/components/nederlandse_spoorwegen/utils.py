@@ -18,13 +18,12 @@ def normalize_and_validate_time_format(time_str: str | None) -> tuple[bool, str 
     Accepts HH:MM or HH:MM:SS format and normalizes to HH:MM:SS.
     """
     if not time_str:
-        return True, None  # Optional field
+        return True, None
 
     try:
-        # Basic validation for HH:MM or HH:MM:SS format
+        # Validate HH:MM or HH:MM:SS format
         parts = time_str.split(":")
         if len(parts) == 2:
-            # Add seconds if not provided
             hours, minutes = parts
             seconds = "00"
         elif len(parts) == 3:
@@ -32,7 +31,7 @@ def normalize_and_validate_time_format(time_str: str | None) -> tuple[bool, str 
         else:
             return False, None
 
-        # Validate ranges
+        # Validate time ranges
         if not (
             0 <= int(hours) <= 23
             and 0 <= int(minutes) <= 59
@@ -40,7 +39,6 @@ def normalize_and_validate_time_format(time_str: str | None) -> tuple[bool, str 
         ):
             return False, None
 
-        # Return normalized format HH:MM:SS
         normalized = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
     except (ValueError, AttributeError):
         return False, None
