@@ -1,7 +1,7 @@
 {
   "domain": "lunatone",
   "name": "Lunatone",
-  "codeowners": ["@Overlap0190"],
+  "codeowners": ["@MoonDevLT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lunatone",
   "integration_type": "hub",
