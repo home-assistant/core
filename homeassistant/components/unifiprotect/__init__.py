@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     if not protect.is_api_key_set() and auth_user and nvr_info.can_write(auth_user):
         try:
             new_api_key = await protect.create_api_key(
-                name=f"Home Assistant {hass.config.location_name}"
+                name=f"Home Assistant ({hass.config.location_name})"
             )
         except NotAuthorized as err:
             _LOGGER.error("Failed to create API key: %s", err)
