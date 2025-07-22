@@ -1059,8 +1059,30 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
+    "set_program_error": {
+      "message": "'Set program' action failed {status} / {message}."
+    },
     "set_state_error": {
       "message": "Failed to set state for {entity}."
+    }
+  },
+  "services": {
+    "set_program": {
+      "name": "Set program",
+      "description": "Sets and starts a program on the appliance.",
+      "fields": {
+        "device_id": {
+          "description": "The device to set the program on.",
+          "name": "Device"
+        },
+        "program_id": {
+          "description": "The ID of the program to set.",
+          "name": "Program ID"
+        }
+      }
     }
   }
 }

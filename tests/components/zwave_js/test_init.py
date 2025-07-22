@@ -514,8 +514,8 @@ async def test_on_node_added_not_ready(
     assert len(device.identifiers) == 1
 
     entities = er.async_entries_for_device(entity_registry, device.id)
-    # the only entities are the node status sensor, last_seen sensor, and ping button
-    assert len(entities) == 3
+    # the only entities are the node status sensor, and ping button
+    assert len(entities) == 2
 
 
 async def test_existing_node_ready(
@@ -631,8 +631,8 @@ async def test_existing_node_not_ready(
     assert len(device.identifiers) == 1
 
     entities = er.async_entries_for_device(entity_registry, device.id)
-    # the only entities are the node status sensor, last_seen sensor, and ping button
-    assert len(entities) == 3
+    # the only entities are the node status sensor, and ping button
+    assert len(entities) == 2
 
 
 async def test_existing_node_not_replaced_when_not_ready(

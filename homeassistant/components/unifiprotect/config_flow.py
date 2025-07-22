@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -223,7 +223,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -372,7 +372,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
