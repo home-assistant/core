@@ -932,6 +932,11 @@ async def test_usb_discovery_migration(
 
     assert mock_usb_serial_by_id.call_count == 2
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm_migration"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 

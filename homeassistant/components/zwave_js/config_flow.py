@@ -498,6 +498,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_installation_type()
 
+    async def async_step_confirm_usb_migration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm USB migration."""
+        if user_input is not None:
+            return await self.async_step_intent_migrate()
+        assert self.usb_path
+        return self.async_show_form(
+            step_id="confirm_usb_migration",
+            description_placeholders={
+                "usb_title": self.context["title_placeholders"][CONF_NAME],
+            },
+        )
+
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
