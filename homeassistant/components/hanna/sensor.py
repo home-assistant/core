@@ -44,42 +44,42 @@ SENSOR_DESCRIPTIONS = {
     ),
     "temp": SensorEntityDescription(
         key="temp",
-        name="Water Temperature",
+        name="Water temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "airTemp": SensorEntityDescription(
         key="airTemp",
-        name="Air Temperature",
+        name="Air temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "acidBase": SensorEntityDescription(
-        key="acidBase", name="pH Acid/Base Flow Rate", icon="mdi:flask"
+        key="acidBase", name="pH Acid/Base flow rate", icon="mdi:flask"
     ),
     "cl": SensorEntityDescription(
-        key="cl", name="Chlorine Flow Rate", icon="mdi:chemical-weapon"
+        key="cl", name="Chlorine flow rate", icon="mdi:chemical-weapon"
     ),
     "phPumpColor": SensorEntityDescription(
         key="phPumpColor",
-        name="pH Pump Status",
+        name="pH pump status",
         icon="mdi:pump",
     ),
     "clPumpColor": SensorEntityDescription(
         key="clPumpColor",
-        name="Chlorine Pump Status",
+        name="Chlorine pump status",
         icon="mdi:pump",
     ),
     "StatusColor": SensorEntityDescription(
         key="StatusColor",
-        name="System Status",
+        name="System status",
         icon="mdi:information",
     ),
     "ServiceColor": SensorEntityDescription(
         key="ServiceColor",
-        name="Service Status",
+        name="Service status",
         icon="mdi:wrench",
     ),
     "alarms": SensorEntityDescription(
