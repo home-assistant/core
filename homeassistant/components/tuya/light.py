@@ -121,7 +121,8 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         # Based on multiple reports: manufacturer customized Dimmer 2 switches
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="light",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "1"},
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
@@ -149,7 +150,8 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
-            translation_key="light_2",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "2"},
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
@@ -313,21 +315,24 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "tgkg": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
-            translation_key="light",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "1"},
             brightness=DPCode.BRIGHT_VALUE_1,
             brightness_max=DPCode.BRIGHTNESS_MAX_1,
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
-            translation_key="light_2",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "2"},
             brightness=DPCode.BRIGHT_VALUE_2,
             brightness_max=DPCode.BRIGHTNESS_MAX_2,
             brightness_min=DPCode.BRIGHTNESS_MIN_2,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_3,
-            translation_key="light_3",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "3"},
             brightness=DPCode.BRIGHT_VALUE_3,
             brightness_max=DPCode.BRIGHTNESS_MAX_3,
             brightness_min=DPCode.BRIGHTNESS_MIN_3,
@@ -345,12 +350,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
-            translation_key="light",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "1"},
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
-            translation_key="light_2",
+            translation_key="indexed_light",
+            translation_placeholders={"index": "2"},
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),

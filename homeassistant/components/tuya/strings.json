@@ -131,11 +131,8 @@
       "light": {
         "name": "[%key:component::light::title%]"
       },
-      "light_2": {
-        "name": "Light 2"
-      },
-      "light_3": {
-        "name": "Light 3"
+      "indexed_light": {
+        "name": "Light {index}"
       },
       "night_light": {
         "name": "Night light"
