@@ -352,6 +352,8 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_placeholders={"index": "2"},
         ),
     ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
     "xnyjcn": (
         SelectEntityDescription(
             key=DPCode.WORK_MODE,

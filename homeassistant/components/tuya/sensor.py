@@ -1204,8 +1204,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Wireless Switch
     # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
     "wxkg": BATTERY_SENSORS,
-    # Balcony Micro Storage Inverter (阳台微储一体机)
-    # Compact balcony energy storage and solar PV inverter system with monitoring capabilities
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
     "xnyjcn": (
         TuyaSensorEntityDescription(
             key=DPCode.CURRENT_SOC,
