@@ -5,10 +5,12 @@ from unittest.mock import AsyncMock
 import pytest
 from requests import RequestException
 
+from homeassistant.components.quantum_gateway import DOMAIN
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import setup_platform
+from . import DEVICE_TRACKER_DOMAIN, setup_platform
 
 from tests.components.device_tracker.test_init import mock_yaml_devices  # noqa: F401
 
@@ -28,9 +30,41 @@ async def test_get_scanner(hass: HomeAssistant, mock_scanner: AsyncMock) -> None
 
 
 @pytest.mark.usefixtures("yaml_devices")
+async def test_no_platform(hass: HomeAssistant) -> None:
+    """Test creating a quantum gateway scanner."""
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {DEVICE_TRACKER_DOMAIN: []},
+    )
+    await hass.async_block_till_done()
+    assert result
+
+    assert "quantum_gateway.device_tracker" not in hass.config.components
+
+
+@pytest.mark.usefixtures("yaml_devices")
 async def test_get_scanner_error(hass: HomeAssistant, mock_scanner: AsyncMock) -> None:
     """Test failure when creating a quantum gateway scanner."""
     mock_scanner.side_effect = RequestException("Error")
+    await setup_platform(hass)
+
+    assert "quantum_gateway.device_tracker" not in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "scanner",
+    [
+        {"return_value": None},
+        {"return_value": AsyncMock(success_init=False)},
+    ],
+)
+@pytest.mark.usefixtures("yaml_devices")
+async def test_scan_devices_missing_init(
+    hass: HomeAssistant, mock_scanner: AsyncMock, scanner
+) -> None:
+    """Test failure when initializing scanner."""
+    mock_scanner.configure_mock(**scanner)
     await setup_platform(hass)
 
     assert "quantum_gateway.device_tracker" not in hass.config.components
