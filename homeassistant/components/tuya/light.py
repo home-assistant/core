@@ -489,7 +489,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_data_type: ColorTypeData | None = None
     _color_mode: DPCode | None = None
     _color_temp: IntegerTypeData | None = None
-    _white_color_mode: ColorMode | None = None
+    _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
     _attr_min_color_temp_kelvin = 2000  # 500 Mireds
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
@@ -528,19 +528,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         ):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
-            self._white_color_mode = ColorMode.COLOR_TEMP
-        elif (
-            workmode_type
-            := self.find_dpcode(  # If entity does not have color_temp, check if it has work_mode "white"
-                description.color_mode, dptype=DPType.ENUM, prefer_function=True
-            )
+        # If entity does not have color_temp, check if it has work_mode "white"
+        elif workmode_type := self.find_dpcode(
+            description.color_mode, dptype=DPType.ENUM, prefer_function=True
         ):
             if WorkMode.WHITE.value in workmode_type.range:
                 color_modes.add(ColorMode.WHITE)
                 self._white_color_mode = ColorMode.WHITE
-
-        if not self._white_color_mode:
-            self._white_color_mode = ColorMode.COLOR_TEMP  # default to COLOR_TEMP
 
         if (
             dpcode := self.find_dpcode(description.color_data, prefer_function=True)
@@ -780,9 +774,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
             return ColorMode.HS
-        return (
-            self._white_color_mode if self._white_color_mode else ColorMode.COLOR_TEMP
-        )  # default to COLOR_TEMP
+        return self._white_color_mode
 
     def _get_color_data(self) -> ColorData | None:
         """Get current color data from device."""
