@@ -16,5 +16,10 @@
         "default": "mdi:timer-sync-outline"
       }
     }
+  },
+  "services": {
+    "register_irk": {
+      "service": "mdi:key-wireless"
+    }
   }
 }

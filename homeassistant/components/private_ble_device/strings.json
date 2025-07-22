@@ -11,7 +11,8 @@
     },
     "error": {
       "irk_not_found": "The provided IRK does not match any BLE devices that Home Assistant can see.",
-      "irk_not_valid": "The key does not look like a valid IRK."
+      "irk_not_valid": "The key does not look like a valid IRK.",
+      "irk_already_configured": "The IRK has already been configured."
     },
     "abort": {
       "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices."
@@ -27,6 +28,18 @@
       },
       "estimated_broadcast_interval": {
         "name": "Estimated broadcast interval"
+      }
+    }
+  },
+  "services": {
+    "register_irk": {
+      "name": "Register a new IRK",
+      "description": "Register a new IRK with the Private BLE Device integration",
+      "fields": {
+        "irk": {
+          "description": "IRK as a 16-Byte hex string or base64 encoded",
+          "name": "IRK"
+        }
       }
     }
   }
