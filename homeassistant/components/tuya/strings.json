@@ -157,6 +157,30 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "irrigation_duration_1": {
+        "name": "Irrigation duration 1"
+      },
+      "irrigation_duration_2": {
+        "name": "Irrigation duration 2"
+      },
+      "irrigation_duration_3": {
+        "name": "Irrigation duration 3"
+      },
+      "irrigation_duration_4": {
+        "name": "Irrigation duration 4"
+      },
+      "irrigation_duration_5": {
+        "name": "Irrigation duration 5"
+      },
+      "irrigation_duration_6": {
+        "name": "Irrigation duration 6"
+      },
+      "irrigation_duration_7": {
+        "name": "Irrigation duration 7"
+      },
+      "irrigation_duration_8": {
+        "name": "Irrigation duration 8"
+      },
       "feed": {
         "name": "Feed"
       },
