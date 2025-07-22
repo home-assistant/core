@@ -178,7 +178,7 @@ class OpenRouterEntity(Entity):
                 [
                     msg
                     async for content in chat_log.async_add_delta_content_stream(
-                        user_input.agent_id, _transform_response(result_message)
+                        self.entity_id, _transform_response(result_message)
                     )
                     if (msg := _convert_content_to_chat_message(content))
                 ]
