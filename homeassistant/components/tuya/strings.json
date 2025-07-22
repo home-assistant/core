@@ -94,20 +94,11 @@
       "curtain": {
         "name": "[%key:component::cover::entity_component::curtain::name%]"
       },
-      "curtain_2": {
-        "name": "Curtain 2"
+      "indexed_curtain": {
+        "name": "Curtain {index}"
       },
-      "curtain_3": {
-        "name": "Curtain 3"
-      },
-      "door": {
-        "name": "[%key:component::cover::entity_component::door::name%]"
-      },
-      "door_2": {
-        "name": "Door 2"
-      },
-      "door_3": {
-        "name": "Door 3"
+      "indexed_door": {
+        "name": "Door {index}"
       }
     },
     "event": {
