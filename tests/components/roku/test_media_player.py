@@ -475,6 +475,28 @@ async def test_services(
     assert mock_roku.launch.call_count == 4
     mock_roku.launch.assert_called_with("12")
 
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
+            ATTR_MEDIA_CONTENT_ID: "2285",
+            ATTR_MEDIA_EXTRA: {
+                ATTR_NETWORK_ID: "77c1d69b-93a6-45d8-b7d1-6d39cde0e820",
+            },
+        },
+        blocking=True,
+    )
+
+    assert mock_roku.launch.call_count == 5
+    mock_roku.launch.assert_called_with(
+        "2285",
+        {
+            "networkID": "77c1d69b-93a6-45d8-b7d1-6d39cde0e820",
+        },
+    )
+
 
 async def test_services_play_media(
     hass: HomeAssistant,
