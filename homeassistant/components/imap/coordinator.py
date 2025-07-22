@@ -105,9 +105,10 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
-    def __init__(self, raw_message: bytes) -> None:
+    def __init__(self, raw_message: bytes, prefer_html: bool = False) -> None:
         """Initialize IMAP message."""
         self.email_message = email.message_from_bytes(raw_message)
+        self.prefer_html = prefer_html
 
     @staticmethod
     def _decode_payload(part: Message) -> str:
@@ -196,6 +197,9 @@ class ImapMessage:
                 and message_untyped_text is None
             ):
                 message_untyped_text = str(part.get_payload())
+
+        if self.prefer_html and message_html is not None:
+            return message_html
 
         if message_text is not None and message_text.strip():
             return message_text
