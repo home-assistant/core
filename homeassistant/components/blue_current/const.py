@@ -11,7 +11,6 @@ MODEL_TYPE = "model_type"
 CARD = "card"
 UID = "uid"
 BCU_APP = "BCU-APP"
-DEFAULT_CARD = {"id": BCU_APP, "uid": BCU_APP}
 WITHOUT_CHARGING_CARD = "without_charging_card"
 CHARGING_CARD_ID = "charging_card_id"
 START_CHARGE_SESSION = "start_charge_session"

@@ -1,23 +1,19 @@
 """Test the Blue Current config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.blue_current import CARD, DOMAIN, UID, Connector
+from homeassistant.components.blue_current import DOMAIN
 from homeassistant.components.blue_current.config_flow import (
     AlreadyConnected,
     InvalidApiToken,
     RequestLimitReached,
     WebsocketError,
 )
-from homeassistant.components.blue_current.const import WITHOUT_CHARGING_CARD
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from . import init_integration
 
 from tests.common import MockConfigEntry
 
@@ -164,48 +160,3 @@ async def test_reauth(
         assert config_entry.data["api_token"] == expected_api_token
 
         await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    ("mock_card", "user_input"),
-    [
-        (
-            {UID: "MOCK_UID", CONF_ID: "MOCK_ID", "name": "MOCK_NAME"},
-            {CARD: "MOCK_NAME (MOCK_ID)"},
-        ),
-        ({UID: "MOCK_UID", CONF_ID: "MOCK_ID", "name": ""}, {CARD: "MOCK_ID"}),
-        (
-            {UID: "BCU-APP", CONF_ID: "BCU-APP", "name": ""},
-            {CARD: WITHOUT_CHARGING_CARD},
-        ),
-    ],
-)
-async def test_options_flow(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_card, user_input
-) -> None:
-    """Test the Blue Current options flow."""
-    config_entry.add_to_hass(hass)
-
-    integration = await init_integration(hass, config_entry)
-    client_mock = integration[0]
-
-    mock_card_list = {"MOCK_UID": mock_card}
-    mock_connector = Mock(spec=Connector)
-    mock_connector.selected_charge_card = mock_card
-    mock_connector.charge_cards = mock_card_list
-    mock_connector.client = client_mock
-
-    config_entry.runtime_data = mock_connector
-
-    with patch("homeassistant.components.blue_current.async_setup_entry"):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            flow_id=result["flow_id"], user_input=user_input
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CARD: mock_card}

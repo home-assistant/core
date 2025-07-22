@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
 
-from homeassistant.components.blue_current import UID
+from homeassistant.components.blue_current.const import UID
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
