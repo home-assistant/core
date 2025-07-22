@@ -223,7 +223,7 @@ async def test_setup_with_charset_from_header(
         {
             SENSOR_DOMAIN: {
                 "name": "mysensor",
-                # No encoding config - should use charset from header
+                # No encoding config - should use charset from header.
                 "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
