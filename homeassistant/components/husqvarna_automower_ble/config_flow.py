@@ -16,11 +16,6 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 
 from .const import DOMAIN, LOGGER
 
@@ -55,7 +50,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.address: str
-        self.pin: str
+        self.pin: int | None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -77,18 +72,14 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm Bluetooth discovery."""
 
         if user_input is not None:
-            self.pin = user_input[CONF_PIN]
+            self.pin = self.validate_pin(user_input[CONF_PIN])
             return await self.async_step_bluetooth_finalise()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
         )
@@ -100,7 +91,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.address = user_input[CONF_ADDRESS]
-            self.pin = user_input[CONF_PIN]
+            self.pin = self.validate_pin(user_input[CONF_PIN])
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_finalise()
@@ -110,11 +101,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
         )
@@ -142,12 +129,19 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def connect_mower(self, device) -> tuple[int, Mower]:
         """Connect to the Mower."""
         assert self.address
-        assert self.pin
+        assert self.pin is not None
 
         channel_id = random.randint(1, 0xFFFFFFFF)
-        mower = Mower(channel_id, self.address, int(self.pin))
+        mower = Mower(channel_id, self.address, self.pin)
 
         return (channel_id, mower)
+
+    def validate_pin(self, pin_str: str) -> int:
+        """Validate the PIN."""
+        try:
+            return int(pin_str)
+        except ValueError:
+            raise vol.Invalid("PIN needs to be an integer") from None
 
     async def check_mower(
         self,
@@ -184,11 +178,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         step_id="bluetooth_confirm",
                         data_schema=vol.Schema(
                             {
-                                vol.Required(CONF_PIN): TextSelector(
-                                    TextSelectorConfig(
-                                        type=TextSelectorType.NUMBER,
-                                    ),
-                                ),
+                                vol.Required(CONF_PIN): int,
                             },
                         ),
                         errors=errors,
@@ -198,11 +188,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): str,
-                            vol.Required(CONF_PIN): TextSelector(
-                                TextSelectorConfig(
-                                    type=TextSelectorType.NUMBER,
-                                ),
-                            ),
+                            vol.Required(CONF_PIN): int,
                         },
                     ),
                     errors=errors,
@@ -247,7 +233,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self.address = user_input[CONF_ADDRESS]
-            self.pin = user_input[CONF_PIN]
+            self.pin = self.validate_pin(user_input[CONF_PIN])
 
             try:
                 device = bluetooth.async_ble_device_from_address(
@@ -282,11 +268,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
             errors=errors,
