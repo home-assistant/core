@@ -96,6 +96,7 @@ class DPCode(StrEnum):
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
 
+    ADD_ELE = "add_ele"  # energy
     AIR_QUALITY = "air_quality"
     AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_DELAY_TIME = "alarm_delay_time"
@@ -270,6 +271,7 @@ class DPCode(StrEnum):
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
+    PRO_ADD_ELE = "pro_add_ele"  # Produce energy
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
@@ -306,6 +308,7 @@ class DPCode(StrEnum):
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
     SUCTION = "suction"
+    SUPPLY_FREQUENCY = "supply_frequency"  # Supply frequency
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1

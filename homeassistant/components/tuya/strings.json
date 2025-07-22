@@ -582,6 +582,9 @@
       "total_energy": {
         "name": "Total energy"
       },
+      "total_power": {
+        "name": "Total power"
+      },
       "total_production": {
         "name": "Total production"
       },
@@ -725,6 +728,9 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
