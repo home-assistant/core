@@ -357,7 +357,9 @@ async def test_setup_creates_api_key_when_missing(
         await hass.async_block_till_done()
 
         # Verify API key was created and set
-        ufp.api.create_api_key.assert_called_once_with(name="Home Assistant")
+        ufp.api.create_api_key.assert_called_once_with(
+            name="Home Assistant (test home)"
+        )
         ufp.api.set_api_key.assert_called_once_with("new-api-key-123")
 
         # Verify config entry was updated with new API key
@@ -418,7 +420,9 @@ async def test_setup_handles_api_key_creation_failure(
         assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
 
         # Verify API key creation was attempted but set_api_key was not called
-        ufp.api.create_api_key.assert_called_once_with(name="Home Assistant")
+        ufp.api.create_api_key.assert_called_once_with(
+            name="Home Assistant (test home)"
+        )
         ufp.api.set_api_key.assert_not_called()
     finally:
         # Restore original method
@@ -447,6 +451,7 @@ async def test_setup_api_key_creation_returns_none(
 ) -> None:
     """Test handling when API key creation returns None."""
     # Setup: API key is not set, creation returns None (empty response)
+    # set_api_key will be called with None but is_api_key_set will still be False
     ufp.api.is_api_key_set.return_value = False
     ufp.api.create_api_key = AsyncMock(return_value=None)
 
@@ -462,9 +467,11 @@ async def test_setup_api_key_creation_returns_none(
 
         assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
 
-        # Verify API key creation was attempted but set_api_key was not called
-        ufp.api.create_api_key.assert_called_once_with(name="Home Assistant")
-        ufp.api.set_api_key.assert_not_called()
+        # Verify API key creation was attempted and set_api_key was called with None
+        ufp.api.create_api_key.assert_called_once_with(
+            name="Home Assistant (test home)"
+        )
+        ufp.api.set_api_key.assert_called_once_with(None)
     finally:
         # Restore original method
         object.__setattr__(ufp.api.bootstrap.nvr, "can_write", original_can_write)
@@ -509,3 +516,47 @@ async def test_setup_skips_api_key_creation_when_no_auth_user(
         # Verify API key creation was not attempted
         ufp.api.create_api_key.assert_not_called()
         ufp.api.set_api_key.assert_not_called()
+
+
+async def test_setup_triggers_reauth_when_api_key_still_missing(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test that reauth flow is triggered when API key is still missing after all attempts."""
+    # Setup: API key is not set and remains not set even after attempts
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(return_value="new-api-key-123")
+    ufp.api.set_api_key = Mock()  # Mock this but API key still won't be "set"
+
+    # Mock can_write directly using object.__setattr__ to bypass pydantic validation
+    original_can_write = ufp.api.bootstrap.nvr.can_write
+    mock_can_write = Mock(return_value=True)
+    object.__setattr__(ufp.api.bootstrap.nvr, "can_write", mock_can_write)
+
+    try:
+        # Track reauth flow initiation
+        with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+            # Setup should fail with ConfigEntryAuthFailed
+            await hass.config_entries.async_setup(ufp.entry.entry_id)
+            await hass.async_block_till_done()
+
+            # Verify entry is in setup error state
+            assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+            # Verify API key creation was attempted
+            ufp.api.create_api_key.assert_called_once_with(
+                name="Home Assistant (test home)"
+            )
+            ufp.api.set_api_key.assert_called_once_with("new-api-key-123")
+
+            # Verify reauth flow was initiated (could be called once or twice by HA)
+            assert mock_flow_init.call_count >= 1
+
+            # Check that the first call was our expected call
+            first_call = mock_flow_init.call_args_list[0]
+            assert first_call[0] == (DOMAIN,)  # Positional args
+            assert first_call[1]["context"]["source"] == "reauth"
+            assert first_call[1]["context"]["entry_id"] == ufp.entry.entry_id
+            assert first_call[1]["data"] == ufp.entry.data
+    finally:
+        # Restore original method
+        object.__setattr__(ufp.api.bootstrap.nvr, "can_write", original_can_write)
