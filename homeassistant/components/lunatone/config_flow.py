@@ -212,6 +212,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             raise asyncio.CancelledError
 
     async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> bool:
+        await asyncio.sleep(1)
         for _ in range(360):
             await scan.async_update()
             if not scan.is_busy:
