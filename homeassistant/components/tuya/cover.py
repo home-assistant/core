@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -333,9 +333,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if TYPE_CHECKING:
-            # guarded by CoverEntityFeature.SET_POSITION
-            assert self._set_position is not None
+        if self._set_position is None:
+            raise RuntimeError(
+                "Cannot set position, device doesn't provide methods to set it"
+            )
 
         self._send_command(
             [
@@ -363,9 +364,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if TYPE_CHECKING:
-            # guarded by CoverEntityFeature.SET_TILT_POSITION
-            assert self._tilt is not None
+        if self._tilt is None:
+            raise RuntimeError(
+                "Cannot set tilt, device doesn't provide methods to set it"
+            )
 
         self._send_command(
             [
