@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from telegram import WebhookInfo
 from telegram.error import TimedOut
 
+from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -115,7 +116,7 @@ async def test_webhooks_update_invalid_json(
     client = await hass_client()
 
     response = await client.post(
-        "/api/telegram_webhooks",
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
     assert response.status == 400
@@ -139,7 +140,7 @@ async def test_webhooks_unauthorized_network(
         return_value=IPv4Network("1.2.3.4"),
     ) as mock_remote:
         response = await client.post(
-            "/api/telegram_webhooks",
+            f"{TELEGRAM_WEBHOOK_URL}_123456",
             json="mock json",
             headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
         )
