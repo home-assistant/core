@@ -1,4 +1,4 @@
-"""AI Task integration for OpenRouter."""
+"""AI Task integration for OpenAI."""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ from json import JSONDecodeError
 import logging
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .entity import OpenAIBaseLLMEntity
+from . import OpenRouterConfigEntry
+from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenRouterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""
@@ -35,14 +35,11 @@ async def async_setup_entry(
 
 class OpenAITaskEntity(
     ai_task.AITaskEntity,
-    OpenAIBaseLLMEntity,
+    OpenRouterEntity,
 ):
     """OpenAI AI Task entity."""
 
-    _attr_supported_features = (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-    )
+    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
 
     async def _async_generate_data(
         self,
