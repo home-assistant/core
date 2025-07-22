@@ -171,6 +171,10 @@ async def test_turn_on_unsupported(
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
+    assert err.value.translation_placeholders == {
+        "expected": "['switch', 'switch_spray']",
+        "available": ("[]"),
+    }
 
 
 @pytest.mark.parametrize(
@@ -197,6 +201,10 @@ async def test_turn_off_unsupported(
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
+    assert err.value.translation_placeholders == {
+        "expected": "['switch', 'switch_spray']",
+        "available": ("[]"),
+    }
 
 
 @pytest.mark.parametrize(
@@ -226,3 +234,7 @@ async def test_set_humidity_unsupported(
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
+    assert err.value.translation_placeholders == {
+        "expected": "['dehumidify_set_value']",
+        "available": ("[]"),
+    }

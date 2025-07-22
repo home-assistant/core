@@ -119,3 +119,12 @@ async def test_set_value_no_function(
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
+    assert err.value.translation_placeholders == {
+        "expected": "['delay_set']",
+        "available": (
+            "['alarm_delay_time', 'alarm_time', 'master_mode', 'master_state', "
+            "'muffling', 'sub_admin', 'sub_class', 'switch_alarm_light', "
+            "'switch_alarm_propel', 'switch_alarm_sound', 'switch_kb_light', "
+            "'switch_kb_sound', 'switch_mode_sound']"
+        ),
+    }

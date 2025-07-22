@@ -12,7 +12,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,6 +26,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -464,10 +464,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
-            )
+            raise ActionDPCodeNotFoundError(self.device, self.entity_description.key)
 
         self._send_command(
             [

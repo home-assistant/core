@@ -14,14 +14,14 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError
 
 
 @dataclass(frozen=True)
@@ -171,27 +171,27 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch_dpcode is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
             )
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch_dpcode is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
             )
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="action_dpcode_not_found",
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.humidity,
             )
 
         self._send_command(
