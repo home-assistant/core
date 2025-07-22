@@ -307,17 +307,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if TYPE_CHECKING:
-            # We can rely on supported_features from __init__
+            # guarded by ClimateEntityFeature.FAN_MODE
             assert self._fan_mode_dp_code is not None
 
         self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
-            )
+        if TYPE_CHECKING:
+            # guarded by ClimateEntityFeature.TARGET_HUMIDITY
+            assert self._set_humidity is not None
 
         self._send_command(
             [
@@ -355,11 +354,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._set_temperature is None:
-            raise RuntimeError(
-                "Cannot set target temperature, device doesn't provide methods to"
-                " set it"
-            )
+        if TYPE_CHECKING:
+            # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
+            assert self._set_temperature is not None
 
         self._send_command(
             [
