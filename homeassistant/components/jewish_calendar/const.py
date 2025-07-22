@@ -28,16 +28,4 @@ DEFAULT_CALENDAR_EVENTS = [
 SERVICE_COUNT_OMER = "count_omer"
 
 # Available calendar event types
-CALENDAR_EVENT_TYPES = [
-    "date",
-    "holiday",
-    "weekly_portion",
-    "omer_count",
-    "daf_yomi",
-    "candle_lighting",
-    "havdalah",
-    "fast_day",
-    "rosh_chodesh",
-    "minor_fast",
-    "modern_holiday",
-]
+CALENDAR_EVENT_TYPES = [*DEFAULT_CALENDAR_EVENTS, "candle_lighting", "havdalah"]
