@@ -94,9 +94,6 @@
       "curtain": {
         "name": "[%key:component::cover::entity_component::curtain::name%]"
       },
-      "door": {
-        "name": "[%key:component::cover::entity_component::door::name%]"
-      },
       "indexed_curtain": {
         "name": "Curtain {index}"
       },
