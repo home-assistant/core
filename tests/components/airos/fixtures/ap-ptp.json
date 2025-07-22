@@ -288,5 +288,5 @@
   "provmode": {},
   "ntpclient": {},
   "unms": { "status": 0 },
-  "gps": { "lat": 52.222651, "lon": 4.532288, "fix": 0 }
+  "gps": { "lat": "52.020100", "lon": "5.071400", "fix": 0 }
 }

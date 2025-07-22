@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from airos.airos8 import AirOSData
 import pytest
 
 from tests.common import load_fixture
@@ -13,7 +14,8 @@ from tests.common import load_fixture
 @pytest.fixture
 def ap_fixture():
     """Load fixture data for AP mode."""
-    return json.loads(load_fixture("airos/ap-ptp.json"))
+    json_data = json.loads(load_fixture("airos/ap-ptp.json"))
+    return AirOSData.from_dict(json_data)
 
 
 @pytest.fixture

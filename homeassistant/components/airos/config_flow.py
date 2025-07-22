@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from airos.airos8 import AirOS
 from airos.exceptions import (
     ConnectionAuthenticationError,
     ConnectionSetupError,
@@ -20,13 +19,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    AIROS_DEFAULT_HOSTNAME,
-    AIROS_DEVICE_ID_KEY,
-    AIROS_HOST_KEY,
-    AIROS_HOSTNAME_KEY,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .coordinator import AirOS, AirOSData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +58,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await airos_device.login()
-                status = await airos_device.status()
+                airos_data: AirOSData = await airos_device.status()
 
             except (
                 ConnectionSetupError,
@@ -79,15 +73,11 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                host_data: dict[str, Any] = status[AIROS_HOST_KEY]
-                device_id: str = host_data[AIROS_DEVICE_ID_KEY]
-                hostname: str = host_data.get(
-                    AIROS_HOSTNAME_KEY, AIROS_DEFAULT_HOSTNAME
-                )
-
-                await self.async_set_unique_id(device_id)
+                await self.async_set_unique_id(airos_data.host.device_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=hostname, data=user_input)
+                return self.async_create_entry(
+                    title=airos_data.host.hostname, data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

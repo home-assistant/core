@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+
+from airos.airos8data import NetRole, WirelessMode
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AirOSConfigEntry
-from .coordinator import AirOSDataUpdateCoordinator
+from .coordinator import AirOSConfigEntry, AirOSData, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class AirOSSensorEntityDescription(SensorEntityDescription):
     """Describe an AirOS sensor."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[AirOSData], StateType]
 
 
 SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
@@ -43,13 +43,15 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         translation_key="host_cpuload",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("host", {}).get("cpuload"),
+        value_fn=lambda data: data.host.cpuload,
         entity_registry_enabled_default=False,
     ),
     AirOSSensorEntityDescription(
         key="host_netrole",
         translation_key="host_netrole",
-        value_fn=lambda data: data.get("host", {}).get("netrole"),
+        value_fn=lambda data: data.host.netrole.value
+        if isinstance(data.host.netrole, NetRole)
+        else data.host.netrole,
     ),
     AirOSSensorEntityDescription(
         key="wireless_frequency",
@@ -57,17 +59,19 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {}).get("frequency"),
+        value_fn=lambda data: data.wireless.frequency,
     ),
     AirOSSensorEntityDescription(
         key="wireless_essid",
         translation_key="wireless_essid",
-        value_fn=lambda data: data.get("wireless", {}).get("essid"),
+        value_fn=lambda data: data.wireless.essid,
     ),
     AirOSSensorEntityDescription(
         key="wireless_mode",
         translation_key="wireless_mode",
-        value_fn=lambda data: data.get("wireless", {}).get("mode"),
+        value_fn=lambda data: data.wireless.mode.value
+        if isinstance(data.wireless.mode, WirelessMode)
+        else data.wireless.mode,
     ),
     AirOSSensorEntityDescription(
         key="wireless_antenna_gain",
@@ -75,7 +79,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {}).get("antenna_gain"),
+        value_fn=lambda data: data.wireless.antenna_gain,
     ),
     AirOSSensorEntityDescription(
         key="wireless_throughput_tx",
@@ -83,7 +87,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {}).get("throughput", {}).get("tx"),
+        value_fn=lambda data: data.wireless.throughput.tx,
     ),
     AirOSSensorEntityDescription(
         key="wireless_throughput_rx",
@@ -91,7 +95,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {}).get("throughput", {}).get("rx"),
+        value_fn=lambda data: data.wireless.throughput.rx,
     ),
     AirOSSensorEntityDescription(
         key="wireless_polling_dl_capacity",
@@ -99,9 +103,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {})
-        .get("polling", {})
-        .get("dl_capacity"),
+        value_fn=lambda data: data.wireless.polling.dl_capacity,
     ),
     AirOSSensorEntityDescription(
         key="wireless_polling_ul_capacity",
@@ -109,9 +111,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("wireless", {})
-        .get("polling", {})
-        .get("ul_capacity"),
+        value_fn=lambda data: data.wireless.polling.ul_capacity,
     ),
 )
 
@@ -144,9 +144,9 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.host.device_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data.device_data)
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -6,14 +6,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    AIROS_DEVMODEL_KEY,
-    AIROS_FWVERSION_KEY,
-    AIROS_HOST_KEY,
-    DOMAIN,
-    MANUFACTURER,
-)
-from .coordinator import AirOSDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import AirOSData, AirOSDataUpdateCoordinator
 
 
 class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
@@ -28,9 +22,7 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         """Initialise the gateway."""
         super().__init__(coordinator)
 
-        data = self.coordinator.data
-        device_data = data.device_data
-        host_data = device_data[AIROS_HOST_KEY]
+        airos_data: AirOSData = self.coordinator.data
 
         configuration_url: str | None = (
             f"https://{coordinator.config_entry.data[CONF_HOST]}"
@@ -38,9 +30,9 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             configuration_url=configuration_url,
-            identifiers={(DOMAIN, str(data.device_id))},
+            identifiers={(DOMAIN, str(airos_data.host.device_id))},
             manufacturer=MANUFACTURER,
-            model=host_data.get(AIROS_DEVMODEL_KEY),
-            name=data.hostname,
-            sw_version=host_data.get(AIROS_FWVERSION_KEY),
+            model=airos_data.host.devmodel,
+            name=airos_data.host.hostname,
+            sw_version=airos_data.host.fwversion,
         )

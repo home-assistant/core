@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
-from typing import Any
 
-from airos.airos8 import AirOS
+from airos.airos8 import AirOS, AirOSData
 from airos.exceptions import (
     ConnectionAuthenticationError,
     ConnectionSetupError,
@@ -19,27 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    AIROS_DEFAULT_HOSTNAME,
-    AIROS_DEVICE_ID_KEY,
-    AIROS_HOST_KEY,
-    AIROS_HOSTNAME_KEY,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
-
-
-@dataclass
-class AirOSData:
-    """AirOS data stored in the DataUpdateCoordinator."""
-
-    device_data: dict[str, Any]
-    device_id: str
-    hostname: str
 
 
 class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
@@ -64,7 +46,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
         """Fetch data from AirOS."""
         try:
             await self.airos_device.login()
-            status = await self.airos_device.status()
+            airos_data: AirOSData = await self.airos_device.status()
         except (ConnectionAuthenticationError,) as err:
             _LOGGER.exception("Error authenticating with airOS device: %s")
             raise ConfigEntryError(
@@ -83,8 +65,4 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
                 translation_key="error_data_missing",
             ) from err
 
-        host_data = status[AIROS_HOST_KEY]
-        device_id = host_data[AIROS_DEVICE_ID_KEY]
-        hostname = host_data.get(AIROS_HOSTNAME_KEY, AIROS_DEFAULT_HOSTNAME)
-
-        return AirOSData(device_data=status, device_id=device_id, hostname=hostname)
+        return airos_data
