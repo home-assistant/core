@@ -942,5 +942,25 @@
         "name": "Siren"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Energy Reporting Configuration",
+        "description": "Configure how each energy device reports its values.\n\n**Energy Reporting Modes:**\n• **Cumulative mode**: Uses the total energy value directly from the device (recommended for most devices)\n• **Incremental mode**: Accumulates energy changes over time, useful for devices that report energy deltas\n\nSelect the energy reporting mode for each device below. The device ID is shown in brackets for identification."
+      },
+      "no_energy_devices": {
+        "title": "No Energy Devices Found",
+        "description": "No energy or energy storage devices were found in this Tuya integration. The energy reporting configuration is only available for devices with energy sensors (such as battery energy storage systems, inverters, or smart meters)."
+      }
+    }
+  },
+  "selector": {
+    "energy_report_mode": {
+      "options": {
+        "cumulative": "Cumulative",
+        "incremental": "Incremental"
+      }
+    }
   }
 }
