@@ -30,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -53,7 +54,14 @@ from .alarm_control_panel import (
     async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import (
+    CONF_ADVANCED_OPTIONS,
+    CONF_AVAILABILITY,
+    CONF_PRESS,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+    DOMAIN,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -214,7 +222,17 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
-    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
+    schema |= {
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_ADVANCED_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                }
+            ),
+            {"collapsed": True},
+        ),
+    }
 
     return vol.Schema(schema)
 
@@ -530,7 +548,11 @@ def ws_start_preview(
         )
         return
 
-    preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
+    config: dict = msg["user_input"]
+    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    preview_entity = CREATE_PREVIEW_ENTITY[template_type](
+        hass, name, {**config, **advanced_options}
+    )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

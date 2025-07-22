@@ -235,7 +235,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==37.0.1
+aioesphomeapi==37.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -311,6 +311,9 @@ aiontfy==0.5.3
 
 # homeassistant.components.nut
 aionut==4.3.4
+
+# homeassistant.components.onkyo
+aioonkyo==0.2.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -988,7 +991,7 @@ habiticalib==0.4.0
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.107.1
+hass-nabucasa==0.108.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1631,9 +1634,6 @@ pyefergy==22.5.0
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
 
-# homeassistant.components.onkyo
-pyeiscp==0.0.7
-
 # homeassistant.components.emoncms
 pyemoncms==0.1.1
 
@@ -1922,7 +1922,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2025.4.0
+pyschlage==2025.7.3
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
@@ -2209,7 +2209,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.2
+reolink-aio==0.14.3
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2475,7 +2475,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.15.1
+uiprotect==7.16.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
