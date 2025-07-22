@@ -126,7 +126,7 @@ async def async_setup_entry(
         _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker, config_entry)])
 
-    @service.verify_domain_control(hass, DOMAIN)
+    @service.verify_domain_control(DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
         """Handle dispatched services."""
         assert platform is not None
