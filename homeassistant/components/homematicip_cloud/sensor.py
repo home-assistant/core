@@ -33,6 +33,7 @@ from homematicip.device import (
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
     TiltVibrationSensor,
+    WateringActuator,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -167,6 +168,29 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipTiltStateSensor(hap, device),
             HomematicipTiltAngleSensor(hap, device),
         ],
+        WateringActuator: lambda device: [
+            entity
+            for ch in device.functionalChannels
+            if ch.functionalChannelType
+            == FunctionalChannelType.WATERING_ACTUATOR_CHANNEL
+            for entity in (
+                HomematicipWaterFlowSensor(
+                    hap, device, channel=ch.index, post="currentWaterFlow"
+                ),
+                HomematicipWaterVolumeSensor(
+                    hap,
+                    device,
+                    channel=ch.index,
+                    post="waterVolume",
+                    attribute="waterVolume",
+                ),
+                HomematicipWaterVolumeSinceOpenSensor(
+                    hap,
+                    device,
+                    channel=ch.index,
+                ),
+            )
+        ],
         WeatherSensor: lambda device: [
             HomematicipTemperatureSensor(hap, device),
             HomematicipHumiditySensor(hap, device),
@@ -265,6 +289,65 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
+
+
+class HomematicipWaterFlowSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP watering flow sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, hap: HomematicipHAP, device: Device, channel: int, post: str
+    ) -> None:
+        """Initialize the watering flow sensor device."""
+        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return self.functional_channel.waterFlow
+
+
+class HomematicipWaterVolumeSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP watering volume sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: Device,
+        channel: int,
+        post: str,
+        attribute: str,
+    ) -> None:
+        """Initialize the watering volume sensor device."""
+        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+        self._attribute_name = attribute
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return getattr(self.functional_channel, self._attribute_name, None)
+
+
+class HomematicipWaterVolumeSinceOpenSensor(HomematicipWaterVolumeSensor):
+    """Representation of the HomematicIP watering volume since open sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
+        """Initialize the watering flow volume since open device."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            post="waterVolumeSinceOpen",
+            attribute="waterVolumeSinceOpen",
+        )
 
 
 class HomematicipTiltAngleSensor(HomematicipGenericEntity, SensorEntity):
