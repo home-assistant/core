@@ -40,14 +40,8 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
-
-FIXTURE_PROJECT_DATA = load_json_object_fixture("project.json", DOMAIN)
 
 
 class KNXTestKit:
@@ -315,6 +309,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=DOMAIN,
         data={
+            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA has additional keys
+            # there are installations out there without these keys so we test with legacy data
+            # to ensure backwards compatibility (local_ip, telegram_log_size)
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
@@ -338,11 +335,19 @@ async def knx(
 
 
 @pytest.fixture
-def load_knxproj(hass_storage: dict[str, Any]) -> None:
+async def project_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return the fixture project data."""
+    return await async_load_json_object_fixture(hass, "project.json", DOMAIN)
+
+
+@pytest.fixture
+async def load_knxproj(
+    project_data: dict[str, Any], hass_storage: dict[str, Any]
+) -> None:
     """Mock KNX project data."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,
-        "data": FIXTURE_PROJECT_DATA,
+        "data": project_data,
     }
 
 

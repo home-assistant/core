@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -223,7 +223,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -272,7 +272,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
         except ClientError as ex:
-            _LOGGER.debug(ex)
+            _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
@@ -372,7 +372,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(

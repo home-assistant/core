@@ -1,8 +1,13 @@
 """Base entity for OpenAI."""
 
+from __future__ import annotations
+
+import base64
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal, cast
+from mimetypes import guess_file_type
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -17,6 +22,9 @@ from openai.types.responses import (
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
     ResponseIncompleteEvent,
+    ResponseInputFileParam,
+    ResponseInputImageParam,
+    ResponseInputMessageContentListParam,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
@@ -30,18 +38,25 @@ from openai.types.responses import (
     WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.tool_param import (
+    CodeInterpreter,
+    CodeInterpreterContainerCodeInterpreterToolAuto,
+)
 from openai.types.responses.web_search_tool_param import UserLocation
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
-from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
@@ -63,8 +78,53 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
+if TYPE_CHECKING:
+    from . import OpenAIConfigEntry
+
+
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+
+def _adjust_schema(schema: dict[str, Any]) -> None:
+    """Adjust the schema to be compatible with OpenAI API."""
+    if schema["type"] == "object":
+        if "properties" not in schema:
+            return
+
+        if "required" not in schema:
+            schema["required"] = []
+
+        # Ensure all properties are required
+        for prop, prop_info in schema["properties"].items():
+            _adjust_schema(prop_info)
+            if prop not in schema["required"]:
+                prop_info["type"] = [prop_info["type"], "null"]
+                schema["required"].append(prop)
+
+    elif schema["type"] == "array":
+        if "items" not in schema:
+            return
+
+        _adjust_schema(schema["items"])
+
+
+def _format_structured_output(
+    schema: vol.Schema, llm_api: llm.APIInstance | None
+) -> dict[str, Any]:
+    """Format the schema to be compatible with OpenAI API."""
+    result: dict[str, Any] = convert(
+        schema,
+        custom_serializer=(
+            llm_api.custom_serializer if llm_api else llm.selector_serializer
+        ),
+    )
+
+    _adjust_schema(result)
+
+    result["strict"] = True
+    result["additionalProperties"] = False
+    return result
 
 
 def _format_tool(
@@ -231,11 +291,13 @@ class OpenAIBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[ToolParam] | None = None
+        tools: list[ToolParam] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -257,58 +319,148 @@ class OpenAIBaseLLMEntity(Entity):
                     country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
                     timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 )
-            if tools is None:
-                tools = []
             tools.append(web_search)
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        if options.get(CONF_CODE_INTERPRETER):
+            tools.append(
+                CodeInterpreter(
+                    type="code_interpreter",
+                    container=CodeInterpreterContainerCodeInterpreterToolAuto(
+                        type="auto"
+                    ),
+                )
+            )
+
+        model_args = {
+            "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            "input": [],
+            "max_output_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            "user": chat_log.conversation_id,
+            "store": False,
+            "stream": True,
+        }
+        if tools:
+            model_args["tools"] = tools
+
+        if model_args["model"].startswith("o"):
+            model_args["reasoning"] = {
+                "effort": options.get(
+                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                )
+            }
+        else:
+            model_args["store"] = False
+
         messages = [
             m
             for content in chat_log.content
             for m in _convert_content_to_param(content)
         ]
 
+        last_content = chat_log.content[-1]
+
+        # Handle attachments by adding them to the last user message
+        if last_content.role == "user" and last_content.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                [a.path for a in last_content.attachments],
+            )
+            last_message = messages[-1]
+            assert (
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
+            )
+            last_message["content"] = [
+                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
+                *files,  # type: ignore[list-item]
+            ]
+
+        if structure and structure_name:
+            model_args["text"] = {
+                "format": {
+                    "type": "json_schema",
+                    "name": slugify(structure_name),
+                    "schema": _format_structured_output(structure, chat_log.llm_api),
+                },
+            }
+
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            model_args = {
-                "model": model,
-                "input": messages,
-                "max_output_tokens": options.get(
-                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                ),
-                "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                "user": chat_log.conversation_id,
-                "stream": True,
-            }
-            if tools:
-                model_args["tools"] = tools
-
-            if model.startswith("o"):
-                model_args["reasoning"] = {
-                    "effort": options.get(
-                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                    )
-                }
-            else:
-                model_args["store"] = False
+            model_args["input"] = messages
 
             try:
                 result = await client.responses.create(**model_args)
+
+                async for content in chat_log.async_add_delta_content_stream(
+                    self.entity_id, _transform_stream(chat_log, result, messages)
+                ):
+                    if not isinstance(content, conversation.AssistantContent):
+                        messages.extend(_convert_content_to_param(content))
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
+                if (
+                    isinstance(err, openai.APIError)
+                    and err.type == "insufficient_quota"
+                ):
+                    LOGGER.error("Insufficient funds for OpenAI: %s", err)
+                    raise HomeAssistantError("Insufficient funds for OpenAI") from err
+
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
-            async for content in chat_log.async_add_delta_content_stream(
-                self.entity_id, _transform_stream(chat_log, result, messages)
-            ):
-                if not isinstance(content, conversation.AssistantContent):
-                    messages.extend(_convert_content_to_param(content))
-
             if not chat_log.unresponded_tool_results:
                 break
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, files: list[Path]
+) -> ResponseInputMessageContentListParam:
+    """Append files to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def append_files_to_content() -> ResponseInputMessageContentListParam:
+        content: ResponseInputMessageContentListParam = []
+
+        for file_path in files:
+            if not file_path.exists():
+                raise HomeAssistantError(f"`{file_path}` does not exist")
+
+            mime_type, _ = guess_file_type(file_path)
+
+            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+                raise HomeAssistantError(
+                    "Only images and PDF are supported by the OpenAI API,"
+                    f"`{file_path}` is not an image file or PDF"
+                )
+
+            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+
+            if mime_type.startswith("image/"):
+                content.append(
+                    ResponseInputImageParam(
+                        type="input_image",
+                        image_url=f"data:{mime_type};base64,{base64_file}",
+                        detail="auto",
+                    )
+                )
+            elif mime_type.startswith("application/pdf"):
+                content.append(
+                    ResponseInputFileParam(
+                        type="input_file",
+                        filename=str(file_path),
+                        file_data=f"data:{mime_type};base64,{base64_file}",
+                    )
+                )
+
+        return content
+
+    return await hass.async_add_executor_job(append_files_to_content)
