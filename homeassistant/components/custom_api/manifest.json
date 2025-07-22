@@ -1,0 +1,12 @@
+{
+  "domain": "custom_api",
+  "name": "Custom API",
+  "version": "1.1.0",
+  "documentation": "https://github.com/custom/custom_api",
+  "dependencies": ["http"],
+  "codeowners": [],
+  "requirements": [],
+  "config_flow": false,
+  "iot_class": "local_push",
+  "after_dependencies": ["http"]
+}
