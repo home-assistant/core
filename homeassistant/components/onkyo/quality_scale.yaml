@@ -22,7 +22,7 @@ rules:
     comment: |
       Currently we store created entities in hass.data. That should be removed in the future.
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -77,7 +77,4 @@ rules:
     status: exempt
     comment: |
       This integration is not making any HTTP requests.
-  strict-typing:
-    status: todo
-    comment: |
-      The library is not fully typed yet.
+  strict-typing: done
