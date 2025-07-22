@@ -14,9 +14,9 @@ from homeassistant.components.event import (
     EventEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -26,8 +26,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -42,23 +47,21 @@ CONF_EVENT_TYPES = "event_types"
 
 DEVICE_CLASS_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
 
-EVENT_SCHEMA = vol.Schema(
+EVENT_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
         vol.Required(CONF_EVENT_TYPE): cv.template,
         vol.Required(CONF_EVENT_TYPES): cv.template,
     }
-).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
+)
+
+EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema
+)
 
 
-EVENT_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Required(CONF_EVENT_TYPE): cv.template,
-        vol.Required(CONF_EVENT_TYPES): cv.template,
-        vol.Required(CONF_NAME): cv.template,
-    }
+EVENT_CONFIG_ENTRY_SCHEMA = EVENT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -86,11 +89,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = EVENT_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateEventEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateEventEntity,
+        EVENT_CONFIG_ENTRY_SCHEMA,
+        True,
     )
 
 
@@ -99,8 +104,13 @@ def async_create_preview_event(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateEventEntity:
     """Create a preview event."""
-    validated_config = EVENT_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return StateEventEntity(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateEventEntity,
+        EVENT_CONFIG_ENTRY_SCHEMA,
+    )
 
 
 class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):

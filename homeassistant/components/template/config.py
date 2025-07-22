@@ -127,7 +127,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_EVENT): vol.All(
-                cv.ensure_list, [event_platform.EVENT_SCHEMA]
+                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_FAN): vol.All(
                 cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
