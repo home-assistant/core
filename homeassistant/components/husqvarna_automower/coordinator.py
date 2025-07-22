@@ -231,11 +231,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
             if removed_zones:
                 _LOGGER.debug("Removing stay-out zones: %s", removed_zones)
-
-            for entry in entries:
-                for zone_id in removed_zones:
-                    if entry.unique_id == f"{mower_id}_{zone_id}_stay_out_zones":
-                        entity_registry.async_remove(entry.entity_id)
+                for entry in entries:
+                    for zone_id in removed_zones:
+                        if entry.unique_id == f"{mower_id}_{zone_id}_stay_out_zones":
+                            entity_registry.async_remove(entry.entity_id)
 
     def _async_add_remove_work_areas(self) -> None:
         """Add new work areas, remove non-existing work areas."""
