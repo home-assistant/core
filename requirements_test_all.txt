@@ -500,7 +500,7 @@ async-upnp-client==0.45.0
 asyncarve==0.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.5.2
+asyncsleepiq==1.5.3
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
