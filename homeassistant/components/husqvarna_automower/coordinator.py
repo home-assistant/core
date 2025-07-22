@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -82,7 +82,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             self.ws_connected = True
 
             def start_watchdog() -> None:
-                self.hass.create_task(self._pong_watchdog())
+                # self.hass.create_task(self._pong_watchdog())
+                # _LOGGER.debug("Starting watchdog")
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._pong_watchdog(),
+                    "webdocket_watchdog",
+                )
 
             self.api.register_ws_ready_callback(start_watchdog)
         try:
@@ -200,13 +206,12 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 _LOGGER.debug("Ping result: %s", success)
 
                 await asyncio.sleep(60)
-
-                if self.pong is None or (datetime.now(tz=UTC) - self.pong) >= timedelta(
-                    seconds=90
-                ):
+                _LOGGER.warning("Success %s", success)
+                if not success:
                     _LOGGER.warning("No pong received → restart polling")
-                    if self.update_interval != SCAN_INTERVAL:
+                    if self.update_interval is None:
                         self.update_interval = SCAN_INTERVAL
+                        await self.async_request_refresh()
         except asyncio.CancelledError:
             _LOGGER.debug("Watchdog cancelled")
 
