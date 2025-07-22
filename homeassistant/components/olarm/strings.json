@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "device": {
+        "title": "Select device",
+        "description": "Choose the Olarm device you would like to integrate. If your device is not listed, please ensure you have enabled public API access in your Olarm account for that device.",
+        "data": {
+          "select_device": "Device",
+          "load_zones_bypass": "Load entities for zone bypassing"
+        },
+        "data_description": {
+          "select_device": "The Olarm device you would like to integrate",
+          "load_zones_bypass": "Useful if you bypass zones on your alarm system regularly"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication, please try again.",
+      "oauth_failed": "OAuth authentication failed, please try again."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_timeout": "Timeout resolving OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "user_rejected_authorize": "Account linking rejected: {error}",
+      "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
+      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in your Olarm account for your device"
+    },
+    "create_entry": {
+      "default": "Successfully authenticated"
+    }
+  }
+}
