@@ -13,15 +13,48 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "cl_am43_corded_motor_zigbee_cover": [
+        # https://github.com/home-assistant/core/issues/71242
+        Platform.COVER,
+        Platform.SELECT,
+    ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
         Platform.LIGHT,
     ],
+    "co2bj_air_detector": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.BINARY_SENSOR,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SIREN,
+    ],
     "cs_arete_two_12l_dehumidifier_air_purifier": [
         Platform.BINARY_SENSOR,
         Platform.FAN,
         Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_emma_dehumidifier": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.BINARY_SENSOR,
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cs_smart_dry_plus": [
+        # https://github.com/home-assistant/core/issues/119865
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
+    "cwjwq_smart_odor_eliminator": [
+        # https://github.com/orgs/home-assistant/discussions/79
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
@@ -41,6 +74,10 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "dj_smart_light_bulb": [
+        # https://github.com/home-assistant/core/pull/126242
+        Platform.LIGHT
+    ],
     "dlq_earu_electric_eawcpt": [
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
@@ -49,6 +86,10 @@ DEVICE_MOCKS = {
     "dlq_metering_3pn_wifi": [
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
+    ],
+    "gyd_night_light": [
+        # https://github.com/home-assistant/core/issues/133173
+        Platform.LIGHT,
     ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
@@ -60,9 +101,37 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "ks_tower_fan": [
+        # https://github.com/orgs/home-assistant/discussions/329
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SWITCH,
+    ],
+    "kt_serenelife_slpac905wuk_air_conditioner": [
+        # https://github.com/home-assistant/core/pull/148646
+        Platform.CLIMATE,
+    ],
+    "mal_alarm_host": [
+        # Alarm Host support
+        Platform.ALARM_CONTROL_PANEL,
+        Platform.NUMBER,
+        Platform.SWITCH,
+    ],
     "mcs_door_sensor": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "qccdz_ac_charging_control": [
+        # https://github.com/home-assistant/core/issues/136207
+        Platform.SWITCH,
+    ],
+    "qxj_temp_humidity_external_probe": [
+        # https://github.com/home-assistant/core/issues/136472
+        Platform.SENSOR,
+    ],
+    "qxj_weather_station": [
+        # https://github.com/orgs/home-assistant/discussions/318
         Platform.SENSOR,
     ],
     "rqbj_gas_sensor": [
@@ -82,6 +151,8 @@ DEVICE_MOCKS = {
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
+        Platform.NUMBER,
+        Platform.SENSOR,
         Platform.SWITCH,
     ],
     "wsdcg_temperature_humidity": [
