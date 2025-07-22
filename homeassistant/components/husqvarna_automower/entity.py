@@ -111,16 +111,20 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return super().available and self.mower_id in self.coordinator.data
 
 
-class AutomowerConnectedEntity(AutomowerBaseEntity):
+class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
+        return (
+            super().available
+            and self.mower_attributes.metadata.connected
+            and self.mower_attributes.mower.state != MowerStates.OFF
+        )
 
 
-class WorkAreaAvailableEntity(AutomowerConnectedEntity):
+class WorkAreaAvailableEntity(AutomowerControlEntity):
     """Base entity for work areas."""
 
     def __init__(
@@ -151,5 +155,5 @@ class WorkAreaAvailableEntity(AutomowerConnectedEntity):
         return super().available and self.work_area_id in self.work_areas
 
 
-class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerConnectedEntity):
+class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
     """Base entity for work areas with control function."""

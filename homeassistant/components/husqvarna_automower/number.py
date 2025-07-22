@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
-    AutomowerConnectedEntity,
+    AutomowerControlEntity,
     WorkAreaControlEntity,
     _work_area_translation_key,
     handle_sending_exception,
@@ -154,7 +154,7 @@ async def async_setup_entry(
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
-class AutomowerNumberEntity(AutomowerConnectedEntity, NumberEntity):
+class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
     """Defining the AutomowerNumberEntity with AutomowerNumberEntityDescription."""
 
     entity_description: AutomowerNumberEntityDescription

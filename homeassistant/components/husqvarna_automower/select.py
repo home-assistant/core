@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerConnectedEntity, handle_sending_exception
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ async def async_setup_entry(
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
-class AutomowerSelectEntity(AutomowerConnectedEntity, SelectEntity):
+class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     """Defining the headlight mode entity."""
 
     _attr_options = HEADLIGHT_MODES

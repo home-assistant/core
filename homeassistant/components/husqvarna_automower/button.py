@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerConnectedEntity, handle_sending_exception
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
     _async_add_new_devices(set(coordinator.data))
 
 
-class AutomowerButtonEntity(AutomowerConnectedEntity, ButtonEntity):
+class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
     entity_description: AutomowerButtonEntityDescription
