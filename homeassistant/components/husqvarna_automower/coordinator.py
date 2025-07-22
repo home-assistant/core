@@ -166,12 +166,14 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         current_devices = set(self.data)
         device_registry = dr.async_get(self.hass)
 
-        registered_devices: set[str] = set()
-        for device in device_registry.devices.values():
-            if self.config_entry.entry_id in device.config_entries:
-                for domain, mower_id in device.identifiers:
-                    if domain == DOMAIN:
-                        registered_devices.add(str(mower_id))
+        registered_devices: set[str] = {
+            str(mower_id)
+            for device in device_registry.devices.get_devices_for_config_entry_id(
+                self.config_entry.entry_id
+            )
+            for domain, mower_id in device.identifiers
+            if domain == DOMAIN
+        }
 
         orphaned_devices = registered_devices - current_devices
         if orphaned_devices:
