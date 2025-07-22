@@ -575,31 +575,32 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
 
-        if ATTR_WHITE in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self._color_mode_dpcode:
-                commands += [
-                    {
-                        "code": self._color_mode_dpcode,
-                        "value": WorkMode.WHITE,
-                    },
-                ]
+        if self._color_mode_dpcode and (
+            ATTR_WHITE in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs
+        ):
+            commands += [
+                {
+                    "code": self._color_mode_dpcode,
+                    "value": WorkMode.WHITE,
+                },
+            ]
 
-            if ATTR_COLOR_TEMP_KELVIN in kwargs and self._color_temp:
-                commands += [
-                    {
-                        "code": self._color_temp.dpcode,
-                        "value": round(
-                            self._color_temp.remap_value_from(
-                                color_util.color_temperature_kelvin_to_mired(
-                                    kwargs[ATTR_COLOR_TEMP_KELVIN]
-                                ),
-                                MIN_MIREDS,
-                                MAX_MIREDS,
-                                reverse=True,
-                            )
-                        ),
-                    },
-                ]
+        if self._color_temp and ATTR_COLOR_TEMP_KELVIN in kwargs:
+            commands += [
+                {
+                    "code": self._color_temp.dpcode,
+                    "value": round(
+                        self._color_temp.remap_value_from(
+                            color_util.color_temperature_kelvin_to_mired(
+                                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                            ),
+                            MIN_MIREDS,
+                            MAX_MIREDS,
+                            reverse=True,
+                        )
+                    ),
+                },
+            ]
 
         if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
