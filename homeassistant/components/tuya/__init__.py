@@ -105,7 +105,9 @@ class ManagerCompat(Manager):
                     code, value = strategy.convert(strategy_name, dp_item, config_item)
                     device.status[code] = value
                     updated_status_properties.append(code)
-                    dp_timestamps[code] = item.get("t", None)  # 获取时间戳，如果有的话
+                    dp_timestamps[code] = item.get(
+                        "t", None
+                    )  # Get timestamp if available
         else:
             for item in status:
                 if "code" in item and "value" in item:
@@ -113,9 +115,11 @@ class ManagerCompat(Manager):
                     value = item["value"]
                     device.status[code] = value
                     updated_status_properties.append(code)
-                    dp_timestamps[code] = item.get("t", None)  # 获取时间戳，如果有的话
+                    dp_timestamps[code] = item.get(
+                        "t", None
+                    )  # Get timestamp if available
 
-        # 调用增强的设备更新方法，传递时间戳
+        # Call enhanced device update method with timestamps
         self.__update_device_with_timestamps(
             device, updated_status_properties, dp_timestamps
         )
@@ -129,10 +133,10 @@ class ManagerCompat(Manager):
         """Update device with timestamp information."""
         for listener in self.device_listeners:
             try:
-                # 尝试调用新的 3 参数版本
+                # Try new 3-parameter version first
                 listener.update_device(device, updated_status_properties, dp_timestamps)
             except TypeError:
-                # 如果失败，回退到原来的 2 参数版本
+                # Fall back to original 2-parameter version if it fails
                 listener.update_device(device, updated_status_properties)
 
 
