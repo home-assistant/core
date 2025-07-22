@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import AutomowerConfigEntry
 from .const import DOMAIN, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity, handle_sending_exception
+from .entity import AutomowerBaseEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
+class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
