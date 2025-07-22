@@ -31,5 +31,10 @@
         "default": "mdi:stop"
       }
     }
+  },
+  "services": {
+    "start_charge_session": {
+      "service": "mdi:play"
+    }
   }
 }
