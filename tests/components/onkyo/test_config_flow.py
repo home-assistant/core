@@ -28,7 +28,7 @@ from . import RECEIVER_INFO, RECEIVER_INFO_2, mock_discovery, setup_integration
 from tests.common import MockConfigEntry
 
 
-def _entry_title(receiver_info: ReceiverInfo) -> str:
+def _receiver_display_name(receiver_info: ReceiverInfo) -> str:
     return f"{receiver_info.model_name} ({receiver_info.host})"
 
 
@@ -49,32 +49,63 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
-    with mock_discovery(None):
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_receiver"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_VOLUME_RESOLUTION: 200,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: ["THX"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == RECEIVER_INFO_2.host
+    assert result["result"].unique_id == RECEIVER_INFO_2.identifier
+    assert result["title"] == RECEIVER_INFO_2.model_name
+
+
+@pytest.mark.parametrize(
+    ("mock_discovery", "error_reason"),
+    [
+        (mock_discovery(None), "unknown"),
+        (mock_discovery([]), "cannot_connect"),
+        (mock_discovery([RECEIVER_INFO]), "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_manual_recoverable_error(
+    hass: HomeAssistant, mock_discovery: AbstractContextManager, error_reason: str
+) -> None:
+    """Test manual with a recoverable error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with mock_discovery:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
-    assert result["errors"] == {"base": "unknown"}
-
-    with mock_discovery([]):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with mock_discovery([RECEIVER_INFO]):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_reason}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: RECEIVER_INFO_2.host}
@@ -95,6 +126,7 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == RECEIVER_INFO_2.host
     assert result["result"].unique_id == RECEIVER_INFO_2.identifier
+    assert result["title"] == RECEIVER_INFO_2.model_name
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -148,7 +180,9 @@ async def test_eiscp_discovery(
     assert result["step_id"] == "eiscp_discovery"
 
     devices = result["data_schema"].schema["device"].container
-    assert devices == {RECEIVER_INFO_2.identifier: _entry_title(RECEIVER_INFO_2)}
+    assert devices == {
+        RECEIVER_INFO_2.identifier: _receiver_display_name(RECEIVER_INFO_2)
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"device": RECEIVER_INFO_2.identifier}
@@ -169,6 +203,7 @@ async def test_eiscp_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == RECEIVER_INFO_2.host
     assert result["result"].unique_id == RECEIVER_INFO_2.identifier
+    assert result["title"] == RECEIVER_INFO_2.model_name
 
 
 @pytest.mark.parametrize(
@@ -239,6 +274,7 @@ async def test_ssdp_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == RECEIVER_INFO_2.host
     assert result["result"].unique_id == RECEIVER_INFO_2.identifier
+    assert result["title"] == RECEIVER_INFO_2.model_name
 
 
 @pytest.mark.parametrize(
@@ -307,7 +343,9 @@ async def test_configure(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_receiver"
-    assert result["description_placeholders"]["name"] == _entry_title(RECEIVER_INFO)
+    assert result["description_placeholders"]["name"] == _receiver_display_name(
+        RECEIVER_INFO
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
