@@ -64,7 +64,7 @@ async def test_setup_missing_pin(
 
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        data={**mock_config_entry.data, CONF_PIN: "1234"},
+        data={**mock_config_entry.data, CONF_PIN: 1234},
     )
 
     assert len(hass.config_entries.flow.async_progress()) == 1
