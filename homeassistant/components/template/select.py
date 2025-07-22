@@ -124,7 +124,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_current_option = option
             self.async_write_ha_state()
         if select_option := self._action_scripts.get(CONF_SELECT_OPTION):

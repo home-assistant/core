@@ -35,8 +35,8 @@ class AbstractTemplateEntity(Entity):
         if self._optimistic_entity:
             self._template = config.get(CONF_STATE)
 
-            self._attr_assumed_state = self._optimistic = (
-                self._template is None or config.get(CONF_OPTIMISTIC, False)
+            self._attr_assumed_state = self._template is None or config.get(
+                CONF_OPTIMISTIC, False
             )
 
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:

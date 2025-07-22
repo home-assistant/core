@@ -316,7 +316,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 run_variables={"position": 100},
                 context=self._context,
             )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._position = 100
             self.async_write_ha_state()
 
@@ -330,7 +330,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 run_variables={"position": 0},
                 context=self._context,
             )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._position = 0
             self.async_write_ha_state()
 
@@ -347,7 +347,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             run_variables={"position": self._position},
             context=self._context,
         )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -491,10 +491,10 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
                 updater(rendered)
                 write_ha_state = True
 
-        if not self._optimistic:
+        if not self._attr_assumed_state:
             self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
-        elif self._optimistic and len(self._rendered) > 0:
+        elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case any non optimistic template
             write_ha_state = True
 
