@@ -796,6 +796,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     ),
     # Diffuser
     # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
+    "xnyjcn": (
+        SwitchEntityDescription(
+            key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
+            translation_key="feedin_power_limit_enable",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     "xxj": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
