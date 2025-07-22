@@ -44,6 +44,7 @@ from . import (
     service,
     translation,
 )
+from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
 from .issue_registry import IssueSeverity, async_create_issue
@@ -1139,6 +1140,77 @@ class EntityPlatform:
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
+
+    @property
+    @deprecated_function(
+        "platform_data.component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def component_translations(self) -> dict[str, str]:
+        """Return the component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def platform_translations(self) -> dict[str, str]:
+        """Return the platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_component_translations(self) -> dict[str, str]:
+        """Return the object ID component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_platform_translations(self) -> dict[str, str]:
+        """Return the object ID platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.default_language_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def default_language_platform_translations(self) -> dict[str, str]:
+        """Return the default language platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.default_language_platform_translations
+
+    @deprecated_function(
+        "platform_data.async_load_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    async def async_load_translations(self) -> None:
+        """Load translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return await self.platform_data.async_load_translations()
 
 
 @callback
