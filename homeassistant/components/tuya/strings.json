@@ -296,16 +296,8 @@
           "led": "LED"
         }
       },
-      "led_type_2": {
-        "name": "Light 2 source type",
-        "state": {
-          "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
-          "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
-          "led": "[%key:component::tuya::entity::select::led_type::state::led%]"
-        }
-      },
-      "led_type_3": {
-        "name": "Light 3 source type",
+      "indexed_led_type": {
+        "name": "Light {index} source type",
         "state": {
           "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
           "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
