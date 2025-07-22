@@ -125,6 +125,7 @@ def mock_miele_client(
         client.get_devices.return_value = device_fixture
         client.get_actions.return_value = action_fixture
         client.get_programs.return_value = programs_fixture
+        client.set_program.return_value = None
 
         yield client
 
