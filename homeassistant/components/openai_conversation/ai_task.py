@@ -1,4 +1,4 @@
-"""AI Task integration for OpenRouter."""
+"""AI Task integration for OpenAI."""
 
 from __future__ import annotations
 
