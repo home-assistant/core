@@ -30,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -50,9 +51,17 @@ from .alarm_control_panel import (
     CONF_DISARM_ACTION,
     CONF_TRIGGER_ACTION,
     TemplateCodeFormat,
+    async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import (
+    CONF_ADVANCED_OPTIONS,
+    CONF_AVAILABILITY,
+    CONF_PRESS,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+    DOMAIN,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -63,7 +72,7 @@ from .number import (
     DEFAULT_STEP,
     async_create_preview_number,
 )
-from .select import CONF_OPTIONS, CONF_SELECT_OPTION
+from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_select
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
@@ -213,7 +222,17 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
-    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
+    schema |= {
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_ADVANCED_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                }
+            ),
+            {"collapsed": True},
+        ),
+    }
 
     return vol.Schema(schema)
 
@@ -319,6 +338,7 @@ CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         config_schema(Platform.ALARM_CONTROL_PANEL),
+        preview="template",
         validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
     ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
@@ -332,6 +352,7 @@ CONFIG_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
+        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
@@ -341,6 +362,7 @@ CONFIG_FLOW = {
     ),
     Platform.SELECT: SchemaFlowFormStep(
         config_schema(Platform.SELECT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.SELECT),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
@@ -360,6 +382,7 @@ OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         options_schema(Platform.ALARM_CONTROL_PANEL),
+        preview="template",
         validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
     ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
@@ -373,6 +396,7 @@ OPTIONS_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
+        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
@@ -382,6 +406,7 @@ OPTIONS_FLOW = {
     ),
     Platform.SELECT: SchemaFlowFormStep(
         options_schema(Platform.SELECT),
+        preview="template",
         validate_user_input=validate_user_input(Platform.SELECT),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
@@ -400,10 +425,12 @@ CREATE_PREVIEW_ENTITY: dict[
     str,
     Callable[[HomeAssistant, str, dict[str, Any]], TemplateEntity],
 ] = {
-    "binary_sensor": async_create_preview_binary_sensor,
-    "number": async_create_preview_number,
-    "sensor": async_create_preview_sensor,
-    "switch": async_create_preview_switch,
+    Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
+    Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.NUMBER: async_create_preview_number,
+    Platform.SELECT: async_create_preview_select,
+    Platform.SENSOR: async_create_preview_sensor,
+    Platform.SWITCH: async_create_preview_switch,
 }
 
 
@@ -521,7 +548,11 @@ def ws_start_preview(
         )
         return
 
-    preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
+    config: dict = msg["user_input"]
+    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    preview_entity = CREATE_PREVIEW_ENTITY[template_type](
+        hass, name, {**config, **advanced_options}
+    )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

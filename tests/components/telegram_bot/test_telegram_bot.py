@@ -364,7 +364,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
     events = async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -391,7 +391,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     events = async_capture_events(hass, "telegram_command")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_command,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -418,7 +418,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     events = async_capture_events(hass, "telegram_callback")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_callback_query,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -594,7 +594,7 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     events = async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=unauthorized_update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -618,7 +618,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
     async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
     )
     assert response.status == 401
@@ -636,7 +636,7 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
     async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_devices[mock_subentry_data0]
+# name: test_devices[mock_conversation_subentry_data0]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -26,7 +26,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[mock_subentry_data1]
+# name: test_devices[mock_conversation_subentry_data1]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
