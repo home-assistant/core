@@ -72,19 +72,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
-    # Check if API key is missing and trigger reauth
-    if not entry.data.get(CONF_API_KEY):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "reauth", "entry_id": entry.entry_id},
-                data=entry.data,
-            )
-        )
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="api_key_required",
-        )
 
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
@@ -106,6 +93,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     bootstrap = protect.bootstrap
     nvr_info = bootstrap.nvr
     auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+
+    # Check if API key is missing
+    if not protect.is_api_key_set() and auth_user and nvr_info.can_write(auth_user):
+        try:
+            new_api_key = await protect.create_api_key(name="Home Assistant")
+            if new_api_key:
+                protect.set_api_key(new_api_key)
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_API_KEY: new_api_key}
+                )
+        except NotAuthorized as err:
+            _LOGGER.error("Failed to create API key: %s", err)
+
+    if not protect.is_api_key_set():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "reauth", "entry_id": entry.entry_id},
+                data=entry.data,
+            )
+        )
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        )
+
     if auth_user and auth_user.cloud_account:
         ir.async_create_issue(
             hass,
