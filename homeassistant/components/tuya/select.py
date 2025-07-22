@@ -352,6 +352,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_placeholders={"index": "2"},
         ),
     ),
+    "xnyjcn": (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="work_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
