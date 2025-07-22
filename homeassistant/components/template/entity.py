@@ -31,6 +31,7 @@ class AbstractTemplateEntity(Entity):
         self.hass = hass
         self._action_scripts: dict[str, Script] = {}
 
+        self._template = None
         if self._optimistic_entity:
             self._template = config.get(CONF_STATE)
 
