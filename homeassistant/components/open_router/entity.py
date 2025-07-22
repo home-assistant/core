@@ -19,6 +19,7 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
+from openai.types.shared_params.response_format_json_schema import JSONSchema
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -61,21 +62,32 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
 
 def _format_structured_output(
     name: str, schema: vol.Schema, llm_api: llm.APIInstance | None
-) -> dict[str, Any]:
+) -> JSONSchema:
     """Format the schema to be compatible with OpenRouter API."""
-    result: dict[str, Any] = {}
-    result["schema"] = convert(
+    result: JSONSchema = {
+        "name": name,
+        "strict": True,
+    }
+    result_schema = convert(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
     )
+    # result["schema"] = convert(
+    #     schema,
+    #     custom_serializer=(
+    #         llm_api.custom_serializer if llm_api else llm.selector_serializer
+    #     ),
+    # )
 
-    _adjust_schema(result)
+    _adjust_schema(result_schema)
 
-    result["name"] = name
-    result["strict"] = True
-    result["additionalProperties"] = False
+    result["schema"] = result_schema
+
+    # result["name"] = name
+    # result["strict"] = True
+    # result["additionalProperties"] = False
     return result
 
 
@@ -214,35 +226,11 @@ class OpenRouterEntity(Entity):
         ]
 
         if structure and structure_name:
-            # model_args["response_format"] = ResponseFormatJSONSchema(
-            #     type="json_schema",
-            #     json_schema=_format_structured_output(structure_name, structure, chat_log.llm_api),
-            # )
             model_args["response_format"] = ResponseFormatJSONSchema(
                 type="json_schema",
-                json_schema={
-                    "name": "weather",
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "City or location name",
-                            },
-                            "temperature": {
-                                "type": "number",
-                                "description": "Temperature in Celsius",
-                            },
-                            "conditions": {
-                                "type": "string",
-                                "description": "Weather conditions description",
-                            },
-                        },
-                        "required": ["location", "temperature", "conditions"],
-                        "additionalProperties": False,
-                    },
-                },
+                json_schema=_format_structured_output(
+                    structure_name, structure, chat_log.llm_api
+                ),
             )
 
         client = self.entry.runtime_data

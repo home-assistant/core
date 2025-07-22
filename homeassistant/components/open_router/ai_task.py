@@ -1,4 +1,4 @@
-"""AI Task integration for OpenAI."""
+"""AI Task integration for OpenRouter."""
 
 from __future__ import annotations
 
@@ -28,16 +28,16 @@ async def async_setup_entry(
             continue
 
         async_add_entities(
-            [OpenAITaskEntity(config_entry, subentry)],
+            [OpenRouterAITaskEntity(config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class OpenAITaskEntity(
+class OpenRouterAITaskEntity(
     ai_task.AITaskEntity,
     OpenRouterEntity,
 ):
-    """OpenAI AI Task entity."""
+    """OpenRouter AI Task entity."""
 
     _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
 
@@ -69,7 +69,9 @@ class OpenAITaskEntity(
                 err,
                 text,
             )
-            raise HomeAssistantError("Error with OpenAI structured response") from err
+            raise HomeAssistantError(
+                "Error with OpenRouter structured response"
+            ) from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,

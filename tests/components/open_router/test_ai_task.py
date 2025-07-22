@@ -75,34 +75,15 @@ async def test_generate_structured_data(
         "response_format"
     ] == {
         "json_schema": {
-            "name": "weather",
+            "name": "Test Task",
             "schema": {
-                "additionalProperties": False,
                 "properties": {
-                    # "characters": {
-                    #     "description": "List of characters",
-                    #     "items": {"type": "string"},
-                    #     "type": "array",
-                    # }
-                    "conditions": {
-                        "description": "Weather conditions description",
-                        "type": "string",
-                    },
-                    "location": {
-                        "description": "City or location name",
-                        "type": "string",
-                    },
-                    "temperature": {
-                        "description": "Temperature in Celsius",
-                        "type": "number",
-                    },
+                    "characters": {
+                        "items": {"type": "string"},
+                        "type": "array",
+                    }
                 },
-                "required": [
-                    # "characters",
-                    "location",
-                    "temperature",
-                    "conditions",
-                ],
+                "required": ["characters"],
                 "type": "object",
             },
             "strict": True,
