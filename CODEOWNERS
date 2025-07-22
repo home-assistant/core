@@ -1100,6 +1100,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ohmconnect/ @robbiet480
 /homeassistant/components/ohme/ @dan-r
 /tests/components/ohme/ @dan-r
+/homeassistant/components/olarm/ @olarmtech
+/tests/components/olarm/ @olarmtech
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
