@@ -542,7 +542,7 @@ asyncinotify==4.2.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.5.2
+asyncsleepiq==1.5.3
 
 # homeassistant.components.aten_pe
 # atenpdu==0.3.2
@@ -3001,7 +3001,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.16.0
+uiprotect==7.18.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
