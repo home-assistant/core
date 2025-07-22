@@ -148,6 +148,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "wk_air_conditioner": [
+        # https://github.com/home-assistant/core/issues/146263
+        Platform.CLIMATE,
+        Platform.SWITCH,
+    ],
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
