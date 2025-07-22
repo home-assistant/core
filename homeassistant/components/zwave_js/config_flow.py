@@ -504,7 +504,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm USB migration."""
         if user_input is not None:
             return await self.async_step_intent_migrate()
-        assert self.usb_path
         return self.async_show_form(
             step_id="confirm_usb_migration",
             description_placeholders={
