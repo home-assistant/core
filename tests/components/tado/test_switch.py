@@ -1,6 +1,6 @@
 """The sensor tests for the tado platform."""
 
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -43,5 +43,5 @@ async def test_set_child_lock(hass: HomeAssistant, method, expected) -> None:
             blocking=True,
         )
 
-    mock_set_state.assert_called_once()
-    assert mock_set_state.call_args[0][1] is expected
+    assert mock_set_state.call_count == 1
+    mock_set_state.assert_called_with(ANY, expected)
