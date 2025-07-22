@@ -56,7 +56,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 10
+STORAGE_VERSION_MINOR = 11
 
 CLEANUP_DELAY = 10
 
@@ -144,11 +144,19 @@ DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
 LOW_PRIO_CONFIG_ENTRY_DOMAINS = {"homekit_controller", "matter", "mqtt", "upnp"}
 
 
-class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
-    """EventDeviceRegistryUpdated data for action type 'create' and 'remove'."""
+class _EventDeviceRegistryUpdatedData_Create(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'create'."""
 
-    action: Literal["create", "remove"]
+    action: Literal["create"]
     device_id: str
+
+
+class _EventDeviceRegistryUpdatedData_Remove(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'remove'."""
+
+    action: Literal["remove"]
+    device_id: str
+    device: DeviceEntry
 
 
 class _EventDeviceRegistryUpdatedData_Update(TypedDict):
@@ -160,7 +168,8 @@ class _EventDeviceRegistryUpdatedData_Update(TypedDict):
 
 
 type EventDeviceRegistryUpdatedData = (
-    _EventDeviceRegistryUpdatedData_CreateRemove
+    _EventDeviceRegistryUpdatedData_Create
+    | _EventDeviceRegistryUpdatedData_Remove
     | _EventDeviceRegistryUpdatedData_Update
 )
 
@@ -266,6 +275,48 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
+@lru_cache(maxsize=512)
+def format_mac(mac: str) -> str:
+    """Format the mac address string for entry into dev reg."""
+    to_test = mac
+
+    if len(to_test) == 17 and to_test.count(":") == 5:
+        return to_test.lower()
+
+    if len(to_test) == 17 and to_test.count("-") == 5:
+        to_test = to_test.replace("-", "")
+    elif len(to_test) == 14 and to_test.count(".") == 2:
+        to_test = to_test.replace(".", "")
+
+    if len(to_test) == 12:
+        # no : included
+        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
+
+
+def _normalize_connections(
+    connections: Iterable[tuple[str, str]],
+) -> set[tuple[str, str]]:
+    """Normalize connections to ensure we can match mac addresses."""
+    return {
+        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
+        for key, value in connections
+    }
+
+
+def _normalize_connections_validator(
+    instance: Any,
+    attribute: Any,
+    connections: Iterable[tuple[str, str]],
+) -> None:
+    """Check connections normalization used as attrs validator."""
+    for key, value in connections:
+        if key == CONNECTION_NETWORK_MAC and format_mac(value) != value:
+            raise ValueError(f"Invalid mac address format: {value}")
+
+
 @attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
@@ -274,7 +325,9 @@ class DeviceEntry:
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     config_entries_subentries: dict[str, set[str | None]] = attr.ib(factory=dict)
     configuration_url: str | None = attr.ib(default=None)
-    connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    connections: set[tuple[str, str]] = attr.ib(
+        converter=set, factory=set, validator=_normalize_connections_validator
+    )
     created_at: datetime = attr.ib(factory=utcnow)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
@@ -397,7 +450,9 @@ class DeletedDeviceEntry:
     area_id: str | None = attr.ib()
     config_entries: set[str] = attr.ib()
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
-    connections: set[tuple[str, str]] = attr.ib()
+    connections: set[tuple[str, str]] = attr.ib(
+        validator=_normalize_connections_validator
+    )
     created_at: datetime = attr.ib()
     disabled_by: DeviceEntryDisabler | None = attr.ib()
     id: str = attr.ib()
@@ -459,31 +514,10 @@ class DeletedDeviceEntry:
         )
 
 
-@lru_cache(maxsize=512)
-def format_mac(mac: str) -> str:
-    """Format the mac address string for entry into dev reg."""
-    to_test = mac
-
-    if len(to_test) == 17 and to_test.count(":") == 5:
-        return to_test.lower()
-
-    if len(to_test) == 17 and to_test.count("-") == 5:
-        to_test = to_test.replace("-", "")
-    elif len(to_test) == 14 and to_test.count(".") == 2:
-        to_test = to_test.replace(".", "")
-
-    if len(to_test) == 12:
-        # no : included
-        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
-
-    # Not sure how formatted, return original
-    return mac
-
-
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -559,6 +593,16 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["disabled_by"] = None
                     device["labels"] = []
                     device["name_by_user"] = None
+            if old_minor_version < 11:
+                # Normalization of stored CONNECTION_NETWORK_MAC, introduced in 2025.8
+                for device in old_data["devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
+                for device in old_data["deleted_devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
 
         if old_major_version > 2:
             raise NotImplementedError
@@ -1018,8 +1062,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and old.area_id is None
         ):
             # Circular dep
-            # pylint: disable-next=import-outside-toplevel
-            from . import area_registry as ar
+            from . import area_registry as ar  # noqa: PLC0415
 
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
@@ -1275,8 +1318,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 self.async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
-            _EventDeviceRegistryUpdatedData_CreateRemove(
-                action="remove", device_id=device_id
+            _EventDeviceRegistryUpdatedData_Remove(
+                action="remove", device_id=device_id, device=device
             ),
         )
         self.async_schedule_save()
@@ -1622,8 +1665,7 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import entity_registry, label_registry as lr
+    from . import entity_registry, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _label_removed_from_registry_filter(
@@ -1698,11 +1740,3 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         debounced_cleanup.async_cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
-
-
-def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
-    """Normalize connections to ensure we can match mac addresses."""
-    return {
-        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
-        for key, value in connections
-    }

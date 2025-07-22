@@ -522,27 +522,6 @@ async def test_logging(
         assert "GET /api/states/logging.entity" not in caplog.text
 
 
-async def test_register_static_paths(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test registering a static path with old api."""
-    assert await async_setup_component(hass, "frontend", {})
-    path = str(Path(__file__).parent)
-    hass.http.register_static_path("/something", path)
-    client = await hass_client()
-    resp = await client.get("/something/__init__.py")
-    assert resp.status == HTTPStatus.OK
-
-    assert (
-        "Detected code that calls hass.http.register_static_path "
-        "which is deprecated because it does blocking I/O in the "
-        "event loop, instead call "
-        "`await hass.http.async_register_static_paths"
-    ) in caplog.text
-
-
 async def test_ssl_issue_if_no_urls_configured(
     hass: HomeAssistant,
     tmp_path: Path,

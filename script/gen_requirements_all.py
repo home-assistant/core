@@ -155,7 +155,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.5
+pydantic==2.11.7
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -176,12 +176,8 @@ protobuf==6.31.1
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 13.1 is the first version to fully support the new
-# asyncio implementation. The legacy implementation is now
-# deprecated as of websockets 14.0.
-# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
-# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
-websockets>=13.1
+# Prevent accidental fallbacks
+websockets>=15.0.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
