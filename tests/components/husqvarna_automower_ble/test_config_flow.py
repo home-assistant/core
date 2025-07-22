@@ -49,7 +49,7 @@ async def test_user_selection(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -59,7 +59,7 @@ async def test_user_selection(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
+        CONF_PIN: 1234,
     }
 
 
@@ -86,7 +86,7 @@ async def test_user_selection_incorrect_pin(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
 
@@ -104,7 +104,7 @@ async def test_user_selection_incorrect_pin(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
 
@@ -123,7 +123,7 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "1234"},
+        user_input={CONF_PIN: 1234},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -133,7 +133,7 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
+        CONF_PIN: 1234,
     }
 
 
@@ -157,7 +157,7 @@ async def test_bluetooth_incorrect_pin(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "5678"},
+        user_input={CONF_PIN: 5678},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -167,7 +167,7 @@ async def test_bluetooth_incorrect_pin(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "1234"},
+        user_input={CONF_PIN: 1234},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -177,7 +177,7 @@ async def test_bluetooth_incorrect_pin(
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
+        CONF_PIN: 1234,
     }
 
 
@@ -201,7 +201,7 @@ async def test_bluetooth_unknown_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "5678"},
+        user_input={CONF_PIN: 5678},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -228,7 +228,7 @@ async def test_bluetooth_not_paired(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "5678"},
+        user_input={CONF_PIN: 5678},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -238,7 +238,7 @@ async def test_bluetooth_not_paired(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "1234"},
+        user_input={CONF_PIN: 1234},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -248,7 +248,7 @@ async def test_bluetooth_not_paired(
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
+        CONF_PIN: 1234,
     }
 
 
@@ -292,7 +292,7 @@ async def test_successful_reauth(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: "5678",
+            CONF_PIN: 5678,
         },
     )
 
@@ -307,7 +307,7 @@ async def test_successful_reauth(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
 
@@ -342,7 +342,7 @@ async def test_unable_to_connect(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: "5678",
+            CONF_PIN: 5678,
         },
     )
 
@@ -379,7 +379,7 @@ async def test_failed_reauth(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: "5678",
+            CONF_PIN: 5678,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -409,7 +409,7 @@ async def test_duplicate_entry(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -432,7 +432,7 @@ async def test_exception_probe(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: "1234"},
+        user_input={CONF_PIN: 1234},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -462,7 +462,7 @@ async def test_exception_connect(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: "1234",
+            CONF_PIN: 1234,
         },
     )
 
