@@ -87,6 +87,8 @@ class LuciDeviceScanner(DeviceScanner):
         device = next(
             (result for result in self.last_results if result.mac == device), None
         )
+        if device is None:
+            return {}
         return device._asdict()
 
     def _update_info(self):
