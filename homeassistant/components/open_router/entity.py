@@ -136,9 +136,7 @@ class OpenRouterEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
-        self, user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
-    ) -> None:
+    async def _async_handle_chat_log(self, chat_log: conversation.ChatLog) -> None:
         """Generate an answer for the chat log."""
 
         tools: list[ChatCompletionToolParam] | None = None

@@ -62,6 +62,6 @@ class OpenRouterConversationEntity(OpenRouterEntity, conversation.ConversationEn
         except conversation.ConverseError as err:
             return err.as_conversation_result()
 
-        await self._async_handle_chat_log(user_input, chat_log)
+        await self._async_handle_chat_log(chat_log)
 
         return conversation.async_get_result_from_chat_log(user_input, chat_log)
