@@ -80,6 +80,14 @@ async def target_lights(hass: HomeAssistant) -> None:
     )
     entity_reg.async_update_entity(light_label.entity_id, labels={label.label_id})
 
+    # Return all available light entities
+    return [
+        "light.standalone_light",
+        "light.label_light",
+        "light.area_light",
+        "light.device_light",
+    ]
+
 
 @pytest.mark.usefixtures("target_lights")
 @pytest.mark.parametrize(
@@ -103,7 +111,7 @@ async def test_light_state_trigger_behavior_any(
     entity_id: str,
     state: str,
 ) -> None:
-    """Test that the light state trigger fires when light state changes to a specific state."""
+    """Test that the light state trigger fires when any light state changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
     reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
@@ -113,42 +121,155 @@ async def test_light_state_trigger_behavior_any(
         hass,
         automation.DOMAIN,
         {
-            automation.DOMAIN: [
-                {
-                    "alias": "Trigger when state changes to specific state",
-                    "trigger": {
-                        CONF_PLATFORM: "light.state",
-                        CONF_STATE: state,
-                        **trigger_target_config,
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
-                    },
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "light.state",
+                    CONF_STATE: state,
+                    **trigger_target_config,
                 },
-                {
-                    "alias": "Trigger when state changes to any state",
-                    "trigger": {
-                        CONF_PLATFORM: "light.state",
-                        **trigger_target_config,
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
-                    },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
                 },
-            ]
+            }
         },
     )
 
     hass.states.async_set(entity_id, state)
     await hass.async_block_till_done()
-    assert len(service_calls) == 2
+    assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
-    assert service_calls[1].data[CONF_ENTITY_ID] == entity_id
     service_calls.clear()
 
     hass.states.async_set(entity_id, reverse_state)
     await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id"),
+    [
+        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.label_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.area_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.device_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.device_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light"),
+        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
+    ],
+)
+@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+async def test_light_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_lights: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    state: str,
+) -> None:
+    """Test that the light state trigger fires when the first light changes to a specific state."""
+    await async_setup_component(hass, "light", {})
+
+    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
+    for other_entity_id in target_lights:
+        hass.states.async_set(other_entity_id, reverse_state)
+        await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "light.state",
+                    CONF_STATE: state,
+                    "behavior": "first",
+                    **trigger_target_config,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                },
+            }
+        },
+    )
+    hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    service_calls.clear()
+
+    # Triggering other lights should not cause any service calls after the first one
+    for other_entity_id in target_lights:
+        hass.states.async_set(other_entity_id, state)
+        await hass.async_block_till_done()
+    for other_entity_id in target_lights:
+        hass.states.async_set(other_entity_id, reverse_state)
+        await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id"),
+    [
+        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.label_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.area_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light"),
+        ({ATTR_LABEL_ID: "test_label"}, "light.device_light"),
+        ({ATTR_AREA_ID: "test_area"}, "light.device_light"),
+        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light"),
+        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
+    ],
+)
+@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+async def test_light_state_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_lights: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    state: str,
+) -> None:
+    """Test that the light state trigger fires when the last light changes to a specific state."""
+    await async_setup_component(hass, "light", {})
+
+    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
+    for other_entity_id in target_lights:
+        hass.states.async_set(other_entity_id, reverse_state)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "light.state",
+                    CONF_STATE: state,
+                    "behavior": "last",
+                    **trigger_target_config,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                },
+            }
+        },
+    )
+
+    target_lights.remove(entity_id)
+    for other_entity_id in target_lights:
+        hass.states.async_set(other_entity_id, state)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1

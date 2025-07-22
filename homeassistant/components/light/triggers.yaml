@@ -7,3 +7,12 @@ state:
       required: true
       selector:
         state:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
