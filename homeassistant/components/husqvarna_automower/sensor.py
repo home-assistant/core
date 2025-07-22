@@ -441,6 +441,7 @@ MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageSensorEntityDescription, ...] = (
         key="last_error",
         translation_key="last_error",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         option_fn=lambda data: ERROR_KEY_LIST,
         exists_fn=lambda data: bool(data.attributes.messages),
         value_fn=lambda data: (
@@ -451,6 +452,7 @@ MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageSensorEntityDescription, ...] = (
         key="last_error_time",
         translation_key="last_error_time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         exists_fn=lambda data: bool(data.attributes.messages),
         value_fn=lambda data: (
             data.attributes.messages[0].time if data.attributes.messages else None
