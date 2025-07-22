@@ -131,11 +131,8 @@
       "light": {
         "name": "[%key:component::light::title%]"
       },
-      "light_2": {
-        "name": "Light 2"
-      },
-      "light_3": {
-        "name": "Light 3"
+      "indexed_light": {
+        "name": "Light {index}"
       },
       "night_light": {
         "name": "Night light"
@@ -199,17 +196,11 @@
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
-      "minimum_brightness_2": {
-        "name": "Minimum brightness 2"
+      "indexed_minimum_brightness": {
+        "name": "Minimum brightness {index}"
       },
-      "maximum_brightness_2": {
-        "name": "Maximum brightness 2"
-      },
-      "minimum_brightness_3": {
-        "name": "Minimum brightness 3"
-      },
-      "maximum_brightness_3": {
-        "name": "Maximum brightness 3"
+      "indexed_maximum_brightness": {
+        "name": "Maximum brightness {index}"
       },
       "move_down": {
         "name": "Move down"
@@ -296,16 +287,8 @@
           "led": "LED"
         }
       },
-      "led_type_2": {
-        "name": "Light 2 source type",
-        "state": {
-          "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
-          "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
-          "led": "[%key:component::tuya::entity::select::led_type::state::led%]"
-        }
-      },
-      "led_type_3": {
-        "name": "Light 3 source type",
+      "indexed_led_type": {
+        "name": "Light {index} source type",
         "state": {
           "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
           "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",

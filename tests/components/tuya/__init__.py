@@ -15,8 +15,8 @@ from tests.common import MockConfigEntry
 DEVICE_MOCKS = {
     "cl_am43_corded_motor_zigbee_cover": [
         # https://github.com/home-assistant/core/issues/71242
-        Platform.SELECT,
         Platform.COVER,
+        Platform.SELECT,
     ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055

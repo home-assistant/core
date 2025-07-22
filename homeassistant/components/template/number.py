@@ -18,14 +18,13 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -34,8 +33,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
-from .helpers import async_setup_template_platform
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,28 +52,29 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_SCHEMA = vol.Schema(
+NUMBER_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STATE): cv.template,
-        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_STEP): cv.template,
-        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    }
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-NUMBER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_STEP): cv.template,
-        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_MIN): cv.template,
-        vol.Optional(CONF_MAX): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
+)
+
+NUMBER_YAML_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        }
+    )
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+    .extend(NUMBER_COMMON_SCHEMA.schema)
+)
+
+NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -94,11 +102,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = NUMBER_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateNumberEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateNumberEntity,
+        NUMBER_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -107,8 +116,9 @@ def async_create_preview_number(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateNumberEntity:
     """Create a preview number."""
-    validated_config = NUMBER_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return StateNumberEntity(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass, name, config, StateNumberEntity, NUMBER_CONFIG_ENTRY_SCHEMA
+    )
 
 
 class StateNumberEntity(TemplateEntity, NumberEntity):
