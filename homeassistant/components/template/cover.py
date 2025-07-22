@@ -107,7 +107,7 @@ COVER_YAML_SCHEMA = vol.All(
         }
     )
     .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA.schema),
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -131,7 +131,7 @@ COVER_LEGACY_YAML_SCHEMA = vol.All(
         }
     )
     .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA.schema),
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
