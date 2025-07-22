@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import zoneinfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,7 +52,9 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            timestamp: datetime = await get_cert_expiry_timestamp(
+                self.hass, self.host, self.port
+            )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
@@ -60,6 +63,10 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
             return None
 
-        self.cert_error = None
-        self.is_cert_valid = True
+        if timestamp < datetime.now(tz=zoneinfo.ZoneInfo("UTC")):
+            self.cert_error = ValidationFailure(f"Certificate expired at: {timestamp}")
+            self.is_cert_valid = False
+        else:
+            self.cert_error = None
+            self.is_cert_valid = True
         return timestamp
