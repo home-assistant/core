@@ -8042,9 +8042,8 @@ async def test_subentry_get_entry(
 
             async def _async_step_confirm(self):
                 """Confirm input."""
-                reason = f"Found entry {self._get_entry().title}"
-                reason = f"{reason},subentry_type={self._subentry_type}"
-                reason = f"{reason}: {self._entry_id}"
+                reason = f"Found entry {self._get_entry().title},{self._entry_id}: "
+                reason = f"{reason}subentry_type={self._subentry_type}"
 
                 try:
                     subentry = self._get_reconfigure_subentry()
@@ -8073,7 +8072,7 @@ async def test_subentry_get_entry(
     with mock_config_flow("test", TestFlow):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["reason"] == (
-            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
             "Found subentry Test: mock_subentry_id"
         )
 
@@ -8087,7 +8086,7 @@ async def test_subentry_get_entry(
             },
         )
         assert result["reason"] == (
-            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
             "Subentry not found: 01JRemoved"
         )
 
@@ -8097,7 +8096,7 @@ async def test_subentry_get_entry(
             (entry.entry_id, "test"), context={"source": config_entries.SOURCE_USER}
         )
         assert result["reason"] == (
-            "Found entry entry_title,subentry_type=test: mock_entry_id/"
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
             "Source is user, expected reconfigure: -"
         )
 
