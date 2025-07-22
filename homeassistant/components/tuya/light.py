@@ -529,10 +529,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
         # If entity does not have color_temp, check if it has work_mode "white"
-        elif workmode_type := self.find_dpcode(
+        elif color_mode_enum := self.find_dpcode(
             description.color_mode, dptype=DPType.ENUM, prefer_function=True
         ):
-            if WorkMode.WHITE.value in workmode_type.range:
+            if WorkMode.WHITE.value in color_mode_enum.range:
                 color_modes.add(ColorMode.WHITE)
                 self._white_color_mode = ColorMode.WHITE
 
