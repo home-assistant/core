@@ -219,8 +219,6 @@ class EntityPlatform:
         """Initialize the entity platform."""
         self.hass = hass
         self.logger = logger
-        self.domain = domain
-        self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
         self.scan_interval_seconds = scan_interval.total_seconds()
@@ -1140,6 +1138,16 @@ class EntityPlatform:
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
+
+    @property
+    def domain(self) -> str:
+        """Return the domain (e.g. light)."""
+        return self.platform_data.domain
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name (e.g hue)."""
+        return self.platform_data.platform_name
 
     @property
     @deprecated_function(
