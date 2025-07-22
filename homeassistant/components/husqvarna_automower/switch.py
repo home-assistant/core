@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
-    AutomowerControlEntity,
+    AutomowerConnectedEntity,
     WorkAreaControlEntity,
     _work_area_translation_key,
     handle_sending_exception,
@@ -89,7 +89,7 @@ async def async_setup_entry(
     coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
 
 
-class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
+class AutomowerScheduleSwitchEntity(AutomowerConnectedEntity, SwitchEntity):
     """Defining the Automower schedule switch."""
 
     _attr_translation_key = "enable_schedule"
@@ -119,7 +119,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
 
-class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
+class StayOutZoneSwitchEntity(AutomowerConnectedEntity, SwitchEntity):
     """Defining the Automower stay out zone switch."""
 
     _attr_translation_key = "stay_out_zones"
