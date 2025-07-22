@@ -16,11 +16,6 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 
 from .const import DOMAIN, LOGGER
 
@@ -55,7 +50,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.address: str
-        self.pin: str
+        self.pin: int | None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -84,11 +79,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
         )
@@ -110,11 +101,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
         )
@@ -142,10 +129,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def connect_mower(self, device) -> tuple[int, Mower]:
         """Connect to the Mower."""
         assert self.address
-        assert self.pin
+        assert self.pin is not None
 
         channel_id = random.randint(1, 0xFFFFFFFF)
-        mower = Mower(channel_id, self.address, int(self.pin))
+        mower = Mower(channel_id, self.address, self.pin)
 
         return (channel_id, mower)
 
@@ -184,11 +171,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         step_id="bluetooth_confirm",
                         data_schema=vol.Schema(
                             {
-                                vol.Required(CONF_PIN): TextSelector(
-                                    TextSelectorConfig(
-                                        type=TextSelectorType.NUMBER,
-                                    ),
-                                ),
+                                vol.Required(CONF_PIN): int,
                             },
                         ),
                         errors=errors,
@@ -198,11 +181,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): str,
-                            vol.Required(CONF_PIN): TextSelector(
-                                TextSelectorConfig(
-                                    type=TextSelectorType.NUMBER,
-                                ),
-                            ),
+                            vol.Required(CONF_PIN): int,
                         },
                     ),
                     errors=errors,
@@ -282,11 +261,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.NUMBER,
-                        ),
-                    ),
+                    vol.Required(CONF_PIN): int,
                 },
             ),
             errors=errors,
