@@ -172,7 +172,7 @@ class AITaskDataFlowHandler(ConfigSubentryFlow):
         options = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in models
-            if SupportedParameter.RESPONSE_FORMAT in model.supported_parameters
+            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
         ]
         return self.async_show_form(
             step_id="user",
