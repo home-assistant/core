@@ -766,9 +766,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             # The light supports only a single color mode, return it
             return self._fixed_color_mode
 
-        # The light supports both color temperature and HS, determine which mode the
-        # light is in. We consider it to be in HS color mode, when work mode is anything
-        # else than "white".
+        # The light supports both white (with or without adjustable color temperature)
+        # and HS, determine which mode the light is in. We consider it to be in HS color
+        # mode, when work mode is anything else than "white".
         if (
             self._color_mode_dpcode
             and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
