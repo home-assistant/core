@@ -12,6 +12,12 @@ from freezegun.api import FrozenDateTimeFactory
 from hdate.translator import set_language
 import pytest
 
+from homeassistant.components.calendar import (
+    DOMAIN as DOMAIN_CALENDAR,
+    EVENT_END_DATETIME,
+    EVENT_START_DATETIME,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.components.jewish_calendar.const import (
     CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
@@ -21,7 +27,7 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
+from homeassistant.const import ATTR_ENTITY_ID, CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -178,6 +184,44 @@ async def setup_at_time(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the jewish_calendar integration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def get_calendar_events():
+    """Fixture that returns a function to get calendar events for a date range."""
+
+    async def _get_events(
+        hass: HomeAssistant,
+        start_date: dt.datetime,
+        end_date: dt.datetime | None = None,
+    ) -> list[dict[str, str]]:
+        """Get calendar events for a date range."""
+        if end_date is None:
+            end_date = start_date.replace(hour=23, minute=59, second=59)
+
+        response = await hass.services.async_call(
+            DOMAIN_CALENDAR,
+            SERVICE_GET_EVENTS,
+            {
+                ATTR_ENTITY_ID: "calendar.jewish_calendar_events",
+                EVENT_START_DATETIME: start_date.isoformat(),
+                EVENT_END_DATETIME: end_date.isoformat(),
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+        return response["calendar.jewish_calendar_events"]["events"]
+
+    return _get_events
 
 
 @pytest.fixture
