@@ -328,8 +328,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
     "xnyjcn": (
         NumberEntityDescription(
             key=DPCode.BACKUP_RESERVE,
@@ -345,6 +345,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,

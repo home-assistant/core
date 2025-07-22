@@ -347,6 +347,8 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="led_type_2",
         ),
     ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
     "xnyjcn": (
         SelectEntityDescription(
             key=DPCode.WORK_MODE,
