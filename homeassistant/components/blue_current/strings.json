@@ -150,7 +150,7 @@
       "fields": {
         "charging_card_id": {
           "name": "Charging card ID",
-          "description": "Optional charging card ID that will be used to start a charge session. When not provided, the default charging card from the integration settings will be used."
+          "description": "Optional charging card ID that will be used to start a charge session. When not provided, no charging card will be used."
         },
         "device_id": {
           "name": "Device ID",
