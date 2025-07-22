@@ -176,7 +176,7 @@ async def async_setup_entry(
 
 class MiroboVacuum(
     XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[VacuumCoordinatorData]],
-    StateVacuumEntity,
+    StateVacuumEntity[int],
 ):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
@@ -192,6 +192,7 @@ class MiroboVacuum(
         | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
 
     async def async_added_to_hass(self) -> None:
@@ -256,6 +257,11 @@ class MiroboVacuum(
         if self.timers:
             attrs[ATTR_TIMERS] = self.timers
         return attrs
+
+    @property
+    def segment_id_schema(self) -> vol.Schema:
+        """Return a schema for choosing corresponding segment IDs for an area."""
+        return vol.Schema(int)
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
@@ -399,6 +405,14 @@ class MiroboVacuum(
             "Unable to start cleaning of the specified segments: %s",
             self._device.segment_clean,  # type: ignore[attr-defined]
             segments=segments,
+        )
+
+    async def async_clean_area(self, segment_ids: list[int], **kwargs: Any):
+        """Perform an area clean."""
+        await self._try_command(
+            "Unable to start cleaning of the specified segments: %s",
+            self._device.segment_clean,  # type: ignore[attr-defined]
+            segments=segment_ids,
         )
 
     async def async_clean_zone(self, zone: list[Any], repeats: int = 1) -> None:
