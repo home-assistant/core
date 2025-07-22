@@ -13,9 +13,11 @@ from hdate.translator import set_language
 import pytest
 
 from homeassistant.components.jewish_calendar.const import (
+    CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CALENDAR_EVENTS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -118,6 +120,12 @@ def language() -> str:
     return "en"
 
 
+@pytest.fixture
+def calendar_events() -> list[str] | None:
+    """Return default calendar events, unless calendar events are parametrized."""
+    return DEFAULT_CALENDAR_EVENTS
+
+
 @pytest.fixture(autouse=True)
 async def setup_hass(hass: HomeAssistant, location_data: _LocationData | None) -> None:
     """Set up Home Assistant for testing the jewish_calendar integration."""
@@ -133,6 +141,7 @@ def config_entry(
     location_data: _LocationData | None,
     language: str,
     havdalah_offset: int | None,
+    calendar_events: list[str] | None,
 ) -> MockConfigEntry:
     """Set up the jewish_calendar integration for testing."""
     param_data = {}
@@ -147,6 +156,9 @@ def config_entry(
 
     if havdalah_offset:
         param_options[CONF_HAVDALAH_OFFSET_MINUTES] = havdalah_offset
+
+    if calendar_events is not None:
+        param_options[CONF_CALENDAR_EVENTS] = calendar_events
 
     return MockConfigEntry(
         title=DEFAULT_NAME,
