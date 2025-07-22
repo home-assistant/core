@@ -110,7 +110,7 @@
       },
       "confirm_usb_migration": {
         "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {usb_title}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
-        "title": "Migrate no a new adapter"
+        "title": "Migrate to a new adapter"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
