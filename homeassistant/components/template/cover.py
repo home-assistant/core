@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_NAME,
-    CONF_OPTIMISTIC,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -41,6 +40,7 @@ from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -97,7 +97,6 @@ COVER_YAML_SCHEMA = vol.All(
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_POSITION): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
@@ -106,7 +105,9 @@ COVER_YAML_SCHEMA = vol.All(
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
         }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema),
+    )
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA.schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -121,7 +122,6 @@ COVER_LEGACY_YAML_SCHEMA = vol.All(
             vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_TEMPLATE): cv.template,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
             vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
@@ -129,7 +129,9 @@ COVER_LEGACY_YAML_SCHEMA = vol.All(
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA.schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 

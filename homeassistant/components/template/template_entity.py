@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_OPTIMISTIC,
     CONF_PATH,
     CONF_VARIABLES,
     STATE_UNKNOWN,
@@ -98,6 +99,13 @@ TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+
+
+TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+    }
+)
 
 
 def make_template_entity_common_modern_schema(

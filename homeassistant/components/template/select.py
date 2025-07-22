@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -34,6 +34,7 @@ from .helpers import (
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -45,7 +46,6 @@ CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
-DEFAULT_OPTIMISTIC = False
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
@@ -55,15 +55,9 @@ SELECT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-SELECT_YAML_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        }
-    )
-    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(SELECT_COMMON_SCHEMA.schema)
-)
+SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA.schema
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
