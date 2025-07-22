@@ -121,6 +121,19 @@
       },
       "meter_valve_2_state": {
         "name": "Valve 2"
+      },
+      "valve": {
+        "name": "Valve"
+      }
+    },
+    "select": {
+      "sprinkler_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "off": "Off"
+        }
       }
     }
   },

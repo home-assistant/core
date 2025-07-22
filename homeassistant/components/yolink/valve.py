@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from yolink.client_request import ClientRequest
 from yolink.const import (
     ATTR_DEVICE_MODEL_A,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SPRINKLER,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
@@ -36,6 +38,16 @@ class YoLinkValveEntityDescription(ValveEntityDescription):
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     value: Callable = lambda state: state
     channel_index: int | None = None
+    should_update_entity: Callable = lambda state: True
+    is_available: Callable = lambda state: True
+
+
+def sprinkler_valve_available(data: dict[str, Any]) -> bool:
+    """Check if sprinkler valve is available."""
+    if (state := data.get("state")) is not None:
+        if (mode := state.get("mode")) is not None:
+            return mode == "manual"
+    return False
 
 
 DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
@@ -68,11 +80,22 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         ),
         channel_index=1,
     ),
+    YoLinkValveEntityDescription(
+        key="watering",
+        translation_key="valve",
+        icon="mdi:sprinkler-variant",
+        device_class=ValveDeviceClass.WATER,
+        value=lambda value: value is False if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
+        should_update_entity=lambda value: value is not None,
+        is_available=sprinkler_valve_available,
+    ),
 )
 
 DEVICE_TYPE = [
     ATTR_DEVICE_WATER_METER_CONTROLLER,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SPRINKLER,
 ]
 
 
@@ -124,9 +147,13 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
             )
-        ) is None:
+        ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
-        self._attr_is_closed = attr_val
+        if self.entity_description.is_available(state) is True:
+            self._attr_is_closed = attr_val
+            self._attr_available = True
+        else:
+            self._attr_available = False
         self.async_write_ha_state()
 
     async def _async_invoke_device(self, state: str) -> None:
@@ -147,6 +174,12 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
                 await self.call_device(
                     ClientRequest("setState", {"valves": {str(channel_index): state}})
                 )
+        if self.coordinator.device.device_type == ATTR_DEVICE_SPRINKLER:
+            await self.call_device(
+                ClientRequest(
+                    "setManualWater", {"state": "start" if state == "open" else "stop"}
+                )
+            )
         else:
             await self.call_device(ClientRequest("setState", {"valve": state}))
         self._attr_is_closed = state == "close"
@@ -163,4 +196,4 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @property
     def available(self) -> bool:
         """Return true is device is available."""
-        return super().available
+        return self._attr_available and super().available
