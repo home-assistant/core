@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -341,6 +341,21 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "xnyjcn": (
+        NumberEntityDescription(
+            key=DPCode.BACKUP_RESERVE,
+            translation_key="backup_reserve",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.OUTPUT_POWER_LIMIT,
+            translation_key="output_power_limit",
+            device_class=NumberDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     "zd": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
