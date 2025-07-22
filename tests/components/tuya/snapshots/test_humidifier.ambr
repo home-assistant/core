@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqswitch',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_idswitch',
+    'unique_id': 'tuya.mock_device_id_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -145,7 +145,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_idswitch',
+    'unique_id': 'tuya.mock_device_id_switch',
     'unit_of_measurement': None,
   })
 # ---

@@ -450,7 +450,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = f"{super().unique_id}_{description.key}"
         self._bit_mask = bit_mask
 
     @property

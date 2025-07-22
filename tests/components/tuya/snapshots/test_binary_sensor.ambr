@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinco2_state',
+    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpin_co2_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq_defrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqtankfull',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq_tankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -177,7 +177,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqwet',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgq_wet',
     'unit_of_measurement': None,
   })
 # ---
@@ -226,7 +226,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.mock_device_iddefrost',
+    'unique_id': 'tuya.mock_device_id_defrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -275,7 +275,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.mock_device_idtankfull',
+    'unique_id': 'tuya.mock_device_id_tankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -324,7 +324,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3switch',
+    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -373,7 +373,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_status',
+    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbz_gas_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
