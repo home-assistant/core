@@ -117,18 +117,14 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._template = config.get(CONF_STATE)
-
         self._options_template = config[ATTR_OPTIONS]
 
-        self._attr_assumed_state = self._optimistic = (
-            self._template is None or config.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC)
-        )
         self._attr_options = []
         self._attr_current_option = None
 

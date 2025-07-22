@@ -95,6 +95,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
     _attr_should_poll = False
     _attr_image_url: str | None = None
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = False
 
     def __init__(
         self,
