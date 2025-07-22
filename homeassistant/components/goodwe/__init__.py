@@ -18,10 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     host = entry.data[CONF_HOST]
     protocol = entry.data[CONF_PROTOCOL]
     model_family = entry.data[CONF_MODEL_FAMILY]
-    if protocol == PROTOCOL_UDP:
-        port = GOODWE_UDP_PORT
-    elif protocol == PROTOCOL_TCP:
-        port = GOODWE_TCP_PORT
+    port = _get_port(protocol)
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
@@ -31,7 +28,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
             retries=10,
         )
     except InverterError as err:
-        raise ConfigEntryNotReady from err
+        # Try to reconfigure the Inverter
+        reconfigured, port, family = await async_reconfigure_entry(hass, entry, host)
+        if reconfigured:
+            try:
+                inverter = await connect(
+                    host=host,
+                    port=port,
+                    family=family,
+                    retries=10,
+                )
+            except InverterError as InverterErr:
+                raise InverterError from InverterErr
+        else:
+            raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
         configuration_url="https://www.semsportal.com",
@@ -61,6 +71,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
+def _get_port(protocol):
+    if protocol == PROTOCOL_UDP:
+        port = GOODWE_UDP_PORT
+    elif protocol == PROTOCOL_TCP:
+        port = GOODWE_TCP_PORT
+    return port
+
+
+async def async_reconfigure_entry(
+    hass: HomeAssistant, entry: GoodweConfigEntry, host: str
+) -> tuple[bool, int, tuple[str]]:
+    """Try to reconfigure an Inverter that is not able to be connected with actual config. Actual host could be reused by a new Inverter with a different protocol."""
+    try:
+        inverter, protocol = await GoodweFlowHandler.async_detect_inverter_port(
+            host=host
+        )
+    except InverterError:
+        return False, 0, ("",)
+    else:
+        family = (type(inverter).__name__,)
+        update_entry: bool = hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_HOST: host,
+                CONF_PROTOCOL: protocol,
+                CONF_MODEL_FAMILY: family,
+            },
+        )
+        if not update_entry:
+            return False, 0, ("",)
+    port = _get_port(protocol)
+    return True, port, family
+
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> bool:
@@ -73,13 +117,12 @@ async def update_listener(hass: HomeAssistant, config_entry: GoodweConfigEntry) 
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-# Example migration function
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> bool:
     """Migrate old config entries."""
 
-    if config_entry.version > 1:
+    if config_entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
