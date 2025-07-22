@@ -61,6 +61,20 @@
       "description": "Tells the vacuum cleaner to return to its dock.",
       "name": "Return to dock"
     },
+    "clean_area": {
+      "name": "Clean area",
+      "description": "Tells the vacuum cleaner to clean an area.",
+      "fields": {
+        "area_ids": {
+          "name": "Areas",
+          "description": "Areas to clean."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "Number of times to repeat cleaning the specified areas."
+        }
+      }
+    },
     "send_command": {
       "description": "Sends a command to the vacuum cleaner.",
       "fields": {

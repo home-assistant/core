@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, final
@@ -36,20 +36,21 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLEANING,
     _DEPRECATED_STATE_DOCKED,
     _DEPRECATED_STATE_ERROR,
     _DEPRECATED_STATE_RETURNING,
+    DATA_COMPONENT,
     DOMAIN,
     VacuumActivity,
+    VacuumEntityFeature,
 )
+from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -63,6 +64,7 @@ ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
+SERVICE_CLEAN_AREA = "clean_area"
 SERVICE_LOCATE = "locate"
 SERVICE_RETURN_TO_BASE = "return_to_base"
 SERVICE_SEND_COMMAND = "send_command"
@@ -85,25 +87,6 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
 )
 
 
-class VacuumEntityFeature(IntFlag):
-    """Supported features of the vacuum entity."""
-
-    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
-    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
-    PAUSE = 4
-    STOP = 8
-    RETURN_HOME = 16
-    FAN_SPEED = 32
-    BATTERY = 64
-    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
-    SEND_COMMAND = 256
-    LOCATE = 512
-    CLEAN_SPOT = 1024
-    MAP = 2048
-    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
-    START = 8192
-
-
 # mypy: disallow-any-generics
 
 
@@ -120,6 +103,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await component.async_setup(config)
+
+    async_register_websocket_handlers(hass)
 
     component.async_register_entity_service(
         SERVICE_START,
@@ -144,6 +129,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_AREA,
+        {
+            vol.Required("area_ids"): [str],
+            vol.Optional("repeat", default=1): cv.positive_int,
+        },
+        "async_internal_clean_area",
+        [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
@@ -200,7 +194,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
 }
 
 
-class StateVacuumEntity(
+class StateVacuumEntity[SegmentIdType = Any](
     Entity, cached_properties=STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_
 ):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -410,6 +404,11 @@ class StateVacuumEntity(
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
+    @property
+    def segment_id_schema(self) -> vol.Schema:
+        """Return a schema for choosing corresponding segment IDs for an area."""
+        raise NotImplementedError
+
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         raise NotImplementedError
@@ -442,6 +441,45 @@ class StateVacuumEntity(
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
+
+    @final
+    async def async_internal_clean_area(
+        self, area_ids: list[str], **kwargs: Any
+    ) -> None:
+        """Perform an area clean.
+
+        Calls async_clean_area.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot perform area clean, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        area_mapping: dict[str, list[SegmentIdType]] = options.get("area_mapping", {})
+
+        # We use a dict to preserve the order of segments.
+        segment_ids: dict[SegmentIdType, None] = {}
+        for area_id in area_ids:
+            for segment_id in area_mapping.get(area_id, []):
+                segment_ids[segment_id] = None
+
+        if not segment_ids:
+            return
+
+        await self.async_clean_area(list(segment_ids), **kwargs)
+
+    def clean_area(self, segment_ids: list[SegmentIdType], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        raise NotImplementedError
+
+    async def async_clean_area(
+        self, segment_ids: list[SegmentIdType], **kwargs: Any
+    ) -> None:
+        """Perform an area clean."""
+        await self.hass.async_add_executor_job(partial(self.clean_area, **kwargs))
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""

@@ -8,6 +8,9 @@
     "clean_spot": {
       "service": "mdi:target-variant"
     },
+    "clean_area": {
+      "service": "mdi:target-variant"
+    },
     "locate": {
       "service": "mdi:map-marker"
     },
