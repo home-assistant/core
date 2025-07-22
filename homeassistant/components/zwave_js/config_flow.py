@@ -494,7 +494,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._usb_discovery = True
         if current_config_entries:
-            return await self.async_step_intent_migrate()
+            return await self.async_step_confirm_usb_migration()
 
         return await self.async_step_installation_type()
 
