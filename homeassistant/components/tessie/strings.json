@@ -336,7 +336,7 @@
         "state": {
           "autonomous": "Autonomous",
           "backup": "Backup",
-          "self_consumption": "Self consumption"
+          "self_consumption": "Self-consumption"
         }
       }
     },
@@ -495,7 +495,7 @@
         "name": "Speed limit"
       },
       "off_grid_vehicle_charging_reserve_percent": {
-        "name": "Off grid reserve"
+        "name": "Off-grid reserve"
       }
     },
     "update": {

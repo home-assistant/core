@@ -8,7 +8,6 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.components.canary import DOMAIN
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
@@ -19,9 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
 
-from . import mock_device, mock_location, mock_mode
+from . import init_integration, mock_device, mock_location, mock_mode
 
 
 async def test_alarm_control_panel(
@@ -43,10 +41,8 @@ async def test_alarm_control_panel(
     instance = canary.return_value
     instance.get_locations.return_value = [mocked_location]
 
-    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
     with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await init_integration(hass)
 
     entity_id = "alarm_control_panel.home"
     entity_entry = entity_registry.async_get(entity_id)
@@ -124,10 +120,8 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     instance = canary.return_value
     instance.get_locations.return_value = [mocked_location]
 
-    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
     with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await init_integration(hass)
 
     entity_id = "alarm_control_panel.home"
 

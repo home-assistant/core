@@ -28,6 +28,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,7 +56,9 @@ QUERY_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.template,
         vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DB_URL): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -84,11 +87,6 @@ def remove_configured_db_url_if_not_needed(
     )
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener for options."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SQL from yaml config."""
     if (conf := config.get(DOMAIN)) is None:
@@ -111,8 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if entry.options.get(CONF_DB_URL) == get_instance(hass).db_url:
         remove_configured_db_url_if_not_needed(hass, entry)
-
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

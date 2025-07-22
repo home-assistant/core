@@ -218,7 +218,7 @@ class BaseGoogleCloudProvider:
 
         response = await self._client.synthesize_speech(
             request,
-            timeout=10,
+            timeout=30,
             retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
         )
 

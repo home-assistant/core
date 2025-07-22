@@ -1,7 +1,7 @@
 """Test RainMachine diagnostics."""
 
 from regenmaschine.errors import RainMachineError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant

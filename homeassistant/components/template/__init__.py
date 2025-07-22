@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     SERVICE_RELOAD,
 )
@@ -27,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
@@ -136,7 +137,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     coordinator_tasks: list[Coroutine[Any, Any, TriggerUpdateCoordinator]] = []
 
     for conf_section in hass_config[DOMAIN]:
-        if CONF_TRIGGER in conf_section:
+        if CONF_TRIGGERS in conf_section:
             coordinator_tasks.append(init_coordinator(hass, conf_section))
             continue
 

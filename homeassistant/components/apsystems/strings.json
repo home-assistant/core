@@ -21,7 +21,7 @@
   "entity": {
     "binary_sensor": {
       "off_grid_status": {
-        "name": "Off grid status"
+        "name": "Off-grid status"
       },
       "dc_1_short_circuit_error_status": {
         "name": "DC 1 short circuit error status"

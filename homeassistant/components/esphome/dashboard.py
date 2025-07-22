@@ -9,7 +9,6 @@ from typing import Any
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
@@ -64,9 +63,7 @@ class ESPHomeDashboardManager:
         if not (data := self._data) or not (info := data.get("info")):
             return
         if is_hassio(self._hass):
-            from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
-                get_addons_info,
-            )
+            from homeassistant.components.hassio import get_addons_info  # noqa: PLC0415
 
             if (addons := get_addons_info(self._hass)) is not None and info[
                 "addon_slug"
@@ -104,9 +101,7 @@ class ESPHomeDashboardManager:
                 self._cancel_shutdown = None
             self._current_dashboard = None
 
-        dashboard = ESPHomeDashboardCoordinator(
-            hass, addon_slug, url, async_get_clientsession(hass)
-        )
+        dashboard = ESPHomeDashboardCoordinator(hass, addon_slug, url)
         await dashboard.async_request_refresh()
 
         self._current_dashboard = dashboard

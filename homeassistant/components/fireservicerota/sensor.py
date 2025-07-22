@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN
 from .coordinator import FireServiceConfigEntry, FireServiceRotaClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.client_update,
             )
         )

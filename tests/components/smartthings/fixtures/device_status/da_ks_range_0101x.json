@@ -669,11 +669,11 @@
       },
       "samsungce.lamp": {
         "brightnessLevel": {
-          "value": "off",
+          "value": "extraHigh",
           "timestamp": "2025-03-13T21:23:27.659Z"
         },
         "supportedBrightnessLevel": {
-          "value": ["off", "high"],
+          "value": ["off", "extraHigh"],
           "timestamp": "2025-03-13T21:23:27.659Z"
         }
       },

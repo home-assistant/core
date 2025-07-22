@@ -71,8 +71,8 @@
             "state": {
               "auto": "[%key:common::state::auto%]",
               "manual": "[%key:common::state::manual%]",
-              "comfort-1": "Comfort 1",
-              "comfort-2": "Comfort 2",
+              "comfort-1": "Comfort -1°C",
+              "comfort-2": "Comfort -2°C",
               "drying": "Drying",
               "external": "External",
               "freeze": "Freeze",
@@ -112,12 +112,18 @@
           "highest": "Highest",
           "standard": "Standard"
         }
+      },
+      "operating_mode": {
+        "state": {
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
+        }
       }
     },
     "sensor": {
       "battery": {
         "state": {
-          "full": "Full",
+          "full": "[%key:common::state::full%]",
           "low": "[%key:common::state::low%]",
           "normal": "[%key:common::state::normal%]",
           "medium": "[%key:common::state::medium%]",

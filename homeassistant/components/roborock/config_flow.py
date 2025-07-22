@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
@@ -124,14 +124,9 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch(reason="wrong_account")
                     reauth_entry = self._get_reauth_entry()
-                    self.hass.config_entries.async_update_entry(
-                        reauth_entry,
-                        data={
-                            **reauth_entry.data,
-                            CONF_USER_DATA: user_data.as_dict(),
-                        },
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
                     )
-                    return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured(error="already_configured_account")
                 return self._create_entry(self._client, self._username, user_data)
 
@@ -202,7 +197,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         return RoborockOptionsFlowHandler(config_entry)
 
 
-class RoborockOptionsFlowHandler(OptionsFlow):
+class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an option flow for Roborock."""
 
     def __init__(self, config_entry: RoborockConfigEntry) -> None:

@@ -3,16 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.const import (
-    FirmwareType,
-    UpdateCommandStatus,
-    UpdateProgressInfo,
-    UpdateStatus,
-)
+from pylamarzocco.const import FirmwareType, UpdateProgressInfo, UpdateStatus
 from pylamarzocco.exceptions import RequestNotSuccessful
 from pylamarzocco.models import UpdateDetails
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -61,7 +56,7 @@ async def test_update_process(
     mock_lamarzocco.get_firmware.side_effect = [
         UpdateDetails(
             status=UpdateStatus.TO_UPDATE,
-            command_status=UpdateCommandStatus.IN_PROGRESS,
+            command_status=UpdateStatus.IN_PROGRESS,
             progress_info=UpdateProgressInfo.STARTING_PROCESS,
             progress_percentage=0,
         ),
@@ -139,7 +134,7 @@ async def test_update_times_out(
     """Test error during update."""
     mock_lamarzocco.get_firmware.return_value = UpdateDetails(
         status=UpdateStatus.TO_UPDATE,
-        command_status=UpdateCommandStatus.IN_PROGRESS,
+        command_status=UpdateStatus.IN_PROGRESS,
         progress_info=UpdateProgressInfo.STARTING_PROCESS,
         progress_percentage=0,
     )

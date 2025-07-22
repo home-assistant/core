@@ -2,7 +2,8 @@
 
 from unittest.mock import ANY, patch
 
-from aioswitcher.api import DeviceState, SwitcherBaseResponse, ThermostatSwing
+from aioswitcher.api.messages import SwitcherBaseResponse
+from aioswitcher.device import DeviceState, ThermostatSwing
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS

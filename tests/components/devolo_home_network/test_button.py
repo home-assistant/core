@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as PLATFORM, SERVICE_PRESS
 from homeassistant.components.devolo_home_network.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -19,22 +19,27 @@ from .mock import MockDevice
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_button_setup(hass: HomeAssistant) -> None:
+async def test_button_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test default setup of the button component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert (
-        hass.states.get(f"{PLATFORM}.{device_name}_identify_device_with_a_blinking_led")
-        is not None
-    )
-    assert hass.states.get(f"{PLATFORM}.{device_name}_start_plc_pairing") is not None
-    assert hass.states.get(f"{PLATFORM}.{device_name}_restart_device") is not None
-    assert hass.states.get(f"{PLATFORM}.{device_name}_start_wps") is not None
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert not entity_registry.async_get(
+        f"{PLATFORM}.{device_name}_identify_device_with_a_blinking_led"
+    ).disabled
+    assert not entity_registry.async_get(
+        f"{PLATFORM}.{device_name}_start_plc_pairing"
+    ).disabled
+    assert not entity_registry.async_get(
+        f"{PLATFORM}.{device_name}_restart_device"
+    ).disabled
+    assert not entity_registry.async_get(f"{PLATFORM}.{device_name}_start_wps").disabled
 
 
 @pytest.mark.parametrize(
@@ -107,8 +112,6 @@ async def test_button(
             blocking=True,
         )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test setting unautherized triggers the reauth flow."""
@@ -139,5 +142,3 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     assert "context" in flow
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
-
-    await hass.config_entries.async_unload(entry.entry_id)
