@@ -236,46 +236,37 @@ class TuyaOptionsFlow(OptionsFlow):
         self._energy_devices = await self._get_energy_devices()
 
         if not self._energy_devices:
-            # No energy devices found, show a message instead of directly creating entry
-            return self.async_show_form(
-                step_id="no_energy_devices",
-                data_schema=vol.Schema({}),
-                description_placeholders={},
-            )
+            return await self.async_step_no_energy_devices()
 
         if user_input is not None:
-            # Process device-specific settings using device IDs as keys
-            device_configs = {}
+            return self._process_device_configuration(user_input)
 
-            # Convert user-friendly field keys back to device IDs
-            for field_key, value in user_input.items():
-                if field_key in self._device_field_mapping:
-                    device_id = self._device_field_mapping[field_key]
-                    device_configs[device_id] = value
+        return self._build_options_form()
 
-            return self.async_create_entry(
-                title="", data={"device_energy_modes": device_configs}
-            )
+    def _process_device_configuration(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Process device-specific settings and create config entry."""
+        device_configs = {}
 
-        # Build dynamic schema for each energy device
+        # Convert user-friendly field keys back to device IDs
+        for field_key, value in user_input.items():
+            if field_key in self._device_field_mapping:
+                device_id = self._device_field_mapping[field_key]
+                device_configs[device_id] = value
+
+        return self.async_create_entry(
+            title="", data={"device_energy_modes": device_configs}
+        )
+
+    def _build_options_form(self) -> ConfigFlowResult:
+        """Build the options form with device energy mode selectors."""
         schema_dict = {}
         current_options = self.config_entry.options.get("device_energy_modes", {})
-
-        # Create one selector per device using device_id as key
-        # We'll use a mapping to store the device display information
         device_field_mapping = {}
 
         for device_id, device_display_name in self._energy_devices:
-            # Extract clean device name for display
-            # Use the unique separator " &|& " to split device name and sensor info
-            device_name = device_display_name
-            sensor_info = ""
-            if " &|& " in device_display_name:
-                device_name = device_display_name.split(" &|& ")[0]
-                sensor_info = device_display_name.split(" &|& ")[1]
-
-            # Create field key that's user-friendly but still maps to device_id
-            field_key = f"{device_name} [{device_id}] [{sensor_info}]"
+            field_key = self._create_device_field_key(device_display_name, device_id)
             device_field_mapping[field_key] = device_id
 
             schema_dict[
@@ -305,6 +296,15 @@ class TuyaOptionsFlow(OptionsFlow):
             description_placeholders={},
         )
 
+    def _create_device_field_key(self, device_display_name: str, device_id: str) -> str:
+        """Create user-friendly field key from device display name and ID."""
+        device_name = device_display_name
+        sensor_info = ""
+        if " &|& " in device_display_name:
+            device_name, sensor_info = device_display_name.split(" &|& ", 1)
+
+        return f"{device_name} [{device_id}] [{sensor_info}]"
+
     async def async_step_no_energy_devices(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -322,14 +322,9 @@ class TuyaOptionsFlow(OptionsFlow):
     async def _get_energy_devices(self) -> list[tuple[str, str]]:
         """Get all energy devices with their IDs and names, including sensor details.
 
-        Scans all entities associated with this config entry to find energy sensors,
-        groups them by device, and returns a list of tuples containing device ID
-        and display name with sensor information.
-
         Returns:
             List of tuples: (device_id, device_display_name)
-            Example: [("bf123456", "Energy Storage (battery_level, charging_power)")]
-
+            Example: [("bf123456", "Energy Storage &|& battery_level, charging_power")]
         """
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
@@ -339,70 +334,87 @@ class TuyaOptionsFlow(OptionsFlow):
             entity_registry, self.config_entry.entry_id
         )
 
-        # Track energy devices and their associated sensors
-        # Structure: {device_id: {name: device_name, sensors: [sensor_names]}}
+        # Collect energy devices and their sensors
+        energy_devices = self._collect_energy_devices(entities, device_registry)
+
+        # Convert to display format
+        return self._format_device_list(energy_devices)
+
+    def _collect_energy_devices(
+        self, entities: list[er.RegistryEntry], device_registry: dr.DeviceRegistry
+    ) -> dict[str, dict[str, Any]]:
+        """Collect energy devices and their associated sensors."""
         energy_devices: dict[str, dict[str, Any]] = {}
 
         for entity in entities:
-            # Skip entities that don't meet energy sensor criteria
-            if (
-                entity.domain != "sensor"
-                or entity.platform != "tuya"
-                or entity.original_device_class not in ("energy", "energy_storage")
-                or not entity.device_id
-                or not entity.capabilities
-                or entity.capabilities.get("state_class", False)
-                not in ("total_increasing", "total")
-            ):
+            if not self._is_energy_sensor(entity) or entity.device_id is None:
                 continue
 
-            # Get device information from Home Assistant device registry
+            # Get device information and extract Tuya device ID
             ha_device = device_registry.async_get(entity.device_id)
-            if not ha_device or not ha_device.identifiers:
+            tuya_device_id = self._get_tuya_device_id(ha_device)
+            if not tuya_device_id or ha_device is None:
                 continue
 
-            # Extract Tuya device ID from device identifiers using modern Python
-            tuya_device_id = next(
-                (
-                    identifier
-                    for domain, identifier in ha_device.identifiers
-                    if domain == "tuya"
-                ),
-                None,
-            )
-            if not tuya_device_id:
-                continue
-
-            # Get user-friendly device name, prioritizing user-defined names
+            # Get device display name
             device_name = (
                 ha_device.name_by_user or ha_device.name or f"Device {tuya_device_id}"
             )
 
-            # Initialize device entry in tracking dictionary if not exists
+            # Initialize device entry if not exists
             if tuya_device_id not in energy_devices:
                 energy_devices[tuya_device_id] = {
                     "name": device_name,
                     "sensors": [],
                 }
+
+            # Add sensor to device
             sensor_name = entity.original_name or entity.name or "Unknown Sensor"
             energy_devices[tuya_device_id]["sensors"].append(sensor_name)
 
-        # Convert internal dictionary to expected return format
+        return energy_devices
+
+    def _is_energy_sensor(self, entity: er.RegistryEntry) -> bool:
+        """Check if an entity is a valid energy sensor."""
+        return (
+            entity.domain == "sensor"
+            and entity.platform == "tuya"
+            and entity.original_device_class in ("energy", "energy_storage")
+            and entity.device_id is not None
+            and entity.capabilities is not None
+            and entity.capabilities.get("state_class") in ("total_increasing", "total")
+        )
+
+    def _get_tuya_device_id(self, ha_device: dr.DeviceEntry | None) -> str | None:
+        """Extract Tuya device ID from Home Assistant device identifiers."""
+        if not ha_device or not ha_device.identifiers:
+            return None
+
+        return next(
+            (
+                identifier
+                for domain, identifier in ha_device.identifiers
+                if domain == "tuya"
+            ),
+            None,
+        )
+
+    def _format_device_list(
+        self, energy_devices: dict[str, dict[str, Any]]
+    ) -> list[tuple[str, str]]:
+        """Convert internal dictionary to expected return format."""
         result = []
         for device_id, device_info in energy_devices.items():
-            # Build sensor list display text, limiting to first 3 sensors
+            # Format sensor list for display
             sensors = device_info["sensors"]
-            match len(sensors):
-                case 0:
-                    sensors_text = "No sensors"
-                case n if n <= 3:
-                    sensors_text = ", ".join(sensors)
-                case n:
-                    sensors_text = f"{', '.join(sensors[:3])} (+{n - 3} more)"
+            if not sensors:
+                sensors_text = "No sensors"
+            elif len(sensors) <= 3:
+                sensors_text = ", ".join(sensors)
+            else:
+                sensors_text = f"{', '.join(sensors[:3])} (+{len(sensors) - 3} more)"
 
-            # Create comprehensive display name using a unique separator
-            # Use " &|& " as separator to avoid conflicts with device names and sensor info
-            # This ASCII character combination is extremely unlikely to appear in device names
+            # Create display name with separator
             device_display_name = f"{device_info['name']} &|& {sensors_text}"
             result.append((device_id, device_display_name))
 
