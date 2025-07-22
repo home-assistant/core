@@ -284,6 +284,7 @@ async def test_browsing_h265_encoding(
 ) -> None:
     """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
+    reolink_connect.is_nvr = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True

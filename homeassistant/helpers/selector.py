@@ -813,6 +813,7 @@ class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    reorder: bool
     filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
@@ -829,6 +830,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("reorder", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
                 cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
@@ -1108,10 +1110,12 @@ class NumberSelectorMode(StrEnum):
 
 def validate_slider(data: Any) -> Any:
     """Validate configuration."""
-    if data["mode"] == "box":
-        return data
+    has_min_max = "min" in data and "max" in data
 
-    if "min" not in data or "max" not in data:
+    if "mode" not in data:
+        data["mode"] = "slider" if has_min_max else "box"
+
+    if data["mode"] == "slider" and not has_min_max:
         raise vol.Invalid("min and max are required in slider mode")
 
     return data
@@ -1134,7 +1138,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                vol.Optional(CONF_MODE): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
                 vol.Optional("translation_key"): str,
@@ -1334,7 +1338,8 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
-    entity_id: Required[str]
+    entity_id: str
+    hide_states: list[str]
 
 
 @SELECTORS.register("state")
@@ -1345,7 +1350,8 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
-            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("entity_id"): cv.entity_id,
+            vol.Optional("hide_states"): [str],
             # The attribute to filter on, is currently deliberately not
             # configurable/exposed. We are considering separating state
             # selectors into two types: one for state and one for attribute.
