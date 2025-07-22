@@ -7,7 +7,7 @@ import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.services import ATTR_PROGRAM_ID
+from homeassistant.components.miele.services import ATTR_PROGRAM_ID, SERVICE_SET_PROGRAM
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -32,7 +32,7 @@ async def test_services(
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
     await hass.services.async_call(
         DOMAIN,
-        "set_program",
+        SERVICE_SET_PROGRAM,
         {
             ATTR_DEVICE_ID: device.id,
             ATTR_PROGRAM_ID: 24,
@@ -59,7 +59,7 @@ async def test_service_api_errors(
     with pytest.raises(HomeAssistantError, match="'Set program' action failed"):
         await hass.services.async_call(
             DOMAIN,
-            "set_program",
+            SERVICE_SET_PROGRAM,
             {"device_id": device.id, ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
@@ -83,7 +83,7 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
-            "set_program",
+            SERVICE_SET_PROGRAM,
             {"device_id": device.id},
             blocking=True,
         )
@@ -93,19 +93,17 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="expected int for dictionary value"):
         await hass.services.async_call(
             DOMAIN,
-            "set_program",
+            SERVICE_SET_PROGRAM,
             {"device_id": device.id, ATTR_PROGRAM_ID: "invalid"},
             blocking=True,
         )
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid device
-    with pytest.raises(
-        ServiceValidationError, match="'Set program' action failed: No device"
-    ):
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
         await hass.services.async_call(
             DOMAIN,
-            "set_program",
+            SERVICE_SET_PROGRAM,
             {"device_id": "invalid_device", ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
