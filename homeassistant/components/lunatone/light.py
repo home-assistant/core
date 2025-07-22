@@ -64,12 +64,16 @@ class LunatoneLight(LightEntity):
     _attr_should_poll = True
 
     def __init__(
-        self, device: Device, unique_id_prefix: str, interface_version: AwesomeVersion
+        self,
+        device: Device,
+        interface_serial_number: int,
+        interface_version: AwesomeVersion,
     ) -> None:
         """Initialize a LunatoneLight."""
         self._interface_version = interface_version
+        self._interface_serial_number = interface_serial_number
         self._device = device
-        self._attr_unique_id = f"{unique_id_prefix}-device{self._device.id}"
+        self._attr_unique_id = f"{interface_serial_number}-device{self._device.id}"
 
     @property
     def is_on(self) -> bool:
@@ -81,7 +85,9 @@ class LunatoneLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)}, name=self._device.name
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self._device.name,
+            via_device=(DOMAIN, str(self._interface_serial_number)),
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

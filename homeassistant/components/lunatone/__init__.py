@@ -8,8 +8,10 @@ from lunatone_rest_api_client import Auth, Devices, Info
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import (
     LunatoneConfigEntry,
     LunatoneData,
@@ -26,6 +28,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     auth = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
     info = Info(auth)
     devices = Devices(auth)
+
+    if entry.unique_id is not None:
+        await info.async_update()
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=entry.title,
+            manufacturer="Lunatone",
+            sw_version=info.version,
+            configuration_url=entry.data[CONF_URL],
+        )
 
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info)
     await coordinator_info.async_config_entry_first_refresh()
