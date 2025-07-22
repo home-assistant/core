@@ -90,6 +90,12 @@
       },
       "last_mission": {
         "name": "Last mission start time"
+      },
+      "tank_level": {
+        "name": "Tank level"
+      },
+      "dock_tank_level": {
+        "name": "Dock tank level"
       }
     }
   }
