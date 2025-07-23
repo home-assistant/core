@@ -102,6 +102,16 @@
         "maxlen": 255
       }
     },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
     "online_state": {
       "type": "Enum",
       "value": {
@@ -119,6 +129,7 @@
     "alarm_set_1": "BwEADQ==",
     "alarm_set_2": "AQEAPAMBAP0EAQC0BQEAAAcBAAAIAQAeCQAAAA==",
     "breaker_number": "SPM02_6588",
+    "add_ele": 150000,
     "online_state": "online"
   },
   "set_up": true,
