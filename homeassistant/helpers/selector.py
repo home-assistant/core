@@ -1334,6 +1334,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
     entity_id: str
     hide_states: list[str]
     multiple: bool
+    
 
 @SELECTORS.register("state")
 class StateSelector(Selector[StateSelectorConfig]):
