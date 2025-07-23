@@ -74,20 +74,10 @@ def _format_structured_output(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
     )
-    # result["schema"] = convert(
-    #     schema,
-    #     custom_serializer=(
-    #         llm_api.custom_serializer if llm_api else llm.selector_serializer
-    #     ),
-    # )
 
     _adjust_schema(result_schema)
 
     result["schema"] = result_schema
-
-    # result["name"] = name
-    # result["strict"] = True
-    # result["additionalProperties"] = False
     return result
 
 
