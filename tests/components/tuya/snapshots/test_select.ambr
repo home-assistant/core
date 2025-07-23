@@ -361,6 +361,67 @@
     'state': 'cancel',
   })
 # ---
+# name: test_platform_setup_and_discovery[sfkzq_valve_controller][select.sprinkler_cesare_weather_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_delay',
+        '24h',
+        '48h',
+        '72h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.sprinkler_cesare_weather_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Weather delay',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'weather_delay',
+    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mweather_delay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sfkzq_valve_controller][select.sprinkler_cesare_weather_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sprinkler Cesare Weather delay',
+      'options': list([
+        'no_delay',
+        '24h',
+        '48h',
+        '72h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.sprinkler_cesare_weather_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_delay',
+  })
+# ---
 # name: test_platform_setup_and_discovery[tdq_4_443][select.4_433_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

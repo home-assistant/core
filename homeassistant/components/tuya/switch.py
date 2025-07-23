@@ -599,53 +599,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Water Timer
-    "sfkzq": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "3"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "4"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_5,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "5"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_6,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "6"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_7,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "7"},
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_8,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "8"},
-        ),
-    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (

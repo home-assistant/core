@@ -141,7 +141,10 @@ DEVICE_MOCKS = {
     ],
     "sfkzq_valve_controller": [
         # https://github.com/home-assistant/core/issues/148116
-        Platform.SWITCH,
+        Platform.VALVE,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SELECT,
     ],
     "tdq_4_443": [
         # https://github.com/home-assistant/core/issues/146845

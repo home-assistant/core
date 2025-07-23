@@ -947,6 +947,14 @@
       "siren": {
         "name": "Siren"
       }
+    },
+    "valve": {
+      "switch": {
+        "name": "Switch"
+      },
+      "indexed_switch": {
+        "name": "Switch {index}"
+      }
     }
   }
 }
