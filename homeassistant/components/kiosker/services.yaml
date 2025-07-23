@@ -1,4 +1,7 @@
 navigate_url:
+  target:
+    device:
+      integration: kiosker
   fields:
     url:
       required: true
@@ -6,31 +9,54 @@ navigate_url:
         text:
 
 navigate_refresh:
+  target:
+    device:
+      integration: kiosker
 
 navigate_home:
+  target:
+    device:
+      integration: kiosker
 
 navigate_backward:
+  target:
+    device:
+      integration: kiosker
 
 navigate_forward:
+  target:
+    device:
+      integration: kiosker
 
 print:
+  target:
+    device:
+      integration: kiosker
 
 clear_cookies:
+  target:
+    device:
+      integration: kiosker
 
 clear_cache:
+  target:
+    device:
+      integration: kiosker
 
 screensaver_interact:
-
-blackout_clear:
+  target:
+    device:
+      integration: kiosker
 
 blackout_set:
+  target:
+    device:
+      integration: kiosker
   fields:
     visible:
-      default: true
       selector:
         boolean:
     text:
-      default: "Hello, World!"
       selector:
         text:
     background:
@@ -42,6 +68,12 @@ blackout_set:
     icon:
       selector:
         text:
+    expire:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
     dismissible:
       selector:
         boolean:
@@ -56,11 +88,11 @@ blackout_set:
         text:
     sound:
       selector:
-        text:
-    expire:
-      default: 60
-      selector:
         number:
           min: 0
-          max: 3600
-          unit_of_measurement: seconds
+          max: 9999
+
+blackout_clear:
+  target:
+    device:
+      integration: kiosker

@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["mcp__ide__getDiagnostics"],
+    "allow": ["mcp__ide__getDiagnostics", "Bash(rg:*)", "Bash(find:*)"],
     "deny": []
   }
 }

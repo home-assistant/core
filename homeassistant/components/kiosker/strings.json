@@ -190,6 +190,10 @@
           "description": "Sound to play when blackout is displayed (SystemSoundID, e.g., 1007)"
         }
       }
+    },
+    "blackout_clear": {
+      "name": "Clear blackout",
+      "description": "Clear the blackout screen"
     }
   }
 }

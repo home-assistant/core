@@ -847,6 +847,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
 /homeassistant/components/kiosker/ @Claeysson
+/tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
