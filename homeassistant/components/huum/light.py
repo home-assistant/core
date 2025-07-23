@@ -32,7 +32,7 @@ async def async_setup_entry(
 class HuumLight(HuumBaseEntity, LightEntity):
     """Representation of a light."""
 
-    _attr_name = "Light"
+    _attr_translation_key = "light"
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
 

@@ -5,7 +5,7 @@
   "canAutoUpdate": true,
   "isStatsGatheringEnabled": true,
   "timezone": "America/New_York",
-  "version": "2.2.6",
+  "version": "6.0.0",
   "ucoreVersion": "2.3.26",
   "firmwareVersion": "2.3.10",
   "uiVersion": null,

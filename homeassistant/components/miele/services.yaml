@@ -1,0 +1,17 @@
+# Services descriptions for Miele integration
+
+set_program:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: miele
+      required: true
+    program_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 99999
+          mode: box
+      example: 24
