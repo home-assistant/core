@@ -1,10 +1,16 @@
 {
   "chain_names": [
-    { "number": 1, "name": "Chain 0" },
-    { "number": 2, "name": "Chain 1" }
+    {
+      "number": 1,
+      "name": "Chain 0"
+    },
+    {
+      "number": 2,
+      "name": "Chain 1"
+    }
   ],
   "host": {
-    "hostname": "NanoStation 5AC ap name ",
+    "hostname": "NanoStation 5AC ap name",
     "device_id": "03aa0d0b40fed0a47088293584ef5432",
     "uptime": 264888,
     "power_time": 268683,
@@ -64,8 +70,14 @@
     "rx_nss": 2,
     "tx_idx": 9,
     "tx_nss": 2,
-    "throughput": { "tx": 222, "rx": 9907 },
-    "service": { "time": 267181, "link": 266003 },
+    "throughput": {
+      "tx": 222,
+      "rx": 9907
+    },
+    "service": {
+      "time": 267181,
+      "link": 266003
+    },
     "polling": {
       "cb_capacity": 593970,
       "dl_capacity": 647400,
@@ -210,11 +222,20 @@
           ],
           "ipaddr": ["192.168.1.2"],
           "ip6addr": ["fe80::eea:14ff:fea4:806"],
-          "gps": { "lat": "52.020100", "lon": "5.071400", "fix": 0 },
+          "gps": {
+            "lat": "52.379894",
+            "lon": "4.901608",
+            "fix": 0
+          },
           "oob": false,
-          "unms": { "status": 0 },
+          "unms": {
+            "status": 0
+          },
           "airview": 2,
-          "service": { "time": 267195, "link": 265996 }
+          "service": {
+            "time": 267195,
+            "link": 265996
+          }
         }
       }
     ],
@@ -279,7 +300,12 @@
         "tx_dropped": 0,
         "rx_dropped": 0,
         "ipaddr": "192.168.1.2",
-        "ip6addr": [{ "addr": "fe80::eea:14ff:fea4:7b8", "plen": 64 }],
+        "ip6addr": [
+          {
+            "addr": "fe80::eea:14ff:fea4:7b8",
+            "plen": 64
+          }
+        ],
         "speed": 0,
         "duplex": false
       }
@@ -287,6 +313,12 @@
   ],
   "provmode": {},
   "ntpclient": {},
-  "unms": { "status": 0 },
-  "gps": { "lat": "52.020100", "lon": "5.071400", "fix": 0 }
+  "unms": {
+    "status": 0
+  },
+  "gps": {
+    "lat": 52.379894,
+    "lon": 4.901608,
+    "fix": 0
+  }
 }

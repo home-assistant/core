@@ -6,8 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from airos.airos8data import NetRole, WirelessMode
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -49,9 +47,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="host_netrole",
         translation_key="host_netrole",
-        value_fn=lambda data: data.host.netrole.value
-        if isinstance(data.host.netrole, NetRole)
-        else data.host.netrole,
+        value_fn=lambda data: data.host.netrole.value,
     ),
     AirOSSensorEntityDescription(
         key="wireless_frequency",
@@ -69,9 +65,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="wireless_mode",
         translation_key="wireless_mode",
-        value_fn=lambda data: data.wireless.mode.value
-        if isinstance(data.wireless.mode, WirelessMode)
-        else data.wireless.mode,
+        value_fn=lambda data: data.wireless.mode.value,
     ),
     AirOSSensorEntityDescription(
         key="wireless_antenna_gain",
@@ -124,9 +118,7 @@ async def async_setup_entry(
     """Set up the AirOS sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    async_add_entities(
-        AirOSSensor(coordinator, description) for description in SENSORS
-    )
+    async_add_entities(AirOSSensor(coordinator, description) for description in SENSORS)
 
 
 class AirOSSensor(AirOSEntity, SensorEntity):

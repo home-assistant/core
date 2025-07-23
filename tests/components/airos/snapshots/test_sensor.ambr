@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'NanoStation 5AC ap name  Antenna gain',
+      'friendly_name': 'NanoStation 5AC ap name Antenna gain',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
@@ -96,7 +96,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name  Download capacity',
+      'friendly_name': 'NanoStation 5AC ap name Download capacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
     }),
@@ -146,7 +146,7 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name  Network role',
+      'friendly_name': 'NanoStation 5AC ap name Network role',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_network_role',
@@ -200,7 +200,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name  Throughput receive (actual)',
+      'friendly_name': 'NanoStation 5AC ap name Throughput receive (actual)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
     }),
@@ -256,7 +256,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name  Throughput transmit (actual)',
+      'friendly_name': 'NanoStation 5AC ap name Throughput transmit (actual)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
     }),
@@ -312,7 +312,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name  Upload capacity',
+      'friendly_name': 'NanoStation 5AC ap name Upload capacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
     }),
@@ -365,7 +365,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'NanoStation 5AC ap name  Wireless frequency',
+      'friendly_name': 'NanoStation 5AC ap name Wireless frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
     }),
@@ -415,7 +415,7 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name  Wireless mode',
+      'friendly_name': 'NanoStation 5AC ap name Wireless mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_mode',
@@ -463,7 +463,7 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name  Wireless SSID',
+      'friendly_name': 'NanoStation 5AC ap name Wireless SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_ssid',

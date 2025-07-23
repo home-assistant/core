@@ -46,7 +46,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
         """Fetch data from AirOS."""
         try:
             await self.airos_device.login()
-             return await self.airos_device.status()
+            return await self.airos_device.status()
         except (ConnectionAuthenticationError,) as err:
             _LOGGER.exception("Error authenticating with airOS device: %s")
             raise ConfigEntryError(

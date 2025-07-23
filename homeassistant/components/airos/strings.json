@@ -18,7 +18,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "key_data_missing": "Key data not returned from device",
+      "key_data_missing": "Expected data not returned from the device, check the documentation for supported devices",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -31,7 +31,11 @@
         "name": "CPU load"
       },
       "host_netrole": {
-        "name": "Network role"
+        "name": "Network role",
+        "state": {
+          "bridge": "Bridge",
+          "router": "Router"
+        }
       },
       "wireless_frequency": {
         "name": "Wireless frequency"
@@ -40,7 +44,11 @@
         "name": "Wireless SSID"
       },
       "wireless_mode": {
-        "name": "Wireless mode"
+        "name": "Wireless mode",
+        "state": {
+          "ap-ptp": "Access Point",
+          "sta-ptp": "Station"
+        }
       },
       "wireless_antenna_gain": {
         "name": "Antenna gain"

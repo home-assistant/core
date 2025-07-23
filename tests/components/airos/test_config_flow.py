@@ -45,7 +45,7 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NanoStation 5AC ap name "
+    assert result["title"] == "NanoStation 5AC ap name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
@@ -101,7 +101,7 @@ async def test_form_invalid_auth(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NanoStation 5AC ap name "
+    assert result["title"] == "NanoStation 5AC ap name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
@@ -158,7 +158,7 @@ async def test_form_cannot_connect(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NanoStation 5AC ap name "
+    assert result["title"] == "NanoStation 5AC ap name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",

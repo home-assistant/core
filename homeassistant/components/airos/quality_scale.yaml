@@ -37,11 +37,11 @@ rules:
   log-when-unavailable: todo
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: airOS does not do SSDP or ZeroConf but self-emits packets
