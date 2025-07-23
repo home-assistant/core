@@ -46,7 +46,7 @@
       "wireless_mode": {
         "name": "Wireless mode",
         "state": {
-          "ap-ptp": "Access Point",
+          "ap-ptp": "Access point",
           "sta-ptp": "Station"
         }
       },
