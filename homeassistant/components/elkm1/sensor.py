@@ -262,6 +262,15 @@ class ElkZone(ElkSensor):
         return None
 
     @property
+    def state_class(self) -> SensorStateClass | None:
+        """Return the state class of the sensor."""
+        if self._element.definition == ZoneType.TEMPERATURE:
+            return SensorStateClass.MEASUREMENT
+        if self._element.definition == ZoneType.ANALOG_ZONE:
+            return SensorStateClass.MEASUREMENT
+        return None
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self._element.definition == ZoneType.TEMPERATURE:
@@ -275,10 +284,7 @@ class ElkZone(ElkSensor):
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif self._element.definition == ZoneType.ANALOG_ZONE:
             self._attr_native_value = f"{self._element.voltage}"
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_native_value = pretty_const(self._element.logical_status.name)
-            self._attr_state_class = None
