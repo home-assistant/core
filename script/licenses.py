@@ -178,7 +178,6 @@ OSI_APPROVED_LICENSES = {
 }
 
 EXCEPTIONS = {
-    "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL

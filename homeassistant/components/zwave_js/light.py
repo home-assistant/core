@@ -183,7 +183,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self._supports_color_temp:
             self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if not self._supported_color_modes:
-            self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+            if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
+                self._supported_color_modes.add(ColorMode.ONOFF)
+            else:
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._calculate_color_values()
 
         # Entity class attributes

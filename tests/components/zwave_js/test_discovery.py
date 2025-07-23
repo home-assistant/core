@@ -98,6 +98,20 @@ async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> N
     assert state
 
 
+async def test_enbrighten_58446_zwa4013(
+    hass: HomeAssistant, client, enbrighten_58446_zwa4013, integration
+) -> None:
+    """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
+    node = enbrighten_58446_zwa4013
+    assert node.device_class.specific.label == "Multilevel Power Switch"
+
+    state = hass.states.get("light.zwa4013_fan")
+    assert not state
+
+    state = hass.states.get("fan.zwa4013_fan")
+    assert state
+
+
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
 ) -> None:
@@ -481,3 +495,51 @@ async def test_aeotec_smart_switch_7(
     entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
+
+
+async def test_nabu_casa_zwa2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery."""
+    state = hass.states.get("light.z_wave_adapter")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.ONOFF,
+    ], "The LED indicator should be an ON/OFF light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+
+async def test_nabu_casa_zwa2_legacy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2_legacy: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery with legacy firmware."""
+    state = hass.states.get("light.z_wave_adapter")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.HS,
+    ], "The LED indicator should be a color light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )

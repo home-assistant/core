@@ -987,7 +987,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
         "test_domain": {
             "test_service": {
                 "description": "",
-                "fields": {"test": {"selector": {"text": None}}},
+                "fields": {"test": {"selector": {"text": {}}}},
                 "name": "",
             }
         }
@@ -1013,6 +1013,13 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                     - light.ColorMode.COLOR_TEMP
               selector:
                 number:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
             advanced_stuff:
               fields:
                 temperature:
@@ -1024,6 +1031,13 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                         - light.ColorMode.COLOR_TEMP
                   selector:
                     number:
+                entity:
+                  selector:
+                    entity:
+                      filter:
+                        domain: alarm_control_panel
+                        supported_features:
+                          - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
     """
 
     domain = "test_domain"
@@ -1065,7 +1079,21 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                             "attribute": {"supported_color_modes": ["color_temp"]},
                             "supported_features": [1],
                         },
-                        "selector": {"number": None},
+                        "selector": {"number": {}},
+                    },
+                    "entity": {
+                        "selector": {
+                            "entity": {
+                                "filter": [
+                                    {
+                                        "domain": ["alarm_control_panel"],
+                                        "supported_features": [1],
+                                    }
+                                ],
+                                "multiple": False,
+                                "reorder": False,
+                            },
+                        },
                     },
                 },
             },
@@ -1074,7 +1102,21 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                     "attribute": {"supported_color_modes": ["color_temp"]},
                     "supported_features": [1],
                 },
-                "selector": {"number": None},
+                "selector": {"number": {}},
+            },
+            "entity": {
+                "selector": {
+                    "entity": {
+                        "filter": [
+                            {
+                                "domain": ["alarm_control_panel"],
+                                "supported_features": [1],
+                            }
+                        ],
+                        "multiple": False,
+                        "reorder": False,
+                    },
+                },
             },
         },
         "name": "",
