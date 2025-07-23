@@ -310,7 +310,7 @@
         "name": "Flow"
       },
       "hepa_filter_condition": {
-        "name": "Hepa filter condition"
+        "name": "HEPA filter condition"
       },
       "operational_state": {
         "name": "Operational state",
