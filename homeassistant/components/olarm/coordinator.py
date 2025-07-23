@@ -109,39 +109,3 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         if updated:
             self.async_set_updated_data(self.data)
-
-    # Settable properties for backward compatibility with MQTT updates
-    @property
-    def device_name(self) -> str:
-        """Return the device name."""
-        return self.data.device_name if self.data else f"Olarm Device {self.device_id}"
-
-    @property
-    def device_state(self) -> dict[str, Any] | None:
-        """Return the device state."""
-        return self.data.device_state if self.data else None
-
-    @property
-    def device_links(self) -> dict[str, Any] | None:
-        """Return the device links."""
-        return self.data.device_links if self.data else None
-
-    @property
-    def device_io(self) -> dict[str, Any] | None:
-        """Return the device io."""
-        return self.data.device_io if self.data else None
-
-    @property
-    def device_profile(self) -> dict[str, Any] | None:
-        """Return the device profile."""
-        return self.data.device_profile if self.data else None
-
-    @property
-    def device_profile_links(self) -> dict[str, Any] | None:
-        """Return the device profile links."""
-        return self.data.device_profile_links if self.data else None
-
-    @property
-    def device_profile_io(self) -> dict[str, Any] | None:
-        """Return the device profile IO."""
-        return self.data.device_profile_io if self.data else None
