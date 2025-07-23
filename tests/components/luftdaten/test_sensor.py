@@ -81,7 +81,7 @@ async def test_luftdaten_sensors(
     assert state
     assert state.state == "103102.13"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sealevel"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sea level"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
