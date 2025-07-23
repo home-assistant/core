@@ -44,6 +44,7 @@ from .const import (
     GOTOPRESET_MOVE,
     LOGGER,
     RELATIVE_MOVE,
+    EMULATE_RELATIVE_MOVE,
     SERVICE_PTZ,
     STOP_MOVE,
     ZOOM_IN,
@@ -77,6 +78,7 @@ async def async_setup_entry(
                     RELATIVE_MOVE,
                     ABSOLUTE_MOVE,
                     GOTOPRESET_MOVE,
+                    EMULATE_RELATIVE_MOVE,
                     STOP_MOVE,
                 ]
             ),
