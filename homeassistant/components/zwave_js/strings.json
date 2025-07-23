@@ -108,6 +108,10 @@
       "start_addon": {
         "title": "Configuring add-on"
       },
+      "confirm_usb_migration": {
+        "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {usb_title}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
+        "title": "Migrate to a new adapter"
+      },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
@@ -199,8 +203,8 @@
       }
     },
     "sensor": {
-      "average_background_rssi": {
-        "name": "Average background RSSI (channel {channel})"
+      "avg_signal_noise": {
+        "name": "Avg. signal noise (channel {channel})"
       },
       "can": {
         "name": "Collisions"
@@ -215,9 +219,6 @@
           "ready": "Ready",
           "unresponsive": "Unresponsive"
         }
-      },
-      "current_background_rssi": {
-        "name": "Current background RSSI (channel {channel})"
       },
       "last_seen": {
         "name": "Last seen"
@@ -238,11 +239,14 @@
           "unknown": "Unknown"
         }
       },
-      "rssi": {
-        "name": "RSSI"
-      },
       "rtt": {
         "name": "Round trip time"
+      },
+      "signal_noise": {
+        "name": "Signal noise (channel {channel})"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
       },
       "successful_commands": {
         "name": "Successful commands ({direction})"
