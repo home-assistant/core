@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock, patch
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
+import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import ai_task
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import setup_integration
@@ -39,7 +41,6 @@ async def test_generate_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation."""
     await setup_integration(hass, mock_config_entry)
@@ -85,7 +86,6 @@ async def test_generate_structured_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task structured data generation."""
     await setup_integration(hass, mock_config_entry)
@@ -153,3 +153,58 @@ async def test_generate_structured_data(
         },
         "type": "json_schema",
     }
+
+
+async def test_generate_invalid_structured_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task with invalid JSON response."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="INVALID JSON RESPONSE",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="x-ai/grok-3",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Error with OpenRouter structured response"
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate test data",
+            structure=vol.Schema(
+                {
+                    vol.Required("characters"): selector.selector(
+                        {
+                            "text": {
+                                "multiple": True,
+                            }
+                        }
+                    )
+                },
+            ),
+        )
