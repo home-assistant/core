@@ -2554,7 +2554,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][sensor.cbe_pro_2_battery_power-entry]
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][sensor.cbe_pro_2_battery_power_discharge_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2569,7 +2569,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cbe_pro_2_battery_power',
+    'entity_id': 'sensor.cbe_pro_2_battery_power_discharge_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2594,16 +2594,16 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][sensor.cbe_pro_2_battery_power-state]
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][sensor.cbe_pro_2_battery_power_discharge_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CBE Pro 2 Battery power',
+      'friendly_name': 'CBE Pro 2 Battery power (+ discharge, - charge)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cbe_pro_2_battery_power',
+    'entity_id': 'sensor.cbe_pro_2_battery_power_discharge_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
