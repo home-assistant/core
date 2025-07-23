@@ -46,14 +46,14 @@ class ActronNeoApiClient:
         """Initialize the client."""
         self.hass = hass
         self.entry = entry
-        self.api = ActronNeoAPI(pairing_token=entry.data[CONF_API_TOKEN])
+        self.api = ActronNeoAPI(refresh_token=entry.data[CONF_API_TOKEN])
         self.systems: list[ActronAirNeoACSystem] = []
 
     async def async_setup(self) -> bool:
         """Perform initial setup, including refreshing the token."""
         try:
-            await self.api.refresh_token()
-            systems = await self.api.get_ac_systems()
+            self.systems = await self.api.get_ac_systems()
+            await self.api.update_status()
         except ActronNeoAuthError:
             _LOGGER.error(
                 "Authentication error while setting up Actron Neo integration"
@@ -62,7 +62,6 @@ class ActronNeoApiClient:
         except ActronNeoAPIError as err:
             _LOGGER.error("API error while setting up Actron Neo integration: %s", err)
             raise
-        self.systems = systems
         return True
 
 
@@ -94,6 +93,7 @@ class ActronNeoSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch updates and merge incremental changes into the full state."""
+        await self.api.update_status()
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
         return self.status

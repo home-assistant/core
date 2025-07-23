@@ -49,7 +49,7 @@
       "iot_class": "local_polling"
     },
     "actronair_neo": {
-      "name": "Actron Air Neo",
+      "name": "Actron Air",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
