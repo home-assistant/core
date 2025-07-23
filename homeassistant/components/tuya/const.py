@@ -304,7 +304,7 @@ class DPCode(StrEnum):
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
     SENSOR_TEMPERATURE = "sensor_temperature"
-    SERIAL_VALUE = "serial_value"  # Serial number
+    SERIAL_NUMBER = "serial_number"
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
     SIREN_SWITCH = "siren_switch"
