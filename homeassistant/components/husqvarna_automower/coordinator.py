@@ -64,9 +64,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
         self.pong: datetime | None = None
-
-        self.async_add_listener(self._on_data_update)
-        self.api.register_pong_callback(self._on_pong)
+        self.websocket_alive: bool = False
 
     @override
     @callback
@@ -109,7 +107,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     self._async_add_remove_stay_out_zones()
                 if self.data[mower_id].capabilities.work_areas:
                     self._async_add_remove_work_areas()
-            if not self._should_poll() and self.update_interval is not None:
+            if (
+                not self._should_poll()
+                and self.update_interval is not None
+                and self.websocket_alive
+            ):
                 _LOGGER.debug("All mowers inactive and websocket alive: stop polling")
                 self.update_interval = None
             if self.update_interval is None and self._should_poll():
@@ -118,11 +120,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 )
                 self.update_interval = SCAN_INTERVAL
                 self.hass.async_create_task(self.async_request_refresh())
-
-    @callback
-    def _on_pong(self, timestamp: datetime) -> None:
-        """Callback from aioautomower when a pong (empty message) is received."""
-        self.pong = timestamp
 
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
@@ -202,13 +199,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         try:
             while True:
                 _LOGGER.debug("Sending ping")
-                success = await self.api.send_empty_message()
-                _LOGGER.debug("Ping result: %s", success)
+                self.websocket_alive = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", self.websocket_alive)
 
                 await asyncio.sleep(60)
-                _LOGGER.warning("Success %s", success)
-                if not success:
-                    _LOGGER.warning("No pong received → restart polling")
+                _LOGGER.debug("Websocket alive %s", self.websocket_alive)
+                if not self.websocket_alive:
+                    _LOGGER.debug("No pong received → restart polling")
                     if self.update_interval is None:
                         self.update_interval = SCAN_INTERVAL
                         await self.async_request_refresh()

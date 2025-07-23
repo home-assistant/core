@@ -3,7 +3,7 @@
 from asyncio import Event
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import UTC, datetime, time as dt_time, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import http
 import time
 from unittest.mock import AsyncMock, patch
@@ -502,7 +502,6 @@ async def test_dynamic_polling(
     mock_automower_client,
     mock_config_entry,
     freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
     mower1_connected: bool,
     mower1_state: MowerStates,
@@ -515,7 +514,6 @@ async def test_dynamic_polling(
     """
     websocket_values = deepcopy(values)
     poll_values = deepcopy(values)
-    mock_automower_client.send_empty_message.return_value = True
     callback_holder: dict[str, Callable] = {}
 
     @callback
@@ -536,21 +534,10 @@ async def test_dynamic_polling(
         fake_register_ws_ready_callback
     )
 
-    @callback
-    def fake_register_pong_callback(cb) -> None:
-        callback_holder["pong_cb"] = cb
-
-    mock_automower_client.register_pong_callback.side_effect = (
-        fake_register_pong_callback
-    )
-
     await setup_integration(hass, mock_config_entry)
 
     assert "ws_ready_cb" in callback_holder, "ws_ready_callback was not registered"
     callback_holder["ws_ready_cb"]()
-
-    # 🟢 Simuliere gültigen Pong → verhindert Log "No pong received"
-    callback_holder["pong_cb"](freezer().replace(tzinfo=UTC))
 
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 1
@@ -560,6 +547,7 @@ async def test_dynamic_polling(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 2
 
+    # websocket is still active, but mowers are inactive -> no polling required
     poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
     poll_values[TEST_MOWER_ID].mower.state = mower1_state
     poll_values["1234"].metadata.connected = mower2_connected
@@ -581,50 +569,27 @@ async def test_dynamic_polling(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 4
 
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    # websocket is still active, and mowers are active -> polling required
+    mock_automower_client.get_status.reset_mock()
+    assert mock_automower_client.get_status.call_count == 0
     poll_values[TEST_MOWER_ID].metadata.connected = True
     poll_values[TEST_MOWER_ID].mower.state = MowerStates.PAUSED
     poll_values["1234"].metadata.connected = False
     poll_values["1234"].mower.state = MowerStates.OFF
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 4
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 4
-
     websocket_values = deepcopy(poll_values)
     callback_holder["data_cb"](websocket_values)
     await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 5
+    assert mock_automower_client.get_status.call_count == 1
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 6
-
-    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
-    poll_values[TEST_MOWER_ID].mower.state = mower1_state
-    poll_values["1234"].metadata.connected = mower2_connected
-    poll_values["1234"].mower.state = mower2_state
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 7
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 8
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 8
+    assert mock_automower_client.get_status.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -655,7 +620,6 @@ async def test_websocket_watchdog(
     and that the pong callback stops polling when all mowers are inactive.
     """
     poll_values = deepcopy(values)
-    mock_automower_client.send_empty_message.return_value = True
     callback_holder: dict[str, Callable] = {}
 
     @callback
@@ -676,21 +640,10 @@ async def test_websocket_watchdog(
         fake_register_ws_ready_callback
     )
 
-    @callback
-    def fake_register_pong_callback(cb) -> None:
-        callback_holder["pong_cb"] = cb
-
-    mock_automower_client.register_pong_callback.side_effect = (
-        fake_register_pong_callback
-    )
-
     await setup_integration(hass, mock_config_entry)
 
     assert "ws_ready_cb" in callback_holder, "ws_ready_callback was not registered"
     callback_holder["ws_ready_cb"]()
-
-    # 🟢 Simuliere gültigen Pong → verhindert Log "No pong received"
-    callback_holder["pong_cb"](freezer().replace(tzinfo=UTC))
 
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 1
@@ -700,9 +653,7 @@ async def test_websocket_watchdog(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 2
 
-    # 7) Simulate pong callback: mark all mowers inactive and invoke pong
-    # now = datetime.datetime.now(tz=datetime.UTC)
-    # set all mower metadata.connected = False to satisfy _should_poll() == False
+    # websocket is still active, but mowers are inactive -> no polling required
     poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
     poll_values[TEST_MOWER_ID].mower.state = mower1_state
     poll_values["1234"].metadata.connected = mower2_connected
@@ -724,7 +675,7 @@ async def test_websocket_watchdog(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 4
 
-    # Simulate Pong loss and reset mock
+    # Simulate Pong loss and reset mock -> polling required
     mock_automower_client.send_empty_message.return_value = False
     mock_automower_client.get_status.reset_mock()
 
@@ -741,9 +692,4 @@ async def test_websocket_watchdog(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 3
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.get_status.call_count == 5
+    assert mock_automower_client.get_status.call_count == 2
