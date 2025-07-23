@@ -30,15 +30,15 @@ certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==45.0.3
-dbus-fast==2.43.0
+dbus-fast==2.44.2
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==4.0.1
-hass-nabucasa==0.107.1
+hass-nabucasa==0.108.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250702.2
+home-assistant-frontend==20250702.3
 home-assistant-intents==2025.6.23
 httpx==0.28.1
 ifaddr==0.2.0
@@ -150,12 +150,8 @@ protobuf==6.31.1
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 13.1 is the first version to fully support the new
-# asyncio implementation. The legacy implementation is now
-# deprecated as of websockets 14.0.
-# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
-# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
-websockets>=13.1
+# Prevent accidental fallbacks
+websockets>=15.0.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
