@@ -495,3 +495,53 @@ async def test_aeotec_smart_switch_7(
     entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
+
+
+async def test_nabu_casa_zwa2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery."""
+    state = hass.states.get("light.z_wave_adapter")
+    assert state is None, "The LED indicator should be disabled by default"
+
+    entry = entity_registry.async_get("light.z_wave_adapter")
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.ONOFF,
+    ], "The LED indicator should be an ON/OFF light"
+
+    assert entry.disabled, "The entity should be disabled by default"
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+
+async def test_nabu_casa_zwa2_legacy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2_legacy: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery with legacy firmware."""
+    state = hass.states.get("light.z_wave_adapter")
+    assert state is None, "The LED indicator should be disabled by default"
+
+    entry = entity_registry.async_get("light.z_wave_adapter")
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.HS,
+    ], "The LED indicator should be a color light"
+
+    assert entry.disabled, "The entity should be disabled by default"
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )

@@ -772,6 +772,37 @@ DISCOVERY_SCHEMAS = [
             },
         ),
     ),
+    # ZWA-2, discover LED control as configuration, default disabled
+    ## Production firmware (1.0) -> Color Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="color_onoff",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    ## Day-1 firmware update (1.1) -> Binary Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
