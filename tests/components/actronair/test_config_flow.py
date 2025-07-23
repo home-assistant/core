@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-DOMAIN = "actronair_neo"
+DOMAIN = "actronair"
 ERROR_API_ERROR = "api_error"
 ERROR_INVALID_AUTH = "invalid_auth"
 ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
@@ -21,7 +21,7 @@ ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.actronair_neo.async_setup_entry", return_value=True
+        "homeassistant.components.actronair.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
