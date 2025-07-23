@@ -27,7 +27,6 @@ async def async_setup_entry(
 class HuumDoorSensor(HuumBaseEntity, BinarySensorEntity):
     """Representation of a BinarySensor."""
 
-    _attr_translation_key = "door"
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:

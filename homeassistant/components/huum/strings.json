@@ -20,11 +20,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "door": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
-      }
-    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
