@@ -1062,6 +1062,9 @@
     "invalid_target": {
       "message": "Invalid device targeted."
     },
+    "get_programs_error": {
+      "message": "'Get programs' action failed {status} / {message}."
+    },
     "set_program_error": {
       "message": "'Set program' action failed {status} / {message}."
     },
@@ -1070,6 +1073,16 @@
     }
   },
   "services": {
+    "get_programs": {
+      "name": "Get programs",
+      "description": "Returns a list of available programs.",
+      "fields": {
+        "device_id": {
+          "description": "The device to get the available programs from.",
+          "name": "Device"
+        }
+      }
+    },
     "set_program": {
       "name": "Set program",
       "description": "Sets and starts a program on the appliance.",

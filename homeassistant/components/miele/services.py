@@ -7,7 +7,12 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -24,6 +29,13 @@ SERVICE_SET_PROGRAM_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+    },
+)
+
+SERVICE_GET_PROGRAMS = "get_programs"
+SERVICE_GET_PROGRAMS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
     },
 )
 
@@ -47,17 +59,12 @@ async def _extract_config_entry(service_call: ServiceCall) -> MieleConfigEntry:
     return target_entries[0]
 
 
-async def set_program(call: ServiceCall) -> None:
-    """Set a program on a Miele appliance."""
+async def _get_serial_number(call: ServiceCall) -> str:
+    """Extract the serial number from the device identifier."""
 
-    _LOGGER.debug("Set program call: %s", call)
-    config_entry = await _extract_config_entry(call)
     device_reg = dr.async_get(call.hass)
-    api = config_entry.runtime_data.api
     device = call.data[ATTR_DEVICE_ID]
     device_entry = device_reg.async_get(device)
-
-    data = {"programId": call.data[ATTR_PROGRAM_ID]}
     serial_number = next(
         (
             identifier[1]
@@ -71,6 +78,18 @@ async def set_program(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="invalid_target",
         )
+    return serial_number
+
+
+async def set_program(call: ServiceCall) -> None:
+    """Set a program on a Miele appliance."""
+
+    _LOGGER.debug("Set program call: %s", call)
+    config_entry = await _extract_config_entry(call)
+    api = config_entry.runtime_data.api
+
+    serial_number = await _get_serial_number(call)
+    data = {"programId": call.data[ATTR_PROGRAM_ID]}
     try:
         await api.set_program(serial_number, data)
     except aiohttp.ClientResponseError as ex:
@@ -84,9 +103,37 @@ async def set_program(call: ServiceCall) -> None:
         ) from ex
 
 
+async def get_programs(call: ServiceCall) -> ServiceResponse:
+    """Get available programs from appliance."""
+
+    config_entry = await _extract_config_entry(call)
+    api = config_entry.runtime_data.api
+    serial_number = await _get_serial_number(call)
+
+    try:
+        return {"programs": await api.get_programs(serial_number)}
+    except aiohttp.ClientResponseError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="get_programs_error",
+            translation_placeholders={
+                "status": str(ex.status),
+                "message": ex.message,
+            },
+        ) from ex
+
+
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_PROGRAM, set_program, SERVICE_SET_PROGRAM_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROGRAMS,
+        get_programs,
+        SERVICE_GET_PROGRAMS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
