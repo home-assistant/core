@@ -86,12 +86,25 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ConversationFlowHandler(ConfigSubentryFlow):
-    """Handle subentry flow."""
+class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for OpenRouter."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         self.models: dict[str, Model] = {}
+
+    async def _get_models(self) -> None:
+        """Fetch models from OpenRouter."""
+        entry = self._get_entry()
+        client = OpenRouterClient(
+            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
+        )
+        models = await client.get_models()
+        self.models = {model.id: model for model in models}
+
+
+class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle subentry flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -103,14 +116,10 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             return self.async_create_entry(
                 title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
-        entry = self._get_entry()
-        client = OpenRouterClient(
-            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
-        )
-        models = await client.get_models()
-        self.models = {model.id: model for model in models}
+        await self._get_models()
         options = [
-            SelectOptionDict(value=model.id, label=model.name) for model in models
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
         ]
 
         hass_apis: list[SelectOptionDict] = [
@@ -148,12 +157,8 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         )
 
 
-class AITaskDataFlowHandler(ConfigSubentryFlow):
+class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
     """Handle subentry flow."""
-
-    def __init__(self) -> None:
-        """Initialize the subentry flow."""
-        self.models: dict[str, Model] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -163,15 +168,10 @@ class AITaskDataFlowHandler(ConfigSubentryFlow):
             return self.async_create_entry(
                 title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
-        entry = self._get_entry()
-        client = OpenRouterClient(
-            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
-        )
-        models = await client.get_models()
-        self.models = {model.id: model for model in models}
+        await self._get_models()
         options = [
             SelectOptionDict(value=model.id, label=model.name)
-            for model in models
+            for model in self.models.values()
             if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
         ]
         return self.async_show_form(

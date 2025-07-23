@@ -39,6 +39,7 @@ class OpenRouterAITaskEntity(
 ):
     """OpenRouter AI Task entity."""
 
+    _attr_name = None
     _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
 
     async def _async_generate_data(
