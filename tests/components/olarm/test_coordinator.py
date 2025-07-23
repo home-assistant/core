@@ -115,10 +115,9 @@ async def test_coordinator_update_from_mqtt(coordinator, mock_olarm_client) -> N
 
 
 async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
-    """Test coordinator properties."""
-    # Test properties when no data
-    assert coordinator.device_name == "Olarm Device test-device-id"
-    assert coordinator.device_state is None
+    """Test coordinator data access."""
+    # Test when no data
+    assert coordinator.data is None
 
     # Set some data
     mock_device_response = {
@@ -134,14 +133,14 @@ async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
     data = await coordinator._async_update_data()
     coordinator.async_set_updated_data(data)
 
-    # Test properties with data
-    assert coordinator.device_name == "Test Device"
-    assert coordinator.device_state == {"status": "armed"}
-    assert coordinator.device_links == {"link1": "value1"}
-    assert coordinator.device_io == {"io1": "value1"}
-    assert coordinator.device_profile == {"profile": "standard"}
-    assert coordinator.device_profile_links == {"plink1": "value1"}
-    assert coordinator.device_profile_io == {"pio1": "value1"}
+    # Test data access
+    assert coordinator.data.device_name == "Test Device"
+    assert coordinator.data.device_state == {"status": "armed"}
+    assert coordinator.data.device_links == {"link1": "value1"}
+    assert coordinator.data.device_io == {"io1": "value1"}
+    assert coordinator.data.device_profile == {"profile": "standard"}
+    assert coordinator.data.device_profile_links == {"plink1": "value1"}
+    assert coordinator.data.device_profile_io == {"pio1": "value1"}
 
 
 async def test_coordinator_mqtt_update_no_data(coordinator) -> None:
