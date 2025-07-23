@@ -33,6 +33,16 @@
     "energy_daily": {
       "type": "raw",
       "value": {}
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": {
+        "unit": "Hz",
+        "min": 0,
+        "max": 9999,
+        "scale": 2,
+        "step": 1
+      }
     }
   },
   "status_range": {
@@ -67,12 +77,23 @@
         "scale": 2,
         "step": 1
       }
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": {
+        "unit": "Hz",
+        "min": 0,
+        "max": 9999,
+        "scale": 2,
+        "step": 1
+      }
     }
   },
   "status": {
     "energy_month": "GAkYCQAAANQ=",
     "energy_daily": "",
-    "phase_a": "CSIAFfQABKE="
+    "phase_a": "CSIAFfQABKE=",
+    "supply_frequency": 5000
   },
   "set_up": true,
   "support_local": false
