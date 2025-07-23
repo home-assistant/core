@@ -37,9 +37,13 @@ async def async_setup_entry(
 
 def load_zone_sensors(coordinator, config_entry, sensors):
     """Load zone sensors and optionally bypass sensors."""
-    if coordinator.device_profile is not None and coordinator.device_state is not None:
+    if (
+        coordinator.data
+        and coordinator.data.device_profile is not None
+        and coordinator.data.device_state is not None
+    ):
         for zone_index, zone_state in enumerate(
-            coordinator.device_state.get("zones", [])
+            coordinator.data.device_state.get("zones", [])
         ):
             sensors.append(
                 OlarmBinarySensor(
@@ -48,8 +52,8 @@ def load_zone_sensors(coordinator, config_entry, sensors):
                     config_entry.data["device_id"],
                     zone_index,
                     zone_state,
-                    coordinator.device_profile.get("zonesLabels")[zone_index],
-                    coordinator.device_profile.get("zonesTypes")[zone_index],
+                    coordinator.data.device_profile.get("zonesLabels")[zone_index],
+                    coordinator.data.device_profile.get("zonesTypes")[zone_index],
                 )
             )
             # load bypass entities if enabled
@@ -61,19 +65,19 @@ def load_zone_sensors(coordinator, config_entry, sensors):
                         config_entry.data["device_id"],
                         zone_index,
                         zone_state,
-                        coordinator.device_profile.get("zonesLabels")[zone_index],
-                        coordinator.device_profile.get("zonesTypes")[zone_index],
+                        coordinator.data.device_profile.get("zonesLabels")[zone_index],
+                        coordinator.data.device_profile.get("zonesTypes")[zone_index],
                     )
                 )
 
 
 def load_ac_power_sensor(coordinator, config_entry, sensors):
     """Load AC power sensor."""
-    if coordinator.device_state is not None:
+    if coordinator.data and coordinator.data.device_state is not None:
         ac_power_state = "off"
-        if coordinator.device_state.get("powerAC") == "ok":
+        if coordinator.data.device_state.get("powerAC") == "ok":
             ac_power_state = "on"
-        if coordinator.device_state.get("power", {}).get("AC") == "1":
+        if coordinator.data.device_state.get("power", {}).get("AC") == "1":
             ac_power_state = "on"
         sensors.append(
             OlarmBinarySensor(
@@ -89,7 +93,7 @@ def load_ac_power_sensor(coordinator, config_entry, sensors):
 
 
 class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
-    """Define a SmartThings Binary Sensor."""
+    """Define an Olarm Binary Sensor."""
 
     def __init__(
         self,
@@ -144,14 +148,17 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         )
 
         # set state if zone is active[a] or closed[c] or bypassed[b]
-        if (
-            (self.sensor_type == "zone" and self.sensor_state == "a")
-            or (self.sensor_type == "zone_bypass" and self.sensor_state == "b")
-            or (self.sensor_type == "ac_power" and self.sensor_state == "on")
-        ):
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
+        self._attr_is_on = self._determine_is_on()
+
+    def _determine_is_on(self) -> bool:
+        """Determine if the binary sensor should be on."""
+        if self.sensor_type == "zone" and self.sensor_state == "a":
+            return True
+        if self.sensor_type == "zone_bypass" and self.sensor_state == "b":
+            return True
+        if self.sensor_type == "ac_power" and self.sensor_state == "on":
+            return True
+        return False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -177,25 +184,8 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             self.sensor_state = ac_power_state
 
         # set state if zone is active[a] or closed[c] or bypassed[b]
-        if (
-            (self.sensor_type == "zone" and self.sensor_state == "a")
-            or (self.sensor_type == "zone_bypass" and self.sensor_state == "b")
-            or (self.sensor_type == "ac_power" and self.sensor_state == "on")
-        ):
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
+        self._attr_is_on = self._determine_is_on()
 
         # Only schedule state update if the state actually changed
         if self._attr_is_on != previous_state:
-            self.schedule_update_ha_state()
-
-    @property
-    def name(self) -> str | None:
-        """The name of the zone from the Alarm Panel."""
-        return self._attr_name
-
-    @property
-    def is_on(self) -> bool | None:
-        """Whether the sensor/zone is active or not."""
-        return self._attr_is_on
+            self.async_write_ha_state()
