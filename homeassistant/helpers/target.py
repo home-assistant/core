@@ -40,7 +40,7 @@ from .typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True, frozen=True)
 class TargetStateChangedData:
     """Data for state change events related to targets."""
 
