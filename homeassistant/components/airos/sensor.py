@@ -125,8 +125,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [AirOSSensor(coordinator, description) for description in SENSORS],
-        update_before_add=False,
+        AirOSSensor(coordinator, description) for description in SENSORS
     )
 
 

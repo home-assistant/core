@@ -15,14 +15,11 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        coordinator: AirOSDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: AirOSDataUpdateCoordinator) -> None:
         """Initialise the gateway."""
         super().__init__(coordinator)
 
-        airos_data: AirOSData = self.coordinator.data
+        airos_data = self.coordinator.data
 
         configuration_url: str | None = (
             f"https://{coordinator.config_entry.data[CONF_HOST]}"

@@ -58,7 +58,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await airos_device.login()
-                airos_data: AirOSData = await airos_device.status()
+                airos_data = await airos_device.status()
 
             except (
                 ConnectionSetupError,
