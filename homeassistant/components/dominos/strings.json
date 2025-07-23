@@ -6,7 +6,7 @@
       "fields": {
         "order_entity_id": {
           "name": "Order entity",
-          "description": "The ID (as specified in the configuration) of an order to place. If provided as an array, all of the identified orders will be placed."
+          "description": "The ID (as specified in the configuration) of an order to place. If provided as an array, all the identified orders will be placed."
         }
       }
     }
