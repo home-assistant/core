@@ -687,26 +687,26 @@ class ZwaveColorOnOffLight(ZwaveLight):
 
 
 class ZWA2LEDColorLight(ZwaveColorOnOffLight):
-    """Representation of a ZWA-2 LED color light."""
+    """LED entity specific to the ZWA-2 (legacy firmware)."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
-        """Initialize the ZWA-2 LED color light."""
+        """Initialize the ZWA-2 LED entity."""
         super().__init__(config_entry, driver, info)
         self._attr_name = "LED"
 
 
 class ZWA2LEDOnOffLight(ZwaveLight):
-    """Representation of a ZWA-2 LED on/off light."""
+    """LED entity specific to the ZWA-2."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
-        """Initialize the ZWA-2 LED on/off light."""
+        """Initialize the ZWA-2 LED entity."""
         super().__init__(config_entry, driver, info)
         self._attr_name = "LED"
