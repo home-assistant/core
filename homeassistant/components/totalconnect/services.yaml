@@ -9,3 +9,9 @@ arm_home_instant:
     entity:
       integration: totalconnect
       domain: alarm_control_panel
+
+bypass_all:
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel
