@@ -1222,19 +1222,21 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PV_POWER_CHANNEL_1,
-            translation_key="pv_power_channel_1",
+            translation_key="pv_power_channel",
+            translation_placeholders={"channel": "1"},
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PV_POWER_CHANNEL_2,
-            translation_key="pv_power_channel_2",
+            translation_key="pv_power_channel",
+            translation_placeholders={"channel": "2"},
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BATTERY_POWER,
-            translation_key="battery_discharge_power",
+            translation_key="battery_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -1280,7 +1282,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.SERIAL_VALUE,
+            key=DPCode.SERIAL_NUMBER,
             translation_key="serial_number",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),

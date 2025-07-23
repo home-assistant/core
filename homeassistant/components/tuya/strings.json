@@ -546,17 +546,14 @@
       "battery_capacity": {
         "name": "Battery capacity"
       },
-      "battery_discharge_power": {
-        "name": "Battery discharge power"
+      "battery_power": {
+        "name": "Battery power (+ discharge, - charge)"
       },
       "total_pv_power": {
         "name": "Total PV power"
       },
-      "pv_power_channel_1": {
-        "name": "PV power channel 1"
-      },
-      "pv_power_channel_2": {
-        "name": "PV power channel 2"
+      "pv_power_channel": {
+        "name": "PV power channel {channel}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"

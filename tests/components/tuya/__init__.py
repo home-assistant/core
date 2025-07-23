@@ -173,6 +173,13 @@ DEVICE_MOCKS = {
         Platform.EVENT,
         Platform.SENSOR,
     ],
+    "xnyjcn_micro_storage_inverter": [
+        # Micro storage inverter with energy monitoring and control
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "zndb_smart_meter": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,

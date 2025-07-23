@@ -644,6 +644,10 @@
         "step": 1
       }
     },
+    "feedin_power_limit_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
     "country_code": {
       "type": "String",
       "value": {
@@ -770,6 +774,7 @@
     "function_set": "",
     "output_power_limit": 2,
     "feedin_power_limit": 0,
+    "feedin_power_limit_enable": false,
     "country_code": "",
     "indicator_light_mode": "eco",
     "smart_meter_type": "none",
