@@ -1,0 +1,13 @@
+"""Constants for the ActronAir integration."""
+
+DOMAIN = "actronair"
+
+OAUTH2_AUTHORIZE = "https://nimbus.actronair.com.au/authorize"
+OAUTH2_TOKEN = "https://nimbus.actronair.com.au/api/v0/oauth/token"
+DEVICE_AUTH_URL = "https://nimbus.actronair.com.au/connect"
+OAUTH2_USER_INFO = "https://nimbus.actronair.com.au/api/v0/client/account"
+AC_SYSTEMS_COORDINATOR = "ac_system_coordinator"
+SYSTEM_STATUS_COORDINATOR = "system_status_coordinator"
+NEO_WC = "neo"
+CLIENT_ID = "home_assistant"
+AC_SYSTEMS = "ac_systems"
