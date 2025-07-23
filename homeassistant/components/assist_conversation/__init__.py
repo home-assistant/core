@@ -10,6 +10,8 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+PLATFORMS = [Platform.CONVERSATION]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up assist conversation."""
@@ -23,5 +25,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up assist conversation config entry."""
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.CONVERSATION])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload assist conversation config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
