@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import AirOSData, AirOSDataUpdateCoordinator
+from .coordinator import AirOSDataUpdateCoordinator
 
 
 class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
