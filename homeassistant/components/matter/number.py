@@ -371,4 +371,23 @@ DISCOVERY_SCHEMAS = [
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="speaker_setpoint",
+            native_unit_of_measurement=PERCENTAGE,
+            translation_key="pump_setpoint",
+            native_max_value=100,
+            native_min_value=0.5,
+            native_step=0.5,
+            device_to_ha=(
+                lambda x: None if x is None else x / 2  # Matter range (1-200)
+            ),
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterLevelControlNumber,
+        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        device_type=(device_types.Speaker,),
+    ),
 ]
