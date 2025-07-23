@@ -380,12 +380,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.SUPPLY_FREQUENCY,
-            translation_key="supply_frequency",
-            device_class=SensorDeviceClass.FREQUENCY,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
@@ -1302,12 +1296,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="power",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.SUPPLY_FREQUENCY,
-            translation_key="supply_frequency",
-            device_class=SensorDeviceClass.FREQUENCY,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
@@ -1496,12 +1484,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type_data = int_type
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
-                if int_type.unit and int_type.unit.strip():
-                    self._attr_native_unit_of_measurement = int_type.unit
-                elif description.suggested_unit_of_measurement is not None:
-                    self._attr_native_unit_of_measurement = (
-                        description.suggested_unit_of_measurement
-                    )
+                self._attr_native_unit_of_measurement = int_type.unit
         elif enum_type := self.find_dpcode(
             description.key, dptype=DPType.ENUM, prefer_function=True
         ):

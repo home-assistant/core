@@ -102,16 +102,6 @@
         "maxlen": 255
       }
     },
-    "supply_frequency": {
-      "type": "Integer",
-      "value": {
-        "unit": "Hz",
-        "min": 0,
-        "max": 9999,
-        "scale": 2,
-        "step": 1
-      }
-    },
     "online_state": {
       "type": "Enum",
       "value": {
@@ -129,7 +119,6 @@
     "alarm_set_1": "BwEADQ==",
     "alarm_set_2": "AQEAPAMBAP0EAQC0BQEAAAcBAAAIAQAeCQAAAA==",
     "breaker_number": "SPM02_6588",
-    "supply_frequency": 5000,
     "online_state": "online"
   },
   "set_up": true,
