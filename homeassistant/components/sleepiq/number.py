@@ -164,7 +164,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
     CORE_CLIMATE_TIMER: SleepIQNumberEntityDescription(
         key=CORE_CLIMATE_TIMER,
         native_min_value=0,
-        native_max_value=600,
+        native_max_value=SleepIQCoreClimate.max_core_climate_time,
         native_step=30,
         name=ENTITY_TYPES[CORE_CLIMATE_TIMER],
         icon="mdi:timer",
