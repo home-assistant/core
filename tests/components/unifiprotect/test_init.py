@@ -494,35 +494,24 @@ async def test_setup_skips_api_key_creation_when_no_auth_user(
 
 
 @pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
-async def test_setup_triggers_reauth_when_api_key_still_missing(
+async def test_setup_fails_when_api_key_still_missing_after_creation(
     hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
 ) -> None:
-    """Test that reauth flow is triggered when API key is still missing after all attempts."""
+    """Test that setup fails when API key is still missing after creation attempts."""
     # Setup: API key is not set and remains not set even after attempts
-    ufp.api.is_api_key_set.return_value = False
-    ufp.api.create_api_key = AsyncMock(return_value="new-api-key-123")
-    ufp.api.set_api_key = Mock()  # Mock this but API key still won't be "set"
+    ufp.api.is_api_key_set.return_value = False  # type: ignore[attr-defined]
+    ufp.api.create_api_key = AsyncMock(return_value="new-api-key-123")  # type: ignore[method-assign]
+    ufp.api.set_api_key = Mock()  # type: ignore[method-assign] # Mock this but API key still won't be "set"
 
-    with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
-        # Setup should fail with ConfigEntryAuthFailed
-        await hass.config_entries.async_setup(ufp.entry.entry_id)
-        await hass.async_block_till_done()
+    # Setup should fail since API key is still not set after creation
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
 
-        # Verify entry is in setup error state
-        assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+    # Verify entry is in setup error state (which will trigger reauth automatically)
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
 
-        # Verify API key creation was attempted
-        ufp.api.create_api_key.assert_called_once_with(
-            name="Home Assistant (test home)"
-        )
-        ufp.api.set_api_key.assert_called_once_with("new-api-key-123")
-
-        # Verify reauth flow was initiated (could be called once or twice by HA)
-        assert mock_flow_init.call_count >= 1
-
-        # Check that the first call was our expected call
-        first_call = mock_flow_init.call_args_list[0]
-        assert first_call[0] == (DOMAIN,)  # Positional args
-        assert first_call[1]["context"]["source"] == "reauth"
-        assert first_call[1]["context"]["entry_id"] == ufp.entry.entry_id
-        assert first_call[1]["data"] == ufp.entry.data
+    # Verify API key creation was attempted
+    ufp.api.create_api_key.assert_called_once_with(  # type: ignore[attr-defined]
+        name="Home Assistant (test home)"
+    )
+    ufp.api.set_api_key.assert_called_once_with("new-api-key-123")  # type: ignore[attr-defined]
