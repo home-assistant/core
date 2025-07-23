@@ -6,10 +6,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pyvesync import VeSync
-from pyvesync.vesyncbulb import VeSyncBulb
-from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
+from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.switch_base import VeSyncSwitch
 import requests_mock
 
 from homeassistant.components.vesync import DOMAIN
@@ -74,7 +74,7 @@ def manager_fixture() -> VeSync:
 @pytest.fixture(name="fan")
 def fan_fixture():
     """Create a mock VeSync fan fixture."""
-    return Mock(VeSyncAirBypass)
+    return Mock(VeSyncFanBase)
 
 
 @pytest.fixture(name="bulb")
@@ -109,7 +109,7 @@ def outlet_fixture():
 def humidifier_fixture():
     """Create a mock VeSync Classic200S humidifier fixture."""
     return Mock(
-        VeSyncHumid200300S,
+        VeSyncFanBase,
         cid="200s-humidifier",
         config={
             "auto_target_humidity": 40,
@@ -139,7 +139,7 @@ def humidifier_fixture():
 def humidifier_300s_fixture():
     """Create a mock VeSync Classic300S humidifier fixture."""
     return Mock(
-        VeSyncHumid200300S,
+        VeSyncFanBase,
         cid="300s-humidifier",
         config={
             "auto_target_humidity": 40,

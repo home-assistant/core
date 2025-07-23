@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
     await manager.get_devices()
     await manager.update()
+    await manager.check_firmware()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

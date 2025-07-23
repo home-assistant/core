@@ -61,8 +61,8 @@ async def test_fan_state(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+        (SERVICE_TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
+        (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
 async def test_turn_on_off_success(
@@ -94,8 +94,14 @@ async def test_turn_on_off_success(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_on",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_off",
+        ),
     ],
 )
 async def test_turn_on_off_raises_error(
@@ -141,7 +147,7 @@ async def test_set_preset_mode(
     with (
         expectation,
         patch(
-            "pyvesync.vesyncfan.VeSyncTowerFan.normal_mode",
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.normal_mode",
             return_value=api_response,
         ) as method_mock,
     ):

@@ -187,7 +187,7 @@ def mock_outlet_energy_response(
 
 def call_api_side_effect__no_devices(*args, **kwargs):
     """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/cloud/v1/user/login" and args[1] == "post":
+    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
         return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
     if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
         return (
@@ -201,7 +201,7 @@ def call_api_side_effect__no_devices(*args, **kwargs):
 
 def call_api_side_effect__single_humidifier(*args, **kwargs):
     """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/cloud/v1/user/login" and args[1] == "post":
+    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
         return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
     if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
         return (
@@ -226,7 +226,7 @@ def call_api_side_effect__single_humidifier(*args, **kwargs):
 
 def call_api_side_effect__single_fan(*args, **kwargs):
     """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/cloud/v1/user/login" and args[1] == "post":
+    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
         return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
     if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
         return (
