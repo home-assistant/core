@@ -109,13 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             )
 
     if not protect.is_api_key_set():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "reauth", "entry_id": entry.entry_id},
-                data=entry.data,
-            )
-        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="api_key_required",
