@@ -12,6 +12,7 @@ from opower import (
     MeterType,
     Opower,
     ReadResolution,
+    create_cookie_jar,
 )
 from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
@@ -30,7 +31,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -62,7 +64,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            async_create_clientsession(hass, cookie_jar=create_cookie_jar()),
             config_entry.data[CONF_UTILITY],
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],

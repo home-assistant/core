@@ -1,7 +1,7 @@
 """Test the auth script to manage local users."""
 
 import argparse
-from asyncio import AbstractEventLoop
+import asyncio
 from collections.abc import Generator
 import logging
 from typing import Any
@@ -143,7 +143,7 @@ async def test_change_password_invalid_user(
         data.validate_login("invalid-user", "new-pass")
 
 
-def test_parsing_args(event_loop: AbstractEventLoop) -> None:
+async def test_parsing_args() -> None:
     """Test we parse args correctly."""
     called = False
 
@@ -158,7 +158,8 @@ def test_parsing_args(event_loop: AbstractEventLoop) -> None:
 
     args = Mock(config="/somewhere/config", func=mock_func)
 
+    event_loop = asyncio.get_event_loop()
     with patch("argparse.ArgumentParser.parse_args", return_value=args):
-        script_auth.run(None)
+        await event_loop.run_in_executor(None, script_auth.run, None)
 
     assert called, "Mock function did not get called"
