@@ -25,14 +25,11 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import ATTRIBUTION, CONF_TRAVEL_TIMES, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by WSDOT"
-
-CONF_TRAVEL_TIMES = "travel_time"
-
 ICON = "mdi:car"
-DOMAIN = "wsdot"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 

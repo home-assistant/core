@@ -8,13 +8,9 @@ import voluptuous as vol
 import wsdot as wsdot_api
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY
 
-from .sensor import CONF_API_KEY, CONF_TRAVEL_TIMES, DOMAIN
-
-DIALOG_API_KEY = "API Key"
-DIALOG_NAME = "Name"
-CONF_TITLE = "title"
-CONF_DATA = "data"
+from .const import CONF_TRAVEL_TIMES, DIALOG_API_KEY, DIALOG_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

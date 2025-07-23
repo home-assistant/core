@@ -7,14 +7,9 @@ from unittest.mock import patch
 import pytest
 from wsdot import TravelTime
 
-from homeassistant.components.wsdot.sensor import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    CONF_TRAVEL_TIMES,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
+from homeassistant.components.wsdot.sensor import SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

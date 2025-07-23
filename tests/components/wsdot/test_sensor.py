@@ -3,11 +3,8 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock
 
-from homeassistant.components.wsdot.sensor import (
-    CONF_TRAVEL_TIMES,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
+from homeassistant.components.wsdot.sensor import SCAN_INTERVAL
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,

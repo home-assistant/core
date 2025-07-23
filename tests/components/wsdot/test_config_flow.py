@@ -3,21 +3,16 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-from homeassistant.components.wsdot.config_flow import (
+from homeassistant.components.wsdot.const import (
     CONF_DATA,
     CONF_TITLE,
+    CONF_TRAVEL_TIMES,
     DIALOG_API_KEY,
     DIALOG_NAME,
-)
-from homeassistant.components.wsdot.sensor import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    CONF_TRAVEL_TIMES,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_SOURCE, CONF_TYPE
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_SOURCE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
