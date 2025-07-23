@@ -278,7 +278,7 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
 ) -> None:
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
-    assert "max text length must be <= 255" in caplog.text
+    assert "max text length must be <= 2048" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -300,13 +300,13 @@ async def test_validation_payload_greater_then_max_state_length(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the max value of of max configuration attribute."""
+    """Test the max value of max configuration attribute."""
     assert await mqtt_mock_entry()
 
     state = hass.states.get("text.test")
     assert state.state == STATE_UNKNOWN
 
-    async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(310)))
+    async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(2049)))
 
     assert "Cannot update state for entity text.test" in caplog.text
 

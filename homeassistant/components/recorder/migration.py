@@ -2037,6 +2037,15 @@ class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
             connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
 
 
+class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Increase the size of the state column in the states table from 255 to 2048
+        _modify_columns(
+            self.session_maker, self.engine, "states", ["state VARCHAR(2048)"]
+        )
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,

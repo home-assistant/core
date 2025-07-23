@@ -112,7 +112,7 @@ async def test_api_state_change_with_bad_state(
 ) -> None:
     """Test if API sends appropriate error if we omit state."""
     resp = await mock_api_client.post(
-        "/api/states/test.test", json={"state": "x" * 256}
+        "/api/states/test.test", json={"state": "x" * 2049}
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST

@@ -212,7 +212,7 @@ async def test_setting_sensor_to_long_state_via_mqtt_message(
     """Test the setting of the value via MQTT."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(hass, "test-topic", "".join("x" for _ in range(310)))
+    async_fire_mqtt_message(hass, "test-topic", "".join("x" for _ in range(2049)))
     state = hass.states.get("sensor.test")
     await hass.async_block_till_done()
 
