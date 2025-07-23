@@ -111,6 +111,29 @@ class CoolMasterNetMock:
         }
 
 
+class CoolMasterNetErrorMock:
+    """Mock for CoolMasterNet."""
+
+    def __init__(self, *_args: Any, **kwargs: Any) -> None:
+        """Initialize the CoolMasterNetMock."""
+        self._units = copy.deepcopy(TEST_UNITS)
+        self._status_count = 0
+
+    async def info(self) -> dict[str, Any]:
+        """Return info about the bridge device."""
+        return DEFAULT_INFO
+
+    async def status(self) -> dict[str, CoolMasterNetUnitMock]:
+        """Return the units."""
+        if self._status_count % 2 == 0:
+            self._status_count += 1
+            raise OSError("Simulated communication error")
+        return {
+            unit_id: CoolMasterNetUnitMock(unit_id, attributes)
+            for unit_id, attributes in self._units.items()
+        }
+
+
 @pytest.fixture
 async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Coolmaster integration in Home Assistant."""
@@ -128,6 +151,30 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     with patch(
         "homeassistant.components.coolmaster.CoolMasterNet",
         new=CoolMasterNetMock,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
+
+
+@pytest.fixture
+async def load_int_with_error(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Coolmaster integration in Home Assistant."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.coolmaster.CoolMasterNet",
+        new=CoolMasterNetErrorMock,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
