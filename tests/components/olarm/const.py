@@ -3,7 +3,7 @@
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
-# Response payload returned by the mocked Olarm API when listing devices
+# API devices response
 MOCK_DEVICES_RESPONSE = {
     "userId": "abcd4ffb-8131-4de0-9416-a89abde63def",
     "page": 1,
@@ -22,4 +22,21 @@ MOCK_DEVICES_RESPONSE = {
             "deviceStatus": "online",
         }
     ],
+}
+
+# API device response
+MOCK_DEVICE_RESPONSE = {
+    "deviceName": "Test Device",
+    "deviceState": {
+        "zones": ["a", "c", "b"],
+        "powerAC": "ok",
+    },
+    "deviceLinks": {},
+    "deviceIO": {},
+    "deviceProfile": {
+        "zonesLabels": ["Front Door", "Window", "Motion"],
+        "zonesTypes": [10, 11, 20],
+    },
+    "deviceProfileLinks": {},
+    "deviceProfileIO": {},
 }
