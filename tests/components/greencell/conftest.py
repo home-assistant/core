@@ -192,7 +192,7 @@ def stub_subscribe(monkeypatch: pytest.MonkeyPatch):
 
     async def fake_subscribe(hass, topic, callback):
         subs.append((topic, callback))
-        return lambda: None
+        return lambda: subs.remove((topic, callback))
 
     # Patch the exact symbol imported by the integration
     monkeypatch.setattr(
@@ -218,7 +218,7 @@ def stub_mqtt_and_publish(monkeypatch: pytest.MonkeyPatch):
             asyncio.get_event_loop().call_soon(
                 callback, DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
             )
-        return lambda: None
+        return lambda: callbacks.pop(topic, None)
 
     async def fake_publish(hass, topic, payload, qos, retain):
         """Simulate async_publish by storing the call."""
