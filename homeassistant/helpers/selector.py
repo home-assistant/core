@@ -1367,7 +1367,7 @@ class StateSelector(Selector[StateSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [vol.Schema(str)(val) for val in data]
-            
+
 
 class StatisticSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a statistic selector config."""
