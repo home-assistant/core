@@ -80,8 +80,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             self.ws_connected = True
 
             def start_watchdog() -> None:
-                # self.hass.create_task(self._pong_watchdog())
-                # _LOGGER.debug("Starting watchdog")
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._pong_watchdog(),
