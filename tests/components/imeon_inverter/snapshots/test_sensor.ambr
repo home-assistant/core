@@ -55,6 +55,62 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.imeon_inverter_battery_consumed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.imeon_inverter_battery_consumed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Battery consumed',
+    'platform': 'imeon_inverter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_consumed',
+    'unique_id': '111111111111111_battery_consumed',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_battery_consumed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Imeon inverter Battery consumed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.imeon_inverter_battery_consumed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.imeon_inverter_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1232,7 +1288,125 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_building_consumption_minute-entry]
+# name: test_sensors[sensor.imeon_inverter_input_power_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.imeon_inverter_input_power_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Input power total',
+    'platform': 'imeon_inverter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input_power_total',
+    'unique_id': '111111111111111_input_power_total',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_input_power_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Imeon inverter Input power total',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.imeon_inverter_input_power_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_inverter_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unsynchronized',
+        'grid_consumption',
+        'grid_injection',
+        'grid_synchronised_but_not_used',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.imeon_inverter_inverter_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Inverter state',
+    'platform': 'imeon_inverter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'manager_inverter_state',
+    'unique_id': '111111111111111_manager_inverter_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_inverter_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Imeon inverter Inverter state',
+      'options': list([
+        'unsynchronized',
+        'grid_consumption',
+        'grid_injection',
+        'grid_synchronised_but_not_used',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.imeon_inverter_inverter_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_meter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1286,340 +1460,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_grid_consumption_minute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_economy_factor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Monitoring economy factor',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_economy_factor',
-    'unique_id': '111111111111111_monitoring_economy_factor',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_economy_factor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Monitoring economy factor',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_economy_factor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_grid_injection_minute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_grid_injection',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Monitoring grid injection',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_grid_injection',
-    'unique_id': '111111111111111_monitoring_grid_injection',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_grid_injection-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Imeon inverter Monitoring grid injection',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_grid_injection',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_grid_power_flow_minute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_solar_production',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Monitoring grid power flow (minute)',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-
-    'translation_key': 'monitoring_minute_grid_power_flow',
-    'unique_id': '111111111111111_monitoring_minute_grid_power_flow',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_grid_power_flow_minute-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Imeon inverter Monitoring grid power flow (minute)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_grid_power_flow_minute',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-3.4',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_self_consumption-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_self_consumption',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Monitoring self-consumption',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_self_consumption',
-    'unique_id': '111111111111111_monitoring_self_consumption',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_self_consumption-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Monitoring self-consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_self_consumption',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '85.0',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_self_sufficiency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_self_sufficiency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Monitoring self-sufficiency',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_self_sufficiency',
-    'unique_id': '111111111111111_monitoring_self_sufficiency',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_self_sufficiency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Monitoring self-sufficiency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_self_sufficiency',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '90.0',
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_solar_production_minute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_solar_production_minute',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Monitoring solar production (minute)',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_minute_solar_production',
-    'unique_id': '111111111111111_monitoring_minute_solar_production',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_monitoring_solar_production_minute-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Imeon inverter Monitoring solar production (minute)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_monitoring_solar_production_minute',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '43.3',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l1-entry]
@@ -2573,61 +2413,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.imeon_inverter_self_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.imeon_inverter_self_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Self-produced',
-    'platform': 'imeon_inverter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'monitoring_self_produced',
-    'unique_id': '111111111111111_monitoring_self_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[sensor.imeon_inverter_self_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Self-produced',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.imeon_inverter_self_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.imeon_inverter_self_sufficiency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2851,7 +2636,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Today battery consumed energy',
+    'original_name': 'Today battery-consumed energy',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2865,7 +2650,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Imeon inverter Today battery consumed energy',
+      'friendly_name': 'Imeon inverter Today battery-consumed energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -2907,7 +2692,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Today battery stored energy',
+    'original_name': 'Today battery-stored energy',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2921,7 +2706,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Imeon inverter Today battery stored energy',
+      'friendly_name': 'Imeon inverter Today battery-stored energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -3019,7 +2804,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Today grid consumed energy',
+    'original_name': 'Today grid-consumed energy',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3033,7 +2818,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Imeon inverter Today grid consumed energy',
+      'friendly_name': 'Imeon inverter Today grid-consumed energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -3075,7 +2860,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Today grid injected energy',
+    'original_name': 'Today grid-injected energy',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3089,7 +2874,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Imeon inverter Today grid injected energy',
+      'friendly_name': 'Imeon inverter Today grid-injected energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
