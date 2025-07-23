@@ -30,6 +30,6 @@ class OlarmEntity(CoordinatorEntity[OlarmDataUpdateCoordinator]):
         # Set device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=coordinator.device_name,
+            name=coordinator.data.device_name,
             manufacturer="Olarm",
         )

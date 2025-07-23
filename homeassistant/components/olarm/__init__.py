@@ -58,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # setup OlarmFlow API and MQTT client
-    olarm_client = OlarmFlowClient(session.token["access_token"])
+    olarm_client = OlarmFlowClient(
+        session.token["access_token"], session.token["expires_at"]
+    )
 
     # setup coordinator
     coordinator = OlarmDataUpdateCoordinator(
