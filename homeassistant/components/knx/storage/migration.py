@@ -20,7 +20,7 @@ def _migrate_light_schema_1_to_2(light_knx_data: dict[str, Any]) -> None:
     light_knx_data.pop("_light_color_mode_schema", None)
 
     # Move color related group addresses to new "color" key
-    color = {}
+    color: dict[str, Any] = {}
     for color_key in (
         # optional / required and exclusive keys are the same in old and new schema
         store_const.CONF_GA_COLOR,
