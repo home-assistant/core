@@ -223,8 +223,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    # Smart Water Timer
     "sfkzq": (
         # Controls the irrigation duration for the water valve
         NumberEntityDescription(
@@ -284,8 +283,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
