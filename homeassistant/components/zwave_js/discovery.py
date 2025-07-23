@@ -786,7 +786,6 @@ DISCOVERY_SCHEMAS = [
             SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         ],
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     ## Day-1 firmware update (1.1) -> Binary Switch CC
     ZWaveDiscoverySchema(
@@ -801,7 +800,6 @@ DISCOVERY_SCHEMAS = [
             SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         ],
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
