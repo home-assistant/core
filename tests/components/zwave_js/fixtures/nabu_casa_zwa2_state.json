@@ -14,8 +14,8 @@
     "isEmbedded": true,
     "manufacturer": "Nabu Casa",
     "manufacturerId": 1126,
-    "label": "Home Assistant Connect ZWA-2",
-    "description": "Z-Wave Adapter",
+    "label": "NC-ZWA-9734",
+    "description": "Home Assistant Connect ZWA-2",
     "devices": [
       {
         "productType": 1,
@@ -28,7 +28,7 @@
     },
     "preferred": false
   },
-  "label": "Home Assistant Connect ZWA-2",
+  "label": "NC-ZWA-9734",
   "interviewAttempts": 0,
   "isFrequentListening": false,
   "maxDataRate": 100000,

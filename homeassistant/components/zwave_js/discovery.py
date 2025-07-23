@@ -779,7 +779,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0466},
         product_id={0x0001},
         product_type={0x0001},
-        hint="color_onoff",
+        hint="zwa2_led_color",
         primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
         absent_values=[
             SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
@@ -793,7 +793,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0466},
         product_id={0x0001},
         product_type={0x0001},
-        hint="onoff",
+        hint="zwa2_led_onoff",
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         absent_values=[
             COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
