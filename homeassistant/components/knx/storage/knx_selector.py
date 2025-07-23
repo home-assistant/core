@@ -19,7 +19,7 @@ class GroupSelect(vol.Any):
 
     def _exec(self, funcs: Iterable, v: Any, path: list[Hashable] | None = None) -> Any:
         """Execute the validation functions."""
-        errors = []
+        errors: list[vol.Invalid] = []
         for func in funcs:
             try:
                 if path is None:
