@@ -17,12 +17,7 @@ from homeassistant.components.number import (
     NumberEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
@@ -41,6 +36,7 @@ from .helpers import (
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -61,27 +57,12 @@ NUMBER_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_STATE): cv.template,
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     }
 ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-NUMBER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Required(CONF_STEP): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-)
 
-NUMBER_YAML_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        }
-    )
-    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(NUMBER_COMMON_SCHEMA.schema)
-)
+NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -135,20 +116,16 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     """Representation of a template number features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._template = config.get(CONF_STATE)
-
         self._step_template = config[CONF_STEP]
         self._min_template = config[CONF_MIN]
         self._max_template = config[CONF_MAX]
 
-        self._attr_assumed_state = self._optimistic = (
-            self._template is None or config.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC)
-        )
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
@@ -156,7 +133,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_native_value = value
             self.async_write_ha_state()
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
