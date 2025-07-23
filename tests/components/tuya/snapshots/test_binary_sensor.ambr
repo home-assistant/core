@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_defrost',
+    'entity_id': 'binary_sensor.dehumidifier_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,56 +73,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Defrost',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'defrost',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_defrost-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Defrost',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_defrost',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_tank_full',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Tank full',
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -132,21 +83,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_tank_full-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Tank full',
+      'friendly_name': 'Dehumidifier Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_tank_full',
+    'entity_id': 'binary_sensor.dehumidifier_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-entry]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +110,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_wet',
+    'entity_id': 'binary_sensor.dehumidifier_problem_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,7 +122,56 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Wet',
+    'original_name': 'Problem',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'defrost',
+    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Dehumidifier Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifier_problem_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifier_problem_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -181,21 +181,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_wet-state]
+# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][binary_sensor.dehumidifier_problem_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Wet',
+      'friendly_name': 'Dehumidifier Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_wet',
+    'entity_id': 'binary_sensor.dehumidifier_problem_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_defrost-entry]
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,7 +208,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifer_defrost',
+    'entity_id': 'binary_sensor.dehumidifer_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,56 +220,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Defrost',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'defrost',
-    'unique_id': 'tuya.mock_device_iddefrost',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_defrost-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifer Defrost',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifer_defrost',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_tank_full-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifer_tank_full',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Tank full',
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -279,14 +230,63 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_tank_full-state]
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifer Tank full',
+      'friendly_name': 'Dehumidifer Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifer_tank_full',
+    'entity_id': 'binary_sensor.dehumidifer_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_problem_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifer_problem_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'defrost',
+    'unique_id': 'tuya.mock_device_iddefrost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_emma_dehumidifier][binary_sensor.dehumidifer_problem_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Dehumidifer Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifer_problem_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
