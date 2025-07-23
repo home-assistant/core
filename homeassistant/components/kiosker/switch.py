@@ -12,6 +12,8 @@ from . import KioskerConfigEntry
 from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
+PARALLEL_UPDATES = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
