@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from kiosker import Blackout, KioskerAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +46,10 @@ from .const import (
 from .coordinator import KioskerDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+_LOGGER = logging.getLogger(__name__)
+
+# Limit concurrent updates to prevent overwhelming the API
+PARALLEL_UPDATES = 3
 
 
 async def _get_target_coordinators(
@@ -84,6 +90,29 @@ async def _get_target_coordinators(
     return coordinators
 
 
+async def _call_api_safe(
+    hass: HomeAssistant,
+    coordinator: KioskerDataUpdateCoordinator,
+    api_method,
+    action_name: str,
+    *args,
+) -> None:
+    """Call API method with error handling and logging."""
+    try:
+        await hass.async_add_executor_job(api_method, *args)
+    except (OSError, TimeoutError) as exc:
+        _LOGGER.error(
+            "Failed to %s on device %s: %s", action_name, coordinator.api.host, exc
+        )
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.debug(
+            "Unexpected error during %s on device %s: %s",
+            action_name,
+            coordinator.api.host,
+            exc,
+        )
+
+
 async def _register_services(hass: HomeAssistant) -> None:
     """Register Kiosker services."""
 
@@ -93,7 +122,9 @@ async def _register_services(hass: HomeAssistant) -> None:
         coordinators = await _get_target_coordinators(hass, call)
 
         for coordinator in coordinators:
-            await hass.async_add_executor_job(coordinator.api.navigate_url, url)
+            await _call_api_safe(
+                hass, coordinator, coordinator.api.navigate_url, "navigate to URL", url
+            )
 
     async def navigate_refresh(call: ServiceCall) -> None:
         """Refresh page service."""

@@ -42,6 +42,9 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator):
                 self.api.screensaver_get_state
             )
         except Exception as exception:
+            _LOGGER.warning(
+                "Failed to update Kiosker data: %s", exception, exc_info=True
+            )
             raise UpdateFailed(exception) from exception
         else:
             return {

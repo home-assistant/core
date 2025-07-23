@@ -22,6 +22,8 @@ from . import KioskerConfigEntry
 from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
+PARALLEL_UPDATES = 3
+
 
 @dataclass(frozen=True)
 class KioskerSensorEntityDescription(SensorEntityDescription):
