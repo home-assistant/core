@@ -2,7 +2,7 @@
   "services": {
     "order": {
       "name": "Order",
-      "description": "Places a set of orders with Dominos Pizza.",
+      "description": "Places a set of orders with Domino's Pizza.",
       "fields": {
         "order_entity_id": {
           "name": "Order entity",
