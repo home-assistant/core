@@ -45,6 +45,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.AC_IN_STATE: SensorEntityDescription(
         key=Keys.AC_IN_STATE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="device_state",
     ),
     Keys.AC_OUT_POWER: SensorEntityDescription(
         key=Keys.AC_OUT_POWER,
@@ -55,18 +56,22 @@ SENSOR_DESCRIPTIONS = {
     Keys.AC_OUT_STATE: SensorEntityDescription(
         key=Keys.AC_OUT_STATE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="device_state",
     ),
     Keys.ALARM: SensorEntityDescription(
         key=Keys.ALARM,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="alarm",
     ),
     Keys.AUX_MODE: SensorEntityDescription(
         key=Keys.AUX_MODE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="aux_mode",
     ),
     Keys.BALANCER_STATUS: SensorEntityDescription(
         key=Keys.BALANCER_STATUS,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="balancer_status",
     ),
     Keys.BATTERY_CURRENT: SensorEntityDescription(
         key=Keys.BATTERY_CURRENT,
@@ -89,10 +94,12 @@ SENSOR_DESCRIPTIONS = {
     Keys.CHARGE_STATE: SensorEntityDescription(
         key=Keys.CHARGE_STATE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="device_state",
     ),
     Keys.CHARGER_ERROR: SensorEntityDescription(
         key=Keys.CHARGER_ERROR,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="charger_error",
     ),
     Keys.CONSUMED_AMPERE_HOURS: SensorEntityDescription(
         key=Keys.CONSUMED_AMPERE_HOURS,
@@ -108,10 +115,12 @@ SENSOR_DESCRIPTIONS = {
     Keys.DEVICE_STATE: SensorEntityDescription(
         key=Keys.DEVICE_STATE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="device_state",
     ),
     Keys.ERROR_CODE: SensorEntityDescription(
         key=Keys.ERROR_CODE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="error_code",
     ),
     Keys.EXTERNAL_DEVICE_LOAD: SensorEntityDescription(
         key=Keys.EXTERNAL_DEVICE_LOAD,
@@ -128,6 +137,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.METER_TYPE: SensorEntityDescription(
         key=Keys.METER_TYPE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="meter_type",
     ),
     Keys.MIDPOINT_VOLTAGE: SensorEntityDescription(
         key=Keys.MIDPOINT_VOLTAGE,
@@ -138,10 +148,12 @@ SENSOR_DESCRIPTIONS = {
     Keys.OFF_REASON: SensorEntityDescription(
         key=Keys.OFF_REASON,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="off_reason",
     ),
     Keys.OUTPUT_STATE: SensorEntityDescription(
         key=Keys.OUTPUT_STATE,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="output_state",
     ),
     Keys.OUTPUT_VOLTAGE: SensorEntityDescription(
         key=Keys.OUTPUT_VOLTAGE,
@@ -194,6 +206,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.WARNING: SensorEntityDescription(
         key=Keys.WARNING,
         device_class=SensorDeviceClass.ENUM,
+        translation_key="alarm",
     ),
     Keys.YIELD_TODAY: SensorEntityDescription(
         key=Keys.YIELD_TODAY,
