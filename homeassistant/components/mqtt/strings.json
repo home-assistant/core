@@ -4,9 +4,27 @@
       "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     },
-    "invalid_unit_of_measurement": {
-      "title": "Sensor with invalid unit of measurement",
-      "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    "subentry_migration_discovery": {
+      "title": "MQTT device \"{name}\" subentry migration to MQTT discovery",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::mqtt::issues::subentry_migration_discovery::title%]",
+            "description": "Exported MQTT device \"{name}\" identified via MQTT discovery. Select **Submit** to confirm that the MQTT device is to be migrated to the main MQTT configuration, and to remove the existing MQTT device subentry. Make sure that the discovery is retained at the MQTT broker, or is resent after the subentry is removed, so that the MQTT device will be set up correctly. As an alternative you can change the device identifiers and entity unique ID-s in your MQTT discovery configuration payload, and cancel this repair if you want to keep the MQTT device subentry."
+          }
+        }
+      }
+    },
+    "subentry_migration_yaml": {
+      "title": "MQTT device \"{name}\" subentry migration to YAML",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::mqtt::issues::subentry_migration_yaml::title%]",
+            "description": "Exported MQTT device \"{name}\" identified in YAML configuration. Select **Submit** to confirm that the MQTT device is to be migrated to main MQTT config entry, and to remove the existing MQTT device subentry. As an alternative you can change the device identifiers and entity unique ID-s in your configuration.yaml file, and cancel this repair if you want to keep the MQTT device subentry."
+          }
+        }
+      }
     }
   },
   "config": {
@@ -111,10 +129,10 @@
   "config_subentries": {
     "device": {
       "initiate_flow": {
-        "user": "Add MQTT Device",
-        "reconfigure": "Reconfigure MQTT Device"
+        "user": "Add MQTT device",
+        "reconfigure": "Reconfigure MQTT device"
       },
-      "entry_type": "MQTT Device",
+      "entry_type": "MQTT device",
       "step": {
         "availability": {
           "title": "Availability options",
@@ -138,20 +156,27 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
-            "sw_version": "Software version",
-            "hw_version": "Hardware version",
             "model": "Model",
             "model_id": "Model ID"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
-            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
-            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
             "model": "E.g. 'Cleanmaster Pro'.",
             "model_id": "E.g. '123NK2PRO'."
           },
           "sections": {
+            "advanced_settings": {
+              "name": "Advanced device settings",
+              "data": {
+                "sw_version": "Software version",
+                "hw_version": "Hardware version"
+              },
+              "data_description": {
+                "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+                "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'."
+              }
+            },
             "mqtt_settings": {
               "name": "MQTT settings",
               "data": {
@@ -172,6 +197,7 @@
             "delete_entity": "Delete an entity",
             "availability": "Configure availability",
             "device": "Update device properties",
+            "export": "Export MQTT device configuration",
             "save_changes": "Save changes"
           }
         },
@@ -214,6 +240,7 @@
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "data": {
             "device_class": "Device class",
+            "entity_category": "Entity category",
             "fan_feature_speed": "Speed support",
             "fan_feature_preset_modes": "Preset modes support",
             "fan_feature_oscillation": "Oscillation support",
@@ -225,7 +252,8 @@
             "unit_of_measurement": "Unit of measurement"
           },
           "data_description": {
-            "device_class": "The Device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.](https://developers.home-assistant.io/docs/core/entity/#registry-properties)",
             "fan_feature_speed": "The fan supports multiple speeds.",
             "fan_feature_preset_modes": "The fan supports preset modes.",
             "fan_feature_oscillation": "The fan supports oscillation.",
@@ -394,7 +422,7 @@
                 "tilt_opened_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is opened.",
                 "tilt_status_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the tilt status topic. Within the template the following variables are available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_status_template)",
                 "tilt_status_topic": "The MQTT topic subscribed to receive tilt status update values. [Learn more.]({url}#tilt_status_topic)",
-                "tilt_optimistic": "Flag that defines if tilt works in optimistic mode. If tilt status topic is not defined, tilt works in optimisic mode by default. [Learn more.]({url}#tilt_optimistic)"
+                "tilt_optimistic": "Flag that defines if tilt works in optimistic mode. If tilt status topic is not defined, tilt works in optimistic mode by default. [Learn more.]({url}#tilt_optimistic)"
               }
             },
             "light_brightness_settings": {
@@ -621,6 +649,36 @@
                 "xy_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the XY value."
               }
             }
+          }
+        },
+        "export": {
+          "title": "Export MQTT device config",
+          "description": "An export allows you to migrate the MQTT device configuration to YAML-based configuration or MQTT discovery. The configuration export can also be helpful for troubleshooting.",
+          "menu_options": {
+            "export_discovery": "Export MQTT discovery information",
+            "export_yaml": "Export to YAML configuration"
+          }
+        },
+        "export_yaml": {
+          "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
+          "description": "You can copy the configuration below and place it your configuration.yaml file. Home Assistant will detect if the setup of the MQTT device was tried via YAML instead, and will offer a repair flow to clean up the redundant subentry. You can also choose to change the identifiers if you do not want to remove the subentry.",
+          "data": {
+            "yaml": "Copy the YAML configuration below:"
+          },
+          "data_description": {
+            "yaml": "Place YAML configuration in your [configuration.yaml]({url}#yaml-configuration-listed-per-item)."
+          }
+        },
+        "export_discovery": {
+          "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
+          "description": "To allow setup via MQTT [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic. Copy the information from the fields below. Home Assistant will detect if the setup of the MQTT device was tried via MQTT discovery instead, and will offer a repair flow to clean up the redundant subentry. You can also choose to change the identifiers if you do not want to remove the subentry.",
+          "data": {
+            "discovery_topic": "Discovery topic",
+            "discovery_payload": "Discovery payload:"
+          },
+          "data_description": {
+            "discovery_topic": "The [discovery topic]({url}#discovery-topic) to publish the discovery payload, used to trigger MQTT discovery. An empty payload published to this topic will remove the device and discovered entities.",
+            "discovery_payload": "The JSON [discovery payload]({url}#device-discovery-payload) that contains information about the MQTT device."
           }
         }
       },
@@ -887,6 +945,12 @@
         "switch": "[%key:component::switch::title%]"
       }
     },
+    "entity_category": {
+      "options": {
+        "config": "Config",
+        "diagnostic": "Diagnostic"
+      }
+    },
     "light_schema": {
       "options": {
         "basic": "Default schema",
@@ -986,6 +1050,23 @@
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads MQTT entities from the YAML-configuration."
+    }
+  },
+  "triggers": {
+    "mqtt": {
+      "name": "MQTT",
+      "description": "When a specific message is received on a given MQTT topic.",
+      "description_configured": "When an MQTT message has been received",
+      "fields": {
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to trigger on."
+        },
+        "topic": {
+          "name": "Topic",
+          "description": "MQTT topic to listen to."
+        }
+      }
     }
   },
   "exceptions": {
