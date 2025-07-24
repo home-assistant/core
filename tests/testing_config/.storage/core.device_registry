@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "minor_version": 11,
+  "key": "core.device_registry",
+  "data": {
+    "devices": [
+      {"area_id":"garden","config_entries":["automower_test"],"config_entries_subentries":{"automower_test":[null]},"configuration_url":null,"connections":[],"created_at":"2025-07-22T15:18:39.501013+00:00","disabled_by":null,"entry_type":null,"hw_version":null,"id":"0b0d64be99ea89820ce7b1292a169605","identifiers":[["husqvarna_automower","1234"]],"labels":[],"manufacturer":"Husqvarna","model":"AUTOMOWER® Aspire R4","model_id":null,"modified_at":"2025-07-22T15:18:39.501013+00:00","name_by_user":null,"name":"Test Mower 2","primary_config_entry":"automower_test","serial_number":"123","sw_version":null,"via_device_id":null},
+      {"area_id":"garden","config_entries":["automower_test"],"config_entries_subentries":{"automower_test":[null]},"configuration_url":null,"connections":[],"created_at":"2025-07-22T15:18:39.501013+00:00","disabled_by":null,"entry_type":null,"hw_version":null,"id":"33bad86e256b6a5415d80fea8ab31ff6","identifiers":[["husqvarna_automower","c7233734-b219-4287-a173-08e3643f89f0"]],"labels":[],"manufacturer":"Husqvarna","model":"AUTOMOWER® 450XH","model_id":null,"modified_at":"2025-07-22T15:18:39.501013+00:00","name_by_user":null,"name":"Test Mower 1","primary_config_entry":"automower_test","serial_number":"123","sw_version":null,"via_device_id":null}
+    ],
+    "deleted_devices": []
+  }
+}

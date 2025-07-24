@@ -89,19 +89,14 @@ class AutomowerMessageEventEntity(AutomowerMessageBaseEntity, EventEntity):
     @callback
     def _async_handle_event(self) -> None:
         """Handle the demo button event."""
-        if self.message_coordinator.data.attributes.messages[0].code:
+        last_message = self.message_coordinator.data.attributes.messages[0]
+        if last_message.code:
             self._trigger_event(
-                self.message_coordinator.data.attributes.messages[0].code,
+                last_message.code,
                 {
-                    "severity": self.message_coordinator.data.attributes.messages[
-                        0
-                    ].severity,
-                    "latitude": self.message_coordinator.data.attributes.messages[
-                        0
-                    ].latitude,
-                    "longitude": self.message_coordinator.data.attributes.messages[
-                        0
-                    ].longitude,
+                    "severity": last_message.severity,
+                    "latitude": last_message.latitude,
+                    "longitude": last_message.longitude,
                 },
             )
             # self.async_write_ha_state()
