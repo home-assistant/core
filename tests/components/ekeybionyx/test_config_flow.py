@@ -9,8 +9,12 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.ekeybionyx import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from homeassistant.components.ekeybionyx.const import SCOPE
+from homeassistant.components.ekeybionyx.const import (
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    SCOPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
