@@ -77,6 +77,11 @@ from .const import (
 )
 
 
+def gen_uuid() -> str:
+    """Generate a new UUID."""
+    return uuid.uuid4().hex
+
+
 @dataclass
 class AnalyticsData:
     """Analytics data."""
@@ -184,7 +189,7 @@ class Analytics:
             return
 
         if self._data.uuid is None:
-            self._data.uuid = uuid.uuid4().hex
+            self._data.uuid = gen_uuid()
             await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:

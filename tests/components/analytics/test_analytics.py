@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -43,8 +43,9 @@ MOCK_VERSION_NIGHTLY = "1970.1.0.dev19700101"
 @pytest.fixture(autouse=True)
 def uuid_mock() -> Generator[None]:
     """Mock the UUID."""
-    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
-        hex_mock.return_value = MOCK_UUID
+    with patch(
+        "homeassistant.components.analytics.analytics.gen_uuid", return_value=MOCK_UUID
+    ):
         yield
 
 
