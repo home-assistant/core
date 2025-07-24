@@ -52,18 +52,16 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[CoverEntity] = []
 
-    for area_name, device_name, device in entry_data.covers:
+    for device_name, device in entry_data.covers:
         if device.is_motor:
             entities.append(
                 LutronCoverTimeBased(
-                    area_name, device_name, device, entry_data.controller, config_entry
+                    device_name, device, entry_data.controller, config_entry
                 )
             )
         elif device.is_shade:
             entities.append(
-                LutronCover(
-                    area_name, device_name, device, entry_data.controller, config_entry
-                )
+                LutronCover(device_name, device, entry_data.controller, config_entry)
             )
 
     async_add_entities(entities, True)
@@ -94,14 +92,13 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Device,
         controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._config_entry = config_entry
         self._always_confident = False
         self._send_stop_at_ends = True
@@ -412,14 +409,13 @@ class LutronCover(LutronOutput, CoverEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Output,
         controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._config_entry = config_entry
 
     async def async_close_cover(self, **kwargs: Any) -> None:

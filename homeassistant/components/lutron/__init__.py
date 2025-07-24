@@ -74,14 +74,14 @@ class LutronData:
     """Storage class for platform global data."""
 
     controller: LutronController
-    binary_sensors: list[tuple[str, OccupancyGroup]]
-    covers: list[tuple[str, str, Output]]
-    fans: list[tuple[str, str, Output]]
-    lights: list[tuple[str, str, Output]]
-    buttons: list[tuple[str, str, Button]]
-    scenes: list[tuple[str, str, Button]]
-    leds: list[tuple[str, str, Led]]
-    switches: list[tuple[str, str, Output]]
+    binary_sensors: list[OccupancyGroup]
+    covers: list[tuple[str, Output]]
+    fans: list[tuple[str, Output]]
+    lights: list[tuple[str, Output]]
+    buttons: list[tuple[str, Button]]
+    scenes: list[tuple[str, Button]]
+    leds: list[tuple[str, Led]]
+    switches: list[tuple[str, Output]]
     variables: list[tuple[str, Sysvar]]
 
 
@@ -113,7 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     lutron_data_file = hass.config.path(LUTRON_DATA_FILE)
 
-    lutron_controller = LutronController(hass, host, uid, pwd)
+    lutron_controller = LutronController(
+        hass, host, uid, pwd, use_full_path, use_area_for_device_name
+    )
     await hass.async_add_executor_job(
         lambda: lutron_controller.load_xml_db(
             lutron_data_file, refresh_data, use_radiora_mode, variable_ids=variable_ids
@@ -140,27 +142,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Sort our devices into types
     _LOGGER.debug("Start adding devices")
     for area in lutron_controller.areas:
-        area_name = area.name if not use_full_path else area.location + " " + area.name
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
             device_name = (
-                f"{area_name} {output.name}"
+                f"{area.name} {output.name}"
                 if use_area_for_device_name
                 else output.name
             )
 
             _LOGGER.debug("Working on output %s", output.output_type)
             if output.is_motor or output.is_shade:
-                entry_data.covers.append((area_name, device_name, output))
+                entry_data.covers.append((device_name, output))
                 platform = Platform.COVER
             elif output.is_fan:
-                entry_data.fans.append((area_name, device_name, output))
+                entry_data.fans.append((device_name, output))
                 platform = Platform.FAN
             elif output.is_light:
-                entry_data.lights.append((area_name, device_name, output))
+                entry_data.lights.append((device_name, output))
                 platform = Platform.LIGHT
             else:
-                entry_data.switches.append((area_name, device_name, output))
+                entry_data.switches.append((device_name, output))
                 platform = Platform.SWITCH
 
             _async_check_entity_unique_id(
@@ -181,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         for keypad in area.keypads:
             device_name = (
-                f"{area_name} {keypad.name}"
+                f"{keypad.area.name} {keypad.name}"
                 if use_area_for_device_name
                 else keypad.name
             )
@@ -199,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # Add the leds if they are controlled by integration in Lutron
 
                 if button.has_action:
-                    entry_data.buttons.append((area_name, device_name, button))
+                    entry_data.buttons.append((device_name, button))
 
                     _async_check_entity_unique_id(
                         hass,
@@ -210,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         entry_data.controller.guid,
                     )
 
-                    entry_data.scenes.append((area_name, device_name, button))
+                    entry_data.scenes.append((device_name, button))
 
                     _async_check_entity_unique_id(
                         hass,
@@ -230,7 +231,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     # Add the LED as a light device if is controlled via integration
                     # RadioRa mode adds all leds as switches
                     if led is not None and (use_radiora_mode or button.led_logic == 5):
-                        entry_data.leds.append((area_name, device_name, led))
+                        entry_data.leds.append((device_name, led))
                         platform = (
                             Platform.SWITCH if use_radiora_mode else Platform.LIGHT
                         )
@@ -251,7 +252,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         # exclude occupancy_group not linked to an area
         if area.occupancy_group is not None and area.occupancy_group.id != 0:
-            entry_data.binary_sensors.append((area_name, area.occupancy_group))
+            entry_data.binary_sensors.append(area.occupancy_group)
             platform = Platform.BINARY_SENSOR
             _async_check_entity_unique_id(
                 hass,

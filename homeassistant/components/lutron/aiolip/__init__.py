@@ -47,7 +47,9 @@ class LutronController:
     network, handles dispatch of incoming status updates, etc.
     """
 
-    def __init__(self, hass, host, user, password):
+    def __init__(
+        self, hass, host, user, password, use_full_path, use_area_for_device_name
+    ):
         """Initialize the Lutron controller."""
         self.hass = hass
         self.host = host
@@ -61,6 +63,8 @@ class LutronController:
         self.areas = []
         self.variables = []
         self.name = None
+        self.use_full_path = use_full_path
+        self.use_area_for_device_name = use_area_for_device_name
 
     async def connect(self):
         """Connect to the Lutron controller."""

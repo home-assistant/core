@@ -56,7 +56,7 @@ class LutronVariableSelect(LutronVariable, SelectEntity):
         controller: LutronController,
     ) -> None:
         """Initialize the occupancy sensor."""
-        super().__init__("", device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._attr_options = list(LABEL_TO_VALUE.keys())
         self._current_value = 0
 

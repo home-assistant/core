@@ -32,19 +32,15 @@ async def async_setup_entry(
     )
 
     # Add Lutron Switches
-    for area_name, device_name, device in entry_data.switches:
-        entities.append(
-            LutronSwitch(area_name, device_name, device, entry_data.controller)
-        )
+    for device_name, device in entry_data.switches:
+        entities.append(LutronSwitch(device_name, device, entry_data.controller))
 
     # Add Led as switches if radiora mode
     # Add the indicator LEDs for scenes (keypad buttons)
     if use_radiora_mode:
-        for area_name, device_name, led in entry_data.leds:
+        for device_name, led in entry_data.leds:
             entities.append(
-                LutronLedSwitch(
-                    area_name, device_name, led, entry_data.controller, config_entry
-                )
+                LutronLedSwitch(device_name, led, entry_data.controller, config_entry)
             )
 
     async_add_entities(entities, True)
@@ -79,14 +75,13 @@ class LutronLedSwitch(LutronKeypadComponent, SwitchEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Led,
         controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._config_entry = config_entry
         self._attr_name = lutron_device.name
 

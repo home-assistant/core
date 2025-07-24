@@ -46,10 +46,8 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(
-                area_name, device_name, device, entry_data.controller, config_entry
-            )
-            for area_name, device_name, device in entry_data.lights
+            LutronLight(device_name, device, entry_data.controller, config_entry)
+            for device_name, device in entry_data.lights
         ),
         True,
     )
@@ -58,10 +56,8 @@ async def async_setup_entry(
     if not use_radiora_mode:
         async_add_entities(
             (
-                LutronLedLight(
-                    area_name, device_name, device, entry_data.controller, config_entry
-                )
-                for area_name, device_name, device in entry_data.leds
+                LutronLedLight(device_name, device, entry_data.controller, config_entry)
+                for device_name, device in entry_data.leds
             ),
             True,
         )
@@ -94,14 +90,13 @@ class LutronLight(LutronOutput, LightEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Output,
         controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._config_entry = config_entry
         if self._lutron_device.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -166,14 +161,13 @@ class LutronLedLight(LutronKeypadComponent, LightEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Led,
         controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._config_entry = config_entry
         self._attr_name = lutron_device.name
 

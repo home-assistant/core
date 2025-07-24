@@ -25,7 +25,6 @@ class LutronBaseEntity(Entity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: Device,
         controller: LutronController,
@@ -33,14 +32,24 @@ class LutronBaseEntity(Entity):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
-        self._area_name = area_name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Lutron",
             name=device_name,
-            suggested_area=area_name,
+            suggested_area=self.area_name,
             via_device=(DOMAIN, controller.guid),
         )
+
+    @property
+    def area_name(self) -> str:
+        """Return the area name."""
+        if (area := self._lutron_device.area) is not None:
+            return (
+                area.name
+                if not self._controller.use_full_path
+                else area.location + " " + area.name
+            )
+        return "Not Assigned"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -101,19 +110,18 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     def __init__(
         self,
-        area_name: str,
         device_name: str,
         lutron_device: KeypadComponent,
         controller: LutronController,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, device_name, lutron_device, controller)
+        super().__init__(device_name, lutron_device, controller)
         self._component_number = lutron_device.component_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._lutron_device.id))},
             manufacturer="Lutron",
             name=device_name,
-            suggested_area=area_name,
+            suggested_area=self.area_name,
         )
         if lutron_device.keypad.device_type == "MAIN_REPEATER":
             self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
