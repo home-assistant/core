@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -69,7 +69,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -89,7 +89,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def _send_brightness_command(self, brightness: int) -> None:
