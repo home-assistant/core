@@ -238,7 +238,7 @@
         "name": "OS Agent version"
       },
       "apparmor_version": {
-        "name": "Apparmor version"
+        "name": "AppArmor version"
       },
       "cpu_percent": {
         "name": "CPU percent"
