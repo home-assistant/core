@@ -55,7 +55,7 @@
         "description": "The Nest integration needs to re-authenticate your account"
       },
       "oauth_discovery": {
-        "description": "Home Assistant has found a Google Nest device on your network. Be aware that the set up of Google Nest is more complicated than most other integrations and requires setting up a Nest Device Access project which **requires paying Google a US $5 fee**. Press **Submit** to continue setting up Google Nest."
+        "description": "Home Assistant has found a Google Nest device on your network. Be aware that the setup of Google Nest is more complicated than most other integrations and requires setting up a Nest Device Access project which **requires paying Google a US $5 fee**. Press **Submit** to continue setting up Google Nest."
       }
     },
     "error": {
