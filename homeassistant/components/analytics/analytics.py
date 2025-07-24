@@ -388,21 +388,16 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     return domains
 
 
-@callback
-def async_devices_payload(hass: HomeAssistant) -> dict:
+async def async_devices_payload(hass: HomeAssistant) -> dict:
     """Return the devices payload."""
     integrations_without_model_id: set[str] = set()
     devices: list[dict[str, Any]] = []
     dev_reg = dr.async_get(hass)
-    ignored_integrations = {
-        "bluetooth",
-        "esphome",
-        "hassio",
-        "mqtt",
-    }
     # Devices that need via device info set
     new_indexes: dict[str, int] = {}
     via_devices: dict[str, str] = {}
+
+    seen_integrations = set()
 
     for device in dev_reg.devices.values():
         # Ignore services
@@ -417,8 +412,7 @@ def async_devices_payload(hass: HomeAssistant) -> dict:
         if config_entry is None:
             continue
 
-        if config_entry.domain in ignored_integrations:
-            continue
+        seen_integrations.add(config_entry.domain)
 
         if not device.model_id:
             integrations_without_model_id.add(config_entry.domain)
@@ -448,6 +442,15 @@ def async_devices_payload(hass: HomeAssistant) -> dict:
         if via_device not in new_indexes:
             continue
         devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
+
+    integrations = await async_get_integrations(hass, seen_integrations)
+
+    for device_info in devices:
+        integration = integrations.get(device_info["integration"])
+        if not isinstance(integration, Integration):
+            continue
+
+        device_info["is_custom_integration"] = not integration.is_built_in
 
     return {
         "version": "home-assistant:1",

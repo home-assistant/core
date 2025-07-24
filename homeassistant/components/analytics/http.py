@@ -18,7 +18,7 @@ class AnalyticsDevicesView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Return analytics devices payload as JSON."""
         hass: HomeAssistant = request.app[KEY_HASS]
-        payload = async_devices_payload(hass)
+        payload = await async_devices_payload(hass)
         return self.json(
             payload,
             headers={

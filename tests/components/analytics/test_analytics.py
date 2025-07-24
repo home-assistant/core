@@ -982,13 +982,13 @@ async def test_devices_payload(
 ) -> None:
     """Test devices payload."""
     assert await async_setup_component(hass, "analytics", {})
-    assert async_devices_payload(hass) == {
+    assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "no_model_id": [],
         "devices": [],
     }
 
-    mock_config_entry = MockConfigEntry()
+    mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
 
     # Normal entry
@@ -1012,16 +1012,6 @@ async def test_devices_payload(
         manufacturer="test-manufacturer",
         model_id="test-model-id",
         entry_type=dr.DeviceEntryType.SERVICE,
-    )
-
-    # Ignored because config entry is ignore list
-    ignored_config_entry = MockConfigEntry(domain="esphome")
-    ignored_config_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=ignored_config_entry.entry_id,
-        identifiers={("device", "3")},
-        manufacturer="test-manufacturer",
-        model_id="test-model-id",
     )
 
     # Ignored because no model id
@@ -1049,7 +1039,7 @@ async def test_devices_payload(
         via_device=("device", "1"),
     )
 
-    assert async_devices_payload(hass) == {
+    assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "no_model_id": ["no_model_id"],
         "devices": [
@@ -1059,7 +1049,8 @@ async def test_devices_payload(
                 "model": "test-model",
                 "sw_version": "test-sw-version",
                 "hw_version": "test-hw-version",
-                "integration": "test",
+                "integration": "hue",
+                "is_custom_integration": False,
                 "has_suggested_area": True,
                 "has_configuration_url": True,
                 "via_device": None,
@@ -1070,7 +1061,8 @@ async def test_devices_payload(
                 "model": None,
                 "sw_version": None,
                 "hw_version": None,
-                "integration": "test",
+                "integration": "hue",
+                "is_custom_integration": False,
                 "has_suggested_area": False,
                 "has_configuration_url": False,
                 "via_device": 0,
@@ -1081,4 +1073,4 @@ async def test_devices_payload(
     client = await hass_client()
     response = await client.get("/api/analytics/devices")
     assert response.status == HTTPStatus.OK
-    assert await response.json() == async_devices_payload(hass)
+    assert await response.json() == await async_devices_payload(hass)
