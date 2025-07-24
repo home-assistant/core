@@ -75,8 +75,8 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
-    backup,
     category_registry,
+    condition,
     config_validation as cv,
     device_registry,
     entity,
@@ -89,6 +89,7 @@ from .helpers import (
     restore_state,
     template,
     translation,
+    trigger,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
@@ -331,6 +332,9 @@ async def async_setup_hass(
             if not is_virtual_env():
                 await async_mount_local_lib_path(runtime_config.config_dir)
 
+            if hass.config.safe_mode:
+                _LOGGER.info("Starting in safe mode")
+
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
             )
@@ -383,8 +387,6 @@ async def async_setup_hass(
             {"recovery_mode": {}, "http": http_conf},
             hass,
         )
-    elif hass.config.safe_mode:
-        _LOGGER.info("Starting in safe mode")
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -452,6 +454,8 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
         create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
     )
 
 
@@ -605,7 +609,7 @@ async def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
-        exc_info=(  # type: ignore[arg-type]  # noqa: LOG014
+        exc_info=(  # type: ignore[arg-type]
             args.exc_type,
             args.exc_value,
             args.exc_traceback,
@@ -691,10 +695,10 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
-    # Filter out the repeating and common config section [homeassistant]
-    domains = {
-        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
-    }
+    # The common config section [homeassistant] could be filtered here,
+    # but that is not necessary, since it corresponds to the core integration,
+    # that is always unconditionally loaded.
+    domains = {cv.domain_key(key) for key in config}
 
     # Add config entry and default domains
     if not hass.config.recovery_mode:
@@ -722,34 +726,28 @@ async def _async_resolve_domains_and_preload(
       together with all their dependencies.
     """
     domains_to_setup = _get_domains(hass, config)
-    platform_integrations = conf_util.extract_platform_integrations(
-        config, BASE_PLATFORMS
-    )
-    # Ensure base platforms that have platform integrations are added to `domains`,
-    # so they can be setup first instead of discovering them later when a config
-    # entry setup task notices that it's needed and there is already a long line
-    # to use the import executor.
+
+    # Also process all base platforms since we do not require the manifest
+    # to list them as dependencies.
+    # We want to later avoid lock contention when multiple integrations try to load
+    # their manifests at once.
     #
+    # Additionally process integrations that are defined under base platforms
+    # to speed things up.
     # For example if we have
     # sensor:
     #   - platform: template
     #
-    # `template` has to be loaded to validate the config for sensor
-    # so we want to start loading `sensor` as soon as we know
-    # it will be needed. The more platforms under `sensor:`, the longer
+    # `template` has to be loaded to validate the config for sensor.
+    # The more platforms under `sensor:`, the longer
     # it will take to finish setup for `sensor` because each of these
     # platforms has to be imported before we can validate the config.
     #
     # Thankfully we are migrating away from the platform pattern
     # so this will be less of a problem in the future.
-    domains_to_setup.update(platform_integrations)
-
-    # Additionally process base platforms since we do not require the manifest
-    # to list them as dependencies.
-    # We want to later avoid lock contention when multiple integrations try to load
-    # their manifests at once.
-    # Also process integrations that are defined under base platforms
-    # to speed things up.
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
     additional_domains_to_process = {
         *BASE_PLATFORMS,
         *chain.from_iterable(platform_integrations.values()),
@@ -867,9 +865,9 @@ async def _async_set_up_integrations(
     domains = set(integrations) & all_domains
 
     _LOGGER.info(
-        "Domains to be set up: %s | %s",
-        domains,
-        all_domains - domains,
+        "Domains to be set up: %s\nDependencies: %s",
+        domains or "{}",
+        (all_domains - domains) or "{}",
     )
 
     async_set_domains_to_be_loaded(hass, all_domains)
@@ -877,10 +875,6 @@ async def _async_set_up_integrations(
     # Initialize recorder
     if "recorder" in all_domains:
         recorder.async_initialize_recorder(hass)
-
-    # Initialize backup
-    if "backup" in all_domains:
-        backup.async_initialize_backup(hass)
 
     stages: list[tuple[str, set[str], int | None]] = [
         *(
@@ -914,12 +908,13 @@ async def _async_set_up_integrations(
         stage_all_domains = stage_domains | stage_dep_domains
 
         _LOGGER.info(
-            "Setting up stage %s: %s | %s\nDependencies: %s | %s",
+            "Setting up stage %s: %s; already set up: %s\n"
+            "Dependencies: %s; already set up: %s",
             name,
             stage_domains,
-            stage_domains_unfiltered - stage_domains,
-            stage_dep_domains,
-            stage_dep_domains_unfiltered - stage_dep_domains,
+            (stage_domains_unfiltered - stage_domains) or "{}",
+            stage_dep_domains or "{}",
+            (stage_dep_domains_unfiltered - stage_dep_domains) or "{}",
         )
 
         if timeout is None:
@@ -1059,5 +1054,5 @@ async def _async_setup_multi_components(
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
-                exc_info=(type(result), result, result.__traceback__),  # noqa: LOG014
+                exc_info=(type(result), result, result.__traceback__),
             )

@@ -325,6 +325,12 @@ def ge_12730_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fan_ge_12730_state.json", DOMAIN)
 
 
+@pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
+def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
+    return load_json_object_fixture("enbrighten_58446_zwa4013_state.json", DOMAIN)
+
+
 @pytest.fixture(name="aeotec_radiator_thermostat_state", scope="package")
 def aeotec_radiator_thermostat_state_fixture() -> dict[str, Any]:
     """Load the Aeotec Radiator Thermostat node state fixture data."""
@@ -529,6 +535,24 @@ def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
     return cast(
         NodeDataType,
         load_json_object_fixture("zcombo_smoke_co_alarm_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_state")
+def nabu_casa_zwa2_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy_state")
+def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2 (legacy firmware)."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
     )
 
 
@@ -1078,6 +1102,14 @@ def ge_12730_fixture(client, ge_12730_state) -> Node:
     return node
 
 
+@pytest.fixture(name="enbrighten_58446_zwa4013")
+def enbrighten_58446_zwa4013_fixture(client, enbrighten_58446_zwa4013_state) -> Node:
+    """Mock a Enbrighten_58446/zwa4013 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_58446_zwa4013_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="inovelli_lzw36")
 def inovelli_lzw36_fixture(client, inovelli_lzw36_state) -> Node:
     """Mock a Inovelli LZW36 fan controller node."""
@@ -1342,5 +1374,25 @@ def zcombo_smoke_co_alarm_fixture(
 ) -> Node:
     """Load node for ZCombo-G Smoke/CO Alarm."""
     node = Node(client, zcombo_smoke_co_alarm_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2")
+def nabu_casa_zwa2_fixture(
+    client: MagicMock, nabu_casa_zwa2_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2."""
+    node = Node(client, nabu_casa_zwa2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy")
+def nabu_casa_zwa2_legacy_fixture(
+    client: MagicMock, nabu_casa_zwa2_legacy_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
+    node = Node(client, nabu_casa_zwa2_legacy_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

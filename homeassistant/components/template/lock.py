@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
@@ -23,19 +25,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PICTURE, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_CODE_FORMAT = "code_format"
@@ -46,12 +49,12 @@ CONF_OPEN = "open"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-LOCK_SCHEMA = vol.All(
+LOCK_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_CODE_FORMAT): cv.template,
@@ -64,7 +67,6 @@ LOCK_SCHEMA = vol.All(
         }
     ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
-
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
@@ -80,33 +82,6 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template fans."""
-    fans = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        fans.append(
-            TemplateLock(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(fans)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -114,25 +89,22 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template fans."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            [rewrite_common_legacy_to_modern_conf(hass, config, LEGACY_FIELDS)],
-            None,
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        LOCK_DOMAIN,
+        config,
+        StateLockEntity,
+        TriggerLockEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
     )
 
 
 class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     """Representation of a template lock features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -147,7 +119,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
-    def _register_scripts(
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -182,6 +154,11 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     def is_open(self) -> bool:
         """Return true if lock is open."""
         return self._state == LockState.OPEN
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._state == LockState.OPENING
 
     @property
     def code_format(self) -> str | None:
@@ -296,7 +273,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             )
 
 
-class TemplateLock(TemplateEntity, AbstractTemplateLock):
+class StateLockEntity(TemplateEntity, AbstractTemplateLock):
     """Representation of a template lock."""
 
     _attr_should_poll = False
@@ -308,13 +285,13 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
         unique_id: str | None,
     ) -> None:
         """Initialize the lock."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateLock.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -346,3 +323,60 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
                 self._update_code_format,
             )
         super()._async_setup_templates()
+
+
+class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
+    """Lock entity based on trigger data."""
+
+    domain = LOCK_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateLock.__init__(self, config)
+
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        if isinstance(config.get(CONF_CODE_FORMAT), template.Template):
+            self._to_render_simple.append(CONF_CODE_FORMAT)
+            self._parse_result.add(CONF_CODE_FORMAT)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._handle_state),
+            (CONF_CODE_FORMAT, self._update_code_format),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if not self._optimistic:
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()
