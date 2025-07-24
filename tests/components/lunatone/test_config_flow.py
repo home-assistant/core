@@ -1,5 +1,6 @@
 """Define tests for the Lunatone config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import aiohttp
@@ -18,9 +19,20 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def mock_lunatone_scan(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+    """Mock a Lunatone scan object."""
+    with patch(
+        "homeassistant.components.lunatone.config_flow.DALIScan", autospec=True
+    ) as mock_scan:
+        scan = mock_scan.return_value
+        scan._auth = mock_lunatone_auth
+        scan.is_busy = False
+        yield scan
+
+
 async def test_full_flow_no_scan(
     hass: HomeAssistant,
-    mock_lunatone_auth: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -59,7 +71,6 @@ async def test_full_flow_no_scan(
 async def test_full_flow_with_scan(
     hass: HomeAssistant,
     scan_method: DALIDeviceScanMethod,
-    mock_lunatone_auth: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -108,7 +119,6 @@ async def test_full_flow_with_scan(
 async def test_full_flow_fail_on_timeout_before_starting_dali_device_scan(
     hass: HomeAssistant,
     scan_method: DALIDeviceScanMethod,
-    mock_lunatone_auth: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_scan: AsyncMock,
 ) -> None:
@@ -155,7 +165,6 @@ async def test_full_flow_fail_on_timeout_before_starting_dali_device_scan(
 async def test_full_flow_fail_on_timeout_after_starting_dali_device_scan(
     hass: HomeAssistant,
     scan_method: DALIDeviceScanMethod,
-    mock_lunatone_auth: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_scan: AsyncMock,
 ) -> None:
@@ -237,7 +246,7 @@ async def test_user_step_invalid_url(
 
 
 async def test_user_step_cannot_connect(
-    hass: HomeAssistant, mock_lunatone_auth: AsyncMock, mock_lunatone_info: AsyncMock
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test if cannot connect."""
     mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
@@ -259,7 +268,6 @@ async def test_user_step_cannot_connect(
 
 async def test_reconfigure(
     hass: HomeAssistant,
-    mock_lunatone_auth: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: AsyncMock,
 ) -> None:
