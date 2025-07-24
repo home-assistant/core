@@ -1,7 +1,6 @@
 """Common fixtures for the Ubiquiti airOS tests."""
 
 from collections.abc import Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -10,15 +9,14 @@ import pytest
 
 from homeassistant.components.airos.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
 def ap_fixture():
     """Load fixture data for AP mode."""
-    json_data = json.loads(load_fixture("airos/ap-ptp.json"))
+    json_data = load_json_object_fixture("ap-ptp.json", DOMAIN)
     return AirOSData.from_dict(json_data)
 
 
@@ -32,15 +30,28 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_airos_client(ap_fixture: dict[str, Any]):
+def mock_airos_client(
+    request: pytest.FixtureRequest, ap_fixture: dict[str, Any]
+) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
-    with patch(
-        "homeassistant.components.airos.AirOS", autospec=True
-    ) as mock_airos_class:
-        mock_client_instance = mock_airos_class.return_value
-        mock_client_instance.login.return_value = True
-        mock_client_instance.status.return_value = ap_fixture
-        yield mock_airos_class
+    mock_airos = AsyncMock()
+    mock_airos.status.return_value = ap_fixture
+
+    if hasattr(request, "param"):
+        mock_airos.login.side_effect = request.param
+    else:
+        mock_airos.login.return_value = True
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.AirOS", return_value=mock_airos
+        ),
+        patch(
+            "homeassistant.components.airos.coordinator.AirOS", return_value=mock_airos
+        ),
+        patch("homeassistant.components.airos.AirOS", return_value=mock_airos),
+    ):
+        yield mock_airos
 
 
 @pytest.fixture
@@ -56,16 +67,3 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="device0123",
     )
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up the AirOS integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry

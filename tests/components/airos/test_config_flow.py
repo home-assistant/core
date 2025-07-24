@@ -1,239 +1,104 @@
 """Test the Ubiquiti airOS config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from airos.exceptions import (
     ConnectionAuthenticationError,
-    DataMissingError,
     DeviceConnectionError,
     KeyDataMissingError,
 )
+import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.airos.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+MOCK_CONFIG = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
 
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
+
+async def test_form_creates_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_airos_client: AsyncMock,
+    ap_fixture: dict[str, Any],
 ) -> None:
-    """Test we get the form."""
+    """Test we get the form and create the appropriate entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = ap_fixture
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NanoStation 5AC ap name"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
+    assert result["result"].unique_id == "03aa0d0b40fed0a47088293584ef5432"
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
+    # Test we can't re-add existing device
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+
+
+@pytest.mark.parametrize(
+    ("mock_airos_client", "expected_base"),
+    [
+        (ConnectionAuthenticationError, "invalid_auth"),
+        (DeviceConnectionError, "cannot_connect"),
+        (KeyDataMissingError, "key_data_missing"),
+        (Exception, "unknown"),
+    ],
+    indirect=["mock_airos_client"],
+)
+async def test_form_exception_handling(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_airos_client: AsyncMock,
+    ap_fixture: dict[str, Any],
+    expected_base: str,
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = ConnectionAuthenticationError
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_base}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = ap_fixture
+    mock_airos_client.login.side_effect = None
+    mock_airos_client.login.return_value = True
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NanoStation 5AC ap name"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, ap_fixture: dict[str, Any]
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = DeviceConnectionError
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.return_value = True
-        airos_device_mock.return_value.status.return_value = ap_fixture
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NanoStation 5AC ap name"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cookies_or_data_issues(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cookies and data issues."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = DataMissingError
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = KeyDataMissingError
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "key_data_missing"}
-
-
-async def test_form_unknown_handling(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.airos.config_flow.AirOS",
-        autospec=True,
-    ) as airos_device_mock:
-        airos_device_mock.return_value.login.side_effect = Exception
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
