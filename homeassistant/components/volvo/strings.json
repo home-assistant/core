@@ -104,7 +104,12 @@
         "name": "Charging power"
       },
       "charging_power_status": {
-        "name": "Charging power status"
+        "name": "Charging power status",
+        "state": {
+          "providing_power": "Providing power",
+          "no_power_available": "No power",
+          "unknown": "Unknown"
+        }
       },
       "charging_status": {
         "name": "Charging status",

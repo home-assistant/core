@@ -346,7 +346,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'providing_power',
+        'no_power_available',
+        'unknown',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -364,7 +370,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
     'platform': 'volvo',
@@ -379,14 +385,20 @@
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Volvo EX30 Charging power status',
+      'options': list([
+        'providing_power',
+        'no_power_available',
+        'unknown',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.volvo_ex30_charging_power_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'No power available',
+    'state': 'no_power_available',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_status-entry]
@@ -2252,7 +2264,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'providing_power',
+        'no_power_available',
+        'unknown',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2270,7 +2288,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
     'platform': 'volvo',
@@ -2285,14 +2303,20 @@
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging power status',
+      'options': list([
+        'providing_power',
+        'no_power_available',
+        'unknown',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.volvo_xc40_charging_power_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Providing power',
+    'state': 'providing_power',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_status-entry]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+import logging
 from typing import Any, cast
 
 from volvocarsapi.models import (
@@ -39,6 +40,7 @@ from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,9 +74,21 @@ def _charging_power_value(field: VolvoCarsValue) -> int:
     )
 
 
-def _to_capitalize(field: VolvoCarsValue) -> str:
-    return cast(str, field.value).replace("_", " ").lower().capitalize()
+def _charging_power_status_value(field: VolvoCarsValue) -> str:
+    status = cast(str, field.value)
 
+    if status.lower() in _CHARGING_POWER_STATUS_API_VALUES:
+        return status
+
+    _LOGGER.warning(
+        "Unknown value '%s' for charging_power_status. Please report it at https://github.com/home-assistant/core/issues/new?template=bug_report.yml",
+        status,
+    )
+    return "unknown"
+
+
+_CHARGING_POWER_STATUS_API_VALUES = ["providing_power", "no_power_available"]
+_CHARGING_POWER_STATUS_OPTIONS = [*_CHARGING_POWER_STATUS_API_VALUES, "unknown"]
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
@@ -190,7 +204,9 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     VolvoSensorDescription(
         key="charging_power_status",
         api_field="chargerPowerStatus",
-        value_fn=_to_capitalize,
+        device_class=SensorDeviceClass.ENUM,
+        options=_CHARGING_POWER_STATUS_OPTIONS,
+        value_fn=_charging_power_status_value,
     ),
     # energy state endpoint
     VolvoSensorDescription(
