@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, fields
 import datetime
 from math import floor
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from dateutil.rrule import (
     DAILY,
@@ -56,7 +56,12 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     return dt_util.as_local(task.nextDue[0]).date()
 
 
-FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+FREQUENCY_MAP: dict[str, Literal[0, 1, 2, 3]] = {
+    "daily": DAILY,
+    "weekly": WEEKLY,
+    "monthly": MONTHLY,
+    "yearly": YEARLY,
+}
 WEEKDAY_MAP = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
 
 

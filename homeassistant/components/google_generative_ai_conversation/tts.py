@@ -48,10 +48,13 @@ class GoogleGenerativeAITextToSpeechEntity(
 
     _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
+    # Note the documentation might not be up to date, e.g. el-GR is not listed
+    # there but is supported.
     _attr_supported_languages = [
         "ar-EG",
         "bn-BD",
         "de-DE",
+        "el-GR",
         "en-IN",
         "en-US",
         "es-US",
