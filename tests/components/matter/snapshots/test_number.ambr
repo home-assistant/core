@@ -402,7 +402,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_automatic_relock_timer-entry]
+# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -420,7 +420,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -432,7 +432,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Automatic relock timer',
+    'original_name': 'Autorelock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -442,10 +442,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_automatic_relock_timer-state]
+# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Automatic relock timer',
+      'friendly_name': 'Mock Door Lock Autorelock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -453,14 +453,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_automatic_relock_timer-entry]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -478,7 +478,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,7 +490,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Automatic relock timer',
+    'original_name': 'Autorelock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -500,10 +500,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_automatic_relock_timer-state]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Automatic relock timer',
+      'friendly_name': 'Mock Door Lock Autorelock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -511,7 +511,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_automatic_relock_timer',
+    'entity_id': 'number.mock_door_lock_autorelock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -748,6 +748,120 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_numbers[multi_endpoint_light][number.inovelli_led_off_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 75,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.inovelli_led_off_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED off intensity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_indicator_intensity_off',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[multi_endpoint_light][number.inovelli_led_off_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli LED off intensity',
+      'max': 75,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inovelli_led_off_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_numbers[multi_endpoint_light][number.inovelli_led_on_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 75,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.inovelli_led_on_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED on intensity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_indicator_intensity_on',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[multi_endpoint_light][number.inovelli_led_on_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli LED on intensity',
+      'max': 75,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inovelli_led_on_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33',
   })
 # ---
 # name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time-entry]

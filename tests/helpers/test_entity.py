@@ -781,7 +781,7 @@ async def test_warn_slow_write_state(
     mock_entity = entity.Entity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
     mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
@@ -809,7 +809,7 @@ async def test_warn_slow_write_state_custom_component(
     mock_entity = CustomComponentEntity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
     mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
@@ -2711,6 +2711,41 @@ async def test_platform_state(
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
     assert hass.states.get("test.test") is None
+
+
+async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
+    """Test platform state for entities which are not added by an entity platform."""
+
+    class MockEntity(entity.Entity):
+        entity_id = "test.test"
+
+        def async_set_state(self, state: str) -> None:
+            self._attr_state = state
+            self.async_write_ha_state()
+
+    ent = MockEntity()
+    ent.hass = hass
+    assert hass.states.get("test.test") is None
+
+    # The attempt to write when in state NOT_ADDED should be allowed
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    ent.async_set_state("not_added")
+    assert hass.states.get("test.test").state == "not_added"
+
+    # The attempt to write when in state ADDING should be allowed
+    ent._platform_state = entity.EntityPlatformState.ADDING
+    ent.async_set_state("adding")
+    assert hass.states.get("test.test").state == "adding"
+
+    # The attempt to write when in state ADDED should be allowed
+    ent._platform_state = entity.EntityPlatformState.ADDED
+    ent.async_set_state("added")
+    assert hass.states.get("test.test").state == "added"
+
+    # The attempt to write when in state REMOVED should be ignored
+    ent._platform_state = entity.EntityPlatformState.REMOVED
+    ent.async_set_state("removed")
+    assert hass.states.get("test.test").state == "added"
 
 
 async def test_platform_state_fail_to_add(

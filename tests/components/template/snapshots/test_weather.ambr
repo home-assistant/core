@@ -46,6 +46,7 @@
     'last_ozone': None,
     'last_pressure': None,
     'last_temperature': '15.0',
+    'last_uv_index': None,
     'last_visibility': None,
     'last_wind_bearing': None,
     'last_wind_gust_speed': None,

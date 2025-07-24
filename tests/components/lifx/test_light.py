@@ -30,6 +30,8 @@ from homeassistant.components.lifx.manager import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
@@ -1732,6 +1734,48 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     call_dict.pop("callb")
     assert call_dict == {"duration": 5000}
     bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
+
+
+async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
+    """Test lifx.set_state works with brightness, brightness_pct and brightness_step."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [0, 0, 32768, 3500]
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    # brightness_step should convert from 8 bit to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP: 128},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # brightness_step_pct should convert from percentage to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP_PCT: 50},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
     bulb.set_color.reset_mock()
 
 
