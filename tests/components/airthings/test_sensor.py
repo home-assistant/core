@@ -19,5 +19,5 @@ async def test_all_device_types(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all device types."""
-    await setup_integration(hass, mock_config_entry, mock_airthings_client)
+    await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
