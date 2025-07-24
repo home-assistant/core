@@ -133,7 +133,6 @@ async def test_device_conflict_migration(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
             is_status_binary_sensor=True,
         )
     ]
