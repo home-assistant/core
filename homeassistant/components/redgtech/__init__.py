@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS = [Platform.SWITCH]
-
+"test comment for development environment"
 async def async_setup_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> bool:
     """Set up Redgtech from a config entry."""
     _LOGGER.debug("Setting up Redgtech entry: %s", entry.entry_id)
