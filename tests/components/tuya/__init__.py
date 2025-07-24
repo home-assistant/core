@@ -153,6 +153,10 @@ DEVICE_MOCKS = {
         Platform.CLIMATE,
         Platform.SWITCH,
     ],
+    "ydkt_dolceclima_unsupported": [
+        # https://github.com/orgs/home-assistant/discussions/288
+        # unsupported device - no platforms
+    ],
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
