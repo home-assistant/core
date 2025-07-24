@@ -33,7 +33,10 @@ rules:
     comment: |
       The integration does not provide any additional actions.
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      The integration does not have options.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
