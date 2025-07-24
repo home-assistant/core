@@ -5,7 +5,7 @@ Functions:
         Test a successful setup entry and unload of entry.
 """
 
-from homeassistant.components.ekeybionyx import DOMAIN
+from homeassistant.components.ekeybionyx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
