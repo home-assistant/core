@@ -142,12 +142,15 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.sensors.append((device, coordinator))
-
     if isinstance(device, Device) and device.device_type in [
         "K10+",
         "K10+ Pro",
         "Robot Vacuum Cleaner S1",
         "Robot Vacuum Cleaner S1 Plus",
+        "K20+ Pro",
+        "Robot Vacuum Cleaner K10+ Pro Combo",
+        "Robot Vacuum Cleaner S10",
+        "S20",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
