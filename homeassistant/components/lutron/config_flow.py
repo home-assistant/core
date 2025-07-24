@@ -41,10 +41,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_lutron_covers(hass, config_entry):
     """Return lutron cover entities."""
+    # select only is_motor and fix entity_id
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     return [
-        {"entity_id": f"cover.{slugify(device_name)}", "name": device_name}
-        for area_name, device_name, device in entry_data.covers
+        {"entity_id": f"cover.{slugify(device.name)}", "name": device.name}
+        for device in entry_data.covers
     ]
 
 
@@ -65,6 +66,7 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input.get(CONF_PASSWORD)
             use_full_path = user_input.get(CONF_USE_FULL_PATH)
             use_area_for_device_name = user_input.get(CONF_USE_AREA_FOR_DEVICE_NAME)
+            use_radiora_mode = user_input.get(CONF_USE_RADIORA_MODE)
 
             lutron_controller = LutronController(
                 self.hass,
@@ -73,6 +75,7 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
                 password,
                 use_full_path,
                 use_area_for_device_name,
+                use_radiora_mode,
             )
 
             try:
@@ -83,13 +86,11 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
                     for v in user_input.get(CONF_VARIABLE_IDS, "").split(",")
                     if v.strip().isdigit()
                 ]
-                use_radiora_mode = user_input.get(CONF_USE_RADIORA_MODE)
 
                 await self.hass.async_add_executor_job(
                     lambda: lutron_controller.load_xml_db(
                         lutron_data_file,
                         refresh_data,
-                        use_radiora_mode,
                         variable_ids=variable_ids,
                     )
                 )

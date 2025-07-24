@@ -114,11 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lutron_data_file = hass.config.path(LUTRON_DATA_FILE)
 
     lutron_controller = LutronController(
-        hass, host, uid, pwd, use_full_path, use_area_for_device_name
+        hass, host, uid, pwd, use_full_path, use_area_for_device_name, use_radiora_mode
     )
     await hass.async_add_executor_job(
         lambda: lutron_controller.load_xml_db(
-            lutron_data_file, refresh_data, use_radiora_mode, variable_ids=variable_ids
+            lutron_data_file, refresh_data, variable_ids=variable_ids
         )
     )
     await lutron_controller.connect()

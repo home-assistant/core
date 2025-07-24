@@ -46,7 +46,7 @@ class LutronScene(LutronKeypadComponent, Scene):
         """Initialize the scene/button."""
         super().__init__(lutron_device, controller)
         self._config_entry = config_entry
-        self._attr_name = lutron_device.name
+        self._attr_name = self.name
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

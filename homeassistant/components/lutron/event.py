@@ -63,8 +63,7 @@ class LutronEventEntity(LutronKeypadComponent, EventEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(button, controller)
-        name = button.name
-        self._attr_name = name
+        self._attr_name = self.name
         self._has_release_event = (
             button.button_type is not None
             and button.button_type in ("RaiseLower", "DualAction")
@@ -77,8 +76,8 @@ class LutronEventEntity(LutronKeypadComponent, EventEntity):
             LutronEventType.DOUBLE_TAP,
         ]
 
-        self._full_id = slugify(f"{self.device_name}: {name}")
-        self._id = slugify(f"{button.keypad.name}: {name}")  # e.g. keypad_12_btn_3
+        self._full_id = slugify(f"{self.device_name}: {self.name}")
+        self._id = slugify(f"{self.keypad_name}: {self.name}")  # e.g. keypad_12_btn_3
 
     def _update_callback(self, value: int):
         """Trigger an event.

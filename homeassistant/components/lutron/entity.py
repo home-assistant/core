@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .aiolip import Device, KeypadComponent, LutronController, Output, Sysvar
+from .aiolip import Button, Device, KeypadComponent, LutronController, Output, Sysvar
 from .const import DOMAIN
 
 
@@ -138,18 +138,42 @@ class LutronKeypadComponent(LutronBaseEntity):
             self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
 
     @property
-    def device_name(self) -> str:
-        """Return the device name for keypad components, which we get from the keypad.
+    def name(self) -> str:
+        """Return the name of the entity based on the different conditions."""
+        device = self._lutron_device
+        if isinstance(device, Button):
+            if self._controller.use_radiora_mode:
+                name = device.engraving or f"Unknown Button {device.component_number}"
+                # Hybrid keypads have dimmer buttons which have no engravings.
+                if device.button_type == "SingleSceneRaiseLower":
+                    name = "Dimmer " + device.direction
+            else:
+                name = f"Btn {device.component_number}"
+        return name
 
-        We use the device_group_name for the keypad.
-        Usually the keypad device in the DB doesn't have a meaningful name (e.g., CDS 001 for international keypads)
+    @property
+    def keypad_name(self) -> str:
+        """Return the keypad name.
+
+        We use the device_group_name from the keypad.
+        Usually the keypad device in the DB doesn't have a meaningful name (e.g., CDS 001 for international keypads).
         """
-        if (device := self._lutron_device) is not None:
-            return device.keypad.device_group_name
-        return "No Name"
+
+        return self._lutron_device.keypad.device_group_name
+
+    @property
+    def device_name(self) -> str:
+        """Return the device name for the keypad component, which is the keypad including the computed area_name."""
+
+        return (
+            f"{self.area_name} {self.keypad_name}"
+            if self._controller.use_area_for_device_name
+            else self.keypad_name
+        )
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Register the keypad component using also the component_number to get the updates for the components."""
+
         self._controller.subscribe(
             self._lutron_device.id, self._component_number, self._update_callback
         )

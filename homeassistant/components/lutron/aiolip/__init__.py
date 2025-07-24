@@ -48,7 +48,14 @@ class LutronController:
     """
 
     def __init__(
-        self, hass, host, user, password, use_full_path, use_area_for_device_name
+        self,
+        hass,
+        host,
+        user,
+        password,
+        use_full_path,
+        use_area_for_device_name,
+        use_radiora_mode,
     ):
         """Initialize the Lutron controller."""
         self.hass = hass
@@ -65,6 +72,7 @@ class LutronController:
         self.name = None
         self.use_full_path = use_full_path
         self.use_area_for_device_name = use_area_for_device_name
+        self.use_radiora_mode = use_radiora_mode
 
     async def connect(self):
         """Connect to the Lutron controller."""
@@ -202,7 +210,6 @@ class LutronController:
         self,
         cache_path=None,
         refresh_data=True,
-        use_radiora_mode=False,
         variable_ids=None,
     ):
         """Load the Lutron database from the server if refresh_data is True.
@@ -236,7 +243,6 @@ class LutronController:
 
         parser = LutronXmlDbParser(
             xml_db_str=xml_db,
-            use_radiora_mode=use_radiora_mode,
             variable_ids=variable_ids,
         )
         assert parser.parse()  # throw our own exception
