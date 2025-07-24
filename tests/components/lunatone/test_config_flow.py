@@ -79,12 +79,13 @@ async def test_full_flow_with_scan(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "dali"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SCAN_METHOD: scan_method},
-    )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "dali"
+    with patch("homeassistant.components.lunatone.config_flow.asyncio.sleep"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SCAN_METHOD: scan_method},
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "dali"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
