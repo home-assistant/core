@@ -1078,8 +1078,8 @@
       "description": "Returns a list of available programs.",
       "fields": {
         "device_id": {
-          "description": "The device to get the available programs from.",
-          "name": "Device"
+          "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
+          "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
         }
       }
     },
@@ -1088,7 +1088,7 @@
       "description": "Sets and starts a program on the appliance.",
       "fields": {
         "device_id": {
-          "description": "The device to set the program on.",
+          "description": "The target device for this action.",
           "name": "Device"
         },
         "program_id": {

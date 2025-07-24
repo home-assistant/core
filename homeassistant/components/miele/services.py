@@ -111,7 +111,7 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
     serial_number = await _get_serial_number(call)
 
     try:
-        return {"programs": await api.get_programs(serial_number)}
+        programs = await api.get_programs(serial_number)
     except aiohttp.ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -121,6 +121,17 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
                 "message": ex.message,
             },
         ) from ex
+
+    return {
+        "programs": [
+            {
+                "program_id": item["programId"],
+                "program": item["program"],
+                "parameters": item.get("parameters", {}),
+            }
+            for item in programs
+        ],
+    }
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
