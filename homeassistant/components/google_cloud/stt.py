@@ -8,6 +8,7 @@ import logging
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
 from google.cloud import speech_v1
+from propcache.api import cached_property
 
 from homeassistant.components.stt import (
     AudioBitRates,
@@ -69,7 +70,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         self._client = client
         self._model = entry.options.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
 
-    @property
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         # Combine the native Google languages and the standard HA languages.
