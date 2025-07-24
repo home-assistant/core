@@ -1777,7 +1777,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ombi",
     "omnilogic",
     "oncue",
-    "onkyo",
     "ondilo_ico",
     "onewire",
     "onvif",
