@@ -39,6 +39,7 @@ from .const import (  # noqa: F401
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
@@ -386,7 +387,9 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
-            := self.platform.default_language_platform_translations.get(translation_key)
+            := self.platform_data.default_language_platform_translations.get(
+                translation_key
+            )
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(

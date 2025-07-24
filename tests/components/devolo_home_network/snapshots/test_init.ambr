@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_entry[mock_device]
+# name: test_device[mock_device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -36,7 +36,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_setup_entry[mock_ipv6_device]
+# name: test_device[mock_ipv6_device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -73,7 +73,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_setup_entry[mock_repeater_device]
+# name: test_device[mock_repeater_device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,

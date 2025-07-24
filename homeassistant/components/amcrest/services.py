@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import async_extract_entity_ids
@@ -15,6 +15,7 @@ from .const import CAMERAS, DATA_AMCREST, DOMAIN
 from .helpers import service_signal
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Amcrest IP Camera services."""
 

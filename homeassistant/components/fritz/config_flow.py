@@ -17,7 +17,11 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -409,7 +413,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
+class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     async def async_step_init(
