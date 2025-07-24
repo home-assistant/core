@@ -627,62 +627,6 @@
     'state': '29000',
   })
 # ---
-# name: test_sensor[ex30_2024][sensor.volvo_ex30_engine_time_to_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_ex30_engine_time_to_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Engine time to service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'engine_time_to_service',
-    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensor[ex30_2024][sensor.volvo_ex30_engine_time_to_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Volvo EX30 Engine time to service',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_ex30_engine_time_to_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1266',
-  })
-# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_estimated_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -842,6 +786,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo EX30 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_time_to_service-entry]
@@ -1405,62 +1405,6 @@
     'state': '29000',
   })
 # ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_engine_time_to_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_s90_engine_time_to_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Engine time to service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'engine_time_to_service',
-    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_engine_time_to_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Volvo S90 Engine time to service',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_s90_engine_time_to_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1266',
-  })
-# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_fuel_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1571,6 +1515,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo S90 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_service-entry]
@@ -2533,62 +2533,6 @@
     'state': '29000',
   })
 # ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_engine_time_to_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc40_engine_time_to_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Engine time to service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'engine_time_to_service',
-    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_engine_time_to_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Volvo XC40 Engine time to service',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc40_engine_time_to_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1266',
-  })
-# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_estimated_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2748,6 +2692,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC40 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_time_to_service-entry]
@@ -3311,62 +3311,6 @@
     'state': '29000',
   })
 # ---
-# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_engine_time_to_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_xc90_engine_time_to_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Engine time to service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'engine_time_to_service',
-    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_engine_time_to_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Volvo XC90 Engine time to service',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_xc90_engine_time_to_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1266',
-  })
-# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_fuel_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3477,6 +3421,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC90 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_service-entry]
