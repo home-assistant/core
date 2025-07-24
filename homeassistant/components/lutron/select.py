@@ -39,8 +39,8 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            LutronVariableSelect(device_name, device, entry_data.controller)
-            for device_name, device in entry_data.variables
+            LutronVariableSelect(device, entry_data.controller)
+            for device in entry_data.variables
         ],
         True,
     )
@@ -51,12 +51,11 @@ class LutronVariableSelect(LutronVariable, SelectEntity):
 
     def __init__(
         self,
-        device_name: str,
         lutron_device: Sysvar,
         controller: LutronController,
     ) -> None:
         """Initialize the occupancy sensor."""
-        super().__init__(device_name, lutron_device, controller)
+        super().__init__(lutron_device, controller)
         self._attr_options = list(LABEL_TO_VALUE.keys())
         self._current_value = 0
 

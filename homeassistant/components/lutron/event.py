@@ -33,8 +33,8 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LutronEventEntity(device_name, button, entry_data.controller)
-        for device_name, button in entry_data.buttons
+        LutronEventEntity(button, entry_data.controller)
+        for button in entry_data.buttons
     )
 
 
@@ -58,12 +58,11 @@ class LutronEventEntity(LutronKeypadComponent, EventEntity):
 
     def __init__(
         self,
-        device_name: str,
         button: Button,
         controller: LutronController,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_name, button, controller)
+        super().__init__(button, controller)
         name = button.name
         self._attr_name = name
         self._has_release_event = (
@@ -78,7 +77,7 @@ class LutronEventEntity(LutronKeypadComponent, EventEntity):
             LutronEventType.DOUBLE_TAP,
         ]
 
-        self._full_id = slugify(f"{device_name}: {name}")
+        self._full_id = slugify(f"{self.device_name}: {name}")
         self._id = slugify(f"{button.keypad.name}: {name}")  # e.g. keypad_12_btn_3
 
     def _update_callback(self, value: int):

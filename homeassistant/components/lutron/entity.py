@@ -25,7 +25,6 @@ class LutronBaseEntity(Entity):
 
     def __init__(
         self,
-        device_name: str,
         lutron_device: Device,
         controller: LutronController,
     ) -> None:
@@ -35,7 +34,7 @@ class LutronBaseEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Lutron",
-            name=device_name,
+            name=self.device_name,
             suggested_area=self.area_name,
             via_device=(DOMAIN, controller.guid),
         )
@@ -47,9 +46,20 @@ class LutronBaseEntity(Entity):
             return (
                 area.name
                 if not self._controller.use_full_path
-                else area.location + " " + area.name
+                else f"{area.location} {area.name}"
             )
         return "Not Assigned"
+
+    @property
+    def device_name(self) -> str:
+        """Return the device name including the computed area_name."""
+        if (device := self._lutron_device) is not None:
+            return (
+                f"{self.area_name} {device.name}"
+                if self._controller.use_area_for_device_name
+                else device.name
+            )
+        return "No Name"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -110,23 +120,29 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     def __init__(
         self,
-        device_name: str,
         lutron_device: KeypadComponent,
         controller: LutronController,
     ) -> None:
         """Initialize the device."""
-        super().__init__(device_name, lutron_device, controller)
+        super().__init__(lutron_device, controller)
         self._component_number = lutron_device.component_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._lutron_device.id))},
             manufacturer="Lutron",
-            name=device_name,
+            name=self.device_name,
             suggested_area=self.area_name,
         )
         if lutron_device.keypad.device_type == "MAIN_REPEATER":
             self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
         else:
             self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
+
+    @property
+    def device_name(self) -> str:
+        """Return the device name for keypad components, which is the keypad.device_name."""
+        if (device := self._lutron_device) is not None:
+            return device.keypad.device_name
+        return "No Name"
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Register the keypad component using also the component_number to get the updates for the components."""

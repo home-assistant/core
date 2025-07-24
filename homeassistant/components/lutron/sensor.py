@@ -33,8 +33,8 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            LutronVariableSensor(device_name, device, entry_data.controller)
-            for device_name, device in entry_data.variables
+            LutronVariableSensor(device, entry_data.controller)
+            for device in entry_data.variables
         ],
         True,
     )
@@ -50,12 +50,11 @@ class LutronVariableSensor(LutronVariable, SensorEntity):
 
     def __init__(
         self,
-        device_name: str,
         lutron_device: Sysvar,
         controller: LutronController,
     ) -> None:
         """Initialize the occupancy sensor."""
-        super().__init__(lutron_device.name, lutron_device, controller)
+        super().__init__(lutron_device, controller)
 
     async def _request_state(self):
         await self._controller.sysvar_get_state(self._lutron_device.id)

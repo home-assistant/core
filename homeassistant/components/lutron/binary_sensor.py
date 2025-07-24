@@ -32,7 +32,7 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            LutronOccupancySensor(device.name, device, entry_data.controller)
+            LutronOccupancySensor(device, entry_data.controller)
             for device in entry_data.binary_sensors
         ],
         True,

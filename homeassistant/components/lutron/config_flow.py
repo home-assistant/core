@@ -63,9 +63,16 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
             ip_address = user_input[CONF_HOST]
             username = user_input.get(CONF_USERNAME)
             password = user_input.get(CONF_PASSWORD)
+            use_full_path = user_input.get(CONF_USE_FULL_PATH)
+            use_area_for_device_name = user_input.get(CONF_USE_AREA_FOR_DEVICE_NAME)
 
             lutron_controller = LutronController(
-                self.hass, ip_address, username, password
+                self.hass,
+                ip_address,
+                username,
+                password,
+                use_full_path,
+                use_area_for_device_name,
             )
 
             try:

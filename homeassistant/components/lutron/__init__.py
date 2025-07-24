@@ -75,14 +75,14 @@ class LutronData:
 
     controller: LutronController
     binary_sensors: list[OccupancyGroup]
-    covers: list[tuple[str, Output]]
-    fans: list[tuple[str, Output]]
-    lights: list[tuple[str, Output]]
-    buttons: list[tuple[str, Button]]
-    scenes: list[tuple[str, Button]]
-    leds: list[tuple[str, Led]]
-    switches: list[tuple[str, Output]]
-    variables: list[tuple[str, Sysvar]]
+    covers: list[Output]
+    fans: list[Output]
+    lights: list[Output]
+    buttons: list[Button]
+    scenes: list[Button]
+    leds: list[Led]
+    switches: list[Output]
+    variables: list[Sysvar]
 
 
 def get_entry_value(entry: ConfigEntry, key: str, default=None):
@@ -144,24 +144,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     for area in lutron_controller.areas:
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
-            device_name = (
-                f"{area.name} {output.name}"
-                if use_area_for_device_name
-                else output.name
-            )
-
             _LOGGER.debug("Working on output %s", output.output_type)
             if output.is_motor or output.is_shade:
-                entry_data.covers.append((device_name, output))
+                entry_data.covers.append(output)
                 platform = Platform.COVER
             elif output.is_fan:
-                entry_data.fans.append((device_name, output))
+                entry_data.fans.append(output)
                 platform = Platform.FAN
             elif output.is_light:
-                entry_data.lights.append((device_name, output))
+                entry_data.lights.append(output)
                 platform = Platform.LIGHT
             else:
-                entry_data.switches.append((device_name, output))
+                entry_data.switches.append(output)
                 platform = Platform.SWITCH
 
             _async_check_entity_unique_id(
@@ -181,12 +175,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             )
 
         for keypad in area.keypads:
-            device_name = (
-                f"{keypad.area.name} {keypad.name}"
-                if use_area_for_device_name
-                else keypad.name
-            )
-
             _async_check_device_identifiers(
                 hass,
                 device_registry,
@@ -200,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # Add the leds if they are controlled by integration in Lutron
 
                 if button.has_action:
-                    entry_data.buttons.append((device_name, button))
+                    entry_data.buttons.append(button)
 
                     _async_check_entity_unique_id(
                         hass,
@@ -211,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         entry_data.controller.guid,
                     )
 
-                    entry_data.scenes.append((device_name, button))
+                    entry_data.scenes.append(button)
 
                     _async_check_entity_unique_id(
                         hass,
@@ -231,7 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     # Add the LED as a light device if is controlled via integration
                     # RadioRa mode adds all leds as switches
                     if led is not None and (use_radiora_mode or button.led_logic == 5):
-                        entry_data.leds.append((device_name, led))
+                        entry_data.leds.append(led)
                         platform = (
                             Platform.SWITCH if use_radiora_mode else Platform.LIGHT
                         )
@@ -273,7 +261,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     for variable in lutron_controller.variables:
         _LOGGER.debug("Working on variable %s", variable.name)
         platform = Platform.SELECT
-        entry_data.variables.append((variable.name, variable))
+        entry_data.variables.append(variable)
 
         _async_check_entity_unique_id(
             hass,
