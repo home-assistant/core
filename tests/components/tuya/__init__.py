@@ -15,8 +15,8 @@ from tests.common import MockConfigEntry
 DEVICE_MOCKS = {
     "cl_am43_corded_motor_zigbee_cover": [
         # https://github.com/home-assistant/core/issues/71242
-        Platform.SELECT,
         Platform.COVER,
+        Platform.SELECT,
     ],
     "clkg_curtain_switch": [
         # https://github.com/home-assistant/core/issues/136055
@@ -147,6 +147,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/146845
         Platform.SELECT,
         Platform.SWITCH,
+    ],
+    "ydkt_dolceclima_unsupported": [
+        # https://github.com/orgs/home-assistant/discussions/288
+        # unsupported device - no platforms
     ],
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243

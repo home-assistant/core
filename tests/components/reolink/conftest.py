@@ -123,8 +123,9 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.timeout = 60
     host_mock.renewtimer.return_value = 600
     host_mock.wifi_connection = False
-    host_mock.wifi_signal = None
+    host_mock.wifi_signal.return_value = -45
     host_mock.whiteled_mode_list.return_value = []
+    host_mock.post_recording_time_list.return_value = []
     host_mock.zoom_range.return_value = {
         "zoom": {"pos": {"min": 0, "max": 100}},
         "focus": {"pos": {"min": 0, "max": 100}},
