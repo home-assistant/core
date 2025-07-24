@@ -141,24 +141,22 @@ class LutronKeypadComponent(LutronBaseEntity):
     def name(self) -> str:
         """Return the name of the entity based on the different conditions."""
         device = self._lutron_device
-        if isinstance(device, Button):
-            if self._controller.use_radiora_mode:
-                name = device.engraving or f"Unknown Button {device.component_number}"
-                # Hybrid keypads have dimmer buttons which have no engravings.
-                if device.button_type == "SingleSceneRaiseLower":
-                    name = "Dimmer " + device.direction
-            else:
-                name = f"Btn {device.component_number}"
+
+        if not self._controller.use_radiora_mode and isinstance(device, Button):
+            name = f"Btn {device.component_number}"
+        else:
+            name = device.name
         return name
 
     @property
     def keypad_name(self) -> str:
         """Return the keypad name.
 
-        We use the device_group_name from the keypad.
+        If we are using radiora mode, we use the keypad device_group_name.
         Usually the keypad device in the DB doesn't have a meaningful name (e.g., CDS 001 for international keypads).
         """
-
+        if not self._controller.use_radiora_mode:
+            return f"keypad {self._lutron_device.keypad.id}"
         return self._lutron_device.keypad.device_group_name
 
     @property

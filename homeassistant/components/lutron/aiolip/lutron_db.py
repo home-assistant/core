@@ -203,15 +203,21 @@ class LutronXmlDbParser:
         We don't use it. We use component_number instead
         """
         # we should read button - actions  - action to get available button actions
-        name = component_xml.get("Name")
+
         component_number = int(component_xml.get("ComponentNumber"))
         button_xml = component_xml.find("Button")
+        name = button_xml.get("Engraving")
         engraving = button_xml.get("Engraving")
         button_type = button_xml.get("ButtonType")
         direction = button_xml.get("Direction")
-        led_logic = (
-            0 if button_xml.get("LedLogic") is None else int(button_xml.get("LedLogic"))
-        )
+        led_logic = int(button_xml.get("LedLogic") or 0)
+
+        # Hybrid keypads have dimmer buttons which have no engravings.
+        if button_type == "SingleSceneRaiseLower":
+            name = "Dimmer " + direction
+        # a button without engraving can be a valid button (e.g., keypad lower/raiser buttons)
+        if not name:
+            name = f"Unknown Button {component_number}"
 
         return Button(
             keypad=keypad,
