@@ -9,6 +9,7 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "api_key": {
+        "description": "Get your API key from the Volvo developer portal (https://developer.volvocars.com/account/#your-api-applications).",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
@@ -17,6 +18,7 @@
         }
       },
       "vin": {
+        "description": "Select a vehicle",
         "data": {
           "vin": "VIN"
         },
@@ -41,7 +43,7 @@
     },
     "error": {
       "cannot_load_vehicles": "Unable to retrieve vehicles.",
-      "invalid_vin": "VIN is invalid"
+      "no_vehicles": "No vehicles found on this account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

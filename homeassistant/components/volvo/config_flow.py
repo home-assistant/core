@@ -59,18 +59,15 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return logger."""
         return _LOGGER
 
-    # Overridden method
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
         self._config_data |= data
         return await self.async_step_api_key()
 
-    # By convention method
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    # By convention method
     async def async_step_reconfigure(
         self, _: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -161,6 +158,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the VIN step."""
+        errors: dict[str, str] = {}
 
         if len(self._vehicles) == 1:
             # If there is only one VIN, take that as value and
@@ -177,6 +175,9 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             self._config_data |= user_input
             return await self._async_create_or_update()
+
+        if len(self._vehicles) == 0:
+            errors[CONF_VIN] = "no_vehicles"
 
         schema = vol.Schema(
             {
@@ -195,7 +196,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             },
         )
 
-        return self.async_show_form(step_id="vin", data_schema=schema)
+        return self.async_show_form(step_id="vin", data_schema=schema, errors=errors)
 
     async def _async_create_or_update(self) -> ConfigFlowResult:
         vin = self._config_data[CONF_VIN]
