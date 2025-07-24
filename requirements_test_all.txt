@@ -313,7 +313,7 @@ aiontfy==0.5.3
 aionut==4.3.4
 
 # homeassistant.components.onkyo
-aioonkyo==0.2.0
+aioonkyo==0.3.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
