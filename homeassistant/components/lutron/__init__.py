@@ -67,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USE_FULL_PATH, default=False): cv.boolean,
                 vol.Required(CONF_USE_AREA_FOR_DEVICE_NAME, default=False): cv.boolean,
                 vol.Required(CONF_USE_RADIORA_MODE, default=False): cv.boolean,
-                vol.Required(CONF_VARIABLE_IDS, default=""): cv.string,
+                vol.Optional(CONF_VARIABLE_IDS, default=""): cv.string,
             }
         )
     },

@@ -1,7 +1,7 @@
 """classes for the LIP protocol."""
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum, StrEnum
+from enum import IntEnum, StrEnum
 
 
 class LIPMode(StrEnum):
@@ -68,14 +68,6 @@ class LIPMessage:
     action_number: int = 0
     value: float = 0.0
     raw: str | None = None  # Useful for diagnostics
-
-
-class LIPConnectionState(Enum):
-    """Connection state."""
-
-    NOT_CONNECTED = 0
-    CONNECTING = 1
-    CONNECTED = 2
 
 
 class LIPOperation(StrEnum):

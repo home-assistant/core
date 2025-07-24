@@ -114,7 +114,7 @@ class LutronRonModifiedConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USE_FULL_PATH, default=False): bool,
                     vol.Required(CONF_USE_AREA_FOR_DEVICE_NAME, default=False): bool,
                     vol.Required(CONF_USE_RADIORA_MODE, default=False): bool,
-                    vol.Required(CONF_VARIABLE_IDS, default=""): str,
+                    vol.Optional(CONF_VARIABLE_IDS, default=""): str,
                 }
             ),
             errors=errors,
@@ -157,7 +157,7 @@ class OptionsFlowHandler(OptionsFlow):
             vol.Required(
                 CONF_USE_RADIORA_MODE, default=config.get(CONF_USE_RADIORA_MODE, False)
             ): bool,
-            vol.Required(
+            vol.Optional(
                 CONF_VARIABLE_IDS, default=config.get(CONF_VARIABLE_IDS, "")
             ): str,
             vol.Required(
