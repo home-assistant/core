@@ -83,6 +83,7 @@ class GeniusDevice(GeniusEntity):
                     self._device.data["_state"]["lastComms"]
                 )
 
+
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
