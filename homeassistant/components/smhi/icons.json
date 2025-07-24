@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "thunder": {
+        "default": "mdi:lightning-bolt"
+      },
+      "total_cloud": {
+        "default": "mdi:cloud"
+      },
+      "low_cloud": {
+        "default": "mdi:cloud-arrow-down"
+      },
+      "medium_cloud": {
+        "default": "mdi:cloud-arrow-right"
+      },
+      "high_cloud": {
+        "default": "mdi:cloud-arrow-up"
+      },
+      "precipitation_category": {
+        "default": "mdi:weather-pouring"
+      },
+      "frozen_precipitation": {
+        "default": "mdi:weather-snowy-rainy"
+      }
+    }
+  }
+}

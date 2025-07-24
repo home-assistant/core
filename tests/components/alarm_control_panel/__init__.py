@@ -1,8 +1,5 @@
 """The tests for Alarm control panel platforms."""
 
-from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -13,7 +10,7 @@ async def help_async_setup_entry_init(
 ) -> bool:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
+        config_entry, [Platform.ALARM_CONTROL_PANEL]
     )
     return True
 

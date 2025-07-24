@@ -58,7 +58,6 @@ def create_llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="test_platform",
         context=Context(),
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,

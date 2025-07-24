@@ -28,6 +28,15 @@
       "solar_rising": {
         "default": "mdi:sun-clock"
       }
+    },
+    "binary_sensor": {
+      "solar_rising": {
+        "default": "mdi:weather-sunny-off",
+        "state": {
+          "on": "mdi:weather-sunset-up",
+          "off": "mdi:weather-sunset-down"
+        }
+      }
     }
   }
 }

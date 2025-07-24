@@ -1,6 +1,6 @@
 """The foscam component."""
 
-from libpyfoscam import FoscamCamera
+from libpyfoscamcgi import FoscamCamera
 
 from homeassistant.const import (
     CONF_HOST,

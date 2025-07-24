@@ -11,7 +11,11 @@ from python_homeassistant_analytics import (
 from python_homeassistant_analytics.models import Environment, IntegrationType
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -129,7 +133,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
+class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Homeassistant Analytics options."""
 
     async def async_step_init(

@@ -101,17 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Start a reauth flow
     entry.async_start_reauth(hass)
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

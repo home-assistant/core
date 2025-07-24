@@ -111,11 +111,9 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         """Write the state to the HASS state machine."""
         if self.data.holiday_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-            self._attr_hvac_modes = [HVACMode.HEAT]
             self._attr_preset_modes = [PRESET_HOLIDAY]
         elif self.data.summer_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-            self._attr_hvac_modes = [HVACMode.OFF]
             self._attr_preset_modes = [PRESET_SUMMER]
         else:
             self._attr_supported_features = SUPPORTED_FEATURES

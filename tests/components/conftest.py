@@ -98,8 +98,9 @@ def entity_registry_enabled_by_default() -> Generator[None]:
 @pytest.fixture(name="stub_blueprint_populate")
 def stub_blueprint_populate_fixture() -> Generator[None]:
     """Stub copying the blueprints to the config folder."""
-    # pylint: disable-next=import-outside-toplevel
-    from .blueprint.common import stub_blueprint_populate_fixture_helper
+    from .blueprint.common import (  # noqa: PLC0415
+        stub_blueprint_populate_fixture_helper,
+    )
 
     yield from stub_blueprint_populate_fixture_helper()
 
@@ -108,8 +109,7 @@ def stub_blueprint_populate_fixture() -> Generator[None]:
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_get_cache_files_fixture_helper
+    from .tts.common import mock_tts_get_cache_files_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_get_cache_files_fixture_helper()
 
@@ -119,8 +119,7 @@ def mock_tts_init_cache_dir_fixture(
     init_tts_cache_dir_side_effect: Any,
 ) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_init_cache_dir_fixture_helper
+    from .tts.common import mock_tts_init_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_init_cache_dir_fixture_helper(init_tts_cache_dir_side_effect)
 
@@ -128,8 +127,9 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper
+    from .tts.common import (  # noqa: PLC0415
+        init_tts_cache_dir_side_effect_fixture_helper,
+    )
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -142,8 +142,7 @@ def mock_tts_cache_dir_fixture(
     request: pytest.FixtureRequest,
 ) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_cache_dir_fixture_helper
+    from .tts.common import mock_tts_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_cache_dir_fixture_helper(
         tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
@@ -153,8 +152,7 @@ def mock_tts_cache_dir_fixture(
 @pytest.fixture(name="tts_mutagen_mock")
 def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
     """Mock writing tags."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import tts_mutagen_mock_fixture_helper
+    from .tts.common import tts_mutagen_mock_fixture_helper  # noqa: PLC0415
 
     yield from tts_mutagen_mock_fixture_helper()
 
@@ -162,8 +160,9 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    # pylint: disable-next=import-outside-toplevel
-    from .conversation.common import mock_conversation_agent_fixture_helper
+    from .conversation.common import (  # noqa: PLC0415
+        mock_conversation_agent_fixture_helper,
+    )
 
     return mock_conversation_agent_fixture_helper(hass)
 
@@ -180,8 +179,7 @@ def prevent_ffmpeg_subprocess() -> Generator[None]:
 @pytest.fixture
 def mock_light_entities() -> list[MockLight]:
     """Return mocked light entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .light.common import MockLight
+    from .light.common import MockLight  # noqa: PLC0415
 
     return [
         MockLight("Ceiling", STATE_ON),
@@ -193,8 +191,7 @@ def mock_light_entities() -> list[MockLight]:
 @pytest.fixture
 def mock_sensor_entities() -> dict[str, MockSensor]:
     """Return mocked sensor entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .sensor.common import get_mock_sensor_entities
+    from .sensor.common import get_mock_sensor_entities  # noqa: PLC0415
 
     return get_mock_sensor_entities()
 
@@ -202,8 +199,7 @@ def mock_sensor_entities() -> dict[str, MockSensor]:
 @pytest.fixture
 def mock_switch_entities() -> list[MockSwitch]:
     """Return mocked toggle entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .switch.common import get_mock_switch_entities
+    from .switch.common import get_mock_switch_entities  # noqa: PLC0415
 
     return get_mock_switch_entities()
 
@@ -211,8 +207,7 @@ def mock_switch_entities() -> list[MockSwitch]:
 @pytest.fixture
 def mock_legacy_device_scanner() -> MockScanner:
     """Return mocked legacy device scanner entity."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import MockScanner
+    from .device_tracker.common import MockScanner  # noqa: PLC0415
 
     return MockScanner()
 
@@ -220,8 +215,7 @@ def mock_legacy_device_scanner() -> MockScanner:
 @pytest.fixture
 def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner], None]:
     """Return setup callable for legacy device tracker setup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import mock_legacy_device_tracker_setup
+    from .device_tracker.common import mock_legacy_device_tracker_setup  # noqa: PLC0415
 
     return mock_legacy_device_tracker_setup
 
@@ -231,8 +225,7 @@ def addon_manager_fixture(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> AddonManager:
     """Return an AddonManager instance."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_manager
+    from .hassio.common import mock_addon_manager  # noqa: PLC0415
 
     return mock_addon_manager(hass)
 
@@ -288,8 +281,7 @@ def addon_store_info_fixture(
     addon_store_info_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock Supervisor add-on store info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_store_info
+    from .hassio.common import mock_addon_store_info  # noqa: PLC0415
 
     return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
 
@@ -305,8 +297,7 @@ def addon_info_fixture(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
 ) -> AsyncMock:
     """Mock Supervisor add-on info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_info
+    from .hassio.common import mock_addon_info  # noqa: PLC0415
 
     return mock_addon_info(supervisor_client, addon_info_side_effect)
 
@@ -316,8 +307,7 @@ def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_not_installed
+    from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
     return mock_addon_not_installed(addon_store_info, addon_info)
 
@@ -327,8 +317,7 @@ def addon_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_installed
+    from .hassio.common import mock_addon_installed  # noqa: PLC0415
 
     return mock_addon_installed(addon_store_info, addon_info)
 
@@ -338,8 +327,7 @@ def addon_running_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_running
+    from .hassio.common import mock_addon_running  # noqa: PLC0415
 
     return mock_addon_running(addon_store_info, addon_info)
 
@@ -350,8 +338,7 @@ def install_addon_side_effect_fixture(
 ) -> Any | None:
     """Return the install add-on side effect."""
 
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon_side_effect
+    from .hassio.common import mock_install_addon_side_effect  # noqa: PLC0415
 
     return mock_install_addon_side_effect(addon_store_info, addon_info)
 
@@ -371,8 +358,7 @@ def start_addon_side_effect_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
     """Return the start add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon_side_effect
+    from .hassio.common import mock_start_addon_side_effect  # noqa: PLC0415
 
     return mock_start_addon_side_effect(addon_store_info, addon_info)
 
@@ -419,8 +405,7 @@ def set_addon_options_side_effect_fixture(
     addon_options: dict[str, Any],
 ) -> Any | None:
     """Return the set add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options_side_effect
+    from .hassio.common import mock_set_addon_options_side_effect  # noqa: PLC0415
 
     return mock_set_addon_options_side_effect(addon_options)
 
@@ -446,8 +431,7 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 @pytest.fixture(name="create_backup")
 def create_backup_fixture() -> Generator[AsyncMock]:
     """Mock create backup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_create_backup
+    from .hassio.common import mock_create_backup  # noqa: PLC0415
 
     yield from mock_create_backup()
 
@@ -486,8 +470,7 @@ def store_info_fixture(
 @pytest.fixture(name="addon_stats")
 def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock addon stats info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_stats
+    from .hassio.common import mock_addon_stats  # noqa: PLC0415
 
     return mock_addon_stats(supervisor_client)
 

@@ -21,7 +21,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_udn": "SSDP discovery info has no UDN",
-      "not_keenetic_ndms2": "Discovered device is not a Keenetic router"
+      "not_keenetic_ndms2": "Discovered device is not a Keenetic router",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -36,6 +37,10 @@
           "include_associated": "Use Wi-Fi AP associations data (ignored if hotspot data used)"
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_initialized": "The integration is not initialized yet. Can't display available options."
     }
   }
 }

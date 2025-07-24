@@ -34,7 +34,7 @@ async def _trigger_repair_issue(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     with patch(

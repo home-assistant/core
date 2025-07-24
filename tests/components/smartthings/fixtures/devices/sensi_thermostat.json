@@ -1,0 +1,78 @@
+{
+  "items": [
+    {
+      "deviceId": "2409a73c-918a-4d1f-b4f5-c27468c71d70",
+      "name": "Sensi Thermostat",
+      "label": "Thermostat",
+      "manufacturerName": "0AKf",
+      "presentationId": "sensi_thermostat",
+      "deviceManufacturerCode": "Emerson",
+      "locationId": "fc2fb744-4d34-4276-be33-56bbc6af266e",
+      "ownerId": "aecdb855-3ab7-9305-c0e3-0dced524e5dc",
+      "roomId": "025f6d30-c16c-4d11-8be2-03d5f4708d86",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatOperatingState",
+              "version": 1
+            },
+            {
+              "id": "thermostatMode",
+              "version": 1
+            },
+            {
+              "id": "thermostatFanMode",
+              "version": 1
+            },
+            {
+              "id": "relativeHumidityMeasurement",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2022-04-16T19:45:50.864Z",
+      "profile": {
+        "id": "923a86cc-983f-4cb1-98da-64fb5aa435ca"
+      },
+      "viper": {
+        "manufacturerName": "Emerson",
+        "modelName": "1F95U-42WF",
+        "swVersion": "6004971003",
+        "endpointAppId": "viper_7722c3c0-dfc1-11e9-9149-4f2618178093"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

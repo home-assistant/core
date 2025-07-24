@@ -29,7 +29,7 @@ async def test_nexia_sensor_switch(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test NexiaRoomIQSensorSwitch."""
-    await async_init_integration(hass, house_fixture="nexia/sensors_xl1050_house.json")
+    await async_init_integration(hass, house_fixture="sensors_xl1050_house.json")
     sw1_id = f"{Platform.SWITCH}.center_nativezone_include_center"
     sw1 = {ATTR_ENTITY_ID: sw1_id}
     sw2_id = f"{Platform.SWITCH}.center_nativezone_include_upstairs"

@@ -1,6 +1,5 @@
 """The tests for Home Assistant frontend."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -27,6 +26,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -95,7 +95,6 @@ async def frontend_themes(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:
@@ -407,6 +406,35 @@ async def test_themes_reload_themes(
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["themes"] == {"sad": {"primary-color": "blue"}}
+    assert msg["result"]["default_theme"] == "default"
+
+
+@pytest.mark.usefixtures("frontend")
+async def test_themes_reload_invalid(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+) -> None:
+    """Test frontend.reload_themes service with an invalid theme."""
+
+    with patch(
+        "homeassistant.components.frontend.async_hass_config_yaml",
+        return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    with (
+        patch(
+            "homeassistant.components.frontend.async_hass_config_yaml",
+            return_value={DOMAIN: {CONF_THEMES: {"sad": "blue"}}},
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to reload themes"),
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["themes"] == {"happy": {"primary-color": "pink"}}
     assert msg["result"]["default_theme"] == "default"
 
 

@@ -40,6 +40,12 @@ BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
         press_fn=lambda device: device.send_charge_stop(),
     ),
     LektricoButtonEntityDescription(
+        key="charging_schedule_override",
+        translation_key="charging_schedule_override",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda device: device.send_charge_schedule_override(),
+    ),
+    LektricoButtonEntityDescription(
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,

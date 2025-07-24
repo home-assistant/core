@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 from . import GATEWAY_ID, GATEWAY_ID1, GATEWAY_ID2
 from .common import CommandStore
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_entry_setup_unload(
@@ -118,7 +118,7 @@ async def test_migrate_config_entry_and_identifiers(
 
     gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1)
     command_store.register_device(
-        gateway1, load_json_object_fixture("bulb_w.json", DOMAIN)
+        gateway1, await async_load_json_object_fixture(hass, "bulb_w.json", DOMAIN)
     )
     config_entry1.add_to_hass(hass)
 

@@ -1,12 +1,15 @@
 """Base entity for EHEIM Digital."""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.types import EheimDigitalClientError
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -51,3 +54,24 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
         super()._handle_coordinator_update()
+
+
+def exception_handler[_EntityT: EheimDigitalEntity[EheimDigitalDevice], **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate AirGradient calls to handle exceptions.
+
+    A decorator that wraps the passed in function, catches AirGradient errors.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except EheimDigitalClientError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+    return handler

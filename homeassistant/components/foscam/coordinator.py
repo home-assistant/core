@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from libpyfoscam import FoscamCamera
+from libpyfoscamcgi import FoscamCamera
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

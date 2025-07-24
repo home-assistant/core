@@ -65,7 +65,9 @@ homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
+homeassistant.components.alexa_devices.*
 homeassistant.components.alpha_vantage.*
+homeassistant.components.altruist.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*
@@ -375,10 +377,12 @@ homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
+homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
@@ -386,6 +390,7 @@ homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
@@ -500,6 +505,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
+homeassistant.components.telegram_bot.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*
@@ -530,6 +536,7 @@ homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*
 homeassistant.components.uptime.*
+homeassistant.components.uptime_kuma.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.uvc.*

@@ -95,6 +95,12 @@ class SchemaFlowFormStep(SchemaFlowStep):
     preview: str | None = None
     """Optional preview component."""
 
+    description_placeholders: (
+        Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, str]]]
+        | UndefinedType
+    ) = UNDEFINED
+    """Optional property to populate description placeholders."""
+
 
 @dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
@@ -214,6 +220,11 @@ class SchemaCommonFlowHandler:
                         and key.description.get("advanced")
                         and not self._handler.show_advanced_options
                     )
+                    and not (
+                        # don't remove read_only keys
+                        isinstance(data_schema.schema[key], selector.Selector)
+                        and data_schema.schema[key].config.get("read_only")
+                    )
                 ):
                     # Key not present, delete keys old value (if present) too
                     values.pop(key.schema, None)
@@ -252,6 +263,10 @@ class SchemaCommonFlowHandler:
         if (data_schema := await self._get_schema(form_step)) is None:
             return await self._show_next_step_or_create_entry(form_step)
 
+        description_placeholders: dict[str, str] | None = None
+        if form_step.description_placeholders is not UNDEFINED:
+            description_placeholders = await form_step.description_placeholders(self)
+
         suggested_values: dict[str, Any] = {}
         if form_step.suggested_values is UNDEFINED:
             suggested_values = self._options
@@ -280,6 +295,7 @@ class SchemaCommonFlowHandler:
         return self._handler.async_show_form(
             step_id=next_step_id,
             data_schema=data_schema,
+            description_placeholders=description_placeholders,
             errors=errors,
             last_step=last_step,
             preview=form_step.preview,

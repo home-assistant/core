@@ -21,7 +21,7 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -63,6 +63,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
+    async_setup_services(hass)
+
     return True
 
 
@@ -83,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
     if not await hap.async_setup():
         return False
 
-    await async_setup_services(hass)
     _async_remove_obsolete_entities(hass, entry, hap)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
@@ -114,8 +115,6 @@ async def async_unload_entry(
     hap = entry.runtime_data
     assert hap.reset_connection_listener is not None
     hap.reset_connection_listener()
-
-    await async_unload_services(hass)
 
     return await hap.async_reset()
 

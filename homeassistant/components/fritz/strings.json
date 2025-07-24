@@ -214,7 +214,7 @@
       "message": "Unable to establish a connection"
     },
     "update_failed": {
-      "message": "Error while uptaing the data: {error}"
+      "message": "Error while updating the data: {error}"
     }
   }
 }

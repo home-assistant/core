@@ -1,4 +1,4 @@
-"""Support for KNX/IP climate devices."""
+"""Support for KNX climate entities."""
 
 from __future__ import annotations
 
@@ -37,9 +37,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"

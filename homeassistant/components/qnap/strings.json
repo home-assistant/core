@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to the QNAP device",
-        "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
+        "description": "This sensor allows getting various statistics from your QNAP NAS.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

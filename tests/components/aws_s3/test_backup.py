@@ -23,7 +23,6 @@ from homeassistant.components.aws_s3.const import (
 )
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -43,7 +42,6 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         await setup_integration(hass, mock_config_entry)
 
@@ -114,21 +112,23 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": test_backup.addons,
-            "backup_id": test_backup.backup_id,
-            "date": test_backup.date,
-            "database_included": test_backup.database_included,
-            "folders": test_backup.folders,
-            "homeassistant_included": test_backup.homeassistant_included,
-            "homeassistant_version": test_backup.homeassistant_version,
-            "name": test_backup.name,
-            "extra_metadata": test_backup.extra_metadata,
             "agents": {
                 f"{DOMAIN}.{mock_config_entry.entry_id}": {
                     "protected": test_backup.protected,
                     "size": test_backup.size,
                 }
             },
+            "backup_id": test_backup.backup_id,
+            "database_included": test_backup.database_included,
+            "date": test_backup.date,
+            "extra_metadata": test_backup.extra_metadata,
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
+            "folders": test_backup.folders,
+            "homeassistant_included": test_backup.homeassistant_included,
+            "homeassistant_version": test_backup.homeassistant_version,
+            "name": test_backup.name,
             "with_automatic_settings": None,
         }
     ]
@@ -152,21 +152,23 @@ async def test_agents_get_backup(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
         "addons": test_backup.addons,
-        "backup_id": test_backup.backup_id,
-        "date": test_backup.date,
-        "database_included": test_backup.database_included,
-        "folders": test_backup.folders,
-        "homeassistant_included": test_backup.homeassistant_included,
-        "homeassistant_version": test_backup.homeassistant_version,
-        "name": test_backup.name,
-        "extra_metadata": test_backup.extra_metadata,
         "agents": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": {
                 "protected": test_backup.protected,
                 "size": test_backup.size,
             }
         },
+        "backup_id": test_backup.backup_id,
+        "database_included": test_backup.database_included,
+        "date": test_backup.date,
+        "extra_metadata": test_backup.extra_metadata,
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
+        "folders": test_backup.folders,
+        "homeassistant_included": test_backup.homeassistant_included,
+        "homeassistant_version": test_backup.homeassistant_version,
+        "name": test_backup.name,
         "with_automatic_settings": None,
     }
 

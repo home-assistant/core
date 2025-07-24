@@ -21,6 +21,8 @@ from yolink.const import (
     ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_SMOKE_ALARM,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
     ATTR_DEVICE_SWITCH,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
@@ -42,6 +44,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfConductivity,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
@@ -103,6 +106,8 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_GARAGE_DOOR_CONTROLLER,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
+    ATTR_DEVICE_SMOKE_ALARM,
 ]
 
 BATTERY_POWER_SENSOR = [
@@ -122,12 +127,15 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
+    ATTR_DEVICE_SMOKE_ALARM,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_SMOKE_ALARM,
 ]
 
 NONE_HUMIDITY_SENSOR_MODELS = [
@@ -182,7 +190,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (
-            device.device_type in [ATTR_DEVICE_TH_SENSOR]
+            device.device_type in [ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_SOIL_TH_SENSOR]
             and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS
         ),
     ),
@@ -191,7 +199,8 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
+        exists_fn=lambda device: device.device_type
+        in [ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_SOIL_TH_SENSOR],
     ),
     # mcu temperature
     YoLinkSensorEntityDescription(
@@ -206,7 +215,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="loraInfo",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        value=lambda value: value["signal"] if value is not None else None,
+        value=lambda value: value.get("signal") if value is not None else None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -301,6 +310,14 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: device.device_model_name in POWER_SUPPORT_MODELS,
         value=lambda value: value / 100 if value is not None else None,
+    ),
+    YoLinkSensorEntityDescription(
+        key="conductivity",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR],
+        should_update_entity=lambda value: value is not None,
     ),
 )
 

@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_fan_status[dmaker.fan.p18][fan.test_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'Normal',
+        'Nature',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 63>,
+    'translation_key': 'generic_fan',
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p18][fan.test_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'direction': None,
+      'friendly_name': 'test_fan',
+      'oscillating': None,
+      'percentage': None,
+      'percentage_step': 1.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'Normal',
+        'Nature',
+      ]),
+      'supported_features': <FanEntityFeature: 63>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p5][fan.test_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'Normal',
+        'Nature',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 63>,
+    'translation_key': 'generic_fan',
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p5][fan.test_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'direction': None,
+      'friendly_name': 'test_fan',
+      'oscillating': False,
+      'percentage': None,
+      'percentage_step': 1.0,
+      'preset_mode': 'Nature',
+      'preset_modes': list([
+        'Normal',
+        'Nature',
+      ]),
+      'supported_features': <FanEntityFeature: 63>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

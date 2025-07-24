@@ -3,7 +3,7 @@
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-TEST_DATETIME_STRING = "2020-04-25T12:00:00+00:00"
+TEST_DATETIME_STRING = "2024-11-23T12:00:00+00:00"
 
 TEST_API_KEY = "test-metoffice-api-key"
 
@@ -34,31 +34,33 @@ METOFFICE_CONFIG_KINGSLYNN = {
 }
 
 KINGSLYNN_SENSOR_RESULTS = {
-    "weather": ("weather", "sunny"),
-    "visibility": ("visibility", "Very Good"),
-    "visibility_distance": ("visibility_distance", "20-40"),
-    "temperature": ("temperature", "14"),
-    "feels_like_temperature": ("feels_like_temperature", "13"),
-    "uv": ("uv_index", "6"),
-    "precipitation": ("probability_of_precipitation", "0"),
-    "wind_direction": ("wind_direction", "E"),
-    "wind_gust": ("wind_gust", "7"),
-    "wind_speed": ("wind_speed", "2"),
-    "humidity": ("humidity", "60"),
+    "weather": "rainy",
+    "temperature": "7.9",
+    "uv_index": "1",
+    "probability_of_precipitation": "67",
+    "pressure": "998.20",
+    "wind_speed": "22.21",
+    "wind_direction": "180",
+    "wind_gust": "40.26",
+    "feels_like_temperature": "3.4",
+    "visibility_distance": "7478.00",
+    "humidity": "97.5",
+    "station_name": "King's Lynn",
 }
 
 WAVERTREE_SENSOR_RESULTS = {
-    "weather": ("weather", "sunny"),
-    "visibility": ("visibility", "Good"),
-    "visibility_distance": ("visibility_distance", "10-20"),
-    "temperature": ("temperature", "17"),
-    "feels_like_temperature": ("feels_like_temperature", "14"),
-    "uv": ("uv_index", "5"),
-    "precipitation": ("probability_of_precipitation", "0"),
-    "wind_direction": ("wind_direction", "SSE"),
-    "wind_gust": ("wind_gust", "16"),
-    "wind_speed": ("wind_speed", "9"),
-    "humidity": ("humidity", "50"),
+    "weather": "rainy",
+    "temperature": "9.3",
+    "uv_index": "1",
+    "probability_of_precipitation": "61",
+    "pressure": "987.50",
+    "wind_speed": "17.60",
+    "wind_direction": "176",
+    "wind_gust": "34.52",
+    "feels_like_temperature": "5.8",
+    "visibility_distance": "5106.00",
+    "humidity": "95.13",
+    "station_name": "Wavertree",
 }
 
 DEVICE_KEY_KINGSLYNN = {(DOMAIN, TEST_COORDINATES_KINGSLYNN)}

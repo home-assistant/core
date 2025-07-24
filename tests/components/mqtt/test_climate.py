@@ -407,13 +407,6 @@ async def test_turn_on_and_off_optimistic_with_power_command(
         ),
         (
             help_custom_config(
-                climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["off", "dry"]},)
-            ),
-            None,
-            "off",
-        ),
-        (
-            help_custom_config(
                 climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["off", "cool"]},)
             ),
             "cool",

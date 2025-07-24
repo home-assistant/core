@@ -2,6 +2,10 @@
 
 send_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message:
       required: true
       example: The garage door has been open for 10 minutes.
@@ -23,6 +27,7 @@ send_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -61,6 +66,10 @@ send_message:
 
 send_photo:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/image.png"
       selector:
@@ -73,6 +82,14 @@ send_photo:
       example: "My image"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -81,13 +98,6 @@ send_photo:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -100,6 +110,7 @@ send_photo:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -137,6 +148,10 @@ send_photo:
 
 send_sticker:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
@@ -149,6 +164,14 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -157,13 +180,6 @@ send_sticker:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -205,6 +221,10 @@ send_sticker:
 
 send_animation:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
@@ -217,6 +237,14 @@ send_animation:
       example: "My animation"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -225,13 +253,6 @@ send_animation:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -244,6 +265,7 @@ send_animation:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -281,6 +303,10 @@ send_animation:
 
 send_video:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
@@ -293,6 +319,14 @@ send_video:
       example: "My video"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -301,13 +335,6 @@ send_video:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -320,6 +347,7 @@ send_video:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -357,6 +385,10 @@ send_video:
 
 send_voice:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
@@ -369,6 +401,14 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -377,13 +417,6 @@ send_voice:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -425,6 +458,10 @@ send_voice:
 
 send_document:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/document.odf"
       selector:
@@ -437,6 +474,14 @@ send_document:
       example: Document Title xy
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -445,13 +490,6 @@ send_document:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -464,6 +502,7 @@ send_document:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -501,6 +540,10 @@ send_document:
 
 send_location:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     latitude:
       required: true
       selector:
@@ -555,6 +598,10 @@ send_location:
 
 send_poll:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -603,6 +650,10 @@ send_poll:
 
 edit_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -629,6 +680,7 @@ edit_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_web_page_preview:
       selector:
         boolean:
@@ -641,6 +693,10 @@ edit_message:
 
 edit_caption:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -665,6 +721,10 @@ edit_caption:
 
 edit_replymarkup:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -685,6 +745,10 @@ edit_replymarkup:
 
 answer_callback_query:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message:
       required: true
       example: "OK, I'm listening"
@@ -708,6 +772,10 @@ answer_callback_query:
 
 delete_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -718,3 +786,41 @@ delete_message:
       example: 12345
       selector:
         text:
+
+leave_chat:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+
+set_message_reaction:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message_id:
+      required: true
+      example: 54321
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    reaction:
+      required: true
+      example: 👍
+      selector:
+        text:
+    is_big:
+      required: false
+      selector:
+        boolean:

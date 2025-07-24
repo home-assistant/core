@@ -237,6 +237,9 @@ NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 
 BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
+OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
+    "outbound_websocket_incorrectly_enabled_{unique}"
+)
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
@@ -258,6 +261,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
+VIRTUAL_COMPONENTS = ("boolean", "enum", "input", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
@@ -285,3 +289,5 @@ ROLE_TO_DEVICE_CLASS_MAP = {
 # We want to check only the first 5 KB of the script if it contains emitEvent()
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
+
+All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")

@@ -24,7 +24,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DISKS,
@@ -441,7 +441,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return None
 
 
-class SynologyDSMOptionsFlowHandler(OptionsFlow):
+class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
 
     config_entry: SynologyDSMConfigEntry

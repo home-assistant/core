@@ -36,12 +36,14 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         history_stats: HistoryStats,
         config_entry: ConfigEntry | None,
         name: str,
+        preview: bool = False,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         self._history_stats = history_stats
         self._subscriber_count = 0
         self._at_start_listener: CALLBACK_TYPE | None = None
         self._track_events_listener: CALLBACK_TYPE | None = None
+        self._preview = preview
         super().__init__(
             hass,
             _LOGGER,
@@ -104,3 +106,8 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
             return await self._history_stats.async_update(None)
         except (TemplateError, TypeError, ValueError) as ex:
             raise UpdateFailed(ex) from ex
+
+    async def async_refresh(self) -> None:
+        """Refresh data and log errors."""
+        log_failures = not self._preview
+        await self._async_refresh(log_failures)

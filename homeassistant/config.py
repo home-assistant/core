@@ -13,7 +13,6 @@ import logging
 import operator
 import os
 from pathlib import Path
-import re
 import shutil
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
@@ -39,8 +38,6 @@ from .util.yaml.objects import NodeStrClass
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
-RE_ASCII = re.compile(r"\033\[[^m]*m")
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
@@ -378,7 +375,7 @@ def _get_annotation(item: Any) -> tuple[str, int | str] | None:
     if not hasattr(item, "__config_file__"):
         return None
 
-    return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
+    return (item.__config_file__, getattr(item, "__line__", "?"))
 
 
 def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
@@ -1321,8 +1318,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from .helpers import check_config
+    from .helpers import check_config  # noqa: PLC0415
 
     res = await check_config.async_check_ha_config_file(hass)
 

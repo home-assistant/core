@@ -11,12 +11,11 @@ from homematicip.base.functionalChannels import (
     FunctionalChannel,
 )
 from homematicip.device import (
-    BrandSwitchMeasuring,
+    Device,
     EnergySensorsInterface,
     FloorTerminalBlock6,
     FloorTerminalBlock10,
     FloorTerminalBlock12,
-    FullFlushSwitchMeasuring,
     HeatingThermostat,
     HeatingThermostatCompact,
     HeatingThermostatEvo,
@@ -26,13 +25,15 @@ from homematicip.device import (
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
     PassageDetector,
-    PlugableSwitchMeasuring,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
+    TiltVibrationSensor,
+    WateringActuator,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -45,7 +46,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfEnergy,
@@ -64,6 +67,11 @@ from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import get_channels_from_device
 
+ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
+ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
+ATTR_ACCELERATION_SENSOR_SECOND_TRIGGER_ANGLE = (
+    "acceleration_sensor_second_trigger_angle"
+)
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
 ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
 ATTR_HIGHEST_ILLUMINATION = "highest_illumination"
@@ -91,6 +99,159 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
     "highestIllumination": ATTR_HIGHEST_ILLUMINATION,
 }
 
+TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
+
+
+def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
+    """Generate a mapping of device types to handler functions."""
+    return {
+        HomeControlAccessPoint: lambda device: [
+            HomematicipAccesspointDutyCycle(hap, device)
+        ],
+        HeatingThermostat: lambda device: [
+            HomematicipHeatingThermostat(hap, device),
+            HomematicipTemperatureSensor(hap, device),
+        ],
+        HeatingThermostatCompact: lambda device: [
+            HomematicipHeatingThermostat(hap, device),
+            HomematicipTemperatureSensor(hap, device),
+        ],
+        HeatingThermostatEvo: lambda device: [
+            HomematicipHeatingThermostat(hap, device),
+            HomematicipTemperatureSensor(hap, device),
+        ],
+        TemperatureHumiditySensorDisplay: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        TemperatureHumiditySensorWithoutDisplay: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        TemperatureHumiditySensorOutdoor: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        RoomControlDeviceAnalog: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+        ],
+        LightSensor: lambda device: [
+            HomematicipIlluminanceSensor(hap, device),
+        ],
+        MotionDetectorIndoor: lambda device: [
+            HomematicipIlluminanceSensor(hap, device),
+        ],
+        MotionDetectorOutdoor: lambda device: [
+            HomematicipIlluminanceSensor(hap, device),
+        ],
+        MotionDetectorPushButton: lambda device: [
+            HomematicipIlluminanceSensor(hap, device),
+        ],
+        PresenceDetectorIndoor: lambda device: [
+            HomematicipIlluminanceSensor(hap, device),
+        ],
+        SwitchMeasuring: lambda device: [
+            HomematicipPowerSensor(hap, device),
+            HomematicipEnergySensor(hap, device),
+        ],
+        PassageDetector: lambda device: [
+            HomematicipPassageDetectorDeltaCounter(hap, device),
+        ],
+        TemperatureDifferenceSensor2: lambda device: [
+            HomematicpTemperatureExternalSensorCh1(hap, device),
+            HomematicpTemperatureExternalSensorCh2(hap, device),
+            HomematicpTemperatureExternalSensorDelta(hap, device),
+        ],
+        TiltVibrationSensor: lambda device: [
+            HomematicipTiltStateSensor(hap, device),
+            HomematicipTiltAngleSensor(hap, device),
+        ],
+        WateringActuator: lambda device: [
+            entity
+            for ch in device.functionalChannels
+            if ch.functionalChannelType
+            == FunctionalChannelType.WATERING_ACTUATOR_CHANNEL
+            for entity in (
+                HomematicipWaterFlowSensor(
+                    hap, device, channel=ch.index, post="currentWaterFlow"
+                ),
+                HomematicipWaterVolumeSensor(
+                    hap,
+                    device,
+                    channel=ch.index,
+                    post="waterVolume",
+                    attribute="waterVolume",
+                ),
+                HomematicipWaterVolumeSinceOpenSensor(
+                    hap,
+                    device,
+                    channel=ch.index,
+                ),
+            )
+        ],
+        WeatherSensor: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipIlluminanceSensor(hap, device),
+            HomematicipWindspeedSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        WeatherSensorPlus: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipIlluminanceSensor(hap, device),
+            HomematicipWindspeedSensor(hap, device),
+            HomematicipTodayRainSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        WeatherSensorPro: lambda device: [
+            HomematicipTemperatureSensor(hap, device),
+            HomematicipHumiditySensor(hap, device),
+            HomematicipIlluminanceSensor(hap, device),
+            HomematicipWindspeedSensor(hap, device),
+            HomematicipTodayRainSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
+            hap, device
+        ),
+    }
+
+
+def _handle_energy_sensor_interface(
+    hap: HomematicipHAP, device: Device
+) -> list[HomematicipGenericEntity]:
+    """Handle energy sensor interface devices."""
+    result: list[HomematicipGenericEntity] = []
+    for ch in get_channels_from_device(
+        device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
+    ):
+        if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_IEC:
+            if ch.currentPowerConsumption is not None:
+                result.append(HmipEsiIecPowerConsumption(hap, device))
+            if ch.energyCounterOneType != ESI_TYPE_UNKNOWN:
+                result.append(HmipEsiIecEnergyCounterHighTariff(hap, device))
+            if ch.energyCounterTwoType != ESI_TYPE_UNKNOWN:
+                result.append(HmipEsiIecEnergyCounterLowTariff(hap, device))
+            if ch.energyCounterThreeType != ESI_TYPE_UNKNOWN:
+                result.append(HmipEsiIecEnergyCounterInputSingleTariff(hap, device))
+
+        if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_GAS:
+            if ch.currentGasFlow is not None:
+                result.append(HmipEsiGasCurrentGasFlow(hap, device))
+            if ch.gasVolume is not None:
+                result.append(HmipEsiGasGasVolume(hap, device))
+
+        if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_LED:
+            if ch.currentPowerConsumption is not None:
+                result.append(HmipEsiLedCurrentPowerConsumption(hap, device))
+            result.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
+
+    return result
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -100,114 +261,145 @@ async def async_setup_entry(
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
+
+    # Get device handlers dynamically
+    device_handlers = get_device_handlers(hap)
+
+    # Process all devices
     for device in hap.home.devices:
-        if isinstance(device, HomeControlAccessPoint):
-            entities.append(HomematicipAccesspointDutyCycle(hap, device))
-        if isinstance(
-            device,
-            (
-                HeatingThermostat,
-                HeatingThermostatCompact,
-                HeatingThermostatEvo,
-            ),
-        ):
-            entities.append(HomematicipHeatingThermostat(hap, device))
-            entities.append(HomematicipTemperatureSensor(hap, device))
-        if isinstance(
-            device,
-            (
-                TemperatureHumiditySensorDisplay,
-                TemperatureHumiditySensorWithoutDisplay,
-                TemperatureHumiditySensorOutdoor,
-                WeatherSensor,
-                WeatherSensorPlus,
-                WeatherSensorPro,
-            ),
-        ):
-            entities.append(HomematicipTemperatureSensor(hap, device))
-            entities.append(HomematicipHumiditySensor(hap, device))
-            entities.append(HomematicipAbsoluteHumiditySensor(hap, device))
-        elif isinstance(device, (RoomControlDeviceAnalog,)):
-            entities.append(HomematicipTemperatureSensor(hap, device))
-        if isinstance(
-            device,
-            (
-                LightSensor,
-                MotionDetectorIndoor,
-                MotionDetectorOutdoor,
-                MotionDetectorPushButton,
-                PresenceDetectorIndoor,
-                WeatherSensor,
-                WeatherSensorPlus,
-                WeatherSensorPro,
-            ),
-        ):
-            entities.append(HomematicipIlluminanceSensor(hap, device))
-        if isinstance(
-            device,
-            (
-                PlugableSwitchMeasuring,
-                BrandSwitchMeasuring,
-                FullFlushSwitchMeasuring,
-            ),
-        ):
-            entities.append(HomematicipPowerSensor(hap, device))
-            entities.append(HomematicipEnergySensor(hap, device))
-        if isinstance(device, (WeatherSensor, WeatherSensorPlus, WeatherSensorPro)):
-            entities.append(HomematicipWindspeedSensor(hap, device))
-        if isinstance(device, (WeatherSensorPlus, WeatherSensorPro)):
-            entities.append(HomematicipTodayRainSensor(hap, device))
-        if isinstance(device, PassageDetector):
-            entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
-        if isinstance(device, TemperatureDifferenceSensor2):
-            entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
-            entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
-            entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
-        if isinstance(device, EnergySensorsInterface):
-            for ch in get_channels_from_device(
-                device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
-            ):
-                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_IEC:
-                    if ch.currentPowerConsumption is not None:
-                        entities.append(HmipEsiIecPowerConsumption(hap, device))
-                    if ch.energyCounterOneType != ESI_TYPE_UNKNOWN:
-                        entities.append(HmipEsiIecEnergyCounterHighTariff(hap, device))
-                    if ch.energyCounterTwoType != ESI_TYPE_UNKNOWN:
-                        entities.append(HmipEsiIecEnergyCounterLowTariff(hap, device))
-                    if ch.energyCounterThreeType != ESI_TYPE_UNKNOWN:
-                        entities.append(
-                            HmipEsiIecEnergyCounterInputSingleTariff(hap, device)
-                        )
+        for device_class, handler in device_handlers.items():
+            if isinstance(device, device_class):
+                entities.extend(handler(device))
 
-                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_GAS:
-                    if ch.currentGasFlow is not None:
-                        entities.append(HmipEsiGasCurrentGasFlow(hap, device))
-                    if ch.gasVolume is not None:
-                        entities.append(HmipEsiGasGasVolume(hap, device))
-
-                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_LED:
-                    if ch.currentPowerConsumption is not None:
-                        entities.append(HmipEsiLedCurrentPowerConsumption(hap, device))
-                    entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
-        if isinstance(
-            device,
-            (
-                FloorTerminalBlock6,
-                FloorTerminalBlock10,
-                FloorTerminalBlock12,
-                WiredFloorTerminalBlock12,
-            ),
-        ):
-            entities.extend(
-                HomematicipFloorTerminalBlockMechanicChannelValve(
-                    hap, device, channel=channel.index
-                )
-                for channel in device.functionalChannels
-                if isinstance(channel, FloorTerminalBlockMechanicChannel)
-                and getattr(channel, "valvePosition", None) is not None
-            )
+    # Handle floor terminal blocks separately
+    floor_terminal_blocks = (
+        FloorTerminalBlock6,
+        FloorTerminalBlock10,
+        FloorTerminalBlock12,
+        WiredFloorTerminalBlock12,
+    )
+    entities.extend(
+        HomematicipFloorTerminalBlockMechanicChannelValve(
+            hap, device, channel=channel.index
+        )
+        for device in hap.home.devices
+        if isinstance(device, floor_terminal_blocks)
+        for channel in device.functionalChannels
+        if isinstance(channel, FloorTerminalBlockMechanicChannel)
+        and getattr(channel, "valvePosition", None) is not None
+    )
 
     async_add_entities(entities)
+
+
+class HomematicipWaterFlowSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP watering flow sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, hap: HomematicipHAP, device: Device, channel: int, post: str
+    ) -> None:
+        """Initialize the watering flow sensor device."""
+        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return self.functional_channel.waterFlow
+
+
+class HomematicipWaterVolumeSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP watering volume sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: Device,
+        channel: int,
+        post: str,
+        attribute: str,
+    ) -> None:
+        """Initialize the watering volume sensor device."""
+        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+        self._attribute_name = attribute
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return getattr(self.functional_channel, self._attribute_name, None)
+
+
+class HomematicipWaterVolumeSinceOpenSensor(HomematicipWaterVolumeSensor):
+    """Representation of the HomematicIP watering volume since open sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
+        """Initialize the watering flow volume since open device."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            post="waterVolumeSinceOpen",
+            attribute="waterVolumeSinceOpen",
+        )
+
+
+class HomematicipTiltAngleSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP tilt angle sensor."""
+
+    _attr_native_unit_of_measurement = DEGREE
+    _attr_state_class = SensorStateClass.MEASUREMENT_ANGLE
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the tilt angle sensor device."""
+        super().__init__(hap, device, post="Tilt Angle")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        return getattr(self.functional_channel, "absoluteAngle", None)
+
+
+class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP tilt sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = TILT_STATE_VALUES
+    _attr_translation_key = "tilt_state"
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the tilt sensor device."""
+        super().__init__(hap, device, post="Tilt State")
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state."""
+        tilt_state = getattr(self.functional_channel, "tiltState", None)
+        return tilt_state.lower() if tilt_state is not None else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the tilt sensor."""
+        state_attr = super().extra_state_attributes
+
+        state_attr[ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION] = getattr(
+            self.functional_channel, "accelerationSensorNeutralPosition", None
+        )
+        state_attr[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] = getattr(
+            self.functional_channel, "accelerationSensorTriggerAngle", None
+        )
+        state_attr[ATTR_ACCELERATION_SENSOR_SECOND_TRIGGER_ANGLE] = getattr(
+            self.functional_channel, "accelerationSensorSecondTriggerAngle", None
+        )
+
+        return state_attr
 
 
 class HomematicipFloorTerminalBlockMechanicChannelValve(
@@ -351,7 +543,9 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP absolute humidity sensor."""
 
-    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
+    _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -359,7 +553,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Absolute Humidity")
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> float | None:
         """Return the state."""
         if self.functional_channel is None:
             return None
@@ -373,8 +567,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         ):
             return None
 
-        # Convert from g/m³ to mg/m³
-        return int(float(value) * 1000)
+        return round(value, 3)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):

@@ -1,4 +1,4 @@
-"""Support for KNX/IP weather station."""
+"""Support for KNX weather entities."""
 
 from __future__ import annotations
 
@@ -19,9 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import WeatherSchema
 
 

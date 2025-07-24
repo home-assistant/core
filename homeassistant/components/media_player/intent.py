@@ -27,7 +27,12 @@ from . import (
     MediaPlayerDeviceClass,
     SearchMedia,
 )
-from .const import MediaPlayerEntityFeature, MediaPlayerState
+from .const import (
+    ATTR_MEDIA_FILTER_CLASSES,
+    MediaClass,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+)
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
@@ -231,6 +236,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
     intent_type = INTENT_MEDIA_SEARCH_AND_PLAY
     slot_schema = {
         vol.Required("search_query"): cv.string,
+        vol.Optional("media_class"): vol.In([cls.value for cls in MediaClass]),
         # Optional name/area/floor slots handled by intent matcher
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
@@ -285,14 +291,23 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
         target_entity = match_result.states[0]
         target_entity_id = target_entity.entity_id
 
+        # Get media class if provided
+        media_class_slot = slots.get("media_class", {})
+        media_class_value = media_class_slot.get("value")
+
+        # Build search service data
+        search_data = {"search_query": search_query}
+
+        # Add media_filter_classes if media_class is provided
+        if media_class_value:
+            search_data[ATTR_MEDIA_FILTER_CLASSES] = [media_class_value]
+
         # 1. Search Media
         try:
             search_response = await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEARCH_MEDIA,
-                {
-                    "search_query": search_query,
-                },
+                search_data,
                 target={
                     "entity_id": target_entity_id,
                 },

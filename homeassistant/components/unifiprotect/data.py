@@ -93,12 +93,12 @@ class ProtectData:
     @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
-        return self._entry.options.get(CONF_DISABLE_RTSP, False)
+        return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
 
     @property
     def max_events(self) -> int:
         """Max number of events to load at once."""
-        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
+        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
 
     @callback
     def async_subscribe_adopt(

@@ -34,6 +34,9 @@ async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
     """Get base options schema."""
     return vol.Schema(
         {
+            vol.Optional(CONF_ENTITY_ID): selector.EntitySelector(
+                selector.EntitySelectorConfig(multiple=False, read_only=True),
+            ),
             vol.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
                 selector.AttributeSelectorConfig(
                     entity_id=handler.options[CONF_ENTITY_ID]
@@ -97,6 +100,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Trend."""
+
+    MINOR_VERSION = 2
 
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),

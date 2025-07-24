@@ -196,12 +196,12 @@
           "description": "UNIX timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used."
         },
         "mintemp": {
-          "name": "Min temp",
-          "description": "Minimum temperature (°C)."
+          "name": "Min temperature",
+          "description": "Minimum temperature in current period (°C)."
         },
         "maxtemp": {
-          "name": "Max temp",
-          "description": "Maximum temperature (°C)."
+          "name": "Max temperature",
+          "description": "Maximum temperature in current period (°C)."
         },
         "temperature": {
           "name": "Temperature",
@@ -209,11 +209,11 @@
         },
         "wind": {
           "name": "Wind speed",
-          "description": "Wind speed (m/s)."
+          "description": "Current wind speed (m/s)."
         },
         "solarrad": {
           "name": "Solar radiation",
-          "description": "Solar radiation (MJ/m²/h)."
+          "description": "Current solar radiation (MJ/m²/h)."
         },
         "et": {
           "name": "Evapotranspiration",
@@ -229,23 +229,23 @@
         },
         "minrh": {
           "name": "Min relative humidity",
-          "description": "Min relative humidity (%RH)."
+          "description": "Minimum relative humidity in current period (%RH)."
         },
         "maxrh": {
           "name": "Max relative humidity",
-          "description": "Max relative humidity (%RH)."
+          "description": "Maximum relative humidity in current period (%RH)."
         },
         "condition": {
           "name": "Weather condition code",
           "description": "Current weather condition code (WNUM)."
         },
         "pressure": {
-          "name": "Barametric pressure",
-          "description": "Barametric pressure (kPa)."
+          "name": "Barometric pressure",
+          "description": "Current barometric pressure (kPa)."
         },
         "dewpoint": {
           "name": "Dew point",
-          "description": "Dew point (°C)."
+          "description": "Current dew point (°C)."
         }
       }
     },

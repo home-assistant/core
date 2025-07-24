@@ -57,13 +57,16 @@ rules:
     status: exempt
     comment: |
       This integration cannot be discovered, it is a connecting to a cloud service.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      The integration does not have any known limitations.
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -72,12 +75,16 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       The integration does not provide any additional icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      No configuration besides credentials.
+      New credentials will create a new config entry.
   repair-issues:
     status: exempt
     comment: |

@@ -28,7 +28,7 @@
       "fields": {
         "current": {
           "name": "Current",
-          "description": "The maximum current used for the charging process. The value is depending on the DIP-switch settings and the used cable of the charging station."
+          "description": "The maximum current used for the charging process. The value depends on the DIP switch settings and the cable used by the charging station."
         }
       }
     },

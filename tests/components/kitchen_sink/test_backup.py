@@ -15,7 +15,6 @@ from homeassistant.components.backup import (
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -36,8 +35,7 @@ async def backup_only() -> AsyncGenerator[None]:
 
 @pytest.fixture(autouse=True)
 async def setup_integration(hass: HomeAssistant) -> AsyncGenerator[None]:
-    """Set up Kitchen Sink and backup integrations."""
-    async_initialize_backup(hass)
+    """Set up Kitchen Sink integration."""
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -109,7 +107,9 @@ async def test_agents_list_backups(
             "database_included": False,
             "date": "1970-01-01T00:00:00Z",
             "extra_metadata": {},
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": ["media", "share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
@@ -191,7 +191,9 @@ async def test_agents_upload(
         "database_included": True,
         "date": "1970-01-01T00:00:00.000Z",
         "extra_metadata": {"instance_id": ANY, "with_automatic_settings": False},
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": ["media", "share"],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0",

@@ -180,9 +180,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return
 
-        device_registry.async_update_device(
-            device_id=envoy_device.id,
-            new_connections={connection},
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={
+                (
+                    DOMAIN,
+                    self.envoy_serial_number,
+                )
+            },
+            connections={connection},
         )
         _LOGGER.debug("added connection: %s to %s", connection, self.name)
 
@@ -214,6 +220,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await envoy.setup()
         assert envoy.serial_number is not None
         self.envoy_serial_number = envoy.serial_number
+        _LOGGER.debug("Envoy setup complete for serial: %s", self.envoy_serial_number)
         if token := self.config_entry.data.get(CONF_TOKEN):
             with contextlib.suppress(*INVALID_AUTH_ERRORS):
                 # Always set the username and password
@@ -221,6 +228,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await envoy.authenticate(
                     username=self.username, password=self.password, token=token
                 )
+                _LOGGER.debug("Authorized, validating token lifetime")
                 # The token is valid, but we still want
                 # to refresh it if it's stale right away
                 self._async_refresh_token_if_needed(dt_util.utcnow())
@@ -228,6 +236,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # token likely expired or firmware changed
             # so we fall through to authenticate with
             # username/password
+            _LOGGER.debug("setup and auth got INVALID_AUTH_ERRORS")
+        _LOGGER.debug("Authenticate with username/password only")
         await self.envoy.authenticate(username=self.username, password=self.password)
         # Password auth succeeded, so we can update the token
         # if we are using EnvoyTokenAuth
@@ -256,13 +266,16 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for tries in range(2):
             try:
                 if not self._setup_complete:
+                    _LOGGER.debug("update on try %s, setup not complete", tries)
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
             except INVALID_AUTH_ERRORS as err:
+                _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
                 if self._setup_complete and tries == 0:
                     # token likely expired or firmware changed, try to re-authenticate
+                    _LOGGER.debug("update on try %s, setup was complete, retry", tries)
                     self._setup_complete = False
                     continue
                 raise ConfigEntryAuthFailed(
@@ -274,6 +287,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     },
                 ) from err
             except EnvoyError as err:
+                _LOGGER.debug("update on try %s, EnvoyError %s", tries, err)
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="envoy_error",

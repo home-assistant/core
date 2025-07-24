@@ -4,7 +4,6 @@
       "player_id": "00:00:00:00:00:01",
       "provider": "test",
       "type": "player",
-      "name": "Test Player 1",
       "available": true,
       "powered": false,
       "device_info": {
@@ -18,14 +17,15 @@
         "pause",
         "set_members",
         "power",
-        "enqueue"
+        "enqueue",
+        "select_source"
       ],
       "elapsed_time": null,
       "elapsed_time_last_updated": 0,
-      "state": "idle",
+      "playback_state": "idle",
       "volume_level": 20,
       "volume_muted": false,
-      "group_childs": [],
+      "group_members": [],
       "active_source": "00:00:00:00:00:01",
       "active_group": null,
       "current_media": null,
@@ -36,20 +36,44 @@
       "enabled": true,
       "icon": "mdi-speaker",
       "group_volume": 20,
-      "display_name": "Test Player 1",
+      "name": "Test Player 1",
       "power_control": "native",
       "volume_control": "native",
       "mute_control": "native",
       "hide_player_in_ui": ["when_unavailable"],
       "expose_to_ha": true,
       "can_group_with": ["00:00:00:00:00:02"],
-      "source_list": []
+      "source_list": [
+        {
+          "id": "00:00:00:00:00:01",
+          "name": "Music Assistant Queue",
+          "passive": false,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "spotify",
+          "name": "Spotify Connect",
+          "passive": true,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "linein",
+          "name": "Line-In",
+          "passive": false,
+          "can_play_pause": false,
+          "can_seek": false,
+          "can_next_previous": false
+        }
+      ]
     },
     {
       "player_id": "00:00:00:00:00:02",
       "provider": "test",
       "type": "player",
-      "name": "Test Player 2",
       "available": true,
       "powered": true,
       "device_info": {
@@ -67,10 +91,10 @@
       ],
       "elapsed_time": 0,
       "elapsed_time_last_updated": 0,
-      "state": "playing",
+      "playback_state": "playing",
       "volume_level": 20,
       "volume_muted": false,
-      "group_childs": [],
+      "group_members": [],
       "active_source": "spotify",
       "active_group": null,
       "current_media": {
@@ -91,7 +115,7 @@
       "hidden": false,
       "icon": "mdi-speaker",
       "group_volume": 20,
-      "display_name": "My Super Test Player 2",
+      "name": "My Super Test Player 2",
       "power_control": "native",
       "volume_control": "native",
       "mute_control": "native",
@@ -113,7 +137,6 @@
       "player_id": "test_group_player_1",
       "provider": "player_group",
       "type": "group",
-      "name": "Test Group Player 1",
       "available": true,
       "powered": true,
       "device_info": {
@@ -131,10 +154,10 @@
       ],
       "elapsed_time": 0.0,
       "elapsed_time_last_updated": 1730315437.9904983,
-      "state": "idle",
+      "playback_state": "idle",
       "volume_level": 6,
       "volume_muted": false,
-      "group_childs": ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+      "group_members": ["00:00:00:00:00:01", "00:00:00:00:00:02"],
       "active_source": "test_group_player_1",
       "active_group": null,
       "current_media": {
@@ -154,7 +177,7 @@
       "enabled": true,
       "icon": "mdi-speaker-multiple",
       "group_volume": 6,
-      "display_name": "Test Group Player 1",
+      "name": "Test Group Player 1",
       "power_control": "native",
       "volume_control": "native",
       "mute_control": "native",

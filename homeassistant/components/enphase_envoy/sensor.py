@@ -45,6 +45,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -79,6 +80,114 @@ INVERTER_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=attrgetter("last_report_watts"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="dc_voltage",
+        translation_key="dc_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("dc_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="dc_current",
+        translation_key="dc_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("dc_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_voltage",
+        translation_key="ac_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_current",
+        translation_key="ac_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_frequency"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("temperature"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="lifetime_energy",
+        translation_key="lifetime_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("lifetime_energy"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="energy_today",
+        translation_key="energy_today",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("energy_today"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="last_report_duration",
+        translation_key="last_report_duration",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("last_report_duration"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="energy_produced",
+        translation_key="energy_produced",
+        native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("energy_produced"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="max_reported",
+        translation_key="max_reported",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("max_report_watts"),
     ),
     EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
@@ -1204,6 +1313,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
             manufacturer="Enphase",
             model="Inverter",
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
     @property
@@ -1247,6 +1357,7 @@ class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=serial_number,
         )
 
 
@@ -1311,6 +1422,7 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
             name=f"Enpower {enpower_data.serial_number}",
             sw_version=str(enpower_data.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=enpower_data.serial_number,
         )
 
     @property

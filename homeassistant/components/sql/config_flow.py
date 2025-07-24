@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -209,7 +209,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(OptionsFlow):
+class SQLOptionsFlowHandler(OptionsFlowWithReload):
     """Handle SQL options."""
 
     async def async_step_init(

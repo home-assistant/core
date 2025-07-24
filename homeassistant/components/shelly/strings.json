@@ -288,6 +288,20 @@
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
+    },
+    "outbound_websocket_incorrectly_enabled": {
+      "title": "Outbound WebSocket is enabled for {device_name}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Outbound WebSocket is enabled for {device_name}",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
     }
   }
 }

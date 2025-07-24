@@ -45,7 +45,7 @@
     {
       "label": "Ruff",
       "type": "shell",
-      "command": "pre-commit run ruff --all-files",
+      "command": "pre-commit run ruff-check --all-files",
       "group": {
         "kind": "test",
         "isDefault": true

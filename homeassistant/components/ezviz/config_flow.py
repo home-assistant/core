@@ -17,7 +17,11 @@ from pyezvizapi.exceptions import (
 from pyezvizapi.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -386,7 +390,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class EzvizOptionsFlowHandler(OptionsFlow):
+class EzvizOptionsFlowHandler(OptionsFlowWithReload):
     """Handle EZVIZ client options."""
 
     async def async_step_init(

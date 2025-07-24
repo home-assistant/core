@@ -8,7 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.const import (
+    DATA_DEFAULT_ENTITY,
+    HOME_ASSISTANT_AGENT,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -22,8 +25,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -187,7 +188,7 @@ async def test_http_api_wrong_data(
         },
         {
             "text": "Test Text",
-            "agent_id": "homeassistant",
+            "agent_id": HOME_ASSISTANT_AGENT,
         },
     ],
 )
