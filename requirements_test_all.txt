@@ -277,7 +277,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.redgtech
-redgtech==0.1.23
+redgtech==0.1.28
 
 # homeassistant.components.lifx
 aiolifx==1.1.4
