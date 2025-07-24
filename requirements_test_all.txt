@@ -168,7 +168,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.15
+aioairzone-cloud==0.6.16
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -193,7 +193,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.0.0
+aioautomower==2.0.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -269,7 +269,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.10.2
+aioimmich==0.11.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -312,6 +312,9 @@ aiontfy==0.5.3
 
 # homeassistant.components.nut
 aionut==4.3.4
+
+# homeassistant.components.onkyo
+aioonkyo==0.3.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -498,7 +501,7 @@ async-upnp-client==0.45.0
 asyncarve==0.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.5.2
+asyncsleepiq==1.5.3
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
@@ -663,7 +666,7 @@ datadog==0.15.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.43.0
+dbus-fast==2.44.2
 
 # homeassistant.components.debugpy
 debugpy==1.8.14
@@ -989,7 +992,7 @@ habiticalib==0.4.0
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.107.1
+hass-nabucasa==0.108.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1015,7 +1018,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.76
+holidays==0.77
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250702.3
@@ -1066,10 +1069,10 @@ ifaddr==0.2.0
 igloohome-api==0.1.1
 
 # homeassistant.components.imeon_inverter
-imeon_inverter_api==0.3.12
+imeon_inverter_api==0.3.14
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.4.2
+imgw_pib==1.5.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1124,7 +1127,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.4.1.91934
+knx-frontend==2025.7.23.50952
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1632,9 +1635,6 @@ pyefergy==22.5.0
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
 
-# homeassistant.components.onkyo
-pyeiscp==0.0.7
-
 # homeassistant.components.emoncms
 pyemoncms==0.1.1
 
@@ -1923,7 +1923,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2025.7.2
+pyschlage==2025.7.3
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
@@ -2162,7 +2162,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.3.0
+pywmspro==0.3.2
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2210,7 +2210,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.2
+reolink-aio==0.14.3
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2476,7 +2476,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.16.0
+uiprotect==7.19.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2608,7 +2608,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.0.0
+yalexs-ble==3.1.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
