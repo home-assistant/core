@@ -385,7 +385,7 @@ async def test_service_set_mealplan(
             "get_recipes",
             MealieNotFoundError,
             ServiceValidationError,
-            "No recipes found matching your search.",
+            "No recipes found matching your search",
         ),
         (
             SERVICE_IMPORT_RECIPE,
