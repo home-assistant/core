@@ -65,6 +65,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._areas_last_update: dict[str, set[int]] = {}
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
+        self._watchdog_task: asyncio.Task | None = None
 
     @override
     @callback
@@ -80,7 +81,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             self.ws_connected = True
 
             def start_watchdog() -> None:
-                self.config_entry.async_create_background_task(
+                if self._watchdog_task is not None and not self._watchdog_task.done():
+                    _LOGGER.debug("Cancelling previous watchdog task")
+                    self._watchdog_task.cancel()
+                self._watchdog_task = self.config_entry.async_create_background_task(
                     self.hass,
                     self._pong_watchdog(),
                     "webdocket_watchdog",
