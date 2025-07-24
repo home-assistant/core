@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronController, LutronData
+from .aiolip import Button
 from .entity import LutronKeypadComponent
-from .lutron_db import Button
 
 
 async def async_setup_entry(

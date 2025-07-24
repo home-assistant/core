@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-from typing import Any
 import urllib.request
 
 import voluptuous as vol
@@ -16,7 +15,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 
-from .aiolip import LIP, LIPAction, LIPLedState, LIPMessage, LIPMode
+from .aiolip import (
+    LIP,
+    Button,
+    Led,
+    LIPAction,
+    LIPLedState,
+    LIPMessage,
+    LIPMode,
+    LutronXmlDbParser,
+    OccupancyGroup,
+    Output,
+    Sysvar,
+)
 from .const import (
     CONF_REFRESH_DATA,
     CONF_USE_AREA_FOR_DEVICE_NAME,
@@ -26,7 +37,6 @@ from .const import (
     DOMAIN,
     LUTRON_DATA_FILE,
 )
-from .lutron_db import Button, Led, LutronXmlDbParser, OccupancyGroup, Output, Sysvar
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -95,7 +105,6 @@ class LutronController:
         self.guid = None
         self.areas = []
         self.variables = []
-        self._entity_map: dict[int, Any] = {}
         self.name = None
 
     async def connect(self):

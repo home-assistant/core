@@ -13,9 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .aiolip import LIPGroupState
+from .aiolip import LIPGroupState, OccupancyGroup
 from .entity import LutronBaseEntity
-from .lutron_db import OccupancyGroup
 
 _LOGGER = logging.getLogger(__name__)
 

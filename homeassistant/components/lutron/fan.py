@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronController, LutronData
+from .aiolip import Output
 from .entity import LutronOutput
-from .lutron_db import Output
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CONF_USE_RADIORA_MODE, DOMAIN, LIPLedState, LutronController, LutronData
+from .aiolip import Led
 from .entity import LutronKeypadComponent, LutronOutput
-from .lutron_db import Led
 
 
 async def async_setup_entry(

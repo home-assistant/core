@@ -24,8 +24,8 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, LutronController, LutronData
+from .aiolip import Device, Output
 from .entity import LutronOutput
-from .lutron_db import Device, Output
 from .travelcalculator import TravelCalculator, TravelStatus
 
 _LOGGER = logging.getLogger(__name__)

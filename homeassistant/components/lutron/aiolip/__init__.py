@@ -9,7 +9,20 @@ __version__ = "1.1.7"
 
 from collections.abc import Callable
 
-__all__ = ["LIPAction", "LIPGroupState", "LIPLedState"]
+__all__ = [
+    "Button",
+    "Device",
+    "Keypad",
+    "KeypadComponent",
+    "LIPAction",
+    "LIPGroupState",
+    "LIPLedState",
+    "Led",
+    "LutronXmlDbParser",
+    "OccupancyGroup",
+    "Output",
+    "Sysvar",
+]
 
 from .data import (
     LIPAction,
@@ -20,6 +33,17 @@ from .data import (
     LIPOperation,
 )
 from .exceptions import LIPConnectionStateError, LIPProtocolError
+from .lutron_db import (
+    Button,
+    Device,
+    Keypad,
+    KeypadComponent,
+    Led,
+    LutronXmlDbParser,
+    OccupancyGroup,
+    Output,
+    Sysvar,
+)
 from .protocol import (
     CONNECT_TIMEOUT,
     LIP_KEEP_ALIVE,
