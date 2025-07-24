@@ -101,18 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     data = RainbirdData(
         controller,
         model_info,
-        coordinator=RainbirdUpdateCoordinator(
-            hass,
-            name=entry.title,
-            controller=controller,
-            unique_id=entry.unique_id,
-            model_info=model_info,
-        ),
-        schedule_coordinator=RainbirdScheduleUpdateCoordinator(
-            hass,
-            name=f"{entry.title} Schedule",
-            controller=controller,
-        ),
+        coordinator=RainbirdUpdateCoordinator(hass, entry, controller, model_info),
+        schedule_coordinator=RainbirdScheduleUpdateCoordinator(hass, entry, controller),
     )
     await data.coordinator.async_config_entry_first_refresh()
 
@@ -228,6 +218,9 @@ def _async_fix_device_id(
     for device_entry in device_entries:
         unique_id = str(next(iter(device_entry.identifiers))[1])
         device_entry_map[unique_id] = device_entry
+        if unique_id.startswith(mac_address):
+            # Already in the correct format
+            continue
         if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
             migrations[unique_id] = f"{mac_address}{suffix}"
 

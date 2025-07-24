@@ -2,14 +2,22 @@
 
 import amberelectric
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import ConfigType
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SITE_ID, PLATFORMS
-from .coordinator import AmberUpdateCoordinator
+from .const import CONF_SITE_ID, DOMAIN, PLATFORMS
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .services import setup_services
 
-type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Amber component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> bool:
@@ -19,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
     api_instance = amberelectric.AmberApi(api_client)
     site_id = entry.data[CONF_SITE_ID]
 
-    coordinator = AmberUpdateCoordinator(hass, api_instance, site_id)
+    coordinator = AmberUpdateCoordinator(hass, entry, api_instance, site_id)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

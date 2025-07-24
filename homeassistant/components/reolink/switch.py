@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import (
@@ -162,6 +162,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="manual_record",
         cmd_key="GetManualRec",
+        cmd_id=588,
         translation_key="manual_record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "manual_record"),
@@ -206,16 +207,33 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
     ),
-)
-
-AVAILABILITY_SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="privacy_mode",
+        always_available=True,
         translation_key="privacy_mode",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "privacy_mode"),
         value=lambda api, ch: api.baichuan.privacy_mode(ch),
         method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="privacy_mask",
+        cmd_key="GetMask",
+        translation_key="privacy_mask",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mask"),
+        value=lambda api, ch: api.privacy_mask_enabled(ch),
+        method=lambda api, ch, value: api.set_privacy_mask(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="hardwired_chime_enabled",
+        cmd_key="483",
+        translation_key="hardwired_chime_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "hardwired_chime"),
+        value=lambda api, ch: api.baichuan.hardwired_chime_enabled(ch),
+        method=lambda api, ch, value: api.baichuan.set_ding_dong_ctrl(ch, enable=value),
     ),
 )
 
@@ -332,7 +350,7 @@ DEPRECATED_NVR_SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -354,12 +372,6 @@ async def async_setup_entry(
         ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
-    )
-    entities.extend(
-        ReolinkAvailabilitySwitchEntity(reolink_data, channel, entity_description)
-        for entity_description in AVAILABILITY_SWITCH_ENTITIES
-        for channel in reolink_data.host.api.channels
-        if entity_description.supported(reolink_data.host.api, channel)
     )
 
     # Can be removed in HA 2025.4.0
@@ -424,15 +436,6 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
-
-
-class ReolinkAvailabilitySwitchEntity(ReolinkSwitchEntity):
-    """Switch entity class for Reolink IP cameras which will be available even if API is unavailable."""
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._host.api.camera_online(self._channel)
 
 
 class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):

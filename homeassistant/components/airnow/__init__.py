@@ -15,12 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import AirNowDataUpdateCoordinator
+from .coordinator import AirNowConfigEntry, AirNowDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
-
-type AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
@@ -38,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
     # Setup the Coordinator
     session = async_get_clientsession(hass)
     coordinator = AirNowDataUpdateCoordinator(
-        hass, session, api_key, latitude, longitude, distance, update_interval
+        hass, entry, session, api_key, latitude, longitude, distance, update_interval
     )
 
     # Sync with Coordinator
@@ -46,9 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
 
     # Store Entity and Initialize Platforms
     entry.runtime_data = coordinator
-
-    # Listen for option changes
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -90,8 +85,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

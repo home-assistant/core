@@ -61,8 +61,9 @@ from . import (
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    async_call_logger_set_level,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     mock_integration,
 )
 
@@ -77,11 +78,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
 
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS
@@ -92,11 +91,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_100
     )
 
-    switchbot_device_signal_99 = generate_ble_device(
-        address, "wohand_signal_99", rssi=-99
-    )
+    switchbot_device_signal_99 = generate_ble_device(address, "wohand_signal_99")
     switchbot_adv_signal_99 = generate_advertisement_data(
-        local_name="wohand_signal_99", service_uuids=[]
+        local_name="wohand_signal_99", service_uuids=[], rssi=-99
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_99, switchbot_adv_signal_99, HCI0_SOURCE_ADDRESS
@@ -107,11 +104,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_99
     )
 
-    switchbot_device_signal_98 = generate_ble_device(
-        address, "wohand_good_signal", rssi=-98
-    )
+    switchbot_device_signal_98 = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_signal_98 = generate_advertisement_data(
-        local_name="wohand_good_signal", service_uuids=[]
+        local_name="wohand_good_signal", service_uuids=[], rssi=-98
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_98, switchbot_adv_signal_98, HCI1_SOURCE_ADDRESS
@@ -426,7 +421,7 @@ async def test_restore_history_from_dbus(
         address: AdvertisementHistory(
             ble_device,
             generate_advertisement_data(local_name="name"),
-            HCI0_SOURCE_ADDRESS,
+            "hci0",
         )
     }
 
@@ -438,6 +433,8 @@ async def test_restore_history_from_dbus(
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+    info = bluetooth.async_last_service_info(hass, address, False)
+    assert info.source == "00:00:00:00:00:01"
 
 
 @pytest.mark.usefixtures("one_adapter")
@@ -450,7 +447,7 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     address = "AA:BB:CC:CC:CC:FF"
 
     data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        load_fixture("bluetooth.remote_scanners", bluetooth.DOMAIN)
+        await async_load_fixture(hass, "bluetooth.remote_scanners", bluetooth.DOMAIN)
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -492,7 +489,9 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     address = "AA:BB:CC:CC:CC:FF"
 
     data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        load_fixture("bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN)
+        await async_load_fixture(
+            hass, "bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN
+        )
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -800,13 +799,11 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_non_connectable = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -973,7 +970,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1017,8 +1013,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1144,54 +1138,45 @@ async def test_debug_logging(
 ) -> None:
     """Test debug logging."""
     assert await async_setup_component(hass, "logger", {"logger": {}})
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.bluetooth": "DEBUG"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    async with async_call_logger_set_level(
+        "homeassistant.components.bluetooth", "DEBUG", hass=hass, caplog=caplog
+    ):
+        address = "44:44:33:11:23:41"
+        start_time_monotonic = 50.0
 
-    address = "44:44:33:11:23:41"
-    start_time_monotonic = 50.0
+        switchbot_device_poor_signal_hci0 = generate_ble_device(
+            address, "wohand_poor_signal_hci0"
+        )
+        switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+            local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
+        )
+        inject_advertisement_with_time_and_source(
+            hass,
+            switchbot_device_poor_signal_hci0,
+            switchbot_adv_poor_signal_hci0,
+            start_time_monotonic,
+            "hci0",
+        )
+        assert "wohand_poor_signal_hci0" in caplog.text
+        caplog.clear()
 
-    switchbot_device_poor_signal_hci0 = generate_ble_device(
-        address, "wohand_poor_signal_hci0"
-    )
-    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
-        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
-    )
-    inject_advertisement_with_time_and_source(
-        hass,
-        switchbot_device_poor_signal_hci0,
-        switchbot_adv_poor_signal_hci0,
-        start_time_monotonic,
-        "hci0",
-    )
-    assert "wohand_poor_signal_hci0" in caplog.text
-    caplog.clear()
-
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.bluetooth": "WARNING"},
-        blocking=True,
-    )
-
-    switchbot_device_good_signal_hci0 = generate_ble_device(
-        address, "wohand_good_signal_hci0"
-    )
-    switchbot_adv_good_signal_hci0 = generate_advertisement_data(
-        local_name="wohand_good_signal_hci0", service_uuids=[], rssi=-33
-    )
-    inject_advertisement_with_time_and_source(
-        hass,
-        switchbot_device_good_signal_hci0,
-        switchbot_adv_good_signal_hci0,
-        start_time_monotonic,
-        "hci0",
-    )
-    assert "wohand_good_signal_hci0" not in caplog.text
+    async with async_call_logger_set_level(
+        "homeassistant.components.bluetooth", "WARNING", hass=hass, caplog=caplog
+    ):
+        switchbot_device_good_signal_hci0 = generate_ble_device(
+            address, "wohand_good_signal_hci0"
+        )
+        switchbot_adv_good_signal_hci0 = generate_advertisement_data(
+            local_name="wohand_good_signal_hci0", service_uuids=[], rssi=-33
+        )
+        inject_advertisement_with_time_and_source(
+            hass,
+            switchbot_device_good_signal_hci0,
+            switchbot_adv_good_signal_hci0,
+            start_time_monotonic,
+            "hci0",
+        )
+        assert "wohand_good_signal_hci0" not in caplog.text
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
@@ -1400,7 +1385,6 @@ async def test_bluetooth_rediscover(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1444,8 +1428,6 @@ async def test_bluetooth_rediscover(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1579,7 +1561,6 @@ async def test_bluetooth_rediscover_no_match(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1623,8 +1604,6 @@ async def test_bluetooth_rediscover_no_match(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1703,11 +1682,9 @@ async def test_async_register_disappeared_callback(
     """Test bluetooth async_register_disappeared_callback handles failures."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"

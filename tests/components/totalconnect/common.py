@@ -49,19 +49,14 @@ USER = {
     "UserFeatureList": "Master=0,User Administration=0,Configuration Administration=0",
 }
 
-RESPONSE_AUTHENTICATE = {
+RESPONSE_SESSION_DETAILS = {
     "ResultCode": ResultCode.SUCCESS.value,
-    "SessionID": 1,
+    "ResultData": "Success",
+    "SessionID": "12345",
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
-
-RESPONSE_AUTHENTICATE_FAILED = {
-    "ResultCode": ResultCode.BAD_USER_OR_PASSWORD.value,
-    "ResultData": "test bad authentication",
-}
-
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
@@ -359,13 +354,13 @@ OPTIONS_DATA = {AUTO_BYPASS: False, CODE_REQUIRED: False}
 OPTIONS_DATA_CODE_REQUIRED = {AUTO_BYPASS: False, CODE_REQUIRED: True}
 
 PARTITION_DETAILS_1 = {
-    "PartitionID": 1,
+    "PartitionID": "1",
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
 
 PARTITION_DETAILS_2 = {
-    "PartitionID": 2,
+    "PartitionID": "2",
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test2",
 }
@@ -402,6 +397,12 @@ RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
 TOTALCONNECT_REQUEST = (
     "homeassistant.components.totalconnect.TotalConnectClient.request"
 )
+TOTALCONNECT_GET_CONFIG = (
+    "homeassistant.components.totalconnect.TotalConnectClient._get_configuration"
+)
+TOTALCONNECT_REQUEST_TOKEN = (
+    "homeassistant.components.totalconnect.TotalConnectClient._request_token"
+)
 
 
 async def setup_platform(
@@ -420,7 +421,7 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -433,6 +434,8 @@ async def setup_platform(
             TOTALCONNECT_REQUEST,
             side_effect=responses,
         ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert mock_request.call_count == 5
@@ -448,17 +451,21 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     mock_entry.add_to_hass(hass)
 
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
         RESPONSE_DISARMED,
     ]
 
-    with patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         assert mock_request.call_count == 5
     await hass.async_block_till_done()

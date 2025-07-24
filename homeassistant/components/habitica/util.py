@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, fields
 import datetime
 from math import floor
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from dateutil.rrule import (
     DAILY,
@@ -56,7 +56,12 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     return dt_util.as_local(task.nextDue[0]).date()
 
 
-FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+FREQUENCY_MAP: dict[str, Literal[0, 1, 2, 3]] = {
+    "daily": DAILY,
+    "weekly": WEEKLY,
+    "monthly": MONTHLY,
+    "yearly": YEARLY,
+}
 WEEKDAY_MAP = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
 
 
@@ -74,7 +79,7 @@ def build_rrule(task: TaskData) -> rrule:
 
     bysetpos = None
     if rrule_frequency == MONTHLY and task.weeksOfMonth:
-        bysetpos = task.weeksOfMonth
+        bysetpos = [i + 1 for i in task.weeksOfMonth]
         weekdays = weekdays if weekdays else [MO]
 
     return rrule(
@@ -95,21 +100,16 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     'DTSTART:YYYYMMDDTHHMMSS\nRRULE:FREQ=YEARLY;INTERVAL=2'
 
-    Parameters
-    ----------
-    recurrence : rrule
-        An RRULE object.
+    Args:
+        recurrence: An RRULE object.
 
-    Returns
-    -------
-    str
+    Returns:
         The recurrence rule portion of the RRULE string, starting with 'FREQ='.
 
-    Example
-    -------
-    >>> rule = get_recurrence_rule(task)
-    >>> print(rule)
-    'FREQ=YEARLY;INTERVAL=2'
+    Example:
+        >>> rule = get_recurrence_rule(task)
+        >>> print(rule)
+        'FREQ=YEARLY;INTERVAL=2'
 
     """
     return str(recurrence).split("RRULE:")[1]
@@ -162,3 +162,25 @@ def inventory_list(
         for k, v in getattr(user.items, item_type, {}).items()
         if k != "Saddle"
     }
+
+
+def pending_quest_items(user: UserData, content: ContentData) -> int | None:
+    """Pending quest items."""
+
+    return (
+        user.party.quest.progress.collectedItems
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].collect is not None
+        else None
+    )
+
+
+def pending_damage(user: UserData, content: ContentData) -> float | None:
+    """Pending damage."""
+
+    return (
+        user.party.quest.progress.up
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].boss is not None
+        else None
+    )

@@ -28,14 +28,14 @@
       "user": {
         "description": "Enter the settings to connect to the camera.",
         "data": {
-          "still_image_url": "Still Image URL (e.g. http://...)",
-          "stream_source": "Stream Source URL (e.g. rtsp://...)",
+          "still_image_url": "Still image URL (e.g. http://...)",
+          "stream_source": "Stream source URL (e.g. rtsp://...)",
           "rtsp_transport": "RTSP transport protocol",
           "authentication": "Authentication",
-          "limit_refetch_to_url_change": "Limit refetch to url change",
+          "limit_refetch_to_url_change": "Limit refetch to URL change",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "framerate": "Frame Rate (Hz)",
+          "framerate": "Frame rate (Hz)",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },

@@ -21,6 +21,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -41,6 +42,7 @@
     'original_name': 'Nightlight',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
@@ -51,6 +53,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -103,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -123,6 +127,7 @@
     'original_name': 'Reverse',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
@@ -133,6 +138,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -186,6 +192,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -206,6 +213,7 @@
     'original_name': 'Sync receive',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
@@ -216,6 +224,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -269,6 +278,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -289,6 +299,7 @@
     'original_name': 'Sync send',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
@@ -299,6 +310,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(

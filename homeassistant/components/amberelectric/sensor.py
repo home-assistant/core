@@ -19,19 +19,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AmberConfigEntry
 from .const import ATTRIBUTION
-from .coordinator import AmberUpdateCoordinator, normalize_descriptor
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .helpers import format_cents_to_dollars, normalize_descriptor
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
 
 
 def friendly_channel_type(channel_type: str) -> str:
@@ -197,7 +192,7 @@ class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmberConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = entry.runtime_data

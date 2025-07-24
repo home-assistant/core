@@ -5,21 +5,17 @@ import logging
 from aiohttp import ClientError
 from ttls.client import Twinkly
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import TwinklyCoordinator
+from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 
 PLATFORMS = [Platform.LIGHT, Platform.SELECT]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-type TwinklyConfigEntry = ConfigEntry[TwinklyCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> bool:
@@ -30,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> b
 
     client = Twinkly(host, async_get_clientsession(hass))
 
-    coordinator = TwinklyCoordinator(hass, client)
+    coordinator = TwinklyCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

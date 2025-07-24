@@ -12,9 +12,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DEFAULT_NAME,
     DOMAIN,
+    KEY_BATTERY_STATUS,
     KEY_CONNECTED,
+    KEY_CURRENT_STATUS,
+    KEY_FLOW_DETECTED,
     KEY_ID,
+    KEY_LOW,
     KEY_NAME,
+    KEY_REPLACE,
     KEY_REPORTED_STATE,
     KEY_STATE,
 )
@@ -70,17 +75,29 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
             manufacturer=DEFAULT_NAME,
             configuration_url="https://app.rach.io",
         )
-        self._update_attr()
+
+    @property
+    def reported_state(self) -> dict[str, Any]:
+        """Return the reported state."""
+        return self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE]
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return (
-            super().available
-            and self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE][
-                KEY_CONNECTED
-            ]
-        )
+        return super().available and self.reported_state[KEY_CONNECTED]
+
+    @property
+    def battery(self) -> bool:
+        """Return the battery status."""
+        return self.reported_state[KEY_BATTERY_STATUS] in [KEY_LOW, KEY_REPLACE]
+
+    @property
+    def no_flow_detected(self) -> bool:
+        """Return true if valve is on and flow is not detected."""
+        if status := self.reported_state.get(KEY_CURRENT_STATUS):
+            # Since this is a problem indicator we need the opposite of the API state
+            return not status.get(KEY_FLOW_DETECTED, True)
+        return False
 
     @abstractmethod
     def _update_attr(self) -> None:

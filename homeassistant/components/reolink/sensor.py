@@ -16,9 +16,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import (
@@ -107,17 +112,42 @@ SENSORS = (
         value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
         supported=lambda api, ch: api.supported(ch, "battery"),
     ),
+    ReolinkSensorEntityDescription(
+        key="day_night_state",
+        cmd_id=33,
+        cmd_key="296",
+        translation_key="day_night_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["day", "night", "led_day"],
+        value=lambda api, ch: api.baichuan.day_night_state(ch),
+        supported=lambda api, ch: api.supported(ch, "day_night_state"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="wifi_signal",
+        cmd_key="115",
+        translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+        value=lambda api, ch: api.wifi_signal(ch),
+        supported=lambda api, ch: api.supported(ch, "wifi"),
+    ),
 )
 
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
-        cmd_key="GetWifiSignal",
+        cmd_key="115",
         translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
-        value=lambda api: api.wifi_signal,
+        value=lambda api: api.wifi_signal(),
         supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
     ),
     ReolinkHostSensorEntityDescription(
@@ -150,7 +180,7 @@ HDD_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data

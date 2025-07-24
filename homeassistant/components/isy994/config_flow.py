@@ -16,10 +16,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +53,7 @@ from .const import (
     SCHEME_HTTPS,
     UDN_UUID_PREFIX,
 )
+from .models import IsyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,13 +137,13 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
-        self._existing_entry: ConfigEntry | None = None
+        self._existing_entry: IsyConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+        config_entry: IsyConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -316,7 +316,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for ISY/IoX."""
 
     async def async_step_init(

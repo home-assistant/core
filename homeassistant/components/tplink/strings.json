@@ -147,6 +147,21 @@
       },
       "unpair": {
         "name": "Unpair device"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "side_brush_reset": {
+        "name": "Reset side brush consumable"
+      },
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
+      },
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
       }
     },
     "camera": {
@@ -194,13 +209,70 @@
         "name": "Last water leak alert"
       },
       "auto_off_at": {
-        "name": "Auto off at"
+        "name": "Auto-off at"
       },
       "report_interval": {
         "name": "Report interval"
       },
       "alarm_source": {
         "name": "Alarm source"
+      },
+      "clean_area": {
+        "name": "Cleaning area"
+      },
+      "clean_time": {
+        "name": "Cleaning time"
+      },
+      "clean_progress": {
+        "name": "Cleaning progress"
+      },
+      "total_clean_area": {
+        "name": "Total cleaning area"
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
+      },
+      "total_clean_count": {
+        "name": "Total cleaning count"
+      },
+      "last_clean_area": {
+        "name": "Last cleaned area"
+      },
+      "last_clean_time": {
+        "name": "Last cleaned time"
+      },
+      "last_clean_timestamp": {
+        "name": "Last clean start"
+      },
+      "main_brush_remaining": {
+        "name": "Main brush remaining"
+      },
+      "main_brush_used": {
+        "name": "Main brush used"
+      },
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
+      },
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
+      },
+      "sensor_remaining": {
+        "name": "Sensor remaining"
+      },
+      "sensor_used": {
+        "name": "Sensor used"
+      },
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
+      },
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
       },
       "vacuum_error": {
         "name": "Error",
@@ -225,10 +297,10 @@
         "name": "LED"
       },
       "auto_update_enabled": {
-        "name": "Auto update enabled"
+        "name": "Auto-update enabled"
       },
       "auto_off_enabled": {
-        "name": "Auto off enabled"
+        "name": "Auto-off enabled"
       },
       "smooth_transitions": {
         "name": "Smooth transitions"
@@ -316,7 +388,7 @@
         },
         "segments": {
           "name": "Segments",
-          "description": "List of Segments (0 for all)."
+          "description": "List of segments (0 for all)."
         },
         "brightness": {
           "name": "Brightness",
@@ -414,9 +486,6 @@
     },
     "unexpected_device": {
       "message": "Unexpected device found at {host}; expected {expected}, found {found}"
-    },
-    "unsupported_mode": {
-      "message": "Tried to set unsupported mode: {mode}"
     },
     "invalid_alarm_duration": {
       "message": "Invalid duration {duration} available: 1-{duration_max}s"

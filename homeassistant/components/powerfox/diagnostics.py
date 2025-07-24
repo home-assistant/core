@@ -9,7 +9,7 @@ from powerfox import HeatMeter, PowerMeter, WaterMeter
 
 from homeassistant.core import HomeAssistant
 
-from . import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(

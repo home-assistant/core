@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
@@ -21,7 +21,6 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import color as color_util
@@ -35,17 +34,20 @@ from .const import (
     OVERALL_TIMEOUT,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import LIFXConfigEntry
+
 FIX_MAC_FW = AwesomeVersion("3.70")
 
 
 @callback
-def async_entry_is_legacy(entry: ConfigEntry) -> bool:
+def async_entry_is_legacy(entry: LIFXConfigEntry) -> bool:
     """Check if a config entry is the legacy shared one."""
     return entry.unique_id is None or entry.unique_id == DOMAIN
 
 
 @callback
-def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
+def async_get_legacy_entry(hass: HomeAssistant) -> LIFXConfigEntry | None:
     """Get the legacy config entry."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if async_entry_is_legacy(entry):
@@ -113,7 +115,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if _ATTR_COLOR_TEMP in kwargs:
+    if ATTR_COLOR_TEMP_KELVIN not in kwargs and _ATTR_COLOR_TEMP in kwargs:
         # added in 2025.1, can be removed in 2026.1
         _LOGGER.warning(
             "The 'color_temp' parameter is deprecated. Please use 'color_temp_kelvin' for"

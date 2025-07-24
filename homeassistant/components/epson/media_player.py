@@ -43,7 +43,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EpsonConfigEntry
 from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EpsonConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Epson projector from a config entry."""
     projector_entity = EpsonProjectorMediaPlayer(

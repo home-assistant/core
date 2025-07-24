@@ -8,7 +8,7 @@ from typing import Any, cast
 from homeassistant.components import light
 from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EvilGeniusConfigEntry, EvilGeniusUpdateCoordinator
 from .entity import EvilGeniusEntity
@@ -21,7 +21,7 @@ FIB_NO_EFFECT = "Solid Color"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EvilGeniusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Evil Genius light platform."""
     async_add_entities([EvilGeniusLight(config_entry.runtime_data)])

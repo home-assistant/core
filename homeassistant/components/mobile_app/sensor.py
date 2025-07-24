@@ -11,7 +11,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperatur
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -36,7 +36,7 @@ from .webhook import _extract_sensor_unique_id
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up mobile app sensor from a config entry."""
     entities = []

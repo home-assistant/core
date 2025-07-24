@@ -1,7 +1,10 @@
 """Test methods in backup_restore."""
 
+from collections.abc import Generator
+import json
 from pathlib import Path
 import tarfile
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -9,6 +12,23 @@ import pytest
 from homeassistant import backup_restore
 
 from .common import get_test_config_dir
+
+
+@pytest.fixture(autouse=True)
+def remove_restore_result_file() -> Generator[None]:
+    """Remove the restore result file."""
+    yield
+    Path(get_test_config_dir(".HA_RESTORE_RESULT")).unlink(missing_ok=True)
+
+
+def restore_result_file_content() -> dict[str, Any] | None:
+    """Return the content of the restore result file."""
+    try:
+        return json.loads(
+            Path(get_test_config_dir(".HA_RESTORE_RESULT")).read_text("utf-8")
+        )
+    except FileNotFoundError:
+        return None
 
 
 @pytest.mark.parametrize(
@@ -87,6 +107,11 @@ def test_restoring_backup_that_does_not_exist() -> None:
         ),
     ):
         assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
+    assert restore_result_file_content() == {
+        "error": f"Backup file {backup_file_path} does not exist",
+        "error_type": "ValueError",
+        "success": False,
+    }
 
 
 def test_restoring_backup_when_instructions_can_not_be_read() -> None:
@@ -98,6 +123,7 @@ def test_restoring_backup_when_instructions_can_not_be_read() -> None:
         ),
     ):
         assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
+    assert restore_result_file_content() is None
 
 
 def test_restoring_backup_that_is_not_a_file() -> None:
@@ -121,6 +147,11 @@ def test_restoring_backup_that_is_not_a_file() -> None:
         ),
     ):
         assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
+    assert restore_result_file_content() == {
+        "error": f"Backup file {backup_file_path} does not exist",
+        "error_type": "ValueError",
+        "success": False,
+    }
 
 
 def test_aborting_for_older_versions() -> None:
@@ -152,6 +183,13 @@ def test_aborting_for_older_versions() -> None:
         ),
     ):
         assert backup_restore.restore_backup(config_dir) is True
+    assert restore_result_file_content() == {
+        "error": (
+            "You need at least Home Assistant version 9999.99.99 to restore this backup"
+        ),
+        "error_type": "ValueError",
+        "success": False,
+    }
 
 
 @pytest.mark.parametrize(
@@ -280,6 +318,11 @@ def test_removal_of_current_configuration_when_restoring(
         assert removed_directories == {
             Path(config_dir, d) for d in expected_removed_directories
         }
+    assert restore_result_file_content() == {
+        "error": None,
+        "error_type": None,
+        "success": True,
+    }
 
 
 def test_extracting_the_contents_of_a_backup_file() -> None:
@@ -332,6 +375,11 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         assert {
             member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
         } == {"data", "data/.HA_VERSION", "data/.storage", "data/www"}
+    assert restore_result_file_content() == {
+        "error": None,
+        "error_type": None,
+        "success": True,
+    }
 
 
 @pytest.mark.parametrize(
@@ -362,6 +410,11 @@ def test_remove_backup_file_after_restore(
     assert mock_unlink.call_count == unlink_calls
     for call in mock_unlink.mock_calls:
         assert call.args[0] == backup_file_path
+    assert restore_result_file_content() == {
+        "error": None,
+        "error_type": None,
+        "success": True,
+    }
 
 
 @pytest.mark.parametrize(

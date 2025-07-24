@@ -10,7 +10,7 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
@@ -22,7 +22,7 @@ API_SET_LIGHT = "set_light"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher light from a config entry."""
 
@@ -59,31 +59,37 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
     control_result: bool | None = None
     _light_id: int
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """When device updates, clear control result that overrides state."""
-        self.control_result = None
-        self.async_write_ha_state()
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+        self._update_data()
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
+    def _update_data(self) -> None:
+        """Update data from device."""
         if self.control_result is not None:
-            return self.control_result
+            self._attr_is_on = self.control_result
+            self.control_result = None
+            return
 
         data = cast(SwitcherLight, self.coordinator.data)
-        return bool(data.light[self._light_id] == DeviceState.ON)
+        self._attr_is_on = bool(data.light[self._light_id] == DeviceState.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._async_call_api(API_SET_LIGHT, DeviceState.ON, self._light_id)
-        self.control_result = True
+        self._attr_is_on = self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_call_api(API_SET_LIGHT, DeviceState.OFF, self._light_id)
-        self.control_result = False
+        self._attr_is_on = self.control_result = False
         self.async_write_ha_state()
 
 
@@ -98,11 +104,7 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
         light_id: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
-
-        # Entity class attributes
+        super().__init__(coordinator, light_id)
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
 
 
@@ -117,11 +119,7 @@ class SwitcherMultiLightEntity(SwitcherBaseLightEntity):
         light_id: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
-
-        # Entity class attributes
+        super().__init__(coordinator, light_id)
         self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"

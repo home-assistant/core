@@ -8,7 +8,7 @@ from aioacaia.acaiascale import AcaiaScale
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
@@ -45,7 +45,7 @@ BUTTONS: tuple[AcaiaButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AcaiaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button entities and services."""
 

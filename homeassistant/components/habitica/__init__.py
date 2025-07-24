@@ -9,9 +9,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_USER, DOMAIN, X_CLIENT
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .services import async_setup_services
-from .types import HabiticaConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -51,7 +50,7 @@ async def async_setup_entry(
         x_client=X_CLIENT,
     )
 
-    coordinator = HabiticaDataUpdateCoordinator(hass, api)
+    coordinator = HabiticaDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator

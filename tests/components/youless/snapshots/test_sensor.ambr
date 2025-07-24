@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -22,12 +23,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 1',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'youless_localhost_delivery_low',
@@ -59,6 +64,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -73,12 +79,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 2',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'youless_localhost_delivery_high',
@@ -110,6 +120,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -124,12 +135,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Total gas usage',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_gas_m3',
     'unique_id': 'youless_localhost_gas',
@@ -152,6 +167,62 @@
     'state': '1624.264',
   })
 # ---
+# name: test_sensors[sensor.power_meter_average_peak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.power_meter_average_peak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Average peak',
+    'platform': 'youless',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_peak',
+    'unique_id': 'youless_localhost_average_peak',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.power_meter_average_peak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Power meter Average peak',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.power_meter_average_peak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '400',
+  })
+# ---
 # name: test_sensors[sensor.power_meter_current_phase_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -161,6 +232,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -175,12 +247,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_1_current',
@@ -200,7 +276,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_phase_2-entry]
@@ -212,6 +288,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -226,12 +303,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_2_current',
@@ -251,7 +332,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_phase_3-entry]
@@ -263,6 +344,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -277,12 +359,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_3_current',
@@ -302,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_power_usage-entry]
@@ -314,6 +400,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -328,12 +415,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Current power usage',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_w',
     'unique_id': 'youless_localhost_usage',
@@ -365,6 +456,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -379,12 +471,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 1',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'youless_localhost_power_low',
@@ -416,6 +512,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -430,12 +527,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 2',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'youless_localhost_power_high',
@@ -458,6 +559,62 @@
     'state': '4490.631',
   })
 # ---
+# name: test_sensors[sensor.power_meter_month_peak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.power_meter_month_peak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Month peak',
+    'platform': 'youless',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'month_peak',
+    'unique_id': 'youless_localhost_month_peak',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.power_meter_month_peak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Power meter Month peak',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.power_meter_month_peak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1200',
+  })
+# ---
 # name: test_sensors[sensor.power_meter_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -467,6 +624,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -481,12 +639,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_1_power',
@@ -506,7 +668,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '462',
   })
 # ---
 # name: test_sensors[sensor.power_meter_power_phase_2-entry]
@@ -518,6 +680,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -532,12 +695,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_2_power',
@@ -557,7 +724,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230',
   })
 # ---
 # name: test_sensors[sensor.power_meter_power_phase_3-entry]
@@ -569,6 +736,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -583,12 +751,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_3_power',
@@ -608,7 +780,65 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230',
+  })
+# ---
+# name: test_sensors[sensor.power_meter_tariff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.power_meter_tariff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tariff',
+    'platform': 'youless',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_tariff',
+    'unique_id': 'youless_localhost_tariff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.power_meter_tariff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Power meter Tariff',
+      'options': list([
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.power_meter_tariff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
   })
 # ---
 # name: test_sensors[sensor.power_meter_total_energy_import-entry]
@@ -620,6 +850,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -634,12 +865,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy import',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'youless_localhost_power_total',
@@ -671,6 +906,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -685,12 +921,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_1_voltage',
@@ -710,7 +950,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.power_meter_voltage_phase_2-entry]
@@ -722,6 +962,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -736,12 +977,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_2_voltage',
@@ -761,7 +1006,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.power_meter_voltage_phase_3-entry]
@@ -773,6 +1018,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -787,12 +1033,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_3_voltage',
@@ -812,7 +1062,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.s0_meter_current_usage-entry]
@@ -824,6 +1074,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -838,12 +1089,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Current usage',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_s0_w',
     'unique_id': 'youless_localhost_extra_usage',
@@ -875,6 +1130,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -889,12 +1145,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_s0_kwh',
     'unique_id': 'youless_localhost_extra_total',
@@ -926,6 +1186,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -940,12 +1201,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'youless',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_water',
     'unique_id': 'youless_localhost_water',

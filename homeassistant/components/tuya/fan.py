@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -22,19 +22,34 @@ from homeassistant.util.percentage import (
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import EnumTypeData, IntegerTypeData
 
 TUYA_SUPPORT_TYPE = {
-    "fs",  # Fan
-    "fsd",  # Fan with Light
-    "fskg",  # Fan wall switch
-    "kj",  # Air Purifier
-    "cs",  # Dehumidifier
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs",
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs",
+    # Ceiling Fan Light
+    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
+    "fsd",
+    # Fan wall switch
+    "fskg",
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj",
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks",
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
     hass_data = entry.runtime_data

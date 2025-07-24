@@ -37,7 +37,7 @@ def _get_mock_push_lock():
     mock_push_lock.wait_for_first_update = AsyncMock()
     mock_push_lock.stop = AsyncMock()
     mock_push_lock.lock_state = LockState(
-        LockStatus.UNLOCKED, DoorStatus.CLOSED, None, None
+        LockStatus.UNLOCKED, DoorStatus.CLOSED, None, None, None, None
     )
     mock_push_lock.lock_status = LockStatus.UNLOCKED
     mock_push_lock.door_status = DoorStatus.CLOSED
@@ -50,6 +50,58 @@ def _get_mock_push_lock():
 @pytest.mark.parametrize("slot", [0, 1, 66])
 async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
     """Test user step success path."""
+    with patch(
+        "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
+        return_value=[NOT_YALE_DISCOVERY_INFO, YALE_ACCESS_LOCK_DISCOVERY_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+                CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
+                CONF_SLOT: slot,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
+    assert result2["data"] == {
+        CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
+        CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
+        CONF_SLOT: slot,
+    }
+    assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("slot", [0, 1, 66])
+async def test_user_step_from_ignored(hass: HomeAssistant, slot: int) -> None:
+    """Test user step replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
         return_value=[NOT_YALE_DISCOVERY_INFO, YALE_ACCESS_LOCK_DISCOVERY_INFO],

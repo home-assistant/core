@@ -6,7 +6,7 @@
     }),
     'device_info': dict({
       '__type': "<class 'pynecil.types.DeviceInfoResponse'>",
-      'repr': "DeviceInfoResponse(build='v2.22', device_id='c0ffeeC0', address='c0:ff:ee:c0:ff:ee', device_sn='0000c0ffeec0ffee', name='Pinecil-C0FFEEE', is_synced=False)",
+      'repr': "DeviceInfoResponse(build='v2.23', device_id='c0ffeeC0', address='c0:ff:ee:c0:ff:ee', device_sn='0000c0ffeec0ffee', name='Pinecil-C0FFEEE', is_synced=True)",
     }),
     'live_data': dict({
       '__type': "<class 'pynecil.types.LiveDataResponse'>",

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/stookwijzer",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["stookwijzer==1.5.1"]
+  "requirements": ["stookwijzer==1.6.1"]
 }

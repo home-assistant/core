@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -56,6 +55,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
@@ -81,6 +81,7 @@ class WorkMode(StrEnum):
 class DPType(StrEnum):
     """Data point types."""
 
+    BITMAP = "Bitmap"
     BOOLEAN = "Boolean"
     ENUM = "Enum"
     INTEGER = "Integer"
@@ -97,10 +98,12 @@ class DPCode(StrEnum):
 
     AIR_QUALITY = "air_quality"
     AIR_QUALITY_INDEX = "air_quality_index"
+    ALARM_DELAY_TIME = "alarm_delay_time"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
     ALARM_MESSAGE = "alarm_message"
+    ALARM_MSG = "alarm_msg"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -174,6 +177,7 @@ class DPCode(StrEnum):
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DELAY_SET = "delay_set"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -198,7 +202,8 @@ class DPCode(StrEnum):
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
     FILTER = "filter"
-    FILTER_LIFE = "filter"
+    FILTER_DURATION = "filter_life"  # Filter duration (hours)
+    FILTER_LIFE = "filter"  # Filter life (percentage)
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -217,11 +222,14 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
+    MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
@@ -255,12 +263,16 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    PREHEAT = "preheat"
+    PREHEAT_1 = "preheat_1"
+    PREHEAT_2 = "preheat_2"
     POWER_TOTAL = "power_total"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
@@ -304,6 +316,8 @@ class DPCode(StrEnum):
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
+    SWITCH_ALARM_LIGHT = "switch_alarm_light"
+    SWITCH_ALARM_SOUND = "switch_alarm_sound"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
@@ -314,6 +328,15 @@ class DPCode(StrEnum):
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
     SWITCH_LED_3 = "switch_led_3"
+    SWITCH_MODE1 = "switch_mode1"
+    SWITCH_MODE2 = "switch_mode2"
+    SWITCH_MODE3 = "switch_mode3"
+    SWITCH_MODE4 = "switch_mode4"
+    SWITCH_MODE5 = "switch_mode5"
+    SWITCH_MODE6 = "switch_mode6"
+    SWITCH_MODE7 = "switch_mode7"
+    SWITCH_MODE8 = "switch_mode8"
+    SWITCH_MODE9 = "switch_mode9"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SOUND = "switch_sound"  # Voice switch
@@ -331,8 +354,15 @@ class DPCode(StrEnum):
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
+    TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_CURRENT_EXTERNAL = (
+        "temp_current_external"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_F = (
+        "temp_current_external_f"  # Current external temperature in Fahrenheit
+    )
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
@@ -353,6 +383,7 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
@@ -366,6 +397,8 @@ class DPCode(StrEnum):
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATER_TIME = "water_time"  # Water usage duration
+    WATER_LEVEL = "water_level"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
@@ -376,6 +409,7 @@ class DPCode(StrEnum):
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
+    WORK_STATE_E = "work_state_e"
 
 
 @dataclass
@@ -386,8 +420,6 @@ class UnitOfMeasurement:
     device_classes: set[str]
 
     aliases: set[str] = field(default_factory=set)
-    conversion_unit: str | None = None
-    conversion_fn: Callable[[float], float] | None = None
 
 
 # A tuple of available units of measurements we can work with.
@@ -427,8 +459,6 @@ UNITS = (
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
         },
-        conversion_unit=CONCENTRATION_PARTS_PER_MILLION,
-        conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfElectricCurrent.AMPERE,
@@ -439,8 +469,6 @@ UNITS = (
         unit=UnitOfElectricCurrent.MILLIAMPERE,
         aliases={"ma", "milliampere"},
         device_classes={SensorDeviceClass.CURRENT},
-        conversion_unit=UnitOfElectricCurrent.AMPERE,
-        conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfEnergy.WATT_HOUR,
@@ -496,8 +524,6 @@ UNITS = (
             SensorDeviceClass.SULPHUR_DIOXIDE,
             SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         },
-        conversion_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        conversion_fn=lambda x: x * 1000,
     ),
     UnitOfMeasurement(
         unit=UnitOfPower.WATT,
@@ -565,8 +591,6 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
-        conversion_unit=UnitOfElectricPotential.VOLT,
-        conversion_fn=lambda x: x / 1000,
     ),
 )
 

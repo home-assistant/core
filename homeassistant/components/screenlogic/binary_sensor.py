@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
@@ -195,7 +195,7 @@ SUPPORTED_SCG_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ScreenLogicConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     coordinator = config_entry.runtime_data

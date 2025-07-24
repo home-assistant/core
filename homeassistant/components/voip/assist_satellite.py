@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import io
@@ -14,9 +15,9 @@ from typing import TYPE_CHECKING, Any, Final
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
-from voip_utils.sip import SipEndpoint, get_sip_endpoint
+from voip_utils.sip import SipDatagramProtocol, SipEndpoint, get_sip_endpoint
 
-from homeassistant.components import tts
+from homeassistant.components import intent, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
@@ -25,12 +26,22 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
+from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CHANNELS, CONF_SIP_PORT, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .const import (
+    CHANNELS,
+    CONF_SIP_PORT,
+    CONF_SIP_USER,
+    DOMAIN,
+    RATE,
+    RTP_AUDIO_SETTINGS,
+    WIDTH,
+)
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
@@ -40,9 +51,10 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
+_HANGUP_SEC: Final = 0.5
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
-_ANNOUNCEMENT_HANGUP_SEC: Final = 0.5
+_ANNOUNCEMENT_RING_TIMEOUT: Final = 30
 
 
 class Tones(IntFlag):
@@ -63,7 +75,7 @@ _TONE_FILENAMES: dict[Tones, str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP Assist satellite entity."""
     domain_data: DomainData = hass.data[DOMAIN]
@@ -89,7 +101,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
     _attr_name = None
-    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
+    _attr_icon = "mdi:phone-classic"
+    _attr_supported_features = (
+        AssistSatelliteEntityFeature.ANNOUNCE
+        | AssistSatelliteEntityFeature.START_CONVERSATION
+    )
 
     def __init__(
         self,
@@ -116,10 +132,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._processing_tone_done = asyncio.Event()
 
         self._announcement: AssistSatelliteAnnouncement | None = None
-        self._announcement_done = asyncio.Event()
-        self._check_announcement_ended_task: asyncio.Task | None = None
+        self._announcment_start_time: float = 0.0
+        self._check_announcement_pickup_task: asyncio.Task | None = None
+        self._check_hangup_task: asyncio.Task | None = None
+        self._call_end_future: asyncio.Future[Any] = asyncio.Future()
         self._last_chunk_time: float | None = None
         self._rtp_port: int | None = None
+        self._run_pipeline_after_announce: bool = False
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -146,6 +165,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         await super().async_added_to_hass()
         self.voip_device.protocol = self
 
+        assert self.device_entry is not None
+        self.async_on_remove(
+            intent.async_register_timer_handler(
+                self.hass, self.device_entry.id, self.async_handle_timer_event
+            )
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -159,6 +185,29 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Get the current satellite configuration."""
         raise NotImplementedError
 
+    @callback
+    def async_handle_timer_event(
+        self,
+        event_type: TimerEventType,
+        timer_info: TimerInfo,
+    ) -> None:
+        """Handle timer event."""
+        if event_type != TimerEventType.FINISHED:
+            return
+
+        if timer_info.name:
+            message = f"{timer_info.name} finished"
+        else:
+            message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+
+        async def announce_message():
+            announcement = await self._resolve_announcement_media_id(message, None)
+            await self.async_announce(announcement)
+
+        self.config_entry.async_create_background_task(
+            self.hass, announce_message(), "voip_announce_timer"
+        )
+
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
     ) -> None:
@@ -170,7 +219,23 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         Plays announcement in a loop, blocking until the caller hangs up.
         """
-        self._announcement_done.clear()
+        await self._do_announce(announcement, run_pipeline_after=False)
+
+    async def _do_announce(
+        self, announcement: AssistSatelliteAnnouncement, run_pipeline_after: bool
+    ) -> None:
+        """Announce media on the satellite.
+
+        Optionally run a voice pipeline after the announcement has finished.
+        """
+        if announcement.media_id_source != "tts":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="non_tts_announcement",
+            )
+
+        self._call_end_future = asyncio.Future()
+        self._run_pipeline_after_announce = run_pipeline_after
 
         if self._rtp_port is None:
             # Choose random port for RTP
@@ -183,7 +248,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         # HA SIP server
         source_ip = await async_get_source_ip(self.hass)
         sip_port = self.config_entry.options.get(CONF_SIP_PORT, SIP_PORT)
-        source_endpoint = get_sip_endpoint(host=source_ip, port=sip_port)
+        sip_user = self.config_entry.options.get(CONF_SIP_USER)
+        source_endpoint = get_sip_endpoint(
+            host=source_ip, port=sip_port, username=sip_user
+        )
 
         try:
             # VoIP ID is SIP header
@@ -194,38 +262,119 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 host=self.voip_device.voip_id, port=SIP_PORT
             )
 
+        # Reset state so we can time out if needed
+        self._last_chunk_time = None
+        self._announcment_start_time = time.monotonic()
         self._announcement = announcement
 
         # Make the call
-        self.hass.data[DOMAIN].protocol.outgoing_call(
+        sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
             destination=destination_endpoint,
             rtp_port=self._rtp_port,
         )
 
-        await self._announcement_done.wait()
+        # Check if caller didn't pick up
+        self._check_announcement_pickup_task = (
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._check_announcement_pickup(),
+                "voip_announcement_pickup",
+            )
+        )
 
-    async def _check_announcement_ended(self) -> None:
+        try:
+            await self._call_end_future
+        except TimeoutError:
+            # Stop ringing
+            _LOGGER.debug("Caller did not pick up in time")
+            sip_protocol.cancel_call(call_info)
+            raise
+
+    async def _check_announcement_pickup(self) -> None:
         """Continuously checks if an audio chunk was received within a time limit.
 
-        If not, the caller is presumed to have hung up and the announcement is ended.
+        If not, the caller is presumed to have not picked up the phone and the announcement is ended.
         """
-        while self._announcement is not None:
-            if (self._last_chunk_time is not None) and (
-                (time.monotonic() - self._last_chunk_time) > _ANNOUNCEMENT_HANGUP_SEC
+        while True:
+            current_time = time.monotonic()
+            if (self._last_chunk_time is None) and (
+                (current_time - self._announcment_start_time)
+                > _ANNOUNCEMENT_RING_TIMEOUT
             ):
-                # Caller hung up
+                # Ring timeout
+                _LOGGER.debug("Ring timeout")
                 self._announcement = None
-                self._announcement_done.set()
-                self._check_announcement_ended_task = None
-                _LOGGER.debug("Announcement ended")
+                self._check_announcement_pickup_task = None
+                self._call_end_future.set_exception(
+                    TimeoutError("User did not pick up in time")
+                )
+                _LOGGER.debug("Timed out waiting for the user to pick up the phone")
+                break
+            if self._last_chunk_time is not None:
+                _LOGGER.debug("Picked up the phone")
+                self._check_announcement_pickup_task = None
                 break
 
-            await asyncio.sleep(_ANNOUNCEMENT_HANGUP_SEC / 2)
+            await asyncio.sleep(_HANGUP_SEC / 2)
+
+    async def _check_hangup(self) -> None:
+        """Continuously checks if an audio chunk was received within a time limit.
+
+        If not, the caller is presumed to have hung up and the call is ended.
+        """
+        try:
+            while True:
+                current_time = time.monotonic()
+                if (self._last_chunk_time is not None) and (
+                    (current_time - self._last_chunk_time) > _HANGUP_SEC
+                ):
+                    # Caller hung up
+                    _LOGGER.debug("Hang up")
+                    self._announcement = None
+                    if self._run_pipeline_task is not None:
+                        _LOGGER.debug("Cancelling running pipeline")
+                        self._run_pipeline_task.cancel()
+                    if not self._call_end_future.done():
+                        self._call_end_future.set_result(None)
+                    self.disconnect()
+                    break
+
+                await asyncio.sleep(_HANGUP_SEC / 2)
+        except asyncio.CancelledError:
+            # Don't swallow cancellation
+            if (current_task := asyncio.current_task()) and current_task.cancelling():
+                raise
+            _LOGGER.debug("Check hangup cancelled")
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        await self._do_announce(start_announcement, run_pipeline_after=True)
 
     # -------------------------------------------------------------------------
     # VoIP
     # -------------------------------------------------------------------------
+
+    def disconnect(self):
+        """Server disconnected."""
+        super().disconnect()
+        if self._check_hangup_task is not None:
+            self._check_hangup_task.cancel()
+            self._check_hangup_task = None
+
+    def connection_made(self, transport):
+        """Server is ready."""
+        super().connection_made(transport)
+        self._last_chunk_time = time.monotonic()
+        # Check if caller hung up
+        self._check_hangup_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._check_hangup(),
+            "voip_hangup",
+        )
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
@@ -248,16 +397,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._audio_queue.put_nowait(audio_bytes)
         elif self._run_pipeline_task is None:
             # Announcement only
-            if self._check_announcement_ended_task is None:
-                # Check if caller hung up
-                self._check_announcement_ended_task = (
-                    self.config_entry.async_create_background_task(
-                        self.hass,
-                        self._check_announcement_ended(),
-                        "voip_announcement_ended",
-                    )
-                )
-
             # Play announcement (will repeat)
             self._run_pipeline_task = self.config_entry.async_create_background_task(
                 self.hass,
@@ -273,13 +412,22 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.set_is_active(True)
 
         async def stt_stream():
+            retry: bool = True
             while True:
-                async with asyncio.timeout(self._audio_chunk_timeout):
-                    chunk = await self._audio_queue.get()
-                    if not chunk:
-                        break
+                try:
+                    async with asyncio.timeout(self._audio_chunk_timeout):
+                        chunk = await self._audio_queue.get()
+                        if not chunk:
+                            _LOGGER.debug("STT stream got None")
+                            break
 
                     yield chunk
+                except TimeoutError:
+                    _LOGGER.debug("STT Stream timed out")
+                    if not retry:
+                        _LOGGER.debug("No more retries, ending STT stream")
+                        break
+                    retry = False
 
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
@@ -290,6 +438,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             )
 
             if self._pipeline_had_error:
+                _LOGGER.debug("Pipeline error")
                 self._pipeline_had_error = False
                 await self._play_tone(Tones.ERROR)
             else:
@@ -299,7 +448,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 # length of the TTS audio.
                 await self._tts_done.wait()
         except TimeoutError:
+            # This shouldn't happen anymore, we are detecting hang ups with a separate task
+            _LOGGER.exception("Timeout error")
             self.disconnect()  # caller hung up
+        except asyncio.CancelledError:
+            _LOGGER.debug("Pipeline cancelled")
+            # Don't swallow cancellation
+            if (current_task := asyncio.current_task()) and current_task.cancelling():
+                raise
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)
@@ -314,16 +470,32 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Play an announcement once."""
         _LOGGER.debug("Playing announcement")
 
+        if announcement.tts_token is None:
+            _LOGGER.error("Only TTS announcements are supported")
+            return
+
+        await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
+        stream = tts.async_get_stream(self.hass, announcement.tts_token)
+        if stream is None:
+            _LOGGER.error("TTS stream no longer available")
+            return
+
         try:
-            await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
-            await self._send_tts(announcement.original_media_id, wait_for_tone=False)
-            await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
+            await self._send_tts(stream, wait_for_tone=False)
+            if not self._run_pipeline_after_announce:
+                # Delay before looping announcement
+                await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
         except Exception:
             _LOGGER.exception("Unexpected error while playing announcement")
             raise
         finally:
             self._run_pipeline_task = None
             _LOGGER.debug("Announcement finished")
+
+            if self._run_pipeline_after_announce:
+                # Clear announcement to allow pipeline to run
+                _LOGGER.debug("Clearing announcement")
+                self._announcement = None
 
     def _clear_audio_queue(self) -> None:
         """Ensure audio queue is empty."""
@@ -340,34 +512,41 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 )
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            if event.data and (tts_output := event.data["tts_output"]):
-                media_id = tts_output["media_id"]
+            if (
+                event.data
+                and (tts_output := event.data["tts_output"])
+                and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
+            ):
                 self.config_entry.async_create_background_task(
                     self.hass,
-                    self._send_tts(media_id),
+                    self._send_tts(tts_stream=stream),
                     "voip_pipeline_tts",
                 )
             else:
                 # Empty TTS response
+                _LOGGER.debug("Empty TTS response")
                 self._tts_done.set()
         elif event.type == PipelineEventType.ERROR:
             # Play error tone instead of wait for TTS when pipeline is finished.
             self._pipeline_had_error = True
             _LOGGER.warning(event)
 
-    async def _send_tts(self, media_id: str, wait_for_tone: bool = True) -> None:
+    async def _send_tts(
+        self,
+        tts_stream: tts.ResultStream,
+        wait_for_tone: bool = True,
+    ) -> None:
         """Send TTS audio to caller via RTP."""
         try:
             if self.transport is None:
                 return  # not connected
 
-            extension, data = await tts.async_get_media_source_audio(
-                self.hass,
-                media_id,
-            )
+            data = b"".join([chunk async for chunk in tts_stream.async_stream_result()])
 
-            if extension != "wav":
-                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+            if tts_stream.extension != "wav":
+                raise ValueError(
+                    f"Only TTS WAV audio can be streamed, got {tts_stream.extension}"
+                )
 
             if wait_for_tone and ((self._tones & Tones.PROCESSING) == Tones.PROCESSING):
                 # Don't overlap TTS and processing beep

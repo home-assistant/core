@@ -38,8 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         hass.data[DOMAIN][entry.entry_id] = coordinator = SurePetcareDataCoordinator(
-            entry,
             hass,
+            entry,
         )
     except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")

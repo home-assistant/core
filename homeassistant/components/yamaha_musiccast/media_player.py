@@ -24,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import uuid as uuid_util
 
 from .const import (
@@ -55,7 +55,7 @@ MUSIC_PLAYER_BASE_SUPPORT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

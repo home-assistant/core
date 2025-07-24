@@ -2,7 +2,7 @@
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -15,7 +15,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker platform."""
     coordinator = entry.runtime_data

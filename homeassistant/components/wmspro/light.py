@@ -5,34 +5,37 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from wmspro.const import WMS_WebControl_pro_API_actionDescription
+from wmspro.const import (
+    WMS_WebControl_pro_API_actionDescription,
+    WMS_WebControl_pro_API_responseType,
+)
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import WebControlProConfigEntry
 from .const import BRIGHTNESS_SCALE
 from .entity import WebControlProGenericEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=15)
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WebControlProConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WMS based lights from a config entry."""
     hub = config_entry.runtime_data
 
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
-        if dest.action(WMS_WebControl_pro_API_actionDescription.LightDimming):
+        if dest.hasAction(WMS_WebControl_pro_API_actionDescription.LightDimming):
             entities.append(WebControlProDimmer(config_entry.entry_id, dest))
-        elif dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch):
+        elif dest.hasAction(WMS_WebControl_pro_API_actionDescription.LightSwitch):
             entities.append(WebControlProLight(config_entry.entry_id, dest))
 
     async_add_entities(entities)
@@ -42,6 +45,7 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
     """Representation of a WMS based light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
@@ -53,12 +57,16 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
-        await action(onOffState=True)
+        await action(
+            onOffState=True, responseType=WMS_WebControl_pro_API_responseType.Detailed
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
-        await action(onOffState=False)
+        await action(
+            onOffState=False, responseType=WMS_WebControl_pro_API_responseType.Detailed
+        )
 
 
 class WebControlProDimmer(WebControlProLight):
@@ -85,5 +93,6 @@ class WebControlProDimmer(WebControlProLight):
             WMS_WebControl_pro_API_actionDescription.LightDimming
         )
         await action(
-            percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]),
+            responseType=WMS_WebControl_pro_API_responseType.Detailed,
         )

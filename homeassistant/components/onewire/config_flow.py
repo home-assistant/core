@@ -8,7 +8,11 @@ from typing import Any
 from pyownet import protocol
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -147,6 +151,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
+            description_placeholders={"host": self._discovery_data[CONF_HOST]},
             errors=errors,
         )
 
@@ -159,7 +164,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         return OnewireOptionsFlowHandler(config_entry)
 
 
-class OnewireOptionsFlowHandler(OptionsFlow):
+class OnewireOptionsFlowHandler(OptionsFlowWithReload):
     """Handle OneWire Config options."""
 
     configurable_devices: dict[str, str]
@@ -233,12 +238,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         INPUT_ENTRY_DEVICE_SELECTION,
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
-                    ): cv.multi_select(
-                        {
-                            friendly_name: False
-                            for friendly_name in self.configurable_devices
-                        }
-                    ),
+                    ): cv.multi_select(dict.fromkeys(self.configurable_devices, False)),
                 }
             ),
             errors=errors,

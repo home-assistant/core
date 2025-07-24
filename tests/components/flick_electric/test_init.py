@@ -1,135 +1,154 @@
 """Test the Flick Electric config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from pyflick.authentication import AuthException
+import jwt
+from pyflick.types import APIException, AuthException
+import pytest
 
-from homeassistant.components.flick_electric.const import CONF_ACCOUNT_ID, DOMAIN
+from homeassistant.components.flick_electric import CONF_ID_TOKEN, HassFlickAuth
+from homeassistant.components.flick_electric.const import (
+    CONF_ACCOUNT_ID,
+    CONF_TOKEN_EXPIRY,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from . import CONF, _mock_flick_price
+from . import CONF, setup_integration
 
 from tests.common import MockConfigEntry
 
-
-async def test_init_auth_failure_triggers_auth(hass: HomeAssistant) -> None:
-    """Test reauth flow is triggered when username/password is wrong."""
-    with (
-        patch(
-            "homeassistant.components.flick_electric.HassFlickAuth.async_get_access_token",
-            side_effect=AuthException,
-        ),
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={**CONF},
-            title="123 Fake St",
-            unique_id="1234",
-            version=2,
-        )
-        entry.add_to_hass(hass)
-
-        # Ensure setup fails
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
-
-        # Ensure reauth flow is triggered
-        await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 1
+NEW_TOKEN = jwt.encode(
+    {"exp": dt_util.now().timestamp() + 86400}, "secret", algorithm="HS256"
+)
+EXISTING_TOKEN = jwt.encode(
+    {"exp": dt_util.now().timestamp() + 3600}, "secret", algorithm="HS256"
+)
+EXPIRED_TOKEN = jwt.encode(
+    {"exp": dt_util.now().timestamp() - 3600}, "secret", algorithm="HS256"
+)
 
 
-async def test_init_migration_single_account(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exception", "config_entry_state"),
+    [
+        (AuthException, ConfigEntryState.SETUP_ERROR),
+        (APIException, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_init_auth_failure_triggers_auth(
+    hass: HomeAssistant,
+    mock_flick_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    config_entry_state: ConfigEntryState,
+) -> None:
+    """Test integration handles initialisation errors."""
+    with patch.object(mock_flick_client, "getPricing", side_effect=exception):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state == config_entry_state
+
+
+async def test_init_migration_single_account(
+    hass: HomeAssistant,
+    mock_old_config_entry: MockConfigEntry,
+    mock_flick_client: AsyncMock,
+) -> None:
     """Test migration with single account."""
-    with (
-        patch(
-            "homeassistant.components.flick_electric.HassFlickAuth.async_get_access_token",
-            return_value="123456789abcdef",
-        ),
-        patch(
-            "homeassistant.components.flick_electric.FlickAPI.getCustomerAccounts",
-            return_value=[
-                {
-                    "id": "1234",
-                    "status": "active",
-                    "address": "123 Fake St",
-                    "main_consumer": {"supply_node_ref": "123"},
-                }
-            ],
-        ),
-        patch(
-            "homeassistant.components.flick_electric.FlickAPI.getPricing",
-            return_value=_mock_flick_price(),
-        ),
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_USERNAME: CONF[CONF_USERNAME],
-                CONF_PASSWORD: CONF[CONF_PASSWORD],
-            },
-            title=CONF_USERNAME,
-            unique_id=CONF_USERNAME,
-            version=1,
-        )
-        entry.add_to_hass(hass)
+    await setup_integration(hass, mock_old_config_entry)
 
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 0
-        assert entry.state is ConfigEntryState.LOADED
-        assert entry.version == 2
-        assert entry.unique_id == CONF[CONF_ACCOUNT_ID]
-        assert entry.data == CONF
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    assert mock_old_config_entry.version == 2
+    assert mock_old_config_entry.unique_id == CONF[CONF_ACCOUNT_ID]
+    assert mock_old_config_entry.data == CONF
 
 
-async def test_init_migration_multi_account_reauth(hass: HomeAssistant) -> None:
+async def test_init_migration_multi_account_reauth(
+    hass: HomeAssistant,
+    mock_old_config_entry: MockConfigEntry,
+    mock_flick_client_multiple: AsyncMock,
+) -> None:
     """Test migration triggers reauth with multiple accounts."""
-    with (
-        patch(
-            "homeassistant.components.flick_electric.HassFlickAuth.async_get_access_token",
-            return_value="123456789abcdef",
-        ),
-        patch(
-            "homeassistant.components.flick_electric.FlickAPI.getCustomerAccounts",
-            return_value=[
-                {
-                    "id": "1234",
-                    "status": "active",
-                    "address": "123 Fake St",
-                    "main_consumer": {"supply_node_ref": "123"},
-                },
-                {
-                    "id": "5678",
-                    "status": "active",
-                    "address": "456 Fake St",
-                    "main_consumer": {"supply_node_ref": "456"},
-                },
-            ],
-        ),
-        patch(
-            "homeassistant.components.flick_electric.FlickAPI.getPricing",
-            return_value=_mock_flick_price(),
-        ),
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_USERNAME: CONF[CONF_USERNAME],
-                CONF_PASSWORD: CONF[CONF_PASSWORD],
-            },
-            title=CONF_USERNAME,
-            unique_id=CONF_USERNAME,
-            version=1,
-        )
-        entry.add_to_hass(hass)
+    await setup_integration(hass, mock_old_config_entry)
 
-        # ensure setup fails
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.MIGRATION_ERROR
-        await hass.async_block_till_done()
+    assert mock_old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
-        # Ensure reauth flow is triggered
-        await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 1
+    # Ensure reauth flow is triggered
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_fetch_fresh_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flick_client: AsyncMock,
+) -> None:
+    """Test fetching a fresh token."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.get_new_token",
+        return_value={CONF_ID_TOKEN: NEW_TOKEN},
+    ) as mock_get_new_token:
+        auth = HassFlickAuth(hass, mock_config_entry)
+
+        assert await auth.async_get_access_token() == NEW_TOKEN
+        assert mock_get_new_token.call_count == 1
+
+
+async def test_reuse_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flick_client: AsyncMock,
+) -> None:
+    """Test reusing entry token."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_ACCESS_TOKEN: {CONF_ID_TOKEN: EXISTING_TOKEN},
+            CONF_TOKEN_EXPIRY: dt_util.now().timestamp() + 3600,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.get_new_token",
+        return_value={CONF_ID_TOKEN: NEW_TOKEN},
+    ) as mock_get_new_token:
+        auth = HassFlickAuth(hass, mock_config_entry)
+
+        assert await auth.async_get_access_token() == EXISTING_TOKEN
+        assert mock_get_new_token.call_count == 0
+
+
+async def test_fetch_expired_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flick_client: AsyncMock,
+) -> None:
+    """Test fetching token when existing token is expired."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_ACCESS_TOKEN: {CONF_ID_TOKEN: EXPIRED_TOKEN},
+            CONF_TOKEN_EXPIRY: dt_util.now().timestamp() - 3600,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.get_new_token",
+        return_value={CONF_ID_TOKEN: NEW_TOKEN},
+    ) as mock_get_new_token:
+        auth = HassFlickAuth(hass, mock_config_entry)
+
+        assert await auth.async_get_access_token() == NEW_TOKEN
+        assert mock_get_new_token.call_count == 1

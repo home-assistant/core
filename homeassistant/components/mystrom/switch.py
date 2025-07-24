@@ -8,12 +8,12 @@ from typing import Any
 from pymystrom.exceptions import MyStromConnectionError
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .models import MyStromConfigEntry
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -21,10 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MyStromConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     async_add_entities([MyStromSwitch(device, entry.title)])
 
 

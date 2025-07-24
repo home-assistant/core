@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import ThinqConfigEntry
@@ -74,6 +74,11 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=ThinQProperty.TOTAL_POLLUTION_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         translation_key=ThinQProperty.TOTAL_POLLUTION_LEVEL,
+    ),
+    ThinQProperty.CO2: SensorEntityDescription(
+        key=ThinQProperty.CO2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="carbon_dioxide",
     ),
 }
 BATTERY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
@@ -175,9 +180,29 @@ RECIPE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=ThinQProperty.HOP_OIL_INFO,
         translation_key=ThinQProperty.HOP_OIL_INFO,
     ),
+    ThinQProperty.HOP_OIL_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_1,
+    ),
+    ThinQProperty.HOP_OIL_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_2,
+    ),
     ThinQProperty.FLAVOR_INFO: SensorEntityDescription(
         key=ThinQProperty.FLAVOR_INFO,
         translation_key=ThinQProperty.FLAVOR_INFO,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_1,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_2,
     ),
     ThinQProperty.BEER_REMAIN: SensorEntityDescription(
         key=ThinQProperty.BEER_REMAIN,
@@ -247,6 +272,24 @@ TEMPERATURE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.CURRENT_TEMPERATURE,
+    ),
+    ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE,
+    ),
+    ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE,
+    ),
+    ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE,
     ),
 }
 WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
@@ -341,6 +384,10 @@ TIMER_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
 }
 
 WASHER_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ThinQProperty.CYCLE_COUNT,
+        translation_key=ThinQProperty.CYCLE_COUNT,
+    ),
     RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
     TIMER_SENSOR_DESC[TimerProperty.TOTAL],
     TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_START_WM],
@@ -393,6 +440,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.COOKTOP: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         POWER_SENSOR_DESC[ThinQProperty.POWER_LEVEL],
+        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
     ),
     DeviceType.DEHUMIDIFIER: (
         JOB_MODE_SENSOR_DESC[ThinQProperty.CURRENT_JOB_MODE],
@@ -413,7 +461,11 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RECIPE_SENSOR_DESC[ThinQProperty.WORT_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.YEAST_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.BEER_REMAIN],
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         ELAPSED_DAY_SENSOR_DESC[ThinQProperty.ELAPSED_DAY_STATE],
@@ -470,6 +522,21 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
     ),
     DeviceType.STYLER: WASHER_SENSORS,
+    DeviceType.SYSTEM_BOILER: (
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE],
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE],
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE],
+    ),
+    DeviceType.VENTILATOR: (
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.CO2],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM1],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM2],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM10],
+        TEMPERATURE_SENSOR_DESC[ThinQProperty.CURRENT_TEMPERATURE],
+        TIME_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_START],
+        TIME_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_STOP],
+        TIMER_SENSOR_DESC[TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP],
+    ),
     DeviceType.WASHCOMBO_MAIN: WASHER_SENSORS,
     DeviceType.WASHCOMBO_MINI: WASHER_SENSORS,
     DeviceType.WASHER: WASHER_SENSORS,
@@ -492,7 +559,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThinqConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for sensor platform."""
     entities: list[ThinQSensorEntity] = []
@@ -554,36 +621,44 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             local_now = datetime.now(
                 tz=dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
             )
-            if value in [0, None, time.min]:
-                # Reset to None
+            self._device_state = (
+                self.coordinator.data[self._device_state_id].value
+                if self._device_state_id in self.coordinator.data
+                else None
+            )
+            if value in [0, None, time.min] or (
+                self._device_state == "power_off"
+                and self.entity_description.key
+                in [TimerProperty.REMAIN, TimerProperty.TOTAL]
+            ):
+                # Reset to None when power_off
                 value = None
             elif self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
                 if self.entity_description.key in TIME_SENSOR_DESC:
-                    # Set timestamp for time
+                    # Set timestamp for absolute time
                     value = local_now.replace(hour=value.hour, minute=value.minute)
                 else:
                     # Set timestamp for delta
-                    new_state = (
-                        self.coordinator.data[self._device_state_id].value
-                        if self._device_state_id in self.coordinator.data
-                        else None
-                    )
-                    if (
-                        self.native_value is not None
-                        and self._device_state == new_state
-                    ):
-                        # Skip update when same state
-                        return
-
-                    self._device_state = new_state
-                    time_delta = timedelta(
+                    event_data = timedelta(
                         hours=value.hour, minutes=value.minute, seconds=value.second
                     )
-                    value = (
-                        (local_now - time_delta)
+                    new_time = (
+                        (local_now - event_data)
                         if self.entity_description.key == TimerProperty.RUNNING
-                        else (local_now + time_delta)
+                        else (local_now + event_data)
                     )
+                    # The remain_time may change during the wash/dry operation depending on various reasons.
+                    # If there is a diff of more than 60sec, the new timestamp is used
+                    if (
+                        parse_native_value := dt_util.parse_datetime(
+                            str(self.native_value)
+                        )
+                    ) is None or abs(new_time - parse_native_value) > timedelta(
+                        seconds=60
+                    ):
+                        value = new_time
+                    else:
+                        value = self.native_value
             elif self.entity_description.device_class == SensorDeviceClass.DURATION:
                 # Set duration
                 value = self._get_duration(

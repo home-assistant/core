@@ -13,7 +13,9 @@ from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> None:
     """Set up mock for owproxy."""
     dir_side_effect: dict[str, list] = {}
-    read_side_effect: dict[str, list] = {}
+    read_side_effect: dict[str, list] = {
+        "/system/configuration/version": [b"3.2"],
+    }
 
     # Setup directory listing
     dir_side_effect["/"] = [[f"/{device_id}/" for device_id in device_ids]]

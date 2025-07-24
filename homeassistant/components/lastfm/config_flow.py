@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pylast import LastFMNetwork, PyLastError, User, WSError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
@@ -22,6 +22,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN
+from .coordinator import LastFMConfigEntry
 
 PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
 
@@ -31,6 +32,8 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(CONF_MAIN_USER): str,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
@@ -49,7 +52,8 @@ def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "unknown"
-    except Exception:  # noqa: BLE001
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     return user, errors
 
@@ -77,7 +81,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LastFMConfigEntry,
     ) -> LastFmOptionsFlowHandler:
         """Get the options flow for this handler."""
         return LastFmOptionsFlowHandler()
@@ -155,8 +159,10 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LastFmOptionsFlowHandler(OptionsFlow):
+class LastFmOptionsFlowHandler(OptionsFlowWithReload):
     """LastFm Options flow handler."""
+
+    config_entry: LastFMConfigEntry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

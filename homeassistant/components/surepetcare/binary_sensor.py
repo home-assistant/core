@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SurePetcareDataCoordinator
@@ -23,7 +23,9 @@ from .entity import SurePetcareEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sure PetCare Flaps binary sensors based on a config entry."""
 
@@ -131,12 +133,15 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        state = surepy_entity.raw_data()["status"]
-        self._attr_is_on = bool(state)
-        if state:
-            self._attr_extra_state_attributes = {
-                "device_rssi": f"{state['signal']['device_rssi']:.2f}",
-                "hub_rssi": f"{state['signal']['hub_rssi']:.2f}",
-            }
-        else:
-            self._attr_extra_state_attributes = {}
+        state = surepy_entity.raw_data().get("status", {})
+        online = bool(state.get("online", False))
+        self._attr_is_on = online
+        self._attr_extra_state_attributes = {}
+        if online:
+            device_rssi = state.get("signal", {}).get("device_rssi")
+            self._attr_extra_state_attributes["device_rssi"] = (
+                f"{device_rssi:.2f}" if device_rssi else "Unknown"
+            )
+            hub_rssi = state.get("signal", {}).get("hub_rssi")
+            if hub_rssi is not None:
+                self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"

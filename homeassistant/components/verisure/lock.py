@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -33,7 +33,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -81,7 +81,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             manufacturer="Verisure",
             model="Lockguard Smartlock",
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -109,7 +109,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     @property
     def code_format(self) -> str:
         """Return the configured code format."""
-        digits = self.coordinator.entry.options.get(
+        digits = self.coordinator.config_entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
         return f"^\\d{{{digits}}}$"

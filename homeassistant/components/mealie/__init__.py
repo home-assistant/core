@@ -24,7 +24,7 @@ from .coordinator import (
     MealieShoppingListCoordinator,
     MealieStatisticsCoordinator,
 )
-from .services import setup_services
+from .services import async_setup_services
 from .utils import create_version
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.TODO]
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Mealie component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -86,9 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         sw_version=about.version,
     )
 
-    mealplan_coordinator = MealieMealplanCoordinator(hass, client)
-    shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
-    statistics_coordinator = MealieStatisticsCoordinator(hass, client)
+    mealplan_coordinator = MealieMealplanCoordinator(hass, entry, client)
+    shoppinglist_coordinator = MealieShoppingListCoordinator(hass, entry, client)
+    statistics_coordinator = MealieStatisticsCoordinator(hass, entry, client)
 
     await mealplan_coordinator.async_config_entry_first_refresh()
     await shoppinglist_coordinator.async_config_entry_first_refresh()

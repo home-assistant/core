@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from mastodon.Mastodon import Account, Instance
+
 from homeassistant.core import HomeAssistant
 
-from . import MastodonConfigEntry
+from .coordinator import MastodonConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
@@ -25,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     }
 
 
-def get_diagnostics(config_entry: MastodonConfigEntry) -> tuple[dict, dict]:
+def get_diagnostics(config_entry: MastodonConfigEntry) -> tuple[Instance, Account]:
     """Get mastodon diagnostics."""
     client = config_entry.runtime_data.client
 

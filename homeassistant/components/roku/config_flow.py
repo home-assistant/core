@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -25,8 +25,8 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import RokuConfigEntry
 from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
+from .coordinator import RokuConfigEntry
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -202,7 +202,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return RokuOptionsFlowHandler()
 
 
-class RokuOptionsFlowHandler(OptionsFlow):
+class RokuOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Roku options."""
 
     async def async_step_init(

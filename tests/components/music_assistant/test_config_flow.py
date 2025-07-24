@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 SERVER_INFO = {
     "server_id": "1234",
@@ -186,7 +186,7 @@ async def test_flow_user_server_version_invalid(
 
     mock_get_server_info.side_effect = None
     mock_get_server_info.return_value = ServerInfoMessage.from_json(
-        load_fixture("server_info_message.json", DOMAIN)
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
 
     assert result["type"] is FlowResultType.FORM

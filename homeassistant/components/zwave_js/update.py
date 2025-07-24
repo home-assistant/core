@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from typing import Any, Final
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
@@ -27,17 +26,17 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
-from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
+from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -76,11 +75,11 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave update entity from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
     cnt: Counter = Counter()
 
     @callback
@@ -200,18 +199,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
             return
 
-        # If device is asleep/dead, wait for it to wake up/become alive before
-        # attempting an update
-        for status, event_name in (
-            (NodeStatus.ASLEEP, "wake up"),
-            (NodeStatus.DEAD, "alive"),
-        ):
-            if self.node.status == status:
-                if not self._status_unsub:
-                    self._status_unsub = self.node.once(
-                        event_name, self._update_on_status_change
-                    )
-                return
+        # If device is asleep, wait for it to wake up before attempting an update
+        if self.node.status == NodeStatus.ASLEEP:
+            if not self._status_unsub:
+                self._status_unsub = self.node.once(
+                    "wake up", self._update_on_status_change
+                )
+            return
 
         try:
             # Retrieve all firmware updates including non-stable ones but filter

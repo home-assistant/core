@@ -234,6 +234,7 @@ async def test_browse_media_root_multiple_consoles(
                 "host": "1.1.1.2",
                 "username": "test-username",
                 "password": "test-password",
+                "api_key": "test-api-key",
                 "id": "UnifiProtect2",
                 "port": 443,
                 "verify_ssl": False,

@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -123,7 +123,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
         entity_registry_enabled_default=False,
         options=[
             "no_defect",
-            "of_frame",
+            "loss_of_frame",
             "loss_of_signal",
             "loss_of_power",
             "loss_of_signal_quality",
@@ -174,6 +174,7 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.alimvoltage,
     ),
     SFRBoxSensorEntityDescription[SystemInfo](
@@ -182,6 +183,7 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: _get_temperature(x.temperature),
     ),
 )
@@ -217,7 +219,9 @@ def _get_temperature(value: float | None) -> float | None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]

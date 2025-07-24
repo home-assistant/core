@@ -52,7 +52,7 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
-    def update(self):
+    def update(self) -> None:
         """Force a refresh from the device if the device is unavailable."""
         refresh_needed = self.vera_device.should_poll or not self.available
         _LOGGER.debug("%s: update called (refresh=%s)", self._name, refresh_needed)
@@ -90,7 +90,7 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         return attr
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """If device communications have failed return false."""
         return not self.vera_device.comm_failure
 

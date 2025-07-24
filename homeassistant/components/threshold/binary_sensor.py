@@ -31,9 +31,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -90,18 +92,13 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize threshold config entry."""
     registry = er.async_get(hass)
     device_class = None
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
-    )
-
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        entity_id,
     )
 
     hysteresis = config_entry.options[CONF_HYSTERESIS]
@@ -113,14 +110,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                entity_id,
-                name,
-                lower,
-                upper,
-                hysteresis,
-                device_class,
-                unique_id,
-                device_info=device_info,
+                hass,
+                entity_id=entity_id,
+                name=name,
+                lower=lower,
+                upper=upper,
+                hysteresis=hysteresis,
+                device_class=device_class,
+                unique_id=unique_id,
             )
         ]
     )
@@ -143,7 +140,14 @@ async def async_setup_platform(
     async_add_entities(
         [
             ThresholdSensor(
-                entity_id, name, lower, upper, hysteresis, device_class, None
+                hass,
+                entity_id=entity_id,
+                name=name,
+                lower=lower,
+                upper=upper,
+                hysteresis=hysteresis,
+                device_class=device_class,
+                unique_id=None,
             )
         ],
     )
@@ -168,6 +172,8 @@ class ThresholdSensor(BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        *,
         entity_id: str,
         name: str,
         lower: float | None,
@@ -175,12 +181,15 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        if entity_id:  # Guard against empty entity_id in preview mode
+            self.device_entry = async_entity_id_to_device(
+                hass,
+                entity_id,
+            )
         self._entity_id = entity_id
         self._attr_name = name
         if lower is not None:

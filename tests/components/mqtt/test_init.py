@@ -45,6 +45,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -391,6 +392,25 @@ async def test_service_call_with_ascii_qos_retain_flags(
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == ""
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+
+    mqtt_mock.reset_mock()
+
+    # Test service call without payload
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_QOS: "2",
+            mqtt.ATTR_RETAIN: "no",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] is None
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
 
@@ -663,11 +683,9 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
 
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.client import MQTTMessage
+    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt.models import MqttData
+    from homeassistant.components.mqtt.models import MqttData  # noqa: PLC0415
 
     msg = MQTTMessage(topic=b"tasmota/discovery/18FE34E0B760\xcc\x02")
     msg.payload = b"Payload"
@@ -981,10 +999,9 @@ async def test_dump_service(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
-    writes = mopen.return_value.write.mock_calls
-    assert len(writes) == 2
-    assert writes[0][1][0] == "bla/1,test1\n"
-    assert writes[1][1][0] == "bla/2,test2\n"
+    writes = mopen.return_value.writelines.mock_calls
+    assert len(writes) == 1
+    assert writes[0][1][0] == ["bla/1,test1\n", "bla/2,test2\n"]
 
 
 async def test_mqtt_ws_remove_discovered_device(
@@ -1553,6 +1570,7 @@ async def test_subscribe_connection_status(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
@@ -1570,7 +1588,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1584,12 +1602,12 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1599,7 +1617,7 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 

@@ -15,7 +15,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HoneywellConfigEntry
 from .const import DOMAIN
@@ -73,7 +73,7 @@ HUMIDIFIERS: dict[str, HoneywellHumidifierEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HoneywellConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Honeywell (de)humidifier dynamically."""
     data = config_entry.runtime_data

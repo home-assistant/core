@@ -47,6 +47,10 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
         await self.account.refresh_robots()
+        await self.account.load_pets()
+        for pet in self.account.pets:
+            # Need to fetch weight history for `get_visits_since`
+            await pet.fetch_weight_history()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -56,6 +60,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 password=self.config_entry.data[CONF_PASSWORD],
                 load_robots=True,
                 subscribe_for_updates=True,
+                load_pets=True,
             )
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex

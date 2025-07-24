@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
@@ -21,7 +21,6 @@ from .entity import BleBoxEntity
 SCAN_INTERVAL = timedelta(seconds=5)
 
 BLEBOX_TO_HVACMODE = {
-    None: None,
     0: HVACMode.OFF,
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
@@ -38,7 +37,7 @@ BLEBOX_TO_HVACACTION = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BleBoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
     entities = [
@@ -59,12 +58,14 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return list of supported HVAC modes."""
+        if self._feature.mode is None:
+            return [HVACMode.OFF]
         return [HVACMode.OFF, BLEBOX_TO_HVACMODE[self._feature.mode]]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return the desired HVAC mode."""
         if self._feature.is_on is None:
             return None
@@ -75,7 +76,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the actual current HVAC action."""
         if self._feature.hvac_action is not None:
             if not self._feature.is_on:
@@ -88,22 +89,22 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACAction.HEATING if self._feature.is_heating else HVACAction.IDLE
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.max_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.min_temp
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._feature.current
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the desired thermostat temperature."""
         return self._feature.desired
 

@@ -11,13 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 
-from .models import AgentBackup, BackupError
-
-
-class BackupAgentError(BackupError):
-    """Base class for backup agent errors."""
-
-    error_code = "backup_agent_error"
+from .models import AgentBackup, BackupAgentError
 
 
 class BackupAgentUnreachableError(BackupAgentError):
@@ -47,6 +41,8 @@ class BackupAgent(abc.ABC):
     ) -> AsyncIterator[bytes]:
         """Download a backup file.
 
+        Raises BackupNotFound if the backup does not exist.
+
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
@@ -73,6 +69,8 @@ class BackupAgent(abc.ABC):
     ) -> None:
         """Delete a backup file.
 
+        Raises BackupNotFound if the backup does not exist.
+
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
 
@@ -85,8 +83,11 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
-        """Return a backup."""
+    ) -> AgentBackup:
+        """Return a backup.
+
+        Raises BackupNotFound if the backup does not exist.
+        """
 
 
 class LocalBackupAgent(BackupAgent):
@@ -94,10 +95,15 @@ class LocalBackupAgent(BackupAgent):
 
     @abc.abstractmethod
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup.
+        """Return the local path to an existing backup.
 
         The method should return the path to the backup file with the specified id.
+        Raises BackupAgentError if the backup does not exist.
         """
+
+    @abc.abstractmethod
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
 
 
 class BackupAgentPlatformProtocol(Protocol):

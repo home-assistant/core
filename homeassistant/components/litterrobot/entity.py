@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Generic, TypeVar
 
-from pylitterbot import Robot
+from pylitterbot import Pet, Robot
 from pylitterbot.robot import EVENT_UPDATE
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -14,11 +14,31 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import LitterRobotDataUpdateCoordinator
 
-_RobotT = TypeVar("_RobotT", bound=Robot)
+_WhiskerEntityT = TypeVar("_WhiskerEntityT", bound=Robot | Pet)
+
+
+def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
+    """Get device info for a robot or pet."""
+    if isinstance(whisker_entity, Robot):
+        return DeviceInfo(
+            identifiers={(DOMAIN, whisker_entity.serial)},
+            manufacturer="Whisker",
+            model=whisker_entity.model,
+            name=whisker_entity.name,
+            serial_number=whisker_entity.serial,
+            sw_version=getattr(whisker_entity, "firmware", None),
+        )
+    breed = ", ".join(breed for breed in whisker_entity.breeds or [])
+    return DeviceInfo(
+        identifiers={(DOMAIN, whisker_entity.id)},
+        manufacturer="Whisker",
+        model=f"{breed} {whisker_entity.pet_type}".strip().capitalize(),
+        name=whisker_entity.name,
+    )
 
 
 class LitterRobotEntity(
-    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_RobotT]
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_WhiskerEntityT]
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 
@@ -26,7 +46,7 @@ class LitterRobotEntity(
 
     def __init__(
         self,
-        robot: _RobotT,
+        robot: _WhiskerEntityT,
         coordinator: LitterRobotDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
@@ -34,15 +54,9 @@ class LitterRobotEntity(
         super().__init__(coordinator)
         self.robot = robot
         self.entity_description = description
-        self._attr_unique_id = f"{robot.serial}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, robot.serial)},
-            manufacturer="Whisker",
-            model=robot.model,
-            name=robot.name,
-            serial_number=robot.serial,
-            sw_version=getattr(robot, "firmware", None),
-        )
+        _id = robot.serial if isinstance(robot, Robot) else robot.id
+        self._attr_unique_id = f"{_id}-{description.key}"
+        self._attr_device_info = get_device_info(robot)
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener for the entity."""

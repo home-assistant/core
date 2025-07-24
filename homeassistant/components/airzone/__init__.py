@@ -15,7 +15,6 @@ from aioairzone.const import (
 )
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -25,7 +24,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -37,8 +36,6 @@ PLATFORMS: list[Platform] = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-type AirzoneConfigEntry = ConfigEntry[AirzoneUpdateCoordinator]
 
 
 async def _async_migrate_unique_ids(
@@ -90,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
-    coordinator = AirzoneUpdateCoordinator(hass, airzone)
+    coordinator = AirzoneUpdateCoordinator(hass, entry, airzone)
     await coordinator.async_config_entry_first_refresh()
     await _async_migrate_unique_ids(hass, entry, coordinator)
 

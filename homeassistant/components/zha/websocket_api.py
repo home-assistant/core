@@ -37,6 +37,7 @@ from zha.application.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import (
@@ -330,7 +331,7 @@ async def websocket_permit_devices(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, "zha_gateway_message", forward_messages
+        hass, ZHA_GW_MSG, forward_messages
     )
 
     @callback
@@ -771,7 +772,7 @@ async def websocket_device_cluster_commands(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of cluster commands."""
-    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+    import voluptuous_serialize  # noqa: PLC0415
 
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
@@ -1079,7 +1080,7 @@ async def websocket_get_configuration(
 ) -> None:
     """Get ZHA configuration."""
     config_entry: ConfigEntry = get_config_entry(hass)
-    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+    import voluptuous_serialize  # noqa: PLC0415
 
     def custom_serializer(schema: Any) -> Any:
         """Serialize additional types for voluptuous_serialize."""

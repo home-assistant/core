@@ -105,12 +105,12 @@ class RflinkDevice(Entity):
         return self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Assume device state until first device event sets state."""
         return self._state is None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
@@ -120,7 +120,7 @@ class RflinkDevice(Entity):
         self._available = availability
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
         # Remove temporary bogus entity_id if added
@@ -300,7 +300,7 @@ class RflinkCommand(RflinkDevice):
 class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:

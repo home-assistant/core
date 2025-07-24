@@ -1,0 +1,1029 @@
+# serializer version: 1
+# name: test_setup[sensor.ntfy_sh_attachment_bandwidth_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_attachment_bandwidth_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Attachment bandwidth limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_BANDWIDTH: 'attachment_bandwidth'>,
+    'unique_id': '123456789_attachment_bandwidth',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_bandwidth_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ntfy.sh Attachment bandwidth limit',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_bandwidth_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1024.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_expiry_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_attachment_expiry_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Attachment expiry duration',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_EXPIRY_DURATION: 'attachment_expiry_duration'>,
+    'unique_id': '123456789_attachment_expiry_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_expiry_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'ntfy.sh Attachment expiry duration',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_expiry_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_file_size_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_attachment_file_size_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Attachment file size limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_FILE_SIZE: 'attachment_file_size'>,
+    'unique_id': '123456789_attachment_file_size',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_file_size_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ntfy.sh Attachment file size limit',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_file_size_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Attachment storage',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_TOTAL_SIZE: 'attachment_total_size'>,
+    'unique_id': '123456789_attachment_total_size',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ntfy.sh Attachment storage',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Attachment storage limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_TOTAL_SIZE_LIMIT: 'attachment_total_size_limit'>,
+    'unique_id': '123456789_attachment_total_size_limit',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ntfy.sh Attachment storage limit',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Attachment storage remaining',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.ATTACHMENT_TOTAL_SIZE_REMAINING: 'attachment_total_size_remaining'>,
+    'unique_id': '123456789_attachment_total_size_remaining',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_attachment_storage_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ntfy.sh Attachment storage remaining',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_attachment_storage_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_email_usage_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_email_usage_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Email usage limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.EMAILS_LIMIT: 'emails_limit'>,
+    'unique_id': '123456789_emails_limit',
+    'unit_of_measurement': 'emails',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_email_usage_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Email usage limit',
+      'unit_of_measurement': 'emails',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_email_usage_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_emails_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_emails_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Emails remaining',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.EMAILS_REMAINING: 'emails_remaining'>,
+    'unique_id': '123456789_emails_remaining',
+    'unit_of_measurement': 'emails',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_emails_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Emails remaining',
+      'unit_of_measurement': 'emails',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_emails_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_emails_sent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_emails_sent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Emails sent',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.EMAILS: 'emails'>,
+    'unique_id': '123456789_emails',
+    'unit_of_measurement': 'emails',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_emails_sent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Emails sent',
+      'unit_of_measurement': 'emails',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_emails_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_expiry_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_messages_expiry_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Messages expiry duration',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.MESSAGES_EXPIRY_DURATION: 'messages_expiry_duration'>,
+    'unique_id': '123456789_messages_expiry_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_expiry_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'ntfy.sh Messages expiry duration',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_messages_expiry_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_published-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_messages_published',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Messages published',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.MESSAGES: 'messages'>,
+    'unique_id': '123456789_messages',
+    'unit_of_measurement': 'messages',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_published-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Messages published',
+      'unit_of_measurement': 'messages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_messages_published',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_messages_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Messages remaining',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.MESSAGES_REMAINING: 'messages_remaining'>,
+    'unique_id': '123456789_messages_remaining',
+    'unit_of_measurement': 'messages',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Messages remaining',
+      'unit_of_measurement': 'messages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_messages_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4990',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_usage_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_messages_usage_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Messages usage limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.MESSAGES_LIMIT: 'messages_limit'>,
+    'unique_id': '123456789_messages_limit',
+    'unit_of_measurement': 'messages',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_usage_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Messages usage limit',
+      'unit_of_measurement': 'messages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_messages_usage_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5000',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_made-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_made',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Phone calls made',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.CALLS: 'calls'>,
+    'unique_id': '123456789_calls',
+    'unit_of_measurement': 'calls',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_made-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Phone calls made',
+      'unit_of_measurement': 'calls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_made',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Phone calls remaining',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.CALLS_REMAINING: 'calls_remaining'>,
+    'unique_id': '123456789_calls_remaining',
+    'unit_of_measurement': 'calls',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Phone calls remaining',
+      'unit_of_measurement': 'calls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_usage_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_usage_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Phone calls usage limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.CALLS_LIMIT: 'calls_limit'>,
+    'unique_id': '123456789_calls_limit',
+    'unit_of_measurement': 'calls',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_phone_calls_usage_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Phone calls usage limit',
+      'unit_of_measurement': 'calls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_phone_calls_usage_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reserved topics',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.RESERVATIONS: 'reservations'>,
+    'unique_id': '123456789_reservations',
+    'unit_of_measurement': 'topics',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Reserved topics',
+      'unit_of_measurement': 'topics',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reserved topics limit',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.RESERVATIONS_LIMIT: 'reservations_limit'>,
+    'unique_id': '123456789_reservations_limit',
+    'unit_of_measurement': 'topics',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Reserved topics limit',
+      'unit_of_measurement': 'topics',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reserved topics remaining',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.RESERVATIONS_REMAINING: 'reservations_remaining'>,
+    'unique_id': '123456789_reservations_remaining',
+    'unit_of_measurement': 'topics',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_reserved_topics_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Reserved topics remaining',
+      'unit_of_measurement': 'topics',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_reserved_topics_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_subscription_tier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ntfy_sh_subscription_tier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Subscription tier',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.TIER: 'tier'>,
+    'unique_id': '123456789_tier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_subscription_tier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Subscription tier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_subscription_tier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'starter',
+  })
+# ---

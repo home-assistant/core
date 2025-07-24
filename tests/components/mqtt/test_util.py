@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
-from random import getrandbits
 import shutil
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -53,7 +52,7 @@ async def test_canceling_debouncer_on_shutdown(
         assert not mock_debouncer.is_set()
         mqtt_client_mock.subscribe.assert_not_called()
 
-        # Note thet the broker connection will not be disconnected gracefully
+        # Note that the broker connection will not be disconnected gracefully
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await asyncio.sleep(0)
@@ -199,7 +198,6 @@ async def test_reading_non_exitisting_certificate_file() -> None:
     )
 
 
-@pytest.mark.parametrize("temp_dir_prefix", "unknown")
 async def test_return_default_get_file_path(
     hass: HomeAssistant, mock_temp_dir: str
 ) -> None:
@@ -211,12 +209,8 @@ async def test_return_default_get_file_path(
             and mqtt.util.get_file_path("some_option", "mydefault") == "mydefault"
         )
 
-    with patch(
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        f"home-assistant-mqtt-other-{getrandbits(10):03x}",
-    ) as temp_dir_name:
-        tempdir = Path(tempfile.gettempdir()) / temp_dir_name
-        assert await hass.async_add_executor_job(_get_file_path, tempdir)
+    temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
+    assert await hass.async_add_executor_job(_get_file_path, temp_dir)
 
 
 async def test_waiting_for_client_not_loaded(

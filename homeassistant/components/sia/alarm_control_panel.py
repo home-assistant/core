@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
 from .entity import SIABaseEntity, SIAEntityDescription
@@ -69,7 +69,7 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import GuardianConfigEntry
 from .const import API_SYSTEM_DIAGNOSTICS, CONF_UID, DOMAIN
 from .coordinator import GuardianDataUpdateCoordinator
 
@@ -32,7 +32,7 @@ class PairedSensorEntity(GuardianEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         coordinator: GuardianDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
@@ -62,7 +62,7 @@ class ValveControllerEntity(GuardianEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         coordinators: dict[str, GuardianDataUpdateCoordinator],
         description: ValveControllerEntityDescription,
     ) -> None:

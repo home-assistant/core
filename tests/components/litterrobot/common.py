@@ -150,5 +150,24 @@ FEEDER_ROBOT_DATA = {
         },
     ],
 }
+PET_DATA = {
+    "petId": "PET-123",
+    "userId": "1234567",
+    "createdAt": "2023-04-27T23:26:49.813Z",
+    "name": "Kitty",
+    "type": "CAT",
+    "gender": "FEMALE",
+    "lastWeightReading": 9.1,
+    "breeds": ["sphynx"],
+    "weightHistory": [
+        {"weight": 6.48, "timestamp": "2025-06-13T16:12:36"},
+        {"weight": 6.6, "timestamp": "2025-06-14T03:52:00"},
+        {"weight": 6.59, "timestamp": "2025-06-14T17:20:32"},
+        {"weight": 6.5, "timestamp": "2025-06-14T19:22:48"},
+        {"weight": 6.35, "timestamp": "2025-06-15T03:12:15"},
+        {"weight": 6.45, "timestamp": "2025-06-15T15:27:21"},
+        {"weight": 6.25, "timestamp": "2025-06-15T15:29:26"},
+    ],
+}
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"

@@ -123,7 +123,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.side_effect = mock_constructor
 
 
-def setup_mock_device(mock_device, capabilities=None):
+def setup_mock_device(mock_device, capabilities=None, profiles=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
     mock_device.port = 80
@@ -145,7 +145,7 @@ def setup_mock_device(mock_device, capabilities=None):
         ptz=None,
         video_source_token=None,
     )
-    mock_device.profiles = [profile1]
+    mock_device.profiles = profiles or [profile1]
     mock_device.events = MagicMock(
         webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),

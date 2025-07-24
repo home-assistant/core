@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
 REQUEST_REFRESH_COOLDOWN: Final = 5
 
+type APCUPSdConfigEntry = ConfigEntry[APCUPSdCoordinator]
+
 
 class APCUPSdData(dict[str, str]):
     """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
@@ -57,13 +59,20 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
     updates from the server.
     """
 
-    config_entry: ConfigEntry
+    config_entry: APCUPSdConfigEntry
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: APCUPSdConfigEntry,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize the data object."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
             request_refresh_debouncer=Debouncer(
@@ -77,10 +86,15 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
         self._port = port
 
     @property
+    def unique_device_id(self) -> str:
+        """Return a unique ID of the device, which is the serial number (if available) or the config entry ID."""
+        return self.data.serial_no or self.config_entry.entry_id
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
+            identifiers={(DOMAIN, self.unique_device_id)},
             model=self.data.model,
             manufacturer="APC",
             name=self.data.name or "APC UPS",
@@ -99,4 +113,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
                 data = await aioapcaccess.request_status(self._host, self._port)
                 return APCUPSdData(data)
             except (OSError, asyncio.IncompleteReadError) as error:
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from error

@@ -26,10 +26,9 @@ from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import RokuConfigEntry
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -40,7 +39,7 @@ from .const import (
     ATTR_THUMBNAIL,
     SERVICE_SEARCH,
 )
-from .coordinator import RokuDataUpdateCoordinator
+from .coordinator import RokuConfigEntry, RokuDataUpdateCoordinator
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
@@ -83,7 +82,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: RokuConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RokuConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roku config entry."""
     async_add_entities(
@@ -141,7 +142,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self.coordinator.data.state.standby:
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
 
         if self.coordinator.data.app is None:
             return None
@@ -307,21 +308,21 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler()
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state not in {MediaPlayerState.STANDBY, MediaPlayerState.PAUSED}:
+        if self.state not in {MediaPlayerState.OFF, MediaPlayerState.PAUSED}:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
     @roku_exception_handler()
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state not in {MediaPlayerState.STANDBY, MediaPlayerState.PLAYING}:
+        if self.state not in {MediaPlayerState.OFF, MediaPlayerState.PLAYING}:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
     @roku_exception_handler()
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self.state != MediaPlayerState.STANDBY:
+        if self.state != MediaPlayerState.OFF:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 

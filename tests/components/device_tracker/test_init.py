@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -34,6 +33,7 @@ from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup
 
 from tests.common import (
+    RegistryEntryWithDefaults,
     assert_setup_component,
     async_fire_time_changed,
     mock_registry,
@@ -400,7 +400,7 @@ async def test_see_service_guard_config_entry(
     mock_registry(
         hass,
         {
-            entity_id: RegistryEntry(
+            entity_id: RegistryEntryWithDefaults(
                 entity_id=entity_id, unique_id=1, platform=const.DOMAIN
             )
         },

@@ -32,6 +32,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )

@@ -3,17 +3,17 @@
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NanoleafConfigEntry, NanoleafCoordinator
 from .const import TOUCH_MODELS
+from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
 from .entity import NanoleafEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NanoleafConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nanoleaf event."""
     coordinator = entry.runtime_data

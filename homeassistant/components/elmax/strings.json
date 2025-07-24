@@ -4,12 +4,12 @@
       "choose_mode": {
         "description": "Please choose the connection mode to Elmax panels.",
         "menu_options": {
-          "cloud": "Connect to Elmax Panel via Elmax Cloud APIs",
-          "direct": "Connect to Elmax Panel via local/direct IP"
+          "cloud": "Connect to Elmax panel via Elmax Cloud APIs",
+          "direct": "Connect to Elmax panel via local/direct IP"
         }
       },
       "cloud": {
-        "description": "Please login to the Elmax cloud using your credentials",
+        "description": "Please log in to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
@@ -28,7 +28,7 @@
       "direct": {
         "description": "Specify the Elmax panel connection parameters below.",
         "data": {
-          "panel_api_host": "Panel API Hostname or IP",
+          "panel_api_host": "Panel API hostname or IP",
           "panel_api_port": "Panel API port",
           "use_ssl": "Use SSL",
           "panel_pin": "Panel PIN code"
@@ -40,7 +40,7 @@
       "panels": {
         "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured.",
         "data": {
-          "panel_name": "Panel Name",
+          "panel_name": "Panel name",
           "panel_id": "Panel ID",
           "panel_pin": "[%key:common::config_flow::data::pin%]"
         }

@@ -36,10 +36,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -82,10 +86,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -127,10 +135,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'Test Satellite',
       'unique_id': 'test_zeroconf_name._wyoming._tcp.local._Test Satellite',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Test Satellite',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import XiaomiPassiveBluetoothDataProcessor
@@ -135,7 +135,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: XiaomiBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
     coordinator = entry.runtime_data

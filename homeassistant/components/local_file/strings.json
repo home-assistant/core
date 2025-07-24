@@ -53,11 +53,5 @@
     "file_path_not_accessible": {
       "message": "Path {file_path} is not accessible"
     }
-  },
-  "issues": {
-    "no_access_path": {
-      "title": "Incorrect file path",
-      "description": "While trying to import your configuration the provided file path {file_path} could not be read.\nPlease update your configuration to a correct file path and restart to fix this issue."
-    }
   }
 }

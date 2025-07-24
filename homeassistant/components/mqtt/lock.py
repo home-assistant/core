@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -116,7 +116,7 @@ STATE_CONFIG_KEYS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT lock through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(

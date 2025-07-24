@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from asyncsleepiq import (
+    CoreTemps,
     FootWarmingTemps,
     Side,
     SleepIQBed,
+    SleepIQCoreClimate,
     SleepIQFootWarmer,
     SleepIQPreset,
 )
@@ -13,9 +15,9 @@ from asyncsleepiq import (
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, FOOT_WARMER
+from .const import CORE_CLIMATE, DOMAIN, FOOT_WARMER
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 
@@ -23,7 +25,7 @@ from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ foundation preset select entities."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
@@ -36,6 +38,10 @@ async def async_setup_entry(
         entities.extend(
             SleepIQFootWarmingTempSelectEntity(data.data_coordinator, bed, foot_warmer)
             for foot_warmer in bed.foundation.foot_warmers
+        )
+        entities.extend(
+            SleepIQCoreTempSelectEntity(data.data_coordinator, bed, core_climate)
+            for core_climate in bed.foundation.core_climates
         )
     async_add_entities(entities)
 
@@ -111,6 +117,60 @@ class SleepIQFootWarmingTempSelectEntity(
             await self.foot_warmer.turn_off()
         else:
             await self.foot_warmer.turn_on(temperature, timer)
+
+        self._attr_current_option = option
+        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
+
+
+class SleepIQCoreTempSelectEntity(
+    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], SelectEntity
+):
+    """Representation of a SleepIQ core climate temperature select entity."""
+
+    # Maps to translate between asyncsleepiq and HA's naming preference
+    SLEEPIQ_TO_HA_CORE_TEMP_MAP = {
+        CoreTemps.OFF: "off",
+        CoreTemps.HEATING_PUSH_LOW: "heating_low",
+        CoreTemps.HEATING_PUSH_MED: "heating_medium",
+        CoreTemps.HEATING_PUSH_HIGH: "heating_high",
+        CoreTemps.COOLING_PULL_LOW: "cooling_low",
+        CoreTemps.COOLING_PULL_MED: "cooling_medium",
+        CoreTemps.COOLING_PULL_HIGH: "cooling_high",
+    }
+    HA_TO_SLEEPIQ_CORE_TEMP_MAP = {v: k for k, v in SLEEPIQ_TO_HA_CORE_TEMP_MAP.items()}
+
+    _attr_icon = "mdi:heat-wave"
+    _attr_options = list(SLEEPIQ_TO_HA_CORE_TEMP_MAP.values())
+    _attr_translation_key = "core_temps"
+
+    def __init__(
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        bed: SleepIQBed,
+        core_climate: SleepIQCoreClimate,
+    ) -> None:
+        """Initialize the select entity."""
+        self.core_climate = core_climate
+        sleeper = sleeper_for_side(bed, core_climate.side)
+        super().__init__(coordinator, bed, sleeper, CORE_CLIMATE)
+        self._async_update_attrs()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update entity attributes."""
+        sleepiq_option = CoreTemps(self.core_climate.temperature)
+        self._attr_current_option = self.SLEEPIQ_TO_HA_CORE_TEMP_MAP[sleepiq_option]
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the current preset."""
+        temperature = self.HA_TO_SLEEPIQ_CORE_TEMP_MAP[option]
+        timer = self.core_climate.timer or 240
+
+        if temperature == CoreTemps.OFF:
+            await self.core_climate.turn_off()
+        else:
+            await self.core_climate.turn_on(temperature, timer)
 
         self._attr_current_option = option
         await self.coordinator.async_request_refresh()

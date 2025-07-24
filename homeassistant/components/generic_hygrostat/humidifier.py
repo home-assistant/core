@@ -42,8 +42,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_report_event,
@@ -94,7 +97,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
 
@@ -116,7 +119,7 @@ async def _async_setup_config(
     hass: HomeAssistant,
     config: Mapping[str, Any],
     unique_id: str | None,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
@@ -142,22 +145,22 @@ async def _async_setup_config(
         [
             GenericHygrostat(
                 hass,
-                name,
-                switch_entity_id,
-                sensor_entity_id,
-                min_humidity,
-                max_humidity,
-                target_humidity,
-                device_class,
-                min_cycle_duration,
-                dry_tolerance,
-                wet_tolerance,
-                keep_alive,
-                initial_state,
-                away_humidity,
-                away_fixed,
-                sensor_stale_duration,
-                unique_id,
+                name=name,
+                switch_entity_id=switch_entity_id,
+                sensor_entity_id=sensor_entity_id,
+                min_humidity=min_humidity,
+                max_humidity=max_humidity,
+                target_humidity=target_humidity,
+                device_class=device_class,
+                min_cycle_duration=min_cycle_duration,
+                dry_tolerance=dry_tolerance,
+                wet_tolerance=wet_tolerance,
+                keep_alive=keep_alive,
+                initial_state=initial_state,
+                away_humidity=away_humidity,
+                away_fixed=away_fixed,
+                sensor_stale_duration=sensor_stale_duration,
+                unique_id=unique_id,
             )
         ]
     )
@@ -171,6 +174,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
@@ -192,7 +196,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
-        self._attr_device_info = async_device_info_to_link_from_entity(
+        self.device_entry = async_entity_id_to_device(
             hass,
             switch_entity_id,
         )

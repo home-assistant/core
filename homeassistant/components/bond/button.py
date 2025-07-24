@@ -8,7 +8,7 @@ from bond_async import Action
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .entity import BondEntity
@@ -89,6 +89,13 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         name="Start Dimmer",
         translation_key="start_dimmer",
         mutually_exclusive=Action.SET_BRIGHTNESS,
+        argument=None,
+    ),
+    BondButtonEntityDescription(
+        key=Action.TOGGLE_LIGHT_TEMP,
+        name="Toggle Light Temperature",
+        translation_key="toggle_light_temp",
+        mutually_exclusive=None,  # No mutually exclusive action
         argument=None,
     ),
     BondButtonEntityDescription(
@@ -257,7 +264,7 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond button devices."""
     data = entry.runtime_data

@@ -11,7 +11,7 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -44,8 +44,8 @@ async def async_set_work_area_cutting_height(
 ) -> None:
     """Set cutting height for work area."""
     await coordinator.api.commands.workarea_settings(
-        mower_id, int(cheight), work_area_id
-    )
+        mower_id, work_area_id
+    ).cutting_height(cutting_height=int(cheight))
 
 
 async def async_set_cutting_height(
@@ -107,7 +107,7 @@ WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number platform."""
     coordinator = entry.runtime_data

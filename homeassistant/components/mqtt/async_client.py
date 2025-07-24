@@ -6,7 +6,14 @@ from functools import lru_cache
 from types import TracebackType
 from typing import Self
 
-from paho.mqtt.client import Client as MQTTClient
+from paho.mqtt.client import (
+    CallbackOnConnect_v2,
+    CallbackOnDisconnect_v2,
+    CallbackOnPublish_v2,
+    CallbackOnSubscribe_v2,
+    CallbackOnUnsubscribe_v2,
+    Client as MQTTClient,
+)
 
 _MQTT_LOCK_COUNT = 7
 
@@ -44,6 +51,12 @@ class AsyncMQTTClient(MQTTClient):
     that is not needed since we are running in an async event loop.
     """
 
+    on_connect: CallbackOnConnect_v2
+    on_disconnect: CallbackOnDisconnect_v2
+    on_publish: CallbackOnPublish_v2
+    on_subscribe: CallbackOnSubscribe_v2
+    on_unsubscribe: CallbackOnUnsubscribe_v2
+
     def setup(self) -> None:
         """Set up the client.
 
@@ -51,10 +64,10 @@ class AsyncMQTTClient(MQTTClient):
         since the client is running in an async event loop
         and will never run in multiple threads.
         """
-        self._in_callback_mutex = NullLock()
-        self._callback_mutex = NullLock()
-        self._msgtime_mutex = NullLock()
-        self._out_message_mutex = NullLock()
-        self._in_message_mutex = NullLock()
-        self._reconnect_delay_mutex = NullLock()
-        self._mid_generate_mutex = NullLock()
+        self._in_callback_mutex = NullLock()  # type: ignore[assignment]
+        self._callback_mutex = NullLock()  # type: ignore[assignment]
+        self._msgtime_mutex = NullLock()  # type: ignore[assignment]
+        self._out_message_mutex = NullLock()  # type: ignore[assignment]
+        self._in_message_mutex = NullLock()  # type: ignore[assignment]
+        self._reconnect_delay_mutex = NullLock()  # type: ignore[assignment]
+        self._mid_generate_mutex = NullLock()  # type: ignore[assignment]

@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
-from .coordinator import MillDataUpdateCoordinator
+from .coordinator import MillDataUpdateCoordinator, MillHistoricDataUpdateCoordinator
 
 PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
 
@@ -41,15 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         key = entry.data[CONF_USERNAME]
         conn_type = CLOUD
 
+        historic_data_coordinator = MillHistoricDataUpdateCoordinator(
+            hass,
+            mill_data_connection=mill_data_connection,
+        )
+        historic_data_coordinator.async_add_listener(lambda: None)
+        await historic_data_coordinator.async_config_entry_first_refresh()
     try:
         if not await mill_data_connection.connect():
             raise ConfigEntryNotReady
     except TimeoutError as error:
         raise ConfigEntryNotReady from error
     data_coordinator = MillDataUpdateCoordinator(
-        hass,
-        mill_data_connection=mill_data_connection,
-        update_interval=update_interval,
+        hass, entry, mill_data_connection, update_interval
     )
 
     await data_coordinator.async_config_entry_first_refresh()

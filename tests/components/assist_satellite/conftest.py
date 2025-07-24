@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
-    DOMAIN as AS_DOMAIN,
+    DOMAIN,
     AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
@@ -15,6 +15,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
@@ -39,6 +40,8 @@ def mock_tts(mock_tts_cache_dir: pathlib.Path) -> None:
 
 class MockAssistSatellite(AssistSatelliteEntity):
     """Mock Assist Satellite Entity."""
+
+    _attr_tts_options = {"test-option": "test-value"}
 
     def __init__(self, name: str, features: AssistSatelliteEntityFeature) -> None:
         """Initialize the mock entity."""
@@ -67,6 +70,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
             active_wake_words=["1234"],
             max_active_wake_words=1,
         )
+        self.start_conversations = []
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
@@ -87,11 +91,23 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Set the current satellite configuration."""
         self.config = config
 
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteConfiguration
+    ) -> None:
+        """Start a conversation from the satellite."""
+        self.start_conversations.append(
+            (self._conversation_id, self._extra_system_prompt, start_announcement)
+        )
+
 
 @pytest.fixture
 def entity() -> MockAssistSatellite:
     """Mock Assist Satellite Entity."""
-    return MockAssistSatellite("Test Entity", AssistSatelliteEntityFeature.ANNOUNCE)
+    return MockAssistSatellite(
+        "Test Entity",
+        AssistSatelliteEntityFeature.ANNOUNCE
+        | AssistSatelliteEntityFeature.START_CONVERSATION,
+    )
 
 
 @pytest.fixture
@@ -129,14 +145,18 @@ async def init_components(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [AS_DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.ASSIST_SATELLITE]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, AS_DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, Platform.ASSIST_SATELLITE
+        )
         return True
 
     mock_integration(
@@ -148,7 +168,7 @@ async def init_components(
         ),
     )
     setup_test_component_platform(
-        hass, AS_DOMAIN, [entity, entity2, entity_no_features], from_config_entry=True
+        hass, DOMAIN, [entity, entity2, entity_no_features], from_config_entry=True
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", Mock())
 

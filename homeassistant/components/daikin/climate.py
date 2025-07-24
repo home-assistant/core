@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_INSIDE_TEMPERATURE,
@@ -83,7 +83,7 @@ DAIKIN_ATTR_ADVANCED = "adv"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DaikinConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = entry.runtime_data
