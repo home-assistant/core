@@ -127,7 +127,25 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
             {
                 "program_id": item["programId"],
                 "program": item["program"],
-                "parameters": item.get("parameters", {}),
+                "parameters": {
+                    "temperature": {
+                        "min": item["parameters"]["temperature"]["min"],
+                        "max": item["parameters"]["temperature"]["max"],
+                        "step": item["parameters"]["temperature"]["step"],
+                        "mandatory": item["parameters"]["temperature"]["mandatory"],
+                    }
+                    if "temperature" in item["parameters"]
+                    else {},
+                    "duration": {
+                        "min": item["parameters"]["duration"]["min"],
+                        "max": item["parameters"]["duration"]["max"],
+                        "mandatory": item["parameters"]["duration"]["mandatory"],
+                    }
+                    if "duration" in item["parameters"]
+                    else {},
+                }
+                if item["parameters"]
+                else {},
             }
             for item in programs
         ],
