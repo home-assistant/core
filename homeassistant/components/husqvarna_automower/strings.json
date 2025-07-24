@@ -213,6 +213,14 @@
           "zone_generator_problem": "Zone generator problem"
         }
       },
+      "inactive_reason": {
+        "name": "Inactive reason",
+        "state": {
+          "none": "No inactivity",
+          "planning": "Planning",
+          "searching_for_satellites": "Searching for satellites"
+        }
+      },
       "my_lawn_last_time_completed": {
         "name": "My lawn last time completed"
       },

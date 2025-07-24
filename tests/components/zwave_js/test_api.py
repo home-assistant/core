@@ -2520,7 +2520,7 @@ async def test_subscribe_rebuild_routes_progress(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
@@ -2564,7 +2564,7 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
