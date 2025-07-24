@@ -1,7 +1,6 @@
 """Airthings test configuration."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 from airthings import Airthings, AirthingsDevice
@@ -10,7 +9,7 @@ import pytest
 from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
 from homeassistant.const import CONF_ID
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -27,15 +26,19 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(params=["view_plus", "wave_plus", "wave_enhance"])
-def mock_airthings_device(
+def airthings_fixture(
     request: pytest.FixtureRequest,
-) -> AirthingsDevice:
+) -> str:
+    """Return the fixture name for Airthings device types."""
+    return request.param
+
+
+@pytest.fixture
+def mock_airthings_device(airthings_fixture: str) -> AirthingsDevice:
     """Mock an Airthings device."""
-
-    device_as_json_string = load_fixture(f"device_{request.param}.json", DOMAIN)
-    device_as_json = json.loads(device_as_json_string)
-
-    return AirthingsDevice(**device_as_json)
+    return AirthingsDevice(
+        **load_json_object_fixture(f"device_{airthings_fixture}.json", DOMAIN)
+    )
 
 
 @pytest.fixture
@@ -43,16 +46,10 @@ def mock_airthings_client(
     mock_airthings_device: AirthingsDevice, mock_airthings_token: AsyncMock
 ) -> Generator[Airthings]:
     """Mock an Airthings client."""
-    with (
-        patch(
-            "homeassistant.components.airthings.Airthings",
-            autospec=True,
-        ) as mock_airthings,
-        patch(
-            "homeassistant.components.airthings.config_flow.airthings.get_token",
-            return_value="test_token",
-        ),
-    ):
+    with patch(
+        "homeassistant.components.airthings.Airthings",
+        autospec=True,
+    ) as mock_airthings:
         client = mock_airthings.return_value
         client.update_devices.return_value = {
             mock_airthings_device.device_id: mock_airthings_device
