@@ -83,8 +83,8 @@ async def test_select_option(
             "entity_id": entity_id,
             "option": "forward",
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "control_back_mode", "value": "forward"}]
     )
