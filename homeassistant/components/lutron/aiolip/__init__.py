@@ -50,7 +50,7 @@ class LIP:
         """Create the LIP class."""
         self.connection_state = LIPConnectionState.NOT_CONNECTED
         self._controller_type = None
-        self._lip = None
+        self._socket = None
         self._host = None
         self._parser = LIPParser()
         self._read_connect_lock = asyncio.Lock()
@@ -102,17 +102,17 @@ class LIP:
             ),
             timeout=CONNECT_TIMEOUT,
         )
-        self._lip = LIPSocket(reader, writer)
+        self._socket = LIPSocket(reader, writer)
         _verify_expected_response(
-            await self._lip.async_readuntil(" "), LIP_PROTOCOL_LOGIN
+            await self._socket.async_readuntil(" "), LIP_PROTOCOL_LOGIN
         )
-        await self._lip.async_write_command(LIP_USERNAME)
+        await self._socket.async_write_command(LIP_USERNAME)
         _verify_expected_response(
-            await self._lip.async_readuntil(" "), LIP_PROTOCOL_PASSWORD
+            await self._socket.async_readuntil(" "), LIP_PROTOCOL_PASSWORD
         )
-        await self._lip.async_write_command(LIP_PASSWORD)
+        await self._socket.async_write_command(LIP_PASSWORD)
 
-        controller_type = await self._lip.async_readuntil(" ")
+        controller_type = await self._socket.async_readuntil(" ")
 
         _verify_expected_response(controller_type, LIP_PROTOCOL_GENERIC_NET)
 
@@ -134,9 +134,9 @@ class LIP:
         if self._reconnecting_event.is_set():
             return
 
-        if self._lip:
-            self._lip.close()
-            self._lip = None
+        if self._socket:
+            self._socket.close()
+            self._socket = None
 
         self._reconnecting_event.set()
         async with self._read_connect_lock:
@@ -158,13 +158,13 @@ class LIP:
         if self._keep_alive_task:
             self._keep_alive_task.cancel()
             self._keep_alive_task = None
-        self._lip.close()
+        self._socket.close()
 
     async def _async_keep_alive_or_reconnect(self):
         """Keep alive or reconnect."""
         connection_error = False
         try:
-            await self._lip.async_write_command(LIP_KEEP_ALIVE)
+            await self._socket.async_write_command(LIP_KEEP_ALIVE)
         except (TimeoutError, ConnectionResetError) as ex:
             _LOGGER.debug("Lutron bridge disconnected: %s", ex)
             connection_error = True
@@ -206,7 +206,7 @@ class LIP:
     async def _async_run_once(self):
         """Process one message or event."""
         async with self._read_connect_lock:
-            read_task = asyncio.create_task(self._lip.async_readline())
+            read_task = asyncio.create_task(self._socket.async_readline())
             disconnect_task = asyncio.create_task(self._disconnect_event.wait())
             reconnecting_task = asyncio.create_task(self._reconnecting_event.wait())
 
@@ -278,7 +278,7 @@ class LIP:
 
         request = ",".join([mode.name, *[str(key) for key in cmd]])
         _LOGGER.debug("Outgoing message:%s-%s", protocol_header, request)
-        await self._lip.async_write_command(f"{protocol_header}{request}")
+        await self._socket.async_write_command(f"{protocol_header}{request}")
 
 
 def _verify_expected_response(received, expected):
