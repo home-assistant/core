@@ -1,11 +1,10 @@
 """Setup the Reolink tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
-from reolink_aio.baichuan import Baichuan
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -91,6 +90,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.expire_session = AsyncMock()
     host_mock.set_volume = AsyncMock()
     host_mock.set_hub_audio = AsyncMock()
+    host_mock.play_quick_reply = AsyncMock()
+    host_mock.update_firmware = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.mac_address = TEST_MAC
@@ -155,6 +156,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.recording_packing_time = "60 Minutes"
 
     # Baichuan
+    host_mock.baichuan = MagicMock()
     host_mock.baichuan_only = False
     # Disable tcp push by default for tests
     host_mock.baichuan.port = TEST_BC_PORT
@@ -163,6 +165,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.unsubscribe_events = AsyncMock()
     host_mock.baichuan.check_subscribe_events = AsyncMock()
     host_mock.baichuan.get_privacy_mode = AsyncMock()
+    host_mock.baichuan.set_privacy_mode = AsyncMock()
+    host_mock.baichuan.set_scene = AsyncMock()
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
@@ -180,38 +184,20 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
 
 
-@pytest.fixture(scope="module")
-def reolink_connect_class() -> Generator[MagicMock]:
+@pytest.fixture
+def reolink_host_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
-    with (
-        patch(
-            "homeassistant.components.reolink.host.Host", autospec=True
-        ) as host_mock_class,
-    ):
-        host_mock = host_mock_class.return_value
-        host_mock.baichuan = create_autospec(Baichuan)
-        _init_host_mock(host_mock)
+    with patch(
+        "homeassistant.components.reolink.host.Host", autospec=False
+    ) as host_mock_class:
+        _init_host_mock(host_mock_class.return_value)
         yield host_mock_class
 
 
 @pytest.fixture
-def reolink_connect(
-    reolink_connect_class: MagicMock,
-) -> Generator[MagicMock]:
-    """Mock reolink connection."""
-    return reolink_connect_class.return_value
-
-
-@pytest.fixture
-def reolink_host() -> Generator[MagicMock]:
+def reolink_host(reolink_host_class: MagicMock) -> Generator[MagicMock]:
     """Mock reolink Host class."""
-    with patch(
-        "homeassistant.components.reolink.host.Host", autospec=False
-    ) as host_mock_class:
-        host_mock = host_mock_class.return_value
-        host_mock.baichuan = MagicMock()
-        _init_host_mock(host_mock)
-        yield host_mock
+    return reolink_host_class.return_value
 
 
 @pytest.fixture
