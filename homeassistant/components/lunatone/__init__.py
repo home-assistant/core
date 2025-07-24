@@ -29,8 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     info = Info(auth)
     devices = Devices(auth)
 
+    coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info)
+    await coordinator_info.async_config_entry_first_refresh()
+
+    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
+    await coordinator_devices.async_config_entry_first_refresh()
+
     if entry.unique_id is not None:
-        await info.async_update()
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -40,12 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
             sw_version=info.version,
             configuration_url=entry.data[CONF_URL],
         )
-
-    coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info)
-    await coordinator_info.async_config_entry_first_refresh()
-
-    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
-    await coordinator_devices.async_config_entry_first_refresh()
 
     entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
