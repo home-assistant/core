@@ -1,13 +1,13 @@
 """Test the Immich services."""
 
-from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioimmich.exceptions import ImmichError, ImmichNotFoundError
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.immich.services import SERVICE_UPLOAD_FILE
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -34,26 +34,24 @@ async def test_upload_file(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_media_source: Mock,
 ) -> None:
     """Test upload_file service."""
-    hass.config.allowlist_external_dirs = {tmp_path}
-    test_file = tmp_path / "image.png"
-    test_file.write_bytes(b"abcdef")
-
     await setup_integration(hass, mock_config_entry)
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPLOAD_FILE,
         {
             "config_entry_id": mock_config_entry.entry_id,
-            "file": test_file.as_posix(),
+            "file": {
+                "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                "media_content_type": "image/jpeg",
+            },
         },
         blocking=True,
     )
 
-    mock_immich.assets.async_upload_asset.assert_called_with(test_file.as_posix())
+    mock_immich.assets.async_upload_asset.assert_called_with("/media/screenshot.jpg")
     mock_immich.albums.async_get_album_info.assert_not_called()
     mock_immich.albums.async_add_assets_to_album.assert_not_called()
 
@@ -62,13 +60,9 @@ async def test_upload_file_to_album(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_media_source: Mock,
 ) -> None:
     """Test upload_file service with target album_id."""
-    hass.config.allowlist_external_dirs = {tmp_path}
-    test_file = tmp_path / "image.png"
-    test_file.write_bytes(b"abcdef")
-
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -76,13 +70,16 @@ async def test_upload_file_to_album(
         SERVICE_UPLOAD_FILE,
         {
             "config_entry_id": mock_config_entry.entry_id,
-            "file": test_file.as_posix(),
+            "file": {
+                "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                "media_content_type": "image/jpeg",
+            },
             "album_id": "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
         },
         blocking=True,
     )
 
-    mock_immich.assets.async_upload_asset.assert_called_with(test_file.as_posix())
+    mock_immich.assets.async_upload_asset.assert_called_with("/media/screenshot.jpg")
     mock_immich.albums.async_get_album_info.assert_called_with(
         "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6", True
     )
@@ -105,7 +102,10 @@ async def test_upload_file_config_entry_not_found(
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": "unknown_entry",
-                "file": "blabla",
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
             },
             blocking=True,
         )
@@ -126,54 +126,46 @@ async def test_upload_file_config_entry_not_loaded(
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": "blabla",
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
             },
             blocking=True,
         )
 
 
-async def test_upload_file_path_not_allowed(
+async def test_upload_file_only_local_media_supported(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
+    mock_media_source: Mock,
 ) -> None:
-    """Test upload_file service raising path_not_allowed."""
-    hass.config.allowlist_external_dirs = {}
+    """Test upload_file service raising only_local_media_supported."""
     await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Cannot read `/blabla/not_existing.file`, no access to path;",
+    with (
+        patch(
+            "homeassistant.components.immich.services.async_resolve_media",
+            return_value=PlayMedia(
+                url="media-source://media_source/camera/some_entity_id",
+                mime_type="image/jpeg",
+                path=None,  # Simulate non-local media
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+            match="Only local media files are currently supported",
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": "/blabla/not_existing.file",
-            },
-            blocking=True,
-        )
-
-
-async def test_upload_file_file_not_found(
-    hass: HomeAssistant,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test upload_file service raising file_not_found."""
-    hass.config.allowlist_external_dirs = {"/blabla"}
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(
-        ServiceValidationError, match="File `/blabla/not_existing.file` not found"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_UPLOAD_FILE,
-            {
-                "config_entry_id": mock_config_entry.entry_id,
-                "file": "/blabla/not_existing.file",
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
             },
             blocking=True,
         )
@@ -183,13 +175,9 @@ async def test_upload_file_album_not_found(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_media_source: Mock,
 ) -> None:
     """Test upload_file service raising album_not_found."""
-    hass.config.allowlist_external_dirs = {tmp_path}
-    test_file = tmp_path / "image.png"
-    test_file.write_bytes(b"abcdef")
-
     await setup_integration(hass, mock_config_entry)
 
     mock_immich.albums.async_get_album_info.side_effect = ImmichNotFoundError(
@@ -210,7 +198,10 @@ async def test_upload_file_album_not_found(
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": test_file.as_posix(),
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
                 "album_id": "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
             },
             blocking=True,
@@ -221,13 +212,9 @@ async def test_upload_file_upload_failed(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_media_source: Mock,
 ) -> None:
     """Test upload_file service raising upload_failed."""
-    hass.config.allowlist_external_dirs = {tmp_path}
-    test_file = tmp_path / "image.png"
-    test_file.write_bytes(b"abcdef")
-
     await setup_integration(hass, mock_config_entry)
 
     mock_immich.assets.async_upload_asset.side_effect = ImmichError(
@@ -239,14 +226,17 @@ async def test_upload_file_upload_failed(
         }
     )
     with pytest.raises(
-        ServiceValidationError, match=f"Upload of file `{test_file.as_posix()}` failed"
+        ServiceValidationError, match="Upload of file `/media/screenshot.jpg` failed"
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": test_file.as_posix(),
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
             },
             blocking=True,
         )
@@ -256,13 +246,9 @@ async def test_upload_file_to_album_upload_failed(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_media_source: Mock,
 ) -> None:
     """Test upload_file service with target album_id raising upload_failed."""
-    hass.config.allowlist_external_dirs = {tmp_path}
-    test_file = tmp_path / "image.png"
-    test_file.write_bytes(b"abcdef")
-
     await setup_integration(hass, mock_config_entry)
 
     mock_immich.albums.async_add_assets_to_album.side_effect = ImmichError(
@@ -274,14 +260,17 @@ async def test_upload_file_to_album_upload_failed(
         }
     )
     with pytest.raises(
-        ServiceValidationError, match=f"Upload of file `{test_file.as_posix()}` failed"
+        ServiceValidationError, match="Upload of file `/media/screenshot.jpg` failed"
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": test_file.as_posix(),
+                "file": {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
                 "album_id": "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
             },
             blocking=True,

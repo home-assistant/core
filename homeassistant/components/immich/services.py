@@ -1,14 +1,15 @@
 """Services for the Immich integration."""
 
 import logging
-import os.path
 
 from aioimmich.exceptions import ImmichError
 import voluptuous as vol
 
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.selector import MediaSelector
 
 from .const import DOMAIN
 from .coordinator import ImmichConfigEntry
@@ -23,7 +24,7 @@ SERVICE_UPLOAD_FILE = "upload_file"
 SERVICE_SCHEMA_UPLOAD_FILE = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): str,
-        vol.Required(CONF_FILE): str,
+        vol.Required(CONF_FILE): MediaSelector({"accept": ["image/*", "video/*"]}),
         vol.Optional(CONF_ALBUM_ID): str,
     }
 )
@@ -40,7 +41,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
     target_entry: ImmichConfigEntry | None = hass.config_entries.async_get_entry(
         service_call.data[CONF_CONFIG_ENTRY_ID]
     )
-    target_file = service_call.data[CONF_FILE]
+    source_media_id = service_call.data[CONF_FILE]["media_content_id"]
 
     if not target_entry:
         raise ServiceValidationError(
@@ -54,18 +55,10 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             translation_key="config_entry_not_loaded",
         )
 
-    if not hass.config.is_allowed_path(target_file):
+    media = await async_resolve_media(hass, source_media_id, None)
+    if media.path is None:
         raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="path_not_allowed",
-            translation_placeholders={"file": target_file},
-        )
-
-    if not os.path.isfile(target_file):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="file_not_found",
-            translation_placeholders={"file": target_file},
+            translation_domain=DOMAIN, translation_key="only_local_media_supported"
         )
 
     coordinator = target_entry.runtime_data
@@ -81,7 +74,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             ) from ex
 
     try:
-        upload_result = await coordinator.api.assets.async_upload_asset(target_file)
+        upload_result = await coordinator.api.assets.async_upload_asset(str(media.path))
         if target_album:
             await coordinator.api.albums.async_add_assets_to_album(
                 target_album, [upload_result.asset_id]
@@ -90,7 +83,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="upload_failed",
-            translation_placeholders={"file": target_file, "error": str(ex)},
+            translation_placeholders={"file": str(media.path), "error": str(ex)},
         ) from ex
 
 

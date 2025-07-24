@@ -102,11 +102,8 @@
     "config_entry_not_loaded": {
       "message": "Config entry not loaded."
     },
-    "path_not_allowed": {
-      "message": "Cannot read `{file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
-    },
-    "file_not_found": {
-      "message": "File `{file}` not found."
+    "only_local_media_supported": {
+      "message": "Only local media files are currently supported."
     },
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."

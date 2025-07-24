@@ -8,7 +8,10 @@ upload_file:
     file:
       required: true
       selector:
-        text:
+        media:
+          accept:
+            - image/*
+            - video/*
     album_id:
       required: false
       selector:
