@@ -30,6 +30,7 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
+    ProtectSensorEntityDescription,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -56,7 +57,7 @@ from .utils import (
 from tests.common import async_capture_events
 
 
-def get_sensor_by_key(sensors: tuple, key: str):
+def get_sensor_by_key(sensors: tuple, key: str) -> ProtectSensorEntityDescription:
     """Get sensor description by key."""
     for sensor in sensors:
         if sensor.key == key:
@@ -405,7 +406,7 @@ async def test_sensor_setup_camera(
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR,
         doorbell,
-        get_sensor_by_key(ALL_DEVICES_SENSORS, "wifi_signal_strength"),
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "wifi_signal"),
     )
 
     entity = entity_registry.async_get(entity_id)
