@@ -22,6 +22,7 @@ from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -40,7 +41,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DATA = "data"
 ATTR_PATH = "path"
 ATTR_PATH_TEMPLATE = "path_template"
 ATTR_TIMEOUT = "timeout"
