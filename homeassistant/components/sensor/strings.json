@@ -2,6 +2,7 @@
   "title": "Sensor",
   "device_automation": {
     "condition_type": {
+      "is_absolute_humidity": "Current {entity_name} absolute humidity",
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
       "is_area": "Current {entity_name} area",
@@ -57,6 +58,7 @@
       "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
+      "absolute_humidity": "{entity_name} absolute humidity changes",
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
       "area": "{entity_name} area changes",
@@ -147,6 +149,9 @@
     },
     "duration": {
       "name": "Duration"
+    },
+    "absolute_humidity": {
+      "name": "Absolute humidity"
     },
     "apparent_power": {
       "name": "Apparent power"
