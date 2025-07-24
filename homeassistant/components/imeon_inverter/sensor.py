@@ -443,11 +443,8 @@ class InverterSensor(InverterEntity, SensorEntity):
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
         raw_value = self.coordinator.data.get(self.data_key)
-        if not isinstance(raw_value, str):
-            return raw_value
-        return {"???": "unknown"}.get(raw_value, raw_value)
 
-    @property
-    def icon(self) -> str | None:
-        """Set the icon."""
-        return super().icon
+        if isinstance(raw_value, str):
+            return None
+
+        return raw_value

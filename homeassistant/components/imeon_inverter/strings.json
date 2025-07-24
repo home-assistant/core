@@ -41,15 +41,6 @@
           "charged": "Charged",
           "charging": "[%key:common::state::charging%]",
           "discharging": "[%key:common::state::discharging%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "charged": "[%key:component::imeon_inverter::entity::sensor::battery_status::state::charged%]",
-              "charging": "[%key:common::state::charging%]",
-              "discharging": "[%key:common::state::discharging%]"
-            }
-          }
         }
       },
       "battery_stored": {
@@ -104,16 +95,6 @@
           "grid_consumption": "Grid consumption",
           "grid_injection": "Grid injection",
           "grid_synchronised_but_not_used": "Grid unsynchronized but used"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "unsynchronized": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::unsynchronized%]",
-              "grid_consumption": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_consumption%]",
-              "grid_injection": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_injection%]",
-              "grid_synchronised_but_not_used": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_synchronised_but_not_used%]"
-            }
-          }
         }
       },
       "meter_power": {
@@ -212,27 +193,6 @@
           "info_ond": "Inverter information available. Please refer to your monitoring panel.",
           "info_bat": "Battery information available. Please refer to your monitoring panel.",
           "info_smartlo": "Smart load information available. Please refer to your monitoring panel."
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "com_lost": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::com_lost%]",
-              "warning_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_grid%]",
-              "warning_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_pv%]",
-              "warning_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_bat%]",
-              "error_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_ond%]",
-              "error_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_soft%]",
-              "error_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_pv%]",
-              "error_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_grid%]",
-              "error_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_bat%]",
-              "good_1": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "web_account": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::web_account%]",
-              "info_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_soft%]",
-              "info_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_ond%]",
-              "info_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_bat%]",
-              "info_smartlo": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_smartlo%]"
-            }
-          }
         }
       },
       "energy_pv": {
