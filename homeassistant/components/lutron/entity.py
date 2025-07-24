@@ -139,9 +139,13 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     @property
     def device_name(self) -> str:
-        """Return the device name for keypad components, which is the keypad.device_name."""
+        """Return the device name for keypad components, which we get from the keypad.
+
+        We use the device_group_name for the keypad.
+        Usually the keypad device in the DB doesn't have a meaningful name (e.g., CDS 001 for international keypads)
+        """
         if (device := self._lutron_device) is not None:
-            return device.keypad.device_name
+            return device.keypad.device_group_name
         return "No Name"
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call

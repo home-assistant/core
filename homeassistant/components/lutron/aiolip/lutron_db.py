@@ -167,15 +167,15 @@ class LutronXmlDbParser:
 
     def _parse_keypad(self, area, keypad_xml, device_group, device_type):
         """Parse a keypad device (the Visor receiver is technically a keypad too)."""
-        # in HW the keypad standard name is CSD 001, we use the integration ID name instead
+        # in HWs the keypad standard name is CSD 001
         # Note that device_group.get('Name') is the real name of the keypad and motion sensor
         name = keypad_xml.get("Name")
-        if keypad_xml.get("Name") == "CSD 001":
-            name = f"keypad {keypad_xml.get('IntegrationID')}"
+        device_group_name = device_group.get("Name")
         keypad = Keypad(
             area=area,
             name=name,
             device_type=device_type,
+            device_group_name=device_group_name,
             integration_id=int(keypad_xml.get("IntegrationID")),
             uuid=keypad_xml.get("UUID"),
         )
@@ -492,6 +492,7 @@ class Keypad(Device):
     """Object representing a Lutron keypad."""
 
     device_type: str | None = None
+    device_group_name: str | None = None
     buttons: list = field(default_factory=list)
     leds: list = field(default_factory=list)
     components: dict[int, Any] = field(default_factory=dict, repr=False)
