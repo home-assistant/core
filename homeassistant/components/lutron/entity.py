@@ -7,8 +7,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import LutronController
-from .aiolip import Device, KeypadComponent, Output, Sysvar
+from .aiolip import Device, KeypadComponent, LutronController, Output, Sysvar
 from .const import DOMAIN
 
 

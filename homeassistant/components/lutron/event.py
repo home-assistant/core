@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronController, LutronData
-from .aiolip import Button
+from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronData
+from .aiolip import Button, LutronController
 from .entity import LutronKeypadComponent
 
 

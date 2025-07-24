@@ -23,8 +23,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, LutronController, LutronData
-from .aiolip import Device, Output
+from . import DOMAIN, LutronData
+from .aiolip import Device, LutronController, Output
 from .entity import LutronOutput
 from .travelcalculator import TravelCalculator, TravelStatus
 

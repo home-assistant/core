@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CONF_USE_RADIORA_MODE, DOMAIN, LIPLedState, LutronController, LutronData
-from .aiolip import Led, Output
+from . import CONF_USE_RADIORA_MODE, DOMAIN, LutronData
+from .aiolip import Led, LIPLedState, LutronController, Output
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
 from .entity import LutronKeypadComponent, LutronOutput
 

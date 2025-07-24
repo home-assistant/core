@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronController, LutronData
-from .aiolip import Sysvar
+from . import DOMAIN, LutronData
+from .aiolip import LutronController, Sysvar
 from .entity import LutronVariable
 
 _LOGGER = logging.getLogger(__name__)
