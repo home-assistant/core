@@ -71,7 +71,6 @@ async def async_setup_entry(
                 voices,
                 default_voice_id,
                 config_entry.entry_id,
-                config_entry.title,
                 voice_settings,
             )
         ]
@@ -83,6 +82,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
     _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
+    _attr_translation_key = "elevenlabs_tts"
 
     def __init__(
         self,
@@ -91,7 +92,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         voices: list[ElevenLabsVoice],
         default_voice_id: str,
         entry_id: str,
-        title: str,
         voice_settings: VoiceSettings,
     ) -> None:
         """Init ElevenLabs TTS service."""
@@ -112,11 +112,11 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
         # Entity attributes
         self._attr_unique_id = entry_id
-        self._attr_name = title
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             manufacturer="ElevenLabs",
             model=model.name,
+            name="ElevenLabs",
             entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_supported_languages = [
