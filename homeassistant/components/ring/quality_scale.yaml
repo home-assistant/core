@@ -27,7 +27,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions: done
+  action-exceptions: todo
   reauthentication-flow: done
   parallel-updates: done
   test-coverage: done
@@ -48,7 +48,7 @@ rules:
   discovery: done
   stale-devices: todo
   diagnostics: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   dynamic-devices: todo
