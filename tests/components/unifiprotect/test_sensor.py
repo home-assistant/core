@@ -55,6 +55,16 @@ from .utils import (
 
 from tests.common import async_capture_events
 
+
+def get_sensor_by_key(sensors: tuple, key: str):
+    """Get sensor description by key."""
+    for sensor in sensors:
+        if sensor.key == key:
+            return sensor
+    raise ValueError(f"Sensor with key '{key}' not found")
+
+
+# Constants for test slicing (subsets of sensor tuples)
 CAMERA_SENSORS_WRITE = CAMERA_SENSORS[:5]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
@@ -123,7 +133,9 @@ async def test_sensor_setup_sensor(
 
     # BLE signal
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, ALL_DEVICES_SENSORS[1]
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "ble_signal"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -269,7 +281,7 @@ async def test_sensor_nvr_missing_values(
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
 
     # Uptime
-    description = NVR_SENSORS[0]
+    description = get_sensor_by_key(NVR_SENSORS, "uptime")
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, nvr, description
     )
@@ -285,8 +297,8 @@ async def test_sensor_nvr_missing_values(
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Memory
-    description = NVR_SENSORS[8]
+    # Recording capacity
+    description = get_sensor_by_key(NVR_SENSORS, "record_capacity")
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, nvr, description
     )
@@ -300,8 +312,8 @@ async def test_sensor_nvr_missing_values(
     assert state.state == "0"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Memory
-    description = NVR_DISABLED_SENSORS[2]
+    # Memory utilization
+    description = get_sensor_by_key(NVR_DISABLED_SENSORS, "memory_utilization")
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, nvr, description
     )
@@ -372,9 +384,9 @@ async def test_sensor_setup_camera(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Wired signal
+    # Wired signal (phy_rate / link speed)
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, ALL_DEVICES_SENSORS[2]
+        Platform.SENSOR, doorbell, get_sensor_by_key(ALL_DEVICES_SENSORS, "phy_rate")
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -391,7 +403,9 @@ async def test_sensor_setup_camera(
 
     # WiFi signal
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, ALL_DEVICES_SENSORS[3]
+        Platform.SENSOR,
+        doorbell,
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "wifi_signal_strength"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -422,7 +436,9 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, MOTION_TRIP_SENSORS[0]
+        Platform.SENSOR,
+        doorbell,
+        get_sensor_by_key(MOTION_TRIP_SENSORS, "motion_last_trip_time"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -447,7 +463,7 @@ async def test_sensor_update_alarm(
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[4]
+        Platform.SENSOR, sensor_all, get_sensor_by_key(SENSE_SENSORS, "alarm_sound")
     )
 
     event_metadata = EventMetadata(sensor_id=sensor_all.id, alarm_type="smoke")
@@ -498,7 +514,9 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[-3]
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "door_last_trip_time"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -529,7 +547,9 @@ async def test_camera_update_license_plate(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+        Platform.SENSOR,
+        camera,
+        get_sensor_by_key(LICENSE_PLATE_EVENT_SENSORS, "smart_obj_licenseplate"),
     )
 
     event_metadata = EventMetadata(
@@ -644,7 +664,9 @@ async def test_camera_update_license_plate_changes_number_during_detect(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+        Platform.SENSOR,
+        camera,
+        get_sensor_by_key(LICENSE_PLATE_EVENT_SENSORS, "smart_obj_licenseplate"),
     )
 
     event_metadata = EventMetadata(
@@ -731,7 +753,9 @@ async def test_camera_update_license_plate_multiple_updates(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+        Platform.SENSOR,
+        camera,
+        get_sensor_by_key(LICENSE_PLATE_EVENT_SENSORS, "smart_obj_licenseplate"),
     )
 
     event_metadata = EventMetadata(
@@ -854,7 +878,9 @@ async def test_camera_update_license_no_dupes(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+        Platform.SENSOR,
+        camera,
+        get_sensor_by_key(LICENSE_PLATE_EVENT_SENSORS, "smart_obj_licenseplate"),
     )
 
     event_metadata = EventMetadata(
@@ -946,6 +972,8 @@ async def test_sensor_precision(
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
     nvr: NVR = ufp.api.bootstrap.nvr
 
-    _, entity_id = ids_from_device_description(Platform.SENSOR, nvr, NVR_SENSORS[6])
+    _, entity_id = ids_from_device_description(
+        Platform.SENSOR, nvr, get_sensor_by_key(NVR_SENSORS, "resolution_4K")
+    )
 
     assert hass.states.get(entity_id).state == "17.49"
