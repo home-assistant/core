@@ -1,6 +1,7 @@
 """The tests for the analytics ."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
@@ -31,6 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -974,9 +976,11 @@ async def test_submitting_legacy_integrations(
 
 async def test_devices_payload(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test devices payload."""
+    assert await async_setup_component(hass, "analytics", {})
     assert async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "no_model_id": [],
@@ -1072,3 +1076,8 @@ async def test_devices_payload(
             },
         ],
     }
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == async_devices_payload(hass)
