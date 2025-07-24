@@ -268,7 +268,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.11.0
+aioimmich==0.11.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -292,7 +292,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.6
+aiomealie==0.10.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -313,7 +313,7 @@ aiontfy==0.5.3
 aionut==4.3.4
 
 # homeassistant.components.onkyo
-aioonkyo==0.2.0
+aioonkyo==0.3.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.7.2
+aioshelly==13.8.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1071,7 +1071,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.14
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.4.2
+imgw_pib==1.5.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1126,7 +1126,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.6.13.181749
+knx-frontend==2025.7.23.50952
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2161,7 +2161,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.3.0
+pywmspro==0.3.2
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2607,7 +2607,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.0.0
+yalexs-ble==3.1.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
