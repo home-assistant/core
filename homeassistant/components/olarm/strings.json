@@ -30,7 +30,7 @@
       "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
       "user_rejected_authorize": "Account linking rejected: {error}",
       "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
-      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in your Olarm account for your device"
+      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in the Olarm account for your device"
     },
     "create_entry": {
       "default": "Successfully authenticated"
