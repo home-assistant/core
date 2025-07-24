@@ -129,7 +129,7 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
             else:
                 self._assume_uncertain_position = str(state) == str(True)
 
-        travel_time_key = f"{self.entity_id}_travel_time"
+        travel_time_key = f"cover.{self._lutron_device.legacy_uuid}_travel_time"
         travel_time_value = self._config_entry.options.get(travel_time_key, 5)
         # Assign the values
         self._travel_time_up = int(travel_time_value)

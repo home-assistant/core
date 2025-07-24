@@ -21,7 +21,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
 )
-from homeassistant.util import slugify
 
 from . import LutronController, LutronData
 from .const import (
@@ -44,7 +43,7 @@ def get_lutron_covers(hass, config_entry):
     # select only is_motor and fix entity_id
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     return [
-        {"entity_id": f"cover.{slugify(device.name)}", "name": device.name}
+        {"legacy_uuid": f"cover.{device.legacy_uuid}", "name": device.name}
         for device in entry_data.covers
     ]
 
@@ -178,10 +177,21 @@ class OptionsFlowHandler(OptionsFlow):
 
         # Append per-cover travel time options
         for cover in covers:
-            entity_id = cover["entity_id"]
-            key = f"{entity_id}_travel_time"
+            legacy_uuid = cover["legacy_uuid"]
+            name = cover["name"]
+            key = f"{legacy_uuid}_travel_time"
             default = config.get(key, 10)  # 10 seconds default travel time
-            schema_dict[vol.Required(key, default=default)] = NumberSelector(
+            schema_dict[
+                vol.Required(
+                    key,
+                    default=default,
+                    description={
+                        "suggested_value": default,
+                        "identifier": key,
+                        "name": f"Travel time for {name}",
+                    },
+                )
+            ] = NumberSelector(
                 NumberSelectorConfig(min=1, max=120, mode=NumberSelectorMode.BOX)
             )
 

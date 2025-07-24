@@ -48,7 +48,7 @@ class LutronBaseEntity(Entity):
                 if not self._controller.use_full_path
                 else f"{area.location} {area.name}"
             )
-        return "Not Assigned"
+        return "No Area"
 
     @property
     def device_name(self) -> str:
