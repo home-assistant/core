@@ -1,4 +1,10 @@
 {
+  "common": {
+    "low_voltage": "Low Voltage",
+    "high_voltage": "High Voltage",
+    "starter_voltage": "Starter Voltage",
+    "midpoint_voltage": "Midpoint Voltage"
+  },
   "config": {
     "flow_title": "{title}",
     "step": {
@@ -24,6 +30,269 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_access_token": "Invalid instant readout encryption key",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_in_power": {
+        "name": "AC In Power"
+      },
+      "ac_out_power": {
+        "name": "AC Out Power"
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "no_alarm": "No alarm",
+          "low_voltage": "[%key:component::victron_ble::common::low_voltage%]",
+          "high_voltage": "[%key:component::victron_ble::common::high_voltage%]",
+          "low_soc": "Low State of Charge",
+          "low_starter_voltage": "Low Starter Voltage",
+          "high_starter_voltage": "High Starter Voltage",
+          "low_temperature": "Low Temperature",
+          "high_temperature": "High Temperature",
+          "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "overload": "Overload",
+          "dc_ripple": "DC Ripple",
+          "low_v_ac_out": "Low Voltage AC Out",
+          "high_v_ac_out": "High Voltage AC Out",
+          "short_circuit": "Short Circuit",
+          "bms_lockout": "Battery Management System Lockout"
+        }
+      },
+      "aux_mode": {
+        "name": "Aux Mode",
+        "state": {
+          "starter_voltage": "[%key:component::victron_ble::common::starter_voltage%]",
+          "midpoint_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "temperature": "Temperature Sensor"
+        }
+      },
+      "balancer_status": {
+        "name": "Balancer Status",
+        "state": {
+          "unknown": "Unknown",
+          "balanced": "Balanced",
+          "balancing": "Balancing",
+          "imbalance": "Imbalance"
+        }
+      },
+      "battery_current": {
+        "name": "Battery Current"
+      },
+      "battery_temperature": {
+        "name": "Battery Temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery Voltage"
+      },
+      "cell_1_voltage": {
+        "name": "Cell 1 Voltage"
+      },
+      "cell_2_voltage": {
+        "name": "Cell 2 Voltage"
+      },
+      "cell_3_voltage": {
+        "name": "Cell 3 Voltage"
+      },
+      "cell_4_voltage": {
+        "name": "Cell 4 Voltage"
+      },
+      "cell_5_voltage": {
+        "name": "Cell 5 Voltage"
+      },
+      "cell_6_voltage": {
+        "name": "Cell 6 Voltage"
+      },
+      "cell_7_voltage": {
+        "name": "Cell 7 Voltage"
+      },
+      "cell_8_voltage": {
+        "name": "Cell 8 Voltage"
+      },
+      "charge_state": {
+        "name": "Charge State"
+      },
+      "charger_error": {
+        "name": "Charger Error"
+      },
+      "consumped_ampere_hours": {
+        "name": "Consumed Ampere Hours"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "device_state": {
+        "name": "Device State",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low_power": "Low Power",
+          "fault": "Fault",
+          "bulk": "Bulk",
+          "absorption": "Absorption",
+          "float": "Float",
+          "storage": "Storage",
+          "equalize_manual": "Equalize Manual",
+          "inverting": "Inverting",
+          "power_supply": "Power Supply",
+          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated Absorption",
+          "recondition": "Recondition",
+          "battery_safe": "Battery Safe",
+          "active": "Active",
+          "external_control": "External Control",
+          "not_available": "Not Available"
+        }
+      },
+      "error_code": {
+        "name": "Error Code",
+        "state": {
+          "no_error": "No error",
+          "temperature_battery_high": "Battery temperature too high",
+          "voltage_high": "Battery voltage too high",
+          "remote_temperature_a": "Remote temperature sensor failure (auto-reset)",
+          "remote_temperature_b": "Remote temperature sensor failure (auto-reset)",
+          "remote_temperature_c": "Remote temperature sensor failure (not auto-reset)",
+          "remote_battery_a": "Remote battery voltage sense failure",
+          "remote_battery_b": "Remote battery voltage sense failure",
+          "remote_battery_c": "Remote battery voltage sense failure",
+          "high_ripple": "Battery high ripple voltage",
+          "temperature_battery_low": "Battery temperature too low",
+          "temperature_charger": "Charger temperature too high",
+          "over_current": "Charger over current",
+          "bulk_time": "Bulk time limit exceeded",
+          "current_sensor": "Current sensor issue",
+          "internal_temperature_a": "Internal temperature sensor failure",
+          "internal_temperature_b": "Internal temperature sensor failure",
+          "fan": "Fan failure",
+          "overheated": "Terminals overheated",
+          "short_circuit": "Charger short circuit",
+          "converter_issue": "Converter issue",
+          "over_charge": "Over-charge protection",
+          "input_voltage": "Input voltage too high (solar panel)",
+          "input_current": "Input current too high (solar panel)",
+          "input_power": "PV over-power",
+          "input_shutdown_voltage": "Input shutdown (excessive battery voltage)",
+          "input_shutdown_current": "Input shutdown (current flow during off mode)",
+          "input_shutdown_failure": "PV input failed to shutdown",
+          "inverter_shutdown_41": "Inverter shutdown (PV isolation)",
+          "inverter_shutdown_42": "Inverter shutdown (PV isolation)",
+          "inverter_shutdown_43": "Inverter shutdown (Ground fault)",
+          "inverter_overload": "Inverter overload",
+          "inverter_temperature": "Inverter temperature too high",
+          "inverter_peak_current": "Inverter peak current",
+          "inverter_ouput_voltage_a": "Inverter output voltage",
+          "inverter_ouput_voltage_b": "Inverter output voltage",
+          "inverter_self_test_a": "Inverter self test failed",
+          "inverter_self_test_b": "Inverter self test failed",
+          "inverter_ac": "Inverter AC voltage on output",
+          "inverter_self_test_c": "Inverter self test failed",
+          "communication": "Communication warning",
+          "synchronisation": "Synchronised charging device configuration issue",
+          "bms": "BMS connection lost",
+          "network_a": "Network misconfigured",
+          "network_b": "Network misconfigured",
+          "network_c": "Network misconfigured",
+          "network_d": "Network misconfigured",
+          "pv_input_shutdown_80": "PV input shutdown",
+          "pv_input_shutdown_81": "PV input shutdown",
+          "pv_input_shutdown_82": "PV input shutdown",
+          "pv_input_shutdown_83": "PV input shutdown",
+          "pv_input_shutdown_84": "PV input shutdown",
+          "pv_input_shutdown_85": "PV input shutdown",
+          "pv_input_shutdown_86": "PV input shutdown",
+          "pv_input_shutdown_87": "PV input shutdown",
+          "cpu_temperature": "CPU temperature too high",
+          "calibration_lost": "Factory calibration data lost",
+          "firmware": "Invalid or incompatible firmware",
+          "settings": "Settings data lost",
+          "tester_fail": "Tester fail",
+          "internal_dc_voltage_a": "Internal DC voltage error",
+          "internal_dc_voltage_b": "Internal DC voltage error",
+          "self_test": "PV residual current sensor self-test failure",
+          "internal_supply_a": "Internal supply voltage error",
+          "internal_supply_b": "Internal supply voltage error",
+          "internal_supply_c": "Internal supply voltage error",
+          "internal_supply_d": "Internal supply voltage error"
+        }
+      },
+      "external_device_load": {
+        "name": "External Device Load"
+      },
+      "input_voltage": {
+        "name": "Input Voltage"
+      },
+      "meter_type": {
+        "name": "Meter Type",
+        "state": {
+          "solar_charger": "Solar charger",
+          "wind_charger": "Wind charger",
+          "shaft_generator": "Shaft generator",
+          "alternator": "Alternator",
+          "fuel_cell": "Fuel cell",
+          "water_generator": "Water generator",
+          "dc_dc_charger": "DC-DC charger",
+          "ac_charger": "AC charger",
+          "generic_source": "Generic source",
+          "generic_load": "Generic load",
+          "electric_drive": "Electric drive",
+          "fridge": "Fridge",
+          "water_pump": "Water pump",
+          "bilge_pump": "Bilge pump",
+          "dc_system": "DC system",
+          "inverter": "Inverter",
+          "water_heater": "Water heater"
+        }
+      },
+      "midpoint_voltage": {
+        "name": "[%key:component::victron_ble::common::midpoint_voltage%]"
+      },
+      "off_reason": {
+        "name": "Off Reason",
+        "state": {
+          "no_reason": "No reason",
+          "no_input_power": "No input power",
+          "switched_off_switch": "Switched off by switch",
+          "switched_off_register": "Switched off by register",
+          "remote_input": "Remote input",
+          "protection_active": "Protection active",
+          "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",
+          "bms": "Battery management system",
+          "engine_shutdown": "Engine shutdown",
+          "analysing_input_voltage": "Analysing input voltage"
+        }
+      },
+      "output_state": {
+        "name": "Output State",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "output_voltage": {
+        "name": "Output Voltage"
+      },
+      "remaining_minutes": {
+        "name": "Remaining Minutes"
+      },
+      "solar_power": {
+        "name": "Solar Power"
+      },
+      "starter_voltage": {
+        "name": "[%key:component::victron_ble::common::starter_voltage%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "warning": {
+        "name": "Warning"
+      },
+      "yield_today": {
+        "name": "Yield Today"
+      }
     }
   }
 }
