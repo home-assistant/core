@@ -1041,7 +1041,7 @@ async def test_devices_payload(
 
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
-        "no_model_id": ["no_model_id"],
+        "no_model_id": [],
         "devices": [
             {
                 "manufacturer": "test-manufacturer",

@@ -443,17 +443,26 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
             continue
         devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
 
-    integrations = await async_get_integrations(hass, seen_integrations)
+    integrations = {
+        domain: integration
+        for domain, integration in (
+            await async_get_integrations(hass, seen_integrations)
+        ).items()
+        if isinstance(integration, Integration)
+    }
 
     for device_info in devices:
-        integration = integrations.get(device_info["integration"])
-        if not isinstance(integration, Integration):
-            continue
-
-        device_info["is_custom_integration"] = not integration.is_built_in
+        if integration := integrations.get(device_info["integration"]):
+            device_info["is_custom_integration"] = not integration.is_built_in
 
     return {
         "version": "home-assistant:1",
-        "no_model_id": sorted(integrations_without_model_id),
+        "no_model_id": sorted(
+            [
+                domain
+                for domain in integrations_without_model_id
+                if domain in integrations and integrations[domain].is_built_in
+            ]
+        ),
         "devices": devices,
     }
