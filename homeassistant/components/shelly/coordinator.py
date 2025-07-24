@@ -94,7 +94,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
-    rpc_zigbee_enabled: bool | None = None
+    rpc_zigbee_firmware: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -730,7 +730,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not self.sleep_period:
             if (
                 self.config_entry.runtime_data.rpc_supports_scripts
-                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+                and not self.config_entry.runtime_data.rpc_zigbee_firmware
             ):
                 await self._async_connect_ble_scanner()
         else:
