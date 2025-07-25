@@ -4,7 +4,10 @@ from datetime import datetime
 
 import pytest
 
-from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
+from homeassistant.components.here_travel_time.config_flow import (
+    DEFAULT_OPTIONS,
+    HERETravelTimeConfigFlow,
+)
 from homeassistant.components.here_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
@@ -46,6 +49,8 @@ async def test_unload_entry(hass: HomeAssistant, options) -> None:
         unique_id="0123456789",
         data=DEFAULT_CONFIG,
         options=options,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -61,9 +66,10 @@ async def test_migrate_entry_v1_1_v1_2(
     """Test successful migration of entry data."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        version=1,
         data=DEFAULT_CONFIG,
         options=DEFAULT_OPTIONS,
+        version=1,
+        minor_version=1,
     )
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
