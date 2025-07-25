@@ -15,6 +15,7 @@ from homeassistant.components.lock import (
     LockEntityFeature,
     LockState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -26,15 +27,23 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PICTURE, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -54,18 +63,24 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-LOCK_YAML_SCHEMA = vol.All(
+LOCK_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CODE_FORMAT): cv.template,
+        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+    }
+)
+
+LOCK_YAML_SCHEMA = (
     vol.Schema(
         {
-            vol.Optional(CONF_CODE_FORMAT): cv.template,
-            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+    )
+    .extend(LOCK_COMMON_SCHEMA.schema)
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
@@ -80,6 +95,10 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+
+LOCK_CONFIG_ENTRY_SCHEMA = LOCK_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -98,6 +117,35 @@ async def async_setup_platform(
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateLockEntity,
+        LOCK_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_lock(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateLockEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateLockEntity,
+        LOCK_CONFIG_ENTRY_SCHEMA,
     )
 
 

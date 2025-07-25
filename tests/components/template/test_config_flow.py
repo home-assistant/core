@@ -132,6 +132,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            "locked",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             "30.0",
@@ -295,6 +305,12 @@ async def test_config_flow(
             },
             {"verify_ssl": True},
             {"verify_ssl": True},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
         ),
         (
             "number",
@@ -490,6 +506,16 @@ async def test_config_flow_device(
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"state": "{{ states('lock.two') }}"},
+            ["locked", "unlocked"],
+            {"one": "locked", "two": "unlocked"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            "state",
         ),
         (
             "number",
@@ -1314,6 +1340,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
             {},
             {},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
         ),
         (
             "image",
