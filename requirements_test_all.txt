@@ -949,7 +949,7 @@ gps3==0.33.3
 greeclimate==2.1.0
 
 # homeassistant.components.greencell
-greencell_client==1.0.0
+greencell_client==1.0.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3

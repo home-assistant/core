@@ -3,7 +3,7 @@
 Contents:
 - EvseTypeStringEnum: base enum class generating string values from member names.
 - EvseStateEnum: valid EVSE states (IDLE, CONNECTED, WAITING_FOR_CAR, CHARGING, FINISHED, ERROR_CAR, ERROR_EVSE, UNKNOWN).
-- GreencellHaAccessLevelEnum: Home Assistant access levels (DISABLED, READ_ONLY, EXECUTE, OFFLINE).
+- GreencellHaAccessLevelEnum: Home Assistant access levels (DISABLED, READ_ONLY, EXECUTE, UNAVAILABLE).
 - DOMAIN and MANUFACTURER identifiers for the integration.
 - Default current limits: DEFAULT_MIN_CURRENT, DEFAULT_MAX_CURRENT_OTHER, DEFAULT_MAX_CURRENT_HABU_DEN.
 - MQTT topics for broadcast and discovery.
