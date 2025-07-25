@@ -35,7 +35,7 @@ from .const import (
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an SFTP Backup Storage config flow."""
 
-    def _check_pkey_and_password(self, user_input: dict) -> dict:
+    def _check_pkey_and_password(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Check if user provided either one of password or private key.
 
         Additionally, check if private key exists and make sure it starts
@@ -75,7 +75,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-        step_id="user",
+        step_id: str = "user",
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}

@@ -1,6 +1,5 @@
 """Tests for SFTP Backup Location."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.backup_sftp import SFTPConfigEntryData
@@ -8,11 +7,9 @@ from homeassistant.components.backup_sftp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import USER_INPUT
+from .conftest import USER_INPUT, ComponentSetup
 
 from tests.common import MockConfigEntry
-
-type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @patch(
@@ -51,7 +48,7 @@ async def test_setup_error(
     backup_agent_client: MagicMock,
     hass: HomeAssistant,
     async_cm_mock: AsyncMock,
-    setup_integration: Callable,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Test setup error."""
     backup_agent_client.return_value = async_cm_mock

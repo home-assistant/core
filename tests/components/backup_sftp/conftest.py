@@ -70,7 +70,7 @@ class AsyncFileIteratorMock:
         return chunk
 
 
-def create_tar_bytes(files: dict) -> bytes:
+def create_tar_bytes(files: dict[str, str | bytes]) -> bytes:
     """Create an in-memory tar archive."""
     buf = BytesIO()
     with tarfile.open(mode="w", fileobj=buf) as tar:
@@ -88,7 +88,7 @@ async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     ssh_objects: tuple[AsyncMock, AsyncMock],
-) -> Callable[[], Awaitable[None]]:
+) -> ComponentSetup:
     """Fixture for setting up the component manually."""
     config_entry.add_to_hass(hass)
 
@@ -125,10 +125,10 @@ def async_cm_mock() -> AsyncMock:
 
 
 @pytest.fixture
-def async_cm_mock_generator() -> callable:
+def async_cm_mock_generator() -> Callable[[], MagicMock]:
     """Return function that generates AsyncMock context manager."""
 
-    def _generator():
+    def _generator() -> MagicMock:
         mocked_client = MagicMock()
         mocked_client.return_value.__aenter__ = AsyncMock(return_value=mocked_client)
         mocked_client.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -138,7 +138,7 @@ def async_cm_mock_generator() -> callable:
 
 
 @pytest.fixture
-def fake_connect(async_cm_mock):
+def fake_connect(async_cm_mock: AsyncMock) -> AsyncMock:
     "Prepare a fake `asyncssh.connect` cm to simulate a successful connection."
     mck = AsyncMock()
     mck.__aenter__.return_value = mck
@@ -169,7 +169,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def ssh_objects():
+def ssh_objects() -> tuple[AsyncMock, AsyncMock]:
     """Return mocked objects returned by `asyncssh.connect` and `SSHClient.start_sftp_client`.
 
     Designed to remove warnings of non-awaited `close` and `exit` methods.

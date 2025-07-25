@@ -58,7 +58,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client
 
     @start_sftp_client.setter
-    def start_sftp_client(self, val: AsyncMock | MagicMock):
+    def start_sftp_client(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client = val
 
     @property
@@ -67,7 +67,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client.return_value.open
 
     @open.setter
-    def open(self, val: AsyncMock | MagicMock):
+    def open(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client.return_value.open = val
 
     @property
@@ -76,7 +76,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client.return_value.open.read
 
     @read.setter
-    def read(self, val: AsyncMock | MagicMock):
+    def read(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client.return_value.open.read = val
 
     @property
@@ -85,7 +85,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client.return_value.open.write
 
     @write.setter
-    def write(self, val: AsyncMock | MagicMock):
+    def write(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client.return_value.open.write = val
 
     @property
@@ -94,7 +94,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client.return_value.exists
 
     @exists.setter
-    def exists(self, val: AsyncMock | MagicMock):
+    def exists(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client.return_value.exists = val
 
     @property
@@ -103,7 +103,7 @@ class Mocks:
         return self.connect.return_value.start_sftp_client.return_value.unlink
 
     @unlink.setter
-    def unlink(self, val: AsyncMock | MagicMock):
+    def unlink(self, val: AsyncMock | MagicMock) -> None:
         self.connect.return_value.start_sftp_client.return_value.unlink = val
 
 

@@ -13,7 +13,12 @@ from homeassistant.components.backup_sftp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID, AsyncFileIteratorMock
+from .conftest import (
+    CONFIG_ENTRY_TITLE,
+    TEST_AGENT_ID,
+    AsyncFileIteratorMock,
+    ComponentSetup,
+)
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -52,7 +57,7 @@ TEST_AGENT_BACKUP_RESULT = {
 
 @pytest.fixture(autouse=True)
 async def mock_setup_integration(
-    setup_integration,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Set up the integration automatically for backup tests."""
     await setup_integration()

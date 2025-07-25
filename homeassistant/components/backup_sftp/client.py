@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
+from types import TracebackType
 from typing import TYPE_CHECKING, Self
 
 from asyncssh import (
@@ -107,7 +108,12 @@ class BackupAgentClient:
 
         return await self.open()
 
-    async def __aexit__(self, exc_type, exc, traceback) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         """Async Context Manager exit routine."""
         if self.sftp:
             self.sftp.exit()
@@ -213,7 +219,7 @@ class BackupAgentClient:
         self,
         iterator: AsyncIterator[bytes],
         backup: AgentBackup,
-    ) -> list[AgentBackup]:
+    ) -> None:
         """Accept `iterator` as bytes iterator and write backup archive to SFTP Server."""
 
         file_path = (
@@ -280,8 +286,6 @@ class BackupAgentClient:
 
         This is to avoid calling `__aenter__` dunder method.
         """
-
-        """Async context manager entrypoint."""
 
         # Configure SSH Client Connection
         try:
