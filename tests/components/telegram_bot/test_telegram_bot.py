@@ -174,6 +174,15 @@ async def test_send_message(
     assert len(events) == 1
     assert events[0].context == context
 
+    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "1234567890:ABC"
+    )
+    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
+    assert events[0].data["bot"]["id"] == 123456
+    assert events[0].data["bot"]["first_name"] == "Testbot"
+    assert events[0].data["bot"]["last_name"] == "mock last name"
+    assert events[0].data["bot"]["username"] == "mock username"
+
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
 
@@ -479,6 +488,16 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+
+    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "1234567890:ABC"
+    )
+    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
+    assert events[0].data["bot"]["id"] == 123456
+    assert events[0].data["bot"]["first_name"] == "Testbot"
+    assert events[0].data["bot"]["last_name"] == "mock last name"
+    assert events[0].data["bot"]["username"] == "mock username"
+
     assert isinstance(events[0].context, Context)
 
 
@@ -752,7 +771,7 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
-    assert err.value.translation_placeholders["bot_name"] == "Testbot"
+    assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
 
 
 async def test_send_message_config_entry_error(
