@@ -181,7 +181,7 @@
     },
     "get_recipes": {
       "name": "Get recipes",
-      "description": "Searches for multiple recipes in Mealie and returns basic information (such as title, ID, and description) for each match, but not full recipe details; use this to find recipe IDs or slugs for use with get_recipe.",
+      "description": "Searches for recipes with any matching properties in Mealie.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -189,7 +189,7 @@
         },
         "search_terms": {
           "name": "Search terms",
-          "description": "Terms to search for in recipe titles or descriptions."
+          "description": "Terms to search for in recipe properties."
         },
         "result_limit": {
           "name": "Result limit",
