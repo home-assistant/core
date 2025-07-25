@@ -62,6 +62,27 @@ async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> Non
         assert result3["options"] == MOCK_OPTIONS
 
 
+async def test_user_flow_abort_already_configured_service(
+    hass: HomeAssistant,
+) -> None:
+    """Abort user-initiated config flow if the same host/port is already configured."""
+    existing_entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        datadog.DOMAIN,
+        context={"source": "user"},
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test that the options flow shows an error when connection fails."""
     mock_entry = MockConfigEntry(
