@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_NAME,
-    CONF_OPTIMISTIC,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -41,6 +40,7 @@ from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -91,13 +91,12 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Cover"
 
-COVER_SCHEMA = vol.All(
+COVER_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_POSITION): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
@@ -106,11 +105,13 @@ COVER_SCHEMA = vol.All(
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
         }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema),
+    )
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-LEGACY_COVER_SCHEMA = vol.All(
+COVER_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -121,7 +122,6 @@ LEGACY_COVER_SCHEMA = vol.All(
             vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_TEMPLATE): cv.template,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
             vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
@@ -129,12 +129,14 @@ LEGACY_COVER_SCHEMA = vol.All(
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
+    )
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(LEGACY_COVER_SCHEMA)}
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_LEGACY_YAML_SCHEMA)}
 )
 
 
@@ -162,21 +164,17 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     """Representation of a template cover features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
-        self._template = config.get(CONF_STATE)
         self._position_template = config.get(CONF_POSITION)
         self._tilt_template = config.get(CONF_TILT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        optimistic = config.get(CONF_OPTIMISTIC)
-        self._optimistic = optimistic or (
-            optimistic is None and not self._template and not self._position_template
-        )
         tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
         self._tilt_optimistic = tilt_optimistic or not self._tilt_template
         self._position: int | None = None
@@ -318,7 +316,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 run_variables={"position": 100},
                 context=self._context,
             )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._position = 100
             self.async_write_ha_state()
 
@@ -332,7 +330,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 run_variables={"position": 0},
                 context=self._context,
             )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._position = 0
             self.async_write_ha_state()
 
@@ -349,7 +347,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             run_variables={"position": self._position},
             context=self._context,
         )
-        if self._optimistic:
+        if self._attr_assumed_state:
             self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -493,10 +491,9 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
                 updater(rendered)
                 write_ha_state = True
 
-        if not self._optimistic:
-            self.async_set_context(self.coordinator.data["context"])
+        if not self._attr_assumed_state:
             write_ha_state = True
-        elif self._optimistic and len(self._rendered) > 0:
+        elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case any non optimistic template
             write_ha_state = True
 

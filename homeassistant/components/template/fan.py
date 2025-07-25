@@ -81,7 +81,7 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Fan"
 
-FAN_SCHEMA = vol.All(
+FAN_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_DIRECTION): cv.template,
@@ -101,7 +101,7 @@ FAN_SCHEMA = vol.All(
     ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
 
-LEGACY_FAN_SCHEMA = vol.All(
+FAN_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -126,7 +126,7 @@ LEGACY_FAN_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(LEGACY_FAN_SCHEMA)}
+    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
 )
 
 
@@ -561,5 +561,4 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
             write_ha_state = True
 
         if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()

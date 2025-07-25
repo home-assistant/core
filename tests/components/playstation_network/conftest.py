@@ -156,6 +156,9 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
                 ]
             }
         }
+        client.me.return_value.get_shareable_profile_link.return_value = {
+            "shareImageUrl": "https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493"
+        }
         yield client
 
 

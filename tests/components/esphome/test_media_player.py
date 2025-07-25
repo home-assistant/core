@@ -55,7 +55,6 @@ async def test_media_player_entity(
             object_id="mymedia_player",
             key=1,
             name="my media_player",
-            unique_id="my_media_player",
             supports_pause=True,
         )
     ]
@@ -202,7 +201,6 @@ async def test_media_player_entity_with_source(
             object_id="mymedia_player",
             key=1,
             name="my media_player",
-            unique_id="my_media_player",
             supports_pause=True,
         )
     ]
@@ -318,7 +316,6 @@ async def test_media_player_proxy(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -477,7 +474,6 @@ async def test_media_player_formats_reload_preserves_data(
                 object_id="test_media_player",
                 key=1,
                 name="Test Media Player",
-                unique_id="test_unique_id",
                 supports_pause=True,
                 supported_formats=supported_formats,
             )
