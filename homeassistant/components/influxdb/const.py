@@ -48,7 +48,9 @@ CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST = "localhost"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_PORT = 8086
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
