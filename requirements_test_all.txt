@@ -1639,6 +1639,9 @@ pyemoncms==0.1.1
 # homeassistant.components.enphase_envoy
 pyenphase==2.2.1
 
+# homeassistant.components.envertech_evt800
+pyenvertechevt800==0.2.2
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 

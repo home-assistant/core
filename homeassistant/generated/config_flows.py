@@ -177,6 +177,7 @@ FLOWS = {
         "enigma2",
         "enocean",
         "enphase_envoy",
+        "envertech_evt800",
         "environment_canada",
         "epic_games_store",
         "epion",

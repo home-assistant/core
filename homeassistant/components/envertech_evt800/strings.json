@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup EVT800 device",
+        "description": "Enter your EVT800 device information.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "type": "EVT800 local server mode"
+        }
+      }
+    }
+  }
+}
