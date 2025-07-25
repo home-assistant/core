@@ -5,12 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
+import aiohttp
 from lunatone_rest_api_client import Devices, Info
 from lunatone_rest_api_client.models import DevicesData, InfoData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -51,7 +52,13 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
 
     async def _async_update_data(self) -> InfoData:
         """Update info data."""
-        await self.info.async_update()
+        try:
+            await self.info.async_update()
+        except aiohttp.ClientConnectionError as ex:
+            raise UpdateFailed("Unable to retrieve data from Lunatone REST API") from ex
+
+        if self.info.data is None:
+            raise UpdateFailed("Did not receive data from Lunatone REST API")
         return self.info.data
 
 
@@ -78,5 +85,11 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
 
     async def _async_update_data(self) -> DevicesData:
         """Update devices data."""
-        await self.devices.async_update()
+        try:
+            await self.devices.async_update()
+        except aiohttp.ClientConnectionError as ex:
+            raise UpdateFailed("Unable to retrieve data from Lunatone REST API") from ex
+
+        if self.devices.data is None:
+            raise UpdateFailed("Did not receive data from Lunatone REST API")
         return self.devices.data
