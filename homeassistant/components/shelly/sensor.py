@@ -141,6 +141,9 @@ class RpcEmeterPhaseSensor(RpcSensor):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             emeter_phase=description.emeter_phase,
             suggested_area=coordinator.suggested_area,

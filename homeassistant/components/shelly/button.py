@@ -237,12 +237,18 @@ class ShellyButton(ShellyBaseButton):
             self._attr_device_info = get_block_device_info(
                 coordinator.device,
                 coordinator.mac,
+                coordinator.configuration_url,
+                coordinator.model,
+                coordinator.model_name,
                 suggested_area=coordinator.suggested_area,
             )
         else:
             self._attr_device_info = get_rpc_device_info(
                 coordinator.device,
                 coordinator.mac,
+                coordinator.configuration_url,
+                coordinator.model,
+                coordinator.model_name,
                 suggested_area=coordinator.suggested_area,
             )
         self._attr_device_info = DeviceInfo(
