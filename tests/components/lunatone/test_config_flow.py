@@ -223,11 +223,11 @@ async def test_device_already_configured(
 
 
 async def test_user_step_invalid_url(
-    hass: HomeAssistant, mock_lunatone_auth: AsyncMock, mock_lunatone_info: AsyncMock
+    hass: HomeAssistant, base_url: str, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test if cannot connect."""
     mock_lunatone_info.async_update.side_effect = aiohttp.InvalidUrlClientError(
-        mock_lunatone_auth.base_url
+        base_url
     )
 
     result = await hass.config_entries.flow.async_init(

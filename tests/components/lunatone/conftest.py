@@ -12,6 +12,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def base_url() -> str:
+    """Base URL fixture."""
+    return "http://10.0.0.131"
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -22,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_auth() -> Generator[AsyncMock]:
+def mock_lunatone_auth(base_url: str) -> Generator[AsyncMock]:
     """Mock a Lunatone auth object."""
     with (
         patch(
@@ -35,7 +41,7 @@ def mock_lunatone_auth() -> Generator[AsyncMock]:
         ),
     ):
         auth = mock_auth.return_value
-        auth.base_url = "http://10.0.0.131"
+        auth.base_url = base_url
         yield auth
 
 
@@ -61,11 +67,11 @@ def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(base_url: str) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="12345",
+        title="Lunatone 12345",
         domain=DOMAIN,
-        data={CONF_URL: "http://10.0.0.131"},
+        data={CONF_URL: base_url},
         unique_id="12345",
     )
