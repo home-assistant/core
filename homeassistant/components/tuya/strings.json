@@ -145,6 +145,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -765,6 +768,9 @@
       "sleep_aid": {
         "name": "Sleep aid"
       },
+      "indexed_switch": {
+        "name": "Switch {index}"
+      },
       "switch_1": {
         "name": "Switch 1"
       },
@@ -914,6 +920,14 @@
       },
       "siren": {
         "name": "Siren"
+      }
+    },
+    "valve": {
+      "switch": {
+        "name": "Switch"
+      },
+      "indexed_switch": {
+        "name": "Switch {index}"
       }
     }
   },

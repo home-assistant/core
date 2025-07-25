@@ -224,6 +224,66 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        # Controls the irrigation duration for the water valve
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_1,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "1"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_2,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "2"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_3,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "3"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_4,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "4"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_5,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "5"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_6,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "6"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_7,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "7"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_8,
+            translation_key="indexed_irrigation_duration",
+            translation_placeholders={"index": "8"},
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
