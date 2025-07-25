@@ -22,6 +22,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -34,16 +35,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .template_entity import (
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -76,22 +85,24 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-VACUUM_YAML_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_BATTERY_LEVEL): cv.template,
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-            vol.Optional(CONF_FAN_SPEED): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        }
-    ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
+VACUUM_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_BATTERY_LEVEL): cv.template,
+        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        vol.Optional(CONF_FAN_SPEED): cv.template,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+    }
+)
+
+VACUUM_YAML_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema
 )
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
@@ -122,6 +133,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
 )
 
+VACUUM_CONFIG_ENTRY_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -140,6 +155,35 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_VACUUMS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        TemplateStateVacuumEntity,
+        VACUUM_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_vacuum(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> TemplateStateVacuumEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        TemplateStateVacuumEntity,
+        VACUUM_CONFIG_ENTRY_SCHEMA,
     )
 
 
