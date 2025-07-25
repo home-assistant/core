@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import HUMIDIFIER_SERVICE_INFO
+from . import EVAPORATIVE_HUMIDIFIER_SERVICE_INFO, HUMIDIFIER_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -167,6 +167,92 @@ async def test_exception_handling_humidifier_service(
         await hass.async_block_till_done()
 
         with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                HUMIDIFIER_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method"),
+    [
+        (SERVICE_TURN_ON, {}, "turn_on"),
+        (SERVICE_TURN_OFF, {}, "turn_off"),
+        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_target_humidity"),
+        (SERVICE_SET_MODE, {ATTR_MODE: "sleep"}, "set_mode"),
+    ],
+)
+async def test_evaporative_humidifier_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+) -> None:
+    """Test evaporative humidifier services with proper parameters."""
+    inject_bluetooth_service_info(hass, EVAPORATIVE_HUMIDIFIER_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="evaporative_humidifier")
+    entry.add_to_hass(hass)
+    entity_id = "humidifier.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotEvaporativeHumidifier",
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method"),
+    [
+        (SERVICE_TURN_ON, {}, "turn_on"),
+        (SERVICE_TURN_OFF, {}, "turn_off"),
+        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_target_humidity"),
+        (SERVICE_SET_MODE, {ATTR_MODE: "sleep"}, "set_mode"),
+    ],
+)
+async def test_evaporative_humidifier_services_with_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+) -> None:
+    """Test exception handling for evaporative humidifier services."""
+    inject_bluetooth_service_info(hass, EVAPORATIVE_HUMIDIFIER_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="evaporative_humidifier")
+    entry.add_to_hass(hass)
+    entity_id = "humidifier.test_name"
+
+    patch_target = f"homeassistant.components.switchbot.humidifier.switchbot.SwitchbotEvaporativeHumidifier.{mock_method}"
+
+    with patch(
+        patch_target,
+        new=AsyncMock(side_effect=SwitchbotOperationError("Operation failed")),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(
+            HomeAssistantError,
+            match="An error occurred while performing the action: Operation failed",
+        ):
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 service,

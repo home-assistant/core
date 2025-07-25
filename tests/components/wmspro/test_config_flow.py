@@ -50,7 +50,7 @@ async def test_config_flow_from_dhcp(
 ) -> None:
     """Test we can handle DHCP discovery to create a config entry."""
     info = DhcpServiceInfo(
-        ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
@@ -109,7 +109,7 @@ async def test_config_flow_from_dhcp_add_mac(
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id is None
 
     info = DhcpServiceInfo(
-        ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
@@ -126,7 +126,7 @@ async def test_config_flow_from_dhcp_ip_update(
 ) -> None:
     """Test we can use DHCP discovery to update IP in a config entry."""
     info = DhcpServiceInfo(
-        ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
@@ -154,7 +154,7 @@ async def test_config_flow_from_dhcp_ip_update(
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
 
     info = DhcpServiceInfo(
-        ip="5.6.7.8", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="5.6.7.8", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
@@ -172,7 +172,7 @@ async def test_config_flow_from_dhcp_no_update(
 ) -> None:
     """Test we do not use DHCP discovery to overwrite hostname with IP in config entry."""
     info = DhcpServiceInfo(
-        ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
@@ -200,7 +200,7 @@ async def test_config_flow_from_dhcp_no_update(
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
 
     info = DhcpServiceInfo(
-        ip="5.6.7.8", hostname="webcontrol", macaddress="00:11:22:33:44:55"
+        ip="5.6.7.8", hostname="webcontrol", macaddress="001122334455"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info

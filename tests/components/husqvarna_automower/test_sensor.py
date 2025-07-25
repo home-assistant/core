@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,7 +39,7 @@ async def test_sensor_unknown_states(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_cutting_blade_usage_time_sensor(
@@ -78,7 +78,7 @@ async def test_next_start_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_next_start")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_work_area_sensor(

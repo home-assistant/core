@@ -22,7 +22,7 @@ async def test_repair_issue_is_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created."""
-    from homeassistant.components.sms import (  # pylint: disable=import-outside-toplevel
+    from homeassistant.components.sms import (  # noqa: PLC0415
         DEPRECATED_ISSUE_ID,
         DOMAIN,
     )

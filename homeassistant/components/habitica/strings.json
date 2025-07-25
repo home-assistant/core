@@ -4,7 +4,6 @@
     "dailies": "Dailies",
     "config_entry_name": "Select character",
     "task_name": "Task name",
-    "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
@@ -276,10 +275,6 @@
         "name": "Health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
-      "health_max": {
-        "name": "Max. health",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
-      },
       "mana": {
         "name": "Mana",
         "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
@@ -318,14 +313,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "habits": {
-        "name": "Habits",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "rewards": {
-        "name": "Rewards",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",

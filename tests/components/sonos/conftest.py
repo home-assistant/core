@@ -1,5 +1,7 @@
 """Configuration for Sonos tests."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -107,13 +109,31 @@ class SonosMockAlarmClock(SonosMockService):
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables) -> None:
-        """Initialize the instance."""
+    def __init__(
+        self,
+        soco: MockSoCo,
+        service: SonosMockService,
+        variables: dict[str, str],
+        zone_player_uui_ds_in_group: str | None = None,
+    ) -> None:
+        """Initialize the instance.
+
+        Args:
+            soco: The mock SoCo device associated with this event.
+            service: The Sonos mock service that generated the event.
+            variables: A dictionary of event variables and their values.
+            zone_player_uui_ds_in_group: Optional comma-separated string of unique zone IDs in the group.
+
+        """
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
         self.service = service
         self.variables = variables
+        # In Soco events of the same type may or may not have this attribute present.
+        # Only create the attribute if it should be present.
+        if zone_player_uui_ds_in_group:
+            self.zone_player_uui_ds_in_group = zone_player_uui_ds_in_group
 
     def increment_variable(self, var_name):
         """Increment the value of the var_name key in variables dict attribute.
@@ -823,3 +843,42 @@ async def sonos_setup_two_speakers(
     )
     await hass.async_block_till_done()
     return [soco_lr, soco_br]
+
+
+def create_zgs_sonos_event(
+    fixture_file: str,
+    soco_1: MockSoCo,
+    soco_2: MockSoCo,
+    create_uui_ds_in_group: bool = True,
+) -> SonosMockEvent:
+    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
+    zgs = load_fixture(fixture_file, DOMAIN)
+    variables = {}
+    variables["ZoneGroupState"] = zgs
+    # Sonos does not always send this variable with zgs events
+    if create_uui_ds_in_group:
+        variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
+    zone_player_uui_ds_in_group = (
+        f"{soco_1.uid},{soco_2.uid}" if create_uui_ds_in_group else None
+    )
+    return SonosMockEvent(
+        soco_1, soco_1.zoneGroupTopology, variables, zone_player_uui_ds_in_group
+    )
+
+
+def group_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
+    """Generate events to group two speakers together."""
+    event = create_zgs_sonos_event(
+        "zgs_group.xml", coordinator, group_member, create_uui_ds_in_group=True
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
+    """Generate events to ungroup two speakers."""
+    event = create_zgs_sonos_event(
+        "zgs_two_single.xml", coordinator, group_member, create_uui_ds_in_group=False
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)

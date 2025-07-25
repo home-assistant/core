@@ -89,7 +89,7 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            if vehicle.api.pre2021 or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(

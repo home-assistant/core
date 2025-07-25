@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "reauth_user_code": {
-        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
       },
       "user": {
-        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
@@ -56,6 +56,15 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "tankfull": {
+        "name": "Tank full"
+      },
+      "defrost": {
+        "name": "Defrost"
+      },
+      "wet": {
+        "name": "Wet"
       }
     },
     "button": {
@@ -85,20 +94,11 @@
       "curtain": {
         "name": "[%key:component::cover::entity_component::curtain::name%]"
       },
-      "curtain_2": {
-        "name": "Curtain 2"
+      "indexed_curtain": {
+        "name": "Curtain {index}"
       },
-      "curtain_3": {
-        "name": "Curtain 3"
-      },
-      "door": {
-        "name": "[%key:component::cover::entity_component::door::name%]"
-      },
-      "door_2": {
-        "name": "Door 2"
-      },
-      "door_3": {
-        "name": "Door 3"
+      "indexed_door": {
+        "name": "Door {index}"
       }
     },
     "event": {
@@ -122,11 +122,8 @@
       "light": {
         "name": "[%key:component::light::title%]"
       },
-      "light_2": {
-        "name": "Light 2"
-      },
-      "light_3": {
-        "name": "Light 3"
+      "indexed_light": {
+        "name": "Light {index}"
       },
       "night_light": {
         "name": "Night light"
@@ -190,17 +187,11 @@
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
-      "minimum_brightness_2": {
-        "name": "Minimum brightness 2"
+      "indexed_minimum_brightness": {
+        "name": "Minimum brightness {index}"
       },
-      "maximum_brightness_2": {
-        "name": "Maximum brightness 2"
-      },
-      "minimum_brightness_3": {
-        "name": "Minimum brightness 3"
-      },
-      "maximum_brightness_3": {
-        "name": "Maximum brightness 3"
+      "indexed_maximum_brightness": {
+        "name": "Maximum brightness {index}"
       },
       "move_down": {
         "name": "Move down"
@@ -210,6 +201,18 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
+      },
+      "arm_delay": {
+        "name": "Arm delay"
+      },
+      "alarm_delay": {
+        "name": "Alarm delay"
+      },
+      "siren_duration": {
+        "name": "Siren duration"
       }
     },
     "select": {
@@ -275,16 +278,8 @@
           "led": "LED"
         }
       },
-      "led_type_2": {
-        "name": "Light 2 source type",
-        "state": {
-          "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
-          "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
-          "led": "[%key:component::tuya::entity::select::led_type::state::led%]"
-        }
-      },
-      "led_type_3": {
-        "name": "Light 3 source type",
+      "indexed_led_type": {
+        "name": "Light {index} source type",
         "state": {
           "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
           "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
@@ -476,6 +471,13 @@
           "level_9": "Level 9",
           "level_10": "High"
         }
+      },
+      "odor_elimination_mode": {
+        "name": "Odor elimination mode",
+        "state": {
+          "smart": "Smart",
+          "interim": "Interim"
+        }
       }
     },
     "sensor": {
@@ -617,6 +619,14 @@
       "water_level": {
         "name": "Water level"
       },
+      "water_level_state": {
+        "name": "Water level",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "[%key:common::state::medium%]",
+          "level_3": "[%key:common::state::full%]"
+        }
+      },
       "total_watering_time": {
         "name": "Total watering time"
       },
@@ -680,6 +690,15 @@
       },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "odor_elimination_status": {
+        "name": "Status",
+        "state": {
+          "work": "Working",
+          "standby": "[%key:common::state::standby%]",
+          "charging": "[%key:common::state::charging%]",
+          "charge_done": "Charge done"
+        }
       }
     },
     "switch": {
@@ -889,7 +908,18 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "arm_beep": {
+        "name": "Arm beep"
+      },
+      "siren": {
+        "name": "Siren"
       }
+    }
+  },
+  "exceptions": {
+    "action_dpcode_not_found": {
+      "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     }
   }
 }

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
+from pylgnetcast import LG_COMMAND, LgNetCastError
 from requests import RequestException
 
 from homeassistant.components.media_player import (
@@ -15,13 +15,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
+from . import LgNetCastConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .triggers.turn_on import async_get_turn_on_trigger
 
@@ -46,20 +46,15 @@ SUPPORT_LGTV = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LgNetCastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a LG Netcast Media Player from a config_entry."""
-
-    host = config_entry.data[CONF_HOST]
-    access_token = config_entry.data[CONF_ACCESS_TOKEN]
     unique_id = config_entry.unique_id
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     model = config_entry.data[CONF_MODEL]
 
-    client = LgNetCastClient(host, access_token)
-
-    hass.data[DOMAIN][config_entry.entry_id] = client
+    client = config_entry.runtime_data
 
     async_add_entities([LgTVDevice(client, name, model, unique_id=unique_id)])
 

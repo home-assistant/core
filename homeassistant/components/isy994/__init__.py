@@ -171,17 +171,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     _LOGGER.debug("ISY Starting Event Stream and automatic updates")
     isy.websocket.start()
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: IsyConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 @callback

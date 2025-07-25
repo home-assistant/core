@@ -53,7 +53,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.api.pre2021 or vehicle.firmware < "2025.2.6"
+        if vehicle.poll or vehicle.firmware < "2025.2.6"
         else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )

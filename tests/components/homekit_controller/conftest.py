@@ -66,9 +66,7 @@ def fake_ble_discovery() -> Generator[None]:
     """Fake BLE discovery."""
 
     class FakeBLEDiscovery(FakeDiscovery):
-        device = BLEDevice(
-            address="AA:BB:CC:DD:EE:FF", name="TestDevice", rssi=-50, details=()
-        )
+        device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="TestDevice", details=())
 
     with patch("aiohomekit.testing.FakeDiscovery", FakeBLEDiscovery):
         yield

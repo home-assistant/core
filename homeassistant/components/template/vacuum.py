@@ -34,20 +34,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, DOMAIN
+from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .helpers import async_setup_template_platform
 from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
-    rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,13 +70,13 @@ _VALID_STATES = [
     VacuumActivity.ERROR,
 ]
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
     CONF_FAN_SPEED_TEMPLATE: CONF_FAN_SPEED,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-VACUUM_SCHEMA = vol.All(
+VACUUM_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_BATTERY_LEVEL): cv.template,
@@ -94,7 +94,7 @@ VACUUM_SCHEMA = vol.All(
     ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 )
 
-LEGACY_VACUUM_SCHEMA = vol.All(
+VACUUM_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -119,56 +119,8 @@ LEGACY_VACUUM_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(LEGACY_VACUUM_SCHEMA)}
+    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
 )
-
-
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    vacuums = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        vacuums.append(entity_conf)
-
-    return vacuums
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template switches."""
-    vacuums = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        vacuums.append(
-            TemplateVacuum(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(vacuums)
 
 
 async def async_setup_platform(
@@ -177,26 +129,24 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Template cover."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_VACUUMS]),
-            None,
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    """Set up the Template vacuum."""
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        VACUUM_DOMAIN,
+        config,
+        TemplateStateVacuumEntity,
+        TriggerVacuumEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_VACUUMS,
     )
 
 
 class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     """Representation of a template vacuum features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -213,7 +163,14 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
-    def _register_scripts(
+        self._attr_supported_features = (
+            VacuumEntityFeature.START | VacuumEntityFeature.STATE
+        )
+
+        if self._battery_level_template:
+            self._attr_supported_features |= VacuumEntityFeature.BATTERY
+
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], VacuumEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -334,7 +291,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_fan_speed = None
 
 
-class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
+class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
     """A template vacuum component."""
 
     _attr_should_poll = False
@@ -346,27 +303,17 @@ class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
         unique_id,
     ) -> None:
         """Initialize the vacuum."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateVacuum.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
-        self._attr_supported_features = (
-            VacuumEntityFeature.START | VacuumEntityFeature.STATE
-        )
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
-
-        if self._battery_level_template:
-            self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -403,3 +350,58 @@ class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
             return
 
         self._handle_state(result)
+
+
+class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
+    """Vacuum entity based on trigger data."""
+
+    domain = VACUUM_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateVacuum.__init__(self, config)
+
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        for key in (CONF_STATE, CONF_FAN_SPEED, CONF_BATTERY_LEVEL):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._handle_state),
+            (CONF_FAN_SPEED, self._update_fan_speed),
+            (CONF_BATTERY_LEVEL, self._update_battery_level),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()

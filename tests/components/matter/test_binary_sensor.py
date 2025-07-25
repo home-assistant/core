@@ -184,8 +184,8 @@ async def test_evse_sensor(
     assert state
     assert state.state == "off"
 
-    # Test SupplyStateEnum value with binary_sensor.evse_supply_charging
-    entity_id = "binary_sensor.evse_supply_charging_state"
+    # Test SupplyStateEnum value with binary_sensor.evse_charger_supply_state
+    entity_id = "binary_sensor.evse_charger_supply_state"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
@@ -255,5 +255,23 @@ async def test_pump(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
+async def test_dishwasher_alarm(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test dishwasher alarm sensors."""
+    state = hass.states.get("binary_sensor.dishwasher_door_alarm")
+    assert state
+
+    set_node_attribute(matter_node, 1, 93, 2, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_door_alarm")
     assert state
     assert state.state == "on"

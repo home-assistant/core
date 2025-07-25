@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event_snapshot[event.remote_control_switch_1-entry]
+# name: test_event_snapshot[event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.remote_control_switch_1',
+    'entity_id': 'event.remote_control_kitchen_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,7 +30,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Kitchen Light',
     'platform': 'homee',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event_snapshot[event.remote_control_switch_1-state]
+# name: test_event_snapshot[event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -50,10 +50,10 @@
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 1',
+      'friendly_name': 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
-    'entity_id': 'event.remote_control_switch_1',
+    'entity_id': 'event.remote_control_kitchen_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

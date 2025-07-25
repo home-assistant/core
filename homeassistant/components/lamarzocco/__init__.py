@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
@@ -57,11 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     assert entry.unique_id
     serial = entry.unique_id
 
-    client = async_get_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=client,
+        client=async_create_clientsession(hass),
     )
 
     try:
@@ -154,13 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def update_listener(
-        hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-    ) -> None:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

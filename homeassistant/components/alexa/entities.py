@@ -505,8 +505,13 @@ class ClimateCapabilities(AlexaEntity):
         ):
             yield AlexaThermostatController(self.hass, self.entity)
             yield AlexaTemperatureSensor(self.hass, self.entity)
-        if self.entity.domain == water_heater.DOMAIN and (
-            supported_features & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+        if (
+            self.entity.domain == water_heater.DOMAIN
+            and (
+                supported_features
+                & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+            )
+            and self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST)
         ):
             yield AlexaModeController(
                 self.entity,
@@ -634,7 +639,9 @@ class FanCapabilities(AlexaEntity):
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
             )
             force_range_controller = False
-        if supported & fan.FanEntityFeature.PRESET_MODE:
+        if supported & fan.FanEntityFeature.PRESET_MODE and self.entity.attributes.get(
+            fan.ATTR_PRESET_MODES
+        ):
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
             )
@@ -672,7 +679,11 @@ class RemoteCapabilities(AlexaEntity):
         yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
-        if activities and supported & remote.RemoteEntityFeature.ACTIVITY:
+        if (
+            activities
+            and (supported & remote.RemoteEntityFeature.ACTIVITY)
+            and self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        ):
             yield AlexaModeController(
                 self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
             )
@@ -692,7 +703,9 @@ class HumidifierCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & humidifier.HumidifierEntityFeature.MODES:
+        if (
+            supported & humidifier.HumidifierEntityFeature.MODES
+        ) and self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES):
             yield AlexaModeController(
                 self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}"
             )

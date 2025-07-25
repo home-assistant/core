@@ -8,6 +8,7 @@ from aioimmich.server.models import (
     ImmichServerAbout,
     ImmichServerStatistics,
     ImmichServerStorage,
+    ImmichServerVersionCheck,
 )
 from aioimmich.users.models import ImmichUserObject
 import pytest
@@ -79,21 +80,21 @@ def mock_immich_server() -> AsyncMock:
     mock = AsyncMock(spec=ImmichServer)
     mock.async_get_about_info.return_value = ImmichServerAbout.from_dict(
         {
-            "version": "v1.132.3",
-            "versionUrl": "https://github.com/immich-app/immich/releases/tag/v1.132.3",
+            "version": "v1.134.0",
+            "versionUrl": "https://github.com/immich-app/immich/releases/tag/v1.134.0",
             "licensed": False,
-            "build": "14709928600",
-            "buildUrl": "https://github.com/immich-app/immich/actions/runs/14709928600",
-            "buildImage": "v1.132.3",
+            "build": "15281783550",
+            "buildUrl": "https://github.com/immich-app/immich/actions/runs/15281783550",
+            "buildImage": "v1.134.0",
             "buildImageUrl": "https://github.com/immich-app/immich/pkgs/container/immich-server",
             "repository": "immich-app/immich",
             "repositoryUrl": "https://github.com/immich-app/immich",
-            "sourceRef": "v1.132.3",
-            "sourceCommit": "02994883fe3f3972323bb6759d0170a4062f5236",
-            "sourceUrl": "https://github.com/immich-app/immich/commit/02994883fe3f3972323bb6759d0170a4062f5236",
+            "sourceRef": "v1.134.0",
+            "sourceCommit": "58ae77ec9204a2e43a8cb2f1fd27482af40d0891",
+            "sourceUrl": "https://github.com/immich-app/immich/commit/58ae77ec9204a2e43a8cb2f1fd27482af40d0891",
             "nodejs": "v22.14.0",
             "exiftool": "13.00",
-            "ffmpeg": "7.0.2-7",
+            "ffmpeg": "7.0.2-9",
             "libvips": "8.16.1",
             "imagemagick": "7.1.1-47",
         }
@@ -128,6 +129,12 @@ def mock_immich_server() -> AsyncMock:
                     "quotaSizeInBytes": None,
                 }
             ],
+        }
+    )
+    mock.async_get_version_check.return_value = ImmichServerVersionCheck.from_dict(
+        {
+            "checkedAt": "2025-06-21T16:35:10.352Z",
+            "releaseVersion": "v1.135.3",
         }
     )
     return mock

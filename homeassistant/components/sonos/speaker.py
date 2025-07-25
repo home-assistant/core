@@ -1172,8 +1172,15 @@ class SonosSpeaker:
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            _LOGGER.warning("Timeout waiting for target groups %s", groups)
-
+            group_description = [
+                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+                for group in groups
+            ]
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_join",
+                translation_placeholders={"group_description": str(group_description)},
+            ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
 

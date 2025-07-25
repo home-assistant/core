@@ -1565,7 +1565,7 @@ async def async_setup_entry(
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
             if (
-                not vehicle.api.pre2021
+                not vehicle.poll
                 and description.streaming_listener
                 and vehicle.firmware >= description.streaming_firmware
             ):
@@ -1575,7 +1575,7 @@ async def async_setup_entry(
 
         for time_description in VEHICLE_TIME_DESCRIPTIONS:
             if (
-                not vehicle.api.pre2021
+                not vehicle.poll
                 and vehicle.firmware >= time_description.streaming_firmware
             ):
                 entities.append(

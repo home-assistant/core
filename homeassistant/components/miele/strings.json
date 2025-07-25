@@ -203,30 +203,27 @@
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
-          "0": "0",
-          "110": "Warming",
-          "220": "[%key:component::miele::entity::sensor::plate::state::110%]",
-          "1": "1",
-          "2": "1\u2022",
-          "3": "2",
-          "4": "2\u2022",
-          "5": "3",
-          "6": "3\u2022",
-          "7": "4",
-          "8": "4\u2022",
-          "9": "5",
-          "10": "5\u2022",
-          "11": "6",
-          "12": "6\u2022",
-          "13": "7",
-          "14": "7\u2022",
-          "15": "8",
-          "16": "8\u2022",
-          "17": "9",
-          "18": "9\u2022",
-          "117": "Boost",
-          "118": "[%key:component::miele::entity::sensor::plate::state::117%]",
-          "217": "[%key:component::miele::entity::sensor::plate::state::117%]"
+          "power_step_0": "0",
+          "power_step_warm": "Warming",
+          "power_step_1": "1",
+          "power_step_2": "1\u2022",
+          "power_step_3": "2",
+          "power_step_4": "2\u2022",
+          "power_step_5": "3",
+          "power_step_6": "3\u2022",
+          "power_step_7": "4",
+          "power_step_8": "4\u2022",
+          "power_step_9": "5",
+          "power_step_10": "5\u2022",
+          "power_step_11": "6",
+          "power_step_12": "6\u2022",
+          "power_step_13": "7",
+          "power_step_14": "7\u2022",
+          "power_step_15": "8",
+          "power_step_16": "8\u2022",
+          "power_step_17": "9",
+          "power_step_18": "9\u2022",
+          "power_step_boost": "Boost"
         }
       },
       "drying_step": {
@@ -465,8 +462,8 @@
           "chicken_tikka_masala_with_rice": "Chicken Tikka Masala with rice",
           "chicken_whole": "Chicken",
           "chinese_cabbage_cut": "Chinese cabbage (cut)",
-          "chocolate_hazlenut_cake_one_large": "Chocolate hazlenut cake (one large)",
-          "chocolate_hazlenut_cake_several_small": "Chocolate hazlenut cake (several small)",
+          "chocolate_hazlenut_cake_one_large": "Chocolate hazelnut cake (one large)",
+          "chocolate_hazlenut_cake_several_small": "Chocolate hazelnut cake (several small)",
           "chongming_rapid_steam_cooking": "Chongming (rapid steam cooking)",
           "chongming_steam_cooking": "Chongming (steam cooking)",
           "choux_buns": "Choux buns",
@@ -701,7 +698,7 @@
           "parsnip_cut_into_batons": "Parsnip (cut into batons)",
           "parsnip_diced": "Parsnip (diced)",
           "parsnip_sliced": "Parsnip (sliced)",
-          "pasta_paela": "Pasta/Paela",
+          "pasta_paela": "Pasta/paella",
           "pears_halved": "Pears (halved)",
           "pears_quartered": "Pears (quartered)",
           "pears_to_cook_large_halved": "Pears to cook (large, halved)",
@@ -1062,8 +1059,30 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
+    "set_program_error": {
+      "message": "'Set program' action failed {status} / {message}."
+    },
     "set_state_error": {
       "message": "Failed to set state for {entity}."
+    }
+  },
+  "services": {
+    "set_program": {
+      "name": "Set program",
+      "description": "Sets and starts a program on the appliance.",
+      "fields": {
+        "device_id": {
+          "description": "The device to set the program on.",
+          "name": "Device"
+        },
+        "program_id": {
+          "description": "The ID of the program to set.",
+          "name": "Program ID"
+        }
+      }
     }
   }
 }

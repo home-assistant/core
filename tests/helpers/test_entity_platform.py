@@ -2447,3 +2447,56 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "deprecated_attribute",
+    [
+        "component_translations",
+        "platform_translations",
+        "object_id_component_translations",
+        "object_id_platform_translations",
+        "default_language_platform_translations",
+    ],
+)
+async def test_deprecated_attributes(
+    hass: HomeAssistant,
+    deprecated_attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    assert getattr(entity_platform, deprecated_attribute) is getattr(
+        entity_platform.platform_data, deprecated_attribute
+    )
+    assert (
+        f"The deprecated function {deprecated_attribute} was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        f"{deprecated_attribute} instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_async_load_translations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    await entity_platform.async_load_translations()
+    assert (
+        "The deprecated function async_load_translations was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        "async_load_translations instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )

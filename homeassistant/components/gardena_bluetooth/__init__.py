@@ -13,6 +13,7 @@ from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import dt as dt_util
 
@@ -74,6 +75,7 @@ async def async_setup_entry(
 
     device = DeviceInfo(
         identifiers={(DOMAIN, address)},
+        connections={(dr.CONNECTION_BLUETOOTH, address)},
         name=name,
         sw_version=sw_version,
         manufacturer=manufacturer,

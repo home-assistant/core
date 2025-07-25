@@ -19,7 +19,6 @@ from homeassistant.components.azure_storage.const import (
 )
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -39,7 +38,6 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         await setup_integration(hass, mock_config_entry)
 

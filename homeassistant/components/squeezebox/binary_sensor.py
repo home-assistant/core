@@ -49,7 +49,7 @@ async def async_setup_entry(
 
 
 class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
-    """LMS Status based sensor from LMS via cooridnatior."""
+    """LMS Status based sensor from LMS via coordinator."""
 
     @property
     def is_on(self) -> bool:

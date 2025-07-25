@@ -94,6 +94,7 @@ CONFIG_SCHEMA = vol.Schema(
                 max=28,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="days",
+                translation_key=CONF_METER_OFFSET,
             ),
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
@@ -129,6 +130,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Utility Meter."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

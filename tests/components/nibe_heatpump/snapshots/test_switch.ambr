@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_update[Model.F1255-48043-ACTIVE][switch.holiday_activated_48043-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Holiday - Activated',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'holiday_activated_48043',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-48043',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-48043-ACTIVE][switch.holiday_activated_48043-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 Holiday - Activated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update[Model.F1255-48043-INACTIVE][switch.holiday_activated_48043-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Holiday - Activated',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'holiday_activated_48043',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-48043',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-48043-INACTIVE][switch.holiday_activated_48043-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 Holiday - Activated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.holiday_activated_48043',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-48071-OFF][switch.flm_1_accessory_48071-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'FLM 1 accessory',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'flm_1_accessory_48071',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-48071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-48071-OFF][switch.flm_1_accessory_48071-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 FLM 1 accessory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-48071-ON][switch.flm_1_accessory_48071-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'FLM 1 accessory',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'flm_1_accessory_48071',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-48071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-48071-ON][switch.flm_1_accessory_48071-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 FLM 1 accessory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.flm_1_accessory_48071',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

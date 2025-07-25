@@ -1041,7 +1041,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if self.state in {
             MediaPlayerState.OFF,
-            MediaPlayerState.STANDBY,
+            # Not comparing to MediaPlayerState.STANDBY to avoid deprecation warning
+            "standby",
         }:
             await self.async_turn_on()
         else:

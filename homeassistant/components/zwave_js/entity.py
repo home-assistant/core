@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import (
@@ -27,8 +26,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
 
 EVENT_VALUE_REMOVED = "value removed"
-EVENT_DEAD = "dead"
-EVENT_ALIVE = "alive"
 
 
 class ZWaveBaseEntity(Entity):
@@ -141,11 +138,6 @@ class ZWaveBaseEntity(Entity):
             )
         )
 
-        for status_event in (EVENT_ALIVE, EVENT_DEAD):
-            self.async_on_remove(
-                self.info.node.on(status_event, self._node_status_alive_or_dead)
-            )
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -211,19 +203,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return (
-            self.driver.client.connected
-            and bool(self.info.node.ready)
-            and self.info.node.status != NodeStatus.DEAD
-        )
-
-    @callback
-    def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """Call when node status changes to alive or dead.
-
-        Should not be overridden by subclasses.
-        """
-        self.async_write_ha_state()
+        return self.driver.client.connected and bool(self.info.node.ready)
 
     @callback
     def _value_changed(self, event_data: dict) -> None:

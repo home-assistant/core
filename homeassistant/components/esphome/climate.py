@@ -287,18 +287,24 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
-        self._client.climate_command(**data)
+        self._client.climate_command(**data, device_id=self._static_info.device_id)
 
     @convert_api_error_ha_error
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        self._client.climate_command(key=self._key, target_humidity=humidity)
+        self._client.climate_command(
+            key=self._key,
+            target_humidity=humidity,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         self._client.climate_command(
-            key=self._key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
+            key=self._key,
+            mode=_CLIMATE_MODES.from_hass(hvac_mode),
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
@@ -309,7 +315,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_preset"] = preset_mode
         else:
             kwargs["preset"] = _PRESETS.from_hass(preset_mode)
-        self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs, device_id=self._static_info.device_id)
 
     @convert_api_error_ha_error
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -319,13 +325,15 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_fan_mode"] = fan_mode
         else:
             kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
-        self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs, device_id=self._static_info.device_id)
 
     @convert_api_error_ha_error
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         self._client.climate_command(
-            key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
+            key=self._key,
+            swing_mode=_SWING_MODES.from_hass(swing_mode),
+            device_id=self._static_info.device_id,
         )
 
 
