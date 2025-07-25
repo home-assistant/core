@@ -57,22 +57,15 @@ def setup_security_filter(app: Application) -> None:
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process request and block commonly known exploit attempts."""
-        path_with_query_string = f"{request.path}?{request.query_string}"
-
         for unsafe_byte in UNSAFE_URL_BYTES:
-            if unsafe_byte in path_with_query_string:
-                if unsafe_byte in request.query_string:
-                    _LOGGER.warning(
-                        "Filtered a request with unsafe byte query string: %s",
-                        request.raw_path,
-                    )
-                    raise HTTPBadRequest
+            if unsafe_byte in request.raw_path:
                 _LOGGER.warning(
                     "Filtered a request with an unsafe byte in path: %s",
                     request.raw_path,
                 )
                 raise HTTPBadRequest
 
+        path_with_query_string = f"{request.path}?{request.query_string}"
         if FILTERS.search(_recursive_unquote(path_with_query_string)):
             # Check the full path with query string first, if its
             # a hit, than check just the query string to give a more
