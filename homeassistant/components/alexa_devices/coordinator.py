@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
+from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
@@ -31,6 +32,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self,
         hass: HomeAssistant,
         entry: AmazonConfigEntry,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
         super().__init__(
@@ -41,6 +43,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = AmazonEchoApi(
+            session,
             entry.data[CONF_COUNTRY],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
