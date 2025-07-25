@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import SenseConfigEntry
 from .const import (
@@ -180,7 +181,7 @@ class SenseVoltageSensor(SenseEntity, SensorEntity):
         return round(self._gateway.active_voltage[self._voltage_index], 1)
 
 
-class SenseTrendsSensor(SenseEntity, SensorEntity):
+class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(
@@ -222,7 +223,17 @@ class SenseTrendsSensor(SenseEntity, SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self._attr_state_class == SensorStateClass.TOTAL:
-            return self._gateway.trend_start(self._scale)
+            dt = self._gateway.trend_start(self._scale)
+            if dt is None:
+                return None
+            # Convert UTC to local time
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=dt_util.UTC)
+            local_dt = dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
+            # Align to local midnight for daily scale
+            if self._scale == Scale.DAY:
+                local_dt = local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            return local_dt
         return None
 
 
