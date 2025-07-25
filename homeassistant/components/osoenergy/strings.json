@@ -93,20 +93,6 @@
     }
   },
   "services": {
-    "disable_holiday_mode": {
-      "name": "Disable Holiday Mode",
-      "description": "Disable holiday mode for the heater"
-    },
-    "enable_holiday_mode": {
-      "name": "Enable Holiday Mode",
-      "description": "Enable holiday mode for the heater",
-      "fields": {
-        "duration_days": {
-          "name": "Duration in days",
-          "description": "Number of days to keep holiday mode active (1-365)"
-        }
-      }
-    },
     "get_profile": {
       "name": "Get heater profile",
       "description": "Gets the temperature profile for water heater"

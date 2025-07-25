@@ -13,12 +13,6 @@
     }
   },
   "services": {
-    "disable_holiday_mode": {
-      "service": "mdi:home"
-    },
-    "enable_holiday_mode": {
-      "service": "mdi:beach"
-    },
     "get_profile": {
       "service": "mdi:thermometer-lines"
     },

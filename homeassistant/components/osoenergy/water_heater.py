@@ -26,7 +26,6 @@ from homeassistant.util.json import JsonValueType
 from .const import DOMAIN
 from .entity import OSOEnergyEntity
 
-ATTR_DURATION_DAYS = "duration_days"
 ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
 ATTR_V40MIN = "v40_min"
 CURRENT_OPERATION_MAP: dict[str, Any] = {
@@ -42,8 +41,6 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
         "extraenergy": STATE_HIGH_DEMAND,
     },
 }
-SERVICE_DISABLE_HOLIDAY_MODE = "disable_holiday_mode"
-SERVICE_ENABLE_HOLIDAY_MODE = "enable_holiday_mode"
 SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
@@ -64,22 +61,6 @@ async def async_setup_entry(
     async_add_entities((OSOEnergyWaterHeater(osoenergy, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ENABLE_HOLIDAY_MODE,
-        {
-            vol.Optional(ATTR_DURATION_DAYS): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=365)
-            ),
-        },
-        OSOEnergyWaterHeater.async_enable_holiday_mode.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_DISABLE_HOLIDAY_MODE,
-        {},
-        OSOEnergyWaterHeater.async_disable_holiday_mode.__name__,
-    )
 
     platform.async_register_entity_service(
         SERVICE_GET_PROFILE,
@@ -183,7 +164,9 @@ class OSOEnergyWaterHeater(
 
     _attr_name = None
     _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.ON_OFF
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -223,6 +206,11 @@ class OSOEnergyWaterHeater(
         return self.entity_data.current_temperature
 
     @property
+    def is_away_mode_on(self) -> bool:
+        """Return if the heater is in away mode."""
+        return self.entity_data.isInPowerSave
+
+    @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
@@ -247,6 +235,14 @@ class OSOEnergyWaterHeater(
         """Return the maximum temperature."""
         return self.entity_data.max_temperature
 
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn on away mode."""
+        await self.osoenergy.hotwater.enable_holiday_mode(self.entity_data)
+
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn off away mode."""
+        await self.osoenergy.hotwater.disable_holiday_mode(self.entity_data)
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
         await self.osoenergy.hotwater.turn_on(self.entity_data, True)
@@ -254,19 +250,6 @@ class OSOEnergyWaterHeater(
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.entity_data, True)
-
-    async def async_disable_holiday_mode(self) -> None:
-        """Disable holiday mode."""
-        await self.osoenergy.hotwater.disable_holiday_mode(self.entity_data)
-
-    async def async_enable_holiday_mode(self, duration_days: int | None = None) -> None:
-        """Enable holiday mode."""
-        if duration_days is None:
-            duration_days = 365
-
-        await self.osoenergy.hotwater.enable_holiday_mode(
-            self.entity_data, duration_days
-        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
