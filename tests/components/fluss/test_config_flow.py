@@ -53,40 +53,38 @@ async def test_step_user_success(hass) -> None:
     assert result["data"] == user_input
 
 
-async def test_step_user_invalid_auth(config_flow: FlussConfigFlow) -> None:
-    """Test invalid authentication."""
-    user_input = {CONF_API_KEY: "invalid_api_key"}
-
-    with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.side_effect = FlussApiClientAuthenticationError
-        result = await config_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_step_user_cannot_connect(config_flow: FlussConfigFlow) -> None:
-    """Test connection failure."""
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (FlussApiClientAuthenticationError, "invalid_auth"),
+        (FlussApiClientCommunicationError, "cannot_connect"),
+    ],
+)
+async def test_step_user_errors(hass, exception, expected_error) -> None:
+    """Test error cases for user step (invalid auth and connection failure)."""
     user_input = {CONF_API_KEY: "some_api_key"}
 
     with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.side_effect = FlussApiClientCommunicationError
-        result = await config_flow.async_step_user(user_input)
+        mock_client.side_effect = exception
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
 
-async def test_step_user_unexpected_error(config_flow: FlussConfigFlow, caplog) -> None:
+async def test_step_user_unexpected_error(hass, caplog) -> None:
     """Test unexpected exception handling with logging."""
     user_input = {CONF_API_KEY: "some_api_key"}
 
     with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
         mock_client.side_effect = Exception("Unexpected error")
         with caplog.at_level("ERROR"):
-            result = await config_flow.async_step_user(user_input)
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "user"}, data=user_input
+            )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
