@@ -492,7 +492,6 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
                 write_ha_state = True
 
         if not self._attr_assumed_state:
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case any non optimistic template
