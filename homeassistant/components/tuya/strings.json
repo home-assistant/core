@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "reauth_user_code": {
-        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
       },
       "user": {
-        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
