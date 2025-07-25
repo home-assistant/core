@@ -132,7 +132,10 @@ class EsphomeMediaPlayer(
             media_id = proxy_url
 
         self._client.media_player_command(
-            self._key, media_url=media_id, announcement=announcement
+            self._key,
+            media_url=media_id,
+            announcement=announcement,
+            device_id=self._static_info.device_id,
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -214,22 +217,36 @@ class EsphomeMediaPlayer(
     @convert_api_error_ha_error
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._client.media_player_command(self._key, volume=volume)
+        self._client.media_player_command(
+            self._key, volume=volume, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.PAUSE)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.PAUSE,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_media_play(self) -> None:
         """Send play command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.PLAY)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.PLAY,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.STOP)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.STOP,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_mute_volume(self, mute: bool) -> None:
@@ -237,6 +254,7 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
+            device_id=self._static_info.device_id,
         )
 
 

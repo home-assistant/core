@@ -19,6 +19,7 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
     Platform.WEATHER,
 ]
 

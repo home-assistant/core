@@ -86,7 +86,10 @@ def async_setup_block_attribute_entities(
                 coordinator.device.settings, block
             ):
                 domain = sensor_class.__module__.split(".")[-1]
-                unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
+                unique_id = sensor_class(
+                    coordinator, block, sensor_id, description
+                ).unique_id
+                LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 entities.append(
@@ -192,8 +195,12 @@ def async_setup_rpc_attribute_entities(
             if description.removal_condition and description.removal_condition(
                 coordinator.device.config, coordinator.device.status, key
             ):
-                domain = sensor_class.__module__.split(".")[-1]
-                unique_id = f"{coordinator.mac}-{key}-{sensor_id}"
+                entity_class = get_entity_class(sensor_class, description)
+                domain = entity_class.__module__.split(".")[-1]
+                unique_id = entity_class(
+                    coordinator, key, sensor_id, description
+                ).unique_id
+                LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
             elif description.use_polling_coordinator:
                 if not sleep_period:
@@ -364,6 +371,9 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             block,
             suggested_area=coordinator.suggested_area,
         )
@@ -410,6 +420,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             suggested_area=coordinator.suggested_area,
         )
@@ -529,6 +542,9 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             suggested_area=coordinator.suggested_area,
         )
         self._last_value = None
@@ -640,6 +656,9 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             block,
             suggested_area=coordinator.suggested_area,
         )
@@ -653,7 +672,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
             )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
-            self._attr_name = cast(str, entry.original_name)
 
     @callback
     def _update_callback(self) -> None:
@@ -711,6 +729,9 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             suggested_area=coordinator.suggested_area,
         )

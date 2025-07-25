@@ -16,7 +16,6 @@ from pypck.connection import (
 )
 from pypck.lcn_defs import LcnEvent
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -38,21 +37,20 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
     CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
-    CONNECTION,
-    DEVICE_CONNECTIONS,
     DOMAIN,
     PLATFORMS,
 )
 from .helpers import (
     AddressType,
     InputType,
+    LcnConfigEntry,
+    LcnRuntimeData,
     async_update_config_entry,
     generate_unique_id,
     purge_device_registry,
@@ -69,18 +67,14 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
-    hass.data.setdefault(DOMAIN, {})
-
     async_setup_services(hass)
     await register_panel_and_ws_api(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    if config_entry.entry_id in hass.data[DOMAIN]:
-        return False
 
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
@@ -110,15 +104,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ) as ex:
         await lcn_connection.async_close()
         raise ConfigEntryNotReady(
-            f"Unable to connect to {config_entry.title}: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "config_entry_title": config_entry.title,
+            },
         ) from ex
 
-    _LOGGER.debug('LCN connected to "%s"', config_entry.title)
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        CONNECTION: lcn_connection,
-        DEVICE_CONNECTIONS: {},
-        ADD_ENTITIES_CALLBACKS: {},
-    }
+    _LOGGER.info('LCN connected to "%s"', config_entry.title)
+    config_entry.runtime_data = LcnRuntimeData(
+        connection=lcn_connection,
+        device_connections={},
+        add_entities_callbacks={},
+    )
 
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
@@ -146,7 +144,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: LcnConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -195,7 +195,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 async def async_migrate_entities(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Migrate entity registry."""
 
@@ -217,25 +217,24 @@ async def async_migrate_entities(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
-        host = hass.data[DOMAIN].pop(config_entry.entry_id)
-        await host[CONNECTION].async_close()
+    if unload_ok:
+        await config_entry.runtime_data.connection.async_close()
 
     return unload_ok
 
 
 def async_host_event_received(
-    hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
+    hass: HomeAssistant, config_entry: LcnConfigEntry, event: pypck.lcn_defs.LcnEvent
 ) -> None:
     """Process received event from LCN."""
-    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    lcn_connection = config_entry.runtime_data.connection
 
     async def reload_config_entry() -> None:
         """Close connection and schedule config entry for reload."""
@@ -258,7 +257,7 @@ def async_host_event_received(
 
 def async_host_input_received(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     device_registry: dr.DeviceRegistry,
     inp: pypck.inputs.Input,
 ) -> None:
@@ -266,7 +265,7 @@ def async_host_input_received(
     if not isinstance(inp, pypck.inputs.ModInput):
         return
 
-    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    lcn_connection = config_entry.runtime_data.connection
     logical_address = lcn_connection.physical_to_logical(inp.physical_source_addr)
     address = (
         logical_address.seg_id,

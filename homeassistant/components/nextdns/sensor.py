@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from nextdns import (
     AnalyticsDnssec,
@@ -13,6 +12,7 @@ from nextdns import (
     AnalyticsProtocols,
     AnalyticsStatus,
 )
+from nextdns.model import NextDnsData
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -32,15 +32,14 @@ from .const import (
     ATTR_PROTOCOLS,
     ATTR_STATUS,
 )
-from .coordinator import CoordinatorDataT
 from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class NextDnsSensorEntityDescription(
-    SensorEntityDescription, Generic[CoordinatorDataT]
+class NextDnsSensorEntityDescription[CoordinatorDataT: NextDnsData](
+    SensorEntityDescription
 ):
     """NextDNS sensor entity description."""
 
@@ -297,10 +296,12 @@ async def async_setup_entry(
     )
 
 
-class NextDnsSensor(NextDnsEntity, SensorEntity):
+class NextDnsSensor[CoordinatorDataT: NextDnsData](
+    NextDnsEntity[CoordinatorDataT], SensorEntity
+):
     """Define an NextDNS sensor."""
 
-    entity_description: NextDnsSensorEntityDescription
+    entity_description: NextDnsSensorEntityDescription[CoordinatorDataT]
 
     @property
     def native_value(self) -> StateType:

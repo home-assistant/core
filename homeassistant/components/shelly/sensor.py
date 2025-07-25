@@ -141,6 +141,9 @@ class RpcEmeterPhaseSensor(RpcSensor):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             emeter_phase=description.emeter_phase,
             suggested_area=coordinator.suggested_area,
@@ -868,8 +871,8 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda status: (status and status["n_current"]) is not None,
-        removal_condition=lambda _config, status, _key: "n_current" not in status,
+        removal_condition=lambda _config, status, key: status[key].get("n_current")
+        is None,
         entity_registry_enabled_default=False,
     ),
     "total_current": RpcSensorDescription(
