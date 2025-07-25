@@ -263,7 +263,7 @@ WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 )
 
 # For device class mapping see:
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/
 DISCOVERY_SCHEMAS = [
     # ====== START OF DEVICE SPECIFIC MAPPING SCHEMAS =======
     # Honeywell 39358 In-Wall Fan Control using switch multilevel CC
@@ -291,12 +291,16 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Control - 14287 / 55258 / ZW4002
+    # GE/Jasco - In-Wall Smart Fan Controls
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
-        product_id={0x3131, 0x3337},
+        product_id={
+            0x3131,
+            0x3337,  # 14287 / 55258 / ZW4002
+            0x3533,  # 58446 / ZWA4013
+        },
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(
@@ -767,6 +771,35 @@ DISCOVERY_SCHEMAS = [
                 99: "Siren & Strobe FULL Alarm",
             },
         ),
+    ),
+    # ZWA-2, discover LED control as configuration, default disabled
+    ## Production firmware (1.0) -> Color Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_color",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ## Day-1 firmware update (1.1) -> Binary Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks

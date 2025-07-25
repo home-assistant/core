@@ -213,6 +213,9 @@ class BlockSleepingClimate(
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             sensor_block,
             suggested_area=coordinator.suggested_area,
         )
