@@ -218,6 +218,35 @@
           }
         },
         "title": "Template switch"
+      },
+      "vacuum": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "start": "Actions on turn off",
+          "fan_speed": "Fan speed",
+          "fan_speeds": "Fan Speeds",
+          "set_fan_speed": "Actions on set fan speed",
+          "battery_level": "Battery level",
+          "stop": "Actions on stop",
+          "pause": "Actions on pause",
+          "return_to_base": "Actions on return to base",
+          "clean_spot": "Actions on clean spot",
+          "locate": "Actions on locate"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "Template vacuum"
       }
     }
   },
@@ -417,6 +446,35 @@
           }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
+      },
+      "vacuum": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "start": "[%key:component::template::config::step::vacuum::data::start%]",
+          "fan_speed": "[%key:component::template::config::step::vacuum::data::fan_speed%]",
+          "fan_speeds": "[%key:component::template::config::step::vacuum::data::fan_speeds%]",
+          "set_fan_speed": "[%key:component::template::config::step::vacuum::data::set_fan_speed%]",
+          "battery_level": "[%key:component::template::config::step::vacuum::data::battery_level%]",
+          "stop": "[%key:component::template::config::step::vacuum::data::stop%]",
+          "pause": "[%key:component::template::config::step::vacuum::data::pause%]",
+          "return_to_base": "[%key:component::template::config::step::vacuum::data::return_to_base%]",
+          "clean_spot": "[%key:component::template::config::step::vacuum::data::clean_spot%]",
+          "locate": "[%key:component::template::config::step::vacuum::data::locate%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "Template vacuum"
       }
     }
   },
