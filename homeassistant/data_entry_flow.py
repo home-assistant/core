@@ -142,7 +142,6 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
-    result: Any
     step_id: str
     title: str
     translation_domain: str
