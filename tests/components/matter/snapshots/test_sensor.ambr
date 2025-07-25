@@ -250,7 +250,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hepa filter condition',
+    'original_name': 'HEPA filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -263,7 +263,7 @@
 # name: test_sensors[air_purifier][sensor.air_purifier_hepa_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier Hepa filter condition',
+      'friendly_name': 'Air Purifier HEPA filter condition',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2985,7 +2985,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hepa filter condition',
+    'original_name': 'HEPA filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2998,7 +2998,7 @@
 # name: test_sensors[extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood Hepa filter condition',
+      'friendly_name': 'Mock Extractor hood HEPA filter condition',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

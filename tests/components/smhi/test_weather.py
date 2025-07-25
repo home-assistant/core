@@ -473,3 +473,23 @@ async def test_forecast_service(
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+async def test_twice_daily_forecast_service(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test forecast service."""
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "twice_daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot

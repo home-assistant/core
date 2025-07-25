@@ -389,6 +389,9 @@
       },
       "packing_time": {
         "default": "mdi:record-rec"
+      },
+      "post_rec_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
