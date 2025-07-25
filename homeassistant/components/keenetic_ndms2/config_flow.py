@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -153,7 +153,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
-class KeeneticOptionsFlowHandler(OptionsFlow):
+class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     config_entry: KeeneticConfigEntry

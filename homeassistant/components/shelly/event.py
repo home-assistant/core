@@ -209,6 +209,9 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             suggested_area=coordinator.suggested_area,
         )
