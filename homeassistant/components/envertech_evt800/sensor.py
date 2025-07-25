@@ -35,6 +35,14 @@ from .const import (
 )
 
 SENSORS: dict[str, SensorEntityDescription] = {
+    "timestamp": SensorEntityDescription(
+        key="timestamp",
+        name="Timestamp",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
     "id_1": SensorEntityDescription(
         key="id_1",
         name="MPTT ID 1",
