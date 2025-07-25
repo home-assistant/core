@@ -12,19 +12,7 @@ import pytest
 
 from homeassistant.components.fluss import PLATFORMS, async_setup_entry
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-
-
-@pytest.fixture
-async def mock_hass():
-    """Mock Hass Environment."""
-    hass = AsyncMock(spec=HomeAssistant)
-    hass.config_entries = AsyncMock()
-    hass.config_entries.async_forward_entry_setups = AsyncMock()
-    hass.config_entries.async_unload_platforms = AsyncMock()
-    hass.data = {}
-    return hass
 
 
 @pytest.fixture
