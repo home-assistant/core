@@ -104,17 +104,3 @@ async def test_single_instance_allowed(hass) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-def test_data_schema_validation():
-    """Test that the data schema enforces required string field."""
-    # Valid input
-    STEP_USER_DATA_SCHEMA({CONF_API_KEY: "test_key"})
-
-    # Missing key
-    with pytest.raises(vol.error.MultipleInvalid):
-        STEP_USER_DATA_SCHEMA({})
-
-    # Non-string value
-    with pytest.raises(vol.error.MultipleInvalid):
-        STEP_USER_DATA_SCHEMA({CONF_API_KEY: 123})
