@@ -13,20 +13,26 @@ from .coordinator import HannaDataCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
+def _authenticate_and_get_devices(
+    api_client: HannaCloudClient,
+    email: str,
+    password: str,
+) -> list:
+    """Authenticate and get devices in a single executor job."""
+    api_client.authenticate(email, password)
+    return api_client.get_devices()
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bool:
     """Set up Hanna Instruments from a config entry."""
     # Create a temporary API client to discover devices
-
     api_client = HannaCloudClient()
-    await hass.async_add_executor_job(
-        api_client.authenticate,
+    devices = await hass.async_add_executor_job(
+        _authenticate_and_get_devices,
+        api_client,
         entry.data["email"],
         entry.data["password"],
-        entry.data["code"],
     )
-
-    # Get devices
-    devices = await hass.async_add_executor_job(api_client.get_devices)
 
     # Create device coordinators
     device_coordinators = {}
@@ -36,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> boo
         device_coordinators[coordinator.device_identifier] = coordinator
 
     # Set runtime data
-    entry.runtime_data = {
-        "device_coordinators": device_coordinators,
-    }
+    entry.runtime_data = device_coordinators
 
     # Forward the setup to the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -50,13 +54,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bo
     # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Clean up coordinators
-    if unload_ok and entry.runtime_data:
-        # Clean up device coordinators
-        for coordinator in entry.runtime_data["device_coordinators"].values():
+    # Clean up and device coordinators
+    if unload_ok and entry.runtime_data is not None:
+        for coordinator in entry.runtime_data.values():
             await coordinator.async_shutdown()
-
-        # Clear runtime data
-        entry.runtime_data = None
 
     return unload_ok

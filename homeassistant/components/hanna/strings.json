@@ -4,15 +4,11 @@
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "code": "Encryption key",
-          "scan_interval": "Scan interval"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Email address for your Hanna Cloud account",
-          "password": "Password for your Hanna Cloud account",
-          "code": "Encryption key for your Hanna Cloud account",
-          "scan_interval": "Scan interval for your Hanna Cloud account. Default is 1 minute."
+          "password": "Password for your Hanna Cloud account"
         },
         "description": "Enter your Hanna Cloud credentials",
         "title": "Hanna Cloud"
