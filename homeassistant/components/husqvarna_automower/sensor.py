@@ -330,7 +330,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     entities: list[SensorEntity] = []
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
@@ -365,14 +365,12 @@ async def async_setup_entry(
         )
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
-        entities: list[SensorEntity] = []
-        entities.extend(
+        async_add_entities(
             AutomowerSensorEntity(mower_id, coordinator, description)
             for mower_id in mower_ids
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
-        async_add_entities(entities)
         for mower_id in mower_ids:
             mower_data = coordinator.data[mower_id]
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None:

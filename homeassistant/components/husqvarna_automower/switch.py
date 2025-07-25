@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)

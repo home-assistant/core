@@ -1,6 +1,5 @@
 """The Husqvarna Automower integration."""
 
-import asyncio
 import logging
 
 from aioautomower.session import AutomowerSession
@@ -10,17 +9,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from . import api
-from .const import DOMAIN
-from .coordinator import (
-    AutomowerConfigEntry,
-    AutomowerData,
-    AutomowerDataUpdateCoordinator,
-    AutomowerMessageUpdateCoordinator,
-)
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,34 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
 
     coordinator = AutomowerDataUpdateCoordinator(hass, entry, automower_api)
     await coordinator.async_config_entry_first_refresh()
-    all_mowers = set(coordinator.data)
-    _LOGGER.debug("mowers_init: %s", set(coordinator.data))
-    all_mowers = set(coordinator.data)
-    message_coordinators = {}
-    for mower_id in all_mowers:
-        message_coordinators[mower_id] = AutomowerMessageUpdateCoordinator(
-            hass,
-            entry,
-            automower_api,
-            mower_id,
-            device=DeviceInfo(
-                identifiers={(DOMAIN, mower_id)},
-                manufacturer="Husqvarna",
-                model=coordinator.data[mower_id]
-                .system.model.removeprefix("HUSQVARNA ")
-                .removeprefix("Husqvarna "),
-                name=coordinator.data[mower_id].system.name,
-                serial_number=coordinator.data[mower_id].system.serial_number,
-                suggested_area="Garden",
-            ),
-        )
-    await asyncio.gather(
-        *(
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in message_coordinators.values()
-        )
-    )
-    entry.runtime_data = AutomowerData(coordinator, message_coordinators)
+    entry.runtime_data = coordinator
 
     entry.async_create_background_task(
         hass,

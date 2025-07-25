@@ -1,37 +1,38 @@
 """Creates the sensor entities for the mower."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 
-from aioautomower.model import MessageData
+from aioautomower.exceptions import ApiError
+from aioautomower.model import Message, MessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
 from .const import ERROR_KEYS
-from .coordinator import AutomowerMessageUpdateCoordinator
-from .entity import AutomowerMessageBaseEntity
+from .coordinator import AutomowerDataUpdateCoordinator
+from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
 
-ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
+PARALLEL_UPDATES = 1
+
+ATTR_SEVERITY = "severity"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerMessageEventEntityDescription(EventEntityDescription):
-    """Describes Automower sensor entity."""
+    """Describes an Automower message event."""
 
     exists_fn: Callable[[MessageData], bool] = lambda _: True
-    option_fn: Callable[[MessageData], list[str] | None] = lambda _: None
-    value_fn: Callable[[MessageData], StateType | datetime]
+    value_fn: Callable[[MessageData], str | None]
 
 
 MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageEventEntityDescription, ...] = (
@@ -52,24 +53,42 @@ async def async_setup_entry(
     entry: AutomowerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensor platform."""
-    message_coordinator = entry.runtime_data.message_coordinators
-    entities: list[EventEntity] = []
-    for mower_id in message_coordinator:
-        entities.extend(
-            AutomowerMessageEventEntity(
-                mower_id,
-                message_coordinator[mower_id],
-                description,
-            )
+    """Set up Automower message event entities."""
+    coordinator: AutomowerDataUpdateCoordinator = entry.runtime_data
+
+    async def _async_add_message_entities(mower_ids: set[str]) -> None:
+        """Fetch messages per mower and add EventEntities for those with data."""
+
+        async def _fetch(mower_id: str) -> MessageData | None:
+            """Try to get MessageData for one mower, log and skip exceptions."""
+            try:
+                msg_data = await coordinator.api.async_get_messages(mower_id)
+            except ApiError as err:
+                _LOGGER.debug("Error fetching messages for %s: %s", mower_id, err)
+                return None
+            return msg_data
+
+        tasks = [_fetch(mower_id) for mower_id in mower_ids]
+        results = await asyncio.gather(*tasks)
+
+        valid_msgs = [msg for msg in results if isinstance(msg, MessageData)]
+
+        async_add_entities(
+            AutomowerMessageEventEntity(msg.id, coordinator, description)
+            for msg in valid_msgs
             for description in MESSAGE_SENSOR_TYPES
-            if description.exists_fn(message_coordinator[mower_id].data)
+            if description.exists_fn(msg)
         )
-    async_add_entities(entities)
+
+    await _async_add_message_entities(set(coordinator.data))
+
+    coordinator.new_devices_callbacks.append(
+        lambda mower_ids: hass.create_task(_async_add_message_entities(mower_ids))
+    )
 
 
-class AutomowerMessageEventEntity(AutomowerMessageBaseEntity, EventEntity):
-    """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
+class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
+    """Automower EventEntity for error messages."""
 
     entity_description: AutomowerMessageEventEntityDescription
     _attr_event_types = ERROR_KEYS
@@ -77,30 +96,37 @@ class AutomowerMessageEventEntity(AutomowerMessageBaseEntity, EventEntity):
     def __init__(
         self,
         mower_id: str,
-        message_coordinator: AutomowerMessageUpdateCoordinator,
+        coordinator: AutomowerDataUpdateCoordinator,
         description: AutomowerMessageEventEntityDescription,
     ) -> None:
-        """Set up AutomowerSensors."""
-        super().__init__(mower_id, message_coordinator)
+        """Initialize the Automower error event."""
+        super().__init__(mower_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{description.key}"
-        self.message_coordinator = message_coordinator
+        self.coordinator = coordinator
+        self.mower_id = mower_id
 
     @callback
-    def _async_handle_event(self) -> None:
-        """Handle the demo button event."""
-        last_message = self.message_coordinator.data.attributes.messages[0]
-        if last_message.code:
-            self._trigger_event(
-                last_message.code,
-                {
-                    "severity": last_message.severity,
-                    "latitude": last_message.latitude,
-                    "longitude": last_message.longitude,
-                },
-            )
-            # self.async_write_ha_state()
+    def async_handle_new_message(self, msg_data: MessageData) -> None:
+        """Handle new message from API."""
+        message: Message = msg_data.attributes.messages[0]
+        code = message.code
+        if not code:
+            return
 
-    def _handle_coordinator_update(self) -> None:
-        self._async_handle_event()
-        return super()._handle_coordinator_update()
+        self._trigger_event(
+            code,
+            {
+                ATTR_SEVERITY: message.severity,
+                ATTR_LATITUDE: message.latitude,
+                ATTR_LONGITUDE: message.longitude,
+            },
+        )
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register for message updates."""
+        await super().async_added_to_hass()
+        self.coordinator.api.register_message_callback(
+            self.async_handle_new_message, self.mower_id
+        )

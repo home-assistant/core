@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(

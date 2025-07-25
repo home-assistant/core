@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -13,17 +12,15 @@ from aioautomower.exceptions import (
     ApiError,
     AuthError,
     HusqvarnaTimeoutError,
-    HusqvarnaWSClientError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import MessageData, MowerDictionary
+from aioautomower.model import MowerDictionary
 from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -33,16 +30,7 @@ MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 
-
-@dataclass
-class AutomowerData:
-    """Data for the Teslemetry integration."""
-
-    coordinator: AutomowerDataUpdateCoordinator
-    message_coordinators: dict[str, AutomowerMessageUpdateCoordinator]
-
-
-type AutomowerConfigEntry = ConfigEntry[AutomowerData]
+type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
@@ -153,7 +141,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             # Reset reconnect time after successful connection
             self.reconnect_time = DEFAULT_RECONNECT_TIME
             await automower_client.start_listening()
-        except (HusqvarnaWSServerHandshakeError, HusqvarnaWSClientError) as err:
+        except HusqvarnaWSServerHandshakeError as err:
             _LOGGER.debug(
                 "Failed to connect to websocket. Trying to reconnect: %s",
                 err,
@@ -302,45 +290,3 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                         entity_registry.async_remove(entity_entry.entity_id)
 
         return current_areas
-
-
-class AutomowerMessageUpdateCoordinator(DataUpdateCoordinator[MessageData]):
-    """Class to manage fetching Husqvarna data."""
-
-    config_entry: AutomowerConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: AutomowerConfigEntry,
-        api: AutomowerSession,
-        mower_id: str,
-        device: DeviceInfo,
-    ) -> None:
-        """Initialize data updater."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"{DOMAIN}_message_coordinator_{device['name']}",
-            update_interval=None,
-        )
-        self.api = api
-        self.mower_id = mower_id
-        self.device = device
-        self.api.register_message_callback(self.handle_websocket_updates, mower_id)
-
-    async def _async_update_data(self) -> MessageData:
-        """Poll data from the API."""
-        try:
-            data = await self.api.async_get_messages(self.mower_id)
-        except ApiError as err:
-            raise UpdateFailed(err) from err
-        except AuthError as err:
-            raise ConfigEntryAuthFailed(err) from err
-        return data
-
-    @callback
-    def handle_websocket_updates(self, msg_data: MessageData) -> None:
-        """Handle updates from websocket."""
-        self.async_set_updated_data(msg_data)

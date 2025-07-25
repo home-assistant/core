@@ -10,6 +10,11 @@
         "default": "mdi:clock-check-outline"
       }
     },
+    "event": {
+      "last_error": {
+        "default": "mdi:alert-circle-check-outline"
+      }
+    },
     "number": {
       "cutting_height": {
         "default": "mdi:grass"

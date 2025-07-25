@@ -113,27 +113,21 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception_get_status", "exception_async_get_messages", "entry_state"),
+    ("exception", "entry_state"),
     [
-        (ApiError("Test error"), None, ConfigEntryState.SETUP_RETRY),
-        (AuthError("Test error"), None, ConfigEntryState.SETUP_ERROR),
-        (None, ApiError("Test error"), ConfigEntryState.SETUP_RETRY),
-        (None, AuthError("Test error"), ConfigEntryState.SETUP_ERROR),
+        (ApiError, ConfigEntryState.SETUP_RETRY),
+        (AuthError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    values: dict[str, MowerAttributes],
-    exception_get_status: Exception | None,
-    exception_async_get_messages: Exception | None,
+    exception: Exception,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
-    mock_automower_client.get_status.side_effect = exception_get_status or None
-    mock_automower_client.get_status.return_value = values
-    mock_automower_client.async_get_messages.side_effect = exception_async_get_messages
+    mock_automower_client.get_status.side_effect = exception("Test error")
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is entry_state
@@ -319,6 +313,8 @@ async def test_coordinator_automatic_registry_cleanup(
     current_devices = len(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
+    state = hass.states.get("event.test_mower_1_last_error")
+    assert state is not None
     # Remove mower 2 and check if it worked
     mower2_messages = messages.pop("1234")
     mock_automower_client.async_get_messages.return_value = mower2_messages
@@ -406,6 +402,9 @@ async def test_coordinator_automatic_registry_cleanup(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    state = hass.states.get("event.test_mower_1_last_error")
+    assert state is not None
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices
@@ -524,94 +523,3 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
-
-
-# async def test_new_websocket_message(
-#     hass: HomeAssistant,
-#     mock_automower_client: AsyncMock,
-#     mock_config_entry: MockConfigEntry,
-#     values: dict[str, MowerAttributes],
-#     freezer: FrozenDateTimeFactory,
-# ) -> None:
-#     """Test that a new message arriving over the websocket updates the sensor."""
-
-#     # Capture callbacks per mower_id
-#     callback_holder: dict[str, Callable[[MessageData], None]] = {}
-
-#     @callback
-#     def fake_register_websocket_response(
-#         cb: Callable[[MessageData], None],
-#         mower_id: str,
-#     ) -> None:
-#         callback_holder[mower_id] = cb
-
-#     mock_automower_client.register_message_callback.side_effect = (
-#         fake_register_websocket_response
-#     )
-
-#     # Set up integration
-#     await setup_integration(hass, mock_config_entry)
-#     await hass.async_block_till_done()
-
-#     # Wait for all coordinator/entity setup
-#     freezer.tick(SCAN_INTERVAL)
-#     async_fire_time_changed(hass)
-#     await hass.async_block_till_done()
-
-#     # Ensure callback was registered for the test mower
-#     assert mock_automower_client.register_message_callback.called
-#     assert TEST_MOWER_ID in callback_holder
-
-#     # Check initial state
-#     state = hass.states.get("sensor.test_mower_1_last_error")
-#     assert state is not None
-#     assert state.state == "no_loop_signal"
-
-#     # Simulate a new message for this mower
-#     message = MessageData(
-#         type="messages",
-#         id=TEST_MOWER_ID,
-#         attributes=MessageAttributes(
-#             messages=[
-#                 Message(
-#                     time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
-#                     code="trapped",
-#                     severity=Severity.ERROR,
-#                     latitude=49.0,
-#                     longitude=10.0,
-#                 )
-#             ]
-#         ),
-#     )
-#     callback_holder[TEST_MOWER_ID](message)
-#     await hass.async_block_till_done()
-
-#     state = hass.states.get("sensor.test_mower_1_last_error")
-#     assert state.state == "trapped"
-
-#     # Simulate a message for another mower – should NOT affect this sensor
-#     other_message = MessageData(
-#         type="messages",
-#         id="1234",
-#         attributes=MessageAttributes(
-#             messages=[
-#                 Message(
-#                     time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
-#                     code="internal_voltage_error",
-#                     severity=Severity.ERROR,
-#                     latitude=49.0,
-#                     longitude=10.0,
-#                 )
-#             ]
-#         ),
-#     )
-
-#     # This would call all callbacks; here we directly call only the test mower
-#     # (so we simulate the library’s internal filtering)
-#     callback_holder["1234"](other_message)
-#     await hass.async_block_till_done()
-
-#     state = hass.states.get("sensor.test_mower_1_last_error")
-#     assert (
-#         state.state == "trapped"
-#     )  # Should still be "trapped", not "internal_voltage_error"
