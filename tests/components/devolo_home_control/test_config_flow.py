@@ -2,6 +2,7 @@
 
 from homeassistant import config_entries
 from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,13 +27,13 @@ async def test_form(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "test-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
@@ -47,7 +48,7 @@ async def test_form_invalid_credentials_user(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "wrong-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "wrong-password"},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -55,12 +56,12 @@ async def test_form_invalid_credentials_user(
     mydevolo.valid_credentials = True
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "correct-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "correct-password"},
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
-        "username": "test-username",
-        "password": "correct-password",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "correct-password",
     }
 
 
@@ -70,7 +71,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"username": "test-username", "password": "test-password"},
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -88,13 +89,13 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "test-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
@@ -111,7 +112,7 @@ async def test_form_invalid_credentials_zeroconf(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "test-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -119,7 +120,7 @@ async def test_form_invalid_credentials_zeroconf(
     mydevolo.valid_credentials = True
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "correct-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "correct-password"},
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
@@ -150,8 +151,8 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="123456",
         data={
-            "username": "test-username",
-            "password": "test-password",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
         },
     )
     mock_config.add_to_hass(hass)
@@ -161,7 +162,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username-new", "password": "test-password-new"},
+        {CONF_USERNAME: "test-username-new", CONF_PASSWORD: "test-password-new"},
     )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -176,8 +177,8 @@ async def test_form_invalid_credentials_reauth(
         domain=DOMAIN,
         unique_id="123456",
         data={
-            "username": "test-username",
-            "password": "test-password",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
         },
     )
     mock_config.add_to_hass(hass)
@@ -185,7 +186,7 @@ async def test_form_invalid_credentials_reauth(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username", "password": "wrong-password"},
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "wrong-password"},
     )
     assert result2["errors"] == {"base": "invalid_auth"}
     assert result2["type"] is FlowResultType.FORM
@@ -193,7 +194,7 @@ async def test_form_invalid_credentials_reauth(
     mydevolo.valid_credentials = True
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        {"username": "test-username-new", "password": "correct-password"},
+        {CONF_USERNAME: "test-username-new", CONF_PASSWORD: "correct-password"},
     )
     assert result3["reason"] == "reauth_successful"
     assert result3["type"] is FlowResultType.ABORT
@@ -205,8 +206,8 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="123457",
         data={
-            "username": "test-username",
-            "password": "test-password",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
         },
     )
     mock_config.add_to_hass(hass)
@@ -216,7 +217,7 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"username": "test-username-new", "password": "test-password-new"},
+        {CONF_USERNAME: "test-username-new", CONF_PASSWORD: "test-password-new"},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "reauth_failed"}
