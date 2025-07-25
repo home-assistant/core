@@ -17,10 +17,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import (
-    PWD_NOT_CHANGED,
-    MQTTOptionsFlowHandler,
-)
+from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -196,8 +193,8 @@ def mock_ssl_context(mock_context_client_key: bytes) -> Generator[dict[str, Magi
 @pytest.fixture
 def mock_reload_after_entry_update() -> Generator[MagicMock]:
     """Mock out the reload after updating the entry."""
-    with patch.object(
-        MQTTOptionsFlowHandler, "automatic_reload", return_value=False
+    with patch(
+        "homeassistant.components.mqtt._async_config_entry_updated"
     ) as mock_reload:
         yield mock_reload
 
@@ -1333,11 +1330,11 @@ async def test_keepalive_validation(
     assert result["reason"] == "reconfigure_successful"
 
 
-@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_disable_birth_will(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
     await mqtt_mock_entry()
@@ -1351,6 +1348,7 @@ async def test_disable_birth_will(
         },
     )
     await hass.async_block_till_done()
+    mock_reload_after_entry_update.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1388,6 +1386,10 @@ async def test_disable_birth_will(
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
     }
+
+    await hass.async_block_till_done()
+    # assert that the entry was reloaded with the new config
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 async def test_invalid_discovery_prefix(
