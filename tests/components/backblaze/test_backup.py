@@ -10,6 +10,7 @@ from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze.backup import (
+    METADATA_VERSION,
     BackblazeBackupAgent,
     async_get_backup_agents,
     async_register_backup_agents_listener,
@@ -506,3 +507,77 @@ async def test_process_metadata_file_sync_b2_error(
 
         assert result is None
         assert "Failed to parse metadata file" in caplog.text
+
+
+async def test_async_download_backup_not_found_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test async_download_backup raises BackupNotFound (line 106)."""
+    agents = await async_get_backup_agents(hass)
+    agent = None
+    for entry in agents:
+        if (
+            isinstance(entry, BackblazeBackupAgent)
+            and entry.unique_id == mock_config_entry.entry_id
+        ):
+            agent = entry
+            break
+
+    if agent is None:
+        pytest.fail("BackblazeBackupAgent not found")
+
+    with (
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+            return_value=(None, None),
+        ),
+        pytest.raises(BackupNotFound),
+    ):
+        await agent.async_download_backup("non_existent_backup")
+
+
+async def test_process_metadata_file_sync_non_conforming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test _process_metadata_file_sync with non-conforming metadata (lines 441-447)."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+    file_name = "test.metadata.json"
+    file_version = Mock()
+
+    # Test missing backup_id
+    metadata_content = {
+        "metadata_version": METADATA_VERSION,
+        # Missing backup_id
+    }
+    file_version.download.return_value.text_content = json.dumps(metadata_content)
+
+    with caplog.at_level(logging.DEBUG):
+        result = await hass.async_add_executor_job(
+            agent._process_metadata_file_sync,
+            file_name,
+            file_version,
+            {},
+        )
+        assert result is None
+        assert "Skipping non-conforming metadata file" in caplog.text
+
+    # Test wrong version
+    metadata_content = {
+        "metadata_version": "2",
+        "backup_id": "test",
+    }
+    file_version.download.return_value.text_content = json.dumps(metadata_content)
+
+    with caplog.at_level(logging.DEBUG):
+        result = await hass.async_add_executor_job(
+            agent._process_metadata_file_sync,
+            file_name,
+            file_version,
+            {},
+        )
+        assert result is None
+        assert "Skipping non-conforming metadata file" in caplog.text
