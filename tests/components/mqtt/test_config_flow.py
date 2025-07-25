@@ -17,7 +17,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.components.mqtt.config_flow import (
+    PWD_NOT_CHANGED,
+    MQTTOptionsFlowHandler,
+)
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -193,8 +196,8 @@ def mock_ssl_context(mock_context_client_key: bytes) -> Generator[dict[str, Magi
 @pytest.fixture
 def mock_reload_after_entry_update() -> Generator[MagicMock]:
     """Mock out the reload after updating the entry."""
-    with patch(
-        "homeassistant.components.mqtt._async_config_entry_updated"
+    with patch.object(
+        MQTTOptionsFlowHandler, "automatic_reload", return_value=False
     ) as mock_reload:
         yield mock_reload
 
@@ -1330,11 +1333,11 @@ async def test_keepalive_validation(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_disable_birth_will(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
-    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
     await mqtt_mock_entry()
@@ -1348,7 +1351,6 @@ async def test_disable_birth_will(
         },
     )
     await hass.async_block_till_done()
-    mock_reload_after_entry_update.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1386,10 +1388,6 @@ async def test_disable_birth_will(
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
     }
-
-    await hass.async_block_till_done()
-    # assert that the entry was reloaded with the new config
-    assert mock_reload_after_entry_update.call_count == 1
 
 
 async def test_invalid_discovery_prefix(
@@ -3220,7 +3218,7 @@ async def test_subentry_configflow(
         "url": learn_more_url(component["platform"]),
     }
 
-    # Process entity details setep
+    # Process entity details step
     assert result["step_id"] == "entity_platform_config"
 
     # First test validators if set of test
@@ -3344,6 +3342,7 @@ async def test_subentry_reconfigure_remove_entity(
         "delete_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can delete an entity
@@ -3465,6 +3464,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "delete_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can update an entity
@@ -3683,6 +3683,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         "update_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3823,6 +3824,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
         "update_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3953,6 +3955,7 @@ async def test_subentry_reconfigure_add_entity(
         "update_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can update the entity, there is no select step
@@ -4058,6 +4061,7 @@ async def test_subentry_reconfigure_update_device_properties(
         "delete_entity",
         "device",
         "availability",
+        "export",
     ]
 
     # assert we can update the device properties
@@ -4212,3 +4216,146 @@ async def test_subentry_reconfigure_availablity(
         "payload_available": "1",
         "payload_not_available": "0",
     }
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("flow_step", "field_suggestions"),
+    [
+        ("export_yaml", {"yaml": "identifiers:\n      - {}\n"}),
+        (
+            "export_discovery",
+            {
+                "discovery_topic": "homeassistant/device/{}/config",
+                "discovery_payload": '"identifiers": [\n      "{}"\n',
+            },
+        ),
+    ],
+)
+async def test_subentry_reconfigure_export_settings(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    flow_step: str,
+    field_suggestions: dict[str, str],
+) -> None:
+    """Test the subentry ConfigFlow reconfigure export feature."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we entity for all subentry components
+    components = deepcopy(dict(subentry.data))["components"]
+    assert len(components) == 2
+
+    # assert menu options, we have the option to export
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "delete_entity",
+        "device",
+        "availability",
+        "export",
+    ]
+
+    # Open export menu
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "export"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "export"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": flow_step},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == flow_step
+    assert result["description_placeholders"] == {
+        "url": "https://www.home-assistant.io/integrations/mqtt/"
+    }
+
+    # Assert the export is correct
+    for field in result["data_schema"].schema:
+        assert (
+            field_suggestions[field].format(subentry_id)
+            in field.description["suggested_value"]
+        )
+
+    # Back to summary menu
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+
+async def test_subentry_configflow_section_feature(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the subentry ConfigFlow sections are hidden when they have no configurable options."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Bla", "mqtt_settings": {"qos": 1}},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"platform": "fan"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"] == {
+        "mqtt_device": "Bla",
+        "platform": "fan",
+        "entity": "Bla",
+        "url": learn_more_url("fan"),
+    }
+
+    # Process entity details step
+    assert result["step_id"] == "entity_platform_config"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"fan_feature_speed": True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "mqtt_platform_config"
+
+    # Check mqtt platform config flow sections from data schema
+    data_schema = result["data_schema"].schema
+    assert "fan_speed_settings" in data_schema
+    assert "fan_preset_mode_settings" not in data_schema

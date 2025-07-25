@@ -194,6 +194,12 @@
       },
       "auto_relock_timer": {
         "name": "Autorelock time"
+      },
+      "led_indicator_intensity_off": {
+        "name": "LED off intensity"
+      },
+      "led_indicator_intensity_on": {
+        "name": "LED on intensity"
       }
     },
     "light": {
@@ -304,7 +310,7 @@
         "name": "Flow"
       },
       "hepa_filter_condition": {
-        "name": "Hepa filter condition"
+        "name": "HEPA filter condition"
       },
       "operational_state": {
         "name": "Operational state",

@@ -371,6 +371,9 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             block,
             suggested_area=coordinator.suggested_area,
         )
@@ -417,6 +420,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             suggested_area=coordinator.suggested_area,
         )
@@ -536,6 +542,9 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             suggested_area=coordinator.suggested_area,
         )
         self._last_value = None
@@ -647,6 +656,9 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self._attr_device_info = get_block_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             block,
             suggested_area=coordinator.suggested_area,
         )
@@ -717,6 +729,9 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_device_info = get_rpc_device_info(
             coordinator.device,
             coordinator.mac,
+            coordinator.configuration_url,
+            coordinator.model,
+            coordinator.model_name,
             key,
             suggested_area=coordinator.suggested_area,
         )
