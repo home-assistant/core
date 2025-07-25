@@ -1,9 +1,9 @@
 {
   "common": {
-    "low_voltage": "Low Voltage",
-    "high_voltage": "High Voltage",
-    "starter_voltage": "Starter Voltage",
-    "midpoint_voltage": "Midpoint Voltage"
+    "low_voltage": "Low voltage",
+    "high_voltage": "High voltage",
+    "starter_voltage": "Starter voltage",
+    "midpoint_voltage": "Midpoint voltage"
   },
   "config": {
     "flow_title": "{title}",
@@ -35,10 +35,10 @@
   "entity": {
     "sensor": {
       "ac_in_power": {
-        "name": "AC In Power"
+        "name": "AC in power"
       },
       "ac_out_power": {
-        "name": "AC Out Power"
+        "name": "AC out power"
       },
       "alarm": {
         "name": "Alarm",
@@ -46,30 +46,30 @@
           "no_alarm": "No alarm",
           "low_voltage": "[%key:component::victron_ble::common::low_voltage%]",
           "high_voltage": "[%key:component::victron_ble::common::high_voltage%]",
-          "low_soc": "Low State of Charge",
-          "low_starter_voltage": "Low Starter Voltage",
-          "high_starter_voltage": "High Starter Voltage",
-          "low_temperature": "Low Temperature",
-          "high_temperature": "High Temperature",
+          "low_soc": "Low state of charge",
+          "low_starter_voltage": "Low starter voltage",
+          "high_starter_voltage": "High starter voltage",
+          "low_temperature": "Low temperature",
+          "high_temperature": "High temperature",
           "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
           "overload": "Overload",
-          "dc_ripple": "DC Ripple",
-          "low_v_ac_out": "Low Voltage AC Out",
-          "high_v_ac_out": "High Voltage AC Out",
-          "short_circuit": "Short Circuit",
-          "bms_lockout": "Battery Management System Lockout"
+          "dc_ripple": "DC ripple",
+          "low_v_ac_out": "Low voltage AC out",
+          "high_v_ac_out": "High voltage AC out",
+          "short_circuit": "Short circuit",
+          "bms_lockout": "Battery management system lockout"
         }
       },
       "aux_mode": {
-        "name": "Aux Mode",
+        "name": "Aux mode",
         "state": {
           "starter_voltage": "[%key:component::victron_ble::common::starter_voltage%]",
           "midpoint_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
-          "temperature": "Temperature Sensor"
+          "temperature": "Temperature sensor"
         }
       },
       "balancer_status": {
-        "name": "Balancer Status",
+        "name": "Balancer status",
         "state": {
           "unknown": "Unknown",
           "balanced": "Balanced",
@@ -78,74 +78,43 @@
         }
       },
       "battery_current": {
-        "name": "Battery Current"
+        "name": "Battery current"
       },
       "battery_temperature": {
-        "name": "Battery Temperature"
+        "name": "Battery temperature"
       },
       "battery_voltage": {
-        "name": "Battery Voltage"
+        "name": "Battery voltage"
       },
       "cell_1_voltage": {
-        "name": "Cell 1 Voltage"
+        "name": "Cell 1 voltage"
       },
       "cell_2_voltage": {
-        "name": "Cell 2 Voltage"
+        "name": "Cell 2 voltage"
       },
       "cell_3_voltage": {
-        "name": "Cell 3 Voltage"
+        "name": "Cell 3 voltage"
       },
       "cell_4_voltage": {
-        "name": "Cell 4 Voltage"
+        "name": "Cell 4 voltage"
       },
       "cell_5_voltage": {
-        "name": "Cell 5 Voltage"
+        "name": "Cell 5 voltage"
       },
       "cell_6_voltage": {
-        "name": "Cell 6 Voltage"
+        "name": "Cell 6 voltage"
       },
       "cell_7_voltage": {
-        "name": "Cell 7 Voltage"
+        "name": "Cell 7 voltage"
       },
       "cell_8_voltage": {
-        "name": "Cell 8 Voltage"
+        "name": "Cell 8 voltage"
       },
       "charge_state": {
-        "name": "Charge State"
+        "name": "Charge state"
       },
       "charger_error": {
-        "name": "Charger Error"
-      },
-      "consumped_ampere_hours": {
-        "name": "Consumed Ampere Hours"
-      },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
-      "device_state": {
-        "name": "Device State",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "low_power": "Low Power",
-          "fault": "Fault",
-          "bulk": "Bulk",
-          "absorption": "Absorption",
-          "float": "Float",
-          "storage": "Storage",
-          "equalize_manual": "Equalize Manual",
-          "inverting": "Inverting",
-          "power_supply": "Power Supply",
-          "starting_up": "Starting Up",
-          "repeated_absorption": "Repeated Absorption",
-          "recondition": "Recondition",
-          "battery_safe": "Battery Safe",
-          "active": "Active",
-          "external_control": "External Control",
-          "not_available": "Not Available"
-        }
-      },
-      "error_code": {
-        "name": "Error Code",
+        "name": "Charger error",
         "state": {
           "no_error": "No error",
           "temperature_battery_high": "Battery temperature too high",
@@ -216,14 +185,45 @@
           "internal_supply_d": "Internal supply voltage error"
         }
       },
+      "consumped_ampere_hours": {
+        "name": "Consumed ampere hours"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "device_state": {
+        "name": "Device state",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low_power": "Low power",
+          "fault": "Fault",
+          "bulk": "Bulk",
+          "absorption": "Absorption",
+          "float": "Float",
+          "storage": "Storage",
+          "equalize_manual": "Equalize (manual)",
+          "inverting": "Inverting",
+          "power_supply": "Power supply",
+          "starting_up": "Starting up",
+          "repeated_absorption": "Repeated absorption",
+          "recondition": "Recondition",
+          "battery_safe": "Battery safe",
+          "active": "Active",
+          "external_control": "External control",
+          "not_available": "Not available"
+        }
+      },
+      "error_code": {
+        "name": "Error code"
+      },
       "external_device_load": {
-        "name": "External Device Load"
+        "name": "External device load"
       },
       "input_voltage": {
-        "name": "Input Voltage"
+        "name": "Input voltage"
       },
       "meter_type": {
-        "name": "Meter Type",
+        "name": "Meter type",
         "state": {
           "solar_charger": "Solar charger",
           "wind_charger": "Wind charger",
@@ -248,7 +248,7 @@
         "name": "[%key:component::victron_ble::common::midpoint_voltage%]"
       },
       "off_reason": {
-        "name": "Off Reason",
+        "name": "Off reason",
         "state": {
           "no_reason": "No reason",
           "no_input_power": "No input power",
@@ -263,20 +263,20 @@
         }
       },
       "output_state": {
-        "name": "Output State",
+        "name": "Output state",
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]"
         }
       },
       "output_voltage": {
-        "name": "Output Voltage"
+        "name": "Output voltage"
       },
       "remaining_minutes": {
-        "name": "Remaining Minutes"
+        "name": "Remaining minutes"
       },
       "solar_power": {
-        "name": "Solar Power"
+        "name": "Solar power"
       },
       "starter_voltage": {
         "name": "[%key:component::victron_ble::common::starter_voltage%]"
@@ -291,7 +291,7 @@
         "name": "Warning"
       },
       "yield_today": {
-        "name": "Yield Today"
+        "name": "Yield today"
       }
     }
   }

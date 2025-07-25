@@ -120,7 +120,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.ERROR_CODE: SensorEntityDescription(
         key=Keys.ERROR_CODE,
         device_class=SensorDeviceClass.ENUM,
-        translation_key="error_code",
+        translation_key="charger_error",
     ),
     Keys.EXTERNAL_DEVICE_LOAD: SensorEntityDescription(
         key=Keys.EXTERNAL_DEVICE_LOAD,
