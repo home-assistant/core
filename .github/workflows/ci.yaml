@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 4-c1
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2025.8"
@@ -541,6 +541,13 @@ jobs:
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
+
+          # https://github.com/cdce8p/ical/tree/pydantic-v2  # 2025-07-23
+          uv pip install git+https://github.com/cdce8p/ical@0caf173676a2785782dd2b542cca2a8debd482e0
+
+          # https://github.com/cdce8p/gcal_sync/tree/pydantic-v2  # 2025-07-24
+          uv pip install git+https://github.com/cdce8p/gcal_sync@f8cc653568ccaaccb59488faf60a52daf24708bc
+
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
