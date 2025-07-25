@@ -29,6 +29,26 @@
         "scale": 0,
         "step": 1
       }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "pro_add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
     }
   },
   "status_range": {
@@ -45,11 +65,33 @@
         "scale": 0,
         "step": 1
       }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "pro_add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
     }
   },
   "status": {
     "switch_1": false,
-    "countdown_1": 0
+    "countdown_1": 0,
+    "add_ele": 125000,
+    "pro_add_ele": 50000
   },
   "set_up": true,
   "support_local": true

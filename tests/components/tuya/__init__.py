@@ -93,6 +93,7 @@ DEVICE_MOCKS = {
     ],
     "kg_smart_valve": [
         # https://github.com/home-assistant/core/issues/148347
+        Platform.SENSOR,
         Platform.SWITCH,
     ],
     "kj_bladeless_tower_fan": [
