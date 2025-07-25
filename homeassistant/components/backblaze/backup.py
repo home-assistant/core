@@ -1,5 +1,6 @@
 """Backup platform for the Backblaze integration."""
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import functools
 import json
@@ -86,7 +87,6 @@ class BackblazeBackupAgent(BackupAgent):
         """Initialize the Backblaze agent."""
         super().__init__()
         self._hass = hass
-        self.async_create_task = entry.async_create_task
         self._bucket = entry.runtime_data
         self._prefix = entry.data[CONF_PREFIX]
 
@@ -173,7 +173,7 @@ class BackblazeBackupAgent(BackupAgent):
                 w.close()
 
         # Schedule the writers
-        backup_writer_task = self.async_create_task(self._hass, backup_writer())
+        backup_writer_task = self._hass.async_create_task(backup_writer())
         metadata_writer_task = self._hass.async_add_executor_job(metadata_writer)
 
         # The upload_files function needs to be async because it's called with await
@@ -258,65 +258,22 @@ class BackblazeBackupAgent(BackupAgent):
             list(all_files_in_prefix.keys()),
         )
 
-        # Separate the logic for processing metadata files into a helper function
-        async def _process_metadata_file(
-            file_name: str, file_version: FileVersion
-        ) -> AgentBackup | None:
-            """Process a single metadata file and return an AgentBackup if valid."""
-            try:
-                downloaded_meta = await self._hass.async_add_executor_job(
-                    file_version.download
-                )
-                metadata_content = json.loads(downloaded_meta.text_content)
-
-                if (
-                    metadata_content.get("metadata_version") == METADATA_VERSION
-                    and "backup_id" in metadata_content
-                    and "backup_metadata" in metadata_content
-                ):
-                    backup_id = file_name[
-                        len(self._prefix) : -len(METADATA_FILE_SUFFIX)
-                    ]
-                    found_backup_archive_file = None
-
-                    for (
-                        archive_file_name,
-                        archive_file_version,
-                    ) in all_files_in_prefix.items():
-                        if archive_file_name.startswith(
-                            self._prefix + backup_id
-                        ) and not archive_file_name.endswith(METADATA_FILE_SUFFIX):
-                            found_backup_archive_file = archive_file_version
-                            _LOGGER.debug(
-                                "Matched metadata file '%s' with archive file '%s'",
-                                file_name,
-                                archive_file_name,
-                            )
-                            break
-                    if found_backup_archive_file:
-                        return self._backup_from_b2_metadata(
-                            metadata_content, found_backup_archive_file
-                        )
-                    _LOGGER.warning(
-                        "Found metadata file %s but no corresponding backup file starting with %s (after prefix)",
-                        file_name,
-                        backup_id,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Skipping non-conforming metadata file: %s", file_name
-                    )
-
-            except (B2Error, json.JSONDecodeError) as err:
-                _LOGGER.warning("Failed to parse metadata file %s: %s", file_name, err)
-            return None
-
-        # Iterate through files and process metadata files
+        # Collect tasks for concurrent metadata downloads
+        tasks = []
         for file_name, file_version in all_files_in_prefix.items():
             if file_name.endswith(METADATA_FILE_SUFFIX):
-                backup = await _process_metadata_file(file_name, file_version)
-                if backup:
-                    backups.append(backup)
+                tasks.append(
+                    self._hass.async_add_executor_job(
+                        self._process_metadata_file_sync,
+                        file_name,
+                        file_version,
+                        all_files_in_prefix,
+                    )
+                )
+
+        # Run metadata downloads concurrently
+        results = await asyncio.gather(*tasks)
+        backups = [backup for backup in results if backup]
 
         _LOGGER.debug("Found %d backups", len(backups))
         return backups
@@ -356,24 +313,6 @@ class BackblazeBackupAgent(BackupAgent):
         all_files_in_prefix = await self._get_all_files_in_prefix()
 
         # Iterate through metadata files to find the one matching backup_id
-        found_backup_file = None
-        found_metadata_file_name = None
-
-        # Use a helper function to find the corresponding backup file
-        def _find_corresponding_backup_file(
-            target_backup_id: str,
-        ) -> FileVersion | None:
-            """Find the actual backup file for a given backup ID."""
-            for (
-                archive_file_name,
-                archive_file_version,
-            ) in all_files_in_prefix.items():
-                if archive_file_name.startswith(
-                    self._prefix + target_backup_id
-                ) and not archive_file_name.endswith(METADATA_FILE_SUFFIX):
-                    return archive_file_version
-            return None
-
         for file_name, file_version in all_files_in_prefix.items():
             if not file_name.endswith(METADATA_FILE_SUFFIX):
                 continue
@@ -383,32 +322,45 @@ class BackblazeBackupAgent(BackupAgent):
                     file_version.download
                 )
                 metadata_content = json.loads(downloaded_meta.text_content)
-
-                if (
-                    metadata_content.get("metadata_version") == METADATA_VERSION
-                    and metadata_content.get("backup_id") == backup_id
-                ):
-                    found_metadata_file_name = file_name
-                    found_backup_file = _find_corresponding_backup_file(backup_id)
-
-                    if found_backup_file:
-                        _LOGGER.debug(
-                            "Found backup file %s and metadata file %s from id %s",
-                            found_backup_file.file_name,
-                            found_metadata_file_name,
-                            backup_id,
-                        )
-                        return found_backup_file, found_metadata_file_name
-                    _LOGGER.warning(
-                        "Found metadata file %s for backup ID %s, but no corresponding backup file",
-                        file_name,
-                        backup_id,
-                    )
             except (B2Error, json.JSONDecodeError) as err:
                 _LOGGER.warning(
                     "Failed to parse metadata file %s during ID search: %s",
                     file_name,
                     err,
+                )
+                continue
+
+            if (
+                metadata_content.get("metadata_version") == METADATA_VERSION
+                and metadata_content.get("backup_id") == backup_id
+            ):
+                # Found the metadata file for the given backup_id
+                found_metadata_file_name = file_name
+                # Find the corresponding backup file (e.g., .tar)
+                # It should start with the backup_id and not be a metadata file
+                found_backup_file = next(
+                    (
+                        archive_file_version
+                        for archive_file_name, archive_file_version in all_files_in_prefix.items()
+                        if archive_file_name.startswith(self._prefix + backup_id)
+                        and not archive_file_name.endswith(METADATA_FILE_SUFFIX)
+                    ),
+                    None,
+                )
+
+                if found_backup_file:
+                    _LOGGER.debug(
+                        "Found backup file %s and metadata file %s from id %s",
+                        found_backup_file.file_name,
+                        found_metadata_file_name,
+                        backup_id,
+                    )
+                    return found_backup_file, found_metadata_file_name
+
+                _LOGGER.warning(
+                    "Found metadata file %s for backup ID %s, but no corresponding backup file",
+                    file_name,
+                    backup_id,
                 )
 
         _LOGGER.debug("Backup %s not found", backup_id)
@@ -433,3 +385,52 @@ class BackblazeBackupAgent(BackupAgent):
 
         await self._hass.async_add_executor_job(get_files_sync)
         return all_files_in_prefix
+
+    def _process_metadata_file_sync(
+        self,
+        file_name: str,
+        file_version: FileVersion,
+        all_files_in_prefix: dict[str, FileVersion],
+    ) -> AgentBackup | None:
+        """Synchronously process a single metadata file and return an AgentBackup if valid."""
+        try:
+            downloaded_meta = file_version.download()
+            metadata_content = json.loads(downloaded_meta.text_content)
+
+            if (
+                metadata_content.get("metadata_version") == METADATA_VERSION
+                and "backup_id" in metadata_content
+                and "backup_metadata" in metadata_content
+            ):
+                backup_id = file_name[len(self._prefix) : -len(METADATA_FILE_SUFFIX)]
+                found_backup_archive_file = None
+
+                for (
+                    archive_file_name,
+                    archive_file_version,
+                ) in all_files_in_prefix.items():
+                    if archive_file_name.startswith(
+                        self._prefix + backup_id
+                    ) and not archive_file_name.endswith(METADATA_FILE_SUFFIX):
+                        found_backup_archive_file = archive_file_version
+                        _LOGGER.debug(
+                            "Matched metadata file '%s' with archive file '%s'",
+                            file_name,
+                            archive_file_name,
+                        )
+                        break
+                if found_backup_archive_file:
+                    return self._backup_from_b2_metadata(
+                        metadata_content, found_backup_archive_file
+                    )
+                _LOGGER.warning(
+                    "Found metadata file %s but no corresponding backup file starting with %s (after prefix)",
+                    file_name,
+                    backup_id,
+                )
+            else:
+                _LOGGER.debug("Skipping non-conforming metadata file: %s", file_name)
+
+        except (B2Error, json.JSONDecodeError) as err:
+            _LOGGER.warning("Failed to parse metadata file %s: %s", file_name, err)
+        return None
