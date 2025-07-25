@@ -69,6 +69,37 @@
         },
         "title": "Template button"
       },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "percentage": "Percentage",
+          "set_percentage": "Actions on set percentage",
+          "preset_mode": "Preset mode",
+          "preset_modes": "Preset modes",
+          "set_preset_mode": "Actions on set preset mode",
+          "direction": "Direction",
+          "set_direction": "Actions on set direction",
+          "oscillating": "Oscillating",
+          "set_oscillating": "Actions on set oscillating",
+          "speed_count": "Speed count"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "Template fan"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -258,6 +289,36 @@
           }
         },
         "title": "[%key:component::template::config::step::button::title%]"
+      },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "percentage": "[%key:component::template::config::step::fan::data::percentage%]",
+          "set_percentage": "[%key:component::template::config::step::fan::data::set_percentage%]",
+          "preset_mode": "[%key:component::template::config::step::fan::data::preset_mode%]",
+          "preset_modes": "[%key:component::template::config::step::fan::data::preset_modes%]",
+          "set_preset_mode": "[%key:component::template::config::step::fan::data::set_preset_mode%]",
+          "direction": "[%key:component::template::config::step::fan::data::direction%]",
+          "set_direction": "[%key:component::template::config::step::fan::data::set_direction%]",
+          "oscillating": "[%key:component::template::config::step::fan::data::oscillating%]",
+          "set_oscillating": "[%key:component::template::config::step::fan::data::set_oscillating%]",
+          "speed_count": "[%key:component::template::config::step::fan::data::speed_count%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::fan::title%]"
       },
       "image": {
         "data": {

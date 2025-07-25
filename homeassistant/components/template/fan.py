@@ -20,6 +20,7 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -34,15 +35,23 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -81,24 +90,26 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Fan"
 
-FAN_YAML_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_DIRECTION): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OSCILLATING): cv.template,
-            vol.Optional(CONF_PERCENTAGE): cv.template,
-            vol.Optional(CONF_PRESET_MODE): cv.template,
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_STATE): cv.template,
-        }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+FAN_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DIRECTION): cv.template,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OSCILLATING): cv.template,
+        vol.Optional(CONF_PERCENTAGE): cv.template,
+        vol.Optional(CONF_PRESET_MODE): cv.template,
+        vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
+        vol.Optional(CONF_STATE): cv.template,
+    }
+)
+
+FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
 )
 
 FAN_LEGACY_YAML_SCHEMA = vol.All(
@@ -129,6 +140,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
 )
 
+FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -147,6 +162,35 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_FANS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateFanEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
     )
 
 

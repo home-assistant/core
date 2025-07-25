@@ -62,6 +62,21 @@ from .const import (
     CONF_TURN_ON,
     DOMAIN,
 )
+from .fan import (
+    CONF_DIRECTION,
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_OSCILLATING,
+    CONF_PERCENTAGE,
+    CONF_PRESET_MODE,
+    CONF_PRESET_MODES,
+    CONF_SET_DIRECTION_ACTION,
+    CONF_SET_OSCILLATING_ACTION,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+    CONF_SPEED_COUNT,
+    async_create_preview_fan,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -142,6 +157,33 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.FAN:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
+            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_PRESET_MODE): selector.TemplateSelector(),
+            vol.Optional(CONF_PRESET_MODES): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_DIRECTION): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_DIRECTION_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_OSCILLATING): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+        }
 
     if domain == Platform.IMAGE:
         schema |= {
@@ -327,6 +369,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.FAN,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -349,6 +392,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        config_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -394,6 +442,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.FAN: SchemaFlowFormStep(
+        options_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
@@ -427,6 +480,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.FAN: async_create_preview_fan,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
