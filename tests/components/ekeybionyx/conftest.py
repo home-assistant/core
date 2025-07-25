@@ -70,8 +70,8 @@ def mock_no_response(
     )
 
 
-@pytest.fixture(name="no_availible_webhooks")
-def mock_no_availible_webhooks(
+@pytest.fixture(name="no_available_webhooks")
+def mock_no_available_webhooks(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""

@@ -175,12 +175,12 @@ async def test_no_own_system(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_no_availible_webhooks(
+async def test_no_available_webhooks(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
-    no_availible_webhooks: None,
+    no_available_webhooks: None,
 ) -> None:
     """Check no own System flow."""
     result = await hass.config_entries.flow.async_init(
@@ -220,7 +220,7 @@ async def test_no_availible_webhooks(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     assert flow.get("type") is FlowResultType.ABORT
-    assert flow.get("reason") == "no_availible_webhooks"
+    assert flow.get("reason") == "no_available_webhooks"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
