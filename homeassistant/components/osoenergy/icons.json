@@ -14,10 +14,10 @@
   },
   "services": {
     "disable_holiday_mode": {
-      "service": "mdi:beach"
+      "service": "mdi:home"
     },
     "enable_holiday_mode": {
-      "service": "mdi:home"
+      "service": "mdi:beach"
     },
     "get_profile": {
       "service": "mdi:thermometer-lines"
