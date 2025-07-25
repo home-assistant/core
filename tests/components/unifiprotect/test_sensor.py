@@ -406,7 +406,7 @@ async def test_sensor_setup_camera(
     assert state.state == "1000"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # WiFi signal
+    # Wi-Fi signal
     unique_id, entity_id = await ids_from_device_description(
         hass,
         Platform.SENSOR,
