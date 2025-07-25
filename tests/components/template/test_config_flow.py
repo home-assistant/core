@@ -181,6 +181,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
         ),
+        (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            "2024-07-09T00:00:00.000+00:00",
+            {"one": "single", "two": "double"},
+            {},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {},
+        ),
     ],
 )
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
@@ -331,6 +341,12 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
         ),
     ],
 )
@@ -550,6 +566,16 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+        ),
+        (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            {"event_type": "{{ states('event.two') }}"},
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            {"one": "single", "two": "double"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            "event_type",
         ),
     ],
 )
@@ -1365,6 +1391,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
         ),
     ],
 )
