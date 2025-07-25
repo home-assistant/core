@@ -75,13 +75,13 @@
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]",
-          "open_cover": "Actions on open cover",
-          "close_cover": "Actions on close cover",
-          "stop_cover": "Actions on stop cover",
+          "open_cover": "Actions on open",
+          "close_cover": "Actions on close",
+          "stop_cover": "Actions on stop",
           "position": "Position",
-          "set_cover_position": "Actions on set cover position",
+          "set_cover_position": "Actions on set position",
           "tilt": "Tilt position",
-          "set_cover_tilt_position": "Actions on set cover position"
+          "set_cover_tilt_position": "Actions on set tilt position"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
