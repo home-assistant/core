@@ -37,6 +37,7 @@ async def async_setup_entry(
     entry.runtime_data = PlaystationNetworkRuntimeData(coordinator, trophy_titles)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

@@ -13,19 +13,61 @@ from psnawp_api.core.psnawp_exceptions import (
 from psnawp_api.utils.misc import parse_npsso_token
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.selector import BooleanSelector
 
-from .const import CONF_NPSSO, DOMAIN, NPSSO_LINK, PSN_LINK
+from .const import CONF_NPSSO, CONF_SHOW_ENTITY_PICTURES, DOMAIN, NPSSO_LINK, PSN_LINK
+from .coordinator import PlaystationNetworkConfigEntry
 from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_NPSSO): str})
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SHOW_ENTITY_PICTURES): BooleanSelector(),
+    }
+)
+
+
+class PlaystationNetworkOptionsFlowHandler(OptionsFlow):
+    """Handle an options flow for PlayStation Network."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+            description_placeholders={
+                "trophy_pack": "https://www.home-assistant.io/integrations/playstation_network#trophy-images"
+            },
+        )
 
 
 class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Playstation Network."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: PlaystationNetworkConfigEntry,
+    ) -> PlaystationNetworkOptionsFlowHandler:
+        """Create the options flow."""
+        return PlaystationNetworkOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

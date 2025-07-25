@@ -3,6 +3,7 @@
   "name": "PlayStation Network",
   "codeowners": ["@jackjpowell", "@tr4nt0r"],
   "config_flow": true,
+  "dependencies": ["http"],
   "dhcp": [
     {
       "macaddress": "AC8995*"
