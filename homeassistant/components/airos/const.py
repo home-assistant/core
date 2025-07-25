@@ -7,5 +7,3 @@ DOMAIN = "airos"
 SCAN_INTERVAL = timedelta(minutes=1)
 
 MANUFACTURER = "Ubiquiti"
-
-AIROS_DEFAULT_HOSTNAME = "Ubiquiti airOS Device"
