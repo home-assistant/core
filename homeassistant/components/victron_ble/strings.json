@@ -35,17 +35,17 @@
   "entity": {
     "sensor": {
       "ac_in_power": {
-        "name": "AC in power"
+        "name": "AC-in power"
       },
       "ac_out_power": {
-        "name": "AC out power"
+        "name": "AC-out power"
       },
       "alarm": {
         "name": "Alarm",
         "state": {
           "no_alarm": "No alarm",
-          "low_voltage": "[%key:component::victron_ble::common::low_voltage%]",
-          "high_voltage": "[%key:component::victron_ble::common::high_voltage%]",
+          "low_voltage": "Undervoltage",
+          "high_voltage": "Overvoltage",
           "low_soc": "Low state of charge",
           "low_starter_voltage": "Low starter voltage",
           "high_starter_voltage": "High starter voltage",
@@ -54,8 +54,8 @@
           "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
           "overload": "Overload",
           "dc_ripple": "DC ripple",
-          "low_v_ac_out": "Low voltage AC out",
-          "high_v_ac_out": "High voltage AC out",
+          "low_v_ac_out": "AC-out undervoltage",
+          "high_v_ac_out": "AC-out overvoltage",
           "short_circuit": "Short circuit",
           "bms_lockout": "Battery management system lockout"
         }
@@ -118,7 +118,7 @@
         "state": {
           "no_error": "No error",
           "temperature_battery_high": "Battery temperature too high",
-          "voltage_high": "Battery voltage too high",
+          "voltage_high": "Battery overvoltage",
           "remote_temperature_a": "Remote temperature sensor failure (auto-reset)",
           "remote_temperature_b": "Remote temperature sensor failure (auto-reset)",
           "remote_temperature_c": "Remote temperature sensor failure (not auto-reset)",
@@ -128,7 +128,7 @@
           "high_ripple": "Battery high ripple voltage",
           "temperature_battery_low": "Battery temperature too low",
           "temperature_charger": "Charger temperature too high",
-          "over_current": "Charger over current",
+          "over_current": "Charger overcurrent",
           "bulk_time": "Bulk time limit exceeded",
           "current_sensor": "Current sensor issue",
           "internal_temperature_a": "Internal temperature sensor failure",
@@ -137,11 +137,11 @@
           "overheated": "Terminals overheated",
           "short_circuit": "Charger short circuit",
           "converter_issue": "Converter issue",
-          "over_charge": "Over-charge protection",
-          "input_voltage": "Input voltage too high (solar panel)",
-          "input_current": "Input current too high (solar panel)",
-          "input_power": "PV over-power",
-          "input_shutdown_voltage": "Input shutdown (excessive battery voltage)",
+          "over_charge": "Overcharge protection",
+          "input_voltage": "Input overvoltage",
+          "input_current": "Input overcurrent",
+          "input_power": "Input overpower",
+          "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
           "input_shutdown_failure": "PV input failed to shutdown",
           "inverter_shutdown_41": "Inverter shutdown (PV isolation)",
@@ -150,14 +150,14 @@
           "inverter_overload": "Inverter overload",
           "inverter_temperature": "Inverter temperature too high",
           "inverter_peak_current": "Inverter peak current",
-          "inverter_ouput_voltage_a": "Inverter output voltage",
-          "inverter_ouput_voltage_b": "Inverter output voltage",
-          "inverter_self_test_a": "Inverter self test failed",
-          "inverter_self_test_b": "Inverter self test failed",
+          "inverter_output_voltage_a": "Inverter output voltage",
+          "inverter_output_voltage_b": "Inverter output voltage",
+          "inverter_self_test_a": "Inverter self-test failed",
+          "inverter_self_test_b": "Inverter self-test failed",
           "inverter_ac": "Inverter AC voltage on output",
-          "inverter_self_test_c": "Inverter self test failed",
+          "inverter_self_test_c": "Inverter self-test failed",
           "communication": "Communication warning",
-          "synchronisation": "Synchronised charging device configuration issue",
+          "synchronisation": "Synchronized charging device configuration issue",
           "bms": "BMS connection lost",
           "network_a": "Network misconfigured",
           "network_b": "Network misconfigured",
@@ -259,7 +259,7 @@
           "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",
           "bms": "Battery management system",
           "engine_shutdown": "Engine shutdown",
-          "analysing_input_voltage": "Analysing input voltage"
+          "analysing_input_voltage": "Analyzing input voltage"
         }
       },
       "output_state": {
