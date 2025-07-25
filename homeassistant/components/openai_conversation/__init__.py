@@ -117,15 +117,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         # Get first conversation subentry for options
-        conversation_subentry = next(
-            (
-                sub
-                for sub in entry.subentries.values()
-                if sub.subentry_type == "conversation"
-            ),
-            None,
-        )
-        if not conversation_subentry:
+        if not (
+            conversation_subentry := next(
+                (
+                    sub
+                    for sub in entry.subentries.values()
+                    if sub.subentry_type == "conversation"
+                ),
+                None,
+            )
+        ):
             raise ServiceValidationError("No conversation configuration found")
 
         model: str = conversation_subentry.data.get(
@@ -138,13 +139,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ]
 
         if filenames := call.data.get(CONF_FILENAMES):
-            for filename in filenames:
-                if not hass.config.is_allowed_path(filename):
-                    raise HomeAssistantError(
-                        f"Cannot read `{filename}`, no access to path; "
-                        "`allowlist_external_dirs` may need to be adjusted in "
-                        "`configuration.yaml`"
-                    )
+            # Check access to all files first
+            if blocked_file := next(
+                (
+                    filename
+                    for filename in filenames
+                    if not hass.config.is_allowed_path(filename)
+                ),
+                None,
+            ):
+                raise HomeAssistantError(
+                    f"Cannot read `{blocked_file}`, no access to path; "
+                    "`allowlist_external_dirs` may need to be adjusted in "
+                    "`configuration.yaml`"
+                )
 
             content.extend(
                 await async_prepare_files_for_prompt(
@@ -244,11 +252,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 
     try:
         await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
-    except openai.AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        return False
     except openai.OpenAIError as err:
-        raise ConfigEntryNotReady(err) from err
+        match err:
+            case openai.AuthenticationError():
+                LOGGER.error("Invalid API key: %s", err)
+                return False
+            case _:
+                raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
 

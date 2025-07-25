@@ -1,6 +1,8 @@
 """Constants for the OpenAI Conversation integration."""
 
+from dataclasses import dataclass, field
 import logging
+from typing import Any
 
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.helpers import llm
@@ -58,6 +60,50 @@ UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
     "o3-mini",
 ]
 
+
+@dataclass(frozen=True)
+class ConversationOptions:
+    """Configuration options for conversation."""
+
+    recommended: bool = True
+    llm_hass_api: list[str] = field(default_factory=lambda: [llm.LLM_API_ASSIST])
+    prompt: str = llm.DEFAULT_INSTRUCTIONS_PROMPT
+    chat_model: str = RECOMMENDED_CHAT_MODEL
+    max_tokens: int = RECOMMENDED_MAX_TOKENS
+    temperature: float = RECOMMENDED_TEMPERATURE
+    top_p: float = RECOMMENDED_TOP_P
+    reasoning_effort: str = RECOMMENDED_REASONING_EFFORT
+    web_search: bool = RECOMMENDED_WEB_SEARCH
+    code_interpreter: bool = RECOMMENDED_CODE_INTERPRETER
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            CONF_RECOMMENDED: self.recommended,
+            CONF_LLM_HASS_API: self.llm_hass_api,
+            CONF_PROMPT: self.prompt,
+            CONF_CHAT_MODEL: self.chat_model,
+            CONF_MAX_TOKENS: self.max_tokens,
+            CONF_TEMPERATURE: self.temperature,
+            CONF_TOP_P: self.top_p,
+            CONF_REASONING_EFFORT: self.reasoning_effort,
+            CONF_WEB_SEARCH: self.web_search,
+            CONF_CODE_INTERPRETER: self.code_interpreter,
+        }
+
+
+@dataclass(frozen=True)
+class AITaskOptions:
+    """Configuration options for AI tasks."""
+
+    recommended: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary format."""
+        return {CONF_RECOMMENDED: self.recommended}
+
+
+# Maintain backward compatibility with existing dictionary format
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],

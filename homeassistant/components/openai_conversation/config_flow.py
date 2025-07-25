@@ -114,10 +114,15 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(user_input)
         try:
             await validate_input(self.hass, user_input)
-        except openai.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except openai.AuthenticationError:
-            errors["base"] = "invalid_auth"
+        except openai.OpenAIError as err:
+            match err:
+                case openai.APIConnectionError():
+                    errors["base"] = "cannot_connect"
+                case openai.AuthenticationError():
+                    errors["base"] = "invalid_auth"
+                case _:
+                    _LOGGER.exception("Unexpected OpenAI error")
+                    errors["base"] = "unknown"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -293,8 +298,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             options.update(user_input)
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
-                errors[CONF_CHAT_MODEL] = "model_not_supported"
+
+            match user_input.get(CONF_CHAT_MODEL):
+                case model if model in UNSUPPORTED_MODELS:
+                    errors[CONF_CHAT_MODEL] = "model_not_supported"
+                case _:
+                    pass
 
             if not errors:
                 return await self.async_step_model()

@@ -184,91 +184,97 @@ async def _transform_stream(
     async for event in result:
         LOGGER.debug("Received event: %s", event)
 
-        if isinstance(event, ResponseOutputItemAddedEvent):
-            if isinstance(event.item, ResponseOutputMessage):
-                yield {"role": event.item.role}
-            elif isinstance(event.item, ResponseFunctionToolCall):
+        match event:
+            case ResponseOutputItemAddedEvent(item=ResponseOutputMessage() as msg):
+                yield {"role": msg.role}
+            case ResponseOutputItemAddedEvent(
+                item=ResponseFunctionToolCall() as tool_call
+            ):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
                 # to ensure that tools are called as soon as possible.
                 yield {"role": "assistant"}
-                current_tool_call = event.item
-        elif isinstance(event, ResponseOutputItemDoneEvent):
-            item = event.item.model_dump()
-            item.pop("status", None)
-            if isinstance(event.item, ResponseReasoningItem):
-                messages.append(cast(ResponseReasoningItemParam, item))
-            elif isinstance(event.item, ResponseOutputMessage):
-                messages.append(cast(ResponseOutputMessageParam, item))
-            elif isinstance(event.item, ResponseFunctionToolCall):
-                messages.append(cast(ResponseFunctionToolCallParam, item))
-        elif isinstance(event, ResponseTextDeltaEvent):
-            yield {"content": event.delta}
-        elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
-            current_tool_call.arguments += event.delta
-        elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
-            current_tool_call.status = "completed"
-            yield {
-                "tool_calls": [
-                    llm.ToolInput(
-                        id=current_tool_call.call_id,
-                        tool_name=current_tool_call.name,
-                        tool_args=json.loads(current_tool_call.arguments),
-                    )
-                ]
-            }
-        elif isinstance(event, ResponseCompletedEvent):
-            if event.response.usage is not None:
-                chat_log.async_trace(
-                    {
-                        "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
-                        }
-                    }
-                )
-        elif isinstance(event, ResponseIncompleteEvent):
-            if event.response.usage is not None:
-                chat_log.async_trace(
-                    {
-                        "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
-                        }
-                    }
-                )
-
-            if (
-                event.response.incomplete_details
-                and event.response.incomplete_details.reason
+                current_tool_call = tool_call
+            case ResponseOutputItemDoneEvent() as done_event:
+                item = done_event.item.model_dump()
+                item.pop("status", None)
+                match done_event.item:
+                    case ResponseReasoningItem():
+                        messages.append(cast(ResponseReasoningItemParam, item))
+                    case ResponseOutputMessage():
+                        messages.append(cast(ResponseOutputMessageParam, item))
+                    case ResponseFunctionToolCall():
+                        messages.append(cast(ResponseFunctionToolCallParam, item))
+            case ResponseTextDeltaEvent(delta=delta):
+                yield {"content": delta}
+            case ResponseFunctionCallArgumentsDeltaEvent(delta=delta):
+                current_tool_call.arguments += delta
+            case ResponseFunctionCallArgumentsDoneEvent():
+                current_tool_call.status = "completed"
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=current_tool_call.call_id,
+                            tool_name=current_tool_call.name,
+                            tool_args=json.loads(current_tool_call.arguments),
+                        )
+                    ]
+                }
+            case ResponseCompletedEvent(response=response) if (
+                response.usage is not None
             ):
-                reason: str = event.response.incomplete_details.reason
-            else:
-                reason = "unknown reason"
-
-            if reason == "max_output_tokens":
-                reason = "max output tokens reached"
-            elif reason == "content_filter":
-                reason = "content filter triggered"
-
-            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
-        elif isinstance(event, ResponseFailedEvent):
-            if event.response.usage is not None:
                 chat_log.async_trace(
                     {
                         "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
+                            "input_tokens": response.usage.input_tokens,
+                            "output_tokens": response.usage.output_tokens,
                         }
                     }
                 )
-            reason = "unknown reason"
-            if event.response.error is not None:
-                reason = event.response.error.message
-            raise HomeAssistantError(f"OpenAI response failed: {reason}")
-        elif isinstance(event, ResponseErrorEvent):
-            raise HomeAssistantError(f"OpenAI response error: {event.message}")
+            case ResponseIncompleteEvent(response=response):
+                if response.usage is not None:
+                    chat_log.async_trace(
+                        {
+                            "stats": {
+                                "input_tokens": response.usage.input_tokens,
+                                "output_tokens": response.usage.output_tokens,
+                            }
+                        }
+                    )
+
+                reason = (
+                    response.incomplete_details.reason
+                    if response.incomplete_details
+                    and response.incomplete_details.reason
+                    else "unknown reason"
+                )
+
+                match reason:
+                    case "max_output_tokens":
+                        error_message = "max output tokens reached"
+                    case "content_filter":
+                        error_message = "content filter triggered"
+                    case _:
+                        error_message = reason
+
+                raise HomeAssistantError(f"OpenAI response incomplete: {error_message}")
+            case ResponseFailedEvent(response=response):
+                if response.usage is not None:
+                    chat_log.async_trace(
+                        {
+                            "stats": {
+                                "input_tokens": response.usage.input_tokens,
+                                "output_tokens": response.usage.output_tokens,
+                            }
+                        }
+                    )
+                error_message = (
+                    response.error.message if response.error else "unknown reason"
+                )
+                raise HomeAssistantError(f"OpenAI response failed: {error_message}")
+            case ResponseErrorEvent(message=message):
+                raise HomeAssistantError(f"OpenAI response error: {message}")
 
 
 class OpenAIBaseLLMEntity(Entity):
@@ -436,32 +442,33 @@ async def async_prepare_files_for_prompt(
             if not file_path.exists():
                 raise HomeAssistantError(f"`{file_path}` does not exist")
 
-            mime_type, _ = guess_file_type(file_path)
-
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+            if not (
+                mime_type := guess_file_type(file_path)[0]
+            ) or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
                     "Only images and PDF are supported by the OpenAI API,"
                     f"`{file_path}` is not an image file or PDF"
                 )
 
-            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+            base64_data = f"data:{mime_type};base64,{base64.b64encode(file_path.read_bytes()).decode('utf-8')}"
 
-            if mime_type.startswith("image/"):
-                content.append(
-                    ResponseInputImageParam(
-                        type="input_image",
-                        image_url=f"data:{mime_type};base64,{base64_file}",
-                        detail="auto",
+            match mime_type.split("/")[0]:
+                case "image":
+                    content.append(
+                        ResponseInputImageParam(
+                            type="input_image",
+                            image_url=base64_data,
+                            detail="auto",
+                        )
                     )
-                )
-            elif mime_type.startswith("application/pdf"):
-                content.append(
-                    ResponseInputFileParam(
-                        type="input_file",
-                        filename=str(file_path),
-                        file_data=f"data:{mime_type};base64,{base64_file}",
+                case "application" if mime_type == "application/pdf":
+                    content.append(
+                        ResponseInputFileParam(
+                            type="input_file",
+                            filename=str(file_path),
+                            file_data=base64_data,
+                        )
                     )
-                )
 
         return content
 
