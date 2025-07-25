@@ -114,7 +114,7 @@ class MatterLock(MatterEntity, LockEntity):
                         self._attr_is_locking = None
                         self._attr_is_jammed = True
                         self.async_write_ha_state()
-            case clusters.DoorLock.Events.LockOperation.event_id:  # Lock cluster vent 2
+            case clusters.DoorLock.Events.LockOperation.event_id:  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
                 operation_source: int = nodeEventData.get("operationSource", -1)
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
