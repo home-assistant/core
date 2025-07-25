@@ -13,6 +13,7 @@ from homeassistant.components.fluss.config_flow import (
     STEP_USER_DATA_SCHEMA,
     FlussConfigFlow,
 )
+from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,9 +26,11 @@ def config_flow(hass):
     return flow
 
 
-async def test_step_user_initial_form(config_flow: FlussConfigFlow) -> None:
+async def test_step_user_initial_form(hass) -> None:
     """Test initial form display when no user input is provided."""
-    result = await config_flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -35,13 +38,15 @@ async def test_step_user_initial_form(config_flow: FlussConfigFlow) -> None:
     assert result["errors"] == {}
 
 
-async def test_step_user_success(config_flow: FlussConfigFlow) -> None:
+async def test_step_user_success(hass) -> None:
     """Test successful user step."""
     user_input = {CONF_API_KEY: "valid_api_key"}
 
     with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
         mock_client.return_value = None
-        result = await config_flow.async_step_user(user_input)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=user_input
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Fluss+ Devices"
@@ -89,10 +94,15 @@ async def test_step_user_unexpected_error(config_flow: FlussConfigFlow, caplog) 
     assert "Unexpected exception occurred" in caplog.text
 
 
-async def test_single_instance_allowed(config_flow: FlussConfigFlow) -> None:
+async def test_single_instance_allowed(hass) -> None:
     """Test that only one instance is allowed."""
-    with patch.object(config_flow, "_async_current_entries", return_value=[True]):
-        result = await config_flow.async_step_user(None)
+    with patch(
+        "homeassistant.components.fluss.config_flow.FlussConfigFlow._async_current_entries",
+        return_value=[True]
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
