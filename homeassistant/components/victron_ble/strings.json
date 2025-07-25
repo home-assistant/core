@@ -43,7 +43,7 @@
       "alarm": {
         "name": "Alarm",
         "state": {
-          "no_alarm": "No alarm",
+          "none": "None",
           "low_voltage": "Undervoltage",
           "high_voltage": "Overvoltage",
           "low_soc": "Low state of charge",
