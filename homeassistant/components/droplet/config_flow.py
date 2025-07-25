@@ -91,7 +91,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     title=self._droplet_discovery.device_id,
                     data=device_data,
                 )
-            # Nicer error message? Why isn't it using strings.json?
             errors["base"] = "failed_connect"
         return self.async_show_form(
             step_id="confirm",

@@ -12,11 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfVolumeFlowRate
+from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -28,9 +29,8 @@ from .const import (
     KEY_CURRENT_FLOW_RATE,
     KEY_SERVER_CONNECTIVITY,
     KEY_SIGNAL_QUALITY,
-    NAME_CURRENT_FLOW_RATE,
-    NAME_SERVER_CONNECTIVITY,
-    NAME_SIGNAL_QUALITY,
+    KEY_VOLUME,
+    AccumulatedVolume,
 )
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
@@ -50,18 +50,62 @@ SENSORS: list[DropletSensorEntityDescription] = [
         translation_key=KEY_CURRENT_FLOW_RATE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
-        name=NAME_CURRENT_FLOW_RATE,
         value_fn=lambda device: device.get_flow_rate(),
+    ),
+    DropletSensorEntityDescription(
+        key=KEY_VOLUME,
+        translation_key=KEY_VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
+        has_entity_name=True,
+        value_fn=lambda device: device.get_volume_delta(),
+    ),
+    DropletSensorEntityDescription(
+        key=AccumulatedVolume.DAILY,
+        translation_key=AccumulatedVolume.DAILY,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        has_entity_name=True,
+        value_fn=lambda device: device.get_daily_volume(),
+    ),
+    DropletSensorEntityDescription(
+        key=AccumulatedVolume.WEEKLY,
+        translation_key=AccumulatedVolume.WEEKLY,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        has_entity_name=True,
+        value_fn=lambda device: device.get_weekly_volume(),
+    ),
+    DropletSensorEntityDescription(
+        key=AccumulatedVolume.MONTHLY,
+        translation_key=AccumulatedVolume.MONTHLY,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        has_entity_name=True,
+        value_fn=lambda device: device.get_monthly_volume(),
     ),
     DropletSensorEntityDescription(
         key=KEY_SERVER_CONNECTIVITY,
         translation_key=KEY_SERVER_CONNECTIVITY,
         device_class=SensorDeviceClass.ENUM,
+        options=["Connected", "Connecting", "Disconnected"],
         has_entity_name=True,
-        name=NAME_SERVER_CONNECTIVITY,
         value_fn=lambda device: device.get_server_status(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -69,8 +113,8 @@ SENSORS: list[DropletSensorEntityDescription] = [
         key=KEY_SIGNAL_QUALITY,
         translation_key=KEY_SIGNAL_QUALITY,
         device_class=SensorDeviceClass.ENUM,
+        options=["No Signal", "Weak Signal", "Strong Signal"],
         has_entity_name=True,
-        name=NAME_SIGNAL_QUALITY,
         value_fn=lambda device: device.get_signal_quality(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -130,4 +174,6 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the value reported by the sensor."""
+        if self.entity_description.key == KEY_VOLUME:
+            self._attr_last_reset = dt_util.now()
         return self.entity_description.value_fn(self.coordinator)

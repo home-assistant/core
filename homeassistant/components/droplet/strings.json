@@ -25,7 +25,13 @@
   },
   "entity": {
     "sensor": {
-      "current_flow_rate": { "name": "Flow Rate" }
+      "current_flow_rate": { "name": "Flow Rate" },
+      "server_connectivity": { "name": "Server Status" },
+      "signal_quality": { "name": "Signal Quality" },
+      "volume": { "name": "Volume" },
+      "daily_volume": { "name": "Daily Volume" },
+      "weekly_volume": { "name": "Weekly Volume" },
+      "monthly_volume": { "name": "Monthly Volume" }
     }
   }
 }

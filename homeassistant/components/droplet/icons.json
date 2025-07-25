@@ -9,6 +9,18 @@
       },
       "signal_quality": {
         "default": "mdi:waveform"
+      },
+      "volume": {
+        "default": "mdi:cup-water"
+      },
+      "daily_volume": {
+        "default": "mdi:calendar-today"
+      },
+      "weekly_volume": {
+        "default": "mdi:calendar-week"
+      },
+      "monthly_volume": {
+        "default": "mdi:calendar-month"
       }
     }
   }
