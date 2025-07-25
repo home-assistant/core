@@ -13,6 +13,7 @@ from here_routing import (
     Return,
     RoutingMode,
     Spans,
+    TrafficMode,
     TransportMode,
 )
 import here_transit
@@ -44,6 +45,7 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ROUTE_MODE_FASTEST,
@@ -87,7 +89,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         _LOGGER.debug(
             (
                 "Requesting route for origin: %s, destination: %s, route_mode: %s,"
-                " mode: %s, arrival: %s, departure: %s"
+                " mode: %s, arrival: %s, departure: %s, traffic_mode: %s"
             ),
             params.origin,
             params.destination,
@@ -95,6 +97,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             TransportMode(params.travel_mode),
             params.arrival,
             params.departure,
+            params.traffic_mode,
         )
 
         try:
@@ -109,6 +112,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
                 routing_mode=params.route_mode,
                 arrival_time=params.arrival,
                 departure_time=params.departure,
+                traffic_mode=params.traffic_mode,
                 return_values=[Return.POLYINE, Return.SUMMARY],
                 spans=[Spans.NAMES],
             )
@@ -350,6 +354,11 @@ def prepare_parameters(
         if config_entry.options[CONF_ROUTE_MODE] == ROUTE_MODE_FASTEST
         else RoutingMode.SHORT
     )
+    traffic_mode = (
+        TrafficMode.DISABLED
+        if config_entry.options[CONF_TRAFFIC_MODE] is False
+        else TrafficMode.DEFAULT
+    )
 
     return HERETravelTimeAPIParams(
         destination=destination,
@@ -358,6 +367,7 @@ def prepare_parameters(
         route_mode=route_mode,
         arrival=arrival,
         departure=departure,
+        traffic_mode=traffic_mode,
     )
 
 
