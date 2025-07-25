@@ -147,7 +147,7 @@ class SFTPBackupAgent(BackupAgent):
 
         for backup in backups:
             if backup.backup_id == backup_id:
-                LOGGER.debug(f"Returning backup id: {backup_id}. {backup}")
+                LOGGER.debug("Returning backup id: %s. %s", backup_id, backup)
                 return backup
 
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(f"Backup id: {backup_id} not found")

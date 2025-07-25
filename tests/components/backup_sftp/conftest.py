@@ -139,7 +139,7 @@ def async_cm_mock_generator() -> Callable[[], MagicMock]:
 
 @pytest.fixture
 def fake_connect(async_cm_mock: AsyncMock) -> AsyncMock:
-    "Prepare a fake `asyncssh.connect` cm to simulate a successful connection."
+    """Prepare a fake `asyncssh.connect` cm to simulate a successful connection."""
     mck = AsyncMock()
     mck.__aenter__.return_value = mck
     mck.start_sftp_client = lambda: async_cm_mock

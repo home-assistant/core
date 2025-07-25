@@ -82,7 +82,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            LOGGER.debug("Source: ", self.source)
+            LOGGER.debug("Source: %s", self.source)
 
             # Create a session using your credentials
             user_config = SFTPConfigEntryData(

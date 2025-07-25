@@ -124,7 +124,7 @@ class BackupAgentClient:
 
             await self._ssh.wait_closed()
 
-    def _initialized(self, file_path: str | None = None) -> None:
+    def _check_initialized(self, file_path: str | None = None) -> None:
         """Check if SSH Connection is initialized.
 
         If `file_path` is provided, also checks if
@@ -263,7 +263,7 @@ class BackupAgentClient:
 
     async def list_backup_location(self) -> list[str]:
         """Return a list of `*.metadata.json` files located in backup location."""
-        self._initialized()
+        self._check_initialized()
         files = []
         LOGGER.debug(
             "Changing directory to: `%s`", self.cfg.runtime_data.backup_location
