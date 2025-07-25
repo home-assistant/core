@@ -28,13 +28,13 @@ VICTRON_BATTERY_MONITOR_SERVICE_INFO = BluetoothServiceInfo(
 )
 VICTRON_BATTERY_MONITOR_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
 VICTRON_BATTERY_MONITOR_SENSORS = {
-    "battery_monitor_aux_mode": "DISABLED",
+    "battery_monitor_aux_mode": "disabled",
     "battery_monitor_consumed_ampere_hours": "-50.0",
     "battery_monitor_current": "0.0",
     "battery_monitor_remaining_minutes": "unknown",
     "battery_monitor_state_of_charge": "50.0",
     "battery_monitor_voltage": "12.53",
-    "battery_monitor_alarm": "no alarm",
+    "battery_monitor_alarm": "none",
     "battery_monitor_temperature": "unknown",
     "battery_monitor_starter_voltage": "unknown",
     "battery_monitor_midpoint_voltage": "unknown",
@@ -71,16 +71,16 @@ VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_DC_ENERGY_METER_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
 
 VICTRON_DC_ENERGY_METER_SENSORS = {
-    "dc_energy_meter_meter_type": "DC_DC_CHARGER",
-    "dc_energy_meter_aux_mode": "STARTER_VOLTAGE",
+    "dc_energy_meter_meter_type": "dc_dc_charger",
+    "dc_energy_meter_aux_mode": "starter_voltage",
     "dc_energy_meter_current": "0.0",
     "dc_energy_meter_voltage": "12.52",
     "dc_energy_meter_starter_voltage": "-0.01",
-    "dc_energy_meter_alarm": "no alarm",
+    "dc_energy_meter_alarm": "none",
     "dc_energy_meter_temperature": "unknown",
 }
 
-# Inverter - unsupported by victron-ble library - for testing
+# Inverter
 
 VICTRON_INVERTER_SERVICE_INFO = BluetoothServiceInfo(
     name="Inverter",
@@ -111,7 +111,7 @@ VICTRON_SOLAR_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_SOLAR_CHARGER_TOKEN = "adeccb947395801a4dd45a2eaa44bf17"
 
 VICTRON_SOLAR_CHARGER_SENSORS = {
-    "solar_charger_charge_state": "ABSORPTION",
+    "solar_charger_charge_state": "absorption",
     "solar_charger_battery_voltage": "13.88",
     "solar_charger_battery_current": "1.4",
     "solar_charger_yield_today": "30",
@@ -136,7 +136,7 @@ VICTRON_VEBUS_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_VEBUS_TOKEN = "da3f5fa2860cb1cf86ba7a6d1d16b9dd"
 
 VICTRON_VEBUS_SENSORS = {
-    "inverter_charger_device_state": "FLOAT",
+    "inverter_charger_device_state": "float",
     "inverter_charger_battery_voltage": "14.45",
     "inverter_charger_battery_current": "23.2",
     "inverter_charger_ac_in_state": "AC_IN_1",
