@@ -204,7 +204,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.0.1
+aioautomower==2.0.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -2215,7 +2215,7 @@ pyopnsense==0.4.0
 pyoppleio-legacy==1.0.8
 
 # homeassistant.components.osoenergy
-pyosoenergyapi==1.1.5
+pyosoenergyapi==1.2.4
 
 # homeassistant.components.opentherm_gw
 pyotgw==2.2.2
