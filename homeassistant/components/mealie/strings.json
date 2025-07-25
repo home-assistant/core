@@ -181,7 +181,7 @@
     },
     "get_recipes": {
       "name": "Get recipes",
-      "description": "Searches for recipes with any matching properties in Mealie.",
+      "description": "Searches for recipes with any matching properties in Mealie",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
