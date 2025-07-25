@@ -38,6 +38,19 @@
         "user": "Add conversation agent"
       },
       "entry_type": "Conversation agent"
+    },
+    "ai_task_data": {
+      "step": {
+        "user": {
+          "data": {
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add Generate data with AI service"
+      },
+      "entry_type": "Generate data with AI service"
     }
   }
 }

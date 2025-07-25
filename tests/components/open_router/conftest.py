@@ -50,8 +50,18 @@ def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
 
 
 @pytest.fixture
+def ai_task_data_subentry_data() -> dict[str, Any]:
+    """Mock AI task subentry data."""
+    return {
+        CONF_MODEL: "google/gemini-1.5-pro",
+    }
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, conversation_subentry_data: dict[str, Any]
+    hass: HomeAssistant,
+    conversation_subentry_data: dict[str, Any],
+    ai_task_data_subentry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
@@ -67,7 +77,14 @@ def mock_config_entry(
                 subentry_type="conversation",
                 title="GPT-3.5 Turbo",
                 unique_id=None,
-            )
+            ),
+            ConfigSubentryData(
+                data=ai_task_data_subentry_data,
+                subentry_id="ABCDEG",
+                subentry_type="ai_task_data",
+                title="Gemini 1.5 Pro",
+                unique_id=None,
+            ),
         ],
     )
 
