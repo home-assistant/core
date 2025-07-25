@@ -372,7 +372,6 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
                 write_ha_state = True
 
         if not self._optimistic:
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._optimistic and len(self._rendered) > 0:
             # In case any non optimistic template

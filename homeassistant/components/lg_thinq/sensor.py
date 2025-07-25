@@ -75,6 +75,11 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         translation_key=ThinQProperty.TOTAL_POLLUTION_LEVEL,
     ),
+    ThinQProperty.CO2: SensorEntityDescription(
+        key=ThinQProperty.CO2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="carbon_dioxide",
+    ),
 }
 BATTERY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.BATTERY_PERCENT: SensorEntityDescription(
@@ -175,9 +180,29 @@ RECIPE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=ThinQProperty.HOP_OIL_INFO,
         translation_key=ThinQProperty.HOP_OIL_INFO,
     ),
+    ThinQProperty.HOP_OIL_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_1,
+    ),
+    ThinQProperty.HOP_OIL_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_2,
+    ),
     ThinQProperty.FLAVOR_INFO: SensorEntityDescription(
         key=ThinQProperty.FLAVOR_INFO,
         translation_key=ThinQProperty.FLAVOR_INFO,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_1,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_2,
     ),
     ThinQProperty.BEER_REMAIN: SensorEntityDescription(
         key=ThinQProperty.BEER_REMAIN,
@@ -415,6 +440,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.COOKTOP: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         POWER_SENSOR_DESC[ThinQProperty.POWER_LEVEL],
+        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
     ),
     DeviceType.DEHUMIDIFIER: (
         JOB_MODE_SENSOR_DESC[ThinQProperty.CURRENT_JOB_MODE],
@@ -435,7 +461,11 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RECIPE_SENSOR_DESC[ThinQProperty.WORT_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.YEAST_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.BEER_REMAIN],
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         ELAPSED_DAY_SENSOR_DESC[ThinQProperty.ELAPSED_DAY_STATE],
@@ -496,6 +526,16 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE],
         TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE],
         TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE],
+    ),
+    DeviceType.VENTILATOR: (
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.CO2],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM1],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM2],
+        AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM10],
+        TEMPERATURE_SENSOR_DESC[ThinQProperty.CURRENT_TEMPERATURE],
+        TIME_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_START],
+        TIME_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_STOP],
+        TIMER_SENSOR_DESC[TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP],
     ),
     DeviceType.WASHCOMBO_MAIN: WASHER_SENSORS,
     DeviceType.WASHCOMBO_MINI: WASHER_SENSORS,
